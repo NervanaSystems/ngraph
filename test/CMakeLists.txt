@@ -84,11 +84,12 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     link_directories(${LLVM_LIB_DIR})
     link_directories(${CUDA_LIBRARIES})
     link_directories(${CUDA_CUBLAS_LIBRARIES})
+    link_directories(${CUDNN_LIBRARIES})
     set(SRC
         ${SRC}
         cudnn.cpp)
     # Disabled for testing
-    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
@@ -109,6 +110,15 @@ if(NGRAPH_ARGON_ENABLE)
     # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
     add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
     set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
+endif()
+
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    foreach(BACKEND_NAME ${BACKEND_NAMES})
+        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
+endforeach()
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
@@ -144,6 +154,10 @@ endif()
 
 add_executable(unit-test ${SRC})
 
+if(MPI_C_INCLUDE_PATH)
+    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
+endif()
+
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
     add_dependencies(unit-test ext_mkldnn)
@@ -161,7 +175,7 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest eigen)
+add_dependencies(unit-test ngraph libgtest ext_eigen)
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

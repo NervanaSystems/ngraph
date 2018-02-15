@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,25 +26,18 @@ namespace ngraph
     {
         /// \brief Elementwise addition operation.
         ///
-        /// ## Inputs
-        ///
-        /// |        | Type                              | Description                                            |
-        /// | ------ | --------------------------------- | ------------------------------------------------------ |
-        /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type.        |
-        /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                                    |
-        /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n] + \texttt{arg1}[i_1,\dots,i_n]\f$ |
-        class Add : public BinaryElementwiseArithmetic
+        class Add : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an addition operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
+            /// \param arg0 Node that produces the first input tensor.<br>
+            /// `[d0, ...]`
+            /// \param arg1 Node that produces the second input tensor.<br>
+            /// `[d0, ...]`
+            ///
+            /// Output `[d0, ...]`
+            ///
             Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseArithmetic("Add", arg0, arg1)
             {
@@ -54,7 +47,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Add>(new_args.at(0), new_args.at(1));
             }
 

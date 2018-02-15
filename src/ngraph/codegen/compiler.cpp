@@ -123,7 +123,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
-    , m_debuginfo_enabled(false)
+    , m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
@@ -133,9 +133,6 @@ codegen::StaticCompiler::StaticCompiler()
 void codegen::StaticCompiler::initialize()
 {
     m_extra_search_path_list.clear();
-#if NGCPU_DEBUGINFO
-    m_debuginfo_enabled = true;
-#endif
 
     InitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
@@ -154,6 +151,8 @@ void codegen::StaticCompiler::initialize()
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
+    diag_options->ShowCarets = false;
+    diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     DiagnosticsEngine diag_engine(diag_id, &*diag_options);
 
@@ -354,6 +353,15 @@ void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
     load_headers_from_resource();
+#elif defined(__APPLE__)
+    add_header_search_path(EIGEN_HEADERS_PATH);
+    add_header_search_path(MKLDNN_HEADERS_PATH);
+    add_header_search_path(TBB_HEADERS_PATH);
+    add_header_search_path(NGRAPH_HEADERS_PATH);
+    add_header_search_path(INSTALLED_HEADERS_PATH);
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+    add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
@@ -402,6 +410,10 @@ void codegen::StaticCompiler::configure_search_path()
 #ifdef CUDA_HEADER_PATHS
     // Only needed for GPU backend
     add_header_search_path(CUDA_HEADER_PATHS);
+#endif
+
+#ifdef NGRAPH_DISTRIBUTED
+    add_header_search_path(MPI_HEADER_PATH);
 #endif
 }
 

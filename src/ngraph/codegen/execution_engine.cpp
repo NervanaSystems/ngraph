@@ -78,6 +78,13 @@ void codegen::ExecutionEngine::finalize()
 
 void* codegen::ExecutionEngine::get_pointer_to_named_function(const std::string& func_name)
 {
+// For whatever reason, macOS seems to expect that we prefix this with an underscore.
+#ifdef __APPLE__
+    std::string fname = "_" + func_name;
+#else
+    const std::string& fname = func_name;
+#endif
+
     // set AbortOnFailure flag to false so call fails by returning nullptr
-    return m_execution_engine->getPointerToNamedFunction(func_name, false);
+    return m_execution_engine->getPointerToNamedFunction(fname, false);
 }

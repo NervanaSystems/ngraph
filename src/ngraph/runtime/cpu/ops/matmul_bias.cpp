@@ -20,7 +20,9 @@ std::shared_ptr<ngraph::Node> ngraph::op::MatmulBias::copy_with_new_args(
     const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
 {
     if (new_args.size() != 2)
+    {
         throw ngraph_error("Incorrect number of new arguments");
+    }
     return std::make_shared<MatmulBias>(new_args.at(0),
                                         new_args.at(1),
                                         new_args.at(1),
@@ -69,7 +71,7 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
         throw ngraph_error("product dimensions are not equal while creating MatmulBias");
     }
 
-    auto dot_shape = Shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
+    Shape dot_shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape)
                  << " , b shape = " << vector_to_string(b->get_shape());
 

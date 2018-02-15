@@ -36,9 +36,7 @@ set (SRC
     ops/abs.cpp
     ops/add.cpp
     ops/avg_pool.cpp
-    ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_comparison.cpp
-    ops/binary_elementwise.cpp
+    ops/batch_norm.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
@@ -79,8 +77,12 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise.cpp
+    ops/util/binary_elementwise_arithmetic.cpp 
+    ops/util/binary_elementwise_comparison.cpp 
+    ops/util/binary_elementwise.cpp 
+    ops/util/requires_tensor_view_args.cpp 
+    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/unary_elementwise.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
@@ -151,7 +153,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
         else()
             message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-            endif()
+        endif()
     endif()
 
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
@@ -171,30 +173,56 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
+        runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
+        runtime/cpu/cpu_layout_descriptor.cpp
+        runtime/cpu/cpu_tracing.cpp
+        runtime/cpu/mkldnn_utils.cpp
+        runtime/cpu/ops/convert_layout.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_layout.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+
+    set(HEADER_SEARCH_DEFINES
+        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+        "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
+    )
+
     if (NGRAPH_TBB_ENABLE)
-        set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-          "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";NGRAPH_TBB_ENABLE;")
         set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-    else()
-        set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-          "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
+        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
+            "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+            "NGRAPH_TBB_ENABLE"
+        )
     endif()
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
+
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
+    # Add sources for distributed ngraph
+    # and all its dependencies
+    set(SRC ${SRC}
+        ops/allreduce.cpp
+    )
+    set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
+        "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
+endif()
 
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -225,7 +253,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
         resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator eigen ext_llvm ext_mkldnn
+        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
     add_dependencies(ngraph header_resource)
@@ -277,7 +305,11 @@ endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+endif()
+
+if(MPI_CXX_INCLUDE_PATH)
+    target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
 # Argon
@@ -300,35 +332,33 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-if (NOT APPLE)
-    install(DIRECTORY
-        ${MKLDNN_LIB_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_LIB}"
+install(DIRECTORY
+    ${MKLDNN_LIB_DIR}/
+    DESTINATION "${NGRAPH_INSTALL_LIB}"
+)
+
+if (NGRAPH_TBB_ENABLE)
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb.so.*"
     )
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+    )
+endif()
 
-    if (NGRAPH_TBB_ENABLE)
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb.so.*"
-        )
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb_debug.so.*"
-        )
-    endif()
-
-    if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "*.so"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.hpp"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+if (NGRAPH_ARGON_ENABLE)
+    install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "*.so"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.hpp"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.h"
+    )
 endif()

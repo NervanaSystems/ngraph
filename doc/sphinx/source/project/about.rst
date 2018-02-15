@@ -8,6 +8,8 @@ of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of
 components, APIs, and documentation that can be used to compile and run  
 :abbr:`Deep Neural Network (DNN)` models defined in a variety of frameworks.  
 
+.. figure:: ../graphics/ngraph-hub.png  
+
 The nGraph library translates a framework’s representation of computations into 
 an :abbr:`Intermediate Representation (IR)` designed to promote computational 
 efficiency on target hardware. Initially-supported backends include Intel 
@@ -15,7 +17,29 @@ Architecture CPUs, the Intel® Nervana Neural Network Processor™ (NNP),
 and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
 memory management and data layout abstraction. 
 
-.. figure:: graphics/fig.jpeg  
+Why is this needed?
+--------------------
+
+When Deep Learning (DL) frameworks first emerged as the vehicle for training 
+and inference models, they were designed around kernels optimized for a 
+particular platform. As a result, many backend details were being exposed in 
+the model definitions, making the adaptability and portability of DL models 
+to other or more advanced backends inherently complex and expensive.
+
+The traditional approach means that an algorithm developer cannot easily adapt 
+his or her model to different backends. Making a model run on a different 
+framework is also problematic because the user must separate the essence of 
+the model from the performance adjustments made for the backend, translate 
+to similar ops in the new framework, and finally make the necessary changes 
+for the preferred backend configuration on the new framework.
+
+We designed the Intel nGraph project to substantially reduce these kinds of 
+engineering complexities. While optimized kernels for deep-learning primitives 
+are provided through the project and via libraries like Intel® Math Kernel 
+Library (Intel® MKL) for Deep Neural Networks (Intel® MKL-DNN), there are 
+several compiler-inspired ways in which performance can be further optimized.
+
+=======
 
 The *nGraph core* uses a strongly-typed and platform-neutral stateless graph 
 representation for computations. Each node, or *op*, in the graph corresponds
@@ -40,3 +64,6 @@ for development in our `SysML conference paper`_.
 
 .. _frontend: http://neon.nervanasys.com/index.html/
 .. _SysML conference paper: https://arxiv.org/pdf/1801.08058.pdf
+.. _MXNet: http://mxnet.incubator.apache.org/
+.. _TensorFlow: https://www.tensorflow.org/
+

@@ -17,10 +17,14 @@
 Intel nGraph library project
 #############################
 
-Welcome to the Intel nGraph project, an open source C++ library for developers
-of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
-components, APIs, and documentation that can be used to compile and run  
-:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of frameworks.  
+Welcome to Intel nGraph, an open source C++ library for developers of 
+:abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite 
+of components, APIs, and documentation that can be used to compile 
+and run :abbr:`Deep Neural Network (DNN)` (DNN) models defined in a 
+variety of frameworks.  
+
+.. figure:: graphics/ngraph-hub.png  
+
 
 For this early release, we provide :doc:`framework-integration-guides` to compile 
 and run MXNet and TensorFlow-based projects.
@@ -32,53 +36,26 @@ Architecture CPUs (CPU), the Intel® Nervana Neural Network Processor™ (NNP),
 and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
 memory management and data layout abstraction. 
 
-Further overview details can be found on our :doc:`about` page. 
+Further project details can be found on our :doc:`project/about` page. 
+
+
 
 =======
 
+Sections
+=========
+
 .. toctree::
    :maxdepth: 1
-   :caption: Table Of Contents
    :name: tocmaster
+   :caption: Table of Contents
 
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
    graph-basics.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Algorithms 
-   :name: 
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference API
-
-   api.rst
-   autodiff.rst
-   glossary.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Ops
-
-   ops/convolution.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Project Docs
-
-   about.rst
-   release-notes.rst
-   code-contributor-README.rst
-
-.. toctree::
-   :maxdepth: 0
-   :hidden: 
-   
-   branding-notice.rst
-   doc-contributor-README.rst
+   ops/index.rst
+   project/index.rst
 
 
 Indices and tables
@@ -86,4 +63,5 @@ Indices and tables
 
    * :ref:`search`   
    * :ref:`genindex`
+
      

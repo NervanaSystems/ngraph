@@ -28,16 +28,15 @@ After building and installing the nGraph library to your system, the next
 logical step is to compile a framework that you can use to run a 
 training/inference model with one of the backends that are now enabled.
 
-For this early |release| release, we're providing integration guides for:
+For this early |release| release, we're providing :doc:`framework-integration-guides`, 
+for:
 
-* `MXNet`_,  
-* `TensorFlow`_, and
+* :doc:`MXNet<framework-integration-guides>` framework,  
+* :doc:`Tensorflow<framework-integration-guides>` framework, and
 * neon™ `frontend framework`_.
 
-Integration guides for other frameworks is tentatively forthcoming.
+Integration guides for other frameworks are tentatively forthcoming.
 
 .. _GTest framework: https://github.com/google/googletest.git
-.. _MXNet: http://mxnet.incubator.apache.org/
-.. _TensorFlow: https://www.tensorflow.org/
 .. _frontend framework: http://neon.nervanasys.com/index.html/
 

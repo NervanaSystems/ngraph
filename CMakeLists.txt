@@ -26,20 +26,24 @@ endif()
 
 project (ngraph)
 
-SET( GCC_MIN_VERSION 4.8)
-SET( CLANG_MIN_VERSION 3.8)
+SET(GCC_MIN_VERSION 4.8)
+SET(CLANG_MIN_VERSION 3.8)
+SET(APPLE_CLANG_MIN_VERSION 9.0)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS GCC_MIN_VERSION)
         message(FATAL_ERROR "GCC version must be at least ${GCC_MIN_VERSION}!")
     endif()
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    # require at least clang 3.8
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANG_MIN_VERSION)
         message(FATAL_ERROR "Clang version must be at least ${CLANG_MIN_VERSION}!")
     endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS APPLE_CLANG_MIN_VERSION)
+        message(FATAL_ERROR "Apple Clang version must be at least ${APPLE_CLANG_MIN_VERSION}!")
+    endif()
 else()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
+    message(WARNING "You are using an unsupported compiler. Compilation has only been tested with Clang (${CLANG_MIN_VERSION} and up), Apple Clang (${APPLE_CLANG_MIN_VERSION} and up), and GCC (${GCC_MIN_VERSION} and up).")
 endif()
 
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
@@ -134,18 +138,28 @@ elseif(NGRAPH_GPU_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
+# distributed support
+#-----------------------------------------------------------------------------------------------
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    if(MPI_CXX_FOUND)
+        add_definitions(-DNGRAPH_DISTRIBUTED)
+    endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
 # Root for external installs, when using `make`, e.g.
-# ${EXTERNAL_INSTALL_DIR}
-# ├── eigen               <-- ${EIGEN_INSTALL_DIR}
+# ${EXTERNAL_PROJECTS_ROOT}
+# ├── eigen
 # │   ├── include
 # │   │   └── eigen3      <-- ${EIGEN_INCLUDE_DIR}
 # │   │       ├── Eigen
 # │   ...
 # │
-# └── mkldnn              <-- ${MKLDNN_INSTALL_DIR}
+# └── mkldnn
 #     ├── include         <-- ${MKLDNN_INCLUDE_DIR}
 #     │   ├── mkldnn.h
 #     │   ...
