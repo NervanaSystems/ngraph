@@ -28,7 +28,9 @@ else:
 sys.setdlopenflags(flags)
 
 from _pyngraph import *
-#from _pyngraph import Function
-#from _pyngraph import Node
-#from _pyngraph import Type
-#from _pyngraph import TensorViewType
+"""
+from _pyngraph import Function
+from _pyngraph import Node
+from _pyngraph import Type
+from _pyngraph import TensorViewType
+"""
