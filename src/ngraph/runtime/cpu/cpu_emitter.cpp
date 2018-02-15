@@ -249,7 +249,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::MatmulBias)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNorm)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::BatchNorm)
 {
     const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
 
@@ -328,7 +329,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNorm)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDot)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Dot)
 {
     const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
 
