@@ -36,7 +36,7 @@ TEST(build_graph, build_simple)
 
     auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
 
-    ASSERT_EQ(cluster_0->get_output_op(0), dot);
+    ASSERT_EQ(cluster_0->get_output_op(0)->get_input_op(0), dot);
 }
 
 // Check node comparisons

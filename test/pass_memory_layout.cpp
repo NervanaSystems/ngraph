@@ -232,5 +232,5 @@ TEST(memory_layout, constant)
     pass_manager.run_passes(f);
     auto sorted = f->get_ordered_ops();
     size_t temporary_pool_size = f->get_temporary_pool_size();
-    EXPECT_EQ(0, temporary_pool_size);
+    EXPECT_EQ(4, temporary_pool_size);
 }

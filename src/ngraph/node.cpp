@@ -92,16 +92,7 @@ bool Node::is_parameter() const
 
 bool Node::is_output() const
 {
-    if (!m_users.size())
-    {
-        if (dynamic_cast<const op::Result*>(this) !=
-            nullptr) //this could be refactored into a virtual function on Result
-        {
-            throw ngraph_error("is_output is called on an internal node");
-        }
-        return false;
-    }
-    return !(*begin(m_users))->m_users.size();
+    return false;
 }
 
 bool Node::is_constant() const

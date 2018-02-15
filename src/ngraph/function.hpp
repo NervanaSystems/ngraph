@@ -44,6 +44,12 @@ namespace ngraph
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
+        Function(const std::vector<std::shared_ptr<op::Result>>& results,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "");
+
+        void init();
+
         virtual ~Function() {}
     public:
         /// Return the number of outputs for this function.
@@ -65,7 +71,7 @@ namespace ngraph
         }
 
         /// Return the ops that generate the results
-        std::vector<std::shared_ptr<Node>> get_results() const;
+        const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -79,6 +85,8 @@ namespace ngraph
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
         void set_temporary_pool_size(size_t);
+        //updates old w/ repl in m_results list
+        void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
         //updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 

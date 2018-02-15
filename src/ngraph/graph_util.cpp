@@ -110,17 +110,9 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           bool replace_output)
 {
-    if (std::dynamic_pointer_cast<op::Result>(target))
-    {
-        throw ngraph_error("Internal Error: replacee is a Result node!");
-    }
-
     if (target->is_output())
     {
-        for (descriptor::Output& output : replacement->get_outputs())
-        {
-            output.get_tensor().set_is_output();
-        }
+        throw ngraph_error("Internal Error: replacee is a Result node!");
     }
 
     //fix input/output descriptors
@@ -249,7 +241,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function result and parameters
-    auto cloned_result = node_map.get(func->get_result());
+    auto cloned_result = std::dynamic_pointer_cast<op::Result>(node_map.get(func->get_result()));
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func->get_parameters())
     {
@@ -257,5 +249,6 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     }
 
     // create and return cloned function
-    return std::make_shared<ngraph::Function>(cloned_result, cloned_params);
+    return std::make_shared<ngraph::Function>(
+        std::vector<std::shared_ptr<op::Result>>{cloned_result}, cloned_params);
 }

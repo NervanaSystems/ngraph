@@ -36,6 +36,7 @@
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
@@ -2138,6 +2139,16 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
         writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
         writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
     }
+}
+
+void runtime::cpu::CPU_Emitter::EmitResult(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
+                                           const vector<runtime::cpu::TensorViewWrapper>& args,
+                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "               " << out[0].get_name() << ",\n";
+    writer << "               " << shape_size(n->get_shape()) << ");\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,

@@ -54,9 +54,14 @@ namespace ngraph
 
                 return std::make_shared<Result>(new_args.at(0));
             }
-            bool is_functionally_identical(const Node& other) const override
+
+            bool is_functionally_identical(const Node& other) const override { return false; }
+            virtual bool is_output() const override { return true; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override
             {
-                return test_identical(other);
+                adjoints.add_delta(get_input_op(0), delta);
             }
         };
     }

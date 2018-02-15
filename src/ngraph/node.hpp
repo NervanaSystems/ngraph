@@ -89,7 +89,7 @@ namespace ngraph
         void set_value_type_checked(const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
-        bool is_output() const;
+        virtual bool is_output() const;
         virtual bool is_constant() const;
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }

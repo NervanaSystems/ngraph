@@ -25,6 +25,7 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
+/*
 Function::Function(const Nodes& results,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
@@ -38,7 +39,7 @@ Function::Function(const Nodes& results,
         return std::make_shared<op::Result>(n);
     });
 
-    for (auto r : results)
+    for (auto r : m_results)
     {
         for (descriptor::Output& output : r->get_outputs())
         {
@@ -61,11 +62,65 @@ Function::Function(const Nodes& results,
     });
 }
 
+*/
+
+Function::Function(const std::vector<std::shared_ptr<op::Result>>& results,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
+    : m_results(results.begin(), results.end())
+    , m_parameters(parameters)
+    , m_name(name)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+{
+    init();
+}
+
+Function::Function(const Nodes& results,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
+    : m_results(results.size())
+    , m_parameters(parameters)
+    , m_name(name)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+{
+    std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
+        return std::make_shared<op::Result>(n);
+    });
+    init();
+}
+
 Function::Function(const std::shared_ptr<Node>& result,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
     : Function(Nodes{result}, parameters, name)
 {
+}
+
+void Function::init()
+{
+    for (auto r : m_results)
+    {
+        for (descriptor::Output& output : r->get_outputs())
+        {
+            output.get_tensor().set_is_output();
+        }
+    }
+
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+        if (nullptr != p)
+        {
+            auto it = std::find_if(m_parameters.begin(),
+                                   m_parameters.end(),
+                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
 }
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops()
@@ -132,21 +187,7 @@ const Shape& Function::get_output_shape(size_t i) const
 
 shared_ptr<Node> Function::get_output_op(size_t i) const
 {
-    return m_results.at(i)->get_input_op(0);
-}
-
-std::vector<std::shared_ptr<Node>> Function::get_results() const
-{
-    std::vector<std::shared_ptr<Node>> results;
-    for (auto r : m_results)
-    {
-        if (std::dynamic_pointer_cast<op::Result>(r) == nullptr)
-        {
-            throw ngraph_error("Internal Error: m_results should only contain op::Result!");
-        }
-        results.push_back(r->get_input_op(0));
-    }
-    return results;
+    return m_results.at(i);
 }
 
 shared_ptr<Node> Function::get_result() const
@@ -155,12 +196,7 @@ shared_ptr<Node> Function::get_result() const
     {
         throw ngraph_error("get_result() must be called on a function with exactly one result.");
     }
-
-    if (std::dynamic_pointer_cast<op::Result>(m_results.at(0)) == nullptr)
-    {
-        throw ngraph_error("Internal Error: m_results should only contain op::Result!");
-    }
-    return m_results.at(0)->get_input_op(0);
+    return m_results.at(0);
 }
 
 std::list<shared_ptr<Node>> Function::get_ops() const
@@ -184,7 +220,18 @@ std::list<shared_ptr<Node>> Function::get_ops() const
     return ops;
 }
 
+void Function::replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
+{
+    auto it = std::find(begin(m_results), end(m_results), old);
+    if (it != end(m_results))
+    {
+        NGRAPH_DEBUG << "Replacing output " << old->get_name() << " w/ " << repl->get_name();
+        *it = repl;
+    }
+}
+
 void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
 {
+    replace_output_op(old, repl);
     ngraph::replace_node(old, repl, true);
 }
