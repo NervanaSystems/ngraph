@@ -24,8 +24,8 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/ops/convolution.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
@@ -37,7 +37,8 @@ static const runtime::cpu::pass::AssignOpMap dispatcher{
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPUAssignment::AssignConvolution},
 };
 
-bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
+bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
+    const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)
     {
@@ -45,9 +46,8 @@ bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(const std::list<std::s
         auto handler = dispatcher.find(TI(n));
         if (handler != dispatcher.end())
         {
-            cout << "calling handler " << node->get_name() << endl;
-            handler->second(node.get());
-        }   
+            handler->second(m_external_function.get(), node.get());
+        }
     }
 
     return false;
@@ -68,10 +68,10 @@ void runtime::cpu::pass::CPUAssignment::ASSIGN_DECL(AssignConvolution)
     {
         data_dilated = data_dilated || (s != 1);
     }
-   
+
     if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-             node->get_input_element_type(0) == element::f32) 
+        node->get_input_element_type(0) == element::f32)
     {
-        cout << "MKLDNN convolution " << endl;
+        external_function->get_op_annotations(node)->is_mkldnn_op = true;
     }
 }

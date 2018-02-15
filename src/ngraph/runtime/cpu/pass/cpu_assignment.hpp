@@ -17,11 +17,11 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
-#define ASSIGN_DECL(E)                                                                      \
-    E(const ngraph::Node* node)                                                            
+#define ASSIGN_DECL(E)                                                                             \
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, const ngraph::Node* node)
 
 namespace ngraph
 {
@@ -31,20 +31,23 @@ namespace ngraph
         {
             namespace pass
             {
-                using AssignFunction = std::function<void(const ngraph::Node*)>;
+                using AssignFunction =
+                    std::function<void(CPU_ExternalFunction*, const ngraph::Node*)>;
 
                 using AssignOpMap = std::unordered_map<std::type_index, AssignFunction>;
 
                 class CPUAssignment : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    CPUAssignment(std::shared_ptr<CPU_ExternalFunction> external_function) : m_external_function(external_function) {}
+                    CPUAssignment(std::shared_ptr<CPU_ExternalFunction> external_function)
+                        : m_external_function(external_function)
+                    {
+                    }
                     virtual bool
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
-
                     static void ASSIGN_DECL(AssignConvolution);
-                    
+
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 };
