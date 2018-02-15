@@ -90,6 +90,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -227,6 +228,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
+    // TODO: to be uncommented COREFusion once relu MKL implementation inplace
+    // pass_manager.register_pass<pass::COREFusion>(); 
     pass_manager.register_pass<pass::CPUFusion>();
     pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
