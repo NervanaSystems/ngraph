@@ -36,6 +36,7 @@ set (SRC
     file_util.cpp
     inliner.cpp
     input_output_assign.cpp
+    interpreter_fusion.cpp
     main.cpp
     op.cpp
     pass_liveness.cpp

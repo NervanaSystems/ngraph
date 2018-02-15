@@ -73,6 +73,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
@@ -111,6 +112,7 @@ void runtime::interpreter::ExternalFunction::compile()
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
+    pass_manager.register_pass<pass::COREFusion>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
