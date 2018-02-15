@@ -241,7 +241,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 

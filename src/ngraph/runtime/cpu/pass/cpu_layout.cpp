@@ -16,19 +16,39 @@
 
 #include <algorithm>
 #include <memory>
+#include <typeindex>
+#include <typeinfo>
 
 #include <mkldnn.hpp>
 
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
-//using namespace ngraph::runtime::cpu::pass;
+using namespace std;
+using namespace mkldnn;
 using namespace ngraph;
+
+#define TI(x) type_index(typeid(x))
+
+static const runtime::cpu::pass::LayoutOpMap dispatcher{
+    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::LayoutConvolution},
+};
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
+    for (const auto& node : nodes)
+    {
+        auto& n = *node;
+        auto handler = dispatcher.find(TI(n));
+        if (handler != dispatcher.end())
+        {
+            handler->second(m_external_function.get(), node.get());
+        }
+    }
+
     for (const auto& node : nodes)
     {
         for (size_t i = 0; i < node->get_output_size(); ++i)
@@ -81,4 +101,61 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
     }
 
     return false;
+}
+
+void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
+{
+    if (external_function->get_op_annotations(node)->is_mkldnn_op)
+    {
+        auto convolution = static_cast<const op::Convolution*>(node);
+
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg1_shape = node->get_input_shape(1);
+        auto result_shape = node->get_output_shape(0);
+        auto arg0_rank = arg0_shape.size();
+        auto arg1_rank = arg1_shape.size();
+        auto filter_strides = convolution->get_window_movement_strides();
+        auto padding_below = convolution->get_padding_below();
+        auto padding_above = convolution->get_padding_above();
+
+        Strides window_dilation_strides_adjusted;
+
+        for (size_t s : convolution->get_window_dilation_strides())
+        {
+            window_dilation_strides_adjusted.push_back(s - 1);
+        }
+
+        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+            node->get_input_element_type(0).c_type_string());
+
+        engine cpu_engine(engine::cpu, 0);
+        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+        memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
+        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+        memory::dims mkldnn_filter_strides(filter_strides.begin(), filter_strides.end());
+        memory::dims mkldnn_dilated_strides(window_dilation_strides_adjusted.begin(),
+                                            window_dilation_strides_adjusted.end());
+        memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
+        memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
+        const memory::desc input_data_desc(mkldnn_arg0_shape, et, memory::format::any);
+        const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
+        const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
+        convolution_forward::desc fwd_desc(prop_kind::forward,
+                                           algorithm::convolution_direct,
+                                           input_data_desc,
+                                           weights_desc,
+                                           result_desc,
+                                           mkldnn_filter_strides,
+                                           mkldnn_dilated_strides,
+                                           mkldnn_padding_below,
+                                           mkldnn_padding_above,
+                                           padding_kind::zero);
+        convolution_forward::primitive_desc prim_desc(fwd_desc, cpu_engine);
+        mkldnn_memory_format_t prim_src_format = prim_desc.src_primitive_desc().desc().data.format;
+        mkldnn_memory_format_t prim_dst_format = prim_desc.dst_primitive_desc().desc().data.format;
+        mkldnn_memory_format_t prim_weights_format =
+            prim_desc.weights_primitive_desc().desc().data.format;
+        cout << "Convolution Preferred layout src: " << prim_src_format
+             << " weights: " << prim_weights_format << " dst: " << prim_dst_format << endl;
+    }
 }

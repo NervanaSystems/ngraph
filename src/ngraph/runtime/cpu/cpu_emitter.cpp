@@ -44,6 +44,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -70,30 +71,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     stringstream ss;
     ss << "fmt::M{{" << join(shape) << "}, {" << join(strides) << "}}";
     return ss.str();
-}
-
-// Mapping from POD types to MKLDNN data types
-// An empty string implies the corresponding MKLDNN data type
-// is not supported
-static const unordered_map<string, const string> mkldnn_data_type_map{
-    {"char", "memory::data_type::s8"},
-    {"float", "memory::data_type::f32"},
-    {"double", ""},
-    {"int8_t", "memory::data_type::s8"},
-    {"int16_t", "memory::data_type::s16"},
-    {"int32_t", "memory::data_type::s32"},
-    {"int64_t", ""},
-    {"uint8_t", "memory::data_type::u8"},
-    {"uint16_t", ""},
-    {"uint32_t", ""},
-    {"uint64_t", ""}};
-
-static const string& get_mkldnn_data_type(const string& type)
-{
-    auto it = mkldnn_data_type_map.find(type);
-    if (it == mkldnn_data_type_map.end() || it->second.empty())
-        throw ngraph_error("No MKLDNN data type exists for the given element type");
-    return it->second;
 }
 
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
@@ -1804,7 +1781,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
             window_dilation_strides_adjusted.push_back(s - 1);
         }
 
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -1877,7 +1855,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropFilters)
     if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& elem_type = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& elem_type = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
         Strides window_dilation_strides_adjusted;
 
         for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -1984,7 +1963,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropData)
     if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& elem_type = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& elem_type = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
         Strides window_dilation_strides_adjusted;
 
         for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2093,7 +2073,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPool)
     if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -2262,7 +2243,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPool)
     if (arg_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -2334,7 +2316,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPoolBackprop)
     if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;

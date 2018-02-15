@@ -17,6 +17,10 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
+
+#define LAYOUT_DECL(E)                                                                             \
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, const ngraph::Node* node)
 
 namespace ngraph
 {
@@ -26,11 +30,25 @@ namespace ngraph
         {
             namespace pass
             {
+                using LayoutFunction =
+                    std::function<void(CPU_ExternalFunction*, const ngraph::Node*)>;
+
+                using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
+
                 class CPULayout : public ngraph::pass::CallGraphPass
                 {
                 public:
+                    CPULayout(std::shared_ptr<CPU_ExternalFunction> external_function)
+                        : m_external_function(external_function)
+                    {
+                    }
                     virtual bool
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
+
+                    static void LAYOUT_DECL(LayoutConvolution);
+
+                private:
+                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 };
             }
         }
