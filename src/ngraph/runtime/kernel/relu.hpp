@@ -31,6 +31,16 @@ namespace ngraph
                     out[i] = arg[i] > zero ? arg[i] : zero;
                 }
             }
+            template <typename T>
+            void relu_backprop(T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    T zero = 0;
+                    T one = 1;
+                    out[i] = arg[i] > zero ? one : zero;
+                }
+            }
         }
     }
 }

@@ -673,6 +673,10 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Relu>(args[0]);
         }
+        else if (node_op == "ReluBackprop")
+        {
+            node = make_shared<op::ReluBackprop>(args[0]);
+        }
         else if (node_op == "ReplaceSlice")
         {
             auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
@@ -1026,6 +1030,9 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
     else if (node_op == "Relu")
+    {
+    }
+    else if (node_op == "ReluBackprop")
     {
     }
     else if (node_op == "Remainder")

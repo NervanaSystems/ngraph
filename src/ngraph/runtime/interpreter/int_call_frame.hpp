@@ -651,6 +651,12 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
+        else if (node_op == "ReluBackprop")
+        {
+            kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     out[0]->get_element_count());
+        }
         // else if (node_op == "Remainder")
         // {
         //     // node = make_shared<op::Remainder>(args[0], args[1]);

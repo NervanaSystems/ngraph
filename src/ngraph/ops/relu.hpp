@@ -36,10 +36,38 @@ namespace ngraph
             Relu(std::shared_ptr<ngraph::Node> arg);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                {
+                    throw ngraph_error("Incorrect number of new arguments");
+                }
+                return std::make_shared<Relu>(new_args.at(0));
+            }
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
+        };
+
+        /// \brief Elementwise ReluBackprop operation for pattern matching.
+        ///
+        class ReluBackprop : public ngraph::op::util::UnaryElementwiseArithmetic
+        {
+        public:
+            /// \brief Constructs an Relu operation.
+            ///
+            /// \param arg Node that produces the input tensor.
+            ReluBackprop(std::shared_ptr<ngraph::Node> delta);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                {
+                    throw ngraph_error("Incorrect number of new arguments");
+                }
+                return std::make_shared<Relu>(new_args.at(0));
+            }
         };
     }
 }
