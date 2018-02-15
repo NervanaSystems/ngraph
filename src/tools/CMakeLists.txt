@@ -14,8 +14,20 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
+if (NGRAPH_CPU_ENABLE AND NOT APPLE)
+    set (SRC
+        nbench.cpp
+    )
 
-add_subdirectory(resource)
-add_subdirectory(ngraph)
-add_subdirectory(tools)
+    add_executable(nbench ${SRC})
+    add_dependencies(nbench ngraph)
+    
+    set(HEADER_SEARCH_DEFINES
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+    )
+    
+    target_link_libraries(nbench ngraph)
+    
+    set_source_files_properties(nbench.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+
+endif()
