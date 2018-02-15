@@ -176,6 +176,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/ops/convert_layout.cpp
         runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
     )
