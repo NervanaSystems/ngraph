@@ -126,3 +126,7 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/ops/allreduce.hpp"
+#endif

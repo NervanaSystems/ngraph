@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_comparison.hpp"
 
 namespace ngraph
 {
@@ -36,7 +36,7 @@ namespace ngraph
         /// | Type                               | Description                                                                                                                                   |
         /// | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] \leq \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
-        class LessEq : public BinaryElementwiseComparison
+        class LessEq : public util::BinaryElementwiseComparison
         {
         public:
             /// \brief Constructs a less-than-or-equal operation.
@@ -51,7 +51,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<LessEq>(new_args.at(0), new_args.at(1));
             }
         };

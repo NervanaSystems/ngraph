@@ -14,26 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
+#pragma once
 
-#include "ngraph/log.hpp"
+#include "ngraph/nodes.hpp"
 #include "ngraph/ops/op.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-op::BinaryElementwise::BinaryElementwise(const std::string& node_type,
-                                         const element::Type& result_element_type,
-                                         const std::shared_ptr<Node>& arg0,
-                                         const std::shared_ptr<Node>& arg1)
-    : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
+namespace ngraph
 {
-    auto& input_0 = get_inputs().at(0);
-    auto& input_1 = get_inputs().at(1);
-    if (input_0.get_shape() != input_1.get_shape())
+    namespace op
     {
-        throw ngraph_error("Arguments must have the same tensor view shape");
+        namespace util
+        {
+            /// \brief Abstract base class for ops on tensors views.
+            class RequiresTensorViewArgs : public ngraph::op::Op
+            {
+            protected:
+                /// \brief Constructs an operation on tensor view arguments.
+                ///
+                /// \param args The nodes producing this node's input tensors.
+                RequiresTensorViewArgs(const std::string& node_type, const Nodes& args);
+            };
+        }
     }
-
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
 }

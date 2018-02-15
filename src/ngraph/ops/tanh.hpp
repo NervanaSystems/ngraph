@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
         /// | Type                   | Description                                                                           |
         /// | ---------------------- | ------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \tanh(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Tanh : public UnaryElementwiseArithmetic
+        class Tanh : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a hyperbolic tangent operation.
@@ -49,7 +49,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Tanh>(new_args.at(0));
             }
 

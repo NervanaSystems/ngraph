@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/util.hpp"
 
 #include <memory>
@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace op
     {
-        class MatmulBias : public RequiresTensorViewArgs
+        class MatmulBias : public util::RequiresTensorViewArgs
         {
         public:
             MatmulBias(std::shared_ptr<Node> W,

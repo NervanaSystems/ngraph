@@ -21,15 +21,26 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/sqrt.hpp"
+#include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
 
 using namespace ngraph;
@@ -123,6 +134,34 @@ bool sum_predicate(std::shared_ptr<Node> gn)
 std::shared_ptr<pattern::op::Label> construct_sum_pattern() //for the sake of explicitness
 {
     return std::make_shared<pattern::op::Label>(element::i32, Shape{}, sum_predicate);
+}
+
+static std::shared_ptr<pattern::op::Label> construct_variance_graph()
+{
+    // construct varaiance
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance = std::make_shared<op::Divide>(xmu, N);
+    auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+
+    return variance_label;
+}
+
+static std::shared_ptr<pattern::op::Label> construct_mean_graph()
+{
+    //construct mean;
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+    return mean_label;
 }
 
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
@@ -473,4 +512,38 @@ TEST(pattern, sum)
 
     ASSERT_TRUE(n.match(nested_reduce_label, nested_sum_graph));
     ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
+}
+
+TEST(pattern, mean)
+{
+    //construct mean
+    TestMatcher n(nullptr);
+
+    auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+
+    auto mean_graph = construct_mean_graph();
+    ASSERT_TRUE(n.match(mean_graph, mean));
+    ASSERT_EQ(n.get_pattern_map()[mean_graph], mean);
+}
+
+TEST(pattern, variance)
+{
+    //construct variance
+    TestMatcher n(nullptr);
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance = std::make_shared<op::Divide>(xmu, N);
+
+    auto var_graph = construct_variance_graph();
+    ASSERT_TRUE(n.match(var_graph, variance));
+    ASSERT_EQ(n.get_pattern_map()[var_graph], variance);
 }

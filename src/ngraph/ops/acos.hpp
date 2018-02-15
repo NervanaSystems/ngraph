@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse cosine (arccos) operation.
         ///
-        class Acos : public UnaryElementwiseArithmetic
+        class Acos : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an arccos operation.
@@ -44,7 +44,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Acos>(new_args.at(0));
             }
         };

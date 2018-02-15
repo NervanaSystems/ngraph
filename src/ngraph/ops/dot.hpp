@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -54,7 +54,7 @@ namespace ngraph
         /// | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n,d''_1,\dots,d''_p]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n,k_1,\dots,k_p] = \Sigma_{0 \le j_1 < d'_1, \dots, 0 \le j_m < d'_m}(\mathtt{arg0}[i_1,\dots,i_n,j_1,\dots,j_m] \cdot \mathtt{arg1}[j_1,\dots,j_m,k_1,\dots,k_p])\f$ or, if \f$m = 0\f$, \f$T[i_1,\dots,i_n,k_1,\dots,k_p] = \mathtt{arg0}[i_1,\dots,i_n] \cdot \mathtt{arg1}[k_1,\dots,k_p]\f$. |
         ///
-        class Dot : public RequiresTensorViewArgs
+        class Dot : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a dot product operation.
@@ -82,7 +82,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Dot>(
                     new_args.at(0), new_args.at(1), m_reduction_axes_count);
             }

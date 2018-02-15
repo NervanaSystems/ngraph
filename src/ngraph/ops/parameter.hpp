@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
+#include "ngraph/ops/op.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -41,7 +41,7 @@ namespace ngraph
         /// | Type    | Description                                                                                                                 |
         /// | ------- | --------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$T\f$ | The value of the parameter, supplied by the `FunctionCall` to this function or in the initial `ngraph::runtime::CallFrame`. |
-        class Parameter : public Node
+        class Parameter : public op::Op
         {
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

@@ -22,6 +22,7 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -70,6 +71,10 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/ops/allreduce.hpp"
+#endif
 
 using namespace ngraph;
 using namespace std;
@@ -324,6 +329,12 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Add>(args[0], args[1]);
         }
+#ifdef NGRAPH_DISTRIBUTED
+        else if (node_op == "AllReduce")
+        {
+            node = make_shared<op::AllReduce>(args[0]);
+        }
+#endif
         else if (node_op == "Asin")
         {
             node = make_shared<op::Asin>(args[0]);
@@ -356,6 +367,11 @@ static shared_ptr<ngraph::Function>
                                                     window_movement_strides,
                                                     padding_below,
                                                     padding_above);
+        }
+        else if (node_op == "BatchNorm")
+        {
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
         }
         else if (node_op == "Broadcast")
         {
@@ -804,6 +820,9 @@ static json write(const Node& n)
     else if (node_op == "Add")
     {
     }
+    else if (node_op == "AllReduce")
+    {
+    }
     else if (node_op == "Asin")
     {
     }
@@ -826,6 +845,11 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "BatchNorm")
+    {
+        auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        node["eps"] = tmp->get_eps_value();
     }
     else if (node_op == "Broadcast")
     {

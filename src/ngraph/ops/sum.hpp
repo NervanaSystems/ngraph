@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -77,7 +77,7 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
-        class Sum : public RequiresTensorViewArgs
+        class Sum : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a summation operation.
@@ -89,7 +89,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Sum>(new_args.at(0), m_reduction_axes);
             }
 

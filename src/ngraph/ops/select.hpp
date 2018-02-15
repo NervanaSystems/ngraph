@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -37,7 +37,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                             |
         /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg1}[i_1,\dots,i_n]\text{ if }\texttt{arg0}[i_1,\dots,i_n] \neq 0\text{, else }\texttt{arg2}[i_1,\dots,i_n]\f$ |
-        class Select : public RequiresTensorViewArgs
+        class Select : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a selection operation.
@@ -52,7 +52,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 3)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
             }
 

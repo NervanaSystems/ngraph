@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -45,7 +45,7 @@ namespace ngraph
         /// | Type                    | Description                                                                                               |
         /// | ----------------------- | --------------------------------------------------------------------------------------------------------- |
         /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{convert}_{(E,E')}(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Convert : public UnaryElementwise
+        class Convert : public util::UnaryElementwise
         {
         public:
             /// \brief Constructs a conversion operation.
@@ -57,7 +57,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Convert>(new_args.at(0), m_element_type);
             }
 

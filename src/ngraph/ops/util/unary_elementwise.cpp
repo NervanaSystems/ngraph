@@ -14,18 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/op.hpp"
+#include <memory>
+
+#include "ngraph/ops/util/unary_elementwise.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                             const shared_ptr<Node>& arg0,
-                                                             const shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
+op::util::UnaryElementwise::UnaryElementwise(const std::string& node_type,
+                                             const element::Type& result_element_type,
+                                             const std::shared_ptr<Node>& arg)
+    : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
-    if (arg0->get_element_type() != arg1->get_element_type())
-    {
-        throw ngraph_error("Arguments must have the same tensor view element type");
-    }
+    auto& input = get_inputs().at(0);
+
+    set_value_type_checked(result_element_type, input.get_shape());
 }

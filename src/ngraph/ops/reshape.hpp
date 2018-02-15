@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -56,7 +56,7 @@ namespace ngraph
         /// | Type                     | Description                                                                                            |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
-        class Reshape : public RequiresTensorViewArgs
+        class Reshape : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a reshape operation.
@@ -73,7 +73,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
             }
 

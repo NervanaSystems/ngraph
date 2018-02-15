@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -47,7 +47,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                                                                                 |
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
-        class ReplaceSlice : public RequiresTensorViewArgs
+        class ReplaceSlice : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a tensor slice replacement operation.
@@ -79,7 +79,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<ReplaceSlice>(
                     new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
             }

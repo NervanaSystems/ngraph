@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise addition operation.
         ///
-        class Add : public BinaryElementwiseArithmetic
+        class Add : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an addition operation.
@@ -46,7 +46,9 @@ namespace ngraph
             virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Add>(new_args.at(0), new_args.at(1));
             }
 
