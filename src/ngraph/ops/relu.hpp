@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 
 #include <memory>
@@ -26,7 +27,7 @@ namespace ngraph
     {
         /// \brief Elementwise Relu operation for pattern matching.
         ///
-        class Relu : public ngraph::op::UnaryElementwiseArithmetic
+        class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an Relu operation.
