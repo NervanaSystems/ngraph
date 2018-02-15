@@ -2523,15 +2523,16 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPoolBackprop)
 void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
 {
     auto mpb = static_cast<const op::MaxPoolBackprop*>(node);
+    auto max_pool_fprop_op = mpb->get_forward_op();
 
-    auto delta_shape = args[0].get_shape();
+    auto delta_shape = args[1].get_shape();
     auto delta_rank = delta_shape.size();
     auto out_shape = out[0].get_shape();
 
-    if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
+    if (delta_rank == 4 && mpb->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = get_mkldnn_data_type(args[1].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -2541,21 +2542,25 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
                << et << ", memory::format::nchw);\n";
         writer << "memory::desc result_desc = memory::desc({" << join(out_shape) << "}, " << et
                << ", memory::format::nchw);\n";
-        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[1].get_name()
                << ");\n";
         writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
                << ");\n";
 
-        // Dummy forward primitive descriptor to keep MKLDNN happy, use this to query the workspace
+        // create a forward primitive_desc, use this to query the workspace
         // TODO: we need to develop global context to keep the mapping of fprop annd bprop corrosponding
         // mkldnn kernels and use it to query the workspace requirement during bprop
+        // Note: 
+        //      input_data_desc of MaxpoolBackprop : will be same as maxpool(fprop) result_desc
+        //      result_desc of MaxpoolBackprop : will be same as maxpool(fprop) input_data_desc
         writer << "pooling_forward::primitive_desc pool_fwd_pd = pooling_forward::primitive_desc("
                << "{prop_kind::forward, algorithm::pooling_max, "
-               << "result_desc, input_data_desc, {" << join(mpb->get_window_movement_strides())
-               << "}, {" << join(mpb->get_window_shape()) << "}, "
-               << "{" << join(mpb->get_padding_below()) << "}, "
-               << "{" << join(mpb->get_padding_above()) << "}, "
+               << "result_desc, input_data_desc, {" << join(max_pool_fprop_op->get_window_movement_strides())
+               << "}, {" << join(max_pool_fprop_op->get_window_shape()) << "}, "
+               << "{" << join(max_pool_fprop_op->get_padding_below()) << "}, "
+               << "{" << join(max_pool_fprop_op->get_padding_above()) << "}, "
                << "padding_kind::zero}, cpu_engine);\n";
+
 
         // query the workspace from the forward primitive desc
         writer << "memory max_pool_workspace_memory = "
