@@ -24,27 +24,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        ///
-        /// Each scalar in the input tensor is converted to the specified output element type. Note that the conversion may
-        /// result in loss of precision. For example, conversion from `float32` to `int32` is allowed.
-        ///
-        /// ## Parameters
-        ///
-        /// |                | Description                              |
-        /// | -------------- | ---------------------------------------- |
-        /// | `element_type` | The element type \f$E'\f$ to convert to. |
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                               |
-        /// | ----- | --------------------------------- | ----------------------------------------- |
-        /// | `arg` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and element type.   |
-        ///
-        /// ## Output
-        ///
-        /// | Type                    | Description                                                                                               |
-        /// | ----------------------- | --------------------------------------------------------------------------------------------------------- |
-        /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{convert}_{(E,E')}(\texttt{arg}[i_1,\dots,i_n])\f$ |
         class Convert : public util::UnaryElementwise
         {
         public:
