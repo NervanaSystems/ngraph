@@ -21,9 +21,9 @@
 // sample models are under ../../test/models
 
 #include <fstream>
+#include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
-#include <ngraph/runtime/backend.hpp>
 #include "../../test/util/test_tools.hpp"
 using namespace std;
 
@@ -69,11 +69,11 @@ DESCRIPTION
     Benchmark ngraph json model with given backend.                 
                                                                     
 SYNOPSIS                                                            
-        /tmp/nbench [-f <filename>] [-b <backend>] [-i <iterations>]
+        nbench [-f <filename>] [-b <backend>] [-i <iterations>]
                                                                     
 OPTIONS                                                             
         -f          model json file to use (default: model.json)    
-        -b          Backed to use (default: INTERPRETER)                    
+        -b          Backend to use (default: INTERPRETER)           
         -i          Iterations (default: 10)                        
 )###";
         return 1;

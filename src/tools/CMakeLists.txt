@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_CPU_ENABLE AND NOT APPLE)
+if (NGRAPH_CPU_ENABLE)
     set (SRC
         nbench.cpp
     )

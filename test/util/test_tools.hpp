@@ -78,7 +78,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 
 /// performance test utilities
 inline std::multimap<size_t, std::string>
-    agregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data)
+    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data)
 {
     std::unordered_map<std::string, size_t> timing;
     for (const ngraph::runtime::PerformanceCounter& p : perf_data)
@@ -180,7 +180,7 @@ static void
          [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
              return p1.total_microseconds() > p2.total_microseconds();
          });
-    multimap<size_t, string> timing = agregate_timing(perf_data);
+    multimap<size_t, string> timing = aggregate_timing(perf_data);
     for (auto it = timing.rbegin(); it != timing.rend(); it++)
     {
         cout.imbue(locale(""));
