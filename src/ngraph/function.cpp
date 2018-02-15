@@ -25,45 +25,6 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-/*
-Function::Function(const Nodes& results,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                   const std::string& name)
-    : m_results(results.size())
-    , m_parameters(parameters)
-    , m_name(name)
-    , m_temporary_pool_size(0)
-    , m_instance_id(m_next_instance_id.fetch_add(1))
-{
-    std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
-        return std::make_shared<op::Result>(n);
-    });
-
-    for (auto r : m_results)
-    {
-        for (descriptor::Output& output : r->get_outputs())
-        {
-            output.get_tensor().set_is_output();
-        }
-    }
-
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
-        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
-        if (nullptr != p)
-        {
-            auto it = std::find_if(parameters.begin(),
-                                   parameters.end(),
-                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
-            if (it == parameters.end())
-            {
-                throw ngraph_error("Function references undeclared parameter");
-            }
-        }
-    });
-}
-
-*/
-
 Function::Function(const std::vector<std::shared_ptr<op::Result>>& results,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
