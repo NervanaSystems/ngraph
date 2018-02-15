@@ -92,6 +92,7 @@ NGRAPH_CPP_LIBRARY_DIR = "${NGRAPH_INSTALL_PREFIX}" + "/lib"
 
 
 sources = ['pyngraph/function.cpp',
+           'pyngraph/serializer.cpp',
            'pyngraph/node.cpp',
            'pyngraph/pyngraph.cpp',
            'pyngraph/util.cpp',
