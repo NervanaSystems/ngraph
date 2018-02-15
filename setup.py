@@ -86,6 +86,7 @@ else:
 
 
 sources = ['pyngraph/function.cpp',
+           'pyngraph/serializer.cpp', 
            'pyngraph/node.cpp',
            'pyngraph/pyngraph.cpp',
            'pyngraph/util.cpp',
