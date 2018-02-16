@@ -57,9 +57,8 @@ namespace ngraph
         public:
             /// \brief Constructs an ReluBackprop operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            ReluBackprop(std::shared_ptr<ngraph::Node> forward_arg,
-                         std::shared_ptr<ngraph::Node> delta);
+            /// \param arg Node that produces the relu forward input tensor.
+            ReluBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override

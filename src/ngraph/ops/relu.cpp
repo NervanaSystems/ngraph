@@ -24,10 +24,10 @@ op::Relu::Relu(shared_ptr<Node> arg)
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
-op::ReluBackprop::ReluBackprop(shared_ptr<Node> forward_arg, shared_ptr<Node> delta)
-    : RequiresTensorViewArgs("ReluBackprop", {forward_arg, delta})
+op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
+    : RequiresTensorViewArgs("ReluBackprop", {arg, delta})
 {
-    set_value_type_checked(forward_arg->get_element_type(), forward_arg->get_shape());
+    set_value_type_checked(arg->get_element_type(), arg->get_shape());
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
