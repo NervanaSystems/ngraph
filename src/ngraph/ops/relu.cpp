@@ -24,13 +24,15 @@ op::Relu::Relu(shared_ptr<Node> arg)
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
-op::ReluBackprop::ReluBackprop(shared_ptr<Node> delta)
-    : UnaryElementwiseArithmetic("ReluBackprop", {delta})
+op::ReluBackprop::ReluBackprop(shared_ptr<Node> forward_arg, shared_ptr<Node> delta)
+    : RequiresTensorViewArgs("ReluBackprop", {forward_arg, delta})
 {
+    set_value_type_checked(forward_arg->get_element_type(), forward_arg->get_shape());
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
 void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
-    adjoints.add_delta(0, delta);
+    auto backprop = std::make_shared<op::ReluBackprop>(get_input_op(0), delta);
+    adjoints.add_delta(get_input_op(0), backprop);
 }

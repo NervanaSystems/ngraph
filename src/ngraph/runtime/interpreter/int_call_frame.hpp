@@ -654,6 +654,7 @@ private:
         else if (node_op == "ReluBackprop")
         {
             kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
                                      reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                      out[0]->get_element_count());
         }

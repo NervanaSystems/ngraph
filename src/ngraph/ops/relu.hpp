@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 
@@ -51,22 +52,23 @@ namespace ngraph
 
         /// \brief Elementwise ReluBackprop operation for pattern matching.
         ///
-        class ReluBackprop : public ngraph::op::util::UnaryElementwiseArithmetic
+        class ReluBackprop : public ngraph::op::util::RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs an Relu operation.
+            /// \brief Constructs an ReluBackprop operation.
             ///
             /// \param arg Node that produces the input tensor.
-            ReluBackprop(std::shared_ptr<ngraph::Node> delta);
+            ReluBackprop(std::shared_ptr<ngraph::Node> forward_arg,
+                         std::shared_ptr<ngraph::Node> delta);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
-                if (new_args.size() != 1)
+                if (new_args.size() != 2)
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<Relu>(new_args.at(0));
+                return std::make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
             }
         };
     }

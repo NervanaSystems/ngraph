@@ -675,7 +675,7 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "ReluBackprop")
         {
-            node = make_shared<op::ReluBackprop>(args[0]);
+            node = make_shared<op::ReluBackprop>(args[0], args[1]);
         }
         else if (node_op == "ReplaceSlice")
         {

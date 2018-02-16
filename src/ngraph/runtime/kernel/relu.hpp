@@ -32,13 +32,12 @@ namespace ngraph
                 }
             }
             template <typename T>
-            void relu_backprop(T* arg, T* out, size_t count)
+            void relu_backprop(T* arg, T* delta_arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
                     T zero = 0;
-                    T one = 1;
-                    out[i] = arg[i] > zero ? one : zero;
+                    out[i] = arg[i] > zero ? delta_arg[i] : zero;
                 }
             }
         }
