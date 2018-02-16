@@ -1818,11 +1818,17 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
         auto weights_desc = mkldnn_emitter->build_memory_descriptor(args[1], mkldnn::memory::format::oihw);
         auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], mkldnn::memory::format::nchw);
 
-        size_t conv_index = mkldnn_emitter->build_convolution_forward(input_data_desc, weights_desc, result_desc,
+        size_t conv_index = mkldnn_emitter->build_convolution_forward(input_data_desc,
+                                                                      weights_desc,
+                                                                      result_desc,
                                                                       convolution->get_window_movement_strides(),
                                                                       convolution->get_padding_below(),
                                                                       convolution->get_padding_above());
 
+        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", " << args[0].get_name() << ");\n";
+        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", " << args[1].get_name() << ");\n";
+        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", " << out[0].get_name() << ");\n";
 
         writer << "mkldnn_utils::mkldnn_invoke(ctx, " << to_string(conv_index) << ");\n";
 #endif
