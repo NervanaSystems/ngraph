@@ -93,6 +93,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min_reduce.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"

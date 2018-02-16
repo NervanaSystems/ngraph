@@ -55,6 +55,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min_reduce.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -2880,6 +2881,81 @@ namespace ngraph
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(max_reduce->get_reduction_axes())
+                       << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MinReduce)
+            {
+                const ngraph::op::MinReduce* min_reduce =
+                    static_cast<const ngraph::op::MinReduce*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                const Shape& arg_shape = args[0].get_shape();
+                size_t arg_rank = arg_shape.size();
+                const AxisSet& reduction_axes = min_reduce->get_reduction_axes();
+
+                // Trivial case: no reduction axes.
+                if (reduction_axes.size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Full reduction? Then reduce to scalar.
+                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_array1d(out[0]) << " =\n"
+                           << "    " << emit_array1d(args[0]) << ".minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".rowwise().minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".colwise().minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::min_reduce<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(min_reduce->get_reduction_axes())
+                           << "});\n";
+                }
+#else
+                // TODO: add an emitter akin to the emit_sum
+                writer << "kernel::min_reduce<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                writer << "                         {" << join(min_reduce->get_reduction_axes())
                        << "});\n";
 #endif
                 writer.indent--;

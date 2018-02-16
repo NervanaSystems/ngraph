@@ -64,6 +64,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min_reduce.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -227,6 +228,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::MaxReduce), &runtime::cpu::CPU_Emitter::emit<op::MaxReduce>},
+    {TI(ngraph::op::MinReduce), &runtime::cpu::CPU_Emitter::emit<op::MinReduce>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -289,6 +291,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/dot.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/max_reduce.hpp"
+#include "ngraph/runtime/kernel/min_reduce.hpp"
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"

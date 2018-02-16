@@ -53,6 +53,7 @@ set (SRC
     ops/max_pool.cpp
     ops/max_reduce.cpp
     ops/maximum.cpp
+    ops/min_reduce.cpp
     ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp

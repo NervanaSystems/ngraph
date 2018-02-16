@@ -46,6 +46,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min_reduce.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -608,6 +609,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Maximum>(args[0], args[1]);
         }
+        else if (node_op == "MinReduce")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::MinReduce>(args[0], reduction_axes);
+        }
         else if (node_op == "Minimum")
         {
             node = make_shared<op::Minimum>(args[0], args[1]);
@@ -986,6 +992,11 @@ static json write(const Node& n)
     }
     else if (node_op == "Maximum")
     {
+    }
+    else if (node_op == "MinReduce")
+    {
+        auto tmp = dynamic_cast<const op::MinReduce*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Minimum")
     {
