@@ -22,14 +22,14 @@ namespace ngraph
 {
     namespace pass
     {
-        class COREFusion;
+        class CoreFusion;
     }
 }
 
-class ngraph::pass::COREFusion : public ngraph::pass::GraphRewrite
+class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    COREFusion()
+    CoreFusion()
         : GraphRewrite()
     {
         construct_relu_pattern();

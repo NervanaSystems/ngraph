@@ -73,7 +73,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     auto max = make_shared<op::Maximum>(A, B);
     auto graph = make_shared<op::Abs>(max);
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::COREFusion>();
+    pass_manager.register_pass<pass::CoreFusion>();
     auto func = make_shared<Function>(graph, op::Parameters{B});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_input_op(0)), nullptr);

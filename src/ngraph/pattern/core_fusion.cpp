@@ -46,7 +46,7 @@ static shared_ptr<Node> construct_constant_node(int n)
     return op::Constant::create(element::f32, Shape{}, {n});
 }
 
-void pass::COREFusion::construct_relu_pattern()
+void pass::CoreFusion::construct_relu_pattern()
 {
     auto iconst0 = construct_constant_node(0);
     auto val = make_shared<pattern::op::Label>(iconst0);
