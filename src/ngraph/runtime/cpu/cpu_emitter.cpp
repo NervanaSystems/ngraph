@@ -2739,7 +2739,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
             {
-                auto relu = static_cast<const ngraph::op::Relu*>(node);
                 writer << "kernel::relu<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                   " << out[0].get_name() << ",\n";
@@ -2749,7 +2748,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
-                auto relu_bprop = static_cast<const ngraph::op::ReluBackprop*>(node);
                 writer << "kernel::relu_backprop<" << out[0].get_type() << ">("
                        << args[0].get_name() << ",\n";
                 writer << "                      " << args[1].get_name() << ",\n";
