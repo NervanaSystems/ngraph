@@ -501,7 +501,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
             size_t temp_pool_size = current_function->get_temporary_pool_size();
             writer << "// Allocate the memory pool\n";
             // TODO memory pool malloc.
-            writer << "void** pool_base_ptr = runtime::gpu::create_gpu_buffer(" << temp_pool_size
+            writer << "void* pool_base_ptr = runtime::gpu::create_gpu_buffer(" << temp_pool_size
                    << ");\n";
 
             // Add temporaries to the variable name map
@@ -511,7 +511,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                 {
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                       << "*)(((char *)pool_base_ptr) + " << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
