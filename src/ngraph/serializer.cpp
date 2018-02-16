@@ -354,8 +354,14 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            node = make_shared<op::AvgPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            auto include_padding_in_avg_computation =
+                node_js.at("include_padding_in_avg_computation").get<bool>();
+            node = make_shared<op::AvgPool>(args[0],
+                                            window_shape,
+                                            window_movement_strides,
+                                            padding_below,
+                                            padding_above,
+                                            include_padding_in_avg_computation);
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -863,6 +869,7 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "AvgPoolBackprop")
     {

@@ -126,7 +126,8 @@ namespace ngraph
                           const Shape& window_shape,
                           const Strides& window_movement_strides,
                           const Shape& padding_below,
-                          const Shape& padding_above)
+                          const Shape& padding_above,
+                          bool include_padding_in_avg_computation)
             {
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
@@ -213,10 +214,12 @@ namespace ngraph
                     {
                         bool in_bounds =
                             input_batch_transform.has_source_coordinate(input_batch_coord);
-                        T v = in_bounds ? arg[input_batch_transform.index(input_batch_coord)] : 0;
-                        result += v;
-                        if (in_bounds)
+
+                        if (in_bounds || include_padding_in_avg_computation)
                         {
+                            T v =
+                                in_bounds ? arg[input_batch_transform.index(input_batch_coord)] : 0;
+                            result += v;
                             n_elements++;
                         }
                     }
