@@ -1002,11 +1002,6 @@ TEST(${BACKEND_NAME}, backwards_power)
 
 TEST(${BACKEND_NAME}, backward_relu)
 {
-    if ("${BACKEND_NAME}" != "INTERPRETER")
-    {
-        NGRAPH_INFO << "Skipping test on backend ${BACKEND_NAME}";
-        return;
-    }
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
