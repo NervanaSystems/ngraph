@@ -132,7 +132,9 @@ static const string& get_mkldnn_data_type(const string& type)
 {
     auto it = mkldnn_data_type_map.find(type);
     if (it == mkldnn_data_type_map.end() || it->second.empty())
+    {
         throw ngraph_error("No MKLDNN data type exists for the given element type");
+    }
     return it->second;
 }
 
@@ -390,22 +392,23 @@ namespace ngraph
                          dot->get_reduction_axes_count() == 1)
                 {
                     // Emit an MKL SGEMM call if possible
-                    // clang-format off
-        if (args[0].get_element_type() == element::f32)
-        {
-            writer << "{   // " << node->get_name() << "\n";
-            writer.indent++;
-            writer << "cblas::cblas_sgemm("
-               << "cblas::Layout::RowMajor, "
-               << "cblas::Transpose::None, "
-               << "cblas::Transpose::None, "
-               << arg0_shape[0] << ", " << arg1_shape[1] << ", " << arg0_shape[1] << ",\n" <<
-                "        1.0f, " << args[0].get_name() << ", " << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", " << max(1UL, arg1_shape[1]) << ", 0.0f,\n" <<
-                "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1]) << ");\n";
-            writer.indent--;
-            writer << "}\n";
-        }
-                    // clang-format on
+                    if (args[0].get_element_type() == element::f32)
+                    {
+                        writer << "{   // " << node->get_name() << "\n";
+                        writer.indent++;
+                        writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, "
+                               << "cblas::Transpose::None, "
+                               << "cblas::Transpose::None, " << arg0_shape[0] << ", "
+                               << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
+                               << "        1.0f, " << args[0].get_name() << ", "
+                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << ");\n";
+                        writer.indent--;
+                        writer << "}\n";
+                    }
                     else
                     {
                         writer << "{   // " << node->get_name() << "\n";
@@ -1047,21 +1050,20 @@ namespace ngraph
                 else if (arg_rank == 2)
                 {
                     // Emit an MKL transpose call if possible
-                    // clang-format off
-        if (result_element_type == ngraph::element::f32)
-        {
-            writer << "{   // " << node->get_name() << " 2\n";
-            writer.indent++;
-            writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
-                "                   " << to_string(arg_shape[1]) << ", 1.0f,\n" <<
-                "                   " << args[0].get_name() << ", "
-                << to_string(arg_shape[1]) << ",\n" <<
-                "                   " << out[0].get_name()
-                << ", " << to_string(arg_shape[0]) << ");\n";
-                writer.indent--;
-                writer << "}\n";
-        }
-                    // clang-format on
+                    if (result_element_type == ngraph::element::f32)
+                    {
+                        writer << "{   // " << node->get_name() << " 2\n";
+                        writer.indent++;
+                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0])
+                               << ",\n"
+                               << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
+                               << "                   " << args[0].get_name() << ", "
+                               << to_string(arg_shape[1]) << ",\n"
+                               << "                   " << out[0].get_name() << ", "
+                               << to_string(arg_shape[0]) << ");\n";
+                        writer.indent--;
+                        writer << "}\n";
+                    }
                     else
                     {
                         writer << "{   // " << node->get_name() << " 3\n";
