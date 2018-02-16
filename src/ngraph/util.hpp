@@ -42,6 +42,8 @@ namespace ngraph
         class Value;
     }
 
+    std::string to_cplusplus_sourcecode_literal(bool val);
+
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
     {

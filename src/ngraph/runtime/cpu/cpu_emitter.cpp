@@ -2516,6 +2516,11 @@ namespace ngraph
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                         args[0].get_element_type());
 
+                    const char* algorithm_enumerator =
+                        avg_pool->get_include_padding_in_avg_computation()
+                            ? "algorithm::pooling_avg_include_padding"
+                            : "algorithm::pooling_avg_exclude_padding";
+
                     writer << "{\n";
                     writer.indent++;
 
@@ -2532,7 +2537,7 @@ namespace ngraph
 
                     // TODO(jmenon): Use a workspace
                     writer << "pooling_forward avg_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_avg, "
+                           << "{prop_kind::forward_inference, " << algorithm_enumerator << ", "
                            << "input_data_desc, result_desc, {"
                            << join(avg_pool->get_window_movement_strides()) << "}, {"
                            << join(avg_pool->get_window_shape()) << "}, "
@@ -2557,8 +2562,12 @@ namespace ngraph
                     writer << "                 {" << join(avg_pool->get_window_movement_strides())
                            << "},\n";
                     writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
-                    writer << "                 {" << join(avg_pool->get_padding_above())
-                           << "});\n";
+                    writer << "                 {" << join(avg_pool->get_padding_above()) << "},\n";
+                    writer << "                 "
+                           << ngraph::to_cplusplus_sourcecode_literal(
+                                  avg_pool->get_include_padding_in_avg_computation())
+                           << "\n";
+                    writer << "                  );\n";
                 }
             }
 
