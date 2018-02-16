@@ -216,6 +216,4 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
 def dot(left_node, right_node, reduction_axes_count, name=None):
     # type: (Node, Node, int, str) -> Node
     """Return node which performs matrix multiplication of two input nodes."""
-    if reduction_axes_count != 1:
-        raise NotImplementedError("Currently only reduction_axes_count = 1 is supported.")
     return Dot(left_node, right_node, reduction_axes_count)
