@@ -61,6 +61,7 @@ set (SRC
     ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
+    ops/product.cpp
     ops/reduce.cpp
     ops/reduce_window.cpp
     ops/replace_slice.cpp

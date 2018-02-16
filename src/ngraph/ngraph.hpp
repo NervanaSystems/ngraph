@@ -102,6 +102,7 @@
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"

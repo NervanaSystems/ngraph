@@ -53,6 +53,7 @@
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"
@@ -647,6 +648,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Power>(args[0], args[1]);
         }
+        else if (node_op == "Product")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Product>(args[0], reduction_axes);
+        }
         else if (node_op == "Reduce")
         {
             auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -1003,6 +1009,11 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
+    }
+    else if (node_op == "Product")
+    {
+        auto tmp = dynamic_cast<const op::Product*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Power")
     {

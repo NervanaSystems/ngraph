@@ -32,6 +32,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -77,6 +78,7 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
+#include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
@@ -588,6 +590,15 @@ private:
                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
                              out[0]->get_element_count());
+        }
+        else if (node_op == "Product")
+        {
+            const op::Product* product = static_cast<const op::Product*>(&node);
+            kernel::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               product->get_reduction_axes());
         }
         else if (node_op == "Reduce")
         {

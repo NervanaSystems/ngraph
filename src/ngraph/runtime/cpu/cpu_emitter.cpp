@@ -64,6 +64,7 @@
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"
@@ -2733,6 +2734,80 @@ namespace ngraph
                 writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
                 writer << "                 {" << join(mpb->get_padding_above()) << "}\n";
                 writer << "                 );\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Product)
+            {
+                const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                const Shape& arg_shape = args[0].get_shape();
+                size_t arg_rank = arg_shape.size();
+                const AxisSet& reduction_axes = product->get_reduction_axes();
+
+                // Trivial case: no reduction axes.
+                if (reduction_axes.size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Full reduction? Then reduce to scalar.
+                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_array1d(out[0]) << " =\n"
+                           << "    " << emit_array1d(args[0]) << ".prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".rowwise().prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".colwise().prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(product->get_reduction_axes())
+                           << "});\n";
+                }
+#else
+                // TODO: add an emitter akin to the emit_sum
+                writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                writer << "                         {" << join(product->get_reduction_axes())
+                       << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
             }
         }
     }
