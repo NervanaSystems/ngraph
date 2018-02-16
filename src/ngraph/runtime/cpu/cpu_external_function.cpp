@@ -240,7 +240,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     string function_name = m_function->get_name();
 
     ngraph::pass::Manager pass_manager;
-    
+
     // TODO: to be uncommented COREFusion once relu MKL implementation inplace
     // pass_manager.register_pass<pass::COREFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
