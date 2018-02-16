@@ -2549,19 +2549,20 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
         //----------------------------------------------------------------------------------------------
         // create a forward primitive_desc, use this to query the workspace
         // FIXME: (pruthvi) this is a workaround, till we maintain a global context to refer to the corrosponding
-        //        MKLDNN kernel. 
-        writer << "memory::desc max_pool_input_desc = memory::desc({" << join(args[0].get_shape()) << "}, " << et
-               << ", memory::format::nchw);\n";
-        writer << "memory::desc max_pool_result_desc = memory::desc({" << join(args[1].get_shape()) << "}, " << et
-               << ", memory::format::nchw);\n";
-        writer << "memory maxpool_input_data = memory({max_pool_input_desc, cpu_engine}, " << args[0].get_name()
-               << ");\n";
-        writer << "memory maxpool_result = memory({max_pool_result_desc, cpu_engine}, " << out[0].get_name()
-               << ");\n";
+        //        MKLDNN kernel.
+        writer << "memory::desc max_pool_input_desc = memory::desc({" << join(args[0].get_shape())
+               << "}, " << et << ", memory::format::nchw);\n";
+        writer << "memory::desc max_pool_result_desc = memory::desc({" << join(args[1].get_shape())
+               << "}, " << et << ", memory::format::nchw);\n";
+        writer << "memory maxpool_input_data = memory({max_pool_input_desc, cpu_engine}, "
+               << args[0].get_name() << ");\n";
+        writer << "memory maxpool_result = memory({max_pool_result_desc, cpu_engine}, "
+               << out[0].get_name() << ");\n";
         writer << "pooling_forward::primitive_desc pool_fwd_pd = pooling_forward::primitive_desc("
                << "{prop_kind::forward, algorithm::pooling_max, "
-               << "max_pool_input_desc, max_pool_result_desc, {" << join(max_pool_fprop_op->get_window_movement_strides())
-               << "}, {" << join(max_pool_fprop_op->get_window_shape()) << "}, "
+               << "max_pool_input_desc, max_pool_result_desc, {"
+               << join(max_pool_fprop_op->get_window_movement_strides()) << "}, {"
+               << join(max_pool_fprop_op->get_window_shape()) << "}, "
                << "{" << join(max_pool_fprop_op->get_padding_below()) << "}, "
                << "{" << join(max_pool_fprop_op->get_padding_above()) << "}, "
                << "padding_kind::zero}, cpu_engine);\n";
