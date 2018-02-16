@@ -1405,3 +1405,94 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
 }
+
+TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    pass::Manager pass_manager;
+    Shape shape_a{1, 4, 4, 4}; //in CHWN
+    Shape maxpool_shape{4, 1, 3, 3};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{4, 1, 4, 4}); //convert CHWN to NCHW
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+
+    vector<float> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
+                          13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
+                          17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
+                          45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
+
+    vector<float> expected{//delta
+                         0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0, 4, 4,  4, 12, 0,
+                         0, 0, 0, 8, 0, 0, 4, 8, 0, 8, 0, 0, 8, 0, 0, 0, 0, 4, 16, 4, 16, 8,
+                         0, 0, 0, 4, 0, 4, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    pass_manager.run_passes(df);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+
+    ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape_a{1, 5, 5, 2}; //in CHWN
+    Shape maxpool_shape{1, 2, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to NCHW
+    Shape window_shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+
+    vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
+                          30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
+                          19, 40, 10, 46, 34, 53, 26, 55, 50, 13, 24, 14, 49, 56, 59, 11};
+
+    vector<float> expected{//delta
+                         4, 0, 0, 0, 0, 4, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 4, 4, 0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<float>(output) == expected);
+}

@@ -2536,7 +2536,6 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
 
         writer << "{\n";
         writer.indent++;
-
         writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
         writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape) << "}, "
                << et << ", memory::format::nchw);\n";
@@ -2547,26 +2546,38 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
         writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
                << ");\n";
 
+        //----------------------------------------------------------------------------------------------
         // create a forward primitive_desc, use this to query the workspace
-        // TODO: we need to develop global context to keep the mapping of fprop annd bprop corrosponding
-        // mkldnn kernels and use it to query the workspace requirement during bprop
-        // Note: 
-        //      input_data_desc of MaxpoolBackprop : will be same as maxpool(fprop) result_desc
-        //      result_desc of MaxpoolBackprop : will be same as maxpool(fprop) input_data_desc
+        // FIXME: (pruthvi) this is a workaround, till we maintain a global context to refer to the corrosponding
+        //        MKLDNN kernel. 
+        writer << "memory::desc max_pool_input_desc = memory::desc({" << join(args[0].get_shape()) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory::desc max_pool_result_desc = memory::desc({" << join(args[1].get_shape()) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory maxpool_input_data = memory({max_pool_input_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "memory maxpool_result = memory({max_pool_result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
         writer << "pooling_forward::primitive_desc pool_fwd_pd = pooling_forward::primitive_desc("
                << "{prop_kind::forward, algorithm::pooling_max, "
-               << "result_desc, input_data_desc, {" << join(max_pool_fprop_op->get_window_movement_strides())
+               << "max_pool_input_desc, max_pool_result_desc, {" << join(max_pool_fprop_op->get_window_movement_strides())
                << "}, {" << join(max_pool_fprop_op->get_window_shape()) << "}, "
                << "{" << join(max_pool_fprop_op->get_padding_below()) << "}, "
                << "{" << join(max_pool_fprop_op->get_padding_above()) << "}, "
                << "padding_kind::zero}, cpu_engine);\n";
 
-
-        // query the workspace from the forward primitive desc
-        writer << "memory max_pool_workspace_memory = "
+        // query the workspace from the forward primitive desc and allocates memory
+        writer << "auto max_pool_workspace_memory = "
                   "memory(pool_fwd_pd.workspace_primitive_desc());\n";
+        //run fprop with this workspace attached
+        writer << "pooling_forward max_pooling_fwd = pooling_forward("
+               << "pool_fwd_pd, maxpool_input_data, maxpool_result, max_pool_workspace_memory);\n";
 
-        writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
+        writer << "stream s_fprop = stream(stream::kind::eager);\n"
+               << "s_fprop.submit({max_pooling_fwd}).wait();\n";
+
+        //---------------------------------------------------------------------------------------------
+        writer << "auto max_pooling_bwd = pooling_backward(pooling_backward::primitive_desc("
                << "pooling_backward::desc(algorithm::pooling_max, "
                << "result_desc, input_data_desc, {" << join(mpb->get_window_movement_strides())
                << "}, {" << join(mpb->get_window_shape()) << "}, "
@@ -2574,8 +2585,9 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
                << "{" << join(mpb->get_padding_above()) << "}, "
                << "padding_kind::zero), cpu_engine, pool_fwd_pd), "
                << "input_data, max_pool_workspace_memory, result);\n";
-        writer << "auto s = stream(stream::kind::eager);\n"
-               << "s.submit({avg_pooling}).wait();\n";
+        writer << "auto s_bwd = stream(stream::kind::eager);\n"
+               << "s_bwd.submit({max_pooling_bwd}).wait();\n";
+
         writer.indent--;
         writer << "}\n";
     }
