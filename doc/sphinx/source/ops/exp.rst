@@ -1,17 +1,17 @@
-.. add.rst:
+.. exp.rst:
 
 ###
-Add
+Exp
 ###
 
 Description
 ===========
 
-Elementwise add operation.
+Elementwise expine operation.
 
-Produces tensor of the same element type and shape as the two inputs,
-where the value at each coordinate of ``output`` is the sum of the
-values at the corresponding input coordinates.
+Produces a tensor of the same element type and shape as ``arg``,
+where the value at each coordinate of ``output`` is the expine of the
+value at the corresponding coordinate of ``arg``.
 
 Inputs
 ------
@@ -19,9 +19,7 @@ Inputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg0``        | any                     | any                            |
-+-----------------+-------------------------+--------------------------------+
-| ``arg1``        | same as ``arg0``        | same as ``arg0``               |
+| ``arg``         | Any                     | Any                            |
 +-----------------+-------------------------+--------------------------------+
 
 Outputs
@@ -30,7 +28,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | same as ``arg0``        | same as ``arg0``               |
+| ``output``      | Same as ``arg``         | Same as ``arg``.               |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -39,19 +37,19 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} + \texttt{arg1}_{i_0, \ldots, i_{n-1}}
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \exp(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \Delta \\
-   \overline{\texttt{arg1}} &\leftarrow \Delta
+   \overline{\texttt{arg}} \leftarrow \Delta\ \texttt{output}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Add
+.. doxygenclass:: ngraph::op::Exp
    :members:
