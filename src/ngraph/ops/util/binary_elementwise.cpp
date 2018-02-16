@@ -14,30 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <sstream>
+#include <memory>
 
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/ops/util/binary_elementwise.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Op("Parameter", {})
+op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
+                                               const element::Type& result_element_type,
+                                               const std::shared_ptr<Node>& arg0,
+                                               const std::shared_ptr<Node>& arg1)
+    : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
 {
-    add_output(element_type, shape);
-}
-
-shared_ptr<Node> op::Parameter::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
-{
-    if (new_args.size() != 0)
+    auto& input_0 = get_inputs().at(0);
+    auto& input_1 = get_inputs().at(1);
+    if (input_0.get_shape() != input_1.get_shape())
     {
-        throw ngraph_error("Incorrect number of new arguments");
+        throw ngraph_error("Arguments must have the same tensor view shape");
     }
-    const descriptor::Output& output = get_outputs().at(0);
-    return make_shared<Parameter>(output.get_element_type(), output.get_shape());
-}
 
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints,
-                                      const std::shared_ptr<Node>& delta)
-{
+    set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
 }

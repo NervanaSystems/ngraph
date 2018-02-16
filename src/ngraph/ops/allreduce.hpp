@@ -17,13 +17,13 @@
 #ifdef NGRAPH_DISTRIBUTED
 
 #include <memory>
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public RequiresTensorViewArgs
+        class AllReduce : public util::RequiresTensorViewArgs
         {
         public:
             AllReduce(const std::shared_ptr<Node>& arg);

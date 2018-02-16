@@ -16,14 +16,14 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::UnaryElementwise::UnaryElementwise(const std::string& node_type,
-                                       const element::Type& result_element_type,
-                                       const std::shared_ptr<Node>& arg)
+op::util::UnaryElementwise::UnaryElementwise(const std::string& node_type,
+                                             const element::Type& result_element_type,
+                                             const std::shared_ptr<Node>& arg)
     : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
     auto& input = get_inputs().at(0);

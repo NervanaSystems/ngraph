@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise absolute value operation.
         ///
-        class Abs : public UnaryElementwiseArithmetic
+        class Abs : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an absolute value operation.

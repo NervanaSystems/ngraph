@@ -18,14 +18,14 @@
 
 #include <memory>
 #include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchNorm : public RequiresTensorViewArgs
+        class BatchNorm : public util::RequiresTensorViewArgs
         {
         public:
             BatchNorm(double eps,

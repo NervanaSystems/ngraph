@@ -208,19 +208,8 @@ void codegen::StaticCompiler::initialize()
     }
 
     // Enable various target features
-    // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
-
     TO.CPU = sys::getHostCPUName();
-    TO.FeaturesAsWritten.emplace_back("+sse");
-    TO.FeaturesAsWritten.emplace_back("+sse2");
-    TO.FeaturesAsWritten.emplace_back("+sse3");
-    TO.FeaturesAsWritten.emplace_back("+ssse3");
-    TO.FeaturesAsWritten.emplace_back("+sse4.1");
-    TO.FeaturesAsWritten.emplace_back("+sse4.2");
-    TO.FeaturesAsWritten.emplace_back("+avx");
-    TO.FeaturesAsWritten.emplace_back("+avx2");
-    TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
 codegen::StaticCompiler::~StaticCompiler()

@@ -16,26 +16,14 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise hyperbolic cosine (cosh) operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                           |
-        /// | ---------------------- | ------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \cosh(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Cosh : public UnaryElementwiseArithmetic
+        class Cosh : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a hyperbolic cosine operation.

@@ -14,30 +14,16 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <sstream>
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
-#include "ngraph/ops/parameter.hpp"
-
-using namespace std;
 using namespace ngraph;
 
-op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Op("Parameter", {})
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
+                                                                 const std::shared_ptr<Node>& arg)
+    : UnaryElementwise(node_type, arg->get_element_type(), arg)
 {
-    add_output(element_type, shape);
-}
-
-shared_ptr<Node> op::Parameter::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
-{
-    if (new_args.size() != 0)
+    if (arg->get_element_type() == element::boolean)
     {
-        throw ngraph_error("Incorrect number of new arguments");
+        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
-    const descriptor::Output& output = get_outputs().at(0);
-    return make_shared<Parameter>(output.get_element_type(), output.get_shape());
-}
-
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints,
-                                      const std::shared_ptr<Node>& delta)
-{
 }
