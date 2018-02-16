@@ -38,6 +38,7 @@
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -2323,6 +2324,23 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduceWindow)
 
     writer.indent--;
     writer << "}\n";
+}
+
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitRelu)
+{
+    auto relu = static_cast<const op::Relu*>(node);
+    writer << "kernel::relu<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                   " << out[0].get_name() << ",\n";
+    writer << "                   " << out[0].get_size() << ");\n";
+}
+
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReluBackprop)
+{
+    auto relu = static_cast<const op::ReluBackprop*>(node);
+    writer << "kernel::relu_backprop<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                      " << args[1].get_name() << ",\n";
+    writer << "                   " << out[0].get_name() << ",\n";
+    writer << "                   " << out[0].get_size() << ");\n";
 }
 
 void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelectAndScatter)

@@ -71,6 +71,7 @@
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -219,6 +220,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::EmitBatchNorm},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
+    {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::EmitRelu},
+    {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::EmitReluBackprop},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -241,8 +244,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
-    // TODO: to be uncommented COREFusion once relu MKL implementation inplace
-    // pass_manager.register_pass<pass::COREFusion>();
+    pass_manager.register_pass<ngraph::pass::COREFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
@@ -287,6 +289,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
+#include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"

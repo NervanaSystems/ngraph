@@ -6633,18 +6633,12 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 
 TEST(${BACKEND_NAME}, Simple_relu_fprop)
 {
-    if ("${BACKEND_NAME}" != "INTERPRETER")
-    {
-        NGRAPH_INFO << "Skipping test on backend ${BACKEND_NAME}";
-        return;
-    }
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, op::Parameters{A});
 
-    // currenly supported only for interpreter
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -6661,11 +6655,6 @@ TEST(${BACKEND_NAME}, Simple_relu_fprop)
 
 TEST(${BACKEND_NAME}, Simple_relu_backprop)
 {
-    if ("${BACKEND_NAME}" != "INTERPRETER")
-    {
-        NGRAPH_INFO << "Skipping test on backend ${BACKEND_NAME}";
-        return;
-    }
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6673,7 +6662,6 @@ TEST(${BACKEND_NAME}, Simple_relu_backprop)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, op::Parameters{A, delta_val});
 
-    // currenly supported only for interpreter
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();

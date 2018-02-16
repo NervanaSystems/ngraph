@@ -42,7 +42,7 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(interpreter_fusion, fuse_max_with_constant_zero_input_as_relu)
+TEST(core_fusion, fuse_max_with_constant_zero_input_as_relu)
 {
     auto shape_a = Shape{1, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});
@@ -51,7 +51,7 @@ TEST(interpreter_fusion, fuse_max_with_constant_zero_input_as_relu)
     auto shape_rt = Shape{1, 5};
     auto f = make_shared<Function>(max, op::Parameters{B});
 
-    auto manager = runtime::Manager::get("INTERPRETER");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -65,7 +65,7 @@ TEST(interpreter_fusion, fuse_max_with_constant_zero_input_as_relu)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(interpreter_fusion, core_fusion_pass_basic)
+TEST(core_fusion, core_fusion_pass_basic)
 {
     auto shape_a = Shape{1, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});
