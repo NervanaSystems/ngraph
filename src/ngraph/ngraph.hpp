@@ -91,6 +91,7 @@
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"

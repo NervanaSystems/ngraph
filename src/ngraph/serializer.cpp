@@ -44,6 +44,7 @@
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
@@ -598,6 +599,11 @@ static shared_ptr<ngraph::Function>
                                                     padding_below,
                                                     padding_above);
         }
+        else if (node_op == "MaxReduce")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::MaxReduce>(args[0], reduction_axes);
+        }
         else if (node_op == "Maximum")
         {
             node = make_shared<op::Maximum>(args[0], args[1]);
@@ -964,6 +970,11 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "MaxReduce")
+    {
+        auto tmp = dynamic_cast<const op::MaxReduce*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "MaxPoolBackprop")
     {

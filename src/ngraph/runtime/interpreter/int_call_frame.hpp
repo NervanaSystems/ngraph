@@ -30,6 +30,7 @@
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/product.hpp"
@@ -69,6 +70,7 @@
 #include "ngraph/runtime/kernel/less_eq.hpp"
 #include "ngraph/runtime/kernel/log.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
+#include "ngraph/runtime/kernel/max_reduce.hpp"
 #include "ngraph/runtime/kernel/maximum.hpp"
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
@@ -510,6 +512,15 @@ private:
                                 max_pool->get_window_movement_strides(),
                                 max_pool->get_padding_below(),
                                 max_pool->get_padding_above());
+        }
+        else if (node_op == "MaxReduce")
+        {
+            const op::MaxReduce* max_reduce = static_cast<const op::MaxReduce*>(&node);
+            kernel::max_reduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  args[0]->get_shape(),
+                                  out[0]->get_shape(),
+                                  max_reduce->get_reduction_axes());
         }
         else if (node_op == "MaxPoolBackprop")
         {
