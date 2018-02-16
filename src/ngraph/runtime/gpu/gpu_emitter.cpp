@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cublas_v2.h>
 #include <cuda.h>
@@ -194,9 +193,12 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
         // GEMM Call
-        assert(arg0_shape[0] == out[0].get_shape()[0]); // m
-        assert(arg1_shape[1] == out[0].get_shape()[1]); // n
-        assert(arg0_shape[1] == arg1_shape[0]);         // k
+        if(arg0_shape[0] != out[0].get_shape()[0] ||  // m
+           arg1_shape[1] != out[0].get_shape()[1] || // n
+           arg0_shape[1] != arg1_shape[0])         // k
+           {
+               throw std::runtime_error("input and output shape is not correct for dot;");
+           }
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
         writer << "static const float alpha = 1.0;\n";
@@ -520,7 +522,7 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        throw ngraph_error(
+        throw runtime_error(
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
     writer.indent--;
