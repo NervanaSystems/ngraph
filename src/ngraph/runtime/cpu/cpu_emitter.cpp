@@ -2038,31 +2038,31 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], mkldnn::memory::format::nchw);
-                    auto weights_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[1], mkldnn::memory::format::oihw);
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], mkldnn::memory::format::nchw);
+                    auto input_data_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], mkldnn::memory::format::nchw);
+                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], mkldnn::memory::format::oihw);
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], mkldnn::memory::format::nchw);
 
-                    size_t conv_index =
-                        mkldnn_emitter->build_convolution_forward(input_data_desc,
-                                                                  weights_desc,
-                                                                  result_desc,
-                                                                  convolution->get_window_movement_strides(),
-                                                                  convolution->get_padding_below(),
-                                                                  convolution->get_padding_above());
+                    size_t conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
-                           << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
-                           << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(conv_index)
-                           << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
                 }
                 else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
                          args[0].get_element_type() == element::f32)
