@@ -2748,6 +2748,8 @@ namespace ngraph
                     writer << "{\n";
                     writer.indent++;
 
+                    writer << "try {\n";
+                    writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
                            << "}, " << et << ", memory::format::nchw);\n";
@@ -2767,6 +2769,13 @@ namespace ngraph
                               "result);\n";
                     writer << "stream s = stream(stream::kind::eager);\n"
                               "s.submit({relu_fwd}).wait();\n";
+                    writer.indent--;
+                    writer << "} catch (const mkldnn::error& e) {\n";
+                    writer.indent++;
+                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                              "e.status) + \"): \" + e.message);\n";
+                    writer.indent--;
+                    writer << "}\n";
                     writer.indent--;
                     writer << "}\n";
                 }
@@ -2791,6 +2800,8 @@ namespace ngraph
                     writer << "{\n";
                     writer.indent++;
 
+                    writer << "try {\n";
+                    writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
                            << "}, " << et << ", memory::format::nchw);\n";
@@ -2814,13 +2825,21 @@ namespace ngraph
                     writer << "relu_backward::desc relu_bwd_desc = "
                               "relu_backward::desc(algorithm::eltwise_relu, "
                               "delta_data_desc, input_data_desc, 0, 0);\n";
-                    writer << "relu_backward::primitive_desc relu_prim_desc = "
+                    writer << "relu_backward::primitive_desc relu_bdw_prim_desc = "
                               "relu_backward::primitive_desc(relu_bwd_desc, cpu_engine, "
                               "relu_fwd_prim_desc);\n";
-                    writer << "relu_backward relu_bwd= relu_backward(relu_prim_desc, input_data, "
-                              "delta_data, result);\n";
+                    writer
+                        << "relu_backward relu_bwd= relu_backward(relu_bdw_prim_desc, input_data, "
+                           "delta_data, result);\n";
                     writer << "stream s = stream(stream::kind::eager);\n"
                               "s.submit({relu_bwd}).wait();\n";
+                    writer.indent--;
+                    writer << "} catch (const mkldnn::error& e) {\n";
+                    writer.indent++;
+                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                              "e.status) + \"): \" + e.message);\n";
+                    writer.indent--;
+                    writer << "}\n";
                     writer.indent--;
                     writer << "}\n";
                 }
