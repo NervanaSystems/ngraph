@@ -67,9 +67,6 @@ namespace ngraph
             /// \return The axis positions (0-based) to be eliminated through min-reduction.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
-
             AxisSet m_reduction_axes;
         };
     }

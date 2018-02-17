@@ -54,15 +54,3 @@ op::Product::Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_
 
     set_value_type_checked(input.get_element_type(), result_shape);
 }
-
-// TODO: Implement this.
-void op::Product::generate_adjoints(autodiff::Adjoints& adjoints,
-                                    const std::shared_ptr<Node>& delta)
-{
-    /*
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto& x_shape = get_inputs().at(0).get_shape();
-
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
-*/
-}
