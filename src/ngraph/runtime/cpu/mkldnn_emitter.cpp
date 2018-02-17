@@ -22,6 +22,11 @@
 
 using namespace ngraph::runtime::cpu;
 
+const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
+{
+    return mkldnn_primitives;
+}
+
 size_t MKLDNNEmitter::insert_primitive(mkldnn::primitive* primitive)
 {
     mkldnn_primitives.emplace_back(primitive);

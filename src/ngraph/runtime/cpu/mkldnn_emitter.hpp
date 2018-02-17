@@ -39,6 +39,8 @@ namespace ngraph
                 {
                 }
 
+                const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
+
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
 
