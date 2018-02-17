@@ -20,16 +20,16 @@
 
 mkldnn::engine ngraph::runtime::cpu::mkldnn_utils::global_cpu_engine(mkldnn::engine::cpu, 0);
 
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index,
+extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx,
+                                                                   size_t primitive_index,
                                                                    void* ptr)
 {
     auto primitive = static_cast<mkldnn::memory*>(ctx->mkldnn_primitives[primitive_index]);
     primitive->set_data_handle(ptr);
 }
 
-extern "C" void
-    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                                size_t primitive_index)
+extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                            size_t primitive_index)
 {
     mkldnn::stream s(mkldnn::stream::kind::eager);
     s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();

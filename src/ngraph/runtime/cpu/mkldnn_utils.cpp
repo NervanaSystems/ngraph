@@ -45,23 +45,24 @@ namespace ngraph
                     TI(ngraph::op::ConvolutionBackpropFilters),
                     TI(ngraph::op::MaxPool)};
 
-                static const std::unordered_map<std::string, const mkldnn::memory::data_type> s_data_type_map{
-                    {"char", mkldnn::memory::data_type::s8},
-                    {"float", mkldnn::memory::data_type::f32},
-                    {"double", mkldnn::memory::data_type::data_undef},
-                    {"int8_t", mkldnn::memory::data_type::s8},
-                    {"int16_t", mkldnn::memory::data_type::s16},
-                    {"int32_t", mkldnn::memory::data_type::s32},
-                    {"int64_t", mkldnn::memory::data_type::data_undef},
-                    {"uint8_t", mkldnn::memory::data_type::u8},
-                    {"uint16_t", mkldnn::memory::data_type::data_undef},
-                    {"uint32_t", mkldnn::memory::data_type::data_undef},
-                    {"uint64_t", mkldnn::memory::data_type::data_undef}};
+                static const std::unordered_map<std::string, const mkldnn::memory::data_type>
+                    s_data_type_map{{"char", mkldnn::memory::data_type::s8},
+                                    {"float", mkldnn::memory::data_type::f32},
+                                    {"double", mkldnn::memory::data_type::data_undef},
+                                    {"int8_t", mkldnn::memory::data_type::s8},
+                                    {"int16_t", mkldnn::memory::data_type::s16},
+                                    {"int32_t", mkldnn::memory::data_type::s32},
+                                    {"int64_t", mkldnn::memory::data_type::data_undef},
+                                    {"uint8_t", mkldnn::memory::data_type::u8},
+                                    {"uint16_t", mkldnn::memory::data_type::data_undef},
+                                    {"uint32_t", mkldnn::memory::data_type::data_undef},
+                                    {"uint64_t", mkldnn::memory::data_type::data_undef}};
 
                 mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et)
                 {
                     auto it = s_data_type_map.find(et.c_type_string());
-                    if (it == s_data_type_map.end() || it->second == mkldnn::memory::data_type::data_undef)
+                    if (it == s_data_type_map.end() ||
+                        it->second == mkldnn::memory::data_type::data_undef)
                         throw ngraph_error("No MKLDNN data type exists for the given element type");
                     return it->second;
                 }

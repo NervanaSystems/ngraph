@@ -70,7 +70,8 @@ bool runtime::cpu::TensorViewWrapper::is_output() const
     return m_tensor_view->get_tensor().is_output();
 }
 
-const std::shared_ptr<descriptor::TensorView> runtime::cpu::TensorViewWrapper::get_tensor_view() const
+const std::shared_ptr<descriptor::TensorView>
+    runtime::cpu::TensorViewWrapper::get_tensor_view() const
 {
     return m_tensor_view;
 }
