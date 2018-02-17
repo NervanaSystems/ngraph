@@ -1,15 +1,18 @@
-# Copyright 2017 Nervana Systems Inc.
+# ******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ******************************************************************************
 
 include_directories(
     SYSTEM
@@ -92,6 +95,20 @@ if(NGRAPH_ARGON_ENABLE)
     include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
     set(SRC ${SRC} argon_fusion.cpp)
+
+    # enable additional Argon backend test 
+    set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
+    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
+    set(ADDITIONAL_ARGON_TEST
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
+    
+    # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
+    add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
+    set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
@@ -100,15 +117,23 @@ foreach(BACKEND_NAME ${BACKEND_NAMES})
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
 
+    # Some---but not all---autodiff tests go through multiple iterations with
+    # different random seeds. On the CPU backend this is currently very slow
+    # because the autodiff tests recompile with each iteration. That behavior
+    # can be changed, but it's a bit involved, so for the time being we just
+    # reduce the number of test iterations on non-INTERPRETER backends.
+    if(${BACKEND_NAME} MATCHES ^INTERPRETER$)
+        set(TEST_LOOPS 100)
+    else()
+        set(TEST_LOOPS 2)
+    endif()
+
+    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
+
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
-# <special case>
-# This is a special case as the autodiff test recompile the graph multiple times per
-# test which is slow on the CPU
-set(BACKEND_NAME "INTERPRETER")
-configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
-# </special cast>
+
 include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -131,7 +156,7 @@ endif()
 
 if(CUDA_INCLUDE_DIRS)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-  target_link_libraries(unit-test ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(unit-test ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

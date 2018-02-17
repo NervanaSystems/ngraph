@@ -1,24 +1,26 @@
-//// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <cstdlib>
 #include <fstream>
 #include <stdio.h>
 
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -58,17 +60,16 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     CUDA_SAFE_CALL( cuInit(0));
     CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
     CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
-    cublasStatus_t cublasStatus  = cublasCreate(&m_cublas_handle);
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
-        std::cout << "error : " << (int)cublasStatus << std::endl;
         throw runtime_error("cuBLAS create handle failed");
     }
     cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS) 
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
     {
         throw runtime_error("cuDnn create handle failed");
-    }         
+    }
 
     // Pass scalars as reference on the Host
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);

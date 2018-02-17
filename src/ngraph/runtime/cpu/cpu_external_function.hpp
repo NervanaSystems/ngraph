@@ -1,30 +1,35 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
@@ -45,6 +50,21 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
+            struct OpAttributes
+            {
+                std::string Description;
+                std::vector<std::string> Outputs;
+                std::vector<std::string> Inputs;
+                OpAttributes(const std::string& desc,
+                             const std::vector<std::string>& outputs,
+                             const std::vector<std::string>& inputs)
+                    : Description(desc)
+                    , Outputs(outputs)
+                    , Inputs(inputs)
+                {
+                }
+            };
+
             class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
                                          public std::enable_shared_from_this<CPU_ExternalFunction>
             {
@@ -55,6 +75,10 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
+                const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
+                const LayoutDescriptorPtrs& get_result_layout_descriptors();
+
+                const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
             protected:
                 void compile();
 
@@ -86,6 +110,10 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+
+                LayoutDescriptorPtrs parameter_layout_descriptors;
+                LayoutDescriptorPtrs result_layout_descriptors;
+                std::vector<OpAttributes> m_op_attrs;
             };
         }
     }

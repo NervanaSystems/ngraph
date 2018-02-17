@@ -52,11 +52,15 @@ doc/source/generated
 .cache/
 nervana_aeon.egg-info/
 
+# emacs
+*~
+
 # vim
 *.swp
 *.swo
 
 build/
+scripts/
 
 # makeenv and test intermediate files
 tmp/
