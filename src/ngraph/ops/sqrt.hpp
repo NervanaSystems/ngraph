@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
         /// | Type                   | Description                                                                           |
         /// | ---------------------- | ------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sqrt{\texttt{arg}[i_1,\dots,i_n]}\f$ |
-        class Sqrt : public UnaryElementwiseArithmetic
+        class Sqrt : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a square operation.
@@ -50,7 +50,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Sqrt>(new_args.at(0));
             }
 

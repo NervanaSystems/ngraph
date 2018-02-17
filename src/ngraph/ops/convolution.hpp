@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Batched convolution operation, with optional window dilation and stride.
         ///
-        class Convolution : public RequiresTensorViewArgs
+        class Convolution : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched convolution operation.
@@ -151,7 +151,7 @@ namespace ngraph
         };
 
         /// \brief Data batch backprop for batched convolution operation.
-        class ConvolutionBackpropData : public RequiresTensorViewArgs
+        class ConvolutionBackpropData : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -246,7 +246,7 @@ namespace ngraph
         };
 
         /// \brief Filters backprop for batched convolution operation.
-        class ConvolutionBackpropFilters : public RequiresTensorViewArgs
+        class ConvolutionBackpropFilters : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched-convolution filter-backprop operation.
