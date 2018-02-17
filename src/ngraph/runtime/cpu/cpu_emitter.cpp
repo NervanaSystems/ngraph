@@ -1826,11 +1826,11 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
                                                                       convolution->get_padding_above());
 
         auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", " << args[0].get_name() << ");\n";
-        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", " << args[1].get_name() << ");\n";
-        writer << "mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", " << out[0].get_name() << ");\n";
+        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", " << args[0].get_name() << ");\n";
+        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", " << args[1].get_name() << ");\n";
+        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", " << out[0].get_name() << ");\n";
 
-        writer << "mkldnn_utils::mkldnn_invoke(ctx, " << to_string(conv_index) << ");\n";
+        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(conv_index) << ");\n";
 #endif
     }
     else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
