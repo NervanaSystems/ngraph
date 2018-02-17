@@ -2030,11 +2030,7 @@ namespace ngraph
                     data_dilated = data_dilated || (s != 1);
                 }
 
-                // TODO(jmenon): MKLDNN streams should be static so we need to either implement
-                // codegen for statics or move primitive and stream construction out
-                // of the generated function and only generate code to run/rerun the stream
-
-                if (!filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
                     args[0].get_element_type() == element::f32)
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2044,14 +2040,38 @@ namespace ngraph
                         args[1], mkldnn::memory::format::oihw);
                     auto result_desc = mkldnn_emitter->build_memory_descriptor(
                         out[0], mkldnn::memory::format::nchw);
+                    size_t conv_index = 0;
 
-                    size_t conv_index = mkldnn_emitter->build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides(),
-                        convolution->get_padding_below(),
-                        convolution->get_padding_above());
+                    if (!filter_dilated)
+                    {
+                        conv_index = mkldnn_emitter->build_convolution_forward(
+                            input_data_desc,
+                            weights_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above());
+                    }
+                    else
+                    {
+                        // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                        // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                        Strides window_dilation_strides_adjusted;
+
+                        for (size_t s : convolution->get_window_dilation_strides())
+                        {
+                            window_dilation_strides_adjusted.push_back(s - 1);
+                        }
+
+                        conv_index = mkldnn_emitter->build_convolution_forward(
+                            input_data_desc,
+                            weights_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above());
+                    }
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2063,54 +2083,6 @@ namespace ngraph
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
-                }
-                else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                         args[0].get_element_type() == element::f32)
-                {
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
-                    Strides window_dilation_strides_adjusted;
-
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
-
-                    writer << "{\n";
-                    writer.indent++;
-
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape)
-                           << "}, " << et << ", memory::format::oihw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory weights = memory({weights_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer
-                        << "convolution_forward conv = convolution_forward({"
-                        << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
-                           "weights_desc, result_desc, {"
-                        << join(convolution->get_window_movement_strides()) << "}, {"
-                        << join(window_dilation_strides_adjusted) << "}, {"
-                        << join(convolution->get_padding_below()) << "}, {"
-                        << join(convolution->get_padding_above())
-                        << "}, padding_kind::zero}, cpu_engine}, "
-                        << "input_data, weights, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({conv}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
                 }
                 else
                 {
