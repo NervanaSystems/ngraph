@@ -36,7 +36,7 @@ namespace ngraph
             struct CPURuntimeContext
             {
                 int64_t* op_durations;
-                mkldnn::primitive* mkldnn_primitives;
+                mkldnn::primitive** mkldnn_primitives;
             };
             }
         }
