@@ -1780,39 +1780,6 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
     if (!filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-#if 0
-        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
-
-        writer << "{\n";
-        writer.indent++;
-
-        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-        writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
-               << ", memory::format::nchw);\n";
-        writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
-               << ", memory::format::oihw);\n";
-        writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
-               << ", memory::format::nchw);\n";
-
-        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
-               << ");\n";
-        writer << "memory weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
-               << ");\n";
-        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
-               << ");\n";
-        writer << "convolution_forward conv = convolution_forward({"
-               << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
-                  "weights_desc, result_desc, {"
-               << join(convolution->get_window_movement_strides()) << "}, {"
-               << join(convolution->get_padding_below()) << "}, {"
-               << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
-               << "input_data, weights, result);\n";
-
-        writer << "stream s = stream(stream::kind::eager);\n"
-               << "s.submit({conv}).wait();\n";
-        writer.indent--;
-        writer << "}\n";
-#else
         auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
         auto input_data_desc =
             mkldnn_emitter->build_memory_descriptor(args[0], mkldnn::memory::format::nchw);
@@ -1839,7 +1806,6 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
 
         writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(conv_index)
                << ");\n";
-#endif
     }
     else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
              args[0].get_element_type() == element::f32)
