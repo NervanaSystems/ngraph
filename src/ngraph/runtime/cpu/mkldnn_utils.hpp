@@ -39,6 +39,7 @@ namespace ngraph
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 const std::string& get_mkldnn_data_type_string(const std::string& type);
                 mkldnn::memory::data_type get_mkldnn_data_type(const std::string& type);
+                const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
             }
         }
     }

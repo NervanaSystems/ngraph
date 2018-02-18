@@ -1781,6 +1781,12 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
             window_dilation_strides_adjusted.push_back(s - 1);
         }
 
+        auto input_tvl = node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+        auto weights_tvl = node->get_inputs()[1].get_output().get_tensor_view()->get_tensor_view_layout();
+        auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+        auto input_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
+        auto weights_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*weights_tvl).get_mkldnn_format();
+        auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
         const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
             args[0].get_element_type().c_type_string());
 
@@ -1789,11 +1795,11 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
 
         writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
         writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
-               << ", memory::format::nchw);\n";
+               << ", " << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format) << ");\n";
         writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
-               << ", memory::format::oihw);\n";
+               << ", " << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(weights_format) << ");\n";
         writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
-               << ", memory::format::nchw);\n";
+               << ", " << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(output_format) << ");\n";
 
         writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
@@ -2432,4 +2438,33 @@ string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrap
     ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
        << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
     return ss.str();
+}
+
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvertLayout)
+{
+    auto input_tvl = node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+    auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+    auto input_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
+    auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
+    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+            args[0].get_element_type().c_type_string());
+
+    writer << "{\n";
+    writer.indent++;
+
+    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+    writer << "memory::desc input_desc = memory::desc({" << join(args[0].get_shape()) << "}, " << et
+            << ", " << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format) << ");\n";
+    writer << "memory::desc output_desc = memory::desc({" << join(out[0].get_shape()) << "}, " << et
+            << ", " << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(output_format) << ");\n";
+    writer << "memory input = memory({input_desc, cpu_engine}, " << args[0].get_name()
+            << ");\n";
+    writer << "memory output = memory({output_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+    writer << "reorder prim = reorder(input, output);\n";
+
+    writer << "stream s = stream(stream::kind::eager);\n"
+           << "s.submit({prim}).wait();\n";
+    writer.indent--;
+    writer << "}\n";
 }

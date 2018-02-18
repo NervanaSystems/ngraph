@@ -67,6 +67,16 @@ static const std::unordered_map<std::string, memory::data_type> mkldnn_data_type
     {"uint32_t", memory::data_type::data_undef},
     {"uint64_t", memory::data_type::data_undef}};
 
+
+static const std::map<memory::format, const std::string> s_mkldnn_format_string_map{
+    {memory::format::nc, "memory::format::nc"},
+    {memory::format::nchw, "memory::format::nchw"},
+    {memory::format::nChw16c, "memory::format::nChw16c"},
+    {memory::format::oihw, "memory::format::oihw"},
+    {memory::format::oIhw16i, "memory::format::oIhw16i"},
+    {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"}, 
+};
+
 bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 {
     return (s_op_registry.find(TI(op)) != s_op_registry.end());
@@ -99,5 +109,13 @@ mkldnn::memory::data_type runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const
     {
         throw ngraph_error("No MKLDNN data type exists for the given element type");
     }
+    return it->second;
+}
+
+const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format fmt)
+{
+    auto it = s_mkldnn_format_string_map.find(fmt);
+    if (it == s_mkldnn_format_string_map.end())
+        throw ngraph_error("No MKLDNN format exists for the given format type " + std::to_string(fmt));
     return it->second;
 }

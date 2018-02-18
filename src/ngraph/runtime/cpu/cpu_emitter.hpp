@@ -103,6 +103,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitAvgPoolBackprop);
                 static void EMITTER_DECL(EmitPad);
                 static void EMITTER_DECL(EmitMaxPoolBackprop);
+                static void EMITTER_DECL(EmitConvertLayout);
 
                 static void EmitMKLDNNPreamble(codegen::CodeWriter& writer);
 

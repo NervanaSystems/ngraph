@@ -95,6 +95,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -217,6 +218,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
+    {TI(ngraph::runtime::cpu::ops::ConvertLayout), &runtime::cpu::CPU_Emitter::EmitConvertLayout},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(

@@ -20,7 +20,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
 #define LAYOUT_DECL(E)                                                                             \
-    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, const ngraph::Node* node)
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
 {
@@ -31,7 +31,7 @@ namespace ngraph
             namespace pass
             {
                 using LayoutFunction =
-                    std::function<void(CPU_ExternalFunction*, const ngraph::Node*)>;
+                    std::function<void(CPU_ExternalFunction*, std::shared_ptr<ngraph::Node>)>;
 
                 using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
 

@@ -20,13 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::cpu::op::ConvertLayout::ConvertLayout(
+runtime::cpu::ops::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
 }
 
-runtime::cpu::op::ConvertLayout::ConvertLayout(
+runtime::cpu::ops::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
@@ -39,7 +39,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
 
     if (!arg_layout)
     {
-        throw ngraph_error("Layout conversion input tensor is missing layout information");
+        //throw ngraph_error("Layout conversion input tensor is missing layout information");
     }
 
     add_output(layout->get_element_type(), layout->get_shape());

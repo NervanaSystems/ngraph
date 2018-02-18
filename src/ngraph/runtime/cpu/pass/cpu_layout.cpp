@@ -23,9 +23,11 @@
 
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 
 using namespace std;
 using namespace mkldnn;
@@ -45,7 +47,7 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         auto handler = dispatcher.find(TI(n));
         if (handler != dispatcher.end())
         {
-            handler->second(m_external_function.get(), node.get());
+            handler->second(m_external_function.get(), node);
         }
     }
 
@@ -105,9 +107,9 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
 
 void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
 {
-    if (external_function->get_op_annotations(node)->is_mkldnn_op)
+    if (external_function->get_op_annotations(node.get())->is_mkldnn_op)
     {
-        auto convolution = static_cast<const op::Convolution*>(node);
+        auto convolution = static_cast<const ngraph::op::Convolution*>(node.get());
 
         auto arg0_shape = node->get_input_shape(0);
         auto arg1_shape = node->get_input_shape(1);
@@ -151,11 +153,86 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
                                            mkldnn_padding_above,
                                            padding_kind::zero);
         convolution_forward::primitive_desc prim_desc(fwd_desc, cpu_engine);
-        mkldnn_memory_format_t prim_src_format = prim_desc.src_primitive_desc().desc().data.format;
-        mkldnn_memory_format_t prim_dst_format = prim_desc.dst_primitive_desc().desc().data.format;
-        mkldnn_memory_format_t prim_weights_format =
-            prim_desc.weights_primitive_desc().desc().data.format;
-        cout << "Convolution Preferred layout src: " << prim_src_format
-             << " weights: " << prim_weights_format << " dst: " << prim_dst_format << endl;
+        memory::format prim_input_formats[2];
+        memory::format prim_output_formats[1];
+        prim_input_formats[0] = static_cast<memory::format>(prim_desc.src_primitive_desc().desc().data.format);
+        prim_output_formats[0] = static_cast<memory::format>(prim_desc.dst_primitive_desc().desc().data.format);
+        prim_input_formats[1] = static_cast<memory::format>(prim_desc.weights_primitive_desc().desc().data.format);
+        cout << "Convolution Preferred layout src: " << prim_input_formats[0]
+             << " weights: " << prim_input_formats[1] << " dst: " << prim_output_formats[0] << endl;
+
+        std::vector<shared_ptr<Node>> new_args;
+        bool replace_node = false;
+        uint index = 0;
+        for (const descriptor::Input& input : node->get_inputs())
+        {
+            const auto& output = input.get_output();
+            auto tv = output.get_tensor_view();
+            auto tvt = tv->get_tensor_view_type();
+            auto rank = tvt->get_shape().size();
+            auto tvl = tv->get_tensor_view_layout();
+            auto mkldnn_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+            if (!mkldnn_tvl || mkldnn_tvl->get_mkldnn_format() != prim_input_formats[index])
+            {
+                auto native_axis_order =
+                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
+
+                auto layout =
+                    std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
+
+                cout << "Need to convert convolution input: " << output.get_node().get()->get_name() << " to layout: " << prim_input_formats[index] << endl;
+                layout->set_mkldnn_format(prim_input_formats[index]);
+                auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(output.get_node(), layout));
+                new_args.push_back(new_node);
+                replace_node = true;
+            } else {
+                new_args.push_back(node->get_input_op(index));
+            }
+            index++;
+        }
+
+        shared_ptr<Node> new_node;
+        if (replace_node)
+        {
+            new_node = node->copy_with_new_args(new_args);
+            if (node->is_output()) 
+            {
+                external_function->get_function()->replace_node(node, new_node);
+            }
+            else
+            {
+                ngraph::replace_node(node, new_node);
+            }
+            external_function->get_op_annotations(new_node.get())->is_mkldnn_op = true;
+            cout << "Replaced " << node->get_name() << " is_output: " << node->is_output()
+                 << " with new node " << new_node->get_name() << endl;
+        } 
+        else
+        {
+            new_node = node;
+        }
+
+        for (size_t i = 0; i < new_node->get_output_size(); ++i)
+        {
+            auto tv = new_node->get_output_tensor_view(i);
+            auto tvt = tv->get_tensor_view_type();
+            auto rank = tvt->get_shape().size();
+
+            auto tvl = tv->get_tensor_view_layout();
+            if (tvl)
+            {
+                throw ngraph_error("Convolution output layout already set!!!");
+            }
+            
+            auto native_axis_order =
+                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
+
+            auto layout =
+                std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
+
+            layout->set_mkldnn_format(prim_output_formats[i]);
+            tv->set_tensor_view_layout(layout);
+            cout << "Set convolution output layout: " << prim_output_formats[i] << endl;
+        }
     }
 }

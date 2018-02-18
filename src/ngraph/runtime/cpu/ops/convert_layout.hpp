@@ -26,7 +26,7 @@ namespace ngraph
         {
             class LayoutDescriptor;
 
-            namespace op
+            namespace ops
             {
                 /// \brief Layout Conversion
                 ///
