@@ -72,14 +72,32 @@ static const std::unordered_map<std::string, memory::data_type> mkldnn_data_type
 
 // TODO (jbobba): Add the rest of memory formats to this map as well
 static const std::map<memory::format, const std::string> s_mkldnn_format_string_map{
+    {memory::format::format_undef, "memory::format::format_undef"},
+    {memory::format::any, "memory::format::any"},
+    {memory::format::blocked, "memory::format::blocked"},
+    {memory::format::x, "memory::format::x"},
     {memory::format::nc, "memory::format::nc"},
     {memory::format::nchw, "memory::format::nchw"},
+    {memory::format::nhwc, "memory::format::nhwc"},
+    {memory::format::chwn, "memory::format::chwn"},
     {memory::format::nChw8c, "memory::format::nChw8c"},
     {memory::format::nChw16c, "memory::format::nChw16c"},
+    {memory::format::oi, "memory::format::oi"},
+    {memory::format::io, "memory::format::io"},
     {memory::format::oihw, "memory::format::oihw"},
+    {memory::format::ihwo, "memory::format::ihwo"},
+    {memory::format::hwio, "memory::format::hwio"},
+    {memory::format::oIhw8i, "memory::format::oIhw8i"},
     {memory::format::oIhw16i, "memory::format::oIhw16i"},
     {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
     {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
+    {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
+    {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
+    {memory::format::Oihw8o, "memory::format::Oihw8o"},
+    {memory::format::Oihw16o, "memory::format::Oihw16o"},
+    {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
+    {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
+    {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
 };
 
 bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
