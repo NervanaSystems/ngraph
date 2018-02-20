@@ -20,13 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::cpu::ops::ConvertLayout::ConvertLayout(
+runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
 }
 
-runtime::cpu::ops::ConvertLayout::ConvertLayout(
+runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)

@@ -63,8 +63,8 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
             auto layout =
                 std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
             layout->set_mkldnn_format(runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl));
-            auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(
-                output.get_node(), output.get_index(), layout));
+            auto new_node = std::shared_ptr<Node>(
+                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
             replace_node = true;
             NGRAPH_INFO << "Inserted conversion node " << new_node->get_name() << " between "
@@ -106,7 +106,6 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
         }
 
         auto tvt = tv->get_tensor_view_type();
-        auto& tensor = tv->get_tensor();
         auto rank = tvt->get_shape().size();
 
         auto native_axis_order =
@@ -149,8 +148,6 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
         auto arg0_shape = node->get_input_shape(0);
         auto arg1_shape = node->get_input_shape(1);
         auto result_shape = node->get_output_shape(0);
-        auto arg0_rank = arg0_shape.size();
-        auto arg1_rank = arg1_shape.size();
         auto filter_strides = convolution->get_window_movement_strides();
         auto padding_below = convolution->get_padding_below();
         auto padding_above = convolution->get_padding_above();
@@ -215,7 +212,7 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
                     *tv, native_axis_order);
                 layout->set_mkldnn_format(prim_input_formats[index]);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(
+                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
                     output.get_node(), output.get_index(), layout));
                 new_args.push_back(new_node);
                 replace_node = true;
