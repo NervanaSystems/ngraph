@@ -29,11 +29,11 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void min_reduce(T* arg,
-                            T* out,
-                            const Shape& in_shape,
-                            const Shape& out_shape,
-                            const AxisSet& reduction_axes)
+            void min(T* arg,
+                     T* out,
+                     const Shape& in_shape,
+                     const Shape& out_shape,
+                     const AxisSet& reduction_axes)
             {
                 T minval = std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity()
                                                                 : std::numeric_limits<T>::max();

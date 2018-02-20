@@ -6993,11 +6993,11 @@ TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 }
 
 // Trivial case with no reduced axes.
-TEST(${BACKEND_NAME}, max_reduce_trivial)
+TEST(${BACKEND_NAME}, max_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7014,11 +7014,11 @@ TEST(${BACKEND_NAME}, max_reduce_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, max_reduce_trivial_5d)
+TEST(${BACKEND_NAME}, max_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7037,11 +7037,11 @@ TEST(${BACKEND_NAME}, max_reduce_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_to_scalar)
+TEST(${BACKEND_NAME}, max_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7061,12 +7061,12 @@ TEST(${BACKEND_NAME}, max_reduce_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_matrix_columns)
+TEST(${BACKEND_NAME}, max_matrix_columns)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7086,12 +7086,12 @@ TEST(${BACKEND_NAME}, max_reduce_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_matrix_rows)
+TEST(${BACKEND_NAME}, max_matrix_rows)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7111,12 +7111,12 @@ TEST(${BACKEND_NAME}, max_reduce_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_matrix_rows_zero)
+TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 {
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7140,13 +7140,13 @@ TEST(${BACKEND_NAME}, max_reduce_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_matrix_cols_zero)
+TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 {
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7169,12 +7169,12 @@ TEST(${BACKEND_NAME}, max_reduce_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_vector_zero)
+TEST(${BACKEND_NAME}, max_vector_zero)
 {
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7195,12 +7195,12 @@ TEST(${BACKEND_NAME}, max_reduce_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_matrix_to_scalar_zero_by_zero)
+TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 {
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7221,12 +7221,12 @@ TEST(${BACKEND_NAME}, max_reduce_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_3d_to_matrix_most_sig)
+TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7243,12 +7243,12 @@ TEST(${BACKEND_NAME}, max_reduce_3d_to_matrix_most_sig)
     EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_3d_to_matrix_least_sig)
+TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7265,12 +7265,12 @@ TEST(${BACKEND_NAME}, max_reduce_3d_to_matrix_least_sig)
     EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_3d_to_vector)
+TEST(${BACKEND_NAME}, max_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7287,13 +7287,12 @@ TEST(${BACKEND_NAME}, max_reduce_3d_to_vector)
     EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_3d_to_scalar)
+TEST(${BACKEND_NAME}, max_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f =
-        make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7310,12 +7309,12 @@ TEST(${BACKEND_NAME}, max_reduce_3d_to_scalar)
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_reduce_3d_eliminate_zero_dim)
+TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 {
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::MaxReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7337,11 +7336,11 @@ TEST(${BACKEND_NAME}, max_reduce_3d_eliminate_zero_dim)
 }
 
 // Trivial case with no reduced axes.
-TEST(${BACKEND_NAME}, min_reduce_trivial)
+TEST(${BACKEND_NAME}, min_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7358,11 +7357,11 @@ TEST(${BACKEND_NAME}, min_reduce_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, min_reduce_trivial_5d)
+TEST(${BACKEND_NAME}, min_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7381,11 +7380,11 @@ TEST(${BACKEND_NAME}, min_reduce_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_to_scalar)
+TEST(${BACKEND_NAME}, min_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7405,12 +7404,12 @@ TEST(${BACKEND_NAME}, min_reduce_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_matrix_columns)
+TEST(${BACKEND_NAME}, min_matrix_columns)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7430,12 +7429,12 @@ TEST(${BACKEND_NAME}, min_reduce_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_matrix_rows)
+TEST(${BACKEND_NAME}, min_matrix_rows)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7455,12 +7454,12 @@ TEST(${BACKEND_NAME}, min_reduce_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_matrix_rows_zero)
+TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 {
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7484,13 +7483,13 @@ TEST(${BACKEND_NAME}, min_reduce_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_matrix_cols_zero)
+TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 {
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7513,12 +7512,12 @@ TEST(${BACKEND_NAME}, min_reduce_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_vector_zero)
+TEST(${BACKEND_NAME}, min_vector_zero)
 {
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7539,12 +7538,12 @@ TEST(${BACKEND_NAME}, min_reduce_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_matrix_to_scalar_zero_by_zero)
+TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 {
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7565,12 +7564,12 @@ TEST(${BACKEND_NAME}, min_reduce_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_3d_to_matrix_most_sig)
+TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7587,12 +7586,12 @@ TEST(${BACKEND_NAME}, min_reduce_3d_to_matrix_most_sig)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_3d_to_matrix_least_sig)
+TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7609,12 +7608,12 @@ TEST(${BACKEND_NAME}, min_reduce_3d_to_matrix_least_sig)
     EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_3d_to_vector)
+TEST(${BACKEND_NAME}, min_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7631,13 +7630,12 @@ TEST(${BACKEND_NAME}, min_reduce_3d_to_vector)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_3d_to_scalar)
+TEST(${BACKEND_NAME}, min_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f =
-        make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7654,12 +7652,12 @@ TEST(${BACKEND_NAME}, min_reduce_3d_to_scalar)
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_reduce_3d_eliminate_zero_dim)
+TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 {
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::MinReduce>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);

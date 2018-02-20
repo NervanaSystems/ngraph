@@ -50,10 +50,10 @@ set (SRC
     ops/function_call.cpp
     ops/get_output_element.cpp
     ops/log.cpp
+    ops/max.cpp
     ops/max_pool.cpp
-    ops/max_reduce.cpp
     ops/maximum.cpp
-    ops/min_reduce.cpp
+    ops/min.cpp
     ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp

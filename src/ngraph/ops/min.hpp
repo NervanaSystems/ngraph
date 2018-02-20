@@ -45,14 +45,14 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                                       |
         /// | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by taking the minimum element. |
-        class MinReduce : public util::RequiresTensorViewArgs
+        class Min : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a min-reduction operation.
             ///
             /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            MinReduce(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Min(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -61,7 +61,7 @@ namespace ngraph
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<MinReduce>(new_args.at(0), m_reduction_axes);
+                return std::make_shared<Min>(new_args.at(0), m_reduction_axes);
             }
 
             /// \return The axis positions (0-based) to be eliminated through min-reduction.

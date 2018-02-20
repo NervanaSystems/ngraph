@@ -14,22 +14,22 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/min_reduce.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ops/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::MinReduce::MinReduce(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs("MinReduce", {arg})
+op::Max::Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+    : RequiresTensorViewArgs("Max", {arg})
     , m_reduction_axes(reduction_axes)
 {
     auto& input = get_inputs().at(0);
     auto& input_element_type = input.get_element_type();
     if (input_element_type == element::boolean)
     {
-        throw ngraph_error("Argument for min-reduce must have numeric element type");
+        throw ngraph_error("Argument for max must have numeric element type");
     }
 
     auto input_shape = input.get_shape();
@@ -38,7 +38,7 @@ op::MinReduce::MinReduce(const std::shared_ptr<Node>& arg, const AxisSet& reduct
     {
         if (axis >= input_shape.size())
         {
-            throw ngraph_error("Reduction axis for min-reduce is out of bounds");
+            throw ngraph_error("Reduction axis for max is out of bounds");
         }
     }
 

@@ -52,10 +52,10 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/max_reduce.hpp"
 #include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/min_reduce.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -2813,16 +2813,15 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxReduce)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Max)
             {
-                const ngraph::op::MaxReduce* max_reduce =
-                    static_cast<const ngraph::op::MaxReduce*>(node);
+                const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = max_reduce->get_reduction_axes();
+                const AxisSet& reduction_axes = max->get_reduction_axes();
 
                 // Trivial case: no reduction axes.
                 if (reduction_axes.size() == 0)
@@ -2865,22 +2864,22 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::max_reduce<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
+                    writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
                     writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(max_reduce->get_reduction_axes())
+                    writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
                 }
 #else
                 // TODO: add an emitter akin to the emit_sum
-                writer << "kernel::max_reduce<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                writer << "                         {" << join(max_reduce->get_reduction_axes())
+                writer << "                         {" << join(max->get_reduction_axes())
                        << "});\n";
 #endif
                 writer.indent--;
@@ -2888,16 +2887,15 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::MinReduce)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Min)
             {
-                const ngraph::op::MinReduce* min_reduce =
-                    static_cast<const ngraph::op::MinReduce*>(node);
+                const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = min_reduce->get_reduction_axes();
+                const AxisSet& reduction_axes = min->get_reduction_axes();
 
                 // Trivial case: no reduction axes.
                 if (reduction_axes.size() == 0)
@@ -2940,22 +2938,22 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::min_reduce<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
+                    writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
                     writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(min_reduce->get_reduction_axes())
+                    writer << "                         {" << join(min->get_reduction_axes())
                            << "});\n";
                 }
 #else
                 // TODO: add an emitter akin to the emit_sum
-                writer << "kernel::min_reduce<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                writer << "                         {" << join(min_reduce->get_reduction_axes())
+                writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
 #endif
                 writer.indent--;

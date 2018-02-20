@@ -45,14 +45,14 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                                       |
         /// | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by taking the maximum element. |
-        class MaxReduce : public util::RequiresTensorViewArgs
+        class Max : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a max-reduction operation.
             ///
             /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            MaxReduce(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -61,7 +61,7 @@ namespace ngraph
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<MaxReduce>(new_args.at(0), m_reduction_axes);
+                return std::make_shared<Max>(new_args.at(0), m_reduction_axes);
             }
 
             /// \return The axis positions (0-based) to be eliminated through max-reduction.
