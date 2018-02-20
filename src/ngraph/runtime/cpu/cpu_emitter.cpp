@@ -290,6 +290,102 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNorm)
     writer << "}\n";
 }
 
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
+{
+        const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+
+    // get the shape of all the inputs and output to batchnorm
+    auto gamma_shape = args[0].get_shape();
+    auto beta_shape = args[1].get_shape();
+    auto input_shape = args[2].get_shape();
+    auto mean_shape = args[3].get_shape();
+    auto variance_shape = args[4].get_shape();
+	auto delta_shape = args[5].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    // get input element type
+    const string& et = get_mkldnn_data_type(args[2].get_element_type().c_type_string());
+    writer << "{\n";
+    writer.indent++;
+
+    // define weights
+    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(2);\n";
+    auto weights_shape = Shape{2, input_shape[1]};
+
+    // push gamma and beta
+    writer << "auto gamma = " << args[0].get_name() << ";\n";
+    writer << "auto beta = " << args[1].get_name() << ";\n";
+
+    writer << "memcpy(&bn_weights[0], gamma,"
+           << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+    // get the eps value from the bn node
+    writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+
+    // Bind to CPU engine
+    writer << "using namespace mkldnn; \n";
+    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+    // create memory descriptors
+    writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    // TODO define weights by stacking gamma and beta values
+    writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
+           << ", memory::format::nc);\n";
+    writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
+           << ", memory::format::x);\n";
+    writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape) << "}, " << et
+           << ", memory::format::x);\n";
+    writer << "memory::desc delta_desc = memory::desc({" << join(input_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+		   
+
+    // Define memory for the user data
+    writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[2].get_name()
+           << ");\n";
+    writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
+           << ");\n";
+    writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name() << ");\n";
+    writer << "memory variance = memory({variance_desc, cpu_engine}, " << args[4].get_name()
+           << ");\n";
+    writer << "memory delta = memory({delta_desc, cpu_engine}, " << args[2].get_name()
+           << ");\n";
+    writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+	
+	
+	//create fprop batchnorm descriptor
+    writer << "batch_normalization_forward::desc bn_fprop_desc = "
+              "batch_normalization_forward::desc(forward_training,"
+           << "input_data_desc, epsilon, use_scale_shift);\n";
+    //bn fprop primitive descriptor
+    writer << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
+              "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+	
+	//create bprop batchnorm descriptor
+	writer << "batch_normalization_backward::desc bn_bprop_desc = " 
+		      "batch_normalization_backward::desc(backward_data, delta_desc, input_data_desc, epsilon, use_scale_shift);\n"; // ???? looks like we don't need use_global_stats
+		   
+	//bn bprop primitive descriptor
+	writer << "batch_normalization_backward::primitive_desc bn_bprop_prim_desc = "
+	          "batch_normalization_backward::primitive_desc(bn_bprop_desc, cpu_engine, bn_fprop_prim_desc);\n";
+			  
+	//create a batchnorm fprop primitive
+	 writer << " batch_normalization_backward bn_bprop = "
+	           "batch_normalization_backward(bn_bprop_prim_desc, input_data, mean, variance, delta, weights, result);\n ";
+	
+	//try this one in case 
+	//batch_normalization_backward(bn_bprop_prim_desc, primitive::at(input_data), primitive::at(mean), primitive::at(variance), primitive::at(diff_dst), primitive::at(weights), *diff_src);
+			   
+	//create stream and execute
+    writer << "stream s = stream(stream::kind::eager);\n"
+           << "s.submit({bn_bprop}).wait();\n";
+    writer.indent--;
+    writer << "}\n";
+}
+
 void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDot)
 {
     const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
