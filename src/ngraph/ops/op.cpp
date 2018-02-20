@@ -18,23 +18,14 @@
 #include <memory>
 #include <sstream>
 
-#include "ngraph/except.hpp"
+#include "ngraph/common.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-op::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node_type,
-                                                   const std::vector<std::shared_ptr<Node>>& args)
+op::Op::Op(const std::string& node_type, const Nodes& args)
     : Node(node_type, args)
 {
-    for (auto arg : args)
-    {
-        if (arg->get_output_size() != 1)
-        {
-            throw ngraph_error("Arguments for node type \"" + node_type +
-                               "\" must be tensor views");
-        }
-    }
 }

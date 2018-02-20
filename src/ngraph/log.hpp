@@ -20,7 +20,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace nervana
+namespace ngraph
 {
     class conststring
     {
@@ -93,30 +93,30 @@ namespace nervana
     extern std::ostream& get_nil_stream();
 
 #define NGRAPH_ERR                                                                                 \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
-                        nervana::get_file_name(__FILE__),                                          \
-                        __LINE__,                                                                  \
-                        __PRETTY_FUNCTION__)                                                       \
+    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                          \
+                       ngraph::get_file_name(__FILE__),                                            \
+                       __LINE__,                                                                   \
+                       __PRETTY_FUNCTION__)                                                        \
         .stream()
 #define NGRAPH_WARN                                                                                \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING,                                      \
-                        nervana::get_file_name(__FILE__),                                          \
-                        __LINE__,                                                                  \
-                        __PRETTY_FUNCTION__)                                                       \
+    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                        \
+                       ngraph::get_file_name(__FILE__),                                            \
+                       __LINE__,                                                                   \
+                       __PRETTY_FUNCTION__)                                                        \
         .stream()
 #define NGRAPH_INFO                                                                                \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
-                        nervana::get_file_name(__FILE__),                                          \
-                        __LINE__,                                                                  \
-                        __PRETTY_FUNCTION__)                                                       \
+    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                           \
+                       ngraph::get_file_name(__FILE__),                                            \
+                       __LINE__,                                                                   \
+                       __PRETTY_FUNCTION__)                                                        \
         .stream()
 
 // #define NGRAPH_DEBUG                                                                               \
-//     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
-//                         nervana::get_file_name(__FILE__),                                          \
-//                         __LINE__,                                                                  \
-//                         __PRETTY_FUNCTION__)                                                       \
+//     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
+//                        ngraph::get_file_name(__FILE__),                                            \
+//                        __LINE__,                                                                   \
+//                        __PRETTY_FUNCTION__)                                                        \
 //         .stream()
 
-#define NGRAPH_DEBUG nervana::get_nil_stream()
+#define NGRAPH_DEBUG ngraph::get_nil_stream()
 }

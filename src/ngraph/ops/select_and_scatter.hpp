@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -68,7 +68,7 @@ namespace ngraph
         /// | Type                   | Description          |
         /// | ---------------------- | -------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | See above algorithm. |
-        class SelectAndScatter : public RequiresTensorViewArgs
+        class SelectAndScatter : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a select-and-scatter operation.
@@ -91,7 +91,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 3)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<SelectAndScatter>(new_args.at(0),
                                                           new_args.at(1),
                                                           new_args.at(2),

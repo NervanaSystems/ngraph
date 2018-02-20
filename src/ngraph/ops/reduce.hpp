@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -82,7 +82,7 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        class Reduce : public RequiresTensorViewArgs
+        class Reduce : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a reduction operation.
@@ -100,7 +100,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Reduce>(
                     new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
             }

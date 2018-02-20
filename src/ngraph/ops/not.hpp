@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
         /// | Type                               | Description                                                                                                    |
         /// | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
         /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg}[i_1,\dots,i_n] = 0\text{, else } 0\f$ |
-        class Not : public UnaryElementwise
+        class Not : public util::UnaryElementwise
         {
         public:
             /// \brief Constructs a logical negation operation.
@@ -47,7 +47,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Not>(new_args.at(0));
             }
         };

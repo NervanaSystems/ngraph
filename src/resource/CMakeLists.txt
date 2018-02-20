@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_CPU_ENABLE AND NOT APPLE)
+if (NGRAPH_CPU_ENABLE)
     set (SRC
         main.cpp
         util.cpp
@@ -23,7 +23,7 @@ if (NGRAPH_CPU_ENABLE AND NOT APPLE)
     )
 
     add_executable(resource_generator ${SRC})
-    add_dependencies(resource_generator ext_llvm eigen ext_mkldnn)
+    add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
 
     set(HEADER_SEARCH_DEFINES
         "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""

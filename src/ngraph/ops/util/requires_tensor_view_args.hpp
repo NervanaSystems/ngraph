@@ -14,16 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
+#pragma once
+
+#include "ngraph/common.hpp"
 #include "ngraph/ops/op.hpp"
 
-using namespace ngraph;
-
-op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                           const std::shared_ptr<Node>& arg)
-    : UnaryElementwise(node_type, arg->get_element_type(), arg)
+namespace ngraph
 {
-    if (arg->get_element_type() == element::boolean)
+    namespace op
     {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
+        namespace util
+        {
+            /// \brief Abstract base class for ops on tensors views.
+            class RequiresTensorViewArgs : public ngraph::op::Op
+            {
+            protected:
+                /// \brief Constructs an operation on tensor view arguments.
+                ///
+                /// \param args The nodes producing this node's input tensors.
+                RequiresTensorViewArgs(const std::string& node_type, const Nodes& args);
+            };
+        }
     }
 }
