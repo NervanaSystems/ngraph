@@ -18,9 +18,6 @@
 #include <fstream>
 #include <stdio.h>
 
-#include <cuda_runtime.h>
-#include "cublas_v2.h"
-
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
@@ -33,13 +30,25 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    cublasStatus_t stat = cublasCreate(&m_cublas_handle);
-    if (stat != cudaSuccess)
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
-        throw runtime_error("cuBLAS create failed");
+        throw runtime_error("cuBLAS create handle failed");
     }
-    // Pass scalars as reference on the device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuDnn create handle failed");
+    }
+
+    // Pass scalars as reference on the Host
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);
+}
+
+runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
+{
+    cublasDestroy(m_cublas_handle);
+    cudnnDestroy(m_cudnn_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -47,8 +56,8 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
     // Host tensors
-    vector<void**> inputs;
-    vector<void**> outputs;
+    vector<void*> inputs;
+    vector<void*> outputs;
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
@@ -63,7 +72,7 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle);
+    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle, m_cudnn_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::call(

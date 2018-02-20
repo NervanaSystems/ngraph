@@ -201,7 +201,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             "NGRAPH_TBB_ENABLE"
         )
     endif()
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
@@ -220,8 +219,7 @@ endif()
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
         # Add sources for the GPU backend
         # and all its dependencies
         set(SRC ${SRC}
@@ -235,9 +233,11 @@ endif()
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
             )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
+            "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\""
+        )
     endif()
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 
 endif()
 
