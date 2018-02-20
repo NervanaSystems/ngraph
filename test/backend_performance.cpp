@@ -31,6 +31,7 @@
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "util/benchmark.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
 

@@ -24,6 +24,7 @@
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
+#include "../../test/util/benchmark.hpp"
 #include "../../test/util/test_tools.hpp"
 using namespace std;
 

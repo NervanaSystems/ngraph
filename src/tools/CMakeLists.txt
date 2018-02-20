@@ -17,6 +17,7 @@
 if (NGRAPH_CPU_ENABLE)
     set (SRC
         nbench.cpp
+        ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
     )
 
     add_executable(nbench ${SRC})
