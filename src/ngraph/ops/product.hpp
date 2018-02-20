@@ -22,48 +22,47 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Tensor sum operation.
+        /// \brief Product reduction operation.
         ///
-        /// Element-wise sums the input tensor, eliminating the specified reduction axes.
-        /// For example:
+        /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
         ///
         /// \f[
-        ///     \mathit{sum}\left(\{0\},
+        ///     \mathit{product}\left(\{0\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
         ///                5 & 6 \end{array} \right]\right) =
-        ///     \left[ (1 + 3 + 5), (2 + 4 + 6) \right] =
-        ///     \left[ 9, 12 \right]~~~\text{(dimension 0 (rows) is eliminated)}
+        ///     \left[ (1 * 3 * 5), (2 * 4 * 6) \right] =
+        ///     \left[ 15, 48 \right]~~~\text{(dimension 0 (rows) is eliminated)}
         /// \f]
         ///
         /// \f[
-        ///     \mathit{sum}\left(\{1\},
+        ///     \mathit{product}\left(\{1\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
         ///                5 & 6 \end{array} \right]\right) =
-        ///     \left[ (1 + 2), (3 + 4), (5 + 6) \right] =
-        ///     \left[ 3, 7, 11 \right]~~~\text{(dimension 1 (columns) is eliminated)}
+        ///     \left[ (1 * 2), (3 * 4), (5 * 6) \right] =
+        ///     \left[ 2, 12, 30 \right]~~~\text{(dimension 1 (columns) is eliminated)}
         /// \f]
         ///
         /// \f[
-        ///     \mathit{sum}\left(\{0,1\},
+        ///     \mathit{product}\left(\{0,1\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
         ///                5 & 6 \end{array} \right]\right) =
-        ///      (1 + 2) + (3 + 4) + (5 + 6) =
-        ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
+        ///      (1 * 2) * (3 * 4) * (5 * 6) =
+        ///      720~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
         ///
-        /// This is equivalent to Reduce where `arg_init` = 0 and `reduction_function` is \f$f(x,y) = x+y\f$.
+        /// This is equivalent to Reduce where `arg_init` = 1 and `reduction_function` is \f$f(x,y) = x*y\f$.
         ///
         /// ## Parameters
         ///
-        /// |                      | Description                              |
-        /// | -------------------- | ---------------------------------------- |
-        /// | `reduction_axes`     | The axes to eliminate through summation. |
+        /// |                      | Description                            |
+        /// | -------------------- | -------------------------------------- |
+        /// | `reduction_axes`     | The axes to eliminate through product. |
         ///
         /// ## Inputs
         ///
@@ -73,18 +72,18 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                                      | Description                                                                                                      |
-        /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-        /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
-        class Sum : public util::ArithmeticReduction
+        /// | Type                                      | Description                                                                                                    |
+        /// | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+        /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by product. |
+        class Product : public util::ArithmeticReduction
         {
         public:
-            /// \brief Constructs a summation operation.
+            /// \brief Constructs a product reduction operation.
             ///
-            /// \param arg The tensor view to be summed.
+            /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-                : ArithmeticReduction("Sum", arg, reduction_axes)
+            Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+                : ArithmeticReduction("Product", arg, reduction_axes)
             {
             }
 
@@ -95,12 +94,8 @@ namespace ngraph
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<Sum>(new_args.at(0), m_reduction_axes);
+                return std::make_shared<Product>(new_args.at(0), m_reduction_axes);
             }
-
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }
