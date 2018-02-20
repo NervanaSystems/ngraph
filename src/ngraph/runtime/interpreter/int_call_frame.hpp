@@ -495,6 +495,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+        else if (node_op == "Max")
+        {
+            const op::Max* max = static_cast<const op::Max*>(&node);
+            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           max->get_reduction_axes());
+        }
         else if (node_op == "Maximum")
         {
             kernel::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -515,15 +524,6 @@ private:
                                 max_pool->get_padding_below(),
                                 max_pool->get_padding_above());
         }
-        else if (node_op == "Max")
-        {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           args[0]->get_shape(),
-                           out[0]->get_shape(),
-                           max->get_reduction_axes());
-        }
         else if (node_op == "MaxPoolBackprop")
         {
             ngraph::op::MaxPoolBackprop* max_pool_backprop =
@@ -539,13 +539,6 @@ private:
                                          max_pool_backprop->get_padding_below(),
                                          max_pool_backprop->get_padding_above());
         }
-        else if (node_op == "Minimum")
-        {
-            kernel::minimum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
-        }
         else if (node_op == "Min")
         {
             const op::Min* min = static_cast<const op::Min*>(&node);
@@ -554,6 +547,13 @@ private:
                            args[0]->get_shape(),
                            out[0]->get_shape(),
                            min->get_reduction_axes());
+        }
+        else if (node_op == "Minimum")
+        {
+            kernel::minimum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Multiply")
         {

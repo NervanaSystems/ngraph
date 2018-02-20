@@ -555,6 +555,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Log>(args[0]);
         }
+        else if (node_op == "Max")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Max>(args[0], reduction_axes);
+        }
         else if (node_op == "MaxPool")
         {
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -599,11 +604,6 @@ static shared_ptr<ngraph::Function>
                                                     window_movement_strides,
                                                     padding_below,
                                                     padding_above);
-        }
-        else if (node_op == "Max")
-        {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-            node = make_shared<op::Max>(args[0], reduction_axes);
         }
         else if (node_op == "Maximum")
         {
@@ -969,6 +969,11 @@ static json write(const Node& n)
     else if (node_op == "Log")
     {
     }
+    else if (node_op == "Max")
+    {
+        auto tmp = dynamic_cast<const op::Max*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+    }
     else if (node_op == "MaxPool")
     {
         auto tmp = dynamic_cast<const op::MaxPool*>(&n);
@@ -976,11 +981,6 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-    }
-    else if (node_op == "Max")
-    {
-        auto tmp = dynamic_cast<const op::Max*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "MaxPoolBackprop")
     {
