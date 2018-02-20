@@ -631,7 +631,7 @@ TEST(type_prop, reduce_nonscalar)
     {
         auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect non-scalar initial value for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -656,7 +656,7 @@ TEST(type_prop, reduce_elem_type_mismatch)
     {
         auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect element type mismatch for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -816,7 +816,7 @@ TEST(type_prop, reduce_axis_oob)
     {
         auto r = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 2, 1});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect out-of-bound axis for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -6042,6 +6042,48 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
         EXPECT_EQ(
             error.what(),
             std::string("Pad rank for interior padding does not match rank of argument tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, sum_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    auto r0 = make_shared<op::Sum>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::f32);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Sum>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::f32);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Sum>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::f32);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Sum>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::f32);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, sum_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Sum>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for sum";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
     }
     catch (...)
     {

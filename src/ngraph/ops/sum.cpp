@@ -15,45 +15,10 @@
 *******************************************************************************/
 
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/ops/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs("Sum", {arg})
-    , m_reduction_axes(reduction_axes)
-{
-    auto& input = get_inputs().at(0);
-    auto& input_element_type = input.get_element_type();
-    if (input_element_type == element::boolean)
-    {
-        throw ngraph_error("Argument for sum must have numeric element type");
-    }
-
-    auto input_shape = input.get_shape();
-
-    for (auto axis : m_reduction_axes)
-    {
-        if (axis >= input_shape.size())
-        {
-            throw ngraph_error("Reduction axis for sum is out of bounds");
-        }
-    }
-
-    Shape result_shape;
-
-    for (size_t i = 0; i < input_shape.size(); i++)
-    {
-        if (m_reduction_axes.count(i) == 0)
-        {
-            result_shape.push_back(input_shape.at(i));
-        }
-    }
-
-    set_value_type_checked(input.get_element_type(), result_shape);
-}
 
 void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {

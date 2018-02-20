@@ -76,6 +76,7 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
+    ops/util/arithmetic_reduction.cpp
     ops/util/binary_elementwise_arithmetic.cpp 
     ops/util/binary_elementwise_comparison.cpp 
     ops/util/binary_elementwise.cpp 
