@@ -1,8 +1,8 @@
 # Basic Makefile for contrib/docker. This can be expanded later as more targets
 # are added.
 
-# Default is to build with -j for parallel builds.  Turn off with
-#   make PARELLEL=
+# Default is to build with -j for parallel cmake/make.  Turn off with
+#   make PARALLEL=
 PARALLEL=-j
 
 # DIR is an internal variable that serves as an anchor to this cloned git
@@ -28,7 +28,18 @@ DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
 
 # Enable additional options to be added on the command line
 ifndef CMAKE_OPTIONS_EXTRA
-    CMAKE_OPTIONS_EXTRA = ""
+    CMAKE_OPTIONS_EXTRA=
+endif
+
+# Specify the default run_as_user script to execute
+# The default value is "run_as_user.sh" (ubuntu1604)
+# Set for built-in centos74 environment as "run_as_centos_user.sh"
+# Set for ubuntu1604 as "run_as_ubuntu_user.sh"
+# Custom: copy a custom script to the contrib/docker directory and provide the filename
+ifndef RUN_AS_USER
+    RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+else
+    RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/${RUN_AS_USER}"
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
