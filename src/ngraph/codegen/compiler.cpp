@@ -151,6 +151,8 @@ void codegen::StaticCompiler::initialize()
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
+    diag_options->ShowCarets = false;
+    diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     DiagnosticsEngine diag_engine(diag_id, &*diag_options);
 
@@ -206,19 +208,8 @@ void codegen::StaticCompiler::initialize()
     }
 
     // Enable various target features
-    // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
-
     TO.CPU = sys::getHostCPUName();
-    TO.FeaturesAsWritten.emplace_back("+sse");
-    TO.FeaturesAsWritten.emplace_back("+sse2");
-    TO.FeaturesAsWritten.emplace_back("+sse3");
-    TO.FeaturesAsWritten.emplace_back("+ssse3");
-    TO.FeaturesAsWritten.emplace_back("+sse4.1");
-    TO.FeaturesAsWritten.emplace_back("+sse4.2");
-    TO.FeaturesAsWritten.emplace_back("+avx");
-    TO.FeaturesAsWritten.emplace_back("+avx2");
-    TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
 codegen::StaticCompiler::~StaticCompiler()
@@ -351,6 +342,15 @@ void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
     load_headers_from_resource();
+#elif defined(__APPLE__)
+    add_header_search_path(EIGEN_HEADERS_PATH);
+    add_header_search_path(MKLDNN_HEADERS_PATH);
+    add_header_search_path(TBB_HEADERS_PATH);
+    add_header_search_path(NGRAPH_HEADERS_PATH);
+    add_header_search_path(INSTALLED_HEADERS_PATH);
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+    add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h

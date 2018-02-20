@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        class AvgPool : public RequiresTensorViewArgs
+        class AvgPool : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched average pooling operation.
@@ -69,7 +69,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
 
                 return std::make_shared<AvgPool>(new_args.at(0),
                                                  m_window_shape,
@@ -96,7 +98,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class AvgPoolBackprop : public RequiresTensorViewArgs
+        class AvgPoolBackprop : public util::RequiresTensorViewArgs
         {
         public:
             AvgPoolBackprop(const Shape& forward_arg_shape,
@@ -110,7 +112,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
 
                 AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
                                                             new_args.at(0),

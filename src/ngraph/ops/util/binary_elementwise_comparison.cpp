@@ -14,14 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_comparison.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                             const shared_ptr<Node>& arg0,
-                                                             const shared_ptr<Node>& arg1)
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
+                                                                   const shared_ptr<Node>& arg0,
+                                                                   const shared_ptr<Node>& arg1)
     : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
     if (arg0->get_element_type() != arg1->get_element_type())

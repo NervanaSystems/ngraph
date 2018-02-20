@@ -36,9 +36,7 @@ set (SRC
     ops/abs.cpp
     ops/add.cpp
     ops/avg_pool.cpp
-    ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_comparison.cpp
-    ops/binary_elementwise.cpp
+    ops/batch_norm.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
@@ -78,8 +76,12 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise.cpp
+    ops/util/binary_elementwise_arithmetic.cpp 
+    ops/util/binary_elementwise_comparison.cpp 
+    ops/util/binary_elementwise.cpp 
+    ops/util/requires_tensor_view_args.cpp 
+    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/unary_elementwise.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
@@ -250,7 +252,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
         resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator eigen ext_llvm ext_mkldnn
+        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
     add_dependencies(ngraph header_resource)
@@ -329,35 +331,33 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-if (NOT APPLE)
-    install(DIRECTORY
-        ${MKLDNN_LIB_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_LIB}"
+install(DIRECTORY
+    ${MKLDNN_LIB_DIR}/
+    DESTINATION "${NGRAPH_INSTALL_LIB}"
+)
+
+if (NGRAPH_TBB_ENABLE)
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb.so.*"
     )
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+    )
+endif()
 
-    if (NGRAPH_TBB_ENABLE)
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb.so.*"
-        )
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb_debug.so.*"
-        )
-    endif()
-
-    if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "*.so"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.hpp"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+if (NGRAPH_ARGON_ENABLE)
+    install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "*.so"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.hpp"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.h"
+    )
 endif()

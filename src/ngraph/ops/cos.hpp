@@ -16,26 +16,14 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise cosine operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                          |
-        /// | ---------------------- | ------------------------------------------------------------------------------------ |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \cos(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Cos : public UnaryElementwiseArithmetic
+        class Cos : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a cosine operation.
@@ -50,7 +38,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Cos>(new_args.at(0));
             }
 

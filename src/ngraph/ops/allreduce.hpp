@@ -17,13 +17,13 @@
 #ifdef NGRAPH_DISTRIBUTED
 
 #include <memory>
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public RequiresTensorViewArgs
+        class AllReduce : public util::RequiresTensorViewArgs
         {
         public:
             AllReduce(const std::shared_ptr<Node>& arg);
@@ -32,7 +32,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<AllReduce>(new_args.at(0));
             }
         };

@@ -14,14 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const std::string& node_type,
-                                                             const std::shared_ptr<Node>& arg0,
-                                                             const std::shared_ptr<Node>& arg1)
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
+    const std::string& node_type,
+    const std::shared_ptr<Node>& arg0,
+    const std::shared_ptr<Node>& arg1)
     : BinaryElementwise(node_type, arg0->get_element_type(), arg0, arg1)
 {
     if (arg0->get_element_type() != arg1->get_element_type())

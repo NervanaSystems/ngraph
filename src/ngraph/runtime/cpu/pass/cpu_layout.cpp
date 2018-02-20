@@ -18,6 +18,7 @@
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
+#include <string>
 
 #include <mkldnn.hpp>
 
