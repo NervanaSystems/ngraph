@@ -37,7 +37,7 @@ namespace ngraph
             {
             public:
                 MKLDNNEmitter(std::shared_ptr<CPU_ExternalFunction> ef)
-                    : m_external_function(ef)
+                    : external_function(ef)
                 {
                 }
 
@@ -69,7 +69,7 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above);
 
             private:
-                std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<mkldnn::stream> mkldnn_streams;
                 std::unordered_map<size_t, std::vector<size_t>> primitive_deps;
