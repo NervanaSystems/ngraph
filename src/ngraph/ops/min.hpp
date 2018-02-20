@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/util/requires_tensor_view_args.hpp"
+#include "ngraph/ops/util/arithmetic_reduction.hpp"
 
 namespace ngraph
 {
@@ -45,14 +45,17 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                                       |
         /// | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by taking the minimum element. |
-        class Min : public util::RequiresTensorViewArgs
+        class Min : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a min-reduction operation.
             ///
             /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Min(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Min(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+                : ArithmeticReduction("Min", arg, reduction_axes)
+            {
+            }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -63,11 +66,6 @@ namespace ngraph
                 }
                 return std::make_shared<Min>(new_args.at(0), m_reduction_axes);
             }
-
-            /// \return The axis positions (0-based) to be eliminated through min-reduction.
-            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
-        protected:
-            AxisSet m_reduction_axes;
         };
     }
 }

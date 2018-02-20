@@ -14,31 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/product.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/util/arithmetic_reduction.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Product::Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs("Product", {arg})
+op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
+                                                   const std::shared_ptr<Node>& arg,
+                                                   const AxisSet& reduction_axes)
+    : RequiresTensorViewArgs(node_type, {arg})
     , m_reduction_axes(reduction_axes)
 {
     auto& input = get_inputs().at(0);
-    auto& input_element_type = input.get_element_type();
-    if (input_element_type == element::boolean)
-    {
-        throw ngraph_error("Argument for product must have numeric element type");
-    }
-
     auto input_shape = input.get_shape();
 
     for (auto axis : m_reduction_axes)
     {
         if (axis >= input_shape.size())
         {
-            throw ngraph_error("Reduction axis for product is out of bounds");
+            throw ngraph_error("Reduction axis for arithmetic reduction operator is out of bounds");
         }
     }
 

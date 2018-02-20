@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/util/requires_tensor_view_args.hpp"
+#include "ngraph/ops/util/arithmetic_reduction.hpp"
 
 namespace ngraph
 {
@@ -45,14 +45,17 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                                       |
         /// | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by taking the maximum element. |
-        class Max : public util::RequiresTensorViewArgs
+        class Max : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a max-reduction operation.
             ///
             /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+                : ArithmeticReduction("Max", arg, reduction_axes)
+            {
+            }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -63,11 +66,6 @@ namespace ngraph
                 }
                 return std::make_shared<Max>(new_args.at(0), m_reduction_axes);
             }
-
-            /// \return The axis positions (0-based) to be eliminated through max-reduction.
-            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
-        protected:
-            AxisSet m_reduction_axes;
         };
     }
 }

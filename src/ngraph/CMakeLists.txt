@@ -50,10 +50,8 @@ set (SRC
     ops/function_call.cpp
     ops/get_output_element.cpp
     ops/log.cpp
-    ops/max.cpp
     ops/max_pool.cpp
     ops/maximum.cpp
-    ops/min.cpp
     ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp
@@ -63,7 +61,6 @@ set (SRC
     ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
-    ops/product.cpp
     ops/reduce.cpp
     ops/reduce_window.cpp
     ops/replace_slice.cpp
@@ -79,6 +76,7 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
+    ops/util/arithmetic_reduction.cpp
     ops/util/binary_elementwise_arithmetic.cpp 
     ops/util/binary_elementwise_comparison.cpp 
     ops/util/binary_elementwise.cpp 
