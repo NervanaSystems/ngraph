@@ -4,10 +4,19 @@
 Convolution
 ###########
 
+.. code-block:: cpp
+
+   Convolution  // A batched convolution operation
+
+
 Description
 ===========
 
-A batched convolution operation.
+.. TODO 
+
+Long description
+
+
 
 Inputs
 ------
@@ -23,24 +32,24 @@ Inputs
 Attributes
 ----------
 
-+-----------------------------+-----------------------------+---------------------------------------+
-| Name                        | Type                        | Notes                                 |
-+=============================+=============================+=======================================+
-| ``window_movement_strides`` | ``Strides[n]``              | How far to slide the window along     |
-|                             |                             | each axis at each step.               |
-+-----------------------------+-----------------------------+---------------------------------------+
-| ``window_dilation_strides`` | ``Strides[n]``              | Per-axis dilation to apply to the     |
-|                             |                             | filters.                              |
-+-----------------------------+-----------------------------+---------------------------------------+
-| ``padding_below``           | ``Shape[n]``                | How many padding elements to add      |
-|                             |                             | below the 0-coordinate on each axis.  |
-+-----------------------------+-----------------------------+---------------------------------------+
-| ``padding_above``           | ``Shape[n]``                | How manny padding elements to add     |
-|                             |                             | above the max-coordinate on each axis.|
-+-----------------------------+-----------------------------+---------------------------------------+
-| ``image_dilation_strides``  | ``Strides[n]``              | Per-axis dilation to apply to the     |
-|                             |                             | image batch.                          |
-+-----------------------------+-----------------------------+---------------------------------------+
++-----------------------------+-----------------------------+----------------------------------------+
+| Name                        | Type                        | Notes                                  |
++=============================+=============================+========================================+
+| ``window_movement_strides`` | ``Strides[n]``              | How far to slide the window along      |
+|                             |                             | each axis at each step.                |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``window_dilation_strides`` | ``Strides[n]``              | Per-axis dilation to apply to the      |
+|                             |                             | filters.                               |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``padding_below``           | ``Shape[n]``                | How many padding elements to add       |
+|                             |                             | below the 0-coordinate on each axis.   |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``padding_above``           | ``Shape[n]``                | How many padding elements to add above |
+|                             |                             | the max-coordinate on each axis.       |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``image_dilation_strides``  | ``Strides[n]``              | Per-axis dilation to apply to the      |
+|                             |                             | image batch.                           |
++-----------------------------+-----------------------------+----------------------------------------+
 
 
 Outputs
@@ -104,7 +113,12 @@ such that
 Convolution
 -----------
 
-.. TODO
+.. image possibly imported soon; they are not big files but they are svg 
+
+.. 
+ figure:: ../graphics/classngraph_1_1op_1_1Convolution__coll__graph_org.svg
+ :height: 500px
+
 
 Padded, Dilated, Strided Convolution
 ------------------------------------
@@ -121,8 +135,8 @@ Batched, Padded, Dilated, Strided Convolution
 C++ Interface
 =============
 
-.. WIP 
   .. doxygenclass:: ngraph::op::Convolution
+     :project: ngraph
      :members:
 
      

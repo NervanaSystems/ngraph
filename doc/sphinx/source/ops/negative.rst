@@ -4,10 +4,13 @@
 Negative
 ########
 
+.. code-block:: cpp
+
+   Negative  //  Elementwise negative operation.
+
+
 Description
 ===========
-
-Elementwise negative operation.
 
 Produces a single output tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the negative of the
@@ -28,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -52,4 +55,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Negative
+   :project: ngraph
    :members:

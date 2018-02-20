@@ -4,10 +4,12 @@
 Floor
 #####
 
+.. code-block:: cpp
+
+   Floor  // Elementwise floor operation
+
 Description
 ===========
-
-Elementwise floor operation.
 
 Produces a single output tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the floor of the
@@ -54,4 +56,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Floor
+   :project: ngraph
    :members:

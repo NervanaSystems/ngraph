@@ -45,12 +45,12 @@ standards:
 - Case variable and function names with ``snake_case``.
     
 Method names for basic acceesors are prefixed by ``get_`` or ``set_`` and 
-should have simple *O(1)* implementations:
+should have simple ``O(1)`` implementations:
 
 - A ``get_`` method should be externally idempotent. It may perform some simple 
   initialization and cache the result for later use.
 
-- ``is_`` may be used instead of ``get_`` for boolean accessors. Trivial ``get_`` 
+- An ``is_`` may be used instead of ``get_`` for boolean accessors. Trivial ``get_`` 
   methods can be defined in a header file.
 
 - A ``set_`` method should change the value returned by the corresponding``get_`` 

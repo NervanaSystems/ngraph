@@ -4,6 +4,11 @@
 Broadcast
 #########
 
+.. code-block:: cpp
+
+   Broadcast  // Operation that produces a tensor based on arg's axes
+
+
 Description
 ===========
 
@@ -87,4 +92,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Broadcast
+   :project: ngraph
    :members:

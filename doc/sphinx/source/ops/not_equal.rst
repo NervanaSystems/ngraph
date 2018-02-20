@@ -1,13 +1,16 @@
 .. not_equal.rst:
 
-#####
+########
 NotEqual
-#####
+########
 
 Description
 ===========
 
-Elementwise not equal operation.
+.. code-block:: cpp
+
+   NotEqual  // Elementwise "not equal" operation.
+
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is true (1) if
@@ -47,4 +50,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::NotEqual
+   :project: ngraph
    :members:

@@ -4,10 +4,13 @@
 Constant
 ########
 
+.. code-block:: cpp
+
+   Constant // Literal constant tensor
+
+
 Description
 ===========
-
-Literal constant tensor.
 
 The output is a tensor initialized from the ``values`` attribute.
 
@@ -41,4 +44,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Constant
+   :project: ngraph
    :members:

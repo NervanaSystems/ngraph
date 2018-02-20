@@ -4,10 +4,13 @@
 Multiply
 ########
 
+.. code-block:: cpp
+
+   Multiply  //  Elementwise multiply operation
+
+
 Description
 ===========
-
-Elementwise multiply operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is the product of the
@@ -54,4 +57,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Multiply
+   :project: ngraph
    :members:

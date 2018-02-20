@@ -4,10 +4,13 @@
 Not
 ###
 
+.. code-block:: cpp
+
+   Not // Elementwise negation operation
+
+
 Description
 ===========
-
-Elementwise negation operation.
 
 Produces a single output tensor of boolean type and the same shape as ``arg``,
 where the value at each coordinate of ``output`` is the negation of the
@@ -28,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | ``element::boolean``    | Same as ``arg``.               |
+| ``output``      | ``element::boolean``    | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -44,4 +47,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Abs
+   :project: ngraph
    :members:

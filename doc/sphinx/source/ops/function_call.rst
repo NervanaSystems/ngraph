@@ -4,10 +4,13 @@
 FunctionCall
 ############
 
+.. code-block:: cpp
+
+   FunctionCall  // Function call operation
+
+
 Description
 ===========
-
-Function call operation.
 
 Calls the specified function on ``args``. The results of the function are the outputs
 of the op.
@@ -40,5 +43,6 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::FunctionCall
+   :project: ngraph
    :members:
 

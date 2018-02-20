@@ -4,10 +4,13 @@
 Maximum
 #######
 
+.. code-block:: cpp
+
+   Maximum  // Elementwise maximum operation
+   
+
 Description
 ===========
-
-Elementwise maximum operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is the maximum of the
@@ -54,4 +57,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Maximum
+   :project: ngraph
    :members:

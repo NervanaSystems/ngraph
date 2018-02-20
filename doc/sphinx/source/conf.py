@@ -191,7 +191,7 @@ texinfo_documents = [
 html_add_permalinks = ""
 
 breathe_projects = {
-    "": "../../../doxygen/xml",
+    "ngraph": "../../doxygen/xml",
 }
 
 rst_epilog = u"""

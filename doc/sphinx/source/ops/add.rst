@@ -4,6 +4,11 @@
 Add
 ###
 
+.. code-block:: cpp
+
+   Add  // Elementwise add operation
+
+
 Description
 ===========
 
@@ -54,4 +59,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Add
+   :project: ngraph
    :members:

@@ -4,6 +4,11 @@
 Dot
 ###
 
+.. code-block:: cpp
+
+   Dot  //  Generalized dot product operation
+
+
 Description
 ===========
 
@@ -78,4 +83,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Dot
+   :project: ngraph
    :members:

@@ -4,10 +4,12 @@
 Atan
 ####
 
+.. code-block:: cpp
+
+   Atan // Elementwise atan operation
+
 Description
 ===========
-
-Elementwise atan operation.
 
 Produces a tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the inverse tangent of the
@@ -28,7 +30,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -52,4 +54,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Atan
+   :project: ngraph
    :members:

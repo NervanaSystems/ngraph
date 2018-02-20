@@ -4,10 +4,13 @@
 Exp
 ###
 
+.. code-block:: cpp
+
+   Exp  // Elementwise expine operation.
+
+
 Description
 ===========
-
-Elementwise expine operation.
 
 Produces a tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the expine of the
@@ -52,4 +55,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Exp
+   :project: ngraph
    :members:

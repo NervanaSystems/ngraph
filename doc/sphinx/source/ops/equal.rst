@@ -47,4 +47,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Equal
+   :project: ngraph
    :members:

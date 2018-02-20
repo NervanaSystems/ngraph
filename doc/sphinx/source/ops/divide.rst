@@ -4,10 +4,13 @@
 Divide
 ######
 
+.. code-block:: cpp
+
+   Divide  //  Elementwise divide operation.
+
+
 Description
 ===========
-
-Elementwise divide operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is the quotient of the
@@ -54,4 +57,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Divide
+   :project: ngraph
    :members:

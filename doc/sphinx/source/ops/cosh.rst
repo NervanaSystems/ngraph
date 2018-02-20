@@ -4,10 +4,13 @@
 Cosh
 ####
 
+.. code-block:: cpp
+
+   Cosh  //  Elementwise hyperbolic cosine operation
+
+
 Description
 ===========
-
-Elementwise hyperbolic cosine operation.
 
 Produces a tensor of the same element type and shape as ``arg``, where
 the value at each coordinate of ``output`` is the hyperbolic cosine of
@@ -52,4 +55,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Cosh
+   :project: ngraph
    :members:

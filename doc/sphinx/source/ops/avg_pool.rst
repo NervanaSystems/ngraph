@@ -4,10 +4,13 @@
 AvgPool
 #######
 
+.. code-block:: cpp
+
+   AvgPool  // Average Pooling operation
+
+
 Description
 ===========
-
-Average Pooling operation.
 
 Average pooling windows its input and produces an average for each window.
 
@@ -46,10 +49,10 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 
 
-Average pooling takes as its input a batch tensor `data` of shape
-:math:`(N,C,d_1,\ldots,d_n)` where  where :math:`N` is the batch
+Average pooling takes as its input, a batch tensor `data` of shape
+:math:`(N,C,d_1,\ldots,d_n)`, where  where :math:`N` is the batch
 size, and :math:`C > 0` is the
-number of channels (sometimes called features).  The dimensions
+number of channels (sometimes called features). The dimensions
 :math:`(d_1,\ldots,d_n)` correspond to the shape of an
 :math:`n`-dimensional data item in a batch. For example, where
 :math:`n=2`, the data may represent a two-dimensional image. It also
@@ -130,5 +133,6 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::AvgPool
+   :project: ngraph
    :members:
 

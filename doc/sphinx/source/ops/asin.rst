@@ -4,10 +4,13 @@
 Asin
 ####
 
+.. code-block:: cpp
+
+   Asin  // Elementwise asin operation.
+
+
 Description
 ===========
-
-Elementwise asin operation.
 
 Produces a tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the inverse sine of the
@@ -50,4 +53,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Asin
+   :project: ngraph
    :members:

@@ -4,10 +4,13 @@
 Minimum
 #######
 
+.. code-block:: cpp
+
+   Minimum  // Short description.
+
+
 Description
 ===========
-
-Elementwise minimum operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is the minimum of the
@@ -54,4 +57,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Minimum
+   :project: ngraph
    :members:

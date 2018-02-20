@@ -4,10 +4,13 @@
 LessEq
 ######
 
+.. code-block:: cpp
+
+   LessEq  // Elementwise less or equal operation
+
+
 Description
 ===========
-
-Elementwise less or equal operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is true (1) if
@@ -46,4 +49,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::LessEq
+   :project: ngraph
    :members:

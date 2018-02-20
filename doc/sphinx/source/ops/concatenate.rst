@@ -4,10 +4,13 @@
 Concatenate
 ###########
 
+.. code-block:: cpp
+
+   Concatenate  // Short description 
+
+
 Description
 ===========
-
-
 
 Produces a single output tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the absoloute value of the
@@ -35,12 +38,12 @@ Attributes
 Outputs
 -------
 
-+-----------------+-------------------------+---------------------------------------------------+
-| Name            | Element Type            | Shape                                             |
-+=================+=========================+===================================================+
-| ``output``      | Same as ``args`         | Same as ``arg`` on non-``concatenation_axis``     |
-|                 |                         | Sum of ``concatenation_axis`` lengths of ``args`` |
-+-----------------+-------------------------+---------------------------------------------------+
++-----------------+-------------------------+----------------------------------------------------+
+| Name            | Element Type            | Shape                                              |
++=================+=========================+====================================================+
+| ``output``      | Same as ``args``         | Same as ``arg`` on non-``concatenation_axis``     |
+|                 |                          | Sum of ``concatenation_axis`` lengths of ``args`` |
++-----------------+-------------------------+----------------------------------------------------+
 
 
 Mathematical Definition
@@ -73,4 +76,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Concatenate
+   :project: ngraph
    :members:
