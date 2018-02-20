@@ -520,7 +520,8 @@ namespace ngraph
                 }
                 else if (result_shape.size() == 2)
                 {
-                    auto axis = (dynamic_cast<const op::Concat*>(node))->get_concatenation_axis();
+                    auto axis =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -545,7 +546,8 @@ namespace ngraph
                 {
                     if (s_use_ref_kernels)
                     {
-                        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
+                                        ->get_concatenation_axis();
 
                         std::vector<std::string> arg_names;
                         std::vector<std::string> arg_shape_strings;
@@ -565,7 +567,8 @@ namespace ngraph
                     }
                     else
                     {
-                        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
+                                        ->get_concatenation_axis();
 
                         std::vector<std::string> arg_names;
                         std::vector<Shape> arg_shapes;
@@ -2899,8 +2902,14 @@ namespace ngraph
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = max->get_reduction_axes();
 
+                bool zero_sized = false;
+                for (size_t s : arg_shape)
+                {
+                    zero_sized |= (s == 0);
+                }
+
                 // Trivial case: no reduction axes.
-                if (reduction_axes.size() == 0)
+                if (!zero_sized && reduction_axes.size() == 0)
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2910,8 +2919,8 @@ namespace ngraph
                     writer << "}\n";
                 }
                 // Full reduction? Then reduce to scalar.
-                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2920,7 +2929,7 @@ namespace ngraph
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2929,7 +2938,7 @@ namespace ngraph
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2973,8 +2982,14 @@ namespace ngraph
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = min->get_reduction_axes();
 
+                bool zero_sized = false;
+                for (size_t s : arg_shape)
+                {
+                    zero_sized |= (s == 0);
+                }
+
                 // Trivial case: no reduction axes.
-                if (reduction_axes.size() == 0)
+                if (!zero_sized && reduction_axes.size() == 0)
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2984,8 +2999,8 @@ namespace ngraph
                     writer << "}\n";
                 }
                 // Full reduction? Then reduce to scalar.
-                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -2994,7 +3009,7 @@ namespace ngraph
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -3003,7 +3018,7 @@ namespace ngraph
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
