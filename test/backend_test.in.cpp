@@ -233,7 +233,6 @@ TEST(${BACKEND_NAME}, multiple_result)
 
 TEST(${BACKEND_NAME}, abs)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{A});
