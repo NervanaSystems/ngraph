@@ -16,9 +16,9 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <typeindex>
 #include <typeinfo>
-#include <string>
 
 #include <mkldnn.hpp>
 
@@ -40,7 +40,8 @@ static const runtime::cpu::pass::LayoutOpMap dispatcher{
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::LayoutConvolution},
 };
 
-void runtime::cpu::pass::CPULayout::set_default_layouts(runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<Node> node)
+void runtime::cpu::pass::CPULayout::set_default_layouts(
+    runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<Node> node)
 {
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
@@ -54,20 +55,25 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(runtime::cpu::CPU_Extern
         auto tvl = tv->get_tensor_view_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
         if (cpu_tvl && cpu_tvl->get_mkldnn_format() != memory::format::format_undef &&
-            cpu_tvl->get_mkldnn_format() != runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)) 
+            cpu_tvl->get_mkldnn_format() !=
+                runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl))
         {
             auto native_axis_order =
-            ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
+                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
             auto layout =
                 std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
             layout->set_mkldnn_format(runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl));
-            auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(
+                output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
             replace_node = true;
-            NGRAPH_INFO << "Inserted conversion node " << new_node->get_name() << " between " << output.get_node()->get_name()
-                            << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and " << node->get_name()
-                            << "(layout: default)";
-        } else {
+            NGRAPH_INFO << "Inserted conversion node " << new_node->get_name() << " between "
+                        << output.get_node()->get_name()
+                        << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
+                        << node->get_name() << "(layout: default)";
+        }
+        else
+        {
             new_args.push_back(node->get_input_op(index));
         }
         index++;
@@ -77,7 +83,7 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(runtime::cpu::CPU_Extern
     if (replace_node)
     {
         new_node = node->copy_with_new_args(new_args);
-        if (node->is_output()) 
+        if (node->is_output())
         {
             external_function->get_function()->replace_node(node, new_node);
         }
@@ -86,9 +92,10 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(runtime::cpu::CPU_Extern
             ngraph::replace_node(node, new_node);
         }
         NGRAPH_INFO << "Replaced " << node->get_name() << " with " << new_node->get_name();
-        external_function->get_op_annotations(new_node.get())->is_mkldnn_op = external_function->get_op_annotations(node.get())->is_mkldnn_op;
-        node = new_node;        
-    } 
+        external_function->get_op_annotations(new_node.get())->is_mkldnn_op =
+            external_function->get_op_annotations(node.get())->is_mkldnn_op;
+        node = new_node;
+    }
 
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
@@ -124,11 +131,10 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         {
             handler->second(m_external_function.get(), node);
         }
-        else 
+        else
         {
             set_default_layouts(m_external_function.get(), node);
         }
-            
     }
 
     return false;
@@ -184,9 +190,12 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
         convolution_forward::primitive_desc prim_desc(fwd_desc, cpu_engine);
         memory::format prim_input_formats[2];
         memory::format prim_output_formats[1];
-        prim_input_formats[0] = static_cast<memory::format>(prim_desc.src_primitive_desc().desc().data.format);
-        prim_output_formats[0] = static_cast<memory::format>(prim_desc.dst_primitive_desc().desc().data.format);
-        prim_input_formats[1] = static_cast<memory::format>(prim_desc.weights_primitive_desc().desc().data.format);
+        prim_input_formats[0] =
+            static_cast<memory::format>(prim_desc.src_primitive_desc().desc().data.format);
+        prim_output_formats[0] =
+            static_cast<memory::format>(prim_desc.dst_primitive_desc().desc().data.format);
+        prim_input_formats[1] =
+            static_cast<memory::format>(prim_desc.weights_primitive_desc().desc().data.format);
 
         std::vector<shared_ptr<Node>> new_args;
         bool replace_node = false;
@@ -202,17 +211,21 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
             if (!mkldnn_tvl || mkldnn_tvl->get_mkldnn_format() != prim_input_formats[index])
             {
                 auto native_axis_order =
-                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
-                auto layout =
-                    std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
+                    ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
+                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+                    *tv, native_axis_order);
                 layout->set_mkldnn_format(prim_input_formats[index]);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(output.get_node(), output.get_index(), layout));
+                auto new_node = std::shared_ptr<Node>(new runtime::cpu::ops::ConvertLayout(
+                    output.get_node(), output.get_index(), layout));
                 new_args.push_back(new_node);
                 replace_node = true;
-                NGRAPH_INFO << "Inserted conversion node " << new_node->get_name() << " between " << output.get_node()->get_name()
-                            << "(layout: " << mkldnn_tvl->get_mkldnn_format() << ") and " << node->get_name()
-                            << "(layout: " << prim_input_formats[index] << ")";
-            } else {
+                NGRAPH_INFO << "Inserted conversion node " << new_node->get_name() << " between "
+                            << output.get_node()->get_name()
+                            << "(layout: " << mkldnn_tvl->get_mkldnn_format() << ") and "
+                            << node->get_name() << "(layout: " << prim_input_formats[index] << ")";
+            }
+            else
+            {
                 new_args.push_back(node->get_input_op(index));
             }
             index++;
@@ -222,7 +235,7 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
         if (replace_node)
         {
             new_node = node->copy_with_new_args(new_args);
-            if (node->is_output()) 
+            if (node->is_output())
             {
                 external_function->get_function()->replace_node(node, new_node);
             }
@@ -231,9 +244,10 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
                 ngraph::replace_node(node, new_node);
             }
             NGRAPH_INFO << "Replaced " << node->get_name() << " with " << new_node->get_name();
-            external_function->get_op_annotations(new_node.get())->is_mkldnn_op = external_function->get_op_annotations(node.get())->is_mkldnn_op;
+            external_function->get_op_annotations(new_node.get())->is_mkldnn_op =
+                external_function->get_op_annotations(node.get())->is_mkldnn_op;
             node = new_node;
-        } 
+        }
 
         // Set convolution output format
         for (size_t i = 0; i < node->get_output_size(); ++i)
@@ -247,7 +261,7 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
             {
                 throw ngraph_error("Convolution output layout already set");
             }
-            
+
             auto native_axis_order =
                 ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
 
@@ -256,7 +270,8 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
 
             layout->set_mkldnn_format(prim_output_formats[i]);
             tv->set_tensor_view_layout(layout);
-            NGRAPH_INFO << "Setting Node: " << node->get_name() << " output layout: " << prim_output_formats[i] << endl;
+            NGRAPH_INFO << "Setting Node: " << node->get_name()
+                        << " output layout: " << prim_output_formats[i] << endl;
         }
     }
     else

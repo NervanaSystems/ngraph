@@ -98,7 +98,8 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     auto tvl = this->get_tensor_view_layout();
     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
     if (cpu_tvl && cpu_tvl->get_mkldnn_format() != memory::format::format_undef &&
-            cpu_tvl->get_mkldnn_format() != runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)) 
+        cpu_tvl->get_mkldnn_format() !=
+            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl))
     {
         auto tensor_shape = this->get_shape();
         auto input_format = cpu_tvl->get_mkldnn_format();
@@ -115,12 +116,12 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         reorder prim = reorder(input, output);
         stream s = stream(stream::kind::eager);
         s.submit({prim}).wait();
-    } 
-    else 
+    }
+    else
     {
         const char* source = get_data_ptr();
         memcpy(target, &source[tensor_offset], n);
-    }    
+    }
 }
 
 size_t runtime::cpu::CPUTensorView::get_size() const

@@ -20,7 +20,8 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
 #define LAYOUT_DECL(E)                                                                             \
-    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<ngraph::Node> node)
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,                               \
+      std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
 {
@@ -49,7 +50,8 @@ namespace ngraph
 
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;
-                    static void set_default_layouts(CPU_ExternalFunction* external_function, std::shared_ptr<Node> node);
+                    static void set_default_layouts(CPU_ExternalFunction* external_function,
+                                                    std::shared_ptr<Node> node);
                 };
             }
         }

@@ -5843,7 +5843,6 @@ TEST(${BACKEND_NAME}, convolution_layout)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
     Shape shape_a{1, 1, 14};
