@@ -286,7 +286,7 @@ namespace ngraph
 
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_weights(2);\n";
+                       << ">bn_weights(2*" << input_shape[1] << ");\n";
                 auto weights_shape = Shape{2, input_shape[1]};
 
                 // push gamma and beta
