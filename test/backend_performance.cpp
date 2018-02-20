@@ -153,6 +153,18 @@ TEST(benchmark, mxnet_seq2seq_backward)
     run_benchmark(json_path, "CPU", 10);
 }
 
+TEST(benchmark, mxnet_sockeye_seq2seq_forward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Sockeye_Seq2Seq_forward.json");
+    run_benchmark(json_path, "CPU", 10);
+}
+
+TEST(benchmark, mxnet_sockeye_seq2seq_backward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Sockeye_Seq2Seq_backward.json");
+    run_benchmark(json_path, "CPU", 10);
+}
+
 //
 // Benchmarks a graph that concatenates six 32x1x200 arrays along the middle axis.
 //
