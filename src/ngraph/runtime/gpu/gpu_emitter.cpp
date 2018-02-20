@@ -193,12 +193,12 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
         // GEMM Call
-        if(arg0_shape[0] != out[0].get_shape()[0] ||  // m
-           arg1_shape[1] != out[0].get_shape()[1] || // n
-           arg0_shape[1] != arg1_shape[0])         // k
-           {
-               throw std::runtime_error("input and output shape is not correct for dot;");
-           }
+        if (arg0_shape[0] != out[0].get_shape()[0] || // m
+            arg1_shape[1] != out[0].get_shape()[1] || // n
+            arg0_shape[1] != arg1_shape[0])           // k
+        {
+            throw std::runtime_error("input and output shape is not correct for dot;");
+        }
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
         writer << "static const float alpha = 1.0;\n";
