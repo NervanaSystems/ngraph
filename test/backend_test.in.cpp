@@ -6631,7 +6631,7 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     EXPECT_EQ(expected, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, Simple_relu_fprop)
+TEST(${BACKEND_NAME}, relu_2Dfprop)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6653,7 +6653,7 @@ TEST(${BACKEND_NAME}, Simple_relu_fprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, Simple_relu_4Dfprop)
+TEST(${BACKEND_NAME}, relu_4Dfprop)
 {
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6675,7 +6675,7 @@ TEST(${BACKEND_NAME}, Simple_relu_4Dfprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, Simple_relu_backprop)
+TEST(${BACKEND_NAME}, relu_2Dbackprop)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6700,7 +6700,7 @@ TEST(${BACKEND_NAME}, Simple_relu_backprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, Simple_relu_4Dbackprop)
+TEST(${BACKEND_NAME}, relu_4Dbackprop)
 {
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);

@@ -62,7 +62,7 @@ void pass::CoreFusion::construct_relu_pattern()
         auto mzero = m.get_pattern_map()[zero];
         if (!is_zero(mzero))
         {
-            cout << "zero constant = " << mzero->get_name() << " not equal to 0\n";
+            NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
             return nn;
         }
         auto mpattern = m.match_root();
