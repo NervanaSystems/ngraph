@@ -49,6 +49,7 @@ namespace ngraph
 
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                    static void set_default_layouts(CPU_ExternalFunction* external_function, std::shared_ptr<Node> node);
                 };
             }
         }
