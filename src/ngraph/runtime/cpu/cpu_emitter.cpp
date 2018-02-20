@@ -2724,7 +2724,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
 
                 if (delta_rank == 4 && mpb->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                    args[0].get_element_type() == element::f32 && max_pool_fprop_op != nullptr)
                 {
                     const string& et =
                         get_mkldnn_data_type(args[1].get_element_type().c_type_string());
@@ -2743,7 +2743,7 @@ namespace ngraph
 
                     //----------------------------------------------------------------------------------------------
                     // create a forward primitive_desc, use this to query the workspace
-                    // FIXME: (pruthvi) this is a workaround, till we maintain a global context to refer to the corrosponding
+                    // TODO: (pruthvi) this is a workaround, till we maintain a global context to refer to the corrosponding
                     //        MKLDNN fprop kernel. this impacts performance
                     writer << "memory::desc max_pool_input_desc = memory::desc({"
                            << join(args[0].get_shape()) << "}, " << et
