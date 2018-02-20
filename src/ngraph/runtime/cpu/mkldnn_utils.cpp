@@ -41,11 +41,12 @@ namespace ngraph
                 static const std::unordered_set<std::type_index> s_op_registry{
                     TI(ngraph::op::AvgPool),
                     TI(ngraph::op::AvgPoolBackprop),
+                    TI(ngraph::op::BatchNorm),
                     TI(ngraph::op::Convolution),
                     TI(ngraph::op::ConvolutionBackpropData),
                     TI(ngraph::op::ConvolutionBackpropFilters),
                     TI(ngraph::op::MaxPool),
-                    TI(ngraph::op::BatchNorm)};
+                    TI(ngraph::op::MaxPoolBackprop)};
 
                 static const std::unordered_map<std::string, const mkldnn::memory::data_type>
                     s_data_type_map{{"char", mkldnn::memory::data_type::s8},
