@@ -16,10 +16,7 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/ops/util/op_annotations.hpp"
 
 namespace ngraph
 {
@@ -27,27 +24,19 @@ namespace ngraph
     {
         namespace cpu
         {
-            class TensorViewWrapper;
+            /// \brief Annotations added to graph ops by CPU backend passes
+            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
+            {
+            public:
+                /// \brief Constructs a CPUOpAnnotations
+                ///
+                /// \param args
+                CPUOpAnnotations() { m_mkldnn_op = false; }
+                bool is_mkldnn_op() { return m_mkldnn_op; }
+                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
+            private:
+                bool m_mkldnn_op;
+            };
         }
     }
 }
-
-class ngraph::runtime::cpu::TensorViewWrapper
-{
-public:
-    TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
-                      const std::string& alias = "");
-
-    size_t get_size() const;
-    const std::vector<size_t>& get_shape() const;
-    const std::vector<size_t>& get_strides() const;
-    const element::Type& get_element_type() const;
-    const std::string& get_name() const;
-    const std::string& get_type() const;
-    bool is_output() const;
-    const std::shared_ptr<descriptor::TensorView> get_tensor_view() const;
-
-private:
-    std::shared_ptr<descriptor::TensorView> m_tensor_view;
-    std::string m_alias;
-};

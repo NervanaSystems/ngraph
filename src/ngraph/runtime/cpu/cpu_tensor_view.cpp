@@ -58,7 +58,16 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
             throw ngraph_error("Error allocating CPU Tensor View memory");
         }
         buffer = static_cast<char*>(ptr);
+
+// GCC major versions below 5 do not implement C++11 std::align
+#if !defined(__GNUC__) || __GNUC__ >= 5
         std::align(BufferAlignment, buffer_size, ptr, allocation_size);
+#else
+        ptr = static_cast<char*>(ptr) + (BufferAlignment - 1);
+        ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) &
+                                      ~(uintptr_t(BufferAlignment - 1)));
+#endif
+
         aligned_buffer = static_cast<char*>(ptr);
     }
 }

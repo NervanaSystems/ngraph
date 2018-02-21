@@ -14,16 +14,23 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/broadcast.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
-
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+namespace ngraph
 {
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto& x_shape = get_inputs().at(0).get_shape();
-
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
+    namespace op
+    {
+        namespace util
+        {
+            /// \brief Abstract base class for annotations added to graph ops
+            class OpAnnotations
+            {
+            public:
+                /// \brief Constructs an operation on tensor view arguments.
+                ///
+                /// \param args
+                OpAnnotations(){};
+            };
+        }
+    }
 }

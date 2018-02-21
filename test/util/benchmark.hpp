@@ -14,16 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/broadcast.hpp"
+#include <ngraph/runtime/call_frame.hpp>
+#include "test_tools.hpp"
 
-using namespace std;
-using namespace ngraph;
+/// performance test utilities
+std::multimap<size_t, std::string>
+    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
-{
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto& x_shape = get_inputs().at(0).get_shape();
-
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
-}
+void run_benchmark(const std::string& json_path,
+                   const std::string& backend_name,
+                   size_t iterations);

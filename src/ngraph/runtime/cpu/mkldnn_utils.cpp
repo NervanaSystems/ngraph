@@ -33,18 +33,33 @@ using namespace ngraph;
 
 #define TI(x) std::type_index(typeid(x))
 
-const std::unordered_set<std::type_index> s_op_registry{TI(ngraph::op::AvgPool),
-                                                        TI(ngraph::op::AvgPoolBackprop),
-                                                        TI(ngraph::op::Convolution),
-                                                        TI(ngraph::op::ConvolutionBackpropData),
-                                                        TI(ngraph::op::ConvolutionBackpropFilters),
-                                                        TI(ngraph::op::MaxPool),
-                                                        TI(ngraph::op::BatchNorm)};
+static const std::unordered_set<std::type_index> s_op_registry{
+    TI(ngraph::op::AvgPool),
+    TI(ngraph::op::AvgPoolBackprop),
+    TI(ngraph::op::BatchNorm),
+    TI(ngraph::op::Convolution),
+    TI(ngraph::op::ConvolutionBackpropData),
+    TI(ngraph::op::ConvolutionBackpropFilters),
+    TI(ngraph::op::MaxPool),
+    TI(ngraph::op::MaxPoolBackprop)};
+
+static const std::unordered_map<std::string, const mkldnn::memory::data_type> s_data_type_map{
+    {"char", mkldnn::memory::data_type::s8},
+    {"float", mkldnn::memory::data_type::f32},
+    {"double", mkldnn::memory::data_type::data_undef},
+    {"int8_t", mkldnn::memory::data_type::s8},
+    {"int16_t", mkldnn::memory::data_type::s16},
+    {"int32_t", mkldnn::memory::data_type::s32},
+    {"int64_t", mkldnn::memory::data_type::data_undef},
+    {"uint8_t", mkldnn::memory::data_type::u8},
+    {"uint16_t", mkldnn::memory::data_type::data_undef},
+    {"uint32_t", mkldnn::memory::data_type::data_undef},
+    {"uint64_t", mkldnn::memory::data_type::data_undef}};
 
 // Mapping from POD types to MKLDNN data types
 // An empty string implies the corresponding MKLDNN data type
 // is not supported
-static const std::unordered_map<std::string, const std::string> mkldnn_data_type_string_map{
+static const std::unordered_map<std::string, const std::string> s_mkldnn_data_type_string_map{
     {"char", "memory::data_type::s8"},
     {"float", "memory::data_type::f32"},
     {"double", ""},
@@ -57,7 +72,7 @@ static const std::unordered_map<std::string, const std::string> mkldnn_data_type
     {"uint32_t", ""},
     {"uint64_t", ""}};
 
-static const std::unordered_map<std::string, memory::data_type> mkldnn_data_type_map{
+static const std::unordered_map<std::string, memory::data_type> s_mkldnn_data_type_map{
     {"char", memory::data_type::s8},
     {"float", memory::data_type::f32},
     {"double", memory::data_type::data_undef},
@@ -119,16 +134,16 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
 
 const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const std::string& type)
 {
-    auto it = mkldnn_data_type_string_map.find(type);
-    if (it == mkldnn_data_type_string_map.end() || it->second.empty())
+    auto it = s_mkldnn_data_type_string_map.find(type);
+    if (it == s_mkldnn_data_type_string_map.end() || it->second.empty())
         throw ngraph_error("No MKLDNN data type exists for the given element type");
     return it->second;
 }
 
 mkldnn::memory::data_type runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const std::string& type)
 {
-    auto it = mkldnn_data_type_map.find(type);
-    if (it == mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
+    auto it = s_mkldnn_data_type_map.find(type);
+    if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
     {
         throw ngraph_error("No MKLDNN data type exists for the given element type");
     }
