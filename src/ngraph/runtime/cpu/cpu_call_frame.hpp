@@ -62,7 +62,7 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs) override;
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
-                                       const LayoutDescriptorPtrs& layouts) const;
+                                       const LayoutDescriptors& layouts) const;
 
                 std::vector<ngraph::runtime::PerformanceCounter>
                     get_performance_data() const override;
@@ -73,7 +73,7 @@ namespace ngraph
             protected:
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
-                CPURuntimeContext* ctx;
+                CPURuntimeContext* m_ctx;
             };
         }
     }

@@ -61,11 +61,11 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data(), ctx);
+    m_compiled_function(inputs.data(), outputs.data(), m_ctx);
 
     if (runtime::cpu::is_tracing_enabled())
     {
-        generate_timeline(m_external_function->get_op_attrs(), ctx->op_durations);
+        generate_timeline(m_external_function->get_op_attrs(), m_ctx->op_durations);
     }
 }
 
@@ -91,7 +91,7 @@ void runtime::cpu::CPU_CallFrame::call(
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
-    const LayoutDescriptorPtrs& layouts) const
+    const LayoutDescriptors& layouts) const
 {
     if (layouts.size() != tvs.size())
     {
@@ -135,19 +135,19 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
-    ctx = new CPURuntimeContext;
+    m_ctx = new CPURuntimeContext;
 
-    ctx->op_durations = nullptr;
+    m_ctx->op_durations = nullptr;
     if (runtime::cpu::is_tracing_enabled())
     {
-        ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
+        m_ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-    ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
+    m_ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    delete[] ctx->op_durations;
-    delete ctx;
+    delete[] m_ctx->op_durations;
+    delete m_ctx;
 }

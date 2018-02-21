@@ -28,9 +28,9 @@ namespace ngraph
     {
         namespace cpu
         {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
+            using Clock = std::chrono::high_resolution_clock;
+            using Timestamp = std::chrono::time_point<Clock>;
+            using Timescale = std::chrono::microseconds;
 
             extern "C" {
             struct CPURuntimeContext

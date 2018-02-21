@@ -35,7 +35,7 @@ namespace ngraph
             class CPU_Manager : public Manager
             {
             protected:
-                ngraph::codegen::ExecutionEngine exec_state;
+                ngraph::codegen::ExecutionEngine m_exec_state;
 
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
@@ -43,7 +43,7 @@ namespace ngraph
                 virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
                     compile(const std::shared_ptr<ngraph::Function>& fun) override;
 
-                static Factory factory;
+                static Factory s_factory;
             };
         };
     }

@@ -53,9 +53,9 @@ namespace ngraph
                 }
                 mkldnn::memory::format get_mkldnn_format() const { return m_mkldnn_format; }
                 const AxisVector& get_axis_order() const { return m_axis_order; }
-                static const AxisVector Native2DAxisOrder;
-                static const AxisVector Native4DAxisOrder;
-                static const AxisVector CHWNAxisOrder;
+                static const AxisVector s_native_2d_axis_order;
+                static const AxisVector s_native_4d_axis_order;
+                static const AxisVector s_chwn_axis_order;
                 static AxisVector create_native_axis_order(size_t rank);
 
             private:
@@ -68,8 +68,8 @@ namespace ngraph
                 mkldnn::memory::format m_mkldnn_format;
             };
 
-            typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>
-                LayoutDescriptorPtrs;
+            using LayoutDescriptors =
+                std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>;
         }
     }
 }

@@ -77,8 +77,8 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-                const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
-                const LayoutDescriptorPtrs& get_result_layout_descriptors();
+                const LayoutDescriptors& get_parameter_layout_descriptors();
+                const LayoutDescriptors& get_result_layout_descriptors();
 
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
                 const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
@@ -118,8 +118,8 @@ namespace ngraph
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
-                LayoutDescriptorPtrs m_parameter_layout_descriptors;
-                LayoutDescriptorPtrs m_result_layout_descriptors;
+                LayoutDescriptors m_parameter_layout_descriptors;
+                LayoutDescriptors m_result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;

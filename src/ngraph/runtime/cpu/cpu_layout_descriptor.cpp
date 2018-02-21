@@ -24,9 +24,9 @@ namespace ngraph
     {
         namespace cpu
         {
-            const AxisVector LayoutDescriptor::Native2DAxisOrder{0, 1};
-            const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
-            const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
+            const AxisVector LayoutDescriptor::s_native_2d_axis_order{0, 1};
+            const AxisVector LayoutDescriptor::s_native_4d_axis_order{0, 1, 2, 3};
+            const AxisVector LayoutDescriptor::s_chwn_axis_order{1, 2, 3, 0};
 
             AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
             {
