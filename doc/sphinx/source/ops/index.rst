@@ -63,4 +63,20 @@ Not currently a comprehensive list.
    convolution.rst
    cos.rst
    cosh.rst
-
+   divide.rst
+   dot.rst
+   equal.rst
+   exp.rst
+   floor.rst
+   function_call.rst
+   greater_eq.rst
+   greater.rst
+   less_eq.rst
+   less.rst
+   log.rst
+   maximum.rst
+   minimum.rst
+   multiply.rst
+   negative.rst
+   not_equal.rst
+   not.rst

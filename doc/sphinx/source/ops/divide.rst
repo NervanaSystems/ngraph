@@ -1,16 +1,16 @@
-.. add.rst:
+.. divide.rst:
 
-###
-Add
-###
+######
+Divide
+######
 
 Description
 ===========
 
-Elementwise add operation.
+Elementwise divide operation.
 
 Produces tensor of the same element type and shape as the two inputs,
-where the value at each coordinate of ``output`` is the sum of the
+where the value at each coordinate of ``output`` is the quotient of the
 values at the corresponding input coordinates.
 
 Inputs
@@ -39,19 +39,19 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} + \texttt{arg1}_{i_0, \ldots, i_{n-1}}
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \frac{\texttt{arg0}_{i_0, \ldots, i_{n-1}}}{\texttt{arg1}_{i_0, \ldots, i_{n-1}}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \Delta \\
-   \overline{\texttt{arg1}} &\leftarrow \Delta
+   \overline{\texttt{arg0}} &\leftarrow \Delta \frac{\texttt{Output}}{\texttt{arg0}}\\
+   \overline{\texttt{arg1}} &\leftarrow -\Delta \frac{\texttt{Output}}{\texttt{arg1}}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Add
+.. doxygenclass:: ngraph::op::Divide
    :members:
