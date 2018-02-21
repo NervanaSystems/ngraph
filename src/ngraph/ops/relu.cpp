@@ -35,7 +35,7 @@ op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     }
     if (arg->get_shape() != delta->get_shape())
     {
-        throw ngraph_error("Argument and delta element shape for Relu backprop do not match");
+        throw ngraph_error("Argument and delta shape for Relu backprop do not match");
     }
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
