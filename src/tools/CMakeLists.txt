@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(MKLDNN_INCLUDE_DIR)
+    link_directories(${MKLDNN_LIB_DIR})
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     set (SRC
         nbench.cpp
@@ -21,7 +25,7 @@ if (NGRAPH_CPU_ENABLE)
     )
 
     add_executable(nbench ${SRC})
-    add_dependencies(nbench ngraph ext_llvm ext_eigen ext_mkldnn)
+    add_dependencies(nbench ngraph)
     
     set(HEADER_SEARCH_DEFINES
         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
