@@ -63,7 +63,7 @@ void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event
 }
 
 void ngraph::runtime::cpu::generate_timeline(const std::vector<OpAttributes>& op_attrs,
-                                            int64_t* op_durations)
+                                             int64_t* op_durations)
 {
     nlohmann::json timeline;
     std::list<TraceEvent> trace;

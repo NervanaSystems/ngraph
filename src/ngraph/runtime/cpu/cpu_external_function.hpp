@@ -68,13 +68,13 @@ namespace ngraph
             };
 
             class CPUExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<CPUExternalFunction>
+                                        public std::enable_shared_from_this<CPUExternalFunction>
             {
                 friend class CPUCallFrame;
 
             public:
                 CPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = true);
+                                    bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
                 const LayoutDescriptors& get_parameter_layout_descriptors();

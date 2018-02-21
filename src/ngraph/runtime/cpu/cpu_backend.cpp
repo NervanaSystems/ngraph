@@ -30,7 +30,7 @@ std::shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUBackend::make_call_
 
 std::shared_ptr<ngraph::runtime::TensorView>
     runtime::cpu::CPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                                        const Shape& shape)
+                                                       const Shape& shape)
 {
     auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);

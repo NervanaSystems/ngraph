@@ -3033,7 +3033,7 @@ static string format_name(const string& name)
 }
 
 string runtime::cpu::CPUEmitter::emit_vector(const runtime::cpu::TensorViewWrapper& tvi,
-                                              const string& name)
+                                             const string& name)
 {
     stringstream ss;
 
@@ -3044,7 +3044,7 @@ string runtime::cpu::CPUEmitter::emit_vector(const runtime::cpu::TensorViewWrapp
 }
 
 string runtime::cpu::CPUEmitter::emit_array1d(const runtime::cpu::TensorViewWrapper& tvi,
-                                               const string& name)
+                                              const string& name)
 {
     stringstream ss;
 
@@ -3055,7 +3055,7 @@ string runtime::cpu::CPUEmitter::emit_array1d(const runtime::cpu::TensorViewWrap
 }
 
 string runtime::cpu::CPUEmitter::emit_matrix(const runtime::cpu::TensorViewWrapper& tvi,
-                                              const string& name)
+                                             const string& name)
 {
     stringstream ss;
 

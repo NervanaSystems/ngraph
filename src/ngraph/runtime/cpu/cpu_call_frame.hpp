@@ -46,7 +46,7 @@ namespace ngraph
             {
             public:
                 CPUCallFrame(std::shared_ptr<CPUExternalFunction> external_function,
-                              EntryPoint compiled_function);
+                             EntryPoint compiled_function);
                 ~CPUCallFrame();
 
                 /// @brief Invoke the function with values matching the signature of the function.

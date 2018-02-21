@@ -58,7 +58,8 @@ namespace ngraph
 
             void to_json(nlohmann::json& json, const TraceEvent& event);
 
-            void generate_timeline(const std::vector<OpAttributes>& op_attrs, int64_t* op_durations);
+            void generate_timeline(const std::vector<OpAttributes>& op_attrs,
+                                   int64_t* op_durations);
             bool is_tracing_enabled();
         }
     }

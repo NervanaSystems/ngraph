@@ -231,8 +231,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPUEmitter::emit<op::Min>},
 };
 
-runtime::cpu::CPUExternalFunction::CPUExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+runtime::cpu::CPUExternalFunction::CPUExternalFunction(const shared_ptr<ngraph::Function>& function,
+                                                       bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
@@ -897,8 +897,7 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUExternalFunction::make_c
         compile();
     }
 
-    return make_shared<ngraph::runtime::cpu::CPUCallFrame>(shared_from_this(),
-                                                            m_compiled_function);
+    return make_shared<ngraph::runtime::cpu::CPUCallFrame>(shared_from_this(), m_compiled_function);
 }
 
 const runtime::cpu::LayoutDescriptors&
@@ -938,7 +937,7 @@ bool runtime::cpu::CPUExternalFunction::is_functionally_identical(
 }
 
 string runtime::cpu::CPUExternalFunction::emit_op_as_function(const Node& node,
-                                                               const string& function_name)
+                                                              const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
