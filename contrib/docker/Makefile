@@ -31,26 +31,18 @@ ifndef CMAKE_OPTIONS_EXTRA
     CMAKE_OPTIONS_EXTRA=
 endif
 
-# set the default values (ubuntu1604)
-RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
 # Specify the default run_as_user script to execute
 # The default value is "run_as_user.sh" (ubuntu1604)
 # Set for built-in centos74 environment as "run_as_centos_user.sh"
 # Set for ubuntu1604 as "run_as_ubuntu_user.sh"
 # Custom: copy a custom script to the contrib/docker directory and provide the filename
-ifndef OS
-    OS="ubuntu1604"
-endif
+OS ?="ubuntu1604"
 
-ifeq ($(findstring "ubuntu", "${OS}"), "ubuntu")
-    RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_ubuntu_user.sh
-    ifndef DOCKERFILE
-        DOCKERFILE=Dockerfile.ngraph_cpp.ubuntu1604
-    endif
-endif    
+IS_CENTOS=$(shell echo ${OS} | grep -q "centos") 
+IS_UBUNTU=$(shell echo ${OS} | grep -q "ubuntu") 
 
-ifeq ($(findstring "centos", "${OS}"), "centos")
+ifneq ($(IS_CENTOS),"")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_centos_user.sh
     ifndef DOCKERFILE
         DOCKERFILE=Dockerfile.ngraph_cpp.centos74_cmake3
@@ -59,6 +51,11 @@ endif
 
 ifndef DOCKERFILE
     DOCKERFILE=Dockerfile.ngraph_cpp
+endif
+
+# set the default values (ubuntu1604)
+ifndef RUN_AS_USER_SCRIPT
+    RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -96,6 +93,9 @@ all: check_gcc check_clang
 # Docker actions
 
 expand_dockerfile_templates:
+	@echo "OS=${OS}"
+	@echo "DOCKERFILE=${DOCKERFILE}"
+	@echo "RUN_AS_USER_SCRIPT=${RUN_AS_USER_SCRIPT}"
 	cd "${DIR}"/contrib/docker
 	mkdir "${DBUILD_DIR}" || true
 	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' ${DOCKERFILE} > "${DBUILD_DIR}"/Dockerfile.build_ngraph_cpp
@@ -135,7 +135,7 @@ build_gcc: build_docker_image
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
@@ -150,7 +150,7 @@ build_clang:
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
