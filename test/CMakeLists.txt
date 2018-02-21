@@ -31,6 +31,7 @@ set (SRC
     builder_xla.cpp
     build_graph.cpp
     copy.cpp
+    core_fusion.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
