@@ -17,6 +17,9 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
+
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {
@@ -26,7 +29,7 @@ namespace ngraph
         {
             class Cuda_function_pool
             {
-                public:
+            public:
                 static Cuda_function_pool& Instance()
                 {
                     static Cuda_function_pool pool;
@@ -36,29 +39,28 @@ namespace ngraph
                 Cuda_function_pool(Cuda_function_pool const&) = delete;
                 Cuda_function_pool(Cuda_function_pool&&) = delete;
                 Cuda_function_pool& operator=(Cuda_function_pool const&) = delete;
-                Cuda_function_pool& operator=(Cuda_function_pool &&) = delete;
+                Cuda_function_pool& operator=(Cuda_function_pool&&) = delete;
 
                 void Set(std::string& name, std::shared_ptr<CUfunction> function)
                 {
-                    CUfunction_map.insert({name,function});
+                    CUfunction_map.insert({name, function});
                 }
 
                 std::shared_ptr<CUfunction> Get(std::string& name)
                 {
                     auto it = CUfunction_map.find(name);
-                    if(it != CUfunction_map.end())
+                    if (it != CUfunction_map.end())
                     {
                         return (*it).second;
                     }
                     return nullptr;
                 }
 
-                protected:
-                Cuda_function_pool(){}
-                ~Cuda_function_pool(){}
-
+            protected:
+                Cuda_function_pool() {}
+                ~Cuda_function_pool() {}
                 std::unordered_map<std::string, std::shared_ptr<CUfunction>> CUfunction_map;
-            }
+            };
         }
     }
 }

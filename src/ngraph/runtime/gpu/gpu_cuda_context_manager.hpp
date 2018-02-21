@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {
@@ -26,24 +27,20 @@ namespace ngraph
         {
             class Cuda_context_manager
             {
-                public:
+            public:
                 static Cuda_context_manager& Instance()
                 {
                     static Cuda_context_manager manager;
-                    return pool;
+                    return manager;
                 }
 
                 Cuda_context_manager(Cuda_context_manager const&) = delete;
                 Cuda_context_manager(Cuda_context_manager&&) = delete;
                 Cuda_context_manager& operator=(Cuda_context_manager const&) = delete;
-                Cuda_context_manager& operator=(Cuda_context_manager &&) = delete;
+                Cuda_context_manager& operator=(Cuda_context_manager&&) = delete;
 
-                std::shared_ptr<CUcontext> GetContext()
-                {
-                    return context_ptr;
-                }
-
-                protected:
+                std::shared_ptr<CUcontext> GetContext() { return context_ptr; }
+            protected:
                 Cuda_context_manager()
                 {
                     CUDA_SAFE_CALL(cuInit(0));
@@ -51,11 +48,11 @@ namespace ngraph
                     CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
                     context_ptr = std::make_shared<CUcontext>(context);
                 }
-                ~Cuda_context_manager(){}
+                ~Cuda_context_manager() {}
                 CUdevice cuDevice;
                 CUcontext context;
                 std::shared_ptr<CUcontext> context_ptr;
-            }
+            };
         }
     }
 }

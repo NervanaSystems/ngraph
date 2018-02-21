@@ -26,12 +26,16 @@ namespace ngraph
         {
             class Cuda_kernel_builder
             {
-                static std::string get_1_element_op(std::string& name, std::string& data_type, std::string& op, std::string& kernel)
+                public:
+                static void Get_1_element_op(const std::string& name,
+                                                   const  std::string& data_type,
+                                                    const std::string& op,
+                                                    std::string& kernel)
                 {
                     kernel = R"(  
 extern "C" __global__
-void cuda_op_)" + name + "(" + data_type + "* in, " + data_type + "* out, size_t n)\n"
-+R"({  
+void cuda_op_)" + name + "(" +
+                             data_type + "* in, " + data_type + "* out, size_t n)\n" + R"({  
 size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
 if(tid < n) 
 {
@@ -41,27 +45,34 @@ out[tid] = " + op + "(in[tid]);\n"
                     return;
                 }
 
-                static std::string get_2_element_op(std::string& name, std::string& data_type, std::string op, std::string& kernel)
+                static void Get_2_element_op(const std::string& name,
+                                                    const std::string& data_type,
+                                                    const std::string op,
+                                                    std::string& kernel)
                 {
                     kernel = R"(  
 extern "C" __global__
-void cuda_op_)" + name + "(" + data_type + "* in1, " + data_type + "* in2, " + data_type + "* out, size_t n)\n"
-+R"({  
+void cuda_op_)" + name + "(" +
+                             data_type + "* in1, " + data_type + "* in2, " + data_type +
+                             "* out, size_t n)\n" + R"({  
 size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
 if(tid < n) 
 {
-out[tid] = in1[tid] )" + op + "in2[tid]\n"
-+R"(}
+out[tid] = in1[tid] )" + op + "in2[tid]\n" +
+                             R"(}
 })";
                     return;
                 }
 
-                static std::string get_n_element_op(std::string& name, std::string& data_type, std::vector<std::string> ops, std::string& kernel)
+                static void Get_n_element_op(const std::string& name,
+                                                    const std::string& data_type,
+                                                    const std::vector<std::string> ops,
+                                                    std::string& kernel)
                 {
                     kernel = "";
                     return;
                 }
-            }
+            };
         }
     }
 }
