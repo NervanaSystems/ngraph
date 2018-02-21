@@ -741,6 +741,26 @@ using namespace ngraph::runtime;
                 writer << func_name << "(" << join(names) << ", ctx);\n";
             }
 
+            //I assume you are only interested in ops and floats
+            if (node->get_element_type() == element::f32 && node->get_outputs().size() == 1)
+            {
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "float* traced_array = (float*)" << out[0].get_name() << ";\n";
+                //we are already including `util.hpp` so should work
+                writer << " ngraph::check_for_nans (" << node->get_name() << ", traced_array, "
+                       << out[0].get_size() << "); ";
+                // writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                // writer.indent++;
+                // writer << "{\n";
+                // writer.indent++;
+                // writer << " std::cout <<  traced_array[i] << \" , \"; ";
+                // writer.indent--;
+                // writer << "}\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {

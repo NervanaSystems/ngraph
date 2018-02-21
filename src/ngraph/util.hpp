@@ -254,6 +254,21 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
+    //TODO if this doesn't work just make it float instead of a template
+    template <typename T>
+    void check_for_nans(const char* name, T* array, size_t n)
+    {
+        for (size_t i = 0; i i < n; i++)
+        {
+            if (std::isnan(array[i]))
+            {
+                throw std::runtime_error("NaN discovered '" + name + "'");
+            }
+        }
+    }
+
+    template void check_for_nans<float>(const char* name, float* array, size_t n);
+
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
