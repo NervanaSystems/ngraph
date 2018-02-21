@@ -163,76 +163,76 @@ static StaticInitializers s_static_initializers;
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::OpMap dispatcher{
-    {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
+    {TI(ngraph::op::Add), &runtime::cpu::CPUEmitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED
-    {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
+    {TI(ngraph::op::AllReduce), &runtime::cpu::CPUEmitter::emit<op::AllReduce>},
 #endif
-    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
-    {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
-    {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
-    {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::nop},
-    {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
-    {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
-    {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
-    {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
-    {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
-    {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
-    {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
-    {TI(ngraph::op::LessEq), &runtime::cpu::CPU_Emitter::emit<op::LessEq>},
-    {TI(ngraph::op::Log), &runtime::cpu::CPU_Emitter::emit<op::Log>},
-    {TI(ngraph::op::Maximum), &runtime::cpu::CPU_Emitter::emit<op::Maximum>},
-    {TI(ngraph::op::Minimum), &runtime::cpu::CPU_Emitter::emit<op::Minimum>},
-    {TI(ngraph::op::Negative), &runtime::cpu::CPU_Emitter::emit<op::Negative>},
-    {TI(ngraph::op::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::NotEqual>},
-    {TI(ngraph::op::Power), &runtime::cpu::CPU_Emitter::emit<op::Power>},
-    {TI(ngraph::op::Select), &runtime::cpu::CPU_Emitter::emit<op::Select>},
-    {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::emit<op::Subtract>},
-    {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::emit<op::Broadcast>},
-    {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::emit<op::Convert>},
-    {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::emit<op::Constant>},
-    {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::emit<op::Reshape>},
-    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::emit<op::FunctionCall>},
-    {TI(ngraph::op::Reduce), &runtime::cpu::CPU_Emitter::emit<op::Reduce>},
-    {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
-    {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
-    {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},
-    {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::emit<op::Exp>},
-    {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::emit<op::Sin>},
-    {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},
-    {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::emit<op::Cos>},
-    {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::emit<op::Cosh>},
-    {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::emit<op::Tan>},
-    {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::emit<op::Tanh>},
-    {TI(ngraph::op::Asin), &runtime::cpu::CPU_Emitter::emit<op::Asin>},
-    {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
-    {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
-    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
-    {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
-    {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::emit<op::Floor>},
-    {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
-    {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
-    {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
+    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPUEmitter::emit<op::MatmulBias>},
+    {TI(ngraph::op::Dot), &runtime::cpu::CPUEmitter::emit<op::Dot>},
+    {TI(ngraph::op::Multiply), &runtime::cpu::CPUEmitter::emit<op::Multiply>},
+    {TI(ngraph::op::Parameter), &runtime::cpu::CPUEmitter::nop},
+    {TI(ngraph::op::Abs), &runtime::cpu::CPUEmitter::emit<op::Abs>},
+    {TI(ngraph::op::Concat), &runtime::cpu::CPUEmitter::emit<op::Concat>},
+    {TI(ngraph::op::Divide), &runtime::cpu::CPUEmitter::emit<op::Divide>},
+    {TI(ngraph::op::Equal), &runtime::cpu::CPUEmitter::emit<op::Equal>},
+    {TI(ngraph::op::Greater), &runtime::cpu::CPUEmitter::emit<op::Greater>},
+    {TI(ngraph::op::GreaterEq), &runtime::cpu::CPUEmitter::emit<op::GreaterEq>},
+    {TI(ngraph::op::Less), &runtime::cpu::CPUEmitter::emit<op::Less>},
+    {TI(ngraph::op::LessEq), &runtime::cpu::CPUEmitter::emit<op::LessEq>},
+    {TI(ngraph::op::Log), &runtime::cpu::CPUEmitter::emit<op::Log>},
+    {TI(ngraph::op::Maximum), &runtime::cpu::CPUEmitter::emit<op::Maximum>},
+    {TI(ngraph::op::Minimum), &runtime::cpu::CPUEmitter::emit<op::Minimum>},
+    {TI(ngraph::op::Negative), &runtime::cpu::CPUEmitter::emit<op::Negative>},
+    {TI(ngraph::op::NotEqual), &runtime::cpu::CPUEmitter::emit<op::NotEqual>},
+    {TI(ngraph::op::Power), &runtime::cpu::CPUEmitter::emit<op::Power>},
+    {TI(ngraph::op::Select), &runtime::cpu::CPUEmitter::emit<op::Select>},
+    {TI(ngraph::op::Subtract), &runtime::cpu::CPUEmitter::emit<op::Subtract>},
+    {TI(ngraph::op::Broadcast), &runtime::cpu::CPUEmitter::emit<op::Broadcast>},
+    {TI(ngraph::op::Convert), &runtime::cpu::CPUEmitter::emit<op::Convert>},
+    {TI(ngraph::op::Constant), &runtime::cpu::CPUEmitter::emit<op::Constant>},
+    {TI(ngraph::op::Reshape), &runtime::cpu::CPUEmitter::emit<op::Reshape>},
+    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPUEmitter::emit<op::FunctionCall>},
+    {TI(ngraph::op::Reduce), &runtime::cpu::CPUEmitter::emit<op::Reduce>},
+    {TI(ngraph::op::Sign), &runtime::cpu::CPUEmitter::emit<op::Sign>},
+    {TI(ngraph::op::Slice), &runtime::cpu::CPUEmitter::emit<op::Slice>},
+    {TI(ngraph::op::Sum), &runtime::cpu::CPUEmitter::emit<op::Sum>},
+    {TI(ngraph::op::Exp), &runtime::cpu::CPUEmitter::emit<op::Exp>},
+    {TI(ngraph::op::Sin), &runtime::cpu::CPUEmitter::emit<op::Sin>},
+    {TI(ngraph::op::Sinh), &runtime::cpu::CPUEmitter::emit<op::Sinh>},
+    {TI(ngraph::op::Cos), &runtime::cpu::CPUEmitter::emit<op::Cos>},
+    {TI(ngraph::op::Cosh), &runtime::cpu::CPUEmitter::emit<op::Cosh>},
+    {TI(ngraph::op::Tan), &runtime::cpu::CPUEmitter::emit<op::Tan>},
+    {TI(ngraph::op::Tanh), &runtime::cpu::CPUEmitter::emit<op::Tanh>},
+    {TI(ngraph::op::Asin), &runtime::cpu::CPUEmitter::emit<op::Asin>},
+    {TI(ngraph::op::Acos), &runtime::cpu::CPUEmitter::emit<op::Acos>},
+    {TI(ngraph::op::Atan), &runtime::cpu::CPUEmitter::emit<op::Atan>},
+    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPUEmitter::emit<op::ReplaceSlice>},
+    {TI(ngraph::op::OneHot), &runtime::cpu::CPUEmitter::emit<op::OneHot>},
+    {TI(ngraph::op::Floor), &runtime::cpu::CPUEmitter::emit<op::Floor>},
+    {TI(ngraph::op::Ceiling), &runtime::cpu::CPUEmitter::emit<op::Ceiling>},
+    {TI(ngraph::op::Sqrt), &runtime::cpu::CPUEmitter::emit<op::Sqrt>},
+    {TI(ngraph::op::Convolution), &runtime::cpu::CPUEmitter::emit<op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
-     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
+     &runtime::cpu::CPUEmitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
-     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
-    {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
-    {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
-    {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
-    {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow>},
-    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter>},
-    {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
-    {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
-    {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
-    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
-    {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
-    {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
-    {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
+     &runtime::cpu::CPUEmitter::emit<op::ConvolutionBackpropData>},
+    {TI(ngraph::op::Not), &runtime::cpu::CPUEmitter::emit<op::Not>},
+    {TI(ngraph::op::MaxPool), &runtime::cpu::CPUEmitter::emit<op::MaxPool>},
+    {TI(ngraph::op::Reverse), &runtime::cpu::CPUEmitter::emit<op::Reverse>},
+    {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPUEmitter::emit<op::ReduceWindow>},
+    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPUEmitter::emit<op::SelectAndScatter>},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::CPUEmitter::emit<op::AvgPool>},
+    {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPUEmitter::emit<op::AvgPoolBackprop>},
+    {TI(ngraph::op::Pad), &runtime::cpu::CPUEmitter::emit<op::Pad>},
+    {TI(ngraph::op::BatchNorm), &runtime::cpu::CPUEmitter::emit<op::BatchNorm>},
+    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPUEmitter::emit<op::MaxPoolBackprop>},
+    {TI(ngraph::op::Product), &runtime::cpu::CPUEmitter::emit<op::Product>},
+    {TI(ngraph::op::Max), &runtime::cpu::CPUEmitter::emit<op::Max>},
+    {TI(ngraph::op::Min), &runtime::cpu::CPUEmitter::emit<op::Min>},
 };
 
-runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+runtime::cpu::CPUExternalFunction::CPUExternalFunction(const shared_ptr<ngraph::Function>& function,
+                                                       bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
@@ -240,7 +240,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 {
 }
 
-void runtime::cpu::CPU_ExternalFunction::compile()
+void runtime::cpu::CPUExternalFunction::compile()
 {
     if (m_is_compiled)
     {
@@ -266,7 +266,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
+            if (ngraph::runtime::cpu::mkldnn_utils::is_mkldnn_op(*node))
             {
                 include_mkldnn_headers = true;
             }
@@ -325,7 +325,7 @@ using namespace ngraph::runtime;
 
     if (include_mkldnn_headers)
     {
-        runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(writer);
+        runtime::cpu::CPUEmitter::emit_mkldnn_preamble(writer);
     }
 
     string pch_header_source = writer.get_code();
@@ -522,7 +522,7 @@ using namespace ngraph::runtime;
         }
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        if (runtime::cpu::is_tracing_enabled() && current_function->get_name() == function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -689,7 +689,7 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled() &&
+                if (runtime::cpu::is_tracing_enabled() &&
                     current_function->get_name() == function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
@@ -729,7 +729,7 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled() &&
+                if (runtime::cpu::is_tracing_enabled() &&
                     current_function->get_name() == function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "
@@ -801,12 +801,12 @@ using namespace ngraph::runtime;
                 throw ngraph_error("layout missing on function parameter's tensor view: " +
                                    tv->get_name());
             }
-            parameter_layout_descriptors.emplace_back(
+            m_parameter_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }
     }
     // Store layouts assigned for results
-    if (!result_layout_descriptors.empty())
+    if (!m_result_layout_descriptors.empty())
     {
         throw ngraph_error("Function output layouts should not be pre-assigned");
     }
@@ -820,7 +820,7 @@ using namespace ngraph::runtime;
             {
                 throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
             }
-            result_layout_descriptors.emplace_back(
+            m_result_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }
     }
@@ -861,7 +861,7 @@ using namespace ngraph::runtime;
     }
 }
 
-void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
+void runtime::cpu::CPUExternalFunction::handle_output_alias(
     codegen::CodeWriter& writer,
     const Node& node,
     const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
@@ -890,30 +890,29 @@ void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {
         compile();
     }
 
-    return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
-                                                            m_compiled_function);
+    return make_shared<ngraph::runtime::cpu::CPUCallFrame>(shared_from_this(), m_compiled_function);
 }
 
-const runtime::cpu::LayoutDescriptorPtrs&
-    runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
+const runtime::cpu::LayoutDescriptors&
+    runtime::cpu::CPUExternalFunction::get_parameter_layout_descriptors()
 {
-    return parameter_layout_descriptors;
+    return m_parameter_layout_descriptors;
 }
 
-const runtime::cpu::LayoutDescriptorPtrs&
-    runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
+const runtime::cpu::LayoutDescriptors&
+    runtime::cpu::CPUExternalFunction::get_result_layout_descriptors()
 {
-    return result_layout_descriptors;
+    return m_result_layout_descriptors;
 }
 
-void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
+void runtime::cpu::CPUExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,
     Node* node,
     const std::vector<TensorViewWrapper>& in,
@@ -922,7 +921,7 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     writer << "timer_" << node->get_name() << ".start();\n";
 }
 
-void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
+void runtime::cpu::CPUExternalFunction::emit_debug_function_exit(
     codegen::CodeWriter& writer,
     Node* node,
     const std::vector<TensorViewWrapper>& in,
@@ -931,14 +930,14 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     writer << "timer_" << node->get_name() << ".stop();\n";
 }
 
-bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(
+bool runtime::cpu::CPUExternalFunction::is_functionally_identical(
     const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache)
 {
     return node_cache.at(&n1) == node_cache.at(&n2);
 }
 
-string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
-                                                               const string& function_name)
+string runtime::cpu::CPUExternalFunction::emit_op_as_function(const Node& node,
+                                                              const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
@@ -996,7 +995,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     return rc;
 }
 
-string runtime::cpu::CPU_ExternalFunction::strip_comments(const string& s)
+string runtime::cpu::CPUExternalFunction::strip_comments(const string& s)
 {
     stringstream out;
     for (size_t i = 0; i < s.size(); i++)

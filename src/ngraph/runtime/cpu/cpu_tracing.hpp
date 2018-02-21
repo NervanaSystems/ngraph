@@ -35,15 +35,15 @@ namespace ngraph
                 // This should be a single character
                 // but the JSON encoder nlohmann::json
                 // is broken and doesn't handle character fields
-                std::string Phase;
-                std::string Category;
-                const std::string& Name;
-                unsigned int PID;
-                unsigned int TID;
-                int64_t Timestamp;
-                int64_t Duration;
-                const std::vector<std::string>& Outputs;
-                const std::vector<std::string>& Inputs;
+                std::string m_phase;
+                std::string m_category;
+                const std::string& m_name;
+                unsigned int m_pid;
+                unsigned int m_tid;
+                int64_t m_timestamp;
+                int64_t m_duration;
+                const std::vector<std::string>& m_outputs;
+                const std::vector<std::string>& m_inputs;
 
                 TraceEvent(const std::string& ph,
                            const std::string& cat,
@@ -53,24 +53,14 @@ namespace ngraph
                            int64_t ts,
                            int64_t dur,
                            const std::vector<std::string>& outputs,
-                           const std::vector<std::string>& inputs)
-                    : Phase(ph)
-                    , Category(cat)
-                    , Name(name)
-                    , PID(pid)
-                    , TID(tid)
-                    , Timestamp(ts)
-                    , Duration(dur)
-                    , Outputs(outputs)
-                    , Inputs(inputs)
-                {
-                }
+                           const std::vector<std::string>& inputs);
             };
 
             void to_json(nlohmann::json& json, const TraceEvent& event);
 
-            void GenerateTimeline(const std::vector<OpAttributes>& op_attrs, int64_t* op_durations);
-            bool IsTracingEnabled();
+            void generate_timeline(const std::vector<OpAttributes>& op_attrs,
+                                   int64_t* op_durations);
+            bool is_tracing_enabled();
         }
     }
 }

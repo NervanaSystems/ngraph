@@ -34,20 +34,20 @@ namespace ngraph
 
         namespace cpu
         {
-            class CPU_CallFrame;
-            class CPU_ExternalFunction;
+            class CPUCallFrame;
+            class CPUExternalFunction;
 
             using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
             // Compile and execute graphs
-            class CPU_CallFrame : public ngraph::runtime::CallFrame
+            class CPUCallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
-                              EntryPoint compiled_function);
-                ~CPU_CallFrame();
+                CPUCallFrame(std::shared_ptr<CPUExternalFunction> external_function,
+                             EntryPoint compiled_function);
+                ~CPUCallFrame();
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -62,7 +62,7 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs) override;
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
-                                       const LayoutDescriptorPtrs& layouts) const;
+                                       const LayoutDescriptors& layouts) const;
 
                 std::vector<ngraph::runtime::PerformanceCounter>
                     get_performance_data() const override;
@@ -71,9 +71,9 @@ namespace ngraph
                 void cleanup_runtime_context();
 
             protected:
-                std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                std::shared_ptr<CPUExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
-                CPURuntimeContext* ctx;
+                CPURuntimeContext* m_ctx;
             };
         }
     }

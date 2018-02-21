@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_Backend : public runtime::Backend
+            class CPUBackend : public runtime::Backend
             {
             public:
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(

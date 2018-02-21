@@ -40,11 +40,11 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_ExternalFunction;
-            class CPU_Emitter;
-            class CPU_CallFrame;
+            class CPUExternalFunction;
+            class CPUEmitter;
+            class CPUCallFrame;
 
-            using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
+            using OpFunction = std::function<void(CPUExternalFunction* external_function,
                                                   codegen::CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
@@ -54,31 +54,31 @@ namespace ngraph
 
             struct OpAttributes
             {
-                std::string Description;
-                std::vector<std::string> Outputs;
-                std::vector<std::string> Inputs;
+                std::string m_description;
+                std::vector<std::string> m_outputs;
+                std::vector<std::string> m_inputs;
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
                              const std::vector<std::string>& inputs)
-                    : Description(desc)
-                    , Outputs(outputs)
-                    , Inputs(inputs)
+                    : m_description(desc)
+                    , m_outputs(outputs)
+                    , m_inputs(inputs)
                 {
                 }
             };
 
-            class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<CPU_ExternalFunction>
+            class CPUExternalFunction : public ngraph::runtime::ExternalFunction,
+                                        public std::enable_shared_from_this<CPUExternalFunction>
             {
-                friend class CPU_CallFrame;
+                friend class CPUCallFrame;
 
             public:
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = true);
+                CPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                    bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-                const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
-                const LayoutDescriptorPtrs& get_result_layout_descriptors();
+                const LayoutDescriptors& get_parameter_layout_descriptors();
+                const LayoutDescriptors& get_result_layout_descriptors();
 
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
                 const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
@@ -118,8 +118,8 @@ namespace ngraph
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
-                LayoutDescriptorPtrs parameter_layout_descriptors;
-                LayoutDescriptorPtrs result_layout_descriptors;
+                LayoutDescriptors m_parameter_layout_descriptors;
+                LayoutDescriptors m_result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;

@@ -19,30 +19,51 @@
 
 #include "cpu_tracing.hpp"
 
+ngraph::runtime::cpu::TraceEvent::TraceEvent(const std::string& ph,
+                                             const std::string& cat,
+                                             const std::string& name,
+                                             unsigned int pid,
+                                             unsigned int tid,
+                                             int64_t ts,
+                                             int64_t dur,
+                                             const std::vector<std::string>& outputs,
+                                             const std::vector<std::string>& inputs)
+    : m_phase(ph)
+    , m_category(cat)
+    , m_name(name)
+    , m_pid(pid)
+    , m_tid(tid)
+    , m_timestamp(ts)
+    , m_duration(dur)
+    , m_outputs(outputs)
+    , m_inputs(inputs)
+{
+}
+
 void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event)
 {
     std::map<std::string, std::string> args;
-    for (size_t i = 0; i < event.Inputs.size(); i++)
+    for (size_t i = 0; i < event.m_inputs.size(); i++)
     {
-        args["Input" + std::to_string(i + 1)] = event.Inputs[i];
+        args["Input" + std::to_string(i + 1)] = event.m_inputs[i];
     }
-    for (size_t i = 0; i < event.Outputs.size(); i++)
+    for (size_t i = 0; i < event.m_outputs.size(); i++)
     {
-        args["Output" + std::to_string(i + 1)] = event.Outputs[i];
+        args["Output" + std::to_string(i + 1)] = event.m_outputs[i];
     }
 
-    json = nlohmann::json{{"ph", event.Phase},
-                          {"cat", event.Category},
-                          {"name", event.Name},
-                          {"pid", event.PID},
-                          {"tid", event.TID},
-                          {"ts", event.Timestamp},
-                          {"dur", event.Duration},
+    json = nlohmann::json{{"ph", event.m_phase},
+                          {"cat", event.m_category},
+                          {"name", event.m_name},
+                          {"pid", event.m_pid},
+                          {"tid", event.m_tid},
+                          {"ts", event.m_timestamp},
+                          {"dur", event.m_duration},
                           {"args", args}};
 }
 
-void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_attrs,
-                                            int64_t* op_durations)
+void ngraph::runtime::cpu::generate_timeline(const std::vector<OpAttributes>& op_attrs,
+                                             int64_t* op_durations)
 {
     nlohmann::json timeline;
     std::list<TraceEvent> trace;
@@ -53,13 +74,13 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
     {
         trace.emplace_back("X",
                            "Op",
-                           op_attrs[i].Description,
+                           op_attrs[i].m_description,
                            0,
                            0,
                            ts,
                            op_durations[i],
-                           op_attrs[i].Outputs,
-                           op_attrs[i].Inputs);
+                           op_attrs[i].m_outputs,
+                           op_attrs[i].m_inputs);
         ts += op_durations[i];
     }
 
@@ -70,7 +91,7 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
     return;
 }
 
-bool ngraph::runtime::cpu::IsTracingEnabled()
+bool ngraph::runtime::cpu::is_tracing_enabled()
 {
     return (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
 }

@@ -24,9 +24,9 @@ namespace ngraph
     {
         namespace cpu
         {
-            const AxisVector LayoutDescriptor::Native2DAxisOrder{0, 1};
-            const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
-            const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
+            const AxisVector LayoutDescriptor::s_native_2d_axis_order{0, 1};
+            const AxisVector LayoutDescriptor::s_native_4d_axis_order{0, 1, 2, 3};
+            const AxisVector LayoutDescriptor::s_chwn_axis_order{1, 2, 3, 0};
 
             AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
             {
@@ -38,10 +38,10 @@ namespace ngraph
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                                const AxisVector& tv_axis_order)
                 : TensorViewLayout(tv)
-                , axis_order(tv_axis_order)
-                , offset(0)
-                , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                , mkldnn_format(mkldnn::memory::format::format_undef)
+                , m_axis_order(tv_axis_order)
+                , m_offset(0)
+                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_mkldnn_format(mkldnn::memory::format::format_undef)
             {
                 auto shape = get_shape();
                 size_t s = 1;
@@ -58,22 +58,22 @@ namespace ngraph
                         throw ngraph_error("Axis is out of bounds");
                     }
 
-                    strides.emplace_back(s);
+                    m_strides.emplace_back(s);
                     s *= shape[*it];
                 }
-                std::reverse(strides.begin(), strides.end());
+                std::reverse(m_strides.begin(), m_strides.end());
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
-                if (indices.size() != strides.size())
+                if (indices.size() != m_strides.size())
                 {
                     throw ngraph_error("Indices have incorrect rank");
                 }
                 size_t result = 0;
                 for (int i = 0; i < indices.size(); i++)
                 {
-                    result += strides[i] + indices[i];
+                    result += m_strides[i] + indices[i];
                 }
                 return result;
             }
@@ -92,12 +92,12 @@ namespace ngraph
                     return false;
                 }
 
-                if (strides != p_other->strides)
+                if (m_strides != p_other->m_strides)
                 {
                     return false;
                 }
 
-                if (offset != p_other->offset)
+                if (m_offset != p_other->m_offset)
                 {
                     return false;
                 }

@@ -53,11 +53,11 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
             if (tensor.is_output() || tensor.is_input() || tensor.is_constant())
             {
                 // Set the MKLDNN format to native row-major variants
-                layout->set_mkldnn_format(mkldnn_utils::CreateNativeDataFormat(*layout));
+                layout->set_mkldnn_format(mkldnn_utils::create_native_data_format(*layout));
             }
             else
             {
-                if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
+                if (ngraph::runtime::cpu::mkldnn_utils::is_mkldnn_op(*node))
                 {
                     // TODO(jmenon): get_inputs is marked as to-be-deprecated
                     // but get_input_ops isn't a suitable API so this needs to be

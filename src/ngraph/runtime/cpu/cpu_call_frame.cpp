@@ -24,20 +24,20 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
-                                           EntryPoint compiled_function)
+runtime::cpu::CPUCallFrame::CPUCallFrame(std::shared_ptr<CPUExternalFunction> external_function,
+                                         EntryPoint compiled_function)
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
     setup_runtime_context();
 }
 
-runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
+runtime::cpu::CPUCallFrame::~CPUCallFrame()
 {
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::tensor_call(
+void runtime::cpu::CPUCallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
@@ -61,15 +61,15 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data(), ctx);
+    m_compiled_function(inputs.data(), outputs.data(), m_ctx);
 
-    if (runtime::cpu::IsTracingEnabled())
+    if (runtime::cpu::is_tracing_enabled())
     {
-        GenerateTimeline(m_external_function->get_op_attrs(), ctx->op_durations);
+        generate_timeline(m_external_function->get_op_attrs(), m_ctx->op_durations);
     }
 }
 
-void runtime::cpu::CPU_CallFrame::call(
+void runtime::cpu::CPUCallFrame::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& arguments,
     const std::vector<std::shared_ptr<runtime::TensorView>>& results)
 {
@@ -89,9 +89,9 @@ void runtime::cpu::CPU_CallFrame::call(
     tensor_call(inputs, outputs);
 }
 
-void runtime::cpu::CPU_CallFrame::propagate_layouts(
+void runtime::cpu::CPUCallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
-    const LayoutDescriptorPtrs& layouts) const
+    const LayoutDescriptors& layouts) const
 {
     if (layouts.size() != tvs.size())
     {
@@ -109,7 +109,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::cpu::CPUCallFrame::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     auto* engine = m_external_function->m_execution_engine.get();
@@ -133,21 +133,21 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance
     return rc;
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+void runtime::cpu::CPUCallFrame::setup_runtime_context()
 {
-    ctx = new CPURuntimeContext;
+    m_ctx = new CPURuntimeContext;
 
-    ctx->op_durations = nullptr;
-    if (runtime::cpu::IsTracingEnabled())
+    m_ctx->op_durations = nullptr;
+    if (runtime::cpu::is_tracing_enabled())
     {
-        ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
+        m_ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-    ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
+    m_ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
 }
 
-void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
+void runtime::cpu::CPUCallFrame::cleanup_runtime_context()
 {
-    delete[] ctx->op_durations;
-    delete ctx;
+    delete[] m_ctx->op_durations;
+    delete m_ctx;
 }
