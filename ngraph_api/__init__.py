@@ -23,6 +23,7 @@ from ngraph_api.ops import ceiling
 from ngraph_api.ops import ceiling as ceil
 from ngraph_api.ops import constant
 from ngraph_api.ops import convert
+from ngraph_api.ops import convolution
 from ngraph_api.ops import divide
 from ngraph_api.ops import dot
 from ngraph_api.ops import equal
