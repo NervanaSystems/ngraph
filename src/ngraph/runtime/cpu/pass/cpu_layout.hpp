@@ -19,9 +19,9 @@
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
-#define LAYOUT_DECL(E)                                                                             \
-    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,                               \
-      std::shared_ptr<ngraph::Node> node)
+#define LAYOUT_DECL(op_type)                                                                       \
+    layout<op_type>(ngraph::runtime::cpu::CPU_ExternalFunction * external_function,                \
+                    std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
 {
@@ -46,7 +46,10 @@ namespace ngraph
                     virtual bool
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
-                    static void LAYOUT_DECL(LayoutConvolution);
+                    template <typename OP>
+                    static void
+                        layout(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                               std::shared_ptr<ngraph::Node> node);
 
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;

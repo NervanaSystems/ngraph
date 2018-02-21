@@ -20,8 +20,9 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
-#define ASSIGN_DECL(E)                                                                             \
-    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, ngraph::Node* node)
+#define ASSIGN_DECL(op_name)                                                                       \
+    assign<op_name>(ngraph::runtime::cpu::CPU_ExternalFunction * external_function,                \
+                    ngraph::Node * node)
 
 namespace ngraph
 {
@@ -42,10 +43,17 @@ namespace ngraph
                         : m_external_function(external_function)
                     {
                     }
+
                     virtual bool
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
-                    static void ASSIGN_DECL(AssignConvolution);
+                    template <typename OP>
+                    static void
+                        assign(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                               ngraph::Node* node)
+                    {
+                        throw std::runtime_error("Unimplemented op in CPU assignment");
+                    }
 
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;

@@ -32,10 +32,50 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
+                {
+                    auto convolution = static_cast<op::Convolution*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto arg1_rank = arg1_shape.size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+            }
+        }
+    }
+}
+
 #define TI(x) type_index(typeid(x))
 
-static const runtime::cpu::pass::AssignOpMap dispatcher{
-    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPUAssignment::AssignConvolution},
+static const runtime::cpu::pass::AssignOpMap s_dispatcher{
+    {TI(ngraph::op::Convolution),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
@@ -44,37 +84,12 @@ bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
     for (const auto& node : nodes)
     {
         auto& n = *node;
-        auto handler = dispatcher.find(TI(n));
-        if (handler != dispatcher.end())
+        auto handler = s_dispatcher.find(TI(n));
+        if (handler != s_dispatcher.end())
         {
             handler->second(m_external_function.get(), node.get());
         }
     }
 
     return false;
-}
-
-void runtime::cpu::pass::CPUAssignment::ASSIGN_DECL(AssignConvolution)
-{
-    auto convolution = static_cast<op::Convolution*>(node);
-
-    auto arg0_shape = node->get_input_shape(0);
-    auto arg1_shape = node->get_input_shape(1);
-    auto result_shape = node->get_output_shape(0);
-    auto arg0_rank = arg0_shape.size();
-    auto arg1_rank = arg1_shape.size();
-
-    bool data_dilated = false;
-    for (size_t s : convolution->get_data_dilation_strides())
-    {
-        data_dilated = data_dilated || (s != 1);
-    }
-
-    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-        node->get_input_element_type(0) == element::f32)
-    {
-        auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-        op_annotations->set_mkldnn_op(true);
-        convolution->set_op_annotations(op_annotations);
-    }
 }
