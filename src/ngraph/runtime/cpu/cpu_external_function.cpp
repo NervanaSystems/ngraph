@@ -266,7 +266,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
+            if (ngraph::runtime::cpu::mkldnn_utils::is_mkldnn_op(*node))
             {
                 include_mkldnn_headers = true;
             }
@@ -522,7 +522,7 @@ using namespace ngraph::runtime;
         }
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        if (runtime::cpu::is_tracing_enabled() && current_function->get_name() == function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -689,7 +689,7 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled() &&
+                if (runtime::cpu::is_tracing_enabled() &&
                     current_function->get_name() == function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
@@ -729,7 +729,7 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled() &&
+                if (runtime::cpu::is_tracing_enabled() &&
                     current_function->get_name() == function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "

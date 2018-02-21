@@ -61,7 +61,7 @@ namespace ngraph
                                     {"uint32_t", mkldnn::memory::data_type::data_undef},
                                     {"uint64_t", mkldnn::memory::data_type::data_undef}};
 
-                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et)
+                mkldnn::memory::data_type get_data_type(const ngraph::element::Type& et)
                 {
                     auto it = s_data_type_map.find(et.c_type_string());
                     if (it == s_data_type_map.end() ||
@@ -70,13 +70,13 @@ namespace ngraph
                     return it->second;
                 }
 
-                bool IsMKLDNNOp(ngraph::Node& op)
+                bool is_mkldnn_op(ngraph::Node& op)
                 {
                     return (s_op_registry.find(TI(op)) != s_op_registry.end());
                 }
 
                 mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout)
+                    create_native_data_format(const ngraph::runtime::cpu::LayoutDescriptor& layout)
                 {
                     switch (layout.get_shape().size())
                     {

@@ -26,18 +26,18 @@ using namespace ngraph::runtime::cpu;
 
 const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
 {
-    return mkldnn_primitives;
+    return m_mkldnn_primitives;
 }
 
 size_t MKLDNNEmitter::insert_primitive(mkldnn::primitive* primitive)
 {
-    mkldnn_primitives.emplace_back(primitive);
-    return (mkldnn_primitives.size() - 1);
+    m_mkldnn_primitives.emplace_back(primitive);
+    return (m_mkldnn_primitives.size() - 1);
 }
 
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {
-    return primitive_deps.at(index);
+    return m_primitive_deps.at(index);
 }
 
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
@@ -45,7 +45,7 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrap
 {
     return mkldnn::memory::desc(
         mkldnn::memory::dims(tvw.get_shape().begin(), tvw.get_shape().end()),
-        mkldnn_utils::GetDataType(tvw.get_element_type()),
+        mkldnn_utils::get_data_type(tvw.get_element_type()),
         fmt);
 }
 
@@ -95,11 +95,11 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
          mkldnn_utils::global_cpu_engine},
-        *mkldnn_primitives[input_data_index],
-        *mkldnn_primitives[weights_index],
-        *mkldnn_primitives[result_index]));
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
 }
 
@@ -128,10 +128,10 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
          mkldnn_utils::global_cpu_engine},
-        *mkldnn_primitives[input_data_index],
-        *mkldnn_primitives[weights_index],
-        *mkldnn_primitives[result_index]));
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
 }

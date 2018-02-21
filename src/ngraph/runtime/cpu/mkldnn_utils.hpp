@@ -32,12 +32,12 @@ namespace ngraph
             {
                 extern mkldnn::engine global_cpu_engine;
 
-                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et);
+                mkldnn::memory::data_type get_data_type(const ngraph::element::Type& et);
 
-                bool IsMKLDNNOp(ngraph::Node& op);
+                bool is_mkldnn_op(ngraph::Node& op);
 
                 mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                    create_native_data_format(const ngraph::runtime::cpu::LayoutDescriptor& layout);
             }
         }
     }

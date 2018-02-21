@@ -63,9 +63,9 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     // Invoke compiled computation
     m_compiled_function(inputs.data(), outputs.data(), ctx);
 
-    if (runtime::cpu::IsTracingEnabled())
+    if (runtime::cpu::is_tracing_enabled())
     {
-        GenerateTimeline(m_external_function->get_op_attrs(), ctx->op_durations);
+        generate_timeline(m_external_function->get_op_attrs(), ctx->op_durations);
     }
 }
 
@@ -138,7 +138,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     ctx = new CPURuntimeContext;
 
     ctx->op_durations = nullptr;
-    if (runtime::cpu::IsTracingEnabled())
+    if (runtime::cpu::is_tracing_enabled())
     {
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }

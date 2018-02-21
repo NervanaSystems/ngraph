@@ -62,7 +62,7 @@ void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event
                           {"args", args}};
 }
 
-void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_attrs,
+void ngraph::runtime::cpu::generate_timeline(const std::vector<OpAttributes>& op_attrs,
                                             int64_t* op_durations)
 {
     nlohmann::json timeline;
@@ -91,7 +91,7 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
     return;
 }
 
-bool ngraph::runtime::cpu::IsTracingEnabled()
+bool ngraph::runtime::cpu::is_tracing_enabled()
 {
     return (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
 }
