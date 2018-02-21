@@ -40,9 +40,11 @@ public:
     {
         construct_gemm_pattern();
         construct_fprop_bn();
+        construct_conv_bias();
     }
 
 private:
     void construct_gemm_pattern();
     void construct_fprop_bn();
+    void construct_conv_bias();
 };
