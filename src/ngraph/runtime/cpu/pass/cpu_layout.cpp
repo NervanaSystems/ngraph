@@ -150,7 +150,7 @@ namespace ngraph
                         }
 
                         memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0).c_type_string());
+                            node->get_input_element_type(0));
 
                         engine cpu_engine(engine::cpu, 0);
                         memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());

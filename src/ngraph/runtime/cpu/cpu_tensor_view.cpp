@@ -114,7 +114,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         auto input_format = cpu_tvl->get_mkldnn_format();
         auto output_format = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);
         memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
-            this->get_descriptor()->get_tensor_view_type()->get_element_type().c_type_string());
+            this->get_descriptor()->get_tensor_view_type()->get_element_type());
 
         engine cpu_engine(engine::cpu, 0);
         memory::dims mkldnn_shape(tensor_shape.begin(), tensor_shape.end());

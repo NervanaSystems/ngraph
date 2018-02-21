@@ -258,7 +258,7 @@ namespace ngraph
 
                 // get input element type
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[2].get_element_type().c_type_string());
+                    args[2].get_element_type());
 
                 writer << "{\n";
                 writer.indent++;
@@ -2105,7 +2105,7 @@ namespace ngraph
                 {
                     const string& elem_type =
                         runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                            args[0].get_element_type().c_type_string());
+                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2219,7 +2219,7 @@ namespace ngraph
                 {
                     const string& elem_type =
                         runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                            args[0].get_element_type().c_type_string());
+                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2337,7 +2337,7 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type().c_type_string());
+                        args[0].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2520,7 +2520,7 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type().c_type_string());
+                        args[0].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2600,7 +2600,7 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type().c_type_string());
+                        args[0].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2669,7 +2669,7 @@ namespace ngraph
                     args[0].get_element_type() == element::f32 && max_pool_fprop_op != nullptr)
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[1].get_element_type().c_type_string());
+                        args[1].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2998,7 +2998,7 @@ namespace ngraph
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type().c_type_string());
+                    args[0].get_element_type());
 
                 writer << "{\n";
                 writer.indent++;
@@ -3031,7 +3031,7 @@ namespace ngraph
                 const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type().c_type_string());
+                    args[0].get_element_type());
                 if (arg_rank == 4 && args[0].get_element_type() == element::f32)
                 {
                     writer << "{\n";
@@ -3097,7 +3097,7 @@ namespace ngraph
                 const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type().c_type_string());
+                    args[0].get_element_type());
                 if (arg_rank == 4 && args[0].get_element_type() == element::f32)
                 {
                     writer << "{\n";

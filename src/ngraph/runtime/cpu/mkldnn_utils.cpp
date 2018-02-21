@@ -17,9 +17,9 @@
 #include <string>
 #include <typeindex>
 #include <typeinfo>
-#include <unordered_map>
 #include <unordered_set>
 
+#include "ngraph/types/element_type.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
@@ -46,47 +46,32 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::Relu),
     TI(ngraph::op::ReluBackprop)};
 
-static const std::unordered_map<std::string, const mkldnn::memory::data_type> s_data_type_map{
-    {"char", mkldnn::memory::data_type::s8},
-    {"float", mkldnn::memory::data_type::f32},
-    {"double", mkldnn::memory::data_type::data_undef},
-    {"int8_t", mkldnn::memory::data_type::s8},
-    {"int16_t", mkldnn::memory::data_type::s16},
-    {"int32_t", mkldnn::memory::data_type::s32},
-    {"int64_t", mkldnn::memory::data_type::data_undef},
-    {"uint8_t", mkldnn::memory::data_type::u8},
-    {"uint16_t", mkldnn::memory::data_type::data_undef},
-    {"uint32_t", mkldnn::memory::data_type::data_undef},
-    {"uint64_t", mkldnn::memory::data_type::data_undef}};
-
 // Mapping from POD types to MKLDNN data types
-// An empty string implies the corresponding MKLDNN data type
-// is not supported
-static const std::unordered_map<std::string, const std::string> s_mkldnn_data_type_string_map{
-    {"char", "memory::data_type::s8"},
-    {"float", "memory::data_type::f32"},
-    {"double", ""},
-    {"int8_t", "memory::data_type::s8"},
-    {"int16_t", "memory::data_type::s16"},
-    {"int32_t", "memory::data_type::s32"},
-    {"int64_t", ""},
-    {"uint8_t", "memory::data_type::u8"},
-    {"uint16_t", ""},
-    {"uint32_t", ""},
-    {"uint64_t", ""}};
+static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
+    {element::boolean, mkldnn::memory::data_type::s8},
+    {element::f32, mkldnn::memory::data_type::f32},
+    {element::f64, mkldnn::memory::data_type::data_undef},
+    {element::i8, mkldnn::memory::data_type::s8},
+    {element::i16, mkldnn::memory::data_type::s16},
+    {element::i32, mkldnn::memory::data_type::s32},
+    {element::i64, mkldnn::memory::data_type::data_undef},
+    {element::u8, mkldnn::memory::data_type::u8},
+    {element::u16, mkldnn::memory::data_type::data_undef},
+    {element::u32, mkldnn::memory::data_type::data_undef},
+    {element::u64, mkldnn::memory::data_type::data_undef}};
 
-static const std::unordered_map<std::string, memory::data_type> s_mkldnn_data_type_map{
-    {"char", memory::data_type::s8},
-    {"float", memory::data_type::f32},
-    {"double", memory::data_type::data_undef},
-    {"int8_t", memory::data_type::s8},
-    {"int16_t", memory::data_type::s16},
-    {"int32_t", memory::data_type::s32},
-    {"int64_t", memory::data_type::data_undef},
-    {"uint8_t", memory::data_type::u8},
-    {"uint16_t", memory::data_type::data_undef},
-    {"uint32_t", memory::data_type::data_undef},
-    {"uint64_t", memory::data_type::data_undef}};
+static const std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
+    {element::boolean, "mkldnn::memory::data_type::s8"},
+    {element::f32, "mkldnn::memory::data_type::f32"},
+    {element::f64, "mkldnn::memory::data_type::data_undef"},
+    {element::i8, "mkldnn::memory::data_type::s8"},
+    {element::i16, "mkldnn::memory::data_type::s16"},
+    {element::i32, "mkldnn::memory::data_type::s32"},
+    {element::i64, "mkldnn::memory::data_type::data_undef"},
+    {element::u8, "mkldnn::memory::data_type::u8"},
+    {element::u16, "mkldnn::memory::data_type::data_undef"},
+    {element::u32, "mkldnn::memory::data_type::data_undef"},
+    {element::u64, "mkldnn::memory::data_type::data_undef"}};
 
 // TODO (jbobba): Add the rest of memory formats to this map as well
 static const std::map<memory::format, const std::string> s_mkldnn_format_string_map{
@@ -135,7 +120,7 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     }
 }
 
-const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const std::string& type)
+const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_string_map.find(type);
     if (it == s_mkldnn_data_type_string_map.end() || it->second.empty())
@@ -143,7 +128,7 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const
     return it->second;
 }
 
-mkldnn::memory::data_type runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const std::string& type)
+mkldnn::memory::data_type runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_map.find(type);
     if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
