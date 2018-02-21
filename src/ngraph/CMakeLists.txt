@@ -219,6 +219,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     )
     set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
         "MPI_HEADER_PATHS=\"${MPI_C_INCLUE_PATH}\""
+    )
 endif()
 
     # GPU backend current requires CPU because they share compiler.cpp,
