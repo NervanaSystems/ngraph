@@ -20,6 +20,8 @@
 #include <memory>
 #include <vector>
 
+#include <iostream>
+
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -40,6 +42,7 @@
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/util/trace.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/kernel/abs.hpp"
@@ -796,6 +799,19 @@ private:
             kernel::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
+        }
+        else if (node_op == "Trace")
+        {
+            const op::util::Trace* trace = static_cast<const op::util::Trace*>(&node);
+            size_t to = std::min(shape_size(trace->get_shape()), trace->get_to());
+            T* raw_data = reinterpret_cast<T*>(args[0]->get_data_ptr());
+            std::cout << "from = " << trace->get_from() << " , to = " << to << std::endl;
+            std::vector<T> vdata(&raw_data[trace->get_from()], &raw_data[to]);
+            std::cout << "size = " << vdata.size() << std::endl;
+            trace->get_callback()(vector_to_string(vdata), trace->get_name());
+            memcpy(out[0]->get_data_ptr(),
+                   args[0]->get_data_ptr(),
+                   sizeof(T) * out[0]->get_element_count());
         }
         else
         {

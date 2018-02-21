@@ -81,6 +81,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
+#include "ngraph/ops/util/trace.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
@@ -1676,6 +1677,27 @@ namespace ngraph
                 writer << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name()
                        << "[i]);\n";
                 writer << "}\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::util::Trace)
+            {
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+
+                auto trace = static_cast<const ngraph::op::util::Trace*>(node);
+                writer << "auto callback = (void(*)(std::string data, std::string name)) "
+                       << (void*)(trace->get_callback()) << ";\n";
+                size_t to = std::min(shape_size(trace->get_shape()), trace->get_to());
+                writer << "std::vector<" << out[0].get_element_type().c_type_string()
+                       << "> vdata (&" << args[0].get_name() << "[" << trace->get_from() << "], &"
+                       << args[0].get_name() << "[" << to << "]);\n";
+                writer << "callback(ngraph::vector_to_string(vdata), std::string(\""
+                       << trace->get_name() << "\"));\n";
+                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }

@@ -43,6 +43,10 @@
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
 
+//
+#include "ngraph/ops/util/trace.hpp"
+#include "util/test_tools.hpp"
+
 using namespace ngraph;
 using namespace std;
 
@@ -546,4 +550,32 @@ TEST(pattern, variance)
     auto var_graph = construct_variance_graph();
     ASSERT_TRUE(n.match(var_graph, variance));
     ASSERT_EQ(n.get_pattern_map()[var_graph], variance);
+}
+
+TEST(pattern, trace)
+{
+    auto shape = Shape{5};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto neg = make_shared<op::Negative>(A);
+
+    int l = 2;
+
+    op::util::Trace::TraceCallback t = [](const std::string data, const std::string name) -> void {
+        std::cout << "bla , data " << data << " , name = " << name << std::endl;
+    };
+
+    auto trace = make_shared<op::util::Trace>(neg, t);
+
+    auto f = make_shared<Function>(trace, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<int>{-1, -2, -3, -4, -5});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
 }
