@@ -26,6 +26,7 @@
 
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
@@ -55,7 +56,7 @@ bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
 
 void runtime::cpu::pass::CPUAssignment::ASSIGN_DECL(AssignConvolution)
 {
-    auto convolution = static_cast<const op::Convolution*>(node);
+    auto convolution = static_cast<op::Convolution*>(node);
 
     auto arg0_shape = node->get_input_shape(0);
     auto arg1_shape = node->get_input_shape(1);
@@ -72,6 +73,8 @@ void runtime::cpu::pass::CPUAssignment::ASSIGN_DECL(AssignConvolution)
     if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         node->get_input_element_type(0) == element::f32)
     {
-        external_function->get_op_annotations(node)->is_mkldnn_op = true;
+        auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+        op_annotations->set_mkldnn_op(true);
+        convolution->set_op_annotations(op_annotations);
     }
 }

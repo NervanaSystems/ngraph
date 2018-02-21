@@ -21,7 +21,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 #define ASSIGN_DECL(E)                                                                             \
-    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, const ngraph::Node* node)
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function, ngraph::Node* node)
 
 namespace ngraph
 {
@@ -31,8 +31,7 @@ namespace ngraph
         {
             namespace pass
             {
-                using AssignFunction =
-                    std::function<void(CPU_ExternalFunction*, const ngraph::Node*)>;
+                using AssignFunction = std::function<void(CPU_ExternalFunction*, ngraph::Node*)>;
 
                 using AssignOpMap = std::unordered_map<std::type_index, AssignFunction>;
 

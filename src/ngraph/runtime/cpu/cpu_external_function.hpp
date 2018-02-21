@@ -66,11 +66,6 @@ namespace ngraph
                 }
             };
 
-            struct CPUOpAnnotations
-            {
-                bool is_mkldnn_op;
-            };
-
             class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
                                          public std::enable_shared_from_this<CPU_ExternalFunction>
             {
@@ -85,8 +80,6 @@ namespace ngraph
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
 
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
-                CPUOpAnnotations* get_op_annotations(const Node*);
-
             protected:
                 void compile();
 
@@ -122,9 +115,6 @@ namespace ngraph
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
-                // TODO (jbobba): Move CPU op annotations to core ngraph op classes
-                std::unordered_map<const Node*, std::unique_ptr<CPUOpAnnotations>>
-                    m_cpu_op_annotations;
             };
         }
     }

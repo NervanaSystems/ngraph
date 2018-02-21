@@ -26,7 +26,9 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/ops/op.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 
@@ -92,8 +94,8 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
             ngraph::replace_node(node, new_node);
         }
         NGRAPH_INFO << "Replaced " << node->get_name() << " with " << new_node->get_name();
-        external_function->get_op_annotations(new_node.get())->is_mkldnn_op =
-            external_function->get_op_annotations(node.get())->is_mkldnn_op;
+        auto old_op_annotations = static_pointer_cast<ngraph::op::Op>(node)->get_op_annotations();
+        static_pointer_cast<ngraph::op::Op>(new_node)->set_op_annotations(old_op_annotations);
         node = new_node;
     }
 
@@ -141,7 +143,9 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
 
 void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
 {
-    if (external_function->get_op_annotations(node.get())->is_mkldnn_op)
+    auto op_annotations = static_pointer_cast<ngraph::op::Op>(node)->get_op_annotations();
+    if (op_annotations &&
+        static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)->is_mkldnn_op())
     {
         auto convolution = static_cast<const ngraph::op::Convolution*>(node.get());
 
@@ -241,8 +245,9 @@ void runtime::cpu::pass::CPULayout::LAYOUT_DECL(LayoutConvolution)
                 ngraph::replace_node(node, new_node);
             }
             NGRAPH_INFO << "Replaced " << node->get_name() << " with " << new_node->get_name();
-            external_function->get_op_annotations(new_node.get())->is_mkldnn_op =
-                external_function->get_op_annotations(node.get())->is_mkldnn_op;
+            auto old_op_annotations =
+                static_pointer_cast<ngraph::op::Op>(node)->get_op_annotations();
+            static_pointer_cast<ngraph::op::Op>(new_node)->set_op_annotations(old_op_annotations);
             node = new_node;
         }
 

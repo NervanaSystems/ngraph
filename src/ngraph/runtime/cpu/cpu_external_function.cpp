@@ -906,17 +906,6 @@ const runtime::cpu::LayoutDescriptorPtrs&
     return result_layout_descriptors;
 }
 
-runtime::cpu::CPUOpAnnotations*
-    runtime::cpu::CPU_ExternalFunction::get_op_annotations(const Node* n)
-{
-    if (m_cpu_op_annotations.find(n) == m_cpu_op_annotations.end())
-    {
-        m_cpu_op_annotations[n] =
-            unique_ptr<runtime::cpu::CPUOpAnnotations>(new runtime::cpu::CPUOpAnnotations());
-    }
-    return m_cpu_op_annotations[n].get();
-}
-
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,
     Node* node,

@@ -83,6 +83,7 @@
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
@@ -2005,7 +2006,11 @@ namespace ngraph
                     data_dilated = data_dilated || (s != 1);
                 }
 
-                if (external_function->get_op_annotations(node)->is_mkldnn_op)
+                auto op_annotations =
+                    static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+                if (op_annotations &&
+                    static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                        ->is_mkldnn_op())
                 {
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
