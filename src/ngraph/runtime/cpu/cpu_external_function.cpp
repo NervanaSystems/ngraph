@@ -718,7 +718,7 @@ using namespace ngraph::runtime;
                 writer.indent++;
                 writer << "float* traced_array = (float*)" << out[0].get_name() << ";\n";
                 //we are already including `util.hpp` so should work
-                writer << " ngraph::check_for_nans (" << node->get_name() << ", traced_array, "
+                writer << " ngraph::check_for_nans (\"" << node->get_name() << "\", traced_array, "
                        << out[0].get_size() << "); ";
                 // writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 // writer.indent++;

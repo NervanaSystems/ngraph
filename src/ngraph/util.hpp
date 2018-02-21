@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <deque>
 #include <functional>
 #include <iostream>
@@ -256,11 +257,15 @@ namespace ngraph
     template <typename T>
     void check_for_nans(const char* name, T* array, size_t n)
     {
-        for (size_t i = 0; i i < n; i++)
+        for (size_t i = 0; i < n; i++)
         {
             if (std::isnan(array[i]))
             {
-                throw std::runtime_error("NaN discovered '" + name + "'");
+                throw std::runtime_error(std::string("NaN discovered '") + name + "'");
+            }
+            else if (std::isinf(array[i]))
+            {
+                throw std::runtime_error(std::string("INF discovered '") + name + "'");
             }
         }
     }
