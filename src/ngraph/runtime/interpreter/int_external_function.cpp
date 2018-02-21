@@ -57,6 +57,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"

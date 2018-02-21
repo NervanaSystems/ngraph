@@ -63,6 +63,7 @@ set (SRC
     ops/power.cpp
     ops/reduce.cpp
     ops/reduce_window.cpp
+    ops/relu.cpp
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
@@ -95,6 +96,7 @@ set (SRC
     pass/reshape_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
+    pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
