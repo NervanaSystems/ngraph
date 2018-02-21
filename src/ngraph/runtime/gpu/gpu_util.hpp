@@ -23,7 +23,7 @@
         if (result != NVRTC_SUCCESS)                                                               \
         {                                                                                          \
             throw std::runtime_error("\nerror: " #x " failed with error " +                        \
-                                     std::string(nvrtcGetErrorString(result)));                                 \
+                                     std::string(nvrtcGetErrorString(result)));                    \
         }                                                                                          \
     } while (0)
 
@@ -35,7 +35,7 @@
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg));      \
+            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg));     \
         }                                                                                          \
     } while (0)
 

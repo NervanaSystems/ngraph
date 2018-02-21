@@ -30,10 +30,10 @@ namespace ngraph
             class Cuda_function_builder
             {
             public:
-                static std::shared_ptr<CUfunction> Get(std::string& kernel,
-                                                      std::string& name,
-                                                      int number_of_options,
-                                                      const char** options)
+                static std::shared_ptr<CUfunction> Get(const std::string& name,
+                                                       const std::string& kernel,
+                                                       int number_of_options,
+                                                       const char** options)
                 {
                     nvrtcProgram prog;
                     NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,

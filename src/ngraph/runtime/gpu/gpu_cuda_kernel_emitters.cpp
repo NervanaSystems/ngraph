@@ -23,10 +23,10 @@
 #include <cudnn_v7.h>
 #include <nvrtc.h>
 
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 
 namespace ngraph
 {
@@ -49,7 +49,7 @@ namespace ngraph
                             std::string kernel;
                             Cuda_kernel_builder::Get_1_element_op(name, "float", "fabsf", kernel);
                             Cuda_function_pool::Instance().Set(
-                                name, Cuda_function_builder::Get(name, kernel, 2, opts));
+                                name, Cuda_function_builder::Get("cuda_" + name, kernel, 2, opts));
                         }
 
                         //convert runtime ptr to driver api ptr
