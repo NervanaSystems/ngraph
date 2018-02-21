@@ -35,20 +35,20 @@ Attributes
 +-----------------------------+-----------------------------+----------------------------------------+
 | Name                        | Type                        | Notes                                  |
 +=============================+=============================+========================================+
-| ``window_movement_strides`` | ``Strides[n]``              | How far to slide the window along      |
-|                             |                             | each axis at each step.                |
+| ``window_movement_strides`` | ``Strides[n]``              | How far, in strides, to slide the      |
+|                             |                             | window along each axis at each step    |
 +-----------------------------+-----------------------------+----------------------------------------+
 | ``window_dilation_strides`` | ``Strides[n]``              | Per-axis dilation to apply to the      |
-|                             |                             | filters.                               |
+|                             |                             | filters                                |
 +-----------------------------+-----------------------------+----------------------------------------+
 | ``padding_below``           | ``Shape[n]``                | How many padding elements to add       |
-|                             |                             | below the 0-coordinate on each axis.   |
+|                             |                             | below the 0-coordinate on each axis    |
 +-----------------------------+-----------------------------+----------------------------------------+
 | ``padding_above``           | ``Shape[n]``                | How many padding elements to add above |
-|                             |                             | the max-coordinate on each axis.       |
+|                             |                             | the max-coordinate on each axis        |
 +-----------------------------+-----------------------------+----------------------------------------+
 | ``image_dilation_strides``  | ``Strides[n]``              | Per-axis dilation to apply to the      |
-|                             |                             | image batch.                           |
+|                             |                             | image batch                            |
 +-----------------------------+-----------------------------+----------------------------------------+
 
 

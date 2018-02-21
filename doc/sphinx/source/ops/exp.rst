@@ -6,7 +6,7 @@ Exp
 
 .. code-block:: cpp
 
-   Exp  // Elementwise expine operation.
+   Exp  // Elementwise expine operation
 
 
 Description
@@ -31,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 

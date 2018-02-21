@@ -6,7 +6,7 @@ Ceiling
 
 .. code-block:: cpp
 
-   Ceiling  // Elementwise ceiling operation.
+   Ceiling  // Elementwise ceiling operation
 
 
 Description

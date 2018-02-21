@@ -4,14 +4,17 @@
 Equal
 #####
 
+.. code-block:: cpp
+
+   Equal  // Elementwise equal operation
+
+
 Description
 ===========
 
-Elementwise equal operation.
-
 Produces tensor of the same element type and shape as the two inputs,
-where the value at each coordinate of ``output`` is true (1) if
-``arg0`` is equal to ``arg1``, 0 otherwise.
+where the value at each coordinate of ``output`` is ``1`` (true) if
+``arg0`` is equal to ``arg1``, ``0`` otherwise.
 
 
 Inputs

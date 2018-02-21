@@ -31,7 +31,7 @@ Attributes
 +------------------+---------------------------+---------------------------------+
 | Name             | Type                      | Notes                           |
 +==================+===========================+=================================+
-| ``element_type`` | ``ngraph::element::type`` | The element type of the result. |
+| ``element_type`` | ``ngraph::element::type`` | The element type of the result  |
 +------------------+---------------------------+---------------------------------+
 
 Outputs

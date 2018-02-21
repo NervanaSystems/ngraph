@@ -6,7 +6,7 @@ Concatenate
 
 .. code-block:: cpp
 
-   Concatenate  // Short description 
+   Concatenate  // Concatenation operation 
 
 
 Description
@@ -32,7 +32,7 @@ Attributes
 +-------------------------+----------------------------------+
 | Name                    | Notes                            |
 +=========================+==================================+
-| ``concatenation_axis``  | Less than the rank of the shape. |
+| ``concatenation_axis``  | Less than the rank of the shape  |
 +-------------------------+----------------------------------+
 
 Outputs

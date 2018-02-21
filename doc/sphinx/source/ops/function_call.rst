@@ -22,7 +22,7 @@ Inputs
 | Name       | Type               |                                              |
 +============+====================+==============================================+
 | ``args``   | ``ngraph::Nodes``  | Element types and shapes must correspond to  |
-|            |                    | the parameters of ``function``.              |
+|            |                    | the parameters of ``function``               |
 +------------+--------------------+----------------------------------------------+
 
 Attributes

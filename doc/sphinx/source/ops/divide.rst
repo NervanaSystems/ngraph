@@ -6,7 +6,7 @@ Divide
 
 .. code-block:: cpp
 
-   Divide  //  Elementwise divide operation.
+   Divide  //  Elementwise divide operation
 
 
 Description

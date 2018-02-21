@@ -6,7 +6,7 @@ GreaterEq
 
 .. code-block:: cpp
 
-   GreaterEq  // Elementwise greater or equal operation.
+   GreaterEq  // Elementwise greater or equal operation
 
 
 Description

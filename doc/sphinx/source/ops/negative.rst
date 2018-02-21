@@ -6,7 +6,7 @@ Negative
 
 .. code-block:: cpp
 
-   Negative  //  Elementwise negative operation.
+   Negative  //  Elementwise negative operation
 
 
 Description
