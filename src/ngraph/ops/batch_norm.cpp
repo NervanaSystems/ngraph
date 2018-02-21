@@ -16,6 +16,7 @@
 
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 
 ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
@@ -146,6 +147,8 @@ ngraph::op::BatchNormBprop::BatchNormBprop(double eps,
 	}
 
 	add_output(input->get_element_type(), input->get_shape());
+    add_output(gamma->get_element_type(), gamma->get_shape());
+    add_output(beta->get_element_type(), beta->get_shape());
 }
 
 std::shared_ptr<ngraph::Node> ngraph::op::BatchNormBprop::copy_with_new_args(
@@ -168,5 +171,12 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
 	auto input = get_input_op(2); 
 	auto mean = get_input_op(3);
 	auto variance = get_input_op(4);
-	adjoints.add_delta(input, std::make_shared<op::BatchNormBprop>(get_eps_value(), gamma, beta, input, mean, variance, delta));
+    auto bbn = std::make_shared<op::BatchNormBprop>(get_eps_value(), gamma, beta, input, mean, variance, delta);
+    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
+    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
+    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
+
+	adjoints.add_delta(input, dinput);
+    adjoints.add_delta(gamma, dgamma);
+    adjoints.add_delta(beta, dbeta);
 }

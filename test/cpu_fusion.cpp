@@ -313,27 +313,39 @@ TEST(cpu_fusion, batchnorm_bprop_b2c2h2w1)
     copy_data(_beta, vector<float>{0.0f, 0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    shared_ptr<runtime::TensorView> ep =
+    shared_ptr<runtime::TensorView> _delta =
     backend->make_primary_tensor_view(element::f32, shape_r);
-    vector<float> dataEp(shape_size(shape_r), 4);
-    copy_data(ep, dataEp);
+    vector<float> deltaData(shape_size(shape_r), 4);
+    copy_data(_delta, deltaData);
     
     auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
 
 
     //auto df = autodiff::backprop_function(f);
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
-    auto bbn = bn->backprop_node(input, C);
-    auto df = make_shared<Function>(bbn, op::Parameters{mean, var, input, gamma, beta, C});
+    auto dinput = bn->backprop_node(input, C);
+    auto dgamma = bn->backprop_node(gamma, C);
+    auto dbeta = bn->backprop_node(beta, C);
+    auto df = make_shared<Function>(Nodes{dinput, dgamma, dbeta}, op::Parameters{mean, var, input, gamma, beta, C});
 
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
 
-    shared_ptr<runtime::TensorView> output =
+    shared_ptr<runtime::TensorView> _dinput =
     backend->make_primary_tensor_view(element::i32, shape_r);
-    cf->call({_mean, _var, _input, _gamma, _beta, ep}, {output});
+    shared_ptr<runtime::TensorView> _dgamma =
+    backend->make_primary_tensor_view(element::i32, gamma_shape);
+    shared_ptr<runtime::TensorView> _dbeta =
+    backend->make_primary_tensor_view(element::i32, beta_shape);
 
-    std::cout << vector_to_string(read_vector<float>(output)) << std::endl;
+    cf->call({_mean, _var, _input, _gamma, _beta, _delta}, {_dinput, _dgamma, _dbeta});
+
+    std::cout << vector_to_string(read_vector<float>(_dinput)) << std::endl;
+    std::cout << "_dinput : \n";
+    std::cout << vector_to_string(read_vector<float>(_dgamma)) << std::endl;
+    std::cout << "_dgamma : \n";
+    std::cout << vector_to_string(read_vector<float>(_dbeta)) << std::endl;
+    std::cout << "_dbeta : \n";
     /*
     vector<float> expected_result{
         -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};

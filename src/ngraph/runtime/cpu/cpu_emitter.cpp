@@ -309,7 +309,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
     writer.indent++;
 
     // define weights
-    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(2);\n";
+    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(" << args[0].get_shape().at(0) * 2 << ");\n";
+    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">vdiff_weights(" << args[0].get_shape().at(0) * 2 << ", 0.0f);\n";
     auto weights_shape = Shape{2, input_shape[1]};
 
     // push gamma and beta
@@ -333,6 +334,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
     // TODO define weights by stacking gamma and beta values
     writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
            << ", memory::format::nc);\n";
+    writer << "memory::desc diff_weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
+           << ", memory::format::nc);\n";
     writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
            << ", memory::format::nchw);\n";
     writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
@@ -347,6 +350,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
     writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[2].get_name()
            << ");\n";
     writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
+           << ");\n";
+    writer << "memory diff_weights = memory({diff_weights_desc, cpu_engine}, vdiff_weights.data()"
            << ");\n";
     writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name() << ");\n";
     writer << "memory variance = memory({variance_desc, cpu_engine}, " << args[4].get_name()
@@ -374,7 +379,7 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
 			  
 	//create a batchnorm fprop primitive
 	 writer << " batch_normalization_backward bn_bprop = "
-	           "batch_normalization_backward(bn_bprop_prim_desc, input_data, mean, variance, delta, weights, result);\n ";
+	           "batch_normalization_backward(bn_bprop_prim_desc, input_data, mean, variance, delta, weights, result, diff_weights);\n ";
 	
 	//try this one in case 
 	//batch_normalization_backward(bn_bprop_prim_desc, primitive::at(input_data), primitive::at(mean), primitive::at(variance), primitive::at(diff_dst), primitive::at(weights), *diff_src);
@@ -382,6 +387,12 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNormBprop)
 	//create stream and execute
     writer << "stream s = stream(stream::kind::eager);\n"
            << "s.submit({bn_bprop}).wait();\n";
+
+    writer << "memcpy(" << out[1].get_name() << ",&vdiff_weights[0],"
+           << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+    writer << "memcpy(" << out[2].get_name() << ",&vdiff_weights[0] + " << args[1].get_size() << ","          
+           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+    
     writer.indent--;
     writer << "}\n";
 }
