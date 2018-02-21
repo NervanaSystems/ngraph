@@ -249,6 +249,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     string function_name = m_function->get_name();
 
+    m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
+
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -284,6 +286,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
+#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
