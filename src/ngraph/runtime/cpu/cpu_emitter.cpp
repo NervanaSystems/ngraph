@@ -2131,10 +2131,9 @@ namespace ngraph
                         writer << "memory::dims " << var << "{" << dims << "};\n";
                     };
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
+                    writer.block_begin();
+                    writer << "try\n";
+                    writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     emit_memory_desc("data_desc", join(arg0_shape), elem_type, "nchw");
                     emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
@@ -2164,15 +2163,13 @@ namespace ngraph
                            "result);\n"
                            "stream s = stream(stream::kind::eager);\n"
                            "s.submit({bwd_weights}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
+                    writer.block_end();
+                    writer << "catch (const mkldnn::error& e)\n";
+                    writer.block_begin();
                     writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
                               "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
+                    writer.block_end();
                 }
                 else
                 {
@@ -2246,10 +2243,9 @@ namespace ngraph
                         writer << "memory::dims " << var << "{" << dims << "};\n";
                     };
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
+                    writer.block_begin();
+                    writer << "try\n";
+                    writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     emit_memory_desc("weight_desc", join(arg0_shape), elem_type, "oihw");
                     emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
@@ -2278,15 +2274,13 @@ namespace ngraph
                            "result);\n"
                            "stream s = stream(stream::kind::eager);\n"
                            "s.submit({bwd_data}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
+                    writer.block_end();
+                    writer << "catch (const mkldnn::error& e)\n";
+                    writer.block_begin();
                     writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
                               "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
+                    writer.block_end();
                 }
                 else
                 {
