@@ -82,4 +82,3 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 
     return count;
 }
-
