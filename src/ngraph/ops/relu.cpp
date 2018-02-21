@@ -29,6 +29,14 @@ op::Relu::Relu(shared_ptr<Node> arg)
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : RequiresTensorViewArgs("ReluBackprop", {arg, delta})
 {
+    if (arg->get_element_type() != delta->get_element_type())
+    {
+        throw ngraph_error("Argument and delta element types for Relu backprop do not match");
+    }
+    if (arg->get_shape() != delta->get_shape())
+    {
+        throw ngraph_error("Argument and delta element shape for Relu backprop do not match");
+    }
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
