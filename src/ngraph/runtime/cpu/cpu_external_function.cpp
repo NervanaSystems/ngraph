@@ -61,8 +61,10 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -73,6 +75,7 @@
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"
@@ -223,6 +226,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
+    {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
+    {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
+    {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -242,6 +248,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     string function_name = m_function->get_name();
+
+    m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
 
     ngraph::pass::Manager pass_manager;
 
@@ -278,15 +286,19 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
+#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/convolution.hpp"
 #include "ngraph/runtime/kernel/dot.hpp"
+#include "ngraph/runtime/kernel/max.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
+#include "ngraph/runtime/kernel/min.hpp"
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"
+#include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
