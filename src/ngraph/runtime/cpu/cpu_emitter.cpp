@@ -79,6 +79,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -3010,6 +3011,26 @@ namespace ngraph
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                writer << emit_array1d(out[0]) << " =\n"
+                       << "    " << emit_array1d(args[0]) << ".exp();\n";
+#else
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer << "{\n";
+                writer << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name()
+                       << "[i]);\n";
+                writer << "}\n";
 #endif
                 writer.indent--;
                 writer << "}\n";

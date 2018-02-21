@@ -7677,3 +7677,25 @@ TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     cf->call({a}, {result});
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
+
+TEST(${BACKEND_NAME}, softmax)
+{
+    Shape shape{8};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
+        read_vector<float>(result));
+}

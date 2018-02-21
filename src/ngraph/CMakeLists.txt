@@ -71,6 +71,7 @@ set (SRC
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
+    ops/softmax.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp

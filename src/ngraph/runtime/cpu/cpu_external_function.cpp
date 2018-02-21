@@ -88,6 +88,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -229,6 +230,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -306,6 +308,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
+// TODO: do you need a softmax kernel?
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"
 
