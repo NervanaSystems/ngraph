@@ -1035,6 +1035,7 @@ TEST(${BACKEND_NAME}, backwards_power)
 
 TEST(${BACKEND_NAME}, backwards_relu)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
