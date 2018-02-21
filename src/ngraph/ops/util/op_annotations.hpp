@@ -26,9 +26,6 @@ namespace ngraph
             class OpAnnotations
             {
             public:
-                /// \brief Constructs an operation on tensor view arguments.
-                ///
-                /// \param args
                 OpAnnotations(){};
             };
         }
