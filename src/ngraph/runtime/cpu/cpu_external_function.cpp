@@ -801,12 +801,12 @@ using namespace ngraph::runtime;
                 throw ngraph_error("layout missing on function parameter's tensor view: " +
                                    tv->get_name());
             }
-            parameter_layout_descriptors.emplace_back(
+            m_parameter_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }
     }
     // Store layouts assigned for results
-    if (!result_layout_descriptors.empty())
+    if (!m_result_layout_descriptors.empty())
     {
         throw ngraph_error("Function output layouts should not be pre-assigned");
     }
@@ -820,7 +820,7 @@ using namespace ngraph::runtime;
             {
                 throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
             }
-            result_layout_descriptors.emplace_back(
+            m_result_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }
     }
@@ -904,13 +904,13 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_
 const runtime::cpu::LayoutDescriptorPtrs&
     runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
 {
-    return parameter_layout_descriptors;
+    return m_parameter_layout_descriptors;
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&
     runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
 {
-    return result_layout_descriptors;
+    return m_result_layout_descriptors;
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(

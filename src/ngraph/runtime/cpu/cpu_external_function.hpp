@@ -54,15 +54,15 @@ namespace ngraph
 
             struct OpAttributes
             {
-                std::string Description;
-                std::vector<std::string> Outputs;
-                std::vector<std::string> Inputs;
+                std::string m_description;
+                std::vector<std::string> m_outputs;
+                std::vector<std::string> m_inputs;
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
                              const std::vector<std::string>& inputs)
-                    : Description(desc)
-                    , Outputs(outputs)
-                    , Inputs(inputs)
+                    : m_description(desc)
+                    , m_outputs(outputs)
+                    , m_inputs(inputs)
                 {
                 }
             };
@@ -118,8 +118,8 @@ namespace ngraph
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
-                LayoutDescriptorPtrs parameter_layout_descriptors;
-                LayoutDescriptorPtrs result_layout_descriptors;
+                LayoutDescriptorPtrs m_parameter_layout_descriptors;
+                LayoutDescriptorPtrs m_result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
