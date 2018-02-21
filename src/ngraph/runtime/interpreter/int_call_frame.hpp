@@ -29,9 +29,12 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -67,8 +70,10 @@
 #include "ngraph/runtime/kernel/less.hpp"
 #include "ngraph/runtime/kernel/less_eq.hpp"
 #include "ngraph/runtime/kernel/log.hpp"
+#include "ngraph/runtime/kernel/max.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/maximum.hpp"
+#include "ngraph/runtime/kernel/min.hpp"
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/kernel/negate.hpp"
@@ -77,6 +82,7 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
+#include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/relu.hpp"
@@ -490,6 +496,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+        else if (node_op == "Max")
+        {
+            const op::Max* max = static_cast<const op::Max*>(&node);
+            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           max->get_reduction_axes());
+        }
         else if (node_op == "Maximum")
         {
             kernel::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -524,6 +539,15 @@ private:
                                          max_pool_backprop->get_window_movement_strides(),
                                          max_pool_backprop->get_padding_below(),
                                          max_pool_backprop->get_padding_above());
+        }
+        else if (node_op == "Min")
+        {
+            const op::Min* min = static_cast<const op::Min*>(&node);
+            kernel::min<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           min->get_reduction_axes());
         }
         else if (node_op == "Minimum")
         {
@@ -589,6 +613,15 @@ private:
                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
                              out[0]->get_element_count());
+        }
+        else if (node_op == "Product")
+        {
+            const op::Product* product = static_cast<const op::Product*>(&node);
+            kernel::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               product->get_reduction_axes());
         }
         else if (node_op == "Reduce")
         {

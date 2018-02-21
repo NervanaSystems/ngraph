@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,16 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/broadcast.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <cstddef>
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+namespace ngraph
 {
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto& x_shape = get_inputs().at(0).get_shape();
+    namespace runtime
+    {
+        namespace cpu
+        {
+            struct CPURuntimeContext;
 
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
+            namespace mkldnn_utils
+            {
+                extern "C" void
+                    set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index, void* ptr);
+                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                        size_t primitive_index);
+            }
+        }
+    }
 }
