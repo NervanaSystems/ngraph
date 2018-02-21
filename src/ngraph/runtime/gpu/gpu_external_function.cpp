@@ -511,7 +511,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                 {
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                       << "*)((char *)pool_base_ptr + " << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
