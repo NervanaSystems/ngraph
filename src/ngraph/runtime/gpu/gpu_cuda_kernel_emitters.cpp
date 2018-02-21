@@ -1,20 +1,23 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
+
 #include <algorithm>
 #include <map>
 
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+
 
 #include <nvrtc.h>
 #include <cuda.h>
@@ -22,47 +25,10 @@
 #include <cublas_v2.h>
 #include <cudnn_v7.h>
 
-#include "ngraph/node.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concatenate.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/one_hot.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/util.hpp"
-
-
-
-#define NVRTC_SAFE_CALL(x) \ 
-do { \ 
-    nvrtcResult result = x; \ 
-        if (result != NVRTC_SUCCESS) { \ 
-            std::cerr << "\nerror: " #x " failed with error " \ 
-                << nvrtcGetErrorString(result) << '\n'; \
-                exit(1); \ 
-        } \
-} while(0) 
-
-#define CUDA_SAFE_CALL(x) \ 
-do { \ 
-    CUresult result = x; \ 
-        if (result != CUDA_SUCCESS) { \ 
-            const char *msg; \ 
-                cuGetErrorName(result, &msg); \ 
-                std::cerr << "\nerror: " #x " failed with error " \ 
-                << msg << '\n'; \ 
-                exit(1); \ 
-        } \ 
-} while(0)
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cude_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_cude_function_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_cude_function_pool.hpp"
 
 namespace ngraph
 {
@@ -77,69 +43,25 @@ namespace ngraph
 
                     void emit_abs(void* in, void* out, size_t count)
                     {
-                        const char *op_abs = R"(  
-  extern "C" __global__  
-  void cuda_op_abs(float* in, float* out, size_t n)  
-  {  
-    size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
-    if(tid < n) 
-    {
-      out[tid] = fabsf(in[tid]);  
-    }
-  })";
-
-                            // Create an instance of nvrtcProgram with the code string. 
-
-                        nvrtcProgram prog; 
-                        NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
-                                    op_abs, 
-                                    "op_abs.cu", 
-                                    0, // numHeaders 
-                                    NULL, // headers 
-                                    NULL)); // includeNames
-
-
-                        const char *opts[] = {"--gpu-architecture=compute_35",
+                        std::string name = "abs";
+                        // Create an instance of nvrtcProgram with the code string. 
+                        if(Cuda_function_pool::Instance().get(name) == nullptr)
+                        {
+                            const char *opts[] = {"--gpu-architecture=compute_35",
                             "--relocatable-device-code=true"};
-                        nvrtcResult compileResult = nvrtcCompileProgram(prog, 
-                                2, 
-                                opts); 
-
-                        size_t logSize; 
-
-                        NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize)); 
-                        char *log = new char[logSize]; 
-                        NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log)); 
-                        std::cout << log << '\n'; 
-                        delete[] log; 
-
-                        if (compileResult != NVRTC_SUCCESS) {
-                            exit(1);
+                            std::string kernel;
+                            Cuda_kernel_builder::get_1_element_op(name, "float", "fabsf",kernel);
+                            Cuda_function_pool::Instance().set(name, Cuda_function_builder(name, kernel, 2, opts));
                         }
-
-                        size_t ptxSize; 
-                        NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize)); 
-                        char *ptx = new char[ptxSize]; 
-                        NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx)); // Destroy the program. 
-                        NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Load the generated PTX and get a handle to the parent kernel. 
-
-                        CUdevice cuDevice;
-                        CUcontext context;
-                        CUmodule module;
-                        CUfunction cuda_op_abs_kernel;
-                        CUDA_SAFE_CALL( cuInit(0));
-                        CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
-                        CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
-                        CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
-                        CUDA_SAFE_CALL(cuModuleGetFunction(&cuda_op_abs_kernel, module, "cuda_op_abs"));
-
+                     
+                        //convert runtime ptr to driver api ptr
                         CUdeviceptr dPtrIn, dPtrOut;
                         dPtrIn = (CUdeviceptr)in;
                         dPtrOut = (CUdeviceptr)out;
 
                         void *argsList[] = {&dPtrIn, &dPtrOut, &count};
                         CUDA_SAFE_CALL(
-                                cuLaunchKernel(cuda_op_abs_kernel, 
+                                cuLaunchKernel(cudCuda_function_pool::Instance().get(name).get(), 
                                     count ,1, 1, // grid dim 
                                     1, 1, 1, // block dim 
                                     0, NULL, // shared mem and stream 
