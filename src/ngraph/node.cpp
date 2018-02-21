@@ -23,7 +23,6 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -159,13 +158,6 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
 
 Nodes Node::get_input_ops() //const
 {
-    //this should be virtual!
-    if (auto goe = dynamic_cast<const op::GetOutputElement*>(this))
-    {
-        std::cout << " input = " << get_inputs().at(0).get_output().get_node()->get_name() << std::endl;
-        return Nodes{get_inputs().at(0).get_output().get_node()};
-    }
-
     Nodes result;
     for (auto& i : get_inputs())
     {
@@ -175,17 +167,6 @@ Nodes Node::get_input_ops() //const
     }
     if (m_arguments != result)
     {
-        std::cout << " node = " << get_name() << std::endl;
-        std::cout << " result = " << std::endl;
-        for (auto r : result)
-        {
-            std::cout << " r = " << r->get_name() << std::endl;
-        }
-        std::cout << " m_arguments = " << std::endl;
-                for (auto r : m_arguments)
-        {
-            std::cout << " r = " << r->get_name() << std::endl;
-        }
         throw ngraph_error("Arguments aren't equal: different values");
     }
     return result;

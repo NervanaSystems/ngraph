@@ -54,10 +54,10 @@ namespace ngraph
         };
 
 
-        class BatchNormBprop : public util::RequiresTensorViewArgs
+        class BatchNormBackprop : public util::RequiresTensorViewArgs
 		{
 		public:
-			BatchNormBprop(double eps,
+			BatchNormBackprop(double eps,
 				std::shared_ptr<Node> gamma,
 				std::shared_ptr<Node> beta,
 				std::shared_ptr<Node> input,

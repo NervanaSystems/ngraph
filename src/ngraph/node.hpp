@@ -156,7 +156,7 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
-        virtual Nodes get_input_ops(); //const;
+        virtual Nodes get_input_ops();
 
         std::shared_ptr<Node> get_input_op(size_t index);
 

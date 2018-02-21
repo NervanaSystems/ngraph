@@ -96,14 +96,14 @@ std::shared_ptr<ngraph::Node> ngraph::op::BatchNorm::copy_with_new_args(
         m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
 }
 
-ngraph::op::BatchNormBprop::BatchNormBprop(double eps,
+ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 	std::shared_ptr<ngraph::Node> gamma,
 	std::shared_ptr<ngraph::Node> beta,
 	std::shared_ptr<ngraph::Node> input,
 	std::shared_ptr<ngraph::Node> mean,
 	std::shared_ptr<ngraph::Node> variance,
 	std::shared_ptr<ngraph::Node> delta)
-	: RequiresTensorViewArgs("BatchNormBprop", { gamma, beta, input, mean, variance, delta })
+	: RequiresTensorViewArgs("BatchNormBackprop", { gamma, beta, input, mean, variance, delta })
 	, epsilon(eps)
 
 {
@@ -151,14 +151,14 @@ ngraph::op::BatchNormBprop::BatchNormBprop(double eps,
     add_output(beta->get_element_type(), beta->get_shape());
 }
 
-std::shared_ptr<ngraph::Node> ngraph::op::BatchNormBprop::copy_with_new_args(
+std::shared_ptr<ngraph::Node> ngraph::op::BatchNormBackprop::copy_with_new_args(
 	const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
 {
 	if (new_args.size() != 6)
     {
 		throw ngraph_error("Incorrect number of new arguments");
     }
-	return std::make_shared<op::BatchNormBprop>(
+	return std::make_shared<op::BatchNormBackprop>(
 		epsilon, new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), new_args.at(5));
 }
 
@@ -171,7 +171,7 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
 	auto input = get_input_op(2); 
 	auto mean = get_input_op(3);
 	auto variance = get_input_op(4);
-    auto bbn = std::make_shared<op::BatchNormBprop>(get_eps_value(), gamma, beta, input, mean, variance, delta);
+    auto bbn = std::make_shared<op::BatchNormBackprop>(get_eps_value(), gamma, beta, input, mean, variance, delta);
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
     auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
     auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);

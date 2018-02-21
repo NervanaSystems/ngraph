@@ -101,9 +101,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 
-//
-#include <iostream>
-
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
 #endif
@@ -221,7 +218,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::EmitBatchNorm},
-    {TI(ngraph::op::BatchNormBprop), &runtime::cpu::CPU_Emitter::EmitBatchNormBprop},
+    {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::EmitBatchNormBackprop},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
     
@@ -433,10 +430,6 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
-        for (auto r : tmp)
-        {
-            std::cout << " tmp = " << r->get_name() << std::endl;
-        }
         if (tmp.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
@@ -451,7 +444,6 @@ using namespace ngraph::runtime;
                 continue;
             }
             Node& node = *op_list[i];
-            std::cout << " emit_op_as_function = " << node << std::endl;
             string s = emit_op_as_function(node, "f");
             node_cache.insert({&node, s});
         }
