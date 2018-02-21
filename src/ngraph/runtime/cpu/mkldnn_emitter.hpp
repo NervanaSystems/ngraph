@@ -30,13 +30,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_ExternalFunction;
+            class CPUExternalFunction;
             class TensorViewWrapper;
 
             class MKLDNNEmitter
             {
             public:
-                MKLDNNEmitter(std::shared_ptr<CPU_ExternalFunction> ef)
+                MKLDNNEmitter(std::shared_ptr<CPUExternalFunction> ef)
                     : m_external_function(ef)
                 {
                 }
@@ -69,7 +69,7 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above);
 
             private:
-                std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                std::shared_ptr<CPUExternalFunction> m_external_function;
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;

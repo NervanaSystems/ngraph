@@ -40,11 +40,11 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_ExternalFunction;
-            class CPU_Emitter;
-            class CPU_CallFrame;
+            class CPUExternalFunction;
+            class CPUEmitter;
+            class CPUCallFrame;
 
-            using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
+            using OpFunction = std::function<void(CPUExternalFunction* external_function,
                                                   codegen::CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
@@ -67,13 +67,13 @@ namespace ngraph
                 }
             };
 
-            class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<CPU_ExternalFunction>
+            class CPUExternalFunction : public ngraph::runtime::ExternalFunction,
+                                         public std::enable_shared_from_this<CPUExternalFunction>
             {
-                friend class CPU_CallFrame;
+                friend class CPUCallFrame;
 
             public:
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                CPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 

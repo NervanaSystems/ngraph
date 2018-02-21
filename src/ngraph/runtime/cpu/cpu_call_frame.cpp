@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
+runtime::cpu::CPUCallFrame::CPUCallFrame(std::shared_ptr<CPUExternalFunction> external_function,
                                            EntryPoint compiled_function)
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
@@ -32,12 +32,12 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     setup_runtime_context();
 }
 
-runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
+runtime::cpu::CPUCallFrame::~CPUCallFrame()
 {
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::tensor_call(
+void runtime::cpu::CPUCallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
@@ -69,7 +69,7 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::call(
+void runtime::cpu::CPUCallFrame::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& arguments,
     const std::vector<std::shared_ptr<runtime::TensorView>>& results)
 {
@@ -89,7 +89,7 @@ void runtime::cpu::CPU_CallFrame::call(
     tensor_call(inputs, outputs);
 }
 
-void runtime::cpu::CPU_CallFrame::propagate_layouts(
+void runtime::cpu::CPUCallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
     const LayoutDescriptors& layouts) const
 {
@@ -109,7 +109,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::cpu::CPUCallFrame::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     auto* engine = m_external_function->m_execution_engine.get();
@@ -133,7 +133,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance
     return rc;
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+void runtime::cpu::CPUCallFrame::setup_runtime_context()
 {
     m_ctx = new CPURuntimeContext;
 
@@ -146,7 +146,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     m_ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
 }
 
-void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
+void runtime::cpu::CPUCallFrame::cleanup_runtime_context()
 {
     delete[] m_ctx->op_durations;
     delete m_ctx;

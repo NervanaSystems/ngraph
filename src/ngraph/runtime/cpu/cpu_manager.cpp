@@ -22,19 +22,19 @@
 
 using namespace ngraph;
 
-std::shared_ptr<ngraph::runtime::Backend> runtime::cpu::CPU_Manager::allocate_backend()
+std::shared_ptr<ngraph::runtime::Backend> runtime::cpu::CPUManager::allocate_backend()
 {
-    return std::make_shared<CPU_Backend>();
+    return std::make_shared<CPUBackend>();
 }
 
 std::shared_ptr<ngraph::runtime::ExternalFunction>
-    runtime::cpu::CPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
+    runtime::cpu::CPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
-    return std::make_shared<CPU_ExternalFunction>(fun);
+    return std::make_shared<CPUExternalFunction>(fun);
 }
 
-ngraph::runtime::Manager::Factory runtime::cpu::CPU_Manager::s_factory =
+ngraph::runtime::Manager::Factory runtime::cpu::CPUManager::s_factory =
     ngraph::runtime::Manager::register_factory(
         "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-            return std::make_shared<CPU_Manager>();
+            return std::make_shared<CPUManager>();
         });

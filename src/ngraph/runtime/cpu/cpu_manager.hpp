@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             /// @brief Transformer for the interpreted backend
-            class CPU_Manager : public Manager
+            class CPUManager : public Manager
             {
             protected:
                 ngraph::codegen::ExecutionEngine m_exec_state;

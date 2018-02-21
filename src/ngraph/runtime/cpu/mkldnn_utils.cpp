@@ -66,7 +66,9 @@ namespace ngraph
                     auto it = s_data_type_map.find(et.c_type_string());
                     if (it == s_data_type_map.end() ||
                         it->second == mkldnn::memory::data_type::data_undef)
+                    {
                         throw ngraph_error("No MKLDNN data type exists for the given element type");
+                    }
                     return it->second;
                 }
 
