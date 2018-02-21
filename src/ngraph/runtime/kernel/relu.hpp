@@ -18,16 +18,28 @@
 
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        namespace util
+        namespace kernel
         {
-            /// \brief Abstract base class for annotations added to graph ops
-            class OpAnnotations
+            template <typename T>
+            void relu(T* arg, T* out, size_t count)
             {
-            public:
-                OpAnnotations() {}
-            };
+                T zero = 0;
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg[i] > zero ? arg[i] : zero;
+                }
+            }
+            template <typename T>
+            void relu_backprop(T* arg, T* delta_arg, T* out, size_t count)
+            {
+                T zero = 0;
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg[i] > zero ? delta_arg[i] : zero;
+                }
+            }
         }
     }
 }

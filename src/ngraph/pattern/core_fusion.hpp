@@ -16,18 +16,23 @@
 
 #pragma once
 
+#include "ngraph/pass/graph_rewrite.hpp"
+
 namespace ngraph
 {
-    namespace op
+    namespace pass
     {
-        namespace util
-        {
-            /// \brief Abstract base class for annotations added to graph ops
-            class OpAnnotations
-            {
-            public:
-                OpAnnotations() {}
-            };
-        }
+        class CoreFusion;
     }
 }
+
+class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CoreFusion()
+        : GraphRewrite()
+    {
+        construct_relu_pattern();
+    }
+    void construct_relu_pattern();
+};

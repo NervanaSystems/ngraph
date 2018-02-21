@@ -78,6 +78,7 @@
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -97,6 +98,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -233,6 +235,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
+    {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
+    {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -257,6 +261,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
@@ -306,6 +311,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
+#include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"

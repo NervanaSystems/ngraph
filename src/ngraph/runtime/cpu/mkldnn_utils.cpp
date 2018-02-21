@@ -25,6 +25,7 @@
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/relu.hpp"
 
 #include "mkldnn_utils.hpp"
 
@@ -41,7 +42,9 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
     TI(ngraph::op::MaxPool),
-    TI(ngraph::op::MaxPoolBackprop)};
+    TI(ngraph::op::MaxPoolBackprop),
+    TI(ngraph::op::Relu),
+    TI(ngraph::op::ReluBackprop)};
 
 static const std::unordered_map<std::string, const mkldnn::memory::data_type> s_data_type_map{
     {"char", mkldnn::memory::data_type::s8},

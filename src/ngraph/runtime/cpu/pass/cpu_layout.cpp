@@ -64,9 +64,9 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
             new_args.push_back(new_node);
             replace_node = true;
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                        << output.get_node()->get_name()
-                        << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
-                        << node->get_name() << "(layout: default)";
+                         << output.get_node()->get_name()
+                         << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
+                         << node->get_name() << "(layout: default)";
         }
         else
         {
@@ -217,10 +217,10 @@ namespace ngraph
                                 new_args.push_back(new_node);
                                 replace_node = true;
                                 NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name()
-                                            << " between " << output.get_node()->get_name()
-                                            << "(layout: " << mkldnn_tvl->get_mkldnn_format()
-                                            << ") and " << node->get_name()
-                                            << "(layout: " << prim_input_formats[index] << ")";
+                                             << " between " << output.get_node()->get_name()
+                                             << "(layout: " << mkldnn_tvl->get_mkldnn_format()
+                                             << ") and " << node->get_name()
+                                             << "(layout: " << prim_input_formats[index] << ")";
                             }
                             else
                             {
@@ -242,7 +242,7 @@ namespace ngraph
                                 ngraph::replace_node(node, new_node);
                             }
                             NGRAPH_DEBUG << "Replaced " << node->get_name() << " with "
-                                        << new_node->get_name();
+                                         << new_node->get_name();
                             auto old_op_annotations =
                                 static_pointer_cast<ngraph::op::Op>(node)->get_op_annotations();
                             static_pointer_cast<ngraph::op::Op>(new_node)->set_op_annotations(
@@ -273,7 +273,7 @@ namespace ngraph
                             layout->set_mkldnn_format(prim_output_formats[i]);
                             tv->set_tensor_view_layout(layout);
                             NGRAPH_DEBUG << "Setting Node: " << node->get_name()
-                                        << " output layout: " << prim_output_formats[i] << endl;
+                                         << " output layout: " << prim_output_formats[i] << endl;
                         }
                     }
                     else
