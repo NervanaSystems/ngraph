@@ -7771,4 +7771,3 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
     cf->call({a, delta}, {result});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
-}

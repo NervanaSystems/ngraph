@@ -228,11 +228,11 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
-    {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
-    {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
+    {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
+    {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
