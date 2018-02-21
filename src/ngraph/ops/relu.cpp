@@ -29,7 +29,6 @@ op::Relu::Relu(shared_ptr<Node> arg)
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : RequiresTensorViewArgs("ReluBackprop", {arg, delta})
 {
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
