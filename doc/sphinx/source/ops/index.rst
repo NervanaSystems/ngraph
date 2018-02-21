@@ -58,4 +58,9 @@ Not currently a comprehensive list.
    broadcast.rst
    ceiling.rst
    concatenate.rst
+   constant.rst
+   convert.rst
    convolution.rst
+   cos.rst
+   cosh.rst
+

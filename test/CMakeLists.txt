@@ -31,6 +31,7 @@ set (SRC
     builder_xla.cpp
     build_graph.cpp
     copy.cpp
+    core_fusion.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
@@ -50,6 +51,7 @@ set (SRC
     type_prop.cpp
     util/autodiff/backprop_function.cpp
     util/test_tools.cpp
+    util/benchmark.cpp
     util.cpp
     uuid.cpp
 )

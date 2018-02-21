@@ -144,42 +144,6 @@ void Node::set_name(const string& name)
     }
 }
 
-void Node::assert_argument_list_equivalency(const Nodes& b)
-{
-    bool arguments_equal = true;
-    if (this->m_arguments.size() == b.size())
-    {
-        for (size_t i = 0; i < this->m_arguments.size(); i++)
-        {
-            arguments_equal = arguments_equal && this->m_arguments.at(i) == b.at(i);
-        }
-    }
-    else
-    {
-        arguments_equal = false;
-    }
-
-    if (!arguments_equal)
-    {
-        std::cout << "node = " << this->get_name() << std::endl;
-        std::cout << "m_arguments" << std::endl;
-        for (auto arg : this->m_arguments)
-        {
-            std::cout << "arg = " << arg->get_name() << std::endl;
-        }
-        std::cout << "results" << std::endl;
-        for (auto arg : b)
-        {
-            std::cout << "arg = " << arg->get_name() << std::endl;
-        }
-    }
-
-    if (!arguments_equal)
-    {
-        throw "Arguments aren't equal";
-    }
-}
-
 std::shared_ptr<Node> Node::get_input_op(size_t index)
 {
     for (auto arg : m_arguments)
@@ -201,7 +165,10 @@ Nodes Node::get_input_ops() //const
             result.push_back(i.get_output().get_node());
         }
     }
-    assert_argument_list_equivalency(result);
+    if (m_arguments != result)
+    {
+        throw ngraph_error("Arguments aren't equal: different values");
+    }
     return result;
 }
 
