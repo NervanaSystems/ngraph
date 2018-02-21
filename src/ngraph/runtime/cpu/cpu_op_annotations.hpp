@@ -28,9 +28,6 @@ namespace ngraph
             class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
             {
             public:
-                /// \brief Constructs a CPUOpAnnotations
-                ///
-                /// \param args
                 CPUOpAnnotations() { m_mkldnn_op = false; }
                 bool is_mkldnn_op() { return m_mkldnn_op; }
                 void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
