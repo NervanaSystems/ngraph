@@ -555,6 +555,53 @@ TEST(${BACKEND_NAME}, divide)
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, divide_adjoint_stability)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+
+        auto Y_out = f->get_output_op(0);
+        auto Xs = f->get_parameters();
+        auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
+        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
+            return Y_out->backprop_node(X, C);
+        });
+        std::vector<std::shared_ptr<op::Parameter>> params(Xs);
+        params.push_back(C);
+
+        auto bf = std::make_shared<Function>(dYdXs, params);
+        auto external = manager->compile(bf);
+
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{0, 0, 1, 1});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{2, 2, 2, 2});
+    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(c, vector<float>{1, 1, 1, 1});
+
+    auto resulta = backend->make_primary_tensor_view(element::f32, shape);
+    auto resultb = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a, b, c}, {resulta, resultb});
+    EXPECT_EQ((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta));
+    EXPECT_EQ((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb));
+}
+
 TEST(${BACKEND_NAME}, divide_by_zero_float32)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
