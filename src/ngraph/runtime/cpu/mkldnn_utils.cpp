@@ -19,13 +19,13 @@
 #include <typeinfo>
 #include <unordered_set>
 
-#include "ngraph/types/element_type.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/relu.hpp"
+#include "ngraph/types/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
 
@@ -120,7 +120,8 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     }
 }
 
-const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
+const std::string&
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_string_map.find(type);
     if (it == s_mkldnn_data_type_string_map.end() || it->second.empty())
@@ -128,7 +129,8 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const
     return it->second;
 }
 
-mkldnn::memory::data_type runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
+mkldnn::memory::data_type
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_map.find(type);
     if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
