@@ -218,7 +218,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
         ops/allreduce.cpp
     )
     set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
-        "MPI_HEADER_PATHS=\"${MPI_C_INCLUE_PATH}\""
+        "MPI_HEADER_PATH=\"${MPI_C_INCLUE_PATH}\""
     )
 endif()
 
