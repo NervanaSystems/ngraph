@@ -16,29 +16,23 @@
 
 #pragma once
 
-#include <mkldnn.hpp>
-
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            namespace mkldnn_utils
-            {
-                extern mkldnn::engine global_cpu_engine;
-
-                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et);
-
-                bool IsMKLDNNOp(ngraph::Node& op);
-
-                mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
-            }
-        }
+        class CoreFusion;
     }
 }
+
+class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CoreFusion()
+        : GraphRewrite()
+    {
+        construct_relu_pattern();
+    }
+    void construct_relu_pattern();
+};

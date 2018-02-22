@@ -85,6 +85,7 @@
 #include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
+#include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
@@ -676,6 +677,19 @@ private:
                                   f,
                                   reduce_window->get_window_shape(),
                                   reduce_window->get_window_movement_strides());
+        }
+        else if (node_op == "Relu")
+        {
+            kernel::relu<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            out[0]->get_element_count());
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     out[0]->get_element_count());
         }
         // else if (node_op == "Remainder")
         // {

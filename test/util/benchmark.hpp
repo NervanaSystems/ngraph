@@ -14,31 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <ngraph/runtime/call_frame.hpp>
+#include "test_tools.hpp"
 
-#include <mkldnn.hpp>
+/// performance test utilities
+std::multimap<size_t, std::string>
+    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
 
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace mkldnn_utils
-            {
-                extern mkldnn::engine global_cpu_engine;
-
-                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et);
-
-                bool IsMKLDNNOp(ngraph::Node& op);
-
-                mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
-            }
-        }
-    }
-}
+void run_benchmark(const std::string& json_path,
+                   const std::string& backend_name,
+                   size_t iterations);

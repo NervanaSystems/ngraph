@@ -63,6 +63,7 @@ set (SRC
     ops/power.cpp
     ops/reduce.cpp
     ops/reduce_window.cpp
+    ops/relu.cpp
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
@@ -95,6 +96,7 @@ set (SRC
     pass/reshape_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
+    pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
@@ -176,6 +178,8 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_tensor_view_wrapper.cpp
         runtime/cpu/cpu_layout_descriptor.cpp
         runtime/cpu/cpu_tracing.cpp
+        runtime/cpu/mkldnn_emitter.cpp
+        runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/ops/convert_layout.cpp
         runtime/cpu/ops/matmul_bias.cpp

@@ -70,27 +70,6 @@ static std::shared_ptr<Node> construct_constant_node(int n)
     return op::Constant::create(element::i32, Shape{}, {n});
 }
 
-bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant)
-{
-    if (auto rc = std::dynamic_pointer_cast<op::Constant>(reduce_constant))
-    {
-        auto cshape = rc->get_shape();
-        size_t n = shape_size(cshape);
-        //awkward(but generic) way to construct a constant of a given type, shape, value
-        std::vector<std::string> vz{n, const_value};
-        auto zero_constant = std::make_shared<op::Constant>(rc->get_element_type(), cshape, vz);
-
-        //equally awkward way to compare elements to const_value
-        size_t n_bytes = n * rc->get_element_type().size();
-        NGRAPH_DEBUG << "Comparing " << n_bytes << " bytes";
-        return !memcmp(zero_constant->get_data_ptr(), rc->get_data_ptr(), n_bytes);
-    }
-    else
-    {
-        return false;
-    }
-}
-
 bool is_zero(std::shared_ptr<Node> reduce_constant)
 {
     return is_equal_to_const_value("0", reduce_constant);

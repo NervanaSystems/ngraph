@@ -21,7 +21,9 @@
 #include <memory>
 
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/serializer.hpp"
 
 namespace ngraph
 {
