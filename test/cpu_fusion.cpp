@@ -36,6 +36,7 @@
 #include "ngraph/json.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
@@ -287,4 +288,18 @@ TEST(cpu_fusion, fuse_fprop_bn)
     pass_manager.run_passes(func);
     size_t ccg = count_ops_of_type<op::BatchNorm>(func);
     ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, fuse_conv_bias)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t cb = count_ops_of_type<op::ConvolutionBias>(func);
+    ASSERT_GT(cb, 0);
 }

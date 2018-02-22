@@ -298,7 +298,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         std::shared_ptr<Node> nn;
 
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
-        auto bias = m.match_root()->get_input_op(1);
+        auto bias = m.match_root()->get_input_op(1)->get_input_op(0);
         auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
         return conv_bias;
     };
