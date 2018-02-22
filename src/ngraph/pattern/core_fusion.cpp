@@ -21,11 +21,11 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/relu.hpp"
-#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
