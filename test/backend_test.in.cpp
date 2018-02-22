@@ -7697,13 +7697,13 @@ TEST(${BACKEND_NAME}, softmax)
     auto d = expf(-4) + expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2) + expf(3);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{expf(-4) / d,
-                             expf(-3) / d,
-                             expf(-2) / d,
-                             expf(-1) / d,
-                             expf(0) / d,
-                             expf(1) / d,
-                             expf(2) / d,
-                             expf(3) / d}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{expf(-4) / d,
+                                              expf(-3) / d,
+                                              expf(-2) / d,
+                                              expf(-1) / d,
+                                              expf(0) / d,
+                                              expf(1) / d,
+                                              expf(2) / d,
+                                              expf(3) / d},
+                                read_vector<float>(result)));
 }
