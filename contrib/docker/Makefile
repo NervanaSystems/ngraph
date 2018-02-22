@@ -50,6 +50,7 @@ endif
 
 # set the default values (ubuntu1604)
 ifndef DOCKERFILE
+    CMAKE_OPTIONS_EXTRA += "-DNGRAPH_USE_PREBUILT_LLVM=TRUE"
     DOCKERFILE=Dockerfile.ngraph_cpp
 endif
 
@@ -129,18 +130,12 @@ build_gcc: build_docker_image
 	# Make BUILD-GCC directory as user
 	mkdir -p "${DIR}"/BUILD-GCC
 	chmod ug+rwx "${DIR}"/BUILD-GCC
-
-	GCC_VERSION=`gcc --version | grep gcc | cut -f 4 -d ' ' | cut -f 1,2 -d '.'` 
-	@echo "GCC_VERSION=${GCC_VERSION}"
-	if [ "${GCC_VERSION}" != "4.8" ]; then \
-	    CMAKE_OPTIONS_GCC="${CMAKE_OPTIONS_GCC} -DNGRAPH_USE_PREBUILT_LLVM=TRUE"; \
-	fi
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
+            --env RUN_CMD="set -x; set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
