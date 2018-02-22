@@ -175,6 +175,26 @@ size_t ngraph::round_up(size_t size, size_t alignment)
     return size + alignment - remainder;
 }
 
+template <typename T>
+std::vector<T> ngraph::apply_permutation(std::vector<T> input, ngraph::AxisVector order)
+{
+    if (input.size() != order.size())
+    {
+        throw "input and order sizes don't match!";
+    }
+
+    std::vector<T> output(input.size());
+    for (size_t i = 0; i < order.size(); i++)
+    {
+        output.at(i) = input.at(order.at(i));
+    }
+
+    return output;
+}
+
+template std::vector<size_t> ngraph::apply_permutation(std::vector<size_t> input,
+                                                       ngraph::AxisVector order);
+
 ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
                                        std::shared_ptr<ngraph::Function> bprop,
                                        std::vector<std::shared_ptr<Node>> adjoints)

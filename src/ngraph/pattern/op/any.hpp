@@ -33,11 +33,17 @@ namespace ngraph
             {
             public:
                 Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Any(arg, arg->get_element_type(), arg->get_shape(), predicate)
+                {
+                }
+
+                Any(const std::shared_ptr<Node>& arg,
+                    element::Type type,
+                    Shape shape,
+                    Predicate predicate = nullptr)
                     : Pattern("Any", Nodes{arg}, predicate)
                 {
-                    add_output(arg->get_element_type(), arg->get_shape());
-                    //m_arguments.push_back(arg);
-                    //const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
+                    add_output(type, shape);
                 }
             };
         }
