@@ -998,16 +998,20 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
 def test_convolution():
 
     element_type = Type.f32
-    image_shape = [1, 1, 10, 10]
+    image_shape = [1, 1, 16, 16]
     filter_shape = [1, 1, 3, 3]
     A = Parameter(element_type, image_shape)
     B = Parameter(element_type, filter_shape)
     parameter_list = [A, B]
 
-    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
-    filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
-    filter_arr[0][0][1][1] = 1
-    result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
+    image_arr = np.arange(-128, 128, 1, dtype=np.float32).reshape(1, 1, 16, 16)
+    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filter_arr[0][0][0][0] = -1
+    filter_arr[0][0][1][1] = -1
+    filter_arr[0][0][2][2] = -1
+    filter_arr[0][0][0][2] = -1
+    filter_arr[0][0][2][0] = -1
+    result_arr = np.zeros(196, dtype=np.float32).reshape(1, 1, 14, 14)
 
     function = Function([Convolution(A, B)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
@@ -1015,15 +1019,15 @@ def test_convolution():
     a = backend.make_primary_tensor_view(element_type, image_shape)
     b = backend.make_primary_tensor_view(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
+    a.write(util.numpy_to_c(image_arr), 0, 16*16*4)
     b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
 
-    result = backend.make_primary_tensor_view(element_type, [1, 1, 8, 8])
-    result.write(util.numpy_to_c(result_arr), 0, 8*8*4)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 14, 14])
+    result.write(util.numpy_to_c(result_arr), 0, 14*14*4)
     cf.call([a, b], [result])
-    result.read(util.numpy_to_c(result_arr), 0, 8*8*4)
+    result.read(util.numpy_to_c(result_arr), 0, 14*14*4)
 
-    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 8, 8)
+    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 14, 14)
     assert np.allclose(result_arr, result_arr_ref)
 
 
