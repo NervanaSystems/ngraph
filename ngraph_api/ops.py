@@ -213,7 +213,7 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
 
 # matmul ops
 @nameable_op
-def dot(left_node, right_node, reduction_axes_count, name=None):
+def dot(left_node, right_node, name=None):
     # type: (Node, Node, int, str) -> Node
     """Return node which performs matrix multiplication of two input nodes."""
-    return Dot(left_node, right_node, reduction_axes_count)
+    return Dot(left_node, right_node)
