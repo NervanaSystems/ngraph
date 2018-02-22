@@ -142,6 +142,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     {
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
+    const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
+    ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()

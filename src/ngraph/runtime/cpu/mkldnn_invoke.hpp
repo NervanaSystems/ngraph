@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,11 +16,7 @@
 
 #pragma once
 
-#include <mkldnn.hpp>
-
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
+#include <cstddef>
 
 namespace ngraph
 {
@@ -28,16 +24,14 @@ namespace ngraph
     {
         namespace cpu
         {
+            struct CPURuntimeContext;
+
             namespace mkldnn_utils
             {
-                extern mkldnn::engine global_cpu_engine;
-
-                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et);
-
-                bool IsMKLDNNOp(ngraph::Node& op);
-
-                mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                extern "C" void
+                    set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index, void* ptr);
+                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                        size_t primitive_index);
             }
         }
     }

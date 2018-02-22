@@ -16,38 +16,30 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
-
 namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace kernel
         {
-            class TensorViewWrapper;
+            template <typename T>
+            void relu(T* arg, T* out, size_t count)
+            {
+                T zero = 0;
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg[i] > zero ? arg[i] : zero;
+                }
+            }
+            template <typename T>
+            void relu_backprop(T* arg, T* delta_arg, T* out, size_t count)
+            {
+                T zero = 0;
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg[i] > zero ? delta_arg[i] : zero;
+                }
+            }
         }
     }
 }
-
-class ngraph::runtime::cpu::TensorViewWrapper
-{
-public:
-    TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
-                      const std::string& alias = "");
-
-    size_t get_size() const;
-    const std::vector<size_t>& get_shape() const;
-    const std::vector<size_t>& get_strides() const;
-    const element::Type& get_element_type() const;
-    const std::string& get_name() const;
-    const std::string& get_type() const;
-    bool is_output() const;
-    const std::shared_ptr<descriptor::TensorView> get_tensor_view() const;
-
-private:
-    std::shared_ptr<descriptor::TensorView> m_tensor_view;
-    std::string m_alias;
-};
