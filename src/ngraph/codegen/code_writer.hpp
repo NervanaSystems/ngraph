@@ -70,6 +70,18 @@ public:
 
     std::string generate_temporary_name(std::string prefix = "tempvar");
 
+    void block_begin()
+    {
+        *this << "{\n";
+        indent++;
+    }
+
+    void block_end()
+    {
+        indent--;
+        *this << "}\n";
+    }
+
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
