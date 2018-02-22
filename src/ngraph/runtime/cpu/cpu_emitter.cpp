@@ -3019,22 +3019,31 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+              writer << "{   // " << node->get_name() << "\n";
+              writer.indent++;
 #if PREFER_EIGEN == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".exp();\n";
+              writer << emit_array1d(out[0]) << " =\n"
+                << "    " << emit_array1d(args[0]) << ".exp();\n";
 #else
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+              auto type = out[0].get_element_type().c_type_string();
+              writer << type << " d = (" << type << ")0;\n";
+              writer << "#pragma omp parallel for\n";
+              writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+              writer << "{\n";
+              writer << "    " << type << " e = exp(" << args[0].get_name() << "[i]);\n";
+              writer << "    d += e;\n";
+              writer << "    " << out[0].get_name() << "[i] = e;\n";
+              writer << "}\n";
+              writer << "#pragma omp parallel for\n";
+              writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+              writer << "{\n";
+              writer << "    " << out[0].get_name() << "[i] /= d;\n";
+              writer << "}\n";
 #endif
-                writer.indent--;
-                writer << "}\n";
+              writer.indent--;
+              writer << "}\n";
             }
+
         }
     }
 }

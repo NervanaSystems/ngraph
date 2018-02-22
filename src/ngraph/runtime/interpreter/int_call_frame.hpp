@@ -96,7 +96,7 @@
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
-// TODO: do you need a softmax kernel?
+#include "ngraph/runtime/kernel/softmax.hpp"
 #include "ngraph/runtime/kernel/sqrt.hpp"
 #include "ngraph/runtime/kernel/subtract.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
@@ -801,9 +801,9 @@ private:
         }
         else if (node_op == "Softmax")
         {
-            kernel::exp<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            kernel::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Sqrt")
         {

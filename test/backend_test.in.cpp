@@ -7694,8 +7694,16 @@ TEST(${BACKEND_NAME}, softmax)
     copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
+    auto d = expf(-4) + expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2) + expf(3);
+
     cf->call({a}, {result});
-    EXPECT_EQ(
-        (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
-        read_vector<float>(result));
+    EXPECT_EQ((vector<float>{expf(-4) / d,
+                             expf(-3) / d,
+                             expf(-2) / d,
+                             expf(-1) / d,
+                             expf(0) / d,
+                             expf(1) / d,
+                             expf(2) / d,
+                             expf(3) / d}),
+              read_vector<float>(result));
 }

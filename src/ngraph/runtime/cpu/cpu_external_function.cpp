@@ -308,7 +308,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
-// TODO: do you need a softmax kernel?
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"
 
