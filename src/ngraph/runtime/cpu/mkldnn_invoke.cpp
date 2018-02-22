@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <string>
+
 #include <mkldnn.hpp>
 
 #include "mkldnn_invoke.hpp"
