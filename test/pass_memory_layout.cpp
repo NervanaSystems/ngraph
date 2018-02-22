@@ -227,7 +227,7 @@ TEST(memory_layout, constant)
     pass_manager.register_pass<pass::MemoryLayout>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
-    auto shape = Shape{1};
+    Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
     auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
 

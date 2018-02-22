@@ -14,18 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                             const shared_ptr<Node>& arg0,
-                                                             const shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
+    const std::string& node_type,
+    const std::shared_ptr<Node>& arg0,
+    const std::shared_ptr<Node>& arg1)
+    : BinaryElementwise(node_type, arg0->get_element_type(), arg0, arg1)
 {
     if (arg0->get_element_type() != arg1->get_element_type())
     {
         throw ngraph_error("Arguments must have the same tensor view element type");
+    }
+
+    if (arg0->get_element_type() == element::boolean)
+    {
+        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
 }

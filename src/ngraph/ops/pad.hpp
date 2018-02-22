@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -56,7 +56,7 @@ namespace ngraph
         /// (Note that `below` and `above` here refer respectively to lower- or higher-numbered coordinate indices, and numbering starts at the upper-left corner;
         /// thus inserting a row "below" actually inserts it at the "top" of the matrix.)
         ///
-        class Pad : public RequiresTensorViewArgs
+        class Pad : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a generic padding operation.

@@ -631,7 +631,7 @@ TEST(type_prop, reduce_nonscalar)
     {
         auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect non-scalar initial value for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -656,7 +656,7 @@ TEST(type_prop, reduce_elem_type_mismatch)
     {
         auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect element type mismatch for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -816,7 +816,7 @@ TEST(type_prop, reduce_axis_oob)
     {
         auto r = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 2, 1});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect out-of-bound axis for reduce";
     }
     catch (const ngraph_error& error)
     {
@@ -831,7 +831,7 @@ TEST(type_prop, reduce_axis_oob)
 TEST(type_prop, function_call_deduce)
 {
     // First create "f(A,B,C) = (A+B)*C".
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
@@ -1776,7 +1776,7 @@ TEST(type_prop, conv_1d_deduce)
 TEST(type_prop, conv_1d_back_data_batch_deduce)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
     auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
@@ -1801,8 +1801,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce)
 TEST(type_prop, conv_1d_back_filters_deduce)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
@@ -1849,7 +1849,7 @@ TEST(type_prop, conv_1d_deduce_padded)
 TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
@@ -1878,8 +1878,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
@@ -1926,7 +1926,7 @@ TEST(type_prop, conv_1d_deduce_strided)
 TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
@@ -1952,8 +1952,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
@@ -2001,7 +2001,7 @@ TEST(type_prop, conv_1d_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
@@ -2030,8 +2030,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
@@ -2078,7 +2078,7 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 5};
+    Shape data_batch_shape{64, 3, 5};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
@@ -2104,8 +2104,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 5};
-    auto filters_shape = Shape{128, 3, 2};
+    //Shape data_batch_shape{64, 3, 5};
+    Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
@@ -2149,7 +2149,7 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 6};
+    Shape data_batch_shape{64, 3, 6};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
@@ -2175,8 +2175,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 6};
-    auto filters_shape = Shape{128, 3, 2};
+    //Shape data_batch_shape{64, 3, 6};
+    Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
@@ -2221,7 +2221,7 @@ TEST(type_prop, conv_1d_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
@@ -2248,8 +2248,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
@@ -2298,7 +2298,7 @@ TEST(type_prop, conv_1d_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
@@ -2327,8 +2327,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
@@ -2385,7 +2385,7 @@ TEST(type_prop, conv_1d_deduce_window_dilated_data_dilated_padded)
 TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    auto data_batch_shape = Shape{64, 3, 100};
+    Shape data_batch_shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});   // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
@@ -2415,8 +2415,8 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padde
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    //auto data_batch_shape = Shape{64, 3, 100};
-    auto filters_shape = Shape{128, 3, 10};
+    //Shape data_batch_shape{64, 3, 100};
+    Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
@@ -3214,7 +3214,7 @@ TEST(type_prop, max_pool_1d_deduce)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto window_shape = Shape{10};
+    Shape window_shape{10};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape);
 
     EXPECT_EQ(max_pool->get_element_type(), element::f32);
@@ -3228,7 +3228,7 @@ TEST(type_prop, max_pool_1d_deduce_strided)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto window_shape = Shape{10};
+    Shape window_shape{10};
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
@@ -3243,7 +3243,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
-    auto window_shape = Shape{2};
+    Shape window_shape{2};
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
@@ -3258,7 +3258,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});
-    auto window_shape = Shape{2};
+    Shape window_shape{2};
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
@@ -3273,7 +3273,7 @@ TEST(type_prop, max_pool_2d_deduce)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto window_shape = Shape{10, 20};
+    Shape window_shape{10, 20};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape);
 
     EXPECT_EQ(max_pool->get_element_type(), element::f32);
@@ -3287,7 +3287,7 @@ TEST(type_prop, max_pool_2d_deduce_strided)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto window_shape = Shape{10, 20};
+    Shape window_shape{10, 20};
     auto move_strides = Strides{2, 3};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
@@ -3302,7 +3302,7 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
-    auto window_shape = Shape{2, 3, 2};
+    Shape window_shape{2, 3, 2};
     auto move_strides = Strides{2, 3, 4};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
@@ -3317,7 +3317,7 @@ TEST(type_prop, max_pool_invalid_0d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3342,7 +3342,7 @@ TEST(type_prop, max_pool_invalid_1d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3367,7 +3367,7 @@ TEST(type_prop, max_pool_invalid_2d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 6});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3392,7 +3392,7 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
-    auto window_shape = Shape{1};
+    Shape window_shape{1};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3414,7 +3414,7 @@ TEST(type_prop, max_pool_invalid_0_channels)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 0, 1});
-    auto window_shape = Shape{1};
+    Shape window_shape{1};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3436,7 +3436,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3, 3};
+    Shape window_shape{3, 3, 3};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3460,7 +3460,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3};
+    Shape window_shape{3};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3484,7 +3484,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{2, 3, 8};
     try
     {
@@ -3509,7 +3509,7 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3532,7 +3532,7 @@ TEST(type_prop, max_pool_invalid_window_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 0};
+    Shape window_shape{3, 0};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3554,7 +3554,7 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
-    auto window_shape = Shape{9, 9};
+    Shape window_shape{9, 9};
     try
     {
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
@@ -3579,7 +3579,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{0, 1};
     try
     {
@@ -5354,7 +5354,7 @@ TEST(type_prop, avg_pool_1d_deduce)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto window_shape = Shape{10};
+    Shape window_shape{10};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
 
     EXPECT_EQ(avg_pool->get_element_type(), element::f32);
@@ -5370,7 +5370,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto window_shape = Shape{10};
+    Shape window_shape{10};
     auto move_strides = Strides{2};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
@@ -5387,7 +5387,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_uneven)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
-    auto window_shape = Shape{2};
+    Shape window_shape{2};
     auto move_strides = Strides{2};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
@@ -5404,7 +5404,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_even)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});
-    auto window_shape = Shape{2};
+    Shape window_shape{2};
     auto move_strides = Strides{2};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
@@ -5421,7 +5421,7 @@ TEST(type_prop, avg_pool_2d_deduce)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto window_shape = Shape{10, 20};
+    Shape window_shape{10, 20};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
 
     EXPECT_EQ(avg_pool->get_element_type(), element::f32);
@@ -5437,7 +5437,7 @@ TEST(type_prop, avg_pool_2d_deduce_strided)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto window_shape = Shape{10, 20};
+    Shape window_shape{10, 20};
     auto move_strides = Strides{2, 3};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
@@ -5454,7 +5454,7 @@ TEST(type_prop, avg_pool_3d_deduce_strided_small)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
-    auto window_shape = Shape{2, 3, 2};
+    Shape window_shape{2, 3, 2};
     auto move_strides = Strides{2, 3, 4};
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
@@ -5471,10 +5471,10 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
-    auto window_shape = Shape{2, 3, 2};
+    Shape window_shape{2, 3, 2};
     auto move_strides = Strides{2, 3, 4};
-    auto padding_below = Shape{5, 6, 4};
-    auto padding_above = Shape{6, 4, 5};
+    Shape padding_below{5, 6, 4};
+    Shape padding_above{6, 4, 5};
     auto avg_pool =
         make_shared<op::AvgPool>(param, window_shape, move_strides, padding_below, padding_above);
 
@@ -5491,7 +5491,7 @@ TEST(type_prop, avg_pool_invalid_0d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5516,7 +5516,7 @@ TEST(type_prop, avg_pool_invalid_1d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5541,7 +5541,7 @@ TEST(type_prop, avg_pool_invalid_2d_input)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 6});
-    auto window_shape = Shape{};
+    Shape window_shape{};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5566,7 +5566,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
-    auto window_shape = Shape{1};
+    Shape window_shape{1};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5588,7 +5588,7 @@ TEST(type_prop, avg_pool_invalid_0_channels)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 0, 1});
-    auto window_shape = Shape{1};
+    Shape window_shape{1};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5610,7 +5610,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3, 3};
+    Shape window_shape{3, 3, 3};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5635,7 +5635,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3};
+    Shape window_shape{3};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5660,7 +5660,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{2, 3, 8};
     try
     {
@@ -5685,10 +5685,10 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{2, 3};
-    auto padding_below = Shape{1, 2, 3};
-    auto padding_above = Shape{1, 2};
+    Shape padding_below{1, 2, 3};
+    Shape padding_above{1, 2};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(
@@ -5713,10 +5713,10 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{2, 3};
-    auto padding_below = Shape{1, 2};
-    auto padding_above = Shape{1, 2, 3};
+    Shape padding_below{1, 2};
+    Shape padding_above{1, 2, 3};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(
@@ -5741,7 +5741,7 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5764,7 +5764,7 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 0};
+    Shape window_shape{3, 0};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5786,7 +5786,7 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
-    auto window_shape = Shape{9, 9};
+    Shape window_shape{9, 9};
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
@@ -5810,7 +5810,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto move_strides = Strides{0, 1};
     try
     {
@@ -5834,9 +5834,9 @@ TEST(type_prop, pad_deduce_1d_exterior)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{2};
-    auto padding_above = Shape{3};
-    auto padding_interior = Shape{0};
+    Shape padding_below{2};
+    Shape padding_above{3};
+    Shape padding_interior{0};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{55}));
@@ -5851,9 +5851,9 @@ TEST(type_prop, pad_deduce_1d_interior)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{0};
-    auto padding_above = Shape{0};
-    auto padding_interior = Shape{2};
+    Shape padding_below{0};
+    Shape padding_above{0};
+    Shape padding_interior{2};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{148}));
@@ -5868,9 +5868,9 @@ TEST(type_prop, pad_deduce_1d_interior_exterior)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5};
-    auto padding_above = Shape{6};
-    auto padding_interior = Shape{2};
+    Shape padding_below{5};
+    Shape padding_above{6};
+    Shape padding_interior{2};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{159}));
@@ -5885,9 +5885,9 @@ TEST(type_prop, pad_deduce_2d_interior_exterior)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5, 3};
-    auto padding_above = Shape{6, 9};
-    auto padding_interior = Shape{2, 3};
+    Shape padding_below{5, 3};
+    Shape padding_above{6, 9};
+    Shape padding_interior{2, 3};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{159, 169}));
@@ -5902,9 +5902,9 @@ TEST(type_prop, pad_deduce_3d_interior_exterior)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5, 3, 0};
-    auto padding_above = Shape{6, 9, 4};
-    auto padding_interior = Shape{2, 3, 0};
+    Shape padding_below{5, 3, 0};
+    Shape padding_above{6, 9, 4};
+    Shape padding_interior{2, 3, 0};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{159, 169, 24}));
@@ -5919,9 +5919,9 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::i32, Shape{});
-    auto padding_below = Shape{5, 3, 0};
-    auto padding_above = Shape{6, 9, 4};
-    auto padding_interior = Shape{2, 3, 0};
+    Shape padding_below{5, 3, 0};
+    Shape padding_above{6, 9, 4};
+    Shape padding_interior{2, 3, 0};
     try
     {
         auto pad =
@@ -5946,9 +5946,9 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto padding_below = Shape{5, 3, 0};
-    auto padding_above = Shape{6, 9, 4};
-    auto padding_interior = Shape{2, 3, 0};
+    Shape padding_below{5, 3, 0};
+    Shape padding_above{6, 9, 4};
+    Shape padding_interior{2, 3, 0};
     try
     {
         auto pad =
@@ -5972,9 +5972,9 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5, 3, 0, 6};
-    auto padding_above = Shape{6, 9, 4};
-    auto padding_interior = Shape{2, 3, 0};
+    Shape padding_below{5, 3, 0, 6};
+    Shape padding_above{6, 9, 4};
+    Shape padding_interior{2, 3, 0};
     try
     {
         auto pad =
@@ -5999,9 +5999,9 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5, 3, 0};
-    auto padding_above = Shape{6, 9};
-    auto padding_interior = Shape{2, 3, 0};
+    Shape padding_below{5, 3, 0};
+    Shape padding_above{6, 9};
+    Shape padding_interior{2, 3, 0};
     try
     {
         auto pad =
@@ -6026,9 +6026,9 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5, 3, 0};
-    auto padding_above = Shape{6, 9, 4};
-    auto padding_interior = Shape{2, 3, 0, 9, 3};
+    Shape padding_below{5, 3, 0};
+    Shape padding_above{6, 9, 4};
+    Shape padding_interior{2, 3, 0, 9, 3};
     try
     {
         auto pad =
@@ -6042,6 +6042,48 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
         EXPECT_EQ(
             error.what(),
             std::string("Pad rank for interior padding does not match rank of argument tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, sum_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    auto r0 = make_shared<op::Sum>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::f32);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Sum>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::f32);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Sum>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::f32);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Sum>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::f32);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, sum_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Sum>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for sum";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
     }
     catch (...)
     {

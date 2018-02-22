@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,19 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
+#pragma once
 
-#include "ngraph/ops/op.hpp"
+#include <cstddef>
 
-using namespace std;
-using namespace ngraph;
-
-op::UnaryElementwise::UnaryElementwise(const std::string& node_type,
-                                       const element::Type& result_element_type,
-                                       const std::shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs(node_type, Nodes{arg})
+namespace ngraph
 {
-    auto& input = get_inputs().at(0);
+    namespace runtime
+    {
+        namespace cpu
+        {
+            struct CPURuntimeContext;
 
-    set_value_type_checked(result_element_type, input.get_shape());
+            namespace mkldnn_utils
+            {
+                extern "C" void
+                    set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index, void* ptr);
+                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                        size_t primitive_index);
+            }
+        }
+    }
 }

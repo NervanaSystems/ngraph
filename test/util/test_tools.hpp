@@ -21,7 +21,16 @@
 #include <memory>
 
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/serializer.hpp"
+
+#define SKIP_TEST_FOR(backend_to_skip, current_backend)                                            \
+    if (backend_to_skip == current_backend)                                                        \
+    {                                                                                              \
+        NGRAPH_INFO << "Skipped test for " << current_backend;                                     \
+        return;                                                                                    \
+    }
 
 namespace ngraph
 {

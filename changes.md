@@ -1,5 +1,20 @@
 # API Changes
 
+## Changes to ops
+
+* The namespace `ngraph::op` is only for actual ops. Helpers have been moved into
+  `ngraph::op::util`:
+  + `BinaryElementwiseArithmetic`
+  + `BinaryElementwiseComparison`
+  + `BinaryElementwise`
+  + `RequiresTensorViewArgs`
+  + `UnaryElementwiseArithmetic`
+  + `UnaryElementwise`
+  Ops defined outside of nGraph core will need to get the base class from `ngraph::op::util` and 
+  change the include file to `#include "ngraph/ops/util/requires_tensor_view_args.hpp"`, etc.
+
+  See any of the core ops for an example.
+
 ## Changes to convolution and pooling ops
 
 * Backprop ops have been added for convolution ops.
