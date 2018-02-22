@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Node("Parameter", {})
+    : Op("Parameter", {})
 {
     add_output(element_type, shape);
 }
@@ -30,7 +30,9 @@ op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape&
 shared_ptr<Node> op::Parameter::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
 {
     if (new_args.size() != 0)
+    {
         throw ngraph_error("Incorrect number of new arguments");
+    }
     const descriptor::Output& output = get_outputs().at(0);
     return make_shared<Parameter>(output.get_element_type(), output.get_shape());
 }

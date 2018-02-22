@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -48,7 +48,7 @@ namespace ngraph
         /// | Type                                                                           | Description                       |
         /// | ------------------------------------------------------------------------------ | --------------------------------- |
         /// | \f$E[d'_1,\dots,d'_n]\f$ where \f$d'_i = \lceil(u_i - l_i)\, /\, s_i\rceil\f$. | The tensor sliced from the input. |
-        class Slice : public RequiresTensorViewArgs
+        class Slice : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a tensor slice operation.
@@ -76,7 +76,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Slice>(
                     new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
             }

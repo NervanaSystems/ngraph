@@ -53,6 +53,8 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+
     // maps original to replacement nodes e.g. for clone utilities
     // performs index checking on access
     class NodeMap

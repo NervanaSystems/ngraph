@@ -83,10 +83,21 @@ int main(int argc, char** argv)
         }
     }
 
+    vector<ResourceInfo> include_paths;
+
+#ifdef __APPLE__
+    include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
+    include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
+#ifdef NGRAPH_TBB_ENABLE
+    include_paths.push_back({TBB_HEADERS_PATH, {}, true});
+#endif
+    include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
+    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
+    include_paths.push_back({"/Library/Developer/CommandLineTools/usr/include/c++/v1", {}});
+#else // __APPLE__
     string cpp0 = find_path("/usr/include/x86_64-linux-gnu/c++/");
     string cpp1 = find_path("/usr/include/c++/");
 
-    vector<ResourceInfo> include_paths;
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
     include_paths.push_back({"/usr/include/x86_64-linux-gnu", {"asm", "sys", "bits", "gnu"}});
     include_paths.push_back({"/usr/include", {"asm", "sys", "bits", "gnu"}});
@@ -99,6 +110,7 @@ int main(int argc, char** argv)
     include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
 #ifdef NGRAPH_TBB_ENABLE
     include_paths.push_back({TBB_HEADERS_PATH, {}, true});
+#endif
 #endif
 
     if (output_path.empty())

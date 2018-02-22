@@ -6851,3 +6851,1214 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     cf->call({a, b}, {result});
     EXPECT_EQ(expected, read_vector<float>(result));
 }
+
+// Trivial case with no reduced axes.
+TEST(${BACKEND_NAME}, product_trivial)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+// Failure has been reported at 5D for some reason
+TEST(${BACKEND_NAME}, product_trivial_5d)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, product_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{24}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_matrix_columns)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{15, 48}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_matrix_rows)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{2, 12, 30}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_matrix_rows_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1, 1}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_matrix_cols_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    Shape shape_a{0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_vector_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1 * 10 * 19,
+                             2 * 11 * 20,
+                             3 * 12 * 21,
+                             4 * 13 * 22,
+                             5 * 14 * 23,
+                             6 * 15 * 24,
+                             7 * 16 * 25,
+                             8 * 17 * 26,
+                             9 * 18 * 27}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1 * 2 * 3,
+                             4 * 5 * 6,
+                             7 * 8 * 9,
+                             10 * 11 * 12,
+                             13 * 14 * 15,
+                             16 * 17 * 18,
+                             19 * 20 * 21,
+                             22 * 23 * 24,
+                             25 * 26 * 27}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, product_3d_to_vector)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
+                             2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
+                             3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, product_3d_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                               13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f * 12.0f * 3.0f *
+                             2.0f * 11.0f * 8.0f * 5.0f * 14.0f * 5.0f * 8.0f * 11.0f * 2.0f *
+                             3.0f * 12.0f * 7.0f * 6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 2};
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
+}
+
+// Trivial case with no reduced axes.
+TEST(${BACKEND_NAME}, max_trivial)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+// Failure has been reported at 5D for some reason
+TEST(${BACKEND_NAME}, max_trivial_5d)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, max_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{4}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_matrix_columns)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{5, 6}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_matrix_rows)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{2, 4, 6}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_matrix_rows_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity()}),
+              read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_matrix_cols_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    Shape shape_a{0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity()}),
+              read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_vector_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, max_3d_to_vector)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, max_3d_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                               13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 2};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
+
+    float mi = -std::numeric_limits<float>::infinity();
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{mi, mi, mi, mi, mi, mi}), read_vector<float>(result));
+}
+
+// Trivial case with no reduced axes.
+TEST(${BACKEND_NAME}, min_trivial)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+// Failure has been reported at 5D for some reason
+TEST(${BACKEND_NAME}, min_trivial_5d)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, min_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_matrix_columns)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_matrix_rows)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 3, 5}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_matrix_rows_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity()}),
+              read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_matrix_cols_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    Shape shape_a{0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3, 3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity()}),
+              read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_vector_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    copy_data(result, vector<float>({3}));
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+}
+
+TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 3};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, min_3d_to_vector)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, min_3d_to_scalar)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                               13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{3, 0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{3, 2};
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
+
+    float inf = std::numeric_limits<float>::infinity();
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, relu_2Dfprop)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::Relu>(A);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(relu, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
+
+    cf->call({a}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(${BACKEND_NAME}, relu_4Dfprop)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto shape_a = Shape{2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::Relu>(A);
+    auto shape_rt = Shape{2, 2, 2, 2};
+    auto f = make_shared<Function>(relu, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
+
+    cf->call({a}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto shape_a = Shape{2, 5};
+    auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+    auto max = make_shared<op::Maximum>(A, B);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(max, op::Parameters{B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(b, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
+
+    cf->call({b}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(${BACKEND_NAME}, relu_2Dbackprop)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::ReluBackprop>(A, delta_val);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(relu, op::Parameters{A, delta_val});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto delta = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(delta, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 2, 0, 4, 0, 6, 7, 0, 9, 0};
+
+    cf->call({a, delta}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(${BACKEND_NAME}, relu_4Dbackprop)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto shape_a = Shape{2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::ReluBackprop>(A, delta_val);
+    auto shape_rt = Shape{2, 2, 2, 2};
+    auto f = make_shared<Function>(relu, op::Parameters{A, delta_val});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
+    auto delta = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(delta, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
+
+    cf->call({a, delta}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}

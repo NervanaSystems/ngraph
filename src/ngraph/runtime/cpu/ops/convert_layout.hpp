@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -31,7 +31,7 @@ namespace ngraph
                 /// \brief Layout Conversion
                 ///
                 /// Converts an input tensor to a tensor with the given layout descriptor
-                class ConvertLayout : public ngraph::op::RequiresTensorViewArgs
+                class ConvertLayout : public ngraph::op::util::RequiresTensorViewArgs
                 {
                 public:
                     ConvertLayout(
@@ -47,7 +47,9 @@ namespace ngraph
                         const std::vector<std::shared_ptr<Node>>& new_args) const override
                     {
                         if (new_args.size() != 1)
+                        {
                             throw ngraph_error("Incorrect number of new arguments");
+                        }
                         return std::make_shared<ConvertLayout>(new_args.at(0), output_layout);
                     }
 

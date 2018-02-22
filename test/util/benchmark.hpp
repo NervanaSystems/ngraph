@@ -14,16 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/op.hpp"
+#include <ngraph/runtime/call_frame.hpp>
+#include "test_tools.hpp"
 
-using namespace ngraph;
+/// performance test utilities
+std::multimap<size_t, std::string>
+    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
 
-op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                           const std::shared_ptr<Node>& arg)
-    : UnaryElementwise(node_type, arg->get_element_type(), arg)
-{
-    if (arg->get_element_type() == element::boolean)
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
-}
+void run_benchmark(const std::string& json_path,
+                   const std::string& backend_name,
+                   size_t iterations);
