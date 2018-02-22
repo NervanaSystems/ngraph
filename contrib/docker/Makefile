@@ -31,7 +31,6 @@ ifndef CMAKE_OPTIONS_EXTRA
     CMAKE_OPTIONS_EXTRA=
 endif
 
-
 # Specify the default run_as_user script to execute
 # The default value is "run_as_user.sh" (ubuntu1604)
 # Set for built-in centos74 environment as "run_as_centos_user.sh"
@@ -49,11 +48,11 @@ ifneq ($(IS_CENTOS),"")
     endif
 endif
 
+# set the default values (ubuntu1604)
 ifndef DOCKERFILE
     DOCKERFILE=Dockerfile.ngraph_cpp
 endif
 
-# set the default values (ubuntu1604)
 ifndef RUN_AS_USER_SCRIPT
     RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 endif
@@ -61,7 +60,7 @@ endif
 # For gcc builds, we do NOT regard warnings as errors
 # For clang builds, we DO make warnings into errors
 CMAKE_OPTIONS_COMMON=-DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo $(CMAKE_OPTIONS_EXTRA)
-CMAKE_OPTIONS_GCC=$(CMAKE_OPTIONS_COMMON) -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+CMAKE_OPTIONS_GCC=$(CMAKE_OPTIONS_COMMON) -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/ngraph_dist
 CMAKE_OPTIONS_CLANG=$(MAKE_OPTIONS_COMMON)-DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/ngraph_dist -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_WARNINGS_AS_ERRORS=ON -DNGRAPH_USE_PREBUILT_LLVM=TRUE
 
 CALLER_UID := $(shell id -u)
@@ -130,6 +129,12 @@ build_gcc: build_docker_image
 	# Make BUILD-GCC directory as user
 	mkdir -p "${DIR}"/BUILD-GCC
 	chmod ug+rwx "${DIR}"/BUILD-GCC
+
+	GCC_VERSION=`gcc --version | grep gcc | cut -f 4 -d ' ' | cut -f 1,2 -d '.'` 
+	@echo "GCC_VERSION=${GCC_VERSION}"
+	if [ "${GCC_VERSION}" != "4.8" ]; then \
+	    CMAKE_OPTIONS_GCC="${CMAKE_OPTIONS_GCC} -DNGRAPH_USE_PREBUILT_LLVM=TRUE"; \
+	fi
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
