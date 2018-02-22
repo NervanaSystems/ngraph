@@ -44,8 +44,8 @@ standards:
 - Assign template parameters with ``UPPER_SNAKE_CASE``.
 - Case variable and function names with ``snake_case``.
     
-Method names for basic acceesors are prefixed by ``get_`` or ``set_`` and 
-should have simple :math:`mathcal{0}(1)``` implementations:
+Method names for basic accessors are prefixed by ``get_`` or ``set_`` and 
+should have simple ``:math:`mathcal{0}(1)``` implementations:
 
 - A ``get_`` method should be externally idempotent. It may perform some simple 
   initialization and cache the result for later use.
