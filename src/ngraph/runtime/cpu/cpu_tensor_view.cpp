@@ -116,14 +116,14 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
             this->get_descriptor()->get_tensor_view_type()->get_element_type());
 
-        engine cpu_engine(engine::cpu, 0);
-        memory::dims mkldnn_shape(tensor_shape.begin(), tensor_shape.end());
-        memory::desc input_desc(mkldnn_shape, et, input_format);
-        memory::desc output_desc(mkldnn_shape, et, output_format);
-        memory input = memory({input_desc, cpu_engine}, aligned_buffer);
-        memory output = memory({output_desc, cpu_engine}, target);
-        reorder prim = reorder(input, output);
-        stream s = stream(stream::kind::eager);
+        engine cpu_engine{engine::cpu, 0};
+        memory::dims mkldnn_shape{tensor_shape.begin(), tensor_shape.end()};
+        memory::desc input_desc{mkldnn_shape, et, input_format};
+        memory::desc output_desc{mkldnn_shape, et, output_format};
+        memory input{{input_desc, cpu_engine}, aligned_buffer};
+        memory output{{output_desc, cpu_engine}, target};
+        reorder prim{input, output};
+        mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();
     }
     else
