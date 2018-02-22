@@ -45,6 +45,7 @@ public:
     const std::string& get_name() const;
     const std::string& get_type() const;
     bool is_output() const;
+    const std::shared_ptr<descriptor::TensorView> get_tensor_view() const;
 
 private:
     std::shared_ptr<descriptor::TensorView> m_tensor_view;
