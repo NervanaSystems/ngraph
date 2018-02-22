@@ -51,6 +51,6 @@ public:
     /// @param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
-    void** m_allocated_buffer_pool;
+    void* m_allocated_buffer_pool;
     size_t m_buffer_size;
 };

@@ -20,6 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/op_annotations.hpp"
 
 namespace ngraph
 {
@@ -28,8 +29,21 @@ namespace ngraph
         /// Root of all actual ops
         class Op : public Node
         {
+        public:
+            void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)
+            {
+                m_op_annotations = op_annotations;
+            }
+            std::shared_ptr<ngraph::op::util::OpAnnotations> get_op_annotations() const
+            {
+                return m_op_annotations;
+            }
+
         protected:
             Op(const std::string& node_type, const Nodes& arguments);
+
+        private:
+            std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         };
     }
 }

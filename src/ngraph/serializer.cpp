@@ -43,8 +43,10 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -53,8 +55,10 @@
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -552,6 +556,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Log>(args[0]);
         }
+        else if (node_op == "Max")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Max>(args[0], reduction_axes);
+        }
         else if (node_op == "MaxPool")
         {
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -601,6 +610,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Maximum>(args[0], args[1]);
         }
+        else if (node_op == "Min")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Min>(args[0], reduction_axes);
+        }
         else if (node_op == "Minimum")
         {
             node = make_shared<op::Minimum>(args[0], args[1]);
@@ -647,6 +661,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Power>(args[0], args[1]);
         }
+        else if (node_op == "Product")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Product>(args[0], reduction_axes);
+        }
         else if (node_op == "Reduce")
         {
             auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -667,6 +686,14 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Remainder")
         {
             node = make_shared<op::Remainder>(args[0], args[1]);
+        }
+        else if (node_op == "Relu")
+        {
+            node = make_shared<op::Relu>(args[0]);
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            node = make_shared<op::ReluBackprop>(args[0], args[1]);
         }
         else if (node_op == "ReplaceSlice")
         {
@@ -951,6 +978,11 @@ static json write(const Node& n)
     else if (node_op == "Log")
     {
     }
+    else if (node_op == "Max")
+    {
+        auto tmp = dynamic_cast<const op::Max*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+    }
     else if (node_op == "MaxPool")
     {
         auto tmp = dynamic_cast<const op::MaxPool*>(&n);
@@ -969,6 +1001,11 @@ static json write(const Node& n)
     }
     else if (node_op == "Maximum")
     {
+    }
+    else if (node_op == "Min")
+    {
+        auto tmp = dynamic_cast<const op::Min*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Minimum")
     {
@@ -1004,6 +1041,11 @@ static json write(const Node& n)
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
+    else if (node_op == "Product")
+    {
+        auto tmp = dynamic_cast<const op::Product*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+    }
     else if (node_op == "Power")
     {
     }
@@ -1019,6 +1061,12 @@ static json write(const Node& n)
         node["function"] = tmp->get_functions()[0]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+    }
+    else if (node_op == "Relu")
+    {
+    }
+    else if (node_op == "ReluBackprop")
+    {
     }
     else if (node_op == "Remainder")
     {
