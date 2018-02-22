@@ -16,46 +16,26 @@
 
 #pragma once
 
-#include <list>
-#include <memory>
-#include <vector>
+#include <exception>
+#include <sstream>
 
-#include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class Manager;
-        class ManagerState;
+        class AssignPlacement : public CallGraphPass
+        {
+        public:
+            // TODO: make policy a class
+            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
+            virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
+
+        private:
+            bool run_on_node(std::shared_ptr<Node> node);
+            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
+        };
     }
 }
-
-class ngraph::pass::Manager
-{
-public:
-    Manager();
-    Manager(bool to_set_is_output);
-    ~Manager();
-
-    void initialize_default_passes();
-
-    template <typename T, class... Args>
-    void register_pass(Args... args)
-    {
-        static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
-        auto pass = std::make_shared<T>(args...);
-        auto pass_base = std::static_pointer_cast<PassBase>(pass);
-        m_pass_list.push_back(pass_base);
-    }
-
-    void run_passes(std::shared_ptr<Function>);
-
-    ManagerState& get_state();
-
-private:
-    std::vector<std::shared_ptr<PassBase>> m_pass_list;
-    ManagerState m_state;
-    bool m_to_set_is_output;
-};

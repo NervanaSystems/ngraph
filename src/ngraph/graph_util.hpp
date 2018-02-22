@@ -30,10 +30,23 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/placement.hpp"
+
 namespace ngraph
 {
     class Node;
     class Function;
+
+    namespace descriptor
+    {
+        class Input;
+        class Output;
+    }
+
+    namespace op
+    {
+        class Parameter;
+    }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f);
@@ -60,7 +73,7 @@ namespace ngraph
     class NodeMap
     {
     public:
-        // map original node to replcacement node
+        // map original node to replacement node
         // throws ngraph_error if key already exists
         void add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
 
@@ -100,4 +113,17 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    // Assert that nodes in the function is colocated and return that placement
+    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+
+    // Split function to function(s) with unique placement
+    std::vector<std::shared_ptr<Function>> split_function_by_placement(
+        std::shared_ptr<Function> f,
+        std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& map_node_to_source_node);
+
+    // Insert parameter node between src_node and dst_node by splitting the graph
+    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                        std::shared_ptr<Node> dst_node,
+                                        std::shared_ptr<op::Parameter> p_node);
 }
