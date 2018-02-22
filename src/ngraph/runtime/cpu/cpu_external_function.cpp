@@ -467,7 +467,14 @@ using namespace ngraph::runtime;
             {
                 continue;
             }
+
             Node& node = *op_list[i];
+            auto handler = dispatcher.find(type_index(typeid(node)));
+            if (handler == dispatcher.end())
+            {
+                throw ngraph_error("Unhandled op during code generation : " + node.description());
+            }
+
             string s = emit_op_as_function(node, "f");
             node_cache.insert({&node, s});
         }
