@@ -42,8 +42,6 @@
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
-// TODO: only if you need to call Softmax methods
-#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"

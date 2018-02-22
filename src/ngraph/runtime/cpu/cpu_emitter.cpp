@@ -3048,7 +3048,6 @@ namespace ngraph
                 writer.indent--;
                 writer << "}\n";
             }
-
         }
     }
 }
