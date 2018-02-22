@@ -33,6 +33,7 @@ using namespace ngraph;
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -79,6 +80,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -123,6 +125,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -165,6 +168,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -204,6 +208,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -309,6 +314,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
     Shape shape_a{2, 2, 4, 4};
@@ -332,6 +338,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
     Shape shape_a{2, 2, 4, 4};
@@ -355,6 +362,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
     Shape shape_a{2, 2, 4, 4};
@@ -380,6 +388,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
 TEST(${BACKEND_NAME}, backwards_abs)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -430,6 +439,7 @@ TEST(${BACKEND_NAME}, backwards_add)
 
 TEST(${BACKEND_NAME}, backwards_add_nested)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -450,6 +460,7 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
 
 TEST(${BACKEND_NAME}, backwards_broadcast0)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -467,6 +478,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast0)
 
 TEST(${BACKEND_NAME}, backwards_broadcast1)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -484,6 +496,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
 
 TEST(${BACKEND_NAME}, backwards_concat_vector)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -508,6 +521,7 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
 
 TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -532,6 +546,7 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 
 TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -556,6 +571,7 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
 TEST(${BACKEND_NAME}, backwards_ceiling)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -593,6 +609,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
 
 TEST(${BACKEND_NAME}, backwards_cos)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -614,6 +631,7 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
 TEST(${BACKEND_NAME}, backwards_cosh)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -635,6 +653,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
 
 TEST(${BACKEND_NAME}, backwards_divide)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -659,6 +678,7 @@ TEST(${BACKEND_NAME}, backwards_divide)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -680,6 +700,7 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -701,6 +722,7 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -722,6 +744,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -743,6 +766,7 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -764,6 +788,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -785,6 +810,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -806,6 +832,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 
 TEST(${BACKEND_NAME}, backwards_exp)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -823,6 +850,7 @@ TEST(${BACKEND_NAME}, backwards_exp)
 
 TEST(${BACKEND_NAME}, backwards_floor)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -860,6 +888,7 @@ TEST(${BACKEND_NAME}, backwards_floor)
 
 TEST(${BACKEND_NAME}, backwards_log)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -877,6 +906,7 @@ TEST(${BACKEND_NAME}, backwards_log)
 
 TEST(${BACKEND_NAME}, backwards_maximum)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -897,6 +927,7 @@ TEST(${BACKEND_NAME}, backwards_maximum)
 
 TEST(${BACKEND_NAME}, backwards_minimum)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -952,6 +983,7 @@ TEST(${BACKEND_NAME}, backwards_negative)
 
 TEST(${BACKEND_NAME}, backwards_parameter)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -967,6 +999,7 @@ TEST(${BACKEND_NAME}, backwards_parameter)
 
 TEST(${BACKEND_NAME}, backwards_power)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1000,8 +1033,41 @@ TEST(${BACKEND_NAME}, backwards_power)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
+TEST(${BACKEND_NAME}, backwards_relu)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng_neg(-1.0f, -0.01f);
+    test::Uniform<float> rng_pos(0.01f, 1.0f);
+    Shape shape{2, 3};
+    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Relu>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
+    {
+        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+
+        EXPECT_TRUE(
+            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
+
+        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+
+        EXPECT_TRUE(
+            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
+    }
+}
+
 TEST(${BACKEND_NAME}, backwards_replace_slice)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1028,6 +1094,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
 
 TEST(${BACKEND_NAME}, backwards_reshape)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1045,6 +1112,7 @@ TEST(${BACKEND_NAME}, backwards_reshape)
 
 TEST(${BACKEND_NAME}, backwards_select)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1078,6 +1146,7 @@ TEST(${BACKEND_NAME}, backwards_select)
 
 TEST(${BACKEND_NAME}, backwards_select_nested)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1111,6 +1180,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
 TEST(${BACKEND_NAME}, backwards_sign)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1142,6 +1212,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
 
 TEST(${BACKEND_NAME}, backwards_sin)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1163,6 +1234,7 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
 TEST(${BACKEND_NAME}, backwards_sinh)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1184,6 +1256,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
 
 TEST(${BACKEND_NAME}, backwards_slice)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1205,6 +1278,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
 
 TEST(${BACKEND_NAME}, backwards_sqrt)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1227,6 +1301,7 @@ TEST(${BACKEND_NAME}, backwards_sqrt)
 
 TEST(${BACKEND_NAME}, backwards_subtract)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1246,6 +1321,7 @@ TEST(${BACKEND_NAME}, backwards_subtract)
 
 TEST(${BACKEND_NAME}, backwards_sum_v2s)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1263,6 +1339,7 @@ TEST(${BACKEND_NAME}, backwards_sum_v2s)
 
 TEST(${BACKEND_NAME}, backwards_sum_m2s)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1280,6 +1357,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2s)
 
 TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1297,6 +1375,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 
 TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1314,6 +1393,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 
 TEST(${BACKEND_NAME}, backwards_tan)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1348,6 +1428,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
 
 TEST(${BACKEND_NAME}, backwards_tanh)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1391,6 +1472,7 @@ TEST(${BACKEND_NAME}, backwards_abc)
 
 TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1404,4 +1486,91 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+}
+
+TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    Shape shape_a{4, 1, 4, 4}; //in NCHW
+    Shape maxpool_shape{4, 1, 3, 3};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+
+    vector<float> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
+                            13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
+                            17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
+                            45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
+
+    vector<float> expected{//delta
+                           0, 8, 0, 0, 0, 0, 0, 4, 0, 8, 16, 0, 0, 0, 0,  0, 0, 4, 0, 4, 8,  0,
+                           0, 0, 0, 4, 4, 0, 4, 4, 0, 4, 0,  0, 8, 0, 4,  0, 0, 0, 8, 0, 16, 0,
+                           0, 0, 0, 0, 0, 8, 0, 0, 4, 0, 4,  0, 4, 0, 16, 0, 0, 0, 0, 0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape_a{1, 2, 5, 5}; //in NCHW
+    Shape maxpool_shape{1, 2, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::f32, shape_a);
+
+    vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
+                            30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
+                            19, 40, 10, 46, 34, 53, 26, 55, 50, 13, 24, 14, 49, 56, 59, 11};
+
+    vector<float> expected{//delta
+                           4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0,
+                           0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0,  4, 4, 0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<float>(output) == expected);
 }
