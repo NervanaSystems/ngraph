@@ -53,7 +53,7 @@ should have simple :math:`\mathcal{O}(1)` implementations:
 - An ``is_`` may be used instead of ``get_`` for boolean accessors. Trivial ``get_`` 
   methods can be defined in a header file.
 
-- A ``set_`` method should change the value returned by the corresponding``get_`` 
+- A ``set_`` method should change the value returned by the corresponding ``get_`` 
   method.
   
   * Use ``set_is_`` if using ``is_`` to get a value.
