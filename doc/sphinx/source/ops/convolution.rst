@@ -35,7 +35,7 @@ Attributes
 +-----------------------------+-----------------------------+----------------------------------------+
 | Name                        | Type                        | Notes                                  |
 +=============================+=============================+========================================+
-| ``window_movement_strides`` | ``Strides[n]``              | How far, in strides, to slide the      |
+| ``window_movement_strides`` | ``Strides[n]``              | How far to slide the                   |
 |                             |                             | window along each axis at each step    |
 +-----------------------------+-----------------------------+----------------------------------------+
 | ``window_dilation_strides`` | ``Strides[n]``              | Per-axis dilation to apply to the      |
@@ -109,6 +109,9 @@ such that
 .. math::
 
    \mathit{Stride}[s](T)_{i_1,\dots,i_n} \triangleq T_{s_1i_1,\dots,s_ni_n}
+
+
+:math:`s` is the how far, not the unit of farness.
 
 Convolution
 -----------
