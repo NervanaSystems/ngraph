@@ -69,6 +69,7 @@
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -2219,10 +2220,9 @@ namespace ngraph
                         writer << "memory::dims " << var << "{" << dims << "};\n";
                     };
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
+                    writer.block_begin();
+                    writer << "try\n";
+                    writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     emit_memory_desc("data_desc", join(arg0_shape), elem_type, "nchw");
                     emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
@@ -2252,15 +2252,13 @@ namespace ngraph
                            "result);\n"
                            "stream s = stream(stream::kind::eager);\n"
                            "s.submit({bwd_weights}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
+                    writer.block_end();
+                    writer << "catch (const mkldnn::error& e)\n";
+                    writer.block_begin();
                     writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
                               "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
+                    writer.block_end();
                 }
                 else
                 {
@@ -2333,10 +2331,9 @@ namespace ngraph
                         writer << "memory::dims " << var << "{" << dims << "};\n";
                     };
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
+                    writer.block_begin();
+                    writer << "try\n";
+                    writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     emit_memory_desc("weight_desc", join(arg0_shape), elem_type, "oihw");
                     emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
@@ -2365,15 +2362,13 @@ namespace ngraph
                            "result);\n"
                            "stream s = stream(stream::kind::eager);\n"
                            "s.submit({bwd_data}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
+                    writer.block_end();
+                    writer << "catch (const mkldnn::error& e)\n";
+                    writer.block_begin();
                     writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
                               "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
+                    writer.block_end();
                 }
                 else
                 {
@@ -3072,6 +3067,123 @@ namespace ngraph
 #endif
                 writer.indent--;
                 writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
+            {
+                const auto& arg_shape = args[0].get_shape();
+                const size_t arg_rank = arg_shape.size();
+                const auto& result_shape = out[0].get_shape();
+                const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+                {
+                    writer << "{\n";
+                    writer.indent++;
+
+                    writer << "try {\n";
+                    writer.indent++;
+                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
+                           << "}, " << et << ", memory::format::nchw);\n";
+                    writer << "memory::desc delta_data_desc = memory::desc({"
+                           << join(args[1].get_shape()) << "}, " << et
+                           << ", memory::format::nchw);\n";
+                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
+                           << "}, " << et << ", memory::format::nchw);\n";
+
+                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                           << args[0].get_name() << ");\n";
+                    writer << "memory delta_data = memory({delta_data_desc, cpu_engine}, "
+                           << args[1].get_name() << ");\n";
+                    writer << "memory result = memory({result_desc, cpu_engine}, "
+                           << out[0].get_name() << ");\n";
+                    writer << "relu_forward::desc relu_fwd_desc = "
+                              "relu_forward::desc(prop_kind::forward, "
+                              "algorithm::eltwise_relu, input_data_desc, 0, 0);\n";
+                    writer << "relu_forward::primitive_desc relu_fwd_prim_desc = "
+                              "relu_forward::primitive_desc(relu_fwd_desc, cpu_engine);\n";
+                    writer << "relu_backward::desc relu_bwd_desc = "
+                              "relu_backward::desc(algorithm::eltwise_relu, "
+                              "delta_data_desc, input_data_desc, 0, 0);\n";
+                    writer << "relu_backward::primitive_desc relu_bdw_prim_desc = "
+                              "relu_backward::primitive_desc(relu_bwd_desc, cpu_engine, "
+                              "relu_fwd_prim_desc);\n";
+                    writer
+                        << "relu_backward relu_bwd= relu_backward(relu_bdw_prim_desc, input_data, "
+                           "delta_data, result);\n";
+                    writer << "stream s = stream(stream::kind::eager);\n"
+                              "s.submit({relu_bwd}).wait();\n";
+                    writer.indent--;
+                    writer << "} catch (const mkldnn::error& e) {\n";
+                    writer.indent++;
+                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                              "e.status) + \"): \" + e.message);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::relu_backprop<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                      " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   " << out[0].get_size() << ");\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
+            {
+                const auto& arg_shape = args[0].get_shape();
+                const size_t arg_rank = arg_shape.size();
+                const auto& result_shape = out[0].get_shape();
+                const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+                {
+                    writer << "{\n";
+                    writer.indent++;
+
+                    writer << "try {\n";
+                    writer.indent++;
+                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
+                           << "}, " << et << ", memory::format::nchw);\n";
+                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
+                           << "}, " << et << ", memory::format::nchw);\n";
+
+                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                           << args[0].get_name() << ");\n";
+                    writer << "memory result = memory({result_desc, cpu_engine}, "
+                           << out[0].get_name() << ");\n";
+                    writer << "relu_forward::desc relu_fwd_desc = "
+                              "relu_forward::desc(prop_kind::forward_training, "
+                              "algorithm::eltwise_relu, input_data_desc, 0, 0);\n";
+                    writer << "relu_forward::primitive_desc relu_prim_desc = "
+                              "relu_forward::primitive_desc(relu_fwd_desc, cpu_engine);\n";
+                    writer << "relu_forward relu_fwd= relu_forward(relu_prim_desc, input_data, "
+                              "result);\n";
+                    writer << "stream s = stream(stream::kind::eager);\n"
+                              "s.submit({relu_fwd}).wait();\n";
+                    writer.indent--;
+                    writer << "} catch (const mkldnn::error& e) {\n";
+                    writer.indent++;
+                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                              "e.status) + \"): \" + e.message);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::relu<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   " << out[0].get_size() << ");\n";
+                }
             }
         }
     }
