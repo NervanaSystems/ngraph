@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <memory>
+#include <string>
 
 #include "mkldnn_emitter.hpp"
 
