@@ -19,10 +19,12 @@
 import numpy as np
 
 from pyngraph import Node
-from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Divide, Dot, Equal, Exp, \
-    Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, Negative, \
-    Not, NotEqual, Parameter, Sqrt, Subtract, Tanh
 
+from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Convolution, Divide, Dot,\
+    Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, \
+    Negative, Not, NotEqual, Parameter, Sqrt, Subtract, Tanh
+
+from typing import List
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -217,3 +219,27 @@ def dot(left_node, right_node, name=None):
     # type: (Node, Node, str) -> Node
     """Return node which performs matrix multiplication of two input nodes."""
     return Dot(left_node, right_node)
+
+
+# convpool ops
+@nameable_op
+def convolution(x,                      # type: Node
+                weights,                # type: Node
+                strides=None,           # type: List[int]
+                dilation=None,          # type: List[int]
+                padding_above=None,     # type: List[int]
+                padding_below=None,     # type: List[int]
+                name=None,              # type: str
+                ):
+    # type: (...) -> Node
+    """Return convolution node."""
+    if not strides:
+        strides = [1] * (len(x.shape) - 2)  # Default to as many 1s as spatial dimensions of input.
+    if not dilation:
+        dilation = [1] * (len(x.shape) - 2)
+    if not padding_above:
+        padding_above = [0] * (len(x.shape) - 2)
+    if not padding_below:
+        padding_below = [0] * (len(x.shape) - 2)
+
+    return Convolution(x, weights, strides, dilation, padding_above, padding_below)
