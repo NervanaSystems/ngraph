@@ -21,34 +21,10 @@
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-#define NVRTC_SAFE_CALL(x)                                                                         \
-    do                                                                                             \
-    {                                                                                              \
-        nvrtcResult result = x;                                                                    \
-        if (result != NVRTC_SUCCESS)                                                               \
-        {                                                                                          \
-            std::cerr << "\nerror: " #x " failed with error " << nvrtcGetErrorString(result)       \
-                      << '\n';                                                                     \
-            exit(1);                                                                               \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_SAFE_CALL(x)                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        CUresult result = x;                                                                       \
-        if (result != CUDA_SUCCESS)                                                                \
-        {                                                                                          \
-            const char* msg;                                                                       \
-            cuGetErrorName(result, &msg);                                                          \
-            std::cerr << "\nerror: " #x " failed with error " << msg << '\n';                      \
-            exit(1);                                                                               \
-        }                                                                                          \
-    } while (0)
 
 runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
                                            EntryPoint compiled_function)

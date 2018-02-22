@@ -256,10 +256,10 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     string pch_header_source = writer.get_code();
 
-    //    writer += R"(
-    //    using namespace ngraph;
-    //    using namespace std;
-    //)";
+    writer += R"(
+using namespace ngraph;
+using namespace std;
+    )";
 
     if (m_emit_timing)
     {
