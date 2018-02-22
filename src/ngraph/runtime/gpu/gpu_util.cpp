@@ -22,8 +22,8 @@
 #include <stdio.h>
 #include <string>
 
-#include "cuda.h"
-#include "cuda_runtime.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
@@ -47,10 +47,10 @@ void runtime::gpu::check_cuda_errors(CUresult err)
     assert(err == CUDA_SUCCESS);
 }
 
-void** runtime::gpu::create_gpu_buffer(size_t buffer_size)
+void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
 {
-    void** allocated_buffer_pool;
-    cudaMalloc(&allocated_buffer_pool, buffer_size);
+    void* allocated_buffer_pool;
+    cudaMalloc((void**)&allocated_buffer_pool, buffer_size);
     return allocated_buffer_pool;
 }
 
