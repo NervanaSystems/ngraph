@@ -16,29 +16,18 @@
 
 #pragma once
 
-#include <mkldnn.hpp>
-
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
-
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        namespace util
         {
-            namespace mkldnn_utils
+            /// \brief Abstract base class for annotations added to graph ops
+            class OpAnnotations
             {
-                extern mkldnn::engine global_cpu_engine;
-
-                bool IsMKLDNNOp(ngraph::Node& op);
-                mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
-                const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
-                mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
-                const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
-            }
+            public:
+                OpAnnotations() {}
+            };
         }
     }
 }

@@ -106,7 +106,9 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 
@@ -218,6 +220,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
+    {TI(ngraph::runtime::cpu::op::ConvertLayout),
+     &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
@@ -259,7 +263,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
@@ -417,7 +422,7 @@ using namespace ngraph::runtime;
     {
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
+            const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
@@ -516,7 +521,7 @@ using namespace ngraph::runtime;
         set<descriptor::TensorView*> constants;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            if (dynamic_cast<op::Constant*>(node.get()))
+            if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 constants.insert(tv.get());
@@ -580,7 +585,7 @@ using namespace ngraph::runtime;
 
         // Add inputs to the variable name map
         size_t arg_index = 0;
-        for (shared_ptr<op::Parameter> param : current_function->get_parameters())
+        for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
         {
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
@@ -619,7 +624,7 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             bool parameter_as_output = false;
-            for (shared_ptr<op::Parameter> param : current_function->get_parameters())
+            for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
             {
                 for (const descriptor::Output& pout : param->get_outputs())
                 {
