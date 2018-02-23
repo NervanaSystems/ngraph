@@ -1,19 +1,19 @@
-.. asin.rst:
+.. exp.rst:
 
-####
-Asin
-####
+###
+Exp
+###
 
 .. code-block:: cpp
 
-   Asin  // Elementwise asin operation
+   Exp  // Elementwise expine operation
 
 
 Description
 ===========
 
 Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the inverse sine of the
+where the value at each coordinate of ``output`` is the expine of the
 value at the corresponding coordinate of ``arg``.
 
 Inputs
@@ -31,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -40,18 +40,20 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \sin^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \exp(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \frac{\Delta}{\sqrt{1-\texttt{arg}^2}}
+   \overline{\texttt{arg}} \leftarrow \Delta\ \texttt{output}
+
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Asin
+.. doxygenclass:: ngraph::op::Exp
    :project: ngraph
    :members:

@@ -4,10 +4,13 @@
 Cos
 ###
 
+.. code-block:: cpp
+
+   Cos  //  Elementwise cosine operation
+
+
 Description
 ===========
-
-Elementwise cosine operation.
 
 Produces a tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the cosine of the
@@ -28,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -52,4 +55,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Cos
+   :project: ngraph
    :members:

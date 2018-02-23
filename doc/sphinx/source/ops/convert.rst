@@ -4,11 +4,17 @@
 Convert
 #######
 
+.. code-block:: cpp
+   
+   Convert // Convert a tensor from one element type to another
+
+
 Description
 ===========
 
-Convert a tensor from one element type to another.
+.. TODO 
 
+Long description
 
 Inputs
 ------
@@ -25,7 +31,7 @@ Attributes
 +------------------+---------------------------+---------------------------------+
 | Name             | Type                      | Notes                           |
 +==================+===========================+=================================+
-| ``element_type`` | ``ngraph::element::type`` | The element type of the result. |
+| ``element_type`` | ``ngraph::element::type`` | The element type of the result  |
 +------------------+---------------------------+---------------------------------+
 
 Outputs
@@ -34,7 +40,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | ``element_type``        | Same as ``arg``.               |
+| ``output``      | ``element_type``        | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -50,4 +56,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Convert
+   :project: ngraph
    :members:

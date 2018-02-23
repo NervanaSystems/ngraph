@@ -16,36 +16,36 @@
 
 #pragma once
 
-#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
+#include <memory>
+
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise natural log operation.
-        class Log : public util::UnaryElementwiseArithmetic
+        /// \brief Concatenation operation.
+        class Concat : public util::RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs a natural log operation.
+            /// \brief Constructs a concatenation operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Log(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Log", arg)
+            /// \param args               The nodes producing the input tensors.
+            /// \param concatenation_axis The axis along which to concatenate the input tensors.
+            Concat(const Nodes& args, size_t concatenation_axis);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
+                return std::make_shared<Concat>(new_args, m_concatenation_axis);
             }
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Log>(new_args.at(0));
-            }
-
+            /// \return The concatenation axis.
+            size_t get_concatenation_axis() const { return m_concatenation_axis; }
+        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
+            const size_t m_concatenation_axis;
         };
     }
 }

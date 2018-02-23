@@ -1,21 +1,19 @@
-.. add.rst:
+.. minimum.rst:
 
-###
-Add
-###
+#######
+Minimum
+#######
 
 .. code-block:: cpp
 
-   Add  // Elementwise add operation
+   Minimum  // Short description.
 
 
 Description
 ===========
 
-Elementwise add operation.
-
 Produces tensor of the same element type and shape as the two inputs,
-where the value at each coordinate of ``output`` is the sum of the
+where the value at each coordinate of ``output`` is the minimum of the
 values at the corresponding input coordinates.
 
 Inputs
@@ -44,20 +42,20 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} + \texttt{arg1}_{i_0, \ldots, i_{n-1}}
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \min(\texttt{arg0}_{i_0, \ldots, i_{n-1}}, \texttt{arg1}_{i_0, \ldots, i_{n-1}})
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \Delta \\
-   \overline{\texttt{arg1}} &\leftarrow \Delta
+   \overline{\texttt{arg0}} &\leftarrow \texttt{Less}(\texttt{arg0}, \texttt{arg1})\ \Delta \\
+   \overline{\texttt{arg1}} &\leftarrow \texttt{Less}(\texttt{arg1}, \texttt{arg0})\ \Delta
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Add
+.. doxygenclass:: ngraph::op::Minimum
    :project: ngraph
    :members:

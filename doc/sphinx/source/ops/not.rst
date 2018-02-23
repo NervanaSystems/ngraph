@@ -1,20 +1,20 @@
-.. asin.rst:
+.. not.rst:
 
-####
-Asin
-####
+###
+Not
+###
 
 .. code-block:: cpp
 
-   Asin  // Elementwise asin operation
+   Not // Elementwise negation operation
 
 
 Description
 ===========
 
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the inverse sine of the
-value at the corresponding coordinate of ``arg``.
+Produces a single output tensor of boolean type and the same shape as ``arg``,
+where the value at each coordinate of ``output`` is the negation of the
+value at each ``arg`` coordinate.
 
 Inputs
 ------
@@ -22,7 +22,7 @@ Inputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg``         | Any                     | Any                            |
+| ``arg``         | ``element::boolean``    | Any                            |
 +-----------------+-------------------------+--------------------------------+
 
 Outputs
@@ -31,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | ``element::boolean``    | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -40,18 +40,12 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \sin^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \neg\mathtt{arg}_{i_0, \ldots, i_{n-1}}
 
-Backprop
-========
-
-.. math::
-
-   \overline{\texttt{arg}} \leftarrow \frac{\Delta}{\sqrt{1-\texttt{arg}^2}}
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Asin
+.. doxygenclass:: ngraph::op::Abs
    :project: ngraph
    :members:
