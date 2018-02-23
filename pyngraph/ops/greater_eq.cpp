@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_GreaterEq(py::module m){
 
-    py::class_<ngraph::op::GreaterEq, std::shared_ptr<ngraph::op::GreaterEq>, ngraph::op::BinaryElementwiseComparison> greater_eq(m, "GreaterEq");
+    py::class_<ngraph::op::GreaterEq, std::shared_ptr<ngraph::op::GreaterEq>, ngraph::op::util::BinaryElementwiseComparison> greater_eq(m, "GreaterEq");
     greater_eq.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const std::shared_ptr<ngraph::Node>& >());
 }

@@ -27,7 +27,7 @@ void regclass_pyngraph_op_Reshape(py::module m){
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph::op::Reshape, std::shared_ptr<ngraph::op::Reshape>, ngraph::op::RequiresTensorViewArgs> reshape(m, "Reshape");
+    py::class_<ngraph::op::Reshape, std::shared_ptr<ngraph::op::Reshape>, ngraph::op::util::RequiresTensorViewArgs> reshape(m, "Reshape");
     reshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisVector&,
                          const ngraph::Shape& >());
 }

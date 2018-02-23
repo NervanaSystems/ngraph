@@ -4,9 +4,10 @@
 #include "pyngraph/function.hpp"
 #include "pyngraph/serializer.hpp"
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
+#include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
 #include "pyngraph/types/regmodule_pyngraph_types.hpp"
-
+#include "pyngraph/ops/op.hpp"
 
 namespace py = pybind11;
 
@@ -16,7 +17,10 @@ PYBIND11_MODULE(_pyngraph, m){
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);
-    regmodule_pyngraph_op(m);
+    py::module m_op = m.def_submodule("op", "module pyngraph.op");
+    regclass_pyngraph_op_Op(m_op);
+    regmodule_pyngraph_op_util(m);
+    regmodule_pyngraph_op(m_op);
     regmodule_pyngraph_runtime(m);
     regmodule_pyngraph_util(m);
 }

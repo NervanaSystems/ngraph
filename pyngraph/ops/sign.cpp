@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Sign(py::module m){
-    py::class_<ngraph::op::Sign, std::shared_ptr<ngraph::op::Sign>, ngraph::op::UnaryElementwiseArithmetic> sign(m, "Sign");
+    py::class_<ngraph::op::Sign, std::shared_ptr<ngraph::op::Sign>, ngraph::op::util::UnaryElementwiseArithmetic> sign(m, "Sign");
     sign.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

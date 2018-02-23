@@ -20,10 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_RequiresTensorViewArgs(py::module m);
-void regclass_pyngraph_op_UnaryElementwise(py::module m);
-void regclass_pyngraph_op_UnaryElementwiseArithmetic(py::module m);
-void regclass_pyngraph_op_BinaryElementwise(py::module m);
-void regclass_pyngraph_op_BinaryElementwiseComparison(py::module m);
-void regclass_pyngraph_op_BinaryElementwiseArithmetic(py::module m);
-
+void regclass_pyngraph_op_Op(py::module m);

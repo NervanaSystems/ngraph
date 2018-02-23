@@ -27,7 +27,7 @@ void regclass_pyngraph_op_Broadcast(py::module m) {
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph::op::Broadcast, std::shared_ptr<ngraph::op::Broadcast>, ngraph::op::RequiresTensorViewArgs> broadcast(m, "Broadcast");
+    py::class_<ngraph::op::Broadcast, std::shared_ptr<ngraph::op::Broadcast>, ngraph::op::util::RequiresTensorViewArgs> broadcast(m, "Broadcast");
     broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
                            const ngraph::AxisSet& >());
 }

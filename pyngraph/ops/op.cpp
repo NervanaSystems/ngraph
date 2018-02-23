@@ -22,33 +22,8 @@
 
 namespace py = pybind11;
 
-
-//    py::module::import("wrapper.ngraph.Node");
-
-void regclass_pyngraph_op_RequiresTensorViewArgs(py::module m){
-    py::class_<ngraph::op::RequiresTensorViewArgs, std::shared_ptr<ngraph::op::RequiresTensorViewArgs>,
-        ngraph::Node> requiresTensorViewArgs(m, "RequiresTensorViewArgs");
+void regclass_pyngraph_op_Op(py::module m){
+    py::class_<ngraph::op::Op, std::shared_ptr<ngraph::op::Op>,
+        ngraph::Node> op(m, "Op");
+    op.def_property("op_annotations", &ngraph::op::Op::get_op_annotations, &ngraph::op::Op::set_op_annotations);
 }
-
-void regclass_pyngraph_op_UnaryElementwise(py::module m){
-    py::class_<ngraph::op::UnaryElementwise, std::shared_ptr<ngraph::op::UnaryElementwise>,
-        ngraph::op::RequiresTensorViewArgs> unaryElementwise(m, "UnaryElementwise");
-}
-void regclass_pyngraph_op_UnaryElementwiseArithmetic(py::module m){
-    py::class_<ngraph::op::UnaryElementwiseArithmetic, std::shared_ptr<ngraph::op::UnaryElementwiseArithmetic>,
-        ngraph::op::UnaryElementwise> unaryElementwiseArithmetic(m, "UnaryElementwiseArithmetic");
-}
-void regclass_pyngraph_op_BinaryElementwise(py::module m){
-    py::class_<ngraph::op::BinaryElementwise, std::shared_ptr<ngraph::op::BinaryElementwise>,
-        ngraph::op::RequiresTensorViewArgs> binaryElementwise(m, "BinaryElementwise");
-}
-void regclass_pyngraph_op_BinaryElementwiseComparison(py::module m){
-    py::class_<ngraph::op::BinaryElementwiseComparison, std::shared_ptr<ngraph::op::BinaryElementwiseComparison>,
-        ngraph::op::BinaryElementwise> binaryElementwiseComparison(m, "BinaryElementwiseComparison");
-}
-void regclass_pyngraph_op_BinaryElementwiseArithmetic(py::module m){
-    py::class_<ngraph::op::BinaryElementwiseArithmetic, std::shared_ptr<ngraph::op::BinaryElementwiseArithmetic>,
-        ngraph::op::BinaryElementwise> binaryElementwiseArithmetic(m, "BinaryElementwiseArithmetic");
-}
-
-

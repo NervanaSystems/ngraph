@@ -48,7 +48,7 @@
 #include "pyngraph/ops/negative.hpp"
 #include "pyngraph/ops/not.hpp"
 #include "pyngraph/ops/not_equal.hpp"
-#include "pyngraph/ops/op.hpp"
+// #include "pyngraph/ops/op.hpp"
 #include "pyngraph/ops/one_hot.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/power.hpp"

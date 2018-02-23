@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Convolution(py::module m) {
 
-    py::class_<ngraph::op::Convolution, std::shared_ptr<ngraph::op::Convolution>, ngraph::op::RequiresTensorViewArgs> convolution(m, "Convolution");
+    py::class_<ngraph::op::Convolution, std::shared_ptr<ngraph::op::Convolution>, ngraph::op::util::RequiresTensorViewArgs> convolution(m, "Convolution");
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
@@ -58,7 +58,7 @@ void regclass_pyngraph_op_Convolution(py::module m) {
 
 void regclass_pyngraph_op_ConvolutionBackpropData(py::module m) {
 
-    py::class_<ngraph::op::ConvolutionBackpropData, std::shared_ptr<ngraph::op::ConvolutionBackpropData>, ngraph::op::RequiresTensorViewArgs> convolutionBackpropData(m, "ConvolutionBackpropData");
+    py::class_<ngraph::op::ConvolutionBackpropData, std::shared_ptr<ngraph::op::ConvolutionBackpropData>, ngraph::op::util::RequiresTensorViewArgs> convolutionBackpropData(m, "ConvolutionBackpropData");
 
     convolutionBackpropData.def(py::init<const ngraph::Shape&,
                                          const std::shared_ptr<ngraph::Node>&,
@@ -73,7 +73,7 @@ void regclass_pyngraph_op_ConvolutionBackpropData(py::module m) {
 
 void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m) {
 
-    py::class_<ngraph::op::ConvolutionBackpropFilters, std::shared_ptr<ngraph::op::ConvolutionBackpropFilters>, ngraph::op::RequiresTensorViewArgs> convolutionBackpropFilters(m, "ConvolutionBackpropFilters");
+    py::class_<ngraph::op::ConvolutionBackpropFilters, std::shared_ptr<ngraph::op::ConvolutionBackpropFilters>, ngraph::op::util::RequiresTensorViewArgs> convolutionBackpropFilters(m, "ConvolutionBackpropFilters");
 
     convolutionBackpropFilters.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                             const ngraph::Shape&,
