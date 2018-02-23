@@ -24,7 +24,7 @@ from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Convolu
     Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, \
     Negative, Not, NotEqual, Parameter, Sqrt, Subtract, Sum, Tanh
 
-from typing import List, Set
+from typing import Iterable, List
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -247,8 +247,13 @@ def convolution(x,                      # type: Node
 
 # reduction ops
 @nameable_op
-def sum(node, axis_set=None, name=None):  # type: (Node, Set[int], str) -> Node
-    """Return node reduction sum node."""
-    if axis_set is None:
-        axis_set = set(range(len(node.shape)))
-    return Sum(node, axis_set)
+def sum(node, reduction_axes=None, name=None):  # type: (Node, Iterable[int], str) -> Node
+    """Element-wise sums the input tensor, eliminating the specified reduction axes.
+
+    :param reduction_axes: The axes to eliminate through summation.
+    """
+    if reduction_axes is None:
+        reduction_axes = set(range(len(node.shape)))
+    if type(reduction_axes) is not set:
+        reduction_axes = set(reduction_axes)
+    return Sum(node, reduction_axes)
