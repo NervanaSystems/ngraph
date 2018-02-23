@@ -22,9 +22,9 @@ from pyngraph import Node
 
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Convolution, Divide, Dot,\
     Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, \
-    Negative, Not, NotEqual, Parameter, Sqrt, Subtract, Tanh
+    Negative, Not, NotEqual, Parameter, Sqrt, Subtract, Sum, Tanh
 
-from typing import List
+from typing import List, Set
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -243,3 +243,12 @@ def convolution(x,                      # type: Node
         padding_below = [0] * (len(x.shape) - 2)
 
     return Convolution(x, weights, strides, dilation, padding_above, padding_below)
+
+
+# reduction ops
+@nameable_op
+def sum(node, axis_set=None, name=None):  # type: (Node, Set[int], str) -> Node
+    """Return node reduction sum node."""
+    if axis_set is None:
+        axis_set = set(range(len(node.shape)))
+    return Sum(node, axis_set)
