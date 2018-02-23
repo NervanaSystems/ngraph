@@ -30,6 +30,11 @@
 
 using namespace std;
 
+std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
+{
+    return val ? "true" : "false";
+}
+
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto flags = out.flags();
