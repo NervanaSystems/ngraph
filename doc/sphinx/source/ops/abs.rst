@@ -4,10 +4,13 @@
 Abs
 ###
 
+.. code-block:: cpp
+
+   Abs  // Elementwise absolute value operation
+
+
 Description
 ===========
-
-Elementwise absolute value operation.
 
 Produces a single output tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the absoloute value of the
@@ -28,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -52,4 +55,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Abs
+   :project: ngraph
    :members:

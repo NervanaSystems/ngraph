@@ -1,20 +1,19 @@
-.. asin.rst:
+.. floor.rst:
 
-####
-Asin
-####
+#####
+Floor
+#####
 
 .. code-block:: cpp
 
-   Asin  // Elementwise asin operation
-
+   Floor  // Elementwise floor operation
 
 Description
 ===========
 
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the inverse sine of the
-value at the corresponding coordinate of ``arg``.
+Produces a single output tensor of the same element type and shape as ``arg``,
+where the value at each coordinate of ``output`` is the floor of the
+value at each ``arg`` coordinate.
 
 Inputs
 ------
@@ -31,7 +30,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -40,18 +39,22 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \sin^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \lfloor \mathtt{arg}_{i_0,
+   \ldots, i_{n-1}}\rfloor
 
 Backprop
 ========
 
-.. math::
+Not defined by nGraph.
 
-   \overline{\texttt{arg}} \leftarrow \frac{\Delta}{\sqrt{1-\texttt{arg}^2}}
+The backprop would be zero for non-integer
+input and undefined for integer input; a zero backprop would have
+no effect on the backprop to ``arg``, so there is no need for ``Floor``
+to define a backprop.
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Asin
+.. doxygenclass:: ngraph::op::Floor
    :project: ngraph
    :members:
