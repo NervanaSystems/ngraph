@@ -6386,7 +6386,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     Shape shape_r{1, 1, 4, 4};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6420,7 +6420,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     Shape shape_r{2, 1, 4, 4};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6461,7 +6461,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6500,7 +6500,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6539,7 +6539,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     Shape shape_r{2, 1, 5, 5};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6582,7 +6582,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6621,7 +6621,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     Shape shape_r{2, 1, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
