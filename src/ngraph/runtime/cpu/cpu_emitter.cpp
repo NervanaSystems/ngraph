@@ -2618,9 +2618,14 @@ namespace ngraph
                     writer << "memory result = memory({result_desc, cpu_engine}, "
                            << out[0].get_name() << ");\n";
                     // Dummy forward primitive descriptor to keep MKLDNN happy
+                    const char* algorithm_enumerator =
+                        apb->get_include_padding_in_avg_computation()
+                            ? "algorithm::pooling_avg_include_padding"
+                            : "algorithm::pooling_avg_exclude_padding";
+
                     writer << "pooling_forward::primitive_desc fwd_pd = "
                               "pooling_forward::primitive_desc("
-                           << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
+                           << "{prop_kind::forward, " << algorithm_enumerator << ", "
                            << "result_desc, input_data_desc, {"
                            << join(apb->get_window_movement_strides()) << "}, {"
                            << join(apb->get_window_shape()) << "}, "
@@ -2629,7 +2634,7 @@ namespace ngraph
                            << "padding_kind::zero}, cpu_engine);\n";
                     writer
                         << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
-                        << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
+                        << "pooling_backward::desc(" << algorithm_enumerator << ", "
                         << "result_desc, input_data_desc, {"
                         << join(apb->get_window_movement_strides()) << "}, {"
                         << join(apb->get_window_shape()) << "}, "
@@ -2653,7 +2658,11 @@ namespace ngraph
                     writer << "                 {" << join(apb->get_window_movement_strides())
                            << "},\n";
                     writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-                    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+                    writer << "                 {" << join(apb->get_padding_above()) << "},\n";
+                    writer << "                 "
+                           << ngraph::to_cplusplus_sourcecode_literal(
+                                  apb->get_include_padding_in_avg_computation())
+                           << "\n";
                     writer << "                 );\n";
                 }
             }
