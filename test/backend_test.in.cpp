@@ -4617,7 +4617,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
