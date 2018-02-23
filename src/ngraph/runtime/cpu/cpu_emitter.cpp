@@ -3162,7 +3162,6 @@ namespace ngraph
                 writer << "    }\n";
                 writer << "}\n";
                 writer << type << " d = 0;\n";
-                writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer << "{\n";
                 writer << "    " << type << " e = exp(" << args[0].get_name() << "[i] - m);\n";

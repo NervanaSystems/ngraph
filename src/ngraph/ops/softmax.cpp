@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "ngraph/ops/softmax.hpp"
+
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/subtract.hpp"
