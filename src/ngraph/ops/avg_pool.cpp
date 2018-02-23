@@ -259,13 +259,15 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
-                                     const Shape& padding_above)
+                                     const Shape& padding_above,
+                                     bool include_padding_in_avg_computation)
     : RequiresTensorViewArgs("AvgPoolBackprop", {delta})
     , m_forward_arg_shape(forward_arg_shape)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
+    , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
 {
     // --
     // TODO: de-duplicate this code from AvgPool::AvgPool.
@@ -387,6 +389,47 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     }
 
     //
+    // Make sure we're not going to have to compute average over an empty set of tensor elements.
+    // That will happen if the sliding window ever resides entirely over the padding area AND
+    // we're planning to disregard padding when computing the window's average.
+    //
+    if (!include_padding_in_avg_computation)
+    {
+        for (size_t i = 0; i < spatial_dimension_count; i++)
+        {
+            const size_t dim_virtual_size = input_item_virtual_shape[i];
+            const size_t dim_window_size = window_shape[i];
+            const size_t dim_stride = window_movement_strides[i];
+            const size_t dim_padding_below = padding_below[i];
+            const size_t dim_padding_above = padding_above[i];
+
+            // Checking the lower edge of each dimension is easy, because there's no mystery
+            // regarding the window's lower-edge placement...
+            if ((dim_padding_below > 0) && (dim_window_size <= dim_padding_below))
+            {
+                throw ngraph_error(
+                    "AvgPoolBackprop window will sometimes reside entirely within the "
+                    "padding-below region, but the op disregards padding elements.");
+            }
+
+            // Now check the upper-bound...
+            {
+                const size_t dim_num_strides = (dim_virtual_size - dim_window_size) / dim_stride;
+                const size_t dim_window_max_lower_offset = dim_num_strides * dim_stride;
+                const size_t dim_padding_above_start_offset = dim_virtual_size - dim_padding_above;
+
+                if ((dim_padding_above > 0) &&
+                    (dim_window_max_lower_offset >= dim_padding_above_start_offset))
+                {
+                    throw ngraph_error(
+                        "AvgPoolBackprop window will sometimes reside entirely within the "
+                        "padding-above region, but the op disregards padding elements.");
+                }
+            }
+        }
+    }
+
+    //
     // Construct result shape: NCDo.
     //
     Shape forward_result_shape(1 + 1 + spatial_dimension_count);
@@ -413,6 +456,7 @@ void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                                           m_window_shape,
                                                           m_window_movement_strides,
                                                           m_padding_below,
-                                                          m_padding_above);
+                                                          m_padding_above,
+                                                          m_include_padding_in_avg_computation);
     adjoints.add_delta(operand, backprop);
 }
