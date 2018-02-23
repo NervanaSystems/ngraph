@@ -1,12 +1,12 @@
-.. concatenate.rst:
+.. concat.rst:
 
-###########
-Concatenate
-###########
+######
+Concat
+######
 
 .. code-block:: cpp
 
-   Concatenate  // Concatenation operation 
+   Concat  // Concatenation operation 
 
 
 Description
@@ -75,6 +75,6 @@ We slice the backprop value into the backprops associated with the inputs.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Concatenate
+.. doxygenclass:: ngraph::op::Concat
    :project: ngraph
    :members:
