@@ -149,7 +149,7 @@ string ngraph::runtime::cpu::kernel::end_index_loop(const string& index_var)
 {
     stringstream ss;
 
-    ss << "} // end for(" << index_var << ")\n";
+    ss << "}\n";
 
     return ss.str();
 }
@@ -209,7 +209,7 @@ void ngraph::runtime::cpu::kernel::emit_pointwise_copy(codegen::CodeWriter& writ
 
     for (size_t i = 0; i < n_axes; i++)
     {
-        string index_var = writer.generate_temporary_name("i");
+        string index_var = writer.generate_temporary_name("_j");
 
         writer << start_index_loop(index_var, source_start_corner[i], source_end_corner[i], i == 0);
         writer.indent++;
