@@ -47,7 +47,7 @@ out[tid] =)" + op + "(in[tid]);\n" +
 
                 static void Get_2_element_op(const std::string& name,
                                              const std::string& data_type,
-                                             const std::string op,
+                                             const std::string& op,
                                              std::string& kernel)
                 {
                     kernel = R"(  
@@ -66,7 +66,7 @@ out[tid] = in1[tid] )" + op + "in2[tid]\n" +
 
                 static void Get_n_element_op(const std::string& name,
                                              const std::string& data_type,
-                                             const std::vector<std::string> ops,
+                                             const std::vector<std::string>& ops,
                                              std::string& kernel)
                 {
                     kernel = "";
