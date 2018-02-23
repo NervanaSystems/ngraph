@@ -22,7 +22,7 @@ from pyngraph import Node
 
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Convolution, Divide, Dot,\
     Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, \
-    Negative, Not, NotEqual, Parameter, Sqrt, Subtract, Sum, Tanh
+    Negative, Not, NotEqual, Parameter, Reshape, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -91,6 +91,18 @@ def floor(node, name=None):  # type: (NodeInput, str) -> Node
 def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies ceiling to the input node elementwise."""
     return Ceiling(node)
+
+
+@unary_op
+def reshape(node, input_order, output_shape, name=None):
+    # type: (Node, List[int], List[int], str) -> None
+    """Return reshaped node according to provided parameters.
+
+    :param node: The tensor we want to reshape.
+    :param input_order: The order in which to iterate over input axes of input tensor.
+    :param output_shape: The new shape for input tensor.
+    """
+    return Reshape(node, input_order, output_shape)
 
 
 # Binary ops

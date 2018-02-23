@@ -41,6 +41,7 @@ from ngraph_api.ops import multiply
 from ngraph_api.ops import negative
 from ngraph_api.ops import not_equal
 from ngraph_api.ops import parameter
+from ngraph_api.ops import reshape
 from ngraph_api.ops import sqrt
 from ngraph_api.ops import subtract
 from ngraph_api.ops import sum
