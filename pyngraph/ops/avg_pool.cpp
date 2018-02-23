@@ -30,7 +30,8 @@ void regclass_pyngraph_op_AvgPool(py::module m) {
                     const ngraph::Shape&,
                     const ngraph::Strides&,
                     const ngraph::Shape&,
-                    const ngraph::Shape& >());
+                    const ngraph::Shape&,
+                    bool >());
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
                     const ngraph::Shape&,
                     const ngraph::Strides& >());
