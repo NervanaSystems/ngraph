@@ -1203,6 +1203,23 @@ TEST(${BACKEND_NAME}, backwards_slice)
     }
 }
 
+TEST(${BACKEND_NAME}, backwards_softmax)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
+
 TEST(${BACKEND_NAME}, backwards_sqrt)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");

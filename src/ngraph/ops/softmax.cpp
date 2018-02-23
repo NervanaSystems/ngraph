@@ -15,10 +15,24 @@
 *******************************************************************************/
 
 #include "ngraph/ops/softmax.hpp"
+#include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 
 void ngraph::op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const std::shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
-    adjoints.add_delta(x, delta);
+    auto z = delta * shared_from_this();
+
+    AxisSet axes;
+    for (size_t i = 0; i < z->get_shape().size(); i++)
+    {
+        axes.insert(i);
+    }
+    auto zs = std::make_shared<op::Sum>(z, axes);
+
+    auto dot = std::make_shared<op::Dot>(shared_from_this(), zs);
+    adjoints.add_delta(x, z - dot);
 }
