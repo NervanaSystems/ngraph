@@ -4,14 +4,17 @@
 Acos
 ####
 
+.. code-block:: cpp
+
+   Acos  // Elementwise acos operation
+
+
 Description
 ===========
 
-Elementwise acos operation.
-
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the inverse cosine of the
-value at the corresponding coordinate of ``arg`` .
+Produces a tensor of the same element type and shape as ``arg``, where the 
+value at each coordinate of ``output`` is the inverse cosine of the value 
+at the corresponding coordinate of ``arg``.
 
 Inputs
 ------
@@ -28,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -51,4 +54,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Acos
+   :project: ngraph
    :members:
