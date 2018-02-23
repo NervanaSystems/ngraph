@@ -39,11 +39,15 @@ namespace ngraph
             /// `[n]`
             /// \param padding_above The above-padding shape.<br>
             /// `[n]`
+            /// \param include_padding_in_avg_computation If true then averages include padding
+            ///  elements, each treated as the number zero.  If false, padding elements are entirely
+            ///  ignored when computing averages.
             AvgPool(const std::shared_ptr<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
-                    const Shape& padding_above);
+                    const Shape& padding_above,
+                    bool include_padding_in_avg_computation);
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
@@ -76,7 +80,8 @@ namespace ngraph
                                                  m_window_shape,
                                                  m_window_movement_strides,
                                                  m_padding_below,
-                                                 m_padding_above);
+                                                 m_padding_above,
+                                                 m_include_padding_in_avg_computation);
             }
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -90,11 +95,17 @@ namespace ngraph
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The above-padding shape.
             const Shape& get_padding_above() const { return m_padding_above; }
+            bool get_include_padding_in_avg_computation() const
+            {
+                return m_include_padding_in_avg_computation;
+            }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
+            bool m_include_padding_in_avg_computation;
         };
 
         class AvgPoolBackprop : public util::RequiresTensorViewArgs
