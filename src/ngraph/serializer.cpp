@@ -58,6 +58,7 @@
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -354,8 +355,14 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            node = make_shared<op::AvgPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            auto include_padding_in_avg_computation =
+                node_js.at("include_padding_in_avg_computation").get<bool>();
+            node = make_shared<op::AvgPool>(args[0],
+                                            window_shape,
+                                            window_movement_strides,
+                                            padding_below,
+                                            padding_above,
+                                            include_padding_in_avg_computation);
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -687,6 +694,14 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Remainder>(args[0], args[1]);
         }
+        else if (node_op == "Relu")
+        {
+            node = make_shared<op::Relu>(args[0]);
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            node = make_shared<op::ReluBackprop>(args[0], args[1]);
+        }
         else if (node_op == "ReplaceSlice")
         {
             auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
@@ -859,6 +874,7 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "AvgPoolBackprop")
     {
@@ -1057,6 +1073,12 @@ static json write(const Node& n)
         node["function"] = tmp->get_functions()[0]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+    }
+    else if (node_op == "Relu")
+    {
+    }
+    else if (node_op == "ReluBackprop")
+    {
     }
     else if (node_op == "Remainder")
     {

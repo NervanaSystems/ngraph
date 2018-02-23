@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <memory>
+#include <string>
 
 #include "mkldnn_emitter.hpp"
 
@@ -45,7 +46,7 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrap
 {
     return mkldnn::memory::desc(
         mkldnn::memory::dims(tvw.get_shape().begin(), tvw.get_shape().end()),
-        mkldnn_utils::GetDataType(tvw.get_element_type()),
+        mkldnn_utils::get_mkldnn_data_type(tvw.get_element_type()),
         fmt);
 }
 

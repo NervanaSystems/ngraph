@@ -40,7 +40,7 @@ std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
 {
     std::stringstream ss;
 
-    ss << prefix << "__" << m_temporary_name_count;
+    ss << prefix << m_temporary_name_count;
     m_temporary_name_count++;
 
     return ss.str();
