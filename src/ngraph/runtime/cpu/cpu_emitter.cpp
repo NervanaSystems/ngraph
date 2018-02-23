@@ -80,6 +80,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -3143,6 +3144,7 @@ namespace ngraph
                     writer << "                   " << out[0].get_name() << ",\n";
                     writer << "                   " << out[0].get_size() << ");\n";
                 }
+            }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
