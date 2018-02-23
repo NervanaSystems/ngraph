@@ -140,7 +140,7 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
 {
     for (auto user : target->users())
     {
-        auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
+        auto& args = const_cast<ngraph::NodeVector&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
         it = args.erase(it);
@@ -217,7 +217,7 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (!node_map.exists(node))
         {
             // get (already) cloned arguments and clone the node
-            Nodes cloned_args;
+            NodeVector cloned_args;
             for (auto arg : node->get_input_ops())
             {
                 cloned_args.push_back(node_map.get(arg));
@@ -243,7 +243,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function results and parameters
-    Nodes cloned_results;
+    NodeVector cloned_results;
     for (shared_ptr<Node> node : func->get_results())
     {
         cloned_results.push_back(node_map.get(node));

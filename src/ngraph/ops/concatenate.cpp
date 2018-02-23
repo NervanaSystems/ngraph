@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
+op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
     : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {

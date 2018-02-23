@@ -188,14 +188,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
     auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<op::Divide>(xmu, N);
-    auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+    auto variance_label =
+        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
     auto variance_with_broadcast =
         std::make_shared<op::Broadcast>(variance_label, Shape{2, 3}, AxisSet{0});
 
     // construct mean
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
     auto mean_with_broadcast = std::make_shared<op::Broadcast>(mean_label, Shape{2, 3}, AxisSet{0});
     auto input_diff_mean = std::make_shared<op::Subtract>(input, mean_with_broadcast);
 

@@ -357,7 +357,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-std::shared_ptr<Node> op::Convolution::copy_with_new_args(const Nodes& new_args) const
+std::shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -485,7 +485,8 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     set_value_type_checked(filters_et, inferred_convolution_output_shape);
 }
 
-std::shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const Nodes& new_args) const
+std::shared_ptr<Node>
+    op::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -583,7 +584,7 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
 }
 
 std::shared_ptr<Node>
-    op::ConvolutionBackpropFilters::copy_with_new_args(const Nodes& new_args) const
+    op::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {

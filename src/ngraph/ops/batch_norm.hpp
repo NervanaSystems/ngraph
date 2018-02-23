@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
-#include "ngraph/nodes.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/util.hpp"
 
@@ -41,7 +41,8 @@ namespace ngraph
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
             const Shape& get_mean_shape() const { return m_bn_mean_shape; }
             double get_eps_value() const { return m_epsilon; }
-            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
             Shape m_bn_input_shape;

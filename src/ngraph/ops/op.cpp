@@ -18,14 +18,14 @@
 #include <memory>
 #include <sstream>
 
-#include "ngraph/nodes.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-op::Op::Op(const std::string& node_type, const Nodes& args)
+op::Op::Op(const std::string& node_type, const NodeVector& args)
     : Node(node_type, args)
 {
 }

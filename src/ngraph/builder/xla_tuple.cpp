@@ -28,18 +28,18 @@
 using namespace std;
 using namespace ngraph;
 
-xla::op::Tuple::Tuple(const Nodes& nodes)
-    : Node("Tuple", Nodes{})
+xla::op::Tuple::Tuple(const NodeVector& nodes)
+    : Node("Tuple", NodeVector{})
     , m_elements(nodes)
 {
 }
 
-std::shared_ptr<Node> xla::op::Tuple::copy_with_new_args(const Nodes& new_args) const
+std::shared_ptr<Node> xla::op::Tuple::copy_with_new_args(const NodeVector& new_args) const
 {
     return make_shared<Tuple>(new_args);
 }
 
-const Nodes& xla::op::Tuple::get_elements() const
+const NodeVector& xla::op::Tuple::get_elements() const
 {
     return m_elements;
 }
@@ -91,7 +91,7 @@ namespace
 
     // Collect a vector of the non-Tuple nodes that underly nodes
     template <typename T>
-    vector<shared_ptr<T>> flatten(const Nodes& nodes)
+    vector<shared_ptr<T>> flatten(const NodeVector& nodes)
     {
         vector<shared_ptr<T>> result;
         for (auto node : nodes)
@@ -102,7 +102,9 @@ namespace
     }
 }
 
-xla::XLAFunction::XLAFunction(const Nodes& results, const Nodes& parameters, const string& name)
+xla::XLAFunction::XLAFunction(const NodeVector& results,
+                              const NodeVector& parameters,
+                              const string& name)
     : Function(flatten<Node>(results), flatten<ngraph::op::Parameter>(parameters), name)
 {
 }

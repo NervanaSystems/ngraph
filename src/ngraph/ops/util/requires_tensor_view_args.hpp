@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/nodes.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -32,7 +32,7 @@ namespace ngraph
                 /// \brief Constructs an operation on tensor view arguments.
                 ///
                 /// \param args The nodes producing this node's input tensors.
-                RequiresTensorViewArgs(const std::string& node_type, const Nodes& args);
+                RequiresTensorViewArgs(const std::string& node_type, const NodeVector& args);
             };
         }
     }

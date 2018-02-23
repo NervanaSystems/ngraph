@@ -29,7 +29,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const Nodes& arguments)
+Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
@@ -156,9 +156,9 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
     return m_inputs.at(index).get_output().get_node();
 }
 
-Nodes Node::get_input_ops() //const
+NodeVector Node::get_input_ops() //const
 {
-    Nodes result;
+    NodeVector result;
     for (auto& i : get_inputs())
     {
         {

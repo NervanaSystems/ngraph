@@ -35,14 +35,14 @@ namespace ngraph
             public:
                 /// \brief \p a base class for \sa Any and \sa Label
                 ///
-                Pattern(const std::string& type_name, const Nodes& nodes, Predicate pred)
+                Pattern(const std::string& type_name, const NodeVector& nodes, Predicate pred)
                     : Node(type_name, nodes)
                     , m_predicate(pred)
                 {
                 }
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const Nodes& new_args) const override
+                    copy_with_new_args(const NodeVector& new_args) const override
                 {
                     throw ngraph_error("Uncopyable");
                 }

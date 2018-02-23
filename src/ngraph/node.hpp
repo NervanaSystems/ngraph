@@ -31,7 +31,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/nodes.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -51,7 +51,7 @@ namespace ngraph
                                                  std::shared_ptr<Node> replacement);
 
     protected:
-        Node(const std::string& node_type, const Nodes& arguments);
+        Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node()
         {
             for (auto arg : m_arguments)
@@ -156,11 +156,11 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
-        virtual Nodes get_input_ops(); //const;
+        virtual NodeVector get_input_ops(); //const;
 
         std::shared_ptr<Node> get_input_op(size_t index);
 
-        virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const = 0;
+        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
@@ -181,11 +181,11 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
 
     private:
-        Nodes m_arguments;
+        NodeVector m_arguments;
         //m_arguments still needs to be kept in sync with i/o since get_input_ops
         //is pretty ubiquitous and might be called after the original graph was modified.
         //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
         //is correct.
-        Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
+        NodeVector& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }

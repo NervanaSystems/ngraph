@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::FunctionCall::FunctionCall(std::shared_ptr<Function> function, const Nodes& args)
+op::FunctionCall::FunctionCall(std::shared_ptr<Function> function, const NodeVector& args)
     : Node("FunctionCall", args)
     , m_function(function)
 {

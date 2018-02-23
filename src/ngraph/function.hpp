@@ -29,7 +29,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/parameters.hpp"
+#include "ngraph/ops/parameter_vector.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -38,12 +38,12 @@ namespace ngraph
     class Function
     {
     public:
-        Function(const Nodes& results,
-                 const op::Parameters& parameters,
+        Function(const NodeVector& results,
+                 const op::ParameterVector& parameters,
                  const std::string& name = "");
 
         Function(const std::shared_ptr<Node>& result,
-                 const op::Parameters& parameters,
+                 const op::ParameterVector& parameters,
                  const std::string& name = "");
 
         virtual ~Function() {}
@@ -61,9 +61,9 @@ namespace ngraph
         const Shape& get_output_shape(size_t i) const;
 
         /// Return the function parameters
-        const op::Parameters& get_parameters() const { return m_parameters; }
+        const op::ParameterVector& get_parameters() const { return m_parameters; }
         /// Return the ops that generate the results
-        const Nodes get_results() const { return m_results; }
+        const NodeVector get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -83,8 +83,8 @@ namespace ngraph
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
-        Nodes m_results;
-        op::Parameters m_parameters;
+        NodeVector m_results;
+        op::ParameterVector m_parameters;
         std::string m_name;
         size_t m_temporary_pool_size;
 

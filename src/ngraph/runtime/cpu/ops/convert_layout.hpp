@@ -44,7 +44,7 @@ namespace ngraph
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
                     virtual std::shared_ptr<Node>
-                        copy_with_new_args(const Nodes& new_args) const override
+                        copy_with_new_args(const NodeVector& new_args) const override
                     {
                         if (new_args.size() != 1)
                         {

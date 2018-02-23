@@ -97,7 +97,8 @@ namespace ngraph
                    const std::shared_ptr<Function>& reduction_function,
                    const AxisSet& reduction_axes);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 2)
                 {
