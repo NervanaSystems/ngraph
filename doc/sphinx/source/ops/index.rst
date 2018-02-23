@@ -57,7 +57,7 @@ Not currently a comprehensive list.
    avg_pool_backprop.rst
    broadcast.rst
    ceiling.rst
-   concatenate.rst
+   concat.rst
    constant.rst
    convert.rst
    convolution.rst

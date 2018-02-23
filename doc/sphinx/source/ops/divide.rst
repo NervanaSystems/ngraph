@@ -49,7 +49,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \Delta \frac{\texttt{Output}}{\texttt{arg0}}\\
+   \overline{\texttt{arg0}} &\leftarrow \frac{\Delta}{\texttt{arg1}}\\
    \overline{\texttt{arg1}} &\leftarrow -\Delta \frac{\texttt{Output}}{\texttt{arg1}}
 
 
