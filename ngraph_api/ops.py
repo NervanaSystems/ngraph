@@ -233,13 +233,13 @@ def convolution(x,                      # type: Node
                 ):
     # type: (...) -> Node
     """Return convolution node."""
-    if not strides:
+    if strides is None:
         strides = [1] * (len(x.shape) - 2)  # Default to as many 1s as spatial dimensions of input.
-    if not dilation:
+    if dilation is None:
         dilation = [1] * (len(x.shape) - 2)
-    if not padding_above:
+    if padding_above is None:
         padding_above = [0] * (len(x.shape) - 2)
-    if not padding_below:
+    if padding_below is None:
         padding_below = [0] * (len(x.shape) - 2)
 
     return Convolution(x, weights, strides, dilation, padding_above, padding_below)
