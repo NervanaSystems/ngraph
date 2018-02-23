@@ -94,10 +94,15 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
-def reshape(node, axes_order, out_shape, name=None):
+def reshape(node, input_order, output_shape, name=None):
     # type: (Node, List[int], List[int], str) -> None
-    """Return reshaped node according to provided parameters"""
-    return Reshape(node, axes_order, out_shape)
+    """Return reshaped node according to provided parameters.
+
+    :param node: The tensor we want to reshape.
+    :param input_order: The order in which to iterate over input axes of input tensor.
+    :param output_shape: The new shape for input tensor.
+    """
+    return Reshape(node, input_order, output_shape)
 
 
 # Binary ops
