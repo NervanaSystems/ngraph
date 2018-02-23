@@ -32,8 +32,9 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    ngraph::runtime::gpu::Cuda_context_manager::
-        Instance(); //this call will init a cuda context and will use by cublas and cudnn automatically
+    //Create context use driver API and make it current, the runtime call will pickup the context
+    //http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#interoperability-between-runtime-and-driver-apis
+    ngraph::runtime::gpu::Cuda_context_manager::Instance();
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
