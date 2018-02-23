@@ -22,9 +22,9 @@ from pyngraph import Node
 
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Convolution, Divide, Dot,\
     Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, \
-    Negative, Not, NotEqual, Parameter, Reshape, Sqrt, Subtract, Tanh
+    Negative, Not, NotEqual, Parameter, Reshape, Sqrt, Subtract, Sum, Tanh
 
-from typing import List
+from typing import Iterable, List
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -245,13 +245,27 @@ def convolution(x,                      # type: Node
                 ):
     # type: (...) -> Node
     """Return convolution node."""
-    if not strides:
+    if strides is None:
         strides = [1] * (len(x.shape) - 2)  # Default to as many 1s as spatial dimensions of input.
-    if not dilation:
+    if dilation is None:
         dilation = [1] * (len(x.shape) - 2)
-    if not padding_above:
+    if padding_above is None:
         padding_above = [0] * (len(x.shape) - 2)
-    if not padding_below:
+    if padding_below is None:
         padding_below = [0] * (len(x.shape) - 2)
 
     return Convolution(x, weights, strides, dilation, padding_above, padding_below)
+
+
+# reduction ops
+@nameable_op
+def sum(node, reduction_axes=None, name=None):  # type: (Node, Iterable[int], str) -> Node
+    """Element-wise sums the input tensor, eliminating the specified reduction axes.
+
+    :param reduction_axes: The axes to eliminate through summation.
+    """
+    if reduction_axes is None:
+        reduction_axes = set(range(len(node.shape)))
+    if type(reduction_axes) is not set:
+        reduction_axes = set(reduction_axes)
+    return Sum(node, reduction_axes)
