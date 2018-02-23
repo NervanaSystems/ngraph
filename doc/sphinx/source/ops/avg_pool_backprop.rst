@@ -4,16 +4,23 @@
 AvgPoolBackprop
 ###############
 
-Average Pooling backprop operation.
+.. code-block:: cpp
+
+   AvgPoolBackprop // Average Pooling backprop operation.
+
+
+Description
+===========
+
 
 
 C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::AvgPoolBackprop
+   :project: ngraph
    :members:
 
 Python Interface
 ================
 
-is not merged yet, but could go here!
