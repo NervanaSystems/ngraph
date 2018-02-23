@@ -16,6 +16,12 @@
 
 #pragma once
 
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cudnn_v7.h>
+#include <nvrtc.h>
+
 #define NVRTC_SAFE_CALL(x)                                                                         \
     do                                                                                             \
     {                                                                                              \

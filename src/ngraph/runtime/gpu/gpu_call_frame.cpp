@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -31,13 +32,8 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    CUdevice cuDevice;
-    CUcontext context;
-    CUmodule module;
-    CUfunction cuda_op_abs_kernel;
-    CUDA_SAFE_CALL(cuInit(0));
-    CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
-    CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
+    ngraph::runtime::gpu::Cuda_context_manager::
+        Instance(); //this call will init a cuda context and will use by cublas and cudnn automatically
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {

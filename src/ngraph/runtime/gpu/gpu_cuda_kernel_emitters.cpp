@@ -17,12 +17,6 @@
 #include <algorithm>
 #include <map>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn_v7.h>
-#include <nvrtc.h>
-
 #include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
