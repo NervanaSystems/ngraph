@@ -57,17 +57,18 @@ namespace ngraph
                                                  const mkldnn::memory::desc& weights_desc,
                                                  const mkldnn::memory::desc& result_desc,
                                                  const ngraph::Strides& strides,
+                                                 const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
 
                 size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                  const mkldnn::memory::desc& weights_desc,
+                                                 const mkldnn::memory::desc& bias_desc,
                                                  const mkldnn::memory::desc& result_desc,
                                                  const ngraph::Strides& strides,
                                                  const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
-
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
