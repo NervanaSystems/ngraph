@@ -31,31 +31,18 @@ ifndef CMAKE_OPTIONS_EXTRA
     CMAKE_OPTIONS_EXTRA=
 endif
 
-# Specify the default run_as_user script to execute
-# The default value is "run_as_user.sh" (ubuntu1604)
-# Set for built-in centos74 environment as "run_as_centos_user.sh"
-# Set for ubuntu1604 as "run_as_ubuntu_user.sh"
-# Custom: copy a custom script to the contrib/docker directory and provide the filename
-OS ?="ubuntu1604"
+# OS set to 'ubuntu1604' by default
+# can be overridden on the command line with 'make <target> OS=centos74"
+ifndef OS
+    OS="ubuntu1604"
+endif
 
-IS_CENTOS=$(shell echo ${OS} | grep -q "centos") 
-IS_UBUNTU=$(shell echo ${OS} | grep -q "ubuntu") 
-
-ifneq ($(IS_CENTOS),"")
+ifeq ("$(shell echo ${OS} | grep centos)","centos74")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_centos_user.sh
-    ifndef DOCKERFILE
-        DOCKERFILE=Dockerfile.ngraph_cpp.centos74_cmake3
-    endif
-endif
-
-# set the default values (ubuntu1604)
-ifndef DOCKERFILE
-    CMAKE_OPTIONS_EXTRA += "-DNGRAPH_USE_PREBUILT_LLVM=TRUE"
-    DOCKERFILE=Dockerfile.ngraph_cpp
-endif
-
-ifndef RUN_AS_USER_SCRIPT
-    RUN_AS_USER_SCRIPT="${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+    DOCKERFILE=Dockerfile.ngraph_cpp.centos74_cmake3
+else
+    DOCKERFILE ?= "Dockerfile.ngraph_cpp"
+    RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_ubuntu_user.sh
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -115,7 +102,7 @@ sphinx_doc: build_docker_image
 	# sphinx html docs build
 	docker run --rm --tty \
             ${VOLUME} \
-	    ${DOCKER_RUN_ENV} \
+	    {DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/doc/sphinx; env VERBOSE=1 make html 2>&1 | tee make_sphinx_html.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
@@ -139,7 +126,7 @@ build_gcc: build_docker_image
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-build_clang:
+build_clang: build_docker_image
 	# Remove old distribution directory if present
 	( test -d "${DIR}"/BUILD-CLANG/ngraph_dist && rm -fr "${DIR}"/BUILD-CLANG/ngraph_dist && echo "Removed old ${DIR}/BUILD-CLANG/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
 	# Make BUILD-CLANG directory as user
