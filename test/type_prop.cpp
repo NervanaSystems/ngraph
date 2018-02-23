@@ -5475,8 +5475,8 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     auto move_strides = Strides{2, 3, 4};
     Shape padding_below{5, 6, 4};
     Shape padding_above{6, 4, 5};
-    auto avg_pool =
-        make_shared<op::AvgPool>(param, window_shape, move_strides, padding_below, padding_above);
+    auto avg_pool = make_shared<op::AvgPool>(
+        param, window_shape, move_strides, padding_below, padding_above, true);
 
     EXPECT_EQ(avg_pool->get_element_type(), element::f32);
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 9, 6, 5}));
@@ -5692,7 +5692,7 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(
-            param, window_shape, move_strides, padding_below, padding_above);
+            param, window_shape, move_strides, padding_below, padding_above, false);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong below-padding rank not detected";
@@ -5720,7 +5720,7 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     try
     {
         auto avg_pool = make_shared<op::AvgPool>(
-            param, window_shape, move_strides, padding_below, padding_above);
+            param, window_shape, move_strides, padding_below, padding_above, false);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong above-padding rank not detected";
