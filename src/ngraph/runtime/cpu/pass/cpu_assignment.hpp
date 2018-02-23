@@ -18,10 +18,11 @@
 
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
-#define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::cpu::CPU_ExternalFunction * external_function,                \
-                    std::shared_ptr<ngraph::Node> node)
+#define ASSIGN_DECL(op_name)                                                                       \
+    assign<op_name>(ngraph::runtime::cpu::CPU_ExternalFunction * external_function,                \
+                    ngraph::Node * node)
 
 namespace ngraph
 {
@@ -31,30 +32,31 @@ namespace ngraph
         {
             namespace pass
             {
-                using LayoutFunction =
-                    std::function<void(CPU_ExternalFunction*, std::shared_ptr<ngraph::Node>)>;
+                using AssignFunction = std::function<void(CPU_ExternalFunction*, ngraph::Node*)>;
 
-                using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
+                using AssignOpMap = std::unordered_map<std::type_index, AssignFunction>;
 
-                class CPULayout : public ngraph::pass::CallGraphPass
+                class CPUAssignment : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    CPULayout(std::shared_ptr<CPU_ExternalFunction> external_function)
+                    CPUAssignment(std::shared_ptr<CPU_ExternalFunction> external_function)
                         : m_external_function(external_function)
                     {
                     }
+
                     virtual bool
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
                     template <typename OP>
                     static void
-                        layout(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
-                               std::shared_ptr<ngraph::Node> node);
+                        assign(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                               ngraph::Node* node)
+                    {
+                        throw std::runtime_error("Unimplemented op in CPU assignment");
+                    }
 
                 private:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;
-                    static void set_default_layouts(CPU_ExternalFunction* external_function,
-                                                    std::shared_ptr<Node> node);
                 };
             }
         }

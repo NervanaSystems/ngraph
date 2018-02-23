@@ -288,3 +288,23 @@ TEST(cpu_fusion, fuse_fprop_bn)
     size_t ccg = count_ops_of_type<op::BatchNorm>(func);
     ASSERT_EQ(ccg, 1);
 }
+
+class UnhandledOp : public ngraph::op::Abs
+{
+public:
+    UnhandledOp(const std::shared_ptr<Node>& arg)
+        : Abs(arg)
+    {
+    }
+};
+
+TEST(cpu_fusion, unhandled_op)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{});
+    auto unhandled = make_shared<UnhandledOp>(A);
+    auto f = make_shared<Function>(unhandled, op::Parameters{A});
+    auto manager = runtime::Manager::get("CPU");
+    auto backend = manager->allocate_backend();
+    auto external = manager->compile(f);
+    ASSERT_THROW(backend->make_call_frame(external), ngraph_error);
+}

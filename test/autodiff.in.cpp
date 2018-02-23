@@ -138,7 +138,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{2, 2};
     auto avgpool =
-        make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+        make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding, false);
     auto f = make_shared<Function>(avgpool, op::Parameters{A});
 
     shared_ptr<runtime::TensorView> ep =
@@ -373,8 +373,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
         Shape window_shape{2, 2};
         Shape padding{1, 1};
         auto window_movement_strides = Strides{2, 2};
-        auto avgpool =
-            make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+        auto avgpool = make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding, padding, false);
         return make_shared<Function>(avgpool, op::Parameters{A});
 
     };

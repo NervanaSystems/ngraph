@@ -87,6 +87,8 @@
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -114,32 +116,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     stringstream ss;
     ss << "fmt::M{{" << join(shape) << "}, {" << join(strides) << "}}";
     return ss.str();
-}
-
-// Mapping from POD types to MKLDNN data types
-// An empty string implies the corresponding MKLDNN data type
-// is not supported
-static const unordered_map<string, const string> mkldnn_data_type_map{
-    {"char", "memory::data_type::s8"},
-    {"float", "memory::data_type::f32"},
-    {"double", ""},
-    {"int8_t", "memory::data_type::s8"},
-    {"int16_t", "memory::data_type::s16"},
-    {"int32_t", "memory::data_type::s32"},
-    {"int64_t", ""},
-    {"uint8_t", "memory::data_type::u8"},
-    {"uint16_t", ""},
-    {"uint32_t", ""},
-    {"uint64_t", ""}};
-
-static const string& get_mkldnn_data_type(const string& type)
-{
-    auto it = mkldnn_data_type_map.find(type);
-    if (it == mkldnn_data_type_map.end() || it->second.empty())
-    {
-        throw ngraph_error("No MKLDNN data type exists for the given element type");
-    }
-    return it->second;
 }
 
 void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(codegen::CodeWriter& writer)
@@ -281,7 +257,9 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
 
                 // get input element type
-                const string& et = get_mkldnn_data_type(args[2].get_element_type().c_type_string());
+                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                    args[2].get_element_type());
+
                 writer << "{\n";
                 writer.indent++;
 
@@ -2022,63 +2000,54 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool filter_dilated = false;
-                for (size_t s : convolution->get_window_dilation_strides())
+                auto op_annotations =
+                    static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+                if (op_annotations &&
+                    static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                        ->is_mkldnn_op())
                 {
-                    filter_dilated = filter_dilated || (s != 1);
-                }
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+                    auto input_tvl = node->get_inputs()[0]
+                                         .get_output()
+                                         .get_tensor_view()
+                                         ->get_tensor_view_layout();
+                    auto weights_tvl = node->get_inputs()[1]
+                                           .get_output()
+                                           .get_tensor_view()
+                                           ->get_tensor_view_layout();
+                    auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+                    auto input_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl)
+                                            .get_mkldnn_format();
+                    auto weights_format =
+                        dynamic_cast<runtime::cpu::LayoutDescriptor&>(*weights_tvl)
+                            .get_mkldnn_format();
+                    auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl)
+                                             .get_mkldnn_format();
 
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides())
-                {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
-                {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], mkldnn::memory::format::nchw);
-                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[1], mkldnn::memory::format::oihw);
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], mkldnn::memory::format::nchw);
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
                     size_t conv_index = 0;
 
-                    if (!filter_dilated)
-                    {
-                        conv_index = mkldnn_emitter->build_convolution_forward(
-                            input_data_desc,
-                            weights_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above());
-                    }
-                    else
-                    {
-                        // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                        // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
-                        Strides window_dilation_strides_adjusted;
-
-                        for (size_t s : convolution->get_window_dilation_strides())
-                        {
-                            window_dilation_strides_adjusted.push_back(s - 1);
-                        }
-
-                        conv_index = mkldnn_emitter->build_convolution_forward(
-                            input_data_desc,
-                            weights_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above());
-                    }
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2135,7 +2104,8 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     const string& elem_type =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                        runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2245,7 +2215,8 @@ namespace ngraph
                     args[0].get_element_type() == element::f32)
                 {
                     const string& elem_type =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                        runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2359,8 +2330,8 @@ namespace ngraph
                 if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2542,8 +2513,13 @@ namespace ngraph
                 if (arg_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
+
+                    const char* algorithm_enumerator =
+                        avg_pool->get_include_padding_in_avg_computation()
+                            ? "algorithm::pooling_avg_include_padding"
+                            : "algorithm::pooling_avg_exclude_padding";
 
                     writer << "{\n";
                     writer.indent++;
@@ -2561,7 +2537,7 @@ namespace ngraph
 
                     // TODO(jmenon): Use a workspace
                     writer << "pooling_forward avg_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_avg, "
+                           << "{prop_kind::forward_inference, " << algorithm_enumerator << ", "
                            << "input_data_desc, result_desc, {"
                            << join(avg_pool->get_window_movement_strides()) << "}, {"
                            << join(avg_pool->get_window_shape()) << "}, "
@@ -2586,8 +2562,12 @@ namespace ngraph
                     writer << "                 {" << join(avg_pool->get_window_movement_strides())
                            << "},\n";
                     writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
-                    writer << "                 {" << join(avg_pool->get_padding_above())
-                           << "});\n";
+                    writer << "                 {" << join(avg_pool->get_padding_above()) << "},\n";
+                    writer << "                 "
+                           << ngraph::to_cplusplus_sourcecode_literal(
+                                  avg_pool->get_include_padding_in_avg_computation())
+                           << "\n";
+                    writer << "                  );\n";
                 }
             }
 
@@ -2622,8 +2602,8 @@ namespace ngraph
                 if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -2690,8 +2670,8 @@ namespace ngraph
                 if (delta_rank == 4 && mpb->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[1].get_element_type().c_type_string());
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[1].get_element_type());
 
                     writer << "{\n";
                     writer.indent++;
@@ -3010,12 +2990,50 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::ConvertLayout)
+            {
+                auto input_tvl =
+                    node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+                auto input_format =
+                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
+                auto output_format =
+                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
+                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                    args[0].get_element_type());
+
+                writer << "{\n";
+                writer.indent++;
+
+                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+                writer << "memory::desc input_desc = memory::desc({" << join(args[0].get_shape())
+                       << "}, " << et << ", "
+                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                       << ");\n";
+                writer << "memory::desc output_desc = memory::desc({" << join(out[0].get_shape())
+                       << "}, " << et << ", "
+                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(output_format)
+                       << ");\n";
+                writer << "memory input = memory({input_desc, cpu_engine}, " << args[0].get_name()
+                       << ");\n";
+                writer << "memory output = memory({output_desc, cpu_engine}, " << out[0].get_name()
+                       << ");\n";
+                writer << "reorder prim = reorder(input, output);\n";
+
+                writer << "stream s = stream(stream::kind::eager);\n"
+                       << "s.submit({prim}).wait();\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
                 const auto& arg_shape = args[0].get_shape();
                 const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                    args[0].get_element_type());
                 if (arg_rank == 4 && args[0].get_element_type() == element::f32)
                 {
                     writer << "{\n";
@@ -3080,7 +3098,8 @@ namespace ngraph
                 const auto& arg_shape = args[0].get_shape();
                 const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                    args[0].get_element_type());
                 if (arg_rank == 4 && args[0].get_element_type() == element::f32)
                 {
                     writer << "{\n";
