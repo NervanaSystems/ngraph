@@ -1766,6 +1766,32 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
+// Test hybrid mechanism after broadcast
+TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{3, 4};
+    auto broadcast = make_shared<op::Broadcast>(A, shape_r, AxisSet{0});
+    auto reverse = make_shared<op::Reverse>(broadcast, AxisSet{1});
+    auto f = make_shared<Function>(reverse, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
