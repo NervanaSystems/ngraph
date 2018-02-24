@@ -4605,7 +4605,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
     Shape padding_below{2, 0};
     Shape padding_above{1, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{1, 1, 6, 5};
+    Shape shape_r{1, 1, 7, 5};
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
@@ -4634,7 +4634,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
                                           {3, 3, 2, 2, 1},
                                           {3, 3, 2, 1, 1},
                                           {2, 1, 2, 2, 2},
-                                          {2, 2, 2, 2, 2}}}})
+                                          {2, 2, 2, 2, 2},
+                                          {2, 2, 1, 0, 0}}}})
                    .get_vector()),
               read_vector<float>(result));
 }
