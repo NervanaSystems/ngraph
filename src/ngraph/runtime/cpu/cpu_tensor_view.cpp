@@ -74,7 +74,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free(buffer);
+    if (buffer != nullptr)
+        free(buffer);
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
