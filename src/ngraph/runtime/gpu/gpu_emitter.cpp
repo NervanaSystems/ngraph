@@ -175,7 +175,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         return;
     }
 
-    //set out put to 0 if
+    //set output to 0 if input size is 0
     if (args[0].get_size() == 0 || args[1].get_size() == 0)
     {
         writer << "{   // " << n->get_name() << "\n";
@@ -535,7 +535,6 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         writer.indent++;
         writer << "static const float alpha = 1.0;\n";
         writer << "static const float beta = 0.0;\n";
-        //writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
         ;
         writer << "cublasSgeam("
                << "cublas_handle,"
