@@ -150,8 +150,11 @@ namespace ngraph
                        << args[1].get_name() << ");\n";
                 writer << "out = arg0 + arg1;\n";
 #else
-                if (args[0].get_element_type() == element::f32 &&
-                    args[1].get_element_type() == element::f32)
+                auto op_annotations =
+                    static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+                if (op_annotations &&
+                    static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                        ->is_mkldnn_op())
                 {
                     auto input0_size_1d = 1;
                     auto input1_size_1d = 1;
@@ -164,8 +167,9 @@ namespace ngraph
                         input1_size_1d *= args[1].get_shape()[i];
                         result_size_1d *= out[0].get_shape()[i];
                     }
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    // get input element type
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[1].get_element_type());
 
                     // Bind to CPU engine
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";

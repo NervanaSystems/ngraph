@@ -25,6 +25,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/ops/add.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -66,6 +67,29 @@ namespace ngraph
                         convolution->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
+                {
+                    auto add = static_cast<op::Add*>(node);
+                    auto arg0_shape = node->get_input_shape(0);
+
+                    auto src_size = 1;
+                    for (size_t i = 0; i < node->get_input_shape(0).size(); i++)
+                    {
+                        src_size *= arg0_shape[0];
+                    }
+                    // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN overhead
+                    // for smaller tensor sizes
+                    if (node->get_input_element_type(0) == element::f32 &&
+                        node->get_input_element_type(1) == element::f32 && src_size > 64000)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        add->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -76,6 +100,7 @@ namespace ngraph
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Convolution),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
+    {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
