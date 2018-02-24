@@ -535,7 +535,6 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         writer.indent++;
         writer << "static const float alpha = 1.0;\n";
         writer << "static const float beta = 0.0;\n";
-        ;
         writer << "cublasSgeam("
                << "cublas_handle,"
                << "CUBLAS_OP_T,"
