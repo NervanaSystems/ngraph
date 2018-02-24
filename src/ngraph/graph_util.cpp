@@ -332,18 +332,24 @@ void ngraph::insert_parameter_split_between(shared_ptr<Node> src_node,
 // Assert that nodes in the function is colocated and return that placement
 Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
 {
-    Placement placement = Placement::DEFAULT;
+    Placement function_placement = Placement::DEFAULT;
     traverse_nodes(func, [&](shared_ptr<Node> node) {
-        if (placement == Placement::DEFAULT)
+        Placement node_placement = node->get_placement();
+        if (node_placement == Placement::DEFAULT)
         {
-            placement = node->get_placement();
+            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
         }
-        if (placement != node->get_placement())
+        if (function_placement == Placement::DEFAULT)
+        {
+            // First time seeing a node
+            function_placement = node->get_placement();
+        }
+        else if (function_placement != node_placement)
         {
             throw ngraph_error("Function contains nodes of two different placements");
         }
     });
-    return placement;
+    return function_placement;
 }
 
 // Helper function used by ngraph::split_function_by_placement to find the largest subgraph that
