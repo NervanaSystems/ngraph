@@ -27,6 +27,7 @@ namespace ngraph
             void* create_gpu_buffer(size_t buffer_size);
             void cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size);
             void cuda_memcpyHtD(void* d, void* s, size_t buffer_size);
+            void cuda_memset(void* d, int value, size_t buffer_size);
         }
     }
 }
