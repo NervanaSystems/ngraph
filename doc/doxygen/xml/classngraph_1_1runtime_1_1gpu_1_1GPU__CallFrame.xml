@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::gpu::GPU_CallFrame</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1CallFrame" prot="public" virt="non-virtual">ngraph::runtime::CallFrame</basecompoundref>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a9ab6d946f55c8025deb3479387b4f8dd" prot="protected" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__ExternalFunction" kindref="compound">GPU_ExternalFunction</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;GPU_ExternalFunction&gt; ngraph::runtime::gpu::GPU_CallFrame::m_external_function</definition>
+        <argsstring></argsstring>
+        <name>m_external_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a92179e3b9413ce76fd6b5bcdcde5050b" prot="protected" static="no" mutable="no">
+        <type>EntryPoint</type>
+        <definition>EntryPoint ngraph::runtime::gpu::GPU_CallFrame::m_compiled_function</definition>
+        <argsstring></argsstring>
+        <name>m_compiled_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a69bf6839067487a66b017d4c09e3e15c" prot="protected" static="no" mutable="no">
+        <type>cublasHandle_t</type>
+        <definition>cublasHandle_t ngraph::runtime::gpu::GPU_CallFrame::m_cublas_handle</definition>
+        <argsstring></argsstring>
+        <name>m_cublas_handle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a91594b15de69a1987702ca57004d01c0" prot="protected" static="no" mutable="no">
+        <type>cudnnHandle_t</type>
+        <definition>cudnnHandle_t ngraph::runtime::gpu::GPU_CallFrame::m_cudnn_handle</definition>
+        <argsstring></argsstring>
+        <name>m_cudnn_handle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1af20164e494ae5c002182d484c4d6fb11" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::gpu::GPU_CallFrame::GPU_CallFrame</definition>
+        <argsstring>(std::shared_ptr&lt; GPU_ExternalFunction &gt; external_function, EntryPoint compiled_function)</argsstring>
+        <name>GPU_CallFrame</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__ExternalFunction" kindref="compound">GPU_ExternalFunction</ref> &gt;</type>
+          <declname>external_function</declname>
+        </param>
+        <param>
+          <type>EntryPoint</type>
+          <declname>compiled_function</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.cpp" bodystart="28" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a5835811549d9dca8ad6a88a26400bea4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::gpu::GPU_CallFrame::~GPU_CallFrame</definition>
+        <argsstring>() override</argsstring>
+        <name>~GPU_CallFrame</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.cpp" bodystart="48" bodyend="52"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_a2e7bb3ba89dfd7c69ee1234e3df92708_1a2e7bb3ba89dfd7c69ee1234e3df92708" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void runtime::gpu::GPU_CallFrame::call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>call</name>
+        <reimplements refid="classngraph_1_1runtime_1_1CallFrame_1ac420690641ece0b6a9b5a3dc5f045db4">call</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with values matching the signature of the function. </para>        </briefdescription>
+        <detaileddescription>
+<para>Tuples will be expanded into their tensor views to build the call frame. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="61" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.cpp" bodystart="78" bodyend="96"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a098b6de4075bbd9b73d3963dac67edfb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::gpu::GPU_CallFrame::tensor_call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>tensor_call</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with tuples pre-expanded to their underlying tensor views. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.cpp" bodystart="54" bodyend="76"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3446">
+        <label>ngraph::runtime::gpu::GPU_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame"/>
+        <childnode refid="3447" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3447">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3448">
+        <label>ngraph::runtime::gpu::GPU_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame"/>
+        <childnode refid="3449" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3449">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp" bodystart="49" bodyend="74"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_a2e7bb3ba89dfd7c69ee1234e3df92708_1a2e7bb3ba89dfd7c69ee1234e3df92708" prot="public" virt="virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a7e1246898c12577fa16f7319d23a3297" prot="public" virt="virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>get_performance_data</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1af20164e494ae5c002182d484c4d6fb11" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>GPU_CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a92179e3b9413ce76fd6b5bcdcde5050b" prot="protected" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>m_compiled_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a69bf6839067487a66b017d4c09e3e15c" prot="protected" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>m_cublas_handle</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a91594b15de69a1987702ca57004d01c0" prot="protected" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>m_cudnn_handle</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a9ab6d946f55c8025deb3479387b4f8dd" prot="protected" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>m_external_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a098b6de4075bbd9b73d3963dac67edfb" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a611514d20e9a298fb48deaf611ff0cba" prot="public" virt="pure-virtual" ambiguityscope="ngraph::runtime::CallFrame::"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a37e6cbe23dc687451a8f52a067054c3f" prot="public" virt="virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>~CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__CallFrame_1a5835811549d9dca8ad6a88a26400bea4" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_CallFrame</scope><name>~GPU_CallFrame</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1iteration__proxy" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::iteration_proxy</compoundname>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+    <innerclass refid="classnlohmann_1_1detail_1_1iteration__proxy_1_1iteration__proxy__internal" prot="private">nlohmann::detail::iteration_proxy::iteration_proxy_internal</innerclass>
+    <templateparamlist>
+      <param>
+        <type>typename IteratorType</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1iteration__proxy_1a88c0532ba4a5de1d527b18053b24fd19" prot="private" static="no" mutable="no">
+        <type>IteratorType::reference</type>
+        <definition>IteratorType::reference nlohmann::detail::iteration_proxy&lt; IteratorType &gt;::container</definition>
+        <argsstring></argsstring>
+        <name>container</name>
+        <briefdescription>
+<para>the container to iterate </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4260" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4260" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iteration__proxy_1a0aad65238c66bebda98caa9a0002ae1f" prot="public" static="no" const="no" explicit="yes" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::iteration_proxy&lt; IteratorType &gt;::iteration_proxy</definition>
+        <argsstring>(typename IteratorType::reference cont)</argsstring>
+        <name>iteration_proxy</name>
+        <param>
+          <type>typename IteratorType::reference</type>
+          <declname>cont</declname>
+        </param>
+        <briefdescription>
+<para>construct iteration proxy from a container </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4264" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4264" bodyend="4265"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iteration__proxy_1a43612db469c82118fc648c3729e40cee" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>iteration_proxy_internal</type>
+        <definition>iteration_proxy_internal nlohmann::detail::iteration_proxy&lt; IteratorType &gt;::begin</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>begin</name>
+        <briefdescription>
+<para>return iterator begin (needed for range-based for) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4268" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4268" bodyend="4271"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iteration__proxy_1a41303419d073f32fcf1956978410d816" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>iteration_proxy_internal</type>
+        <definition>iteration_proxy_internal nlohmann::detail::iteration_proxy&lt; IteratorType &gt;::end</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>end</name>
+        <briefdescription>
+<para>return iterator end (needed for range-based for) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4274" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4274" bodyend="4277"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>proxy class for the iterator_wrapper functions </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3607" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3607" bodyend="-1"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1iteration__proxy_1a43612db469c82118fc648c3729e40cee" prot="public" virt="non-virtual"><scope>nlohmann::detail::iteration_proxy</scope><name>begin</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iteration__proxy_1a88c0532ba4a5de1d527b18053b24fd19" prot="private" virt="non-virtual"><scope>nlohmann::detail::iteration_proxy</scope><name>container</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iteration__proxy_1a41303419d073f32fcf1956978410d816" prot="public" virt="non-virtual"><scope>nlohmann::detail::iteration_proxy</scope><name>end</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iteration__proxy_1a0aad65238c66bebda98caa9a0002ae1f" prot="public" virt="non-virtual"><scope>nlohmann::detail::iteration_proxy</scope><name>iteration_proxy</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

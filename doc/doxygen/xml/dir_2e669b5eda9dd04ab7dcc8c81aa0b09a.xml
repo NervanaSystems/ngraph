@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_2e669b5eda9dd04ab7dcc8c81aa0b09a" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor</compoundname>
+    <innerdir refid="dir_6e39969f43bbdf0911c6673c07086da1">/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout</innerdir>
+    <innerfile refid="buffer_8hpp">buffer.hpp</innerfile>
+    <innerfile refid="buffer__pos_8hpp">buffer_pos.hpp</innerfile>
+    <innerfile refid="input_8cpp">input.cpp</innerfile>
+    <innerfile refid="input_8hpp">input.hpp</innerfile>
+    <innerfile refid="output_8cpp">output.cpp</innerfile>
+    <innerfile refid="output_8hpp">output.hpp</innerfile>
+    <innerfile refid="primary__tensor__view_8cpp">primary_tensor_view.cpp</innerfile>
+    <innerfile refid="primary__tensor__view_8hpp">primary_tensor_view.hpp</innerfile>
+    <innerfile refid="tensor_8cpp">tensor.cpp</innerfile>
+    <innerfile refid="tensor_8hpp">tensor.hpp</innerfile>
+    <innerfile refid="descriptor_2tensor__view_8cpp">tensor_view.cpp</innerfile>
+    <innerfile refid="descriptor_2tensor__view_8hpp">tensor_view.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/"/>
+  </compounddef>
+</doxygen>

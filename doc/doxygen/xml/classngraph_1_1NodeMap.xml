@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1NodeMap" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::NodeMap</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1NodeMap_1a11c4c89b2180a280ea67665d6246cecf" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;, std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt; &gt;</type>
+        <definition>std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;, std::shared_ptr&lt;ngraph::Node&gt; &gt; ngraph::NodeMap::m_node_map</definition>
+        <argsstring></argsstring>
+        <name>m_node_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="89" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1NodeMap_1a5c54aff38749d02e3afaabf91decbfac" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::NodeMap::add</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Node &gt; orig, std::shared_ptr&lt; ngraph::Node &gt; replacement)</argsstring>
+        <name>add</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>orig</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>replacement</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="191" bodyend="199"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1NodeMap_1a7b824ddd8169296b925e6c5bcfd2c373" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt; ngraph::Node &gt; ngraph::NodeMap::get</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Node &gt; orig) const</argsstring>
+        <name>get</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>orig</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="201" bodyend="208"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1NodeMap_1ac5b510f6de6fff9facda982abee7bbdc" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::NodeMap::exists</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Node &gt; orig) const</argsstring>
+        <name>exists</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>orig</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" bodystart="72" bodyend="75"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1NodeMap_1aabd72d3de6ecc881ad655fb6e8922694" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::unordered_map&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;, std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt; &gt; &amp;</type>
+        <definition>const std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;, std::shared_ptr&lt;ngraph::Node&gt; &gt;&amp; ngraph::NodeMap::get_node_map</definition>
+        <argsstring>() const</argsstring>
+        <name>get_node_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="78" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" bodystart="78" bodyend="81"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1NodeMap_1af57b90c2daf646efe281e173c19e0d71" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::unordered_map&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;, std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt; &gt; &amp;</type>
+        <definition>std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;, std::shared_ptr&lt;ngraph::Node&gt; &gt;&amp; ngraph::NodeMap::get_node_map</definition>
+        <argsstring>()</argsstring>
+        <name>get_node_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="83" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" bodystart="83" bodyend="86"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="61" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" bodystart="60" bodyend="90"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1NodeMap_1a5c54aff38749d02e3afaabf91decbfac" prot="public" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>add</name></member>
+      <member refid="classngraph_1_1NodeMap_1ac5b510f6de6fff9facda982abee7bbdc" prot="public" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>exists</name></member>
+      <member refid="classngraph_1_1NodeMap_1a7b824ddd8169296b925e6c5bcfd2c373" prot="public" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>get</name></member>
+      <member refid="classngraph_1_1NodeMap_1aabd72d3de6ecc881ad655fb6e8922694" prot="public" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>get_node_map</name></member>
+      <member refid="classngraph_1_1NodeMap_1af57b90c2daf646efe281e173c19e0d71" prot="public" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>get_node_map</name></member>
+      <member refid="classngraph_1_1NodeMap_1a11c4c89b2180a280ea67665d6246cecf" prot="private" virt="non-virtual"><scope>ngraph::NodeMap</scope><name>m_node_map</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

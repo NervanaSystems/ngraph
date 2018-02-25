@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1Manager" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>ngraph::runtime::Manager</compoundname>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Manager" prot="public" virt="non-virtual">ngraph::runtime::cpu::CPU_Manager</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Manager" prot="public" virt="non-virtual">ngraph::runtime::gpu::GPU_Manager</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager" prot="public" virt="non-virtual">ngraph::runtime::interpreter::INT_Manager</derivedcompoundref>
+    <includes refid="runtime_2manager_8hpp" local="no">manager.hpp</includes>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classngraph_1_1runtime_1_1Manager_1ae0a72c6e0faedd7020f34c0c5d1997c4" prot="public" static="no">
+        <type>std::function&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1Manager" kindref="compound">Manager</ref> &gt;(const std::string &amp;)&gt;</type>
+        <definition>using ngraph::runtime::Manager::Factory =  std::function&lt;std::shared_ptr&lt;Manager&gt;(const std::string&amp;)&gt;</definition>
+        <argsstring></argsstring>
+        <name>Factory</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="51" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="classngraph_1_1runtime_1_1Manager_1a6e719a07e84b2935bb12b1fa392eaa2c" prot="private" static="no">
+        <type>std::map&lt; std::string, Factory &gt;</type>
+        <definition>using ngraph::runtime::Manager::FactoryMap =  std::map&lt;std::string, Factory&gt;</definition>
+        <argsstring></argsstring>
+        <name>FactoryMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_1a512f1ab87ecb6122703dd1a2e8e185ed" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual ngraph::runtime::Manager::~Manager</definition>
+        <argsstring>()</argsstring>
+        <name>~Manager</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" bodystart="41" bodyend="41"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_a2f9cbafb77478482bb8d9f8fdc2971d7_1a2f9cbafb77478482bb8d9f8fdc2971d7" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1Backend" kindref="compound">Backend</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;Backend&gt; ngraph::runtime::Manager::allocate_backend</definition>
+        <argsstring>()=0</argsstring>
+        <name>allocate_backend</name>
+        <reimplementedby refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Manager_ad2ea48a1e94169a50adaa158610e2176_1ad2ea48a1e94169a50adaa158610e2176">allocate_backend</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_a14521213dee56502e144f961b2e187b7_1a14521213dee56502e144f961b2e187b7">allocate_backend</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Manager_a55905c0e575fd08434c4101360efa0de_1a55905c0e575fd08434c4101360efa0de">allocate_backend</reimplementedby>
+        <briefdescription>
+<para>Allocate a backend for this transformer. </para>        </briefdescription>
+        <detaileddescription>
+<para>Specific transformers may provide addtional methods for allocating customized backends. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="45" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_1a523ec9dba1d6a0ecccf7935c161ef45e" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1ExternalFunction" kindref="compound">ExternalFunction</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;ExternalFunction&gt; ngraph::runtime::Manager::compile</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Function &gt; &amp;fun)=0</argsstring>
+        <name>compile</name>
+        <reimplementedby refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Manager_1a6858701e5ce4241c567e7150a9e30eec">compile</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_1a91581d4dbe86f49ed2656726aa7fff66">compile</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Manager_1ae9e7a56cc840ba259839b775c2d911ae">compile</reimplementedby>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt; &amp;</type>
+          <declname>fun</declname>
+        </param>
+        <briefdescription>
+<para>Convert a function to a form that can be run on a backend. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="49" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_1af0941afa18edb4141ae9a14f7fba79e7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1Manager" kindref="compound">Manager</ref> &gt;</type>
+        <definition>shared_ptr&lt; runtime::Manager &gt; runtime::Manager::get</definition>
+        <argsstring>(const std::string &amp;name)</argsstring>
+        <name>get</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.cpp" bodystart="44" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_1af29b39fa63884584bff4f123e092cf3d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>Factory</type>
+        <definition>runtime::Manager::Factory runtime::Manager::register_factory</definition>
+        <argsstring>(const std::string &amp;name, Factory factory)</argsstring>
+        <name>register_factory</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>Factory</type>
+          <declname>factory</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.cpp" bodystart="57" bodyend="61"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Manager_1a9554e9c6cec2f7be52fb19ef99893541" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>FactoryMap &amp;</type>
+        <definition>runtime::Manager::FactoryMap &amp; runtime::Manager::get_factory_map</definition>
+        <argsstring>()</argsstring>
+        <name>get_factory_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="60" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.cpp" bodystart="37" bodyend="42"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Interface to a generic manager. </para>    </briefdescription>
+    <detaileddescription>
+<para>A manager provides access to compilation for a backend, and a means to obtain a backed for execution and allocation. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3492">
+        <label>ngraph::runtime::gpu::GPU_Manager</label>
+        <link refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Manager"/>
+        <childnode refid="3490" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3491">
+        <label>ngraph::runtime::cpu::CPU_Manager</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Manager"/>
+        <childnode refid="3490" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3493">
+        <label>ngraph::runtime::interpreter::INT_Manager</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager"/>
+        <childnode refid="3490" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3490">
+        <label>ngraph::runtime::Manager</label>
+        <link refid="classngraph_1_1runtime_1_1Manager"/>
+      </node>
+    </inheritancegraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/manager.hpp" bodystart="38" bodyend="61"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1Manager_a2f9cbafb77478482bb8d9f8fdc2971d7_1a2f9cbafb77478482bb8d9f8fdc2971d7" prot="public" virt="pure-virtual"><scope>ngraph::runtime::Manager</scope><name>allocate_backend</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1a523ec9dba1d6a0ecccf7935c161ef45e" prot="public" virt="pure-virtual"><scope>ngraph::runtime::Manager</scope><name>compile</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1ae0a72c6e0faedd7020f34c0c5d1997c4" prot="public" virt="non-virtual"><scope>ngraph::runtime::Manager</scope><name>Factory</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1a6e719a07e84b2935bb12b1fa392eaa2c" prot="private" virt="non-virtual"><scope>ngraph::runtime::Manager</scope><name>FactoryMap</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1af0941afa18edb4141ae9a14f7fba79e7" prot="public" virt="non-virtual"><scope>ngraph::runtime::Manager</scope><name>get</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1a9554e9c6cec2f7be52fb19ef99893541" prot="private" virt="non-virtual"><scope>ngraph::runtime::Manager</scope><name>get_factory_map</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1af29b39fa63884584bff4f123e092cf3d" prot="public" virt="non-virtual"><scope>ngraph::runtime::Manager</scope><name>register_factory</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1a512f1ab87ecb6122703dd1a2e8e185ed" prot="public" virt="virtual"><scope>ngraph::runtime::Manager</scope><name>~Manager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

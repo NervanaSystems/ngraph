@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1descriptor_1_1layout" kind="namespace" language="C++">
+    <compoundname>ngraph::descriptor::layout</compoundname>
+    <innerclass refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" prot="public">ngraph::descriptor::layout::DenseTensorViewLayout</innerclass>
+    <innerclass refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout" prot="public">ngraph::descriptor::layout::TensorViewLayout</innerclass>
+    <briefdescription>
+<para>Layout descriptors describe how tensor views are implemented. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.hpp" line="31" column="1"/>
+  </compounddef>
+</doxygen>

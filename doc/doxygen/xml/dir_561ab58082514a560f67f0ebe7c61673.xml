@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_561ab58082514a560f67f0ebe7c61673" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu</compoundname>
+    <innerdir refid="dir_51a6737464559da9f85bae29541138bd">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops</innerdir>
+    <innerdir refid="dir_f650d1bd6c6198b4cad000b7db6ab69b">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass</innerdir>
+    <innerfile refid="cpu__backend_8cpp">cpu_backend.cpp</innerfile>
+    <innerfile refid="cpu__backend_8hpp">cpu_backend.hpp</innerfile>
+    <innerfile refid="cpu__call__frame_8cpp">cpu_call_frame.cpp</innerfile>
+    <innerfile refid="cpu__call__frame_8hpp">cpu_call_frame.hpp</innerfile>
+    <innerfile refid="cpu__eigen__utils_8hpp">cpu_eigen_utils.hpp</innerfile>
+    <innerfile refid="cpu__emitter_8cpp">cpu_emitter.cpp</innerfile>
+    <innerfile refid="cpu__emitter_8hpp">cpu_emitter.hpp</innerfile>
+    <innerfile refid="cpu__external__function_8cpp">cpu_external_function.cpp</innerfile>
+    <innerfile refid="cpu__external__function_8hpp">cpu_external_function.hpp</innerfile>
+    <innerfile refid="cpu__kernel__emitters_8cpp">cpu_kernel_emitters.cpp</innerfile>
+    <innerfile refid="cpu__kernel__emitters_8hpp">cpu_kernel_emitters.hpp</innerfile>
+    <innerfile refid="cpu__kernel__utils_8cpp">cpu_kernel_utils.cpp</innerfile>
+    <innerfile refid="cpu__kernel__utils_8hpp">cpu_kernel_utils.hpp</innerfile>
+    <innerfile refid="cpu__kernels_8cpp">cpu_kernels.cpp</innerfile>
+    <innerfile refid="cpu__kernels_8hpp">cpu_kernels.hpp</innerfile>
+    <innerfile refid="cpu__layout__descriptor_8cpp">cpu_layout_descriptor.cpp</innerfile>
+    <innerfile refid="cpu__layout__descriptor_8hpp">cpu_layout_descriptor.hpp</innerfile>
+    <innerfile refid="cpu__manager_8cpp">cpu_manager.cpp</innerfile>
+    <innerfile refid="cpu__manager_8hpp">cpu_manager.hpp</innerfile>
+    <innerfile refid="cpu__op__annotations_8hpp">cpu_op_annotations.hpp</innerfile>
+    <innerfile refid="cpu__runtime__context_8hpp">cpu_runtime_context.hpp</innerfile>
+    <innerfile refid="cpu__tensor__view_8cpp">cpu_tensor_view.cpp</innerfile>
+    <innerfile refid="cpu__tensor__view_8hpp">cpu_tensor_view.hpp</innerfile>
+    <innerfile refid="cpu__tensor__view__wrapper_8cpp">cpu_tensor_view_wrapper.cpp</innerfile>
+    <innerfile refid="cpu__tensor__view__wrapper_8hpp">cpu_tensor_view_wrapper.hpp</innerfile>
+    <innerfile refid="cpu__tracing_8cpp">cpu_tracing.cpp</innerfile>
+    <innerfile refid="cpu__tracing_8hpp">cpu_tracing.hpp</innerfile>
+    <innerfile refid="mkldnn__emitter_8cpp">mkldnn_emitter.cpp</innerfile>
+    <innerfile refid="mkldnn__emitter_8hpp">mkldnn_emitter.hpp</innerfile>
+    <innerfile refid="mkldnn__invoke_8cpp">mkldnn_invoke.cpp</innerfile>
+    <innerfile refid="mkldnn__invoke_8hpp">mkldnn_invoke.hpp</innerfile>
+    <innerfile refid="mkldnn__utils_8cpp">mkldnn_utils.cpp</innerfile>
+    <innerfile refid="mkldnn__utils_8hpp">mkldnn_utils.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/"/>
+  </compounddef>
+</doxygen>

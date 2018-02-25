@@ -1,0 +1,682 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="cpu__emitter_8hpp" kind="file" language="C++">
+    <compoundname>cpu_emitter.hpp</compoundname>
+    <includes local="no">string</includes>
+    <includes local="no">vector</includes>
+    <includes refid="code__writer_8hpp" local="yes">ngraph/codegen/code_writer.hpp</includes>
+    <includes refid="node_8hpp" local="yes">ngraph/node.hpp</includes>
+    <includes refid="cpu__external__function_8hpp" local="yes">ngraph/runtime/cpu/cpu_external_function.hpp</includes>
+    <includes refid="cpu__tensor__view__wrapper_8hpp" local="yes">ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp</includes>
+    <includedby refid="cpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</includedby>
+    <includedby refid="cpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</includedby>
+    <incdepgraph>
+      <node id="12229">
+        <label>list</label>
+      </node>
+      <node id="12244">
+        <label>ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="12245" relation="include">
+        </childnode>
+        <childnode refid="12246" relation="include">
+        </childnode>
+      </node>
+      <node id="12201">
+        <label>atomic</label>
+      </node>
+      <node id="12248">
+        <label>ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp</label>
+        <link refid="cpu__tensor__view__wrapper_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12221" relation="include">
+        </childnode>
+        <childnode refid="12216" relation="include">
+        </childnode>
+      </node>
+      <node id="12225">
+        <label>ngraph/codegen/compiler.hpp</label>
+        <link refid="compiler_8hpp_source"/>
+        <childnode refid="12223" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+      </node>
+      <node id="12223">
+        <label>functional</label>
+      </node>
+      <node id="12250">
+        <label>ngraph/runtime/external_function.hpp</label>
+        <link refid="external__function_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12205" relation="include">
+        </childnode>
+        <childnode refid="12224" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12227" relation="include">
+        </childnode>
+      </node>
+      <node id="12212">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="12202" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12240">
+        <label>cstdint</label>
+      </node>
+      <node id="12213">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12214" relation="include">
+        </childnode>
+        <childnode refid="12216" relation="include">
+        </childnode>
+      </node>
+      <node id="12220">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12204" relation="include">
+        </childnode>
+        <childnode refid="12211" relation="include">
+        </childnode>
+        <childnode refid="12221" relation="include">
+        </childnode>
+      </node>
+      <node id="12200">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="12201" relation="include">
+        </childnode>
+        <childnode refid="12198" relation="include">
+        </childnode>
+        <childnode refid="12202" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12204" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12205" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12207" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12208" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+        <childnode refid="12211" relation="include">
+        </childnode>
+        <childnode refid="12220" relation="include">
+        </childnode>
+        <childnode refid="12212" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12233">
+        <label>ngraph/runtime/cpu/cpu_call_frame.hpp</label>
+        <link refid="cpu__call__frame_8hpp_source"/>
+        <childnode refid="12223" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12227" relation="include">
+        </childnode>
+        <childnode refid="12234" relation="include">
+        </childnode>
+        <childnode refid="12239" relation="include">
+        </childnode>
+        <childnode refid="12247" relation="include">
+        </childnode>
+        <childnode refid="12235" relation="include">
+        </childnode>
+      </node>
+      <node id="12245">
+        <label>cassert</label>
+      </node>
+      <node id="12197">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="12198" relation="include">
+        </childnode>
+        <childnode refid="12196" relation="include">
+        </childnode>
+        <childnode refid="12199" relation="include">
+        </childnode>
+      </node>
+      <node id="12199">
+        <label>stdexcept</label>
+      </node>
+      <node id="12193">
+        <label>string</label>
+      </node>
+      <node id="12249">
+        <label>ngraph/runtime/cpu/mkldnn_emitter.hpp</label>
+        <link refid="mkldnn__emitter_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12241" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+      </node>
+      <node id="12217">
+        <label>map</label>
+      </node>
+      <node id="12247">
+        <label>ngraph/runtime/cpu/cpu_runtime_context.hpp</label>
+        <link refid="cpu__runtime__context_8hpp_source"/>
+        <childnode refid="12238" relation="include">
+        </childnode>
+        <childnode refid="12240" relation="include">
+        </childnode>
+      </node>
+      <node id="12207">
+        <label>unordered_set</label>
+      </node>
+      <node id="12246">
+        <label>ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp_source"/>
+      </node>
+      <node id="12222">
+        <label>ngraph/runtime/cpu/cpu_external_function.hpp</label>
+        <link refid="cpu__external__function_8hpp_source"/>
+        <childnode refid="12223" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12205" relation="include">
+        </childnode>
+        <childnode refid="12224" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12195" relation="include">
+        </childnode>
+        <childnode refid="12225" relation="include">
+        </childnode>
+        <childnode refid="12226" relation="include">
+        </childnode>
+        <childnode refid="12227" relation="include">
+        </childnode>
+        <childnode refid="12233" relation="include">
+        </childnode>
+        <childnode refid="12239" relation="include">
+        </childnode>
+        <childnode refid="12248" relation="include">
+        </childnode>
+        <childnode refid="12249" relation="include">
+        </childnode>
+        <childnode refid="12250" relation="include">
+        </childnode>
+      </node>
+      <node id="12241">
+        <label>mkldnn.hpp</label>
+      </node>
+      <node id="12195">
+        <label>ngraph/codegen/code_writer.hpp</label>
+        <link refid="code__writer_8hpp_source"/>
+        <childnode refid="12196" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12197" relation="include">
+        </childnode>
+      </node>
+      <node id="12216">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="12217" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12196" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12218" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+        <childnode refid="12219" relation="include">
+        </childnode>
+        <childnode refid="12197" relation="include">
+        </childnode>
+      </node>
+      <node id="12209">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12204" relation="include">
+        </childnode>
+        <childnode refid="12210" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+      </node>
+      <node id="12211">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12212" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12214">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="12215" relation="include">
+        </childnode>
+        <childnode refid="12202" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+      </node>
+      <node id="12208">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+      </node>
+      <node id="12232">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="12230" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12230">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+        <childnode refid="12200" relation="include">
+        </childnode>
+        <childnode refid="12231" relation="include">
+        </childnode>
+      </node>
+      <node id="12224">
+        <label>typeinfo</label>
+      </node>
+      <node id="12215">
+        <label>cstdio</label>
+      </node>
+      <node id="12243">
+        <label>tuple</label>
+      </node>
+      <node id="12234">
+        <label>ngraph/runtime/call_frame.hpp</label>
+        <link refid="call__frame_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12227" relation="include">
+        </childnode>
+        <childnode refid="12235" relation="include">
+        </childnode>
+      </node>
+      <node id="12194">
+        <label>vector</label>
+      </node>
+      <node id="12210">
+        <label>utility</label>
+      </node>
+      <node id="12196">
+        <label>sstream</label>
+      </node>
+      <node id="12242">
+        <label>ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12243" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12244" relation="include">
+        </childnode>
+        <childnode refid="12221" relation="include">
+        </childnode>
+      </node>
+      <node id="12227">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="12201" relation="include">
+        </childnode>
+        <childnode refid="12228" relation="include">
+        </childnode>
+        <childnode refid="12229" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12220" relation="include">
+        </childnode>
+        <childnode refid="12221" relation="include">
+        </childnode>
+        <childnode refid="12197" relation="include">
+        </childnode>
+        <childnode refid="12200" relation="include">
+        </childnode>
+        <childnode refid="12230" relation="include">
+        </childnode>
+        <childnode refid="12232" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12202">
+        <label>iostream</label>
+      </node>
+      <node id="12231">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="12198">
+        <label>deque</label>
+      </node>
+      <node id="12206">
+        <label>unordered_map</label>
+      </node>
+      <node id="12238">
+        <label>chrono</label>
+      </node>
+      <node id="12192">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp</label>
+        <link refid="cpu__emitter_8hpp"/>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12195" relation="include">
+        </childnode>
+        <childnode refid="12200" relation="include">
+        </childnode>
+        <childnode refid="12222" relation="include">
+        </childnode>
+        <childnode refid="12248" relation="include">
+        </childnode>
+      </node>
+      <node id="12219">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="12199" relation="include">
+        </childnode>
+      </node>
+      <node id="12218">
+        <label>type_traits</label>
+      </node>
+      <node id="12204">
+        <label>set</label>
+      </node>
+      <node id="12221">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12214" relation="include">
+        </childnode>
+      </node>
+      <node id="12237">
+        <label>algorithm</label>
+      </node>
+      <node id="12226">
+        <label>ngraph/codegen/execution_engine.hpp</label>
+        <link refid="execution__engine_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12225" relation="include">
+        </childnode>
+      </node>
+      <node id="12236">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="12237" relation="include">
+        </childnode>
+        <childnode refid="12238" relation="include">
+        </childnode>
+        <childnode refid="12198" relation="include">
+        </childnode>
+        <childnode refid="12223" relation="include">
+        </childnode>
+        <childnode refid="12202" relation="include">
+        </childnode>
+        <childnode refid="12229" relation="include">
+        </childnode>
+        <childnode refid="12217" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12196" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12206" relation="include">
+        </childnode>
+        <childnode refid="12207" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+      </node>
+      <node id="12235">
+        <label>ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp_source"/>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12221" relation="include">
+        </childnode>
+        <childnode refid="12214" relation="include">
+        </childnode>
+        <childnode refid="12216" relation="include">
+        </childnode>
+        <childnode refid="12236" relation="include">
+        </childnode>
+      </node>
+      <node id="12239">
+        <label>ngraph/runtime/cpu/cpu_layout_descriptor.hpp</label>
+        <link refid="cpu__layout__descriptor_8hpp_source"/>
+        <childnode refid="12240" relation="include">
+        </childnode>
+        <childnode refid="12203" relation="include">
+        </childnode>
+        <childnode refid="12193" relation="include">
+        </childnode>
+        <childnode refid="12194" relation="include">
+        </childnode>
+        <childnode refid="12241" relation="include">
+        </childnode>
+        <childnode refid="12209" relation="include">
+        </childnode>
+        <childnode refid="12242" relation="include">
+        </childnode>
+        <childnode refid="12214" relation="include">
+        </childnode>
+        <childnode refid="12213" relation="include">
+        </childnode>
+      </node>
+      <node id="12203">
+        <label>memory</label>
+      </node>
+      <node id="12228">
+        <label>initializer_list</label>
+      </node>
+      <node id="12205">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="12252">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="12253">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="12251">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp</label>
+        <link refid="cpu__emitter_8hpp"/>
+        <childnode refid="12252" relation="include">
+        </childnode>
+        <childnode refid="12253" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter" prot="public">ngraph::runtime::cpu::CPU_Emitter</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu">ngraph::runtime::cpu</innernamespace>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="cpu__emitter_8hpp_1a4e75925505cd09ddeef4019df1ea03eb" prot="public" static="no">
+        <name>EMITTER_DECL</name>
+        <param><defname>op_name</defname></param>
+        <initializer>emit&lt;op_name&gt;(CPU_ExternalFunction * external_function,                                        \
+                  codegen::CodeWriter &amp; writer,                                                    \
+                  const <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref>* node,                                                        \
+                  const std::vector&lt;TensorViewWrapper&gt;&amp; args,                                      \
+                  const std::vector&lt;TensorViewWrapper&gt;&amp; out)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="27" column="9" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/codegen/code_writer.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/node.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/cpu/cpu_external_function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EMITTER_DECL(op_name)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="28"><highlight class="preprocessor"><sp/><sp/><sp/><sp/>emit&lt;op_name&gt;(CPU_ExternalFunction<sp/>*<sp/>external_function,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="29"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>codegen::CodeWriter<sp/>&amp;<sp/>writer,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="30"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>ngraph::Node*<sp/>node,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="31"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>args,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="32"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>out)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">runtime</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">cpu</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="40" refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter" kindref="compound">CPU_Emitter</ref></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keyword">typename</highlight><highlight class="normal"><sp/>OP&gt;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>emit(<ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref>*<sp/>external_function,</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref>&amp;<sp/>writer,</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref>*<sp/>node,</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>args,</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>out)</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>std::runtime_error(</highlight><highlight class="stringliteral">&quot;Unimplemented<sp/>op<sp/>in<sp/>CPU<sp/>emitter&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>nop(<ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref>*<sp/>external_function,</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref>&amp;<sp/>writer,</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref>*<sp/>node,</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>args,</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;TensorViewWrapper&gt;&amp;<sp/>out)</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>emit_mkldnn_preamble(<ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref>&amp;<sp/>writer);</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>std::string<sp/>emit_vector(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref>&amp;,</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>name<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>std::string<sp/>emit_array1d(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref>&amp;,</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>name<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>std::string<sp/>emit_matrix(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref>&amp;,</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>name<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="73"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp"/>
+  </compounddef>
+</doxygen>

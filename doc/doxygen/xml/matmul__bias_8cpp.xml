@@ -1,0 +1,387 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="matmul__bias_8cpp" kind="file" language="C++">
+    <compoundname>matmul_bias.cpp</compoundname>
+    <includes refid="matmul__bias_8hpp" local="yes">matmul_bias.hpp</includes>
+    <incdepgraph>
+      <node id="13386">
+        <label>list</label>
+      </node>
+      <node id="13352">
+        <label>atomic</label>
+      </node>
+      <node id="13385">
+        <label>functional</label>
+      </node>
+      <node id="13366">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="13354" relation="include">
+        </childnode>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+        <childnode refid="13367" relation="include">
+        </childnode>
+      </node>
+      <node id="13367">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+        <childnode refid="13368" relation="include">
+        </childnode>
+        <childnode refid="13370" relation="include">
+        </childnode>
+      </node>
+      <node id="13377">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13356" relation="include">
+        </childnode>
+        <childnode refid="13365" relation="include">
+        </childnode>
+        <childnode refid="13378" relation="include">
+        </childnode>
+      </node>
+      <node id="13351">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="13352" relation="include">
+        </childnode>
+        <childnode refid="13353" relation="include">
+        </childnode>
+        <childnode refid="13354" relation="include">
+        </childnode>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13356" relation="include">
+        </childnode>
+        <childnode refid="13357" relation="include">
+        </childnode>
+        <childnode refid="13358" relation="include">
+        </childnode>
+        <childnode refid="13359" relation="include">
+        </childnode>
+        <childnode refid="13360" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+        <childnode refid="13362" relation="include">
+        </childnode>
+        <childnode refid="13363" relation="include">
+        </childnode>
+        <childnode refid="13365" relation="include">
+        </childnode>
+        <childnode refid="13377" relation="include">
+        </childnode>
+        <childnode refid="13366" relation="include">
+        </childnode>
+        <childnode refid="13367" relation="include">
+        </childnode>
+      </node>
+      <node id="13376">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="13353" relation="include">
+        </childnode>
+        <childnode refid="13372" relation="include">
+        </childnode>
+        <childnode refid="13375" relation="include">
+        </childnode>
+      </node>
+      <node id="13375">
+        <label>stdexcept</label>
+      </node>
+      <node id="13379">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="13363" relation="include">
+        </childnode>
+        <childnode refid="13380" relation="include">
+        </childnode>
+      </node>
+      <node id="13357">
+        <label>string</label>
+      </node>
+      <node id="13371">
+        <label>map</label>
+      </node>
+      <node id="13360">
+        <label>unordered_set</label>
+      </node>
+      <node id="13370">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="13371" relation="include">
+        </childnode>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13372" relation="include">
+        </childnode>
+        <childnode refid="13357" relation="include">
+        </childnode>
+        <childnode refid="13373" relation="include">
+        </childnode>
+        <childnode refid="13363" relation="include">
+        </childnode>
+        <childnode refid="13374" relation="include">
+        </childnode>
+        <childnode refid="13376" relation="include">
+        </childnode>
+      </node>
+      <node id="13363">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13356" relation="include">
+        </childnode>
+        <childnode refid="13364" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+      </node>
+      <node id="13365">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13366" relation="include">
+        </childnode>
+        <childnode refid="13367" relation="include">
+        </childnode>
+      </node>
+      <node id="13368">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="13369" relation="include">
+        </childnode>
+        <childnode refid="13354" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+        <childnode refid="13363" relation="include">
+        </childnode>
+      </node>
+      <node id="13362">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13359" relation="include">
+        </childnode>
+        <childnode refid="13363" relation="include">
+        </childnode>
+      </node>
+      <node id="13380">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="13357" relation="include">
+        </childnode>
+        <childnode refid="13363" relation="include">
+        </childnode>
+        <childnode refid="13351" relation="include">
+        </childnode>
+        <childnode refid="13381" relation="include">
+        </childnode>
+      </node>
+      <node id="13369">
+        <label>cstdio</label>
+      </node>
+      <node id="13361">
+        <label>vector</label>
+      </node>
+      <node id="13350">
+        <label>matmul_bias.hpp</label>
+        <link refid="matmul__bias_8hpp_source"/>
+        <childnode refid="13351" relation="include">
+        </childnode>
+        <childnode refid="13379" relation="include">
+        </childnode>
+        <childnode refid="13382" relation="include">
+        </childnode>
+        <childnode refid="13355" relation="include">
+        </childnode>
+      </node>
+      <node id="13364">
+        <label>utility</label>
+      </node>
+      <node id="13372">
+        <label>sstream</label>
+      </node>
+      <node id="13354">
+        <label>iostream</label>
+      </node>
+      <node id="13381">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="13353">
+        <label>deque</label>
+      </node>
+      <node id="13359">
+        <label>unordered_map</label>
+      </node>
+      <node id="13384">
+        <label>chrono</label>
+      </node>
+      <node id="13374">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="13375" relation="include">
+        </childnode>
+      </node>
+      <node id="13349">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops/matmul_bias.cpp</label>
+        <link refid="matmul__bias_8cpp"/>
+        <childnode refid="13350" relation="include">
+        </childnode>
+      </node>
+      <node id="13373">
+        <label>type_traits</label>
+      </node>
+      <node id="13356">
+        <label>set</label>
+      </node>
+      <node id="13378">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13368" relation="include">
+        </childnode>
+      </node>
+      <node id="13383">
+        <label>algorithm</label>
+      </node>
+      <node id="13382">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="13383" relation="include">
+        </childnode>
+        <childnode refid="13384" relation="include">
+        </childnode>
+        <childnode refid="13353" relation="include">
+        </childnode>
+        <childnode refid="13385" relation="include">
+        </childnode>
+        <childnode refid="13354" relation="include">
+        </childnode>
+        <childnode refid="13386" relation="include">
+        </childnode>
+        <childnode refid="13371" relation="include">
+        </childnode>
+        <childnode refid="13355" relation="include">
+        </childnode>
+        <childnode refid="13372" relation="include">
+        </childnode>
+        <childnode refid="13357" relation="include">
+        </childnode>
+        <childnode refid="13359" relation="include">
+        </childnode>
+        <childnode refid="13360" relation="include">
+        </childnode>
+        <childnode refid="13361" relation="include">
+        </childnode>
+      </node>
+      <node id="13355">
+        <label>memory</label>
+      </node>
+      <node id="13358">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;matmul_bias.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal">std::shared_ptr&lt;ngraph::Node&gt;<sp/>ngraph::op::MatmulBias::copy_with_new_args(</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;ngraph::Node&gt;&gt;&amp;<sp/>new_args)</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="21"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(new_args.size()<sp/>!=<sp/>2)</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>ngraph_error(</highlight><highlight class="stringliteral">&quot;Incorrect<sp/>number<sp/>of<sp/>new<sp/>arguments&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::make_shared&lt;MatmulBias&gt;(new_args.at(0),</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>new_args.at(1),</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>new_args.at(1),</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_shape_w,</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_shape_x,</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_transpose_w,</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_transpose_x);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">ngraph::op::MatmulBias::MatmulBias(std::shared_ptr&lt;ngraph::Node&gt;<sp/>W,</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Node&gt;<sp/>x,</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Node&gt;<sp/>b,</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>shape_w,</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>shape_x,</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>transpose_w,</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>transpose_x)</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>RequiresTensorViewArgs(</highlight><highlight class="stringliteral">&quot;MatMulBias&quot;</highlight><highlight class="normal">,<sp/>{W,<sp/>x,<sp/>b})</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_shape_w(shape_w)</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_shape_x(shape_x)</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_transpose_w(transpose_w)</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_transpose_x(transpose_x)</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(shape_w.size()<sp/>!=<sp/>2)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;W<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(shape_w);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>ngraph_error(</highlight><highlight class="stringliteral">&quot;W.shape.rank<sp/>!=<sp/>2<sp/>while<sp/>creating<sp/>MatmulBias&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(shape_x.size()<sp/>!=<sp/>2)</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;x<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(shape_x);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>ngraph_error(</highlight><highlight class="stringliteral">&quot;x.shape.rank<sp/>!=<sp/>2<sp/>while<sp/>creating<sp/>MatmulBias&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>dot_dimension_w<sp/>=<sp/>(transpose_w)<sp/>?<sp/>0<sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>dot_dimension_x<sp/>=<sp/>(transpose_x)<sp/>?<sp/>1<sp/>:<sp/>0;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;dot_dimension_w<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>dot_dimension_w</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>dot_dimension_x<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>dot_dimension_x;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;W<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(shape_w)</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>x<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(shape_x);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(shape_w.at(dot_dimension_w)<sp/>!=<sp/>shape_x.at(dot_dimension_x))</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>ngraph_error(</highlight><highlight class="stringliteral">&quot;product<sp/>dimensions<sp/>are<sp/>not<sp/>equal<sp/>while<sp/>creating<sp/>MatmulBias&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>dot_shape{shape_w.at(1<sp/>-<sp/>dot_dimension_w),<sp/>shape_x.at(1<sp/>-<sp/>dot_dimension_x)};</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;dot_shape<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(dot_shape)</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>b<sp/>shape<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vector_to_string(b-&gt;get_shape());</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/>add_output(W-&gt;get_element_type(),<sp/>dot_shape);</highlight></codeline>
+<codeline lineno="79"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops/matmul_bias.cpp"/>
+  </compounddef>
+</doxygen>

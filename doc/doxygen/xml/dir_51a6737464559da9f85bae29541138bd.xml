@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_51a6737464559da9f85bae29541138bd" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops</compoundname>
+    <innerfile refid="convert__layout_8cpp">convert_layout.cpp</innerfile>
+    <innerfile refid="convert__layout_8hpp">convert_layout.hpp</innerfile>
+    <innerfile refid="matmul__bias_8cpp">matmul_bias.cpp</innerfile>
+    <innerfile refid="matmul__bias_8hpp">matmul_bias.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops/"/>
+  </compounddef>
+</doxygen>

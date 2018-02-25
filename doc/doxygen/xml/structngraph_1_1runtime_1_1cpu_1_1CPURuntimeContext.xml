@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext" kind="struct" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::CPURuntimeContext</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext_1a87d106ad0c31dc8bed7143b639498fbc" prot="public" static="no" mutable="no">
+        <type>int64_t *</type>
+        <definition>int64_t* ngraph::runtime::cpu::CPURuntimeContext::op_durations</definition>
+        <argsstring></argsstring>
+        <name>op_durations</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext_1ae2e5ec67f5d087ae2889e1db5dec2fc5" prot="public" static="no" mutable="no">
+        <type>mkldnn::primitive *const  *</type>
+        <definition>mkldnn::primitive* const* ngraph::runtime::cpu::CPURuntimeContext::mkldnn_primitives</definition>
+        <argsstring></argsstring>
+        <name>mkldnn_primitives</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="36" bodyend="40"/>
+    <listofallmembers>
+      <member refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext_1ae2e5ec67f5d087ae2889e1db5dec2fc5" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPURuntimeContext</scope><name>mkldnn_primitives</name></member>
+      <member refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext_1a87d106ad0c31dc8bed7143b639498fbc" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPURuntimeContext</scope><name>op_durations</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

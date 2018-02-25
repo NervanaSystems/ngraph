@@ -1,0 +1,536 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1op_1_1Concat" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::op::Concat</compoundname>
+    <basecompoundref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" prot="public" virt="non-virtual">ngraph::op::util::RequiresTensorViewArgs</basecompoundref>
+    <basecompoundref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" prot="public" virt="non-virtual">ngraph::op::util::RequiresTensorViewArgs</basecompoundref>
+    <includes refid="ops_2concat_8hpp" local="no">concat.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1op_1_1Concat_1a63f8913694319ecb888158d39824c65a" prot="protected" static="no" mutable="no">
+        <type>const size_t</type>
+        <definition>const size_t ngraph::op::Concat::m_concatenation_axis</definition>
+        <argsstring></argsstring>
+        <name>m_concatenation_axis</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_a935f75440cf8d26c0bb70e4bfae27511_1a935f75440cf8d26c0bb70e4bfae27511" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>op::Concat::Concat</definition>
+        <argsstring>(const Nodes &amp;args, size_t concatenation_axis)</argsstring>
+        <name>Concat</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref> &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>concatenation_axis</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a concatenation operation. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>args</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The nodes producing the input tensors. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>concatenation_axis</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The axis along which to concatenate the input tensors. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.cpp" bodystart="26" bodyend="76"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_1a9af5b92712fe031f221094b9830999da" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;Node&gt; ngraph::op::Concat::copy_with_new_args</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;new_args) const override</argsstring>
+        <name>copy_with_new_args</name>
+        <reimplements refid="classngraph_1_1Node_1a0c3c1afcdb7effe100c653b86a2eb56e">copy_with_new_args</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>new_args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" bodystart="37" bodyend="41"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_a5302407bf33df335713fc70b2d98ed57_1a5302407bf33df335713fc70b2d98ed57" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::op::Concat::get_concatenation_axis</definition>
+        <argsstring>() const</argsstring>
+        <name>get_concatenation_axis</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The concatenation axis. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" bodystart="44" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_a3f1b8726c24d282624762797994e8e74_1a3f1b8726c24d282624762797994e8e74" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::op::Concat::Concat</definition>
+        <argsstring>(const Nodes &amp;args, size_t concatenation_axis)</argsstring>
+        <name>Concat</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref> &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>concatenation_axis</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a concatenation operation. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>args</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The nodes producing the input tensors. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>concatenation_axis</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The axis along which to concatenate the input tensors. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" line="35" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_1a9af5b92712fe031f221094b9830999da" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;Node&gt; ngraph::op::Concat::copy_with_new_args</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;new_args) const override</argsstring>
+        <name>copy_with_new_args</name>
+        <reimplements refid="classngraph_1_1Node_1a0c3c1afcdb7effe100c653b86a2eb56e">copy_with_new_args</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>new_args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" bodystart="37" bodyend="41"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_a5302407bf33df335713fc70b2d98ed57_1a5302407bf33df335713fc70b2d98ed57" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::op::Concat::get_concatenation_axis</definition>
+        <argsstring>() const</argsstring>
+        <name>get_concatenation_axis</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The concatenation axis. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" bodystart="44" bodyend="44"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_1a615a3b3d4d8397d1a86781a4cd5a60f0" prot="protected" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void op::Concat::generate_adjoints</definition>
+        <argsstring>(autodiff::Adjoints &amp;adjoints, const std::shared_ptr&lt; Node &gt; &amp;delta) override</argsstring>
+        <name>generate_adjoints</name>
+        <reimplements refid="classngraph_1_1Node_1a423c05a93bb628e8c311b631fb6a582c">generate_adjoints</reimplements>
+        <param>
+          <type><ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">autodiff::Adjoints</ref> &amp;</type>
+          <declname>adjoints</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>delta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.cpp" bodystart="78" bodyend="106"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Concat_1a09fce0c4f670ea33d705a4b7b4832865" prot="protected" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ngraph::op::Concat::generate_adjoints</definition>
+        <argsstring>(autodiff::Adjoints &amp;adjoints, const std::shared_ptr&lt; Node &gt; &amp;delta) override</argsstring>
+        <name>generate_adjoints</name>
+        <reimplements refid="classngraph_1_1Node_1a423c05a93bb628e8c311b631fb6a582c">generate_adjoints</reimplements>
+        <param>
+          <type><ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">autodiff::Adjoints</ref> &amp;</type>
+          <declname>adjoints</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>delta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.hpp" line="46" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Concatenation operation. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="647">
+        <label>ngraph::Node</label>
+        <link refid="classngraph_1_1Node"/>
+        <childnode refid="648" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="645">
+        <label>ngraph::op::util::RequiresTensorViewArgs</label>
+        <link refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs"/>
+        <childnode refid="646" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="648">
+        <label>std::enable_shared_from_this&lt; Node &gt;</label>
+      </node>
+      <node id="644">
+        <label>ngraph::op::Concat</label>
+        <link refid="classngraph_1_1op_1_1Concat"/>
+        <childnode refid="645" relation="public-inheritance">
+        </childnode>
+        <childnode refid="645" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="646">
+        <label>ngraph::op::Op</label>
+        <link refid="classngraph_1_1op_1_1Op"/>
+        <childnode refid="647" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="652">
+        <label>ngraph::Node</label>
+        <link refid="classngraph_1_1Node"/>
+        <childnode refid="653" relation="public-inheritance">
+        </childnode>
+        <childnode refid="654" relation="usage">
+          <edgelabel>m_outputs</edgelabel>
+        </childnode>
+        <childnode refid="662" relation="usage">
+          <edgelabel>liveness_live_list</edgelabel>
+          <edgelabel>liveness_free_list</edgelabel>
+          <edgelabel>liveness_new_list</edgelabel>
+        </childnode>
+        <childnode refid="670" relation="usage">
+          <edgelabel>m_users</edgelabel>
+        </childnode>
+        <childnode refid="672" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="673" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+        <childnode refid="665" relation="usage">
+          <edgelabel>m_node_type</edgelabel>
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="650">
+        <label>ngraph::op::util::RequiresTensorViewArgs</label>
+        <link refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs"/>
+        <childnode refid="651" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="659">
+        <label>K</label>
+      </node>
+      <node id="661">
+        <label>T</label>
+      </node>
+      <node id="670">
+        <label>std::multiset&lt; ngraph::Node *&gt;</label>
+        <childnode refid="652" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="671" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="676">
+        <label>std::unordered_map&lt; K, T &gt;</label>
+        <childnode refid="659" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="661" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="673">
+        <label>std::unordered_map&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</label>
+        <childnode refid="674" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="652" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="676" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="664">
+        <label>ngraph::element::Type</label>
+        <link refid="classngraph_1_1element_1_1Type"/>
+      </node>
+      <node id="655">
+        <label>ngraph::descriptor::Output</label>
+        <link refid="classngraph_1_1descriptor_1_1Output"/>
+        <childnode refid="656" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="652" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="663">
+        <label>ngraph::descriptor::Tensor</label>
+        <link refid="classngraph_1_1descriptor_1_1Tensor"/>
+        <childnode refid="664" relation="usage">
+          <edgelabel>m_element_type</edgelabel>
+        </childnode>
+        <childnode refid="665" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+        <childnode refid="667" relation="usage">
+          <edgelabel>m_primary_tensor_view</edgelabel>
+        </childnode>
+      </node>
+      <node id="667">
+        <label>ngraph::descriptor::PrimaryTensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1PrimaryTensorView"/>
+        <childnode refid="668" relation="public-inheritance">
+        </childnode>
+        <childnode refid="663" relation="usage">
+          <edgelabel>m_tensor</edgelabel>
+        </childnode>
+      </node>
+      <node id="668">
+        <label>ngraph::descriptor::TensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1TensorView"/>
+        <childnode refid="665" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="654">
+        <label>std::deque&lt; ngraph::descriptor::Output &gt;</label>
+        <childnode refid="655" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="660" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Output &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="666">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="653">
+        <label>std::enable_shared_from_this&lt; Node &gt;</label>
+      </node>
+      <node id="649">
+        <label>ngraph::op::Concat</label>
+        <link refid="classngraph_1_1op_1_1Concat"/>
+        <childnode refid="650" relation="public-inheritance">
+        </childnode>
+        <childnode refid="650" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="656">
+        <label>std::set&lt; ngraph::descriptor::Input *&gt;</label>
+        <childnode refid="657" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="658" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="651">
+        <label>ngraph::op::Op</label>
+        <link refid="classngraph_1_1op_1_1Op"/>
+        <childnode refid="652" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="658">
+        <label>std::set&lt; K &gt;</label>
+        <childnode refid="659" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="657">
+        <label>ngraph::descriptor::Input</label>
+        <link refid="classngraph_1_1descriptor_1_1Input"/>
+        <childnode refid="655" relation="usage">
+          <edgelabel>m_output</edgelabel>
+        </childnode>
+        <childnode refid="652" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="671">
+        <label>std::multiset&lt; K &gt;</label>
+        <childnode refid="659" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="672">
+        <label>std::deque&lt; ngraph::descriptor::Input &gt;</label>
+        <childnode refid="657" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="660" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="669">
+        <label>std::unordered_set&lt; K &gt;</label>
+        <childnode refid="659" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="675">
+        <label>std::unordered_map&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</label>
+        <childnode refid="652" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="676" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="662">
+        <label>std::unordered_set&lt; ngraph::descriptor::Tensor *&gt;</label>
+        <childnode refid="663" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="669" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Tensor *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="674">
+        <label>ngraph::autodiff::Adjoints</label>
+        <link refid="classngraph_1_1autodiff_1_1Adjoints"/>
+        <childnode refid="675" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+      </node>
+      <node id="660">
+        <label>std::deque&lt; T &gt;</label>
+        <childnode refid="661" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="665">
+        <label>std::string</label>
+        <childnode refid="666" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concat.hpp" bodystart="28" bodyend="49"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1Node_1a1bac19895a096bb5772f6a6c120b3813" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>add_output</name></member>
+      <member refid="classngraph_1_1Node_1a5f3de445063d95cb31842e3a44e487c8" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>backprop_node</name></member>
+      <member refid="classngraph_1_1Node_1a99c230728fde81ca9e64ed393d0728c4" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>clear_arguments</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_a935f75440cf8d26c0bb70e4bfae27511_1a935f75440cf8d26c0bb70e4bfae27511" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>Concat</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_a3f1b8726c24d282624762797994e8e74_1a3f1b8726c24d282624762797994e8e74" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>Concat</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_1a9af5b92712fe031f221094b9830999da" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>copy_with_new_args</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_1a9af5b92712fe031f221094b9830999da" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>copy_with_new_args</name></member>
+      <member refid="classngraph_1_1Node_1a92598fdffd86cf6fd3adf0081e041d2f" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>description</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_1a615a3b3d4d8397d1a86781a4cd5a60f0" prot="protected" virt="virtual"><scope>ngraph::op::Concat</scope><name>generate_adjoints</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_1a09fce0c4f670ea33d705a4b7b4832865" prot="protected" virt="virtual"><scope>ngraph::op::Concat</scope><name>generate_adjoints</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_a5302407bf33df335713fc70b2d98ed57_1a5302407bf33df335713fc70b2d98ed57" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_concatenation_axis</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_a5302407bf33df335713fc70b2d98ed57_1a5302407bf33df335713fc70b2d98ed57" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_concatenation_axis</name></member>
+      <member refid="classngraph_1_1Node_1a08ce613a6a22b1083c05321f0dced2a6" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_element_type</name></member>
+      <member refid="classngraph_1_1Node_1abb77c47e270bdf0622587ee86919b492" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>get_functions</name></member>
+      <member refid="classngraph_1_1Node_1a98841a99a32bdcf64a371ff2aed2abc1" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_input_element_type</name></member>
+      <member refid="classngraph_1_1Node_1aa7aaefcd4db958482315af48cb221a6c" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_input_op</name></member>
+      <member refid="classngraph_1_1Node_1ac9b5aed803ef1f50a02a87dc81034ffe" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>get_input_ops</name></member>
+      <member refid="classngraph_1_1Node_1a9ff5f656d6b183cc00af753ec6b6144a" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_input_shape</name></member>
+      <member refid="classngraph_1_1Node_1a69c6620b65b11187bf367a2d0e440699" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_input_size</name></member>
+      <member refid="classngraph_1_1Node_1a3e88cf704f45f337a48d79a16a54e2c7" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a3d47e40f640c1469db01a33611a993e0" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a7a189270f6c1d02aa62c11b82d837bfb" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1ab0228a9136af1c06e6c32503871aa037" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_name</name></member>
+      <member refid="classngraph_1_1Node_1a49900b3c7bc6ee44c466a622ccf52f71" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_node_id</name></member>
+      <member refid="classngraph_1_1op_1_1Op_1a4f467309aee6d72bb286c09cd09c4bbf" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_op_annotations</name></member>
+      <member refid="classngraph_1_1Node_1a91ccdcd6a30ca5a265c74f0f2734210b" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_element_type</name></member>
+      <member refid="classngraph_1_1Node_1a68967e741c4045d22b712c5f644f5fa7" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a29bad373294c6939549d3302c6c5b45c" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_shape</name></member>
+      <member refid="classngraph_1_1Node_1a9257d1be4e21fd9b4e834ee763c9ab03" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_size</name></member>
+      <member refid="classngraph_1_1Node_1a0cb34ea18330939c53fbf7fe15603c32" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_tensor</name></member>
+      <member refid="classngraph_1_1Node_1a1d7465ea8dda0f2f22c13929656d4291" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_tensor</name></member>
+      <member refid="classngraph_1_1Node_1a45ae2b4b094d1d91d1c867dc30143d7a" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_tensor_view</name></member>
+      <member refid="classngraph_1_1Node_1a75b38938bbc73474c8ea083b36da876c" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_output_tensor_view</name></member>
+      <member refid="classngraph_1_1Node_1ac9aae122c66b9d82c240fd35c1e45250" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_outputs</name></member>
+      <member refid="classngraph_1_1Node_1aed735e2ef3cda31846ec7f0a85ebd5d8" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_outputs</name></member>
+      <member refid="classngraph_1_1Node_1a7a690a13f82f2420e221be4ef0987f56" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>get_shape</name></member>
+      <member refid="classngraph_1_1Node_1a17548877a029631148b2fa00c2f11fcb" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>has_same_type</name></member>
+      <member refid="classngraph_1_1Node_1ad0a48043e7858c06a2c91b25c2e88030" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>is_commutative</name></member>
+      <member refid="classngraph_1_1Node_1aa560b6ff7736831265cf1ce1346e6376" prot="public" virt="virtual"><scope>ngraph::op::Concat</scope><name>is_constant</name></member>
+      <member refid="classngraph_1_1Node_1ad3ae6e9bcbf2462a074847fdf47ab986" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>is_output</name></member>
+      <member refid="classngraph_1_1Node_1ab700ac2bc2dec9138e3e1575b49075c6" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>is_parameter</name></member>
+      <member refid="classngraph_1_1Node_ad69bb7920f3c6898754e0e938461fa8c_1ad69bb7920f3c6898754e0e938461fa8c" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>is_same_op_type</name></member>
+      <member refid="classngraph_1_1Node_1a4f36c2c5ae51d1073d5bc23ab44cd72f" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>liveness_free_list</name></member>
+      <member refid="classngraph_1_1Node_1aa58e8eb953c65c957dbdc56d7aa1dca5" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>liveness_live_list</name></member>
+      <member refid="classngraph_1_1Node_1a572f0f0ef5cb7d309a86b1ffddda7da1" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>liveness_new_list</name></member>
+      <member refid="classngraph_1_1Node_1a881dacc03050bbe8dc679455c99bfaa8" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_adjoint_map</name></member>
+      <member refid="classngraph_1_1op_1_1Concat_1a63f8913694319ecb888158d39824c65a" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_concatenation_axis</name></member>
+      <member refid="classngraph_1_1Node_1a4f55bb2b70a88ddcc407a2930da034e7" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_inputs</name></member>
+      <member refid="classngraph_1_1Node_1ae927d96858146fd4aad4f7a9d6c03e8e" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1a034da5cfe5401a01045f2fd8a9374ca7" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_is_output</name></member>
+      <member refid="classngraph_1_1Node_1af72ec96a91723b94174886a947835f93" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_name</name></member>
+      <member refid="classngraph_1_1Node_1afc2e9023e2895f9d7465062ce7bbd49e" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_next_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1a9d06e17d8a569f809d6d322edb405b24" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_node_type</name></member>
+      <member refid="classngraph_1_1Node_1a177ab91b7609c16e8d57e1a7182f2bd0" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_outputs</name></member>
+      <member refid="classngraph_1_1Node_1ad0f9c97f26a1ad8a42b7308f0e4773f5" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>m_users</name></member>
+      <member refid="classngraph_1_1Node_1a0259d67ef3d6d82e38dbafa62d1463e2" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>Node</name></member>
+      <member refid="classngraph_1_1op_1_1Op_1adfb9351528f9956627f25e07baa560fa" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>Op</name></member>
+      <member refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs_a4ec9a470de62c9b1986d139f72717eb5_1a4ec9a470de62c9b1986d139f72717eb5" prot="protected" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>RequiresTensorViewArgs</name></member>
+      <member refid="classngraph_1_1Node_1a7bcdb7230a14c3c76a38392bfeacea1a" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>set_is_output</name></member>
+      <member refid="classngraph_1_1Node_1a21c1e9e47d5447ba37982d1bbc57e79c" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>set_name</name></member>
+      <member refid="classngraph_1_1op_1_1Op_1aba75fd5c954f4480c2e4ddb4e1fc5f2a" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>set_op_annotations</name></member>
+      <member refid="classngraph_1_1Node_1a0a2d35a1430bc4671184eec8e1425640" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>set_value_type_checked</name></member>
+      <member refid="classngraph_1_1Node_1a7500930e175b8f522d26988796727ce1" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>set_value_type_checked</name></member>
+      <member refid="classngraph_1_1Node_1a1ca1186be7560ca6fd3a4bc1819526a1" prot="public" virt="non-virtual"><scope>ngraph::op::Concat</scope><name>users</name></member>
+      <member refid="classngraph_1_1Node_1a2a6579e8a1f70539b8e47d100eb06ae6" prot="protected" virt="virtual"><scope>ngraph::op::Concat</scope><name>~Node</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classStaticInitializers" kind="class" language="C++" prot="public">
+    <compoundname>StaticInitializers</compoundname>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>StaticInitializers::StaticInitializers</definition>
+        <argsstring>()</argsstring>
+        <name>StaticInitializers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" line="130" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="130" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>StaticInitializers::StaticInitializers</definition>
+        <argsstring>()</argsstring>
+        <name>StaticInitializers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp" line="109" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp" bodystart="109" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>StaticInitializers::StaticInitializers</definition>
+        <argsstring>()</argsstring>
+        <name>StaticInitializers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp" line="88" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp" bodystart="88" bodyend="88"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" line="128" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="127" bodyend="131"/>
+    <listofallmembers>
+      <member refid="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" virt="non-virtual"><scope>StaticInitializers</scope><name>StaticInitializers</name></member>
+      <member refid="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" virt="non-virtual"><scope>StaticInitializers</scope><name>StaticInitializers</name></member>
+      <member refid="classStaticInitializers_1a311d18cfd138a222e6309759854dc7f4" prot="public" virt="non-virtual"><scope>StaticInitializers</scope><name>StaticInitializers</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

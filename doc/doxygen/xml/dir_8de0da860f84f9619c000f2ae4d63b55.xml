@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_8de0da860f84f9619c000f2ae4d63b55" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen</compoundname>
+    <innerfile refid="code__writer_8cpp">code_writer.cpp</innerfile>
+    <innerfile refid="code__writer_8hpp">code_writer.hpp</innerfile>
+    <innerfile refid="compiler_8cpp">compiler.cpp</innerfile>
+    <innerfile refid="compiler_8hpp">compiler.hpp</innerfile>
+    <innerfile refid="execution__engine_8cpp">execution_engine.cpp</innerfile>
+    <innerfile refid="execution__engine_8hpp">execution_engine.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/"/>
+  </compounddef>
+</doxygen>

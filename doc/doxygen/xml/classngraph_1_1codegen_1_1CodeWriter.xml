@@ -1,0 +1,197 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1codegen_1_1CodeWriter" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::codegen::CodeWriter</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1CodeWriter_1ae873f9fe542584f3d1ced61efbd2f57f" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::codegen::CodeWriter::indent</definition>
+        <argsstring></argsstring>
+        <name>indent</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1CodeWriter_1a4f4a91b6a9d45a82db105e34c2fb248d" prot="private" static="no" mutable="no">
+        <type>std::stringstream</type>
+        <definition>std::stringstream ngraph::codegen::CodeWriter::m_ss</definition>
+        <argsstring></argsstring>
+        <name>m_ss</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="86" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1CodeWriter_1a5733299d487b66d88412d27e80c3166c" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::codegen::CodeWriter::m_pending_indent</definition>
+        <argsstring></argsstring>
+        <name>m_pending_indent</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="87" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1CodeWriter_1af1f11fa2ba40e8d8ce9d297517221119" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::codegen::CodeWriter::m_temporary_name_count</definition>
+        <argsstring></argsstring>
+        <name>m_temporary_name_count</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="88" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1ae7a22a15c8dc44baf8f075dbe543ceb7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>codegen::CodeWriter::CodeWriter</definition>
+        <argsstring>()</argsstring>
+        <name>CodeWriter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.cpp" bodystart="22" bodyend="27"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1ab6c6af0d783ac43a7ef509fff447d98b" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string codegen::CodeWriter::get_code</definition>
+        <argsstring>() const</argsstring>
+        <name>get_code</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.cpp" bodystart="29" bodyend="32"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1af09101543be8be25f1d7340634f8fde1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void codegen::CodeWriter::operator+=</definition>
+        <argsstring>(const std::string &amp;)</argsstring>
+        <name>operator+=</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <defname>s</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.cpp" bodystart="34" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1a0b37600679781ab74b8209c682c3a1bd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string codegen::CodeWriter::generate_temporary_name</definition>
+        <argsstring>(std::string prefix=&quot;tempvar&quot;)</argsstring>
+        <name>generate_temporary_name</name>
+        <param>
+          <type>std::string</type>
+          <declname>prefix</declname>
+          <defval>&quot;tempvar&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.cpp" bodystart="39" bodyend="47"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1a524cf4de7b4103ba6f4cbbdb4993ec0a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::codegen::CodeWriter::block_begin</definition>
+        <argsstring>()</argsstring>
+        <name>block_begin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="73" bodyend="77"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1CodeWriter_1af60b2c0ee05fc144124d522cf12ad71d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::codegen::CodeWriter::block_end</definition>
+        <argsstring>()</argsstring>
+        <name>block_end</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="79" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="79" bodyend="83"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="classngraph_1_1codegen_1_1CodeWriter_1a2f6dfadeadcb94fea574a990791874d9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>friend <ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">CodeWriter</ref> &amp;</type>
+        <definition>CodeWriter&amp; operator&lt;&lt;</definition>
+        <argsstring>(CodeWriter &amp;out, const T &amp;obj)</argsstring>
+        <name>operator&lt;&lt;</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">CodeWriter</ref> &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="43" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="43" bodyend="69"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/code_writer.hpp" bodystart="32" bodyend="89"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1a524cf4de7b4103ba6f4cbbdb4993ec0a" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>block_begin</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1af60b2c0ee05fc144124d522cf12ad71d" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>block_end</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1ae7a22a15c8dc44baf8f075dbe543ceb7" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>CodeWriter</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1a0b37600679781ab74b8209c682c3a1bd" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>generate_temporary_name</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1ab6c6af0d783ac43a7ef509fff447d98b" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>get_code</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1ae873f9fe542584f3d1ced61efbd2f57f" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>indent</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1a5733299d487b66d88412d27e80c3166c" prot="private" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>m_pending_indent</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1a4f4a91b6a9d45a82db105e34c2fb248d" prot="private" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>m_ss</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1af1f11fa2ba40e8d8ce9d297517221119" prot="private" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>m_temporary_name_count</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1af09101543be8be25f1d7340634f8fde1" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>operator+=</name></member>
+      <member refid="classngraph_1_1codegen_1_1CodeWriter_1a2f6dfadeadcb94fea574a990791874d9" prot="public" virt="non-virtual"><scope>ngraph::codegen::CodeWriter</scope><name>operator&lt;&lt;</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

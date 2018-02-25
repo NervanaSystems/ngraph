@@ -1,0 +1,591 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="ops_2convolution_8hpp" kind="file" language="C++">
+    <compoundname>convolution.hpp</compoundname>
+    <includes refid="requires__tensor__view__args_8hpp" local="yes">ngraph/ops/util/requires_tensor_view_args.hpp</includes>
+    <includedby refid="ngraph_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</includedby>
+    <includedby refid="convolution_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/convolution.cpp</includedby>
+    <includedby refid="cpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</includedby>
+    <includedby refid="cpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</includedby>
+    <includedby refid="mkldnn__utils_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</includedby>
+    <includedby refid="cpu__assignment_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</includedby>
+    <includedby refid="cpu__layout_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</includedby>
+    <includedby refid="gpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.cpp</includedby>
+    <includedby refid="gpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</includedby>
+    <includedby refid="int__call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</includedby>
+    <includedby refid="serializer_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</includedby>
+    <incdepgraph>
+      <node id="4987">
+        <label>atomic</label>
+      </node>
+      <node id="4995">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="4989" relation="include">
+        </childnode>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4983" relation="include">
+        </childnode>
+        <childnode refid="4996" relation="include">
+        </childnode>
+      </node>
+      <node id="4977">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/convolution.hpp</label>
+        <link refid="ops_2convolution_8hpp"/>
+        <childnode refid="4978" relation="include">
+        </childnode>
+      </node>
+      <node id="4996">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4983" relation="include">
+        </childnode>
+        <childnode refid="4997" relation="include">
+        </childnode>
+        <childnode refid="4999" relation="include">
+        </childnode>
+      </node>
+      <node id="5006">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4981" relation="include">
+        </childnode>
+        <childnode refid="4994" relation="include">
+        </childnode>
+        <childnode refid="5007" relation="include">
+        </childnode>
+      </node>
+      <node id="4986">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="4987" relation="include">
+        </childnode>
+        <childnode refid="4988" relation="include">
+        </childnode>
+        <childnode refid="4989" relation="include">
+        </childnode>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4981" relation="include">
+        </childnode>
+        <childnode refid="4985" relation="include">
+        </childnode>
+        <childnode refid="4990" relation="include">
+        </childnode>
+        <childnode refid="4991" relation="include">
+        </childnode>
+        <childnode refid="4992" relation="include">
+        </childnode>
+        <childnode refid="4983" relation="include">
+        </childnode>
+        <childnode refid="4993" relation="include">
+        </childnode>
+        <childnode refid="4979" relation="include">
+        </childnode>
+        <childnode refid="4994" relation="include">
+        </childnode>
+        <childnode refid="5006" relation="include">
+        </childnode>
+        <childnode refid="4995" relation="include">
+        </childnode>
+        <childnode refid="4996" relation="include">
+        </childnode>
+      </node>
+      <node id="5005">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="4988" relation="include">
+        </childnode>
+        <childnode refid="5001" relation="include">
+        </childnode>
+        <childnode refid="5004" relation="include">
+        </childnode>
+      </node>
+      <node id="5004">
+        <label>stdexcept</label>
+      </node>
+      <node id="4978">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="4979" relation="include">
+        </childnode>
+        <childnode refid="4984" relation="include">
+        </childnode>
+      </node>
+      <node id="4985">
+        <label>string</label>
+      </node>
+      <node id="5000">
+        <label>map</label>
+      </node>
+      <node id="4992">
+        <label>unordered_set</label>
+      </node>
+      <node id="4999">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="5000" relation="include">
+        </childnode>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="5001" relation="include">
+        </childnode>
+        <childnode refid="4985" relation="include">
+        </childnode>
+        <childnode refid="5002" relation="include">
+        </childnode>
+        <childnode refid="4979" relation="include">
+        </childnode>
+        <childnode refid="5003" relation="include">
+        </childnode>
+        <childnode refid="5005" relation="include">
+        </childnode>
+      </node>
+      <node id="4979">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4981" relation="include">
+        </childnode>
+        <childnode refid="4982" relation="include">
+        </childnode>
+        <childnode refid="4983" relation="include">
+        </childnode>
+      </node>
+      <node id="4994">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4995" relation="include">
+        </childnode>
+        <childnode refid="4996" relation="include">
+        </childnode>
+      </node>
+      <node id="4997">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="4998" relation="include">
+        </childnode>
+        <childnode refid="4989" relation="include">
+        </childnode>
+        <childnode refid="4983" relation="include">
+        </childnode>
+        <childnode refid="4979" relation="include">
+        </childnode>
+      </node>
+      <node id="4993">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4991" relation="include">
+        </childnode>
+        <childnode refid="4979" relation="include">
+        </childnode>
+      </node>
+      <node id="4984">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="4985" relation="include">
+        </childnode>
+        <childnode refid="4979" relation="include">
+        </childnode>
+        <childnode refid="4986" relation="include">
+        </childnode>
+        <childnode refid="5008" relation="include">
+        </childnode>
+      </node>
+      <node id="4998">
+        <label>cstdio</label>
+      </node>
+      <node id="4983">
+        <label>vector</label>
+      </node>
+      <node id="4982">
+        <label>utility</label>
+      </node>
+      <node id="5001">
+        <label>sstream</label>
+      </node>
+      <node id="4989">
+        <label>iostream</label>
+      </node>
+      <node id="5008">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="4988">
+        <label>deque</label>
+      </node>
+      <node id="4991">
+        <label>unordered_map</label>
+      </node>
+      <node id="5003">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="5004" relation="include">
+        </childnode>
+      </node>
+      <node id="5002">
+        <label>type_traits</label>
+      </node>
+      <node id="4981">
+        <label>set</label>
+      </node>
+      <node id="5007">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="4980" relation="include">
+        </childnode>
+        <childnode refid="4997" relation="include">
+        </childnode>
+      </node>
+      <node id="4980">
+        <label>memory</label>
+      </node>
+      <node id="4990">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="5016">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</label>
+        <link refid="cpu__layout_8cpp_source"/>
+      </node>
+      <node id="5021">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="5014">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</label>
+        <link refid="mkldnn__utils_8cpp_source"/>
+      </node>
+      <node id="5018">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="5009">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/convolution.hpp</label>
+        <link refid="ops_2convolution_8hpp"/>
+        <childnode refid="5010" relation="include">
+        </childnode>
+        <childnode refid="5011" relation="include">
+        </childnode>
+        <childnode refid="5012" relation="include">
+        </childnode>
+        <childnode refid="5013" relation="include">
+        </childnode>
+        <childnode refid="5014" relation="include">
+        </childnode>
+        <childnode refid="5015" relation="include">
+        </childnode>
+        <childnode refid="5016" relation="include">
+        </childnode>
+        <childnode refid="5017" relation="include">
+        </childnode>
+        <childnode refid="5018" relation="include">
+        </childnode>
+        <childnode refid="5019" relation="include">
+        </childnode>
+        <childnode refid="5024" relation="include">
+        </childnode>
+      </node>
+      <node id="5024">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</label>
+        <link refid="serializer_8cpp_source"/>
+      </node>
+      <node id="5022">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp</label>
+        <link refid="int__external__function_8hpp_source"/>
+        <childnode refid="5021" relation="include">
+        </childnode>
+        <childnode refid="5023" relation="include">
+        </childnode>
+      </node>
+      <node id="5017">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.cpp</label>
+        <link refid="gpu__emitter_8cpp_source"/>
+      </node>
+      <node id="5011">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/convolution.cpp</label>
+        <link refid="convolution_8cpp_source"/>
+      </node>
+      <node id="5012">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="5013">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="5019">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</label>
+        <link refid="int__call__frame_8hpp_source"/>
+        <childnode refid="5020" relation="include">
+        </childnode>
+        <childnode refid="5021" relation="include">
+        </childnode>
+        <childnode refid="5022" relation="include">
+        </childnode>
+      </node>
+      <node id="5023">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.cpp</label>
+        <link refid="int__manager_8cpp_source"/>
+      </node>
+      <node id="5015">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</label>
+        <link refid="cpu__assignment_8cpp_source"/>
+      </node>
+      <node id="5010">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="5020">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp</label>
+        <link refid="int__call__frame_8cpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1op_1_1Convolution" prot="public">ngraph::op::Convolution</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ConvolutionBackpropData" prot="public">ngraph::op::ConvolutionBackpropData</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ConvolutionBackpropFilters" prot="public">ngraph::op::ConvolutionBackpropFilters</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op">ngraph::op</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/util/requires_tensor_view_args.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="22"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">op</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="27" refid="classngraph_1_1op_1_1Convolution" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1Convolution" kindref="compound">Convolution</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" kindref="compound">util::RequiresTensorViewArgs</ref></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Convolution_a2a3329e920a1488df71e2979f21a9189_1a2a3329e920a1488df71e2979f21a9189" kindref="member">Convolution</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters,</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides,</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_dilation_strides,</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_below,</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_above,</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>data_dilation_strides);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Convolution_a2a3329e920a1488df71e2979f21a9189_1a2a3329e920a1488df71e2979f21a9189" kindref="member">Convolution</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters,</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides,</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_dilation_strides,</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_below,</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_above);</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Convolution_a2a3329e920a1488df71e2979f21a9189_1a2a3329e920a1488df71e2979f21a9189" kindref="member">Convolution</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters,</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides,</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_dilation_strides);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Convolution_a2a3329e920a1488df71e2979f21a9189_1a2a3329e920a1488df71e2979f21a9189" kindref="member">Convolution</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters,</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides);</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Convolution_a2a3329e920a1488df71e2979f21a9189_1a2a3329e920a1488df71e2979f21a9189" kindref="member">Convolution</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters);</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;<sp/>copy_with_new_args(</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>new_args)<sp/></highlight><highlight class="keyword">const<sp/>override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>generate_adjoints(<ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">autodiff::Adjoints</ref>&amp;<sp/>adjoints,</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>delta)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight></codeline>
+<codeline lineno="132" refid="classngraph_1_1op_1_1Convolution_a2852be7be2103e848aaee8157d142725_1a2852be7be2103e848aaee8157d142725" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1Convolution_a2852be7be2103e848aaee8157d142725_1a2852be7be2103e848aaee8157d142725" kindref="member">get_window_movement_strides</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_movement_strides;<sp/>}</highlight></codeline>
+<codeline lineno="134" refid="classngraph_1_1op_1_1Convolution_a514ce776769ed90b546b328dc9d7bdd2_1a514ce776769ed90b546b328dc9d7bdd2" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1Convolution_a514ce776769ed90b546b328dc9d7bdd2_1a514ce776769ed90b546b328dc9d7bdd2" kindref="member">get_window_dilation_strides</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_dilation_strides;<sp/>}</highlight></codeline>
+<codeline lineno="136" refid="classngraph_1_1op_1_1Convolution_a46857940ab93948dcf8056cb391211f6_1a46857940ab93948dcf8056cb391211f6" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1Convolution_a46857940ab93948dcf8056cb391211f6_1a46857940ab93948dcf8056cb391211f6" kindref="member">get_padding_below</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_below;<sp/>}</highlight></codeline>
+<codeline lineno="138" refid="classngraph_1_1op_1_1Convolution_ae31c061b03d8f8bb38edfa3c456581af_1ae31c061b03d8f8bb38edfa3c456581af" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1Convolution_ae31c061b03d8f8bb38edfa3c456581af_1ae31c061b03d8f8bb38edfa3c456581af" kindref="member">get_padding_above</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_above;<sp/>}</highlight></codeline>
+<codeline lineno="140" refid="classngraph_1_1op_1_1Convolution_af86ca4307810f97b0e377a087576218d_1af86ca4307810f97b0e377a087576218d" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1Convolution_af86ca4307810f97b0e377a087576218d_1af86ca4307810f97b0e377a087576218d" kindref="member">get_data_dilation_strides</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_dilation_strides;<sp/>}</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_movement_strides;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_dilation_strides;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_below;</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_above;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_data_dilation_strides;</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>default_strides(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch);</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>default_padding(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch);</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"></highlight></codeline>
+<codeline lineno="154" refid="classngraph_1_1op_1_1ConvolutionBackpropData" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData" kindref="compound">ConvolutionBackpropData</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" kindref="compound">util::RequiresTensorViewArgs</ref></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a3eca7781475552218ca7e4ca24c7262c_1a3eca7781475552218ca7e4ca24c7262c" kindref="member">ConvolutionBackpropData</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/>data_batch_shape,</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>filters,</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>output_delta,</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides_forward,</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_dilation_strides_forward,</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_below_forward,</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_above_forward,</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>data_dilation_strides_forward);</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;<sp/>copy_with_new_args(</highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>new_args)<sp/></highlight><highlight class="keyword">const<sp/>override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"></highlight></codeline>
+<codeline lineno="180" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a14239dcdd2969289e3daae43a4d7d47c_1a14239dcdd2969289e3daae43a4d7d47c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a14239dcdd2969289e3daae43a4d7d47c_1a14239dcdd2969289e3daae43a4d7d47c" kindref="member">get_data_batch_shape</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_batch_shape;<sp/>}</highlight></codeline>
+<codeline lineno="182" refid="classngraph_1_1op_1_1ConvolutionBackpropData_ac8a75a80b38477296d8852ccba500339_1ac8a75a80b38477296d8852ccba500339" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_ac8a75a80b38477296d8852ccba500339_1ac8a75a80b38477296d8852ccba500339" kindref="member">get_window_movement_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="183"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_movement_strides_forward;</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="187" refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae3a79692cf46adb2cfc32780d20ad21e_1ae3a79692cf46adb2cfc32780d20ad21e" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae3a79692cf46adb2cfc32780d20ad21e_1ae3a79692cf46adb2cfc32780d20ad21e" kindref="member">get_window_dilation_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="188"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="192" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a27917a587a6b3cb8faf373ce7fc6fc41_1a27917a587a6b3cb8faf373ce7fc6fc41" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a27917a587a6b3cb8faf373ce7fc6fc41_1a27917a587a6b3cb8faf373ce7fc6fc41" kindref="member">get_padding_below_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="193"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_below_forward;</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="197" refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae2718208dffbbcbc743dd68435ab3215_1ae2718208dffbbcbc743dd68435ab3215" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae2718208dffbbcbc743dd68435ab3215_1ae2718208dffbbcbc743dd68435ab3215" kindref="member">get_padding_above_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="198"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_above_forward;</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="202" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a62a13707335c162b30ba7555f3593bcc_1a62a13707335c162b30ba7555f3593bcc" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a62a13707335c162b30ba7555f3593bcc_1a62a13707335c162b30ba7555f3593bcc" kindref="member">get_data_dilation_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="203"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"></highlight></codeline>
+<codeline lineno="208" refid="classngraph_1_1op_1_1ConvolutionBackpropData_aaec0f6f4e4b48c4e104c3a756c98ae31_1aaec0f6f4e4b48c4e104c3a756c98ae31" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_aaec0f6f4e4b48c4e104c3a756c98ae31_1aaec0f6f4e4b48c4e104c3a756c98ae31" kindref="member">get_window_movement_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="209"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_movement_strides_backward;</highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="213" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a41acf553b00acbecadc7e26164e277ba_1a41acf553b00acbecadc7e26164e277ba" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a41acf553b00acbecadc7e26164e277ba_1a41acf553b00acbecadc7e26164e277ba" kindref="member">get_window_dilation_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="214"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="218" refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae828b13e5aa8947c0b1332e6e06d96d3_1ae828b13e5aa8947c0b1332e6e06d96d3" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_ae828b13e5aa8947c0b1332e6e06d96d3_1ae828b13e5aa8947c0b1332e6e06d96d3" kindref="member">get_padding_below_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="219"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_below_backward;</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="223" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a2d9885681f6acb7a171876bfc04ae037_1a2d9885681f6acb7a171876bfc04ae037" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a2d9885681f6acb7a171876bfc04ae037_1a2d9885681f6acb7a171876bfc04ae037" kindref="member">get_padding_above_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="224"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_above_backward;</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="228" refid="classngraph_1_1op_1_1ConvolutionBackpropData_a91bb7349e13599805c02a8c54ef2dae6_1a91bb7349e13599805c02a8c54ef2dae6" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropData_a91bb7349e13599805c02a8c54ef2dae6_1a91bb7349e13599805c02a8c54ef2dae6" kindref="member">get_data_dilation_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="229"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"></highlight></codeline>
+<codeline lineno="233"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>m_data_batch_shape;</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_movement_strides_forward;</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_below_forward;</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_above_forward;</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_data_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"></highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_movement_strides_backward;</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_below_backward;</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_above_backward;</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_data_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"></highlight></codeline>
+<codeline lineno="249" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters" kindref="compound">ConvolutionBackpropFilters</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" kindref="compound">util::RequiresTensorViewArgs</ref></highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a9981c6af463e48dd5775609bba09b334_1a9981c6af463e48dd5775609bba09b334" kindref="member">ConvolutionBackpropFilters</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>data_batch,</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/>filters_shape,</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>output_delta,</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides_forward,</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_dilation_strides_forward,</highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_below_forward,</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/>padding_above_forward,</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>data_dilation_strides_forward);</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"></highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;<sp/>copy_with_new_args(</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>new_args)<sp/></highlight><highlight class="keyword">const<sp/>override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"></highlight></codeline>
+<codeline lineno="275" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a8de30019aa777f36c295565476c93ba9_1a8de30019aa777f36c295565476c93ba9" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a8de30019aa777f36c295565476c93ba9_1a8de30019aa777f36c295565476c93ba9" kindref="member">get_filters_shape</ref>()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_filters_shape;<sp/>}</highlight></codeline>
+<codeline lineno="277" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_aacf085e671114768e52e6a8d487b127f_1aacf085e671114768e52e6a8d487b127f" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_aacf085e671114768e52e6a8d487b127f_1aacf085e671114768e52e6a8d487b127f" kindref="member">get_window_movement_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="278"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="279"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_movement_strides_forward;</highlight></codeline>
+<codeline lineno="280"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="282" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a8ae0cba98bc6eaef3a9a8d626718bce3_1a8ae0cba98bc6eaef3a9a8d626718bce3" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a8ae0cba98bc6eaef3a9a8d626718bce3_1a8ae0cba98bc6eaef3a9a8d626718bce3" kindref="member">get_window_dilation_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="283"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="284"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="285"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="287" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ad1be13475b31f26c81c20bf91ce631f4_1ad1be13475b31f26c81c20bf91ce631f4" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ad1be13475b31f26c81c20bf91ce631f4_1ad1be13475b31f26c81c20bf91ce631f4" kindref="member">get_padding_below_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="288"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="289"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_below_forward;</highlight></codeline>
+<codeline lineno="290"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="292" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a54ecd6499a6eaed744cbdda9ecf3b635_1a54ecd6499a6eaed744cbdda9ecf3b635" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a54ecd6499a6eaed744cbdda9ecf3b635_1a54ecd6499a6eaed744cbdda9ecf3b635" kindref="member">get_padding_above_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="293"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="294"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_above_forward;</highlight></codeline>
+<codeline lineno="295"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="297" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ad6e2d6a189b9e2f4131de82f54c01401_1ad6e2d6a189b9e2f4131de82f54c01401" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ad6e2d6a189b9e2f4131de82f54c01401_1ad6e2d6a189b9e2f4131de82f54c01401" kindref="member">get_data_dilation_strides_forward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="298"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="299"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="300"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="301"><highlight class="normal"></highlight></codeline>
+<codeline lineno="303" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ade5809c6493462268b24016f7f26966c_1ade5809c6493462268b24016f7f26966c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_ade5809c6493462268b24016f7f26966c_1ade5809c6493462268b24016f7f26966c" kindref="member">get_window_movement_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="304"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="305"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_movement_strides_backward;</highlight></codeline>
+<codeline lineno="306"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="308" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a1aa069b58b054ee2aa5721bce545760c_1a1aa069b58b054ee2aa5721bce545760c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a1aa069b58b054ee2aa5721bce545760c_1a1aa069b58b054ee2aa5721bce545760c" kindref="member">get_window_dilation_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="309"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="310"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_window_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="311"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="313" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a5fcab40791490ed2f07fc622d3cb30f2_1a5fcab40791490ed2f07fc622d3cb30f2" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a5fcab40791490ed2f07fc622d3cb30f2_1a5fcab40791490ed2f07fc622d3cb30f2" kindref="member">get_padding_below_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="314"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="315"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_below_backward;</highlight></codeline>
+<codeline lineno="316"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="318" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a157855f234e1884781c66d1fad5faa36_1a157855f234e1884781c66d1fad5faa36" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_a157855f234e1884781c66d1fad5faa36_1a157855f234e1884781c66d1fad5faa36" kindref="member">get_padding_above_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="319"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="320"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_padding_above_backward;</highlight></codeline>
+<codeline lineno="321"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="323" refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_aba442c483e35e4b05ade775b808eba87_1aba442c483e35e4b05ade775b808eba87" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/><ref refid="classngraph_1_1op_1_1ConvolutionBackpropFilters_aba442c483e35e4b05ade775b808eba87_1aba442c483e35e4b05ade775b808eba87" kindref="member">get_data_dilation_strides_backward</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="324"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="325"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_data_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="326"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="327"><highlight class="normal"></highlight></codeline>
+<codeline lineno="328"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="329"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>m_filters_shape;</highlight></codeline>
+<codeline lineno="330"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_movement_strides_forward;</highlight></codeline>
+<codeline lineno="331"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="332"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_below_forward;</highlight></codeline>
+<codeline lineno="333"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_above_forward;</highlight></codeline>
+<codeline lineno="334"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_data_dilation_strides_forward;</highlight></codeline>
+<codeline lineno="335"><highlight class="normal"></highlight></codeline>
+<codeline lineno="336"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_movement_strides_backward;</highlight></codeline>
+<codeline lineno="337"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_window_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="338"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_below_backward;</highlight></codeline>
+<codeline lineno="339"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref><sp/>m_padding_above_backward;</highlight></codeline>
+<codeline lineno="340"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_data_dilation_strides_backward;</highlight></codeline>
+<codeline lineno="341"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="342"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="343"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/convolution.hpp"/>
+  </compounddef>
+</doxygen>

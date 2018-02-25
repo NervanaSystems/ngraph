@@ -1,0 +1,357 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1element_1_1Type" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::element::Type</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1element_1_1Type_1aa81b80f4dd85834b51e358b2b193e388" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::element::Type::m_bitwidth</definition>
+        <argsstring></argsstring>
+        <name>m_bitwidth</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="74" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1element_1_1Type_1ae7d83885e127e726e1a32c6d201b5ed9" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::m_is_real</definition>
+        <argsstring></argsstring>
+        <name>m_is_real</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="75" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1element_1_1Type_1af73bfcde5e10ba3d6dbbab300e0c5942" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::m_is_signed</definition>
+        <argsstring></argsstring>
+        <name>m_is_signed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="76" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1element_1_1Type_1abe25562f651f6dcd7c974e2c62dd1e98" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ngraph::element::Type::m_cname</definition>
+        <argsstring></argsstring>
+        <name>m_cname</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="77" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a877b8d2bcda2987e8e6b9bb9b441b721" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>element::Type::Type</definition>
+        <argsstring>()</argsstring>
+        <name>Type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="55" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a549db28cf3158853d035b2361c8f0790" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::element::Type::Type</definition>
+        <argsstring>(const Type &amp;)=default</argsstring>
+        <name>Type</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="55" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a525eabd10ddc410f5ec075df4fd6f0fb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>element::Type::Type</definition>
+        <argsstring>(size_t bitwidth, bool is_real, bool is_signed, const std::string &amp;cname)</argsstring>
+        <name>Type</name>
+        <param>
+          <type>size_t</type>
+          <declname>bitwidth</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>is_real</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>is_signed</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>cname</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="63" bodyend="69"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1ab1b73d1f54cd79ea4dafa23ec773fcc5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>Type&amp; ngraph::element::Type::operator=</definition>
+        <argsstring>(const Type &amp;)=default</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="57" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a8ff0904ff56b9d77289da864ea0b4a17" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual ngraph::element::Type::~Type</definition>
+        <argsstring>()</argsstring>
+        <name>~Type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="58" bodyend="58"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a19fd884d0434def071b2e0248b7b265b" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::string &amp;</type>
+        <definition>const std::string &amp; element::Type::c_type_string</definition>
+        <argsstring>() const</argsstring>
+        <name>c_type_string</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="59" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="71" bodyend="74"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a7b97a5c178964f22a63ac60335ac71a0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t element::Type::size</definition>
+        <argsstring>() const</argsstring>
+        <name>size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="60" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="95" bodyend="98"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1aea9d8e47537bd551d28acc17c3c4f490" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t element::Type::hash</definition>
+        <argsstring>() const</argsstring>
+        <name>hash</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="61" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="100" bodyend="106"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a907a235a97fd7e3b2173974be84a1890" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::is_real</definition>
+        <argsstring>() const</argsstring>
+        <name>is_real</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="62" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="62" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a6957e48ea66b255b3487249055e086e7" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::is_signed</definition>
+        <argsstring>() const</argsstring>
+        <name>is_signed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="63" bodyend="63"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1ae162f2fe2500e0506e3a90c136a555e6" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::element::Type::bitwidth</definition>
+        <argsstring>() const</argsstring>
+        <name>bitwidth</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="64" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a044517039f402d5eaad75d56d55e6027" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool element::Type::operator==</definition>
+        <argsstring>(const Type &amp;other) const</argsstring>
+        <name>operator==</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="76" bodyend="80"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a9d502a048f5ce2f82f51ae86977650f9" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::operator!=</definition>
+        <argsstring>(const Type &amp;other) const</argsstring>
+        <name>operator!=</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="66" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a3efa6e7287835a735067b4a431a91e5e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool element::Type::operator&lt;</definition>
+        <argsstring>(const Type &amp;other) const</argsstring>
+        <name>operator&lt;</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="67" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="82" bodyend="93"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1ad24ce0965bd041168bd227da2a7829a6" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::element::Type::get_is_real</definition>
+        <argsstring>() const</argsstring>
+        <name>get_is_real</name>
+        <briefdescription>
+<para>Returns true if the type is floating point, else false. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="72" bodyend="72"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="classngraph_1_1element_1_1Type_1af04b22a3cce21530093b788753203b11" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>friend std::ostream &amp;</type>
+        <definition>std::ostream&amp; operator&lt;&lt;</definition>
+        <argsstring>(std::ostream &amp;, const Type &amp;)</argsstring>
+        <name>operator&lt;&lt;</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <defname>out</defname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+          <defname>obj</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="68" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1element_1_1Type_1a1662db0b9d094a3da1dd70364763be0c" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> * &gt;</type>
+        <definition>std::vector&lt; const element::Type * &gt; element::Type::get_known_types</definition>
+        <argsstring>()</argsstring>
+        <name>get_known_types</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="39" bodyend="53"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="51" bodyend="78"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1element_1_1Type_1ae162f2fe2500e0506e3a90c136a555e6" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>bitwidth</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a19fd884d0434def071b2e0248b7b265b" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>c_type_string</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1ad24ce0965bd041168bd227da2a7829a6" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>get_is_real</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a1662db0b9d094a3da1dd70364763be0c" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>get_known_types</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1aea9d8e47537bd551d28acc17c3c4f490" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>hash</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a907a235a97fd7e3b2173974be84a1890" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>is_real</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a6957e48ea66b255b3487249055e086e7" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>is_signed</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1aa81b80f4dd85834b51e358b2b193e388" prot="private" virt="non-virtual"><scope>ngraph::element::Type</scope><name>m_bitwidth</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1abe25562f651f6dcd7c974e2c62dd1e98" prot="private" virt="non-virtual"><scope>ngraph::element::Type</scope><name>m_cname</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1ae7d83885e127e726e1a32c6d201b5ed9" prot="private" virt="non-virtual"><scope>ngraph::element::Type</scope><name>m_is_real</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1af73bfcde5e10ba3d6dbbab300e0c5942" prot="private" virt="non-virtual"><scope>ngraph::element::Type</scope><name>m_is_signed</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a9d502a048f5ce2f82f51ae86977650f9" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>operator!=</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a3efa6e7287835a735067b4a431a91e5e" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>operator&lt;</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1af04b22a3cce21530093b788753203b11" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>operator&lt;&lt;</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1ab1b73d1f54cd79ea4dafa23ec773fcc5" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>operator=</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a044517039f402d5eaad75d56d55e6027" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>operator==</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a7b97a5c178964f22a63ac60335ac71a0" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>size</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a877b8d2bcda2987e8e6b9bb9b441b721" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>Type</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a549db28cf3158853d035b2361c8f0790" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>Type</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a525eabd10ddc410f5ec075df4fd6f0fb" prot="public" virt="non-virtual"><scope>ngraph::element::Type</scope><name>Type</name></member>
+      <member refid="classngraph_1_1element_1_1Type_1a8ff0904ff56b9d77289da864ea0b4a17" prot="public" virt="virtual"><scope>ngraph::element::Type</scope><name>~Type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

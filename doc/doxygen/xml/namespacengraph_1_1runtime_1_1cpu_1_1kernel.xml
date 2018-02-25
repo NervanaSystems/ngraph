@@ -1,0 +1,487 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1runtime_1_1cpu_1_1kernel" kind="namespace" language="C++">
+    <compoundname>ngraph::runtime::cpu::kernel</compoundname>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1a92d1644e395b9426f42232bc7b47753c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_broadcast</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;out, const Shape &amp;arg0_shape, const Shape &amp;out_shape, const AxisSet &amp;broadcast_axes)</argsstring>
+        <name>emit_broadcast</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg0_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" kindref="member">AxisSet</ref> &amp;</type>
+          <declname>broadcast_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="30" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="95" bodyend="124"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1aba062e226876d06866b3845d7e424a58" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_concat</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::vector&lt; std::string &gt; &amp;args, const std::string &amp;out, const std::vector&lt; Shape &gt; &amp;in_shapes, const Shape &amp;out_shape, const size_t concatenation_axis)</argsstring>
+        <name>emit_concat</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &gt; &amp;</type>
+          <declname>in_shapes</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const size_t</type>
+          <declname>concatenation_axis</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="129" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1ac20381b67198dd100449670e9b1ac1fa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_replace_slice</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;arg1, const std::string &amp;out, const Shape &amp;arg1_shape, const Shape &amp;out_shape, const Coordinate &amp;lower_bounds, const Coordinate &amp;upper_bounds, const Strides &amp;strides)</argsstring>
+        <name>emit_replace_slice</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg1</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg1_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>lower_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>upper_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>strides</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="157" bodyend="177"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1a13b80fea6434abc1cdf64ecf44aa7c16" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_slice</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;out, const Shape &amp;arg0_shape, const Shape &amp;out_shape, const Coordinate &amp;lower_bounds, const Coordinate &amp;upper_bounds, const Strides &amp;strides)</argsstring>
+        <name>emit_slice</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg0_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>lower_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>upper_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>strides</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="179" bodyend="221"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1a7a6002ac8549071469a57e20faa34e02" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_reshape</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;out, const Shape &amp;arg0_shape, const Shape &amp;out_shape, const AxisVector &amp;arg0_axis_order)</argsstring>
+        <name>emit_reshape</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg0_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref> &amp;</type>
+          <declname>arg0_axis_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="223" bodyend="286"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1a93578bec25ae57b0c6dee0d889c88c58" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_sum</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;out, const Shape &amp;arg0_shape, const Shape &amp;out_shape, const AxisSet &amp;reduction_axes)</argsstring>
+        <name>emit_sum</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg0_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" kindref="member">AxisSet</ref> &amp;</type>
+          <declname>reduction_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="288" bodyend="370"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__emitters_8hpp_1a6286b4941efd884926933c76a28f9ef6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_reduce</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;arg0, const std::string &amp;arg1, const std::string &amp;out, const Shape &amp;arg0_shape, const Shape &amp;out_shape, const AxisSet &amp;reduction_axes)</argsstring>
+        <name>emit_reduce</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>arg1</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>arg0_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>out_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" kindref="member">AxisSet</ref> &amp;</type>
+          <declname>reduction_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="78" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.cpp" bodystart="371" bodyend="448"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1ada714f69aaf4439ebb178d6d14b4c567" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; std::string &gt;</type>
+        <definition>vector&lt; string &gt; ngraph::runtime::cpu::kernel::emit_multi_indices</definition>
+        <argsstring>(CoordinateTransform &amp;trans, const std::vector&lt; std::string &gt; &amp;index_vars)</argsstring>
+        <name>emit_multi_indices</name>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>trans</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>index_vars</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="42" bodyend="75"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1ac6fb5822ee5d0877c7114f6267704187" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::runtime::cpu::kernel::emit_linear_index</definition>
+        <argsstring>(CoordinateTransform &amp;trans, const std::vector&lt; std::string &gt; &amp;index_vars)</argsstring>
+        <name>emit_linear_index</name>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>trans</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>index_vars</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="94" bodyend="118"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1afe0a0c4bbfd905b25d8ad6b8f30bd11e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::runtime::cpu::kernel::start_index_loop</definition>
+        <argsstring>(const std::string &amp;index_var, size_t start, size_t end, bool omp)</argsstring>
+        <name>start_index_loop</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>index_var</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>start</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>end</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>omp</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="126" bodyend="143"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1a9c972088de55e12b7e7ce6c517384fd4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::runtime::cpu::kernel::end_index_loop</definition>
+        <argsstring>(const std::string &amp;index_var)</argsstring>
+        <name>end_index_loop</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>index_var</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="148" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1adb9b782f143b966639de42a61230cdf0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::runtime::cpu::kernel::emit_nd_sizes</definition>
+        <argsstring>(CoordinateTransform &amp;trans)</argsstring>
+        <name>emit_nd_sizes</name>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>trans</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="157" bodyend="167"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1a8841243aa9ce9f4346ea926746b7536a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::runtime::cpu::kernel::emit_nd_index</definition>
+        <argsstring>(CoordinateTransform &amp;trans, const std::vector&lt; std::string &gt; &amp;index_vars)</argsstring>
+        <name>emit_nd_index</name>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>trans</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>index_vars</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="169" bodyend="180"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__kernel__utils_8hpp_1a465af5d042ccd6a5e5ce01f9a40ff31d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::kernel::emit_pointwise_copy</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const std::string &amp;element_type, const std::string &amp;source_buffer, const std::string &amp;dest_buffer, CoordinateTransform &amp;source_trans, CoordinateTransform &amp;dest_trans)</argsstring>
+        <name>emit_pointwise_copy</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>source_buffer</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>dest_buffer</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>source_trans</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1CoordinateTransform" kindref="compound">CoordinateTransform</ref> &amp;</type>
+          <declname>dest_trans</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_utils.cpp" bodystart="186" bodyend="228"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernel_emitters.hpp" line="29" column="1"/>
+  </compounddef>
+</doxygen>

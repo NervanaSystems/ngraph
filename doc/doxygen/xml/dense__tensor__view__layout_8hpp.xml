@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dense__tensor__view__layout_8hpp" kind="file" language="C++">
+    <compoundname>dense_tensor_view_layout.hpp</compoundname>
+    <includes local="no">cstddef</includes>
+    <includes local="no">vector</includes>
+    <includes refid="tensor__view__layout_8hpp" local="yes">ngraph/descriptor/layout/tensor_view_layout.hpp</includes>
+    <includedby refid="dense__tensor__view__layout_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.cpp</includedby>
+    <includedby refid="ngraph_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</includedby>
+    <includedby refid="gpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</includedby>
+    <includedby refid="gpu__tensor__view_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.cpp</includedby>
+    <includedby refid="host__tensor__view_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.cpp</includedby>
+    <includedby refid="int__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</includedby>
+    <incdepgraph>
+      <node id="1518">
+        <label>ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="1519" relation="include">
+        </childnode>
+        <childnode refid="1520" relation="include">
+        </childnode>
+      </node>
+      <node id="1519">
+        <label>cassert</label>
+      </node>
+      <node id="1512">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.hpp</label>
+        <link refid="dense__tensor__view__layout_8hpp"/>
+        <childnode refid="1513" relation="include">
+        </childnode>
+        <childnode refid="1514" relation="include">
+        </childnode>
+        <childnode refid="1515" relation="include">
+        </childnode>
+      </node>
+      <node id="1520">
+        <label>ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp_source"/>
+      </node>
+      <node id="1525">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="1516" relation="include">
+        </childnode>
+        <childnode refid="1526" relation="include">
+        </childnode>
+        <childnode refid="1527" relation="include">
+        </childnode>
+        <childnode refid="1514" relation="include">
+        </childnode>
+      </node>
+      <node id="1522">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="1523" relation="include">
+        </childnode>
+        <childnode refid="1524" relation="include">
+        </childnode>
+        <childnode refid="1514" relation="include">
+        </childnode>
+        <childnode refid="1525" relation="include">
+        </childnode>
+      </node>
+      <node id="1523">
+        <label>cstdio</label>
+      </node>
+      <node id="1517">
+        <label>tuple</label>
+      </node>
+      <node id="1514">
+        <label>vector</label>
+      </node>
+      <node id="1527">
+        <label>utility</label>
+      </node>
+      <node id="1515">
+        <label>ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="1516" relation="include">
+        </childnode>
+        <childnode refid="1517" relation="include">
+        </childnode>
+        <childnode refid="1514" relation="include">
+        </childnode>
+        <childnode refid="1518" relation="include">
+        </childnode>
+        <childnode refid="1521" relation="include">
+        </childnode>
+      </node>
+      <node id="1524">
+        <label>iostream</label>
+      </node>
+      <node id="1513">
+        <label>cstddef</label>
+      </node>
+      <node id="1526">
+        <label>set</label>
+      </node>
+      <node id="1521">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="1516" relation="include">
+        </childnode>
+        <childnode refid="1522" relation="include">
+        </childnode>
+      </node>
+      <node id="1516">
+        <label>memory</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1534">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="1533">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.cpp</label>
+        <link refid="host__tensor__view_8cpp_source"/>
+      </node>
+      <node id="1531">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="1528">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.hpp</label>
+        <link refid="dense__tensor__view__layout_8hpp"/>
+        <childnode refid="1529" relation="include">
+        </childnode>
+        <childnode refid="1530" relation="include">
+        </childnode>
+        <childnode refid="1531" relation="include">
+        </childnode>
+        <childnode refid="1532" relation="include">
+        </childnode>
+        <childnode refid="1533" relation="include">
+        </childnode>
+        <childnode refid="1534" relation="include">
+        </childnode>
+      </node>
+      <node id="1529">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.cpp</label>
+        <link refid="dense__tensor__view__layout_8cpp_source"/>
+      </node>
+      <node id="1530">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="1532">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.cpp</label>
+        <link refid="gpu__tensor__view_8cpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" prot="public">ngraph::descriptor::layout::DenseTensorViewLayout</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor">ngraph::descriptor</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor_1_1layout">ngraph::descriptor::layout</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstddef&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/layout/tensor_view_layout.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="25"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">descriptor</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal">TensorView;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30" refid="namespacengraph_1_1descriptor_1_1layout" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">layout</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35" refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" kindref="compound">DenseTensorViewLayout</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout" kindref="compound">TensorViewLayout</ref></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>~<ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" kindref="compound">DenseTensorViewLayout</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" kindref="compound">DenseTensorViewLayout</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">TensorView</ref>&amp;<sp/>tensor_view);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41" refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_a46236c9303d19578df640452c578efcd_1a46236c9303d19578df640452c578efcd" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_a46236c9303d19578df640452c578efcd_1a46236c9303d19578df640452c578efcd" kindref="member">get_size</ref>()</highlight><highlight class="keyword"><sp/>override<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_size;<sp/>}</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>get_offset()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_offset;<sp/>}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_a8c79f1a8bbb9314ea26c09e40686a865_1a8c79f1a8bbb9314ea26c09e40686a865" kindref="member">get_index_offset</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;size_t&gt;&amp;<sp/>indices)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>get_strides()</highlight><highlight class="keyword"><sp/>const<sp/>override<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_strides;<sp/>}</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_1ad2c4b90ff593f091289bb48bfc1e3d03" kindref="member">operator==</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>TensorViewLayout&amp;<sp/>other)<sp/></highlight><highlight class="keyword">const<sp/>override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref><sp/>m_strides;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>m_offset{0};</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>m_size;</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="55"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.hpp"/>
+  </compounddef>
+</doxygen>

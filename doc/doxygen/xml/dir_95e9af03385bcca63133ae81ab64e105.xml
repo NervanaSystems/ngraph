@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_95e9af03385bcca63133ae81ab64e105" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/types</compoundname>
+    <innerfile refid="element__type_8cpp">element_type.cpp</innerfile>
+    <innerfile refid="element__type_8hpp">element_type.hpp</innerfile>
+    <innerfile refid="type_8cpp">type.cpp</innerfile>
+    <innerfile refid="type_8hpp">type.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/"/>
+  </compounddef>
+</doxygen>

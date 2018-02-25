@@ -1,0 +1,511 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="graph__rewrite_8cpp" kind="file" language="C++">
+    <compoundname>graph_rewrite.cpp</compoundname>
+    <includes local="no">algorithm</includes>
+    <includes local="no">iostream</includes>
+    <includes local="no">unordered_set</includes>
+    <includes refid="graph__rewrite_8hpp" local="yes">graph_rewrite.hpp</includes>
+    <includes refid="log_8hpp" local="yes">ngraph/log.hpp</includes>
+    <includes refid="matcher_8hpp" local="yes">ngraph/pattern/matcher.hpp</includes>
+    <incdepgraph>
+      <node id="10362">
+        <label>list</label>
+      </node>
+      <node id="10366">
+        <label>atomic</label>
+      </node>
+      <node id="10359">
+        <label>functional</label>
+      </node>
+      <node id="10371">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="10356" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10372" relation="include">
+        </childnode>
+      </node>
+      <node id="10358">
+        <label>graph_rewrite.hpp</label>
+        <link refid="graph__rewrite_8hpp_source"/>
+        <childnode refid="10359" relation="include">
+        </childnode>
+        <childnode refid="10360" relation="include">
+        </childnode>
+        <childnode refid="10361" relation="include">
+        </childnode>
+      </node>
+      <node id="10394">
+        <label>ngraph/pattern/matcher.hpp</label>
+        <link refid="matcher_8hpp_source"/>
+        <childnode refid="10395" relation="include">
+        </childnode>
+        <childnode refid="10396" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10397" relation="include">
+        </childnode>
+        <childnode refid="10401" relation="include">
+        </childnode>
+        <childnode refid="10403" relation="include">
+        </childnode>
+      </node>
+      <node id="10372">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10373" relation="include">
+        </childnode>
+        <childnode refid="10377" relation="include">
+        </childnode>
+      </node>
+      <node id="10369">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10360" relation="include">
+        </childnode>
+        <childnode refid="10370" relation="include">
+        </childnode>
+        <childnode refid="10385" relation="include">
+        </childnode>
+      </node>
+      <node id="10386">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="10366" relation="include">
+        </childnode>
+        <childnode refid="10384" relation="include">
+        </childnode>
+        <childnode refid="10356" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10360" relation="include">
+        </childnode>
+        <childnode refid="10368" relation="include">
+        </childnode>
+        <childnode refid="10387" relation="include">
+        </childnode>
+        <childnode refid="10388" relation="include">
+        </childnode>
+        <childnode refid="10357" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10389" relation="include">
+        </childnode>
+        <childnode refid="10375" relation="include">
+        </childnode>
+        <childnode refid="10370" relation="include">
+        </childnode>
+        <childnode refid="10369" relation="include">
+        </childnode>
+        <childnode refid="10371" relation="include">
+        </childnode>
+        <childnode refid="10372" relation="include">
+        </childnode>
+      </node>
+      <node id="10401">
+        <label>ngraph/pattern/op/any.hpp</label>
+        <link refid="any_8hpp_source"/>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10394" relation="include">
+        </childnode>
+        <childnode refid="10402" relation="include">
+        </childnode>
+      </node>
+      <node id="10395">
+        <label>cassert</label>
+      </node>
+      <node id="10383">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="10384" relation="include">
+        </childnode>
+        <childnode refid="10379" relation="include">
+        </childnode>
+        <childnode refid="10382" relation="include">
+        </childnode>
+      </node>
+      <node id="10382">
+        <label>stdexcept</label>
+      </node>
+      <node id="10361">
+        <label>ngraph/pass/pass.hpp</label>
+        <link refid="pass_8hpp_source"/>
+        <childnode refid="10362" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10365" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10393" relation="include">
+        </childnode>
+      </node>
+      <node id="10368">
+        <label>string</label>
+      </node>
+      <node id="10378">
+        <label>map</label>
+      </node>
+      <node id="10357">
+        <label>unordered_set</label>
+      </node>
+      <node id="10396">
+        <label>memory.h</label>
+      </node>
+      <node id="10377">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="10378" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10379" relation="include">
+        </childnode>
+        <childnode refid="10368" relation="include">
+        </childnode>
+        <childnode refid="10380" relation="include">
+        </childnode>
+        <childnode refid="10375" relation="include">
+        </childnode>
+        <childnode refid="10381" relation="include">
+        </childnode>
+        <childnode refid="10383" relation="include">
+        </childnode>
+      </node>
+      <node id="10375">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10360" relation="include">
+        </childnode>
+        <childnode refid="10376" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+      </node>
+      <node id="10370">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10371" relation="include">
+        </childnode>
+        <childnode refid="10372" relation="include">
+        </childnode>
+      </node>
+      <node id="10373">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="10374" relation="include">
+        </childnode>
+        <childnode refid="10356" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10375" relation="include">
+        </childnode>
+      </node>
+      <node id="10389">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10388" relation="include">
+        </childnode>
+        <childnode refid="10375" relation="include">
+        </childnode>
+      </node>
+      <node id="10392">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="10390" relation="include">
+        </childnode>
+        <childnode refid="10372" relation="include">
+        </childnode>
+      </node>
+      <node id="10390">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="10368" relation="include">
+        </childnode>
+        <childnode refid="10375" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10391" relation="include">
+        </childnode>
+      </node>
+      <node id="10374">
+        <label>cstdio</label>
+      </node>
+      <node id="10403">
+        <label>ngraph/pattern/op/label.hpp</label>
+        <link refid="label_8hpp_source"/>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10394" relation="include">
+        </childnode>
+        <childnode refid="10402" relation="include">
+        </childnode>
+      </node>
+      <node id="10364">
+        <label>vector</label>
+      </node>
+      <node id="10376">
+        <label>utility</label>
+      </node>
+      <node id="10379">
+        <label>sstream</label>
+      </node>
+      <node id="10397">
+        <label>ngraph/ops/constant.hpp</label>
+        <link refid="ops_2constant_8hpp_source"/>
+        <childnode refid="10398" relation="include">
+        </childnode>
+        <childnode refid="10379" relation="include">
+        </childnode>
+        <childnode refid="10383" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10377" relation="include">
+        </childnode>
+        <childnode refid="10399" relation="include">
+        </childnode>
+      </node>
+      <node id="10365">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="10366" relation="include">
+        </childnode>
+        <childnode refid="10367" relation="include">
+        </childnode>
+        <childnode refid="10362" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10368" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10369" relation="include">
+        </childnode>
+        <childnode refid="10385" relation="include">
+        </childnode>
+        <childnode refid="10383" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10390" relation="include">
+        </childnode>
+        <childnode refid="10392" relation="include">
+        </childnode>
+        <childnode refid="10372" relation="include">
+        </childnode>
+      </node>
+      <node id="10356">
+        <label>iostream</label>
+      </node>
+      <node id="10391">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="10384">
+        <label>deque</label>
+      </node>
+      <node id="10388">
+        <label>unordered_map</label>
+      </node>
+      <node id="10400">
+        <label>chrono</label>
+      </node>
+      <node id="10381">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="10382" relation="include">
+        </childnode>
+      </node>
+      <node id="10402">
+        <label>ngraph/pattern/op/pattern.hpp</label>
+        <link refid="pattern_8hpp_source"/>
+        <childnode refid="10359" relation="include">
+        </childnode>
+        <childnode refid="10386" relation="include">
+        </childnode>
+        <childnode refid="10358" relation="include">
+        </childnode>
+        <childnode refid="10394" relation="include">
+        </childnode>
+      </node>
+      <node id="10354">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.cpp</label>
+        <link refid="graph__rewrite_8cpp"/>
+        <childnode refid="10355" relation="include">
+        </childnode>
+        <childnode refid="10356" relation="include">
+        </childnode>
+        <childnode refid="10357" relation="include">
+        </childnode>
+        <childnode refid="10358" relation="include">
+        </childnode>
+        <childnode refid="10383" relation="include">
+        </childnode>
+        <childnode refid="10394" relation="include">
+        </childnode>
+      </node>
+      <node id="10380">
+        <label>type_traits</label>
+      </node>
+      <node id="10360">
+        <label>set</label>
+      </node>
+      <node id="10385">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10373" relation="include">
+        </childnode>
+      </node>
+      <node id="10355">
+        <label>algorithm</label>
+      </node>
+      <node id="10399">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="10355" relation="include">
+        </childnode>
+        <childnode refid="10400" relation="include">
+        </childnode>
+        <childnode refid="10384" relation="include">
+        </childnode>
+        <childnode refid="10359" relation="include">
+        </childnode>
+        <childnode refid="10356" relation="include">
+        </childnode>
+        <childnode refid="10362" relation="include">
+        </childnode>
+        <childnode refid="10378" relation="include">
+        </childnode>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10379" relation="include">
+        </childnode>
+        <childnode refid="10368" relation="include">
+        </childnode>
+        <childnode refid="10388" relation="include">
+        </childnode>
+        <childnode refid="10357" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+      </node>
+      <node id="10393">
+        <label>ngraph/pass/manager_state.hpp</label>
+        <link refid="manager__state_8hpp_source"/>
+        <childnode refid="10363" relation="include">
+        </childnode>
+        <childnode refid="10364" relation="include">
+        </childnode>
+        <childnode refid="10365" relation="include">
+        </childnode>
+      </node>
+      <node id="10398">
+        <label>cstring</label>
+      </node>
+      <node id="10363">
+        <label>memory</label>
+      </node>
+      <node id="10367">
+        <label>initializer_list</label>
+      </node>
+      <node id="10387">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;unordered_set&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;graph_rewrite.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/log.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/pattern/matcher.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::list&lt;std::shared_ptr&lt;ngraph::Node&gt;&gt;&amp;<sp/>nodes,</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;pattern::Matcher&gt;&gt;&amp;<sp/>matchers,</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Function&gt;<sp/>f)</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>rewritten<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>node<sp/>:<sp/>nodes)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>matcher<sp/>:<sp/>matchers)</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Running<sp/>matcher<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>matcher<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>on<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>node<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>node-&gt;get_name()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>is_output<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>node-&gt;is_output();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(matcher-&gt;match(node))</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Matcher<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>matcher<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>matched<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>node<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>node-&gt;get_name();</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>rewritten<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>result<sp/>=<sp/>matcher-&gt;process_match();</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(result)</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>f-&gt;replace_node(node,<sp/>result);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//move<sp/>onto<sp/>the<sp/>next<sp/>node</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>rewritten;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr&lt;ngraph::Function&gt;<sp/>f)</highlight></codeline>
+<codeline lineno="56"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>run_matchers_on_nodes_list(f-&gt;get_ordered_ops(),<sp/>m_matchers,<sp/>f);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.cpp"/>
+  </compounddef>
+</doxygen>

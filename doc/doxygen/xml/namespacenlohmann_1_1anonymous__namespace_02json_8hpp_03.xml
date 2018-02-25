@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacenlohmann_1_1anonymous__namespace_02json_8hpp_03" kind="namespace" language="C++">
+    <compoundname>nlohmann::anonymous_namespace{json.hpp}</compoundname>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="namespacenlohmann_1_1anonymous__namespace_02json_8hpp_03_1a455d0daa616e67bbb74d81cf3ba15e79" prot="public" static="no" mutable="no">
+        <type>constexpr const auto &amp;</type>
+        <definition>constexpr const auto&amp; nlohmann::anonymous_namespace{json.hpp}::to_json</definition>
+        <argsstring></argsstring>
+        <name>to_json</name>
+        <initializer>= <ref refid="structnlohmann_1_1detail_1_1static__const" kindref="compound">detail::static_const</ref>&lt;<ref refid="structnlohmann_1_1detail_1_1to__json__fn" kindref="compound">detail::to_json_fn</ref>&gt;::value</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="6841" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="6841" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="namespacenlohmann_1_1anonymous__namespace_02json_8hpp_03_1a69afe041fa2aeac2239b65ae88b64af8" prot="public" static="no" mutable="no">
+        <type>constexpr const auto &amp;</type>
+        <definition>constexpr const auto&amp; nlohmann::anonymous_namespace{json.hpp}::from_json</definition>
+        <argsstring></argsstring>
+        <name>from_json</name>
+        <initializer>= <ref refid="structnlohmann_1_1detail_1_1static__const" kindref="compound">detail::static_const</ref>&lt;<ref refid="structnlohmann_1_1detail_1_1from__json__fn" kindref="compound">detail::from_json_fn</ref>&gt;::value</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="6842" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="6842" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>namespace to hold default <computeroutput>to_json</computeroutput> / <computeroutput>from_json</computeroutput> functions </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="6840" column="1"/>
+  </compounddef>
+</doxygen>

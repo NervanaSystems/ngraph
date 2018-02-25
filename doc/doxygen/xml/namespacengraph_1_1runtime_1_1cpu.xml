@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1runtime_1_1cpu" kind="namespace" language="C++">
+    <compoundname>ngraph::runtime::cpu</compoundname>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Backend" prot="public">ngraph::runtime::cpu::CPU_Backend</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame" prot="public">ngraph::runtime::cpu::CPU_CallFrame</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter" prot="public">ngraph::runtime::cpu::CPU_Emitter</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" prot="public">ngraph::runtime::cpu::CPU_ExternalFunction</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Manager" prot="public">ngraph::runtime::cpu::CPU_Manager</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPUOpAnnotations" prot="public">ngraph::runtime::cpu::CPUOpAnnotations</innerclass>
+    <innerclass refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext" prot="public">ngraph::runtime::cpu::CPURuntimeContext</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1CPUTensorView" prot="public">ngraph::runtime::cpu::CPUTensorView</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor" prot="public">ngraph::runtime::cpu::LayoutDescriptor</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter" prot="public">ngraph::runtime::cpu::MKLDNNEmitter</innerclass>
+    <innerclass refid="structngraph_1_1runtime_1_1cpu_1_1OpAttributes" prot="public">ngraph::runtime::cpu::OpAttributes</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" prot="public">ngraph::runtime::cpu::TensorViewWrapper</innerclass>
+    <innerclass refid="structngraph_1_1runtime_1_1cpu_1_1TraceEvent" prot="public">ngraph::runtime::cpu::TraceEvent</innerclass>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1eigen">ngraph::runtime::cpu::eigen</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1kernel">ngraph::runtime::cpu::kernel</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1mkldnn__utils">ngraph::runtime::cpu::mkldnn_utils</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1op">ngraph::runtime::cpu::op</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1pass">ngraph::runtime::cpu::pass</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="cpu__call__frame_8hpp_1aa780bc0ce320b4c5b880af77459d4b5f" prot="public" static="no">
+        <type>void(void **inputs, void **outputs, <ref refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext" kindref="compound">CPURuntimeContext</ref> *ctx)</type>
+        <definition>using ngraph::runtime::cpu::EntryPoint_t = typedef void(void** inputs, void** outputs, CPURuntimeContext* ctx)</definition>
+        <argsstring></argsstring>
+        <name>EntryPoint_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__call__frame_8hpp_1ab0c9842ff09d193143f51d855e794454" prot="public" static="no">
+        <type>std::function&lt; EntryPoint_t &gt;</type>
+        <definition>using ngraph::runtime::cpu::EntryPoint = typedef std::function&lt;EntryPoint_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>EntryPoint</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__external__function_8hpp_1a6053e606a457a5b0e493405d824f43f8" prot="public" static="no">
+        <type>std::function&lt; void(<ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> *external_function, <ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;, const <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> *, const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;inputs, const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;outputs)&gt;</type>
+        <definition>using ngraph::runtime::cpu::OpFunction = typedef std::function&lt;void(CPU_ExternalFunction* external_function, codegen::CodeWriter&amp;, const ngraph::Node*, const std::vector&lt;TensorViewWrapper&gt;&amp; inputs, const std::vector&lt;TensorViewWrapper&gt;&amp; outputs)&gt;</definition>
+        <argsstring></argsstring>
+        <name>OpFunction</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__external__function_8hpp_1aeb00c0ba31bf3b5df29c3e017f216f6c" prot="public" static="no">
+        <type>std::unordered_map&lt; std::type_index, OpFunction &gt;</type>
+        <definition>using ngraph::runtime::cpu::OpMap = typedef std::unordered_map&lt;std::type_index, OpFunction&gt;</definition>
+        <argsstring></argsstring>
+        <name>OpMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__layout__descriptor_8hpp_1a526c83b866de8e01adbb4ed9ef8a0e3a" prot="public" static="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor" kindref="compound">ngraph::runtime::cpu::LayoutDescriptor</ref> &gt; &gt;</type>
+        <definition>typedef std::vector&lt;std::shared_ptr&lt;ngraph::runtime::cpu::LayoutDescriptor&gt; &gt; ngraph::runtime::cpu::LayoutDescriptorPtrs</definition>
+        <argsstring></argsstring>
+        <name>LayoutDescriptorPtrs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_layout_descriptor.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_layout_descriptor.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__runtime__context_8hpp_1a53d920754386da83c0d98261714e4c0f" prot="public" static="no">
+        <type>std::chrono::high_resolution_clock</type>
+        <definition>typedef std::chrono::high_resolution_clock ngraph::runtime::cpu::Clock</definition>
+        <argsstring></argsstring>
+        <name>Clock</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="31" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__runtime__context_8hpp_1a7b12ee4d669f92a2b1f599e890a3c2a3" prot="public" static="no">
+        <type>std::chrono::time_point&lt; Clock &gt;</type>
+        <definition>typedef std::chrono::time_point&lt;Clock&gt; ngraph::runtime::cpu::Timestamp</definition>
+        <argsstring></argsstring>
+        <name>Timestamp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__runtime__context_8hpp_1af26848579d05194f51edec37a21ec088" prot="public" static="no">
+        <type>std::chrono::microseconds</type>
+        <definition>typedef std::chrono::microseconds ngraph::runtime::cpu::Timescale</definition>
+        <argsstring></argsstring>
+        <name>Timescale</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_runtime_context.hpp" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="cpu__tracing_8hpp_1a234c7ba5785f24ad4e2a09fa2c88764c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::to_json</definition>
+        <argsstring>(nlohmann::json &amp;json, const TraceEvent &amp;event)</argsstring>
+        <name>to_json</name>
+        <param>
+          <type><ref refid="namespacenlohmann_a2bfd99e845a2e5cd90aeaf1b1431f474_1a2bfd99e845a2e5cd90aeaf1b1431f474" kindref="member">nlohmann::json</ref> &amp;</type>
+          <declname>json</declname>
+        </param>
+        <param>
+          <type>const <ref refid="structngraph_1_1runtime_1_1cpu_1_1TraceEvent" kindref="compound">TraceEvent</ref> &amp;</type>
+          <declname>event</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.cpp" bodystart="22" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__tracing_8hpp_1a952546356621138544b0e1e9a81c9207" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::cpu::GenerateTimeline</definition>
+        <argsstring>(const std::vector&lt; OpAttributes &gt; &amp;op_attrs, int64_t *op_durations)</argsstring>
+        <name>GenerateTimeline</name>
+        <param>
+          <type>const std::vector&lt; <ref refid="structngraph_1_1runtime_1_1cpu_1_1OpAttributes" kindref="compound">OpAttributes</ref> &gt; &amp;</type>
+          <declname>op_attrs</declname>
+        </param>
+        <param>
+          <type>int64_t *</type>
+          <declname>op_durations</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.cpp" bodystart="44" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="cpu__tracing_8hpp_1a5abcc2a5f6d5080680fd305bd87109c8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::runtime::cpu::IsTracingEnabled</definition>
+        <argsstring>()</argsstring>
+        <name>IsTracingEnabled</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.cpp" bodystart="73" bodyend="76"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_backend.hpp" line="26" column="1"/>
+  </compounddef>
+</doxygen>

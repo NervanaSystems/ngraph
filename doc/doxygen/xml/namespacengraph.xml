@@ -1,0 +1,1445 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph" kind="namespace" language="C++">
+    <compoundname>ngraph</compoundname>
+    <innerclass refid="classngraph_1_1conststring" prot="public">ngraph::conststring</innerclass>
+    <innerclass refid="classngraph_1_1CoordinateTransform" prot="public">ngraph::CoordinateTransform</innerclass>
+    <innerclass refid="classngraph_1_1file__util" prot="public">ngraph::file_util</innerclass>
+    <innerclass refid="structngraph_1_1FpropCache" prot="public">ngraph::FpropCache</innerclass>
+    <innerclass refid="classngraph_1_1Function" prot="public">ngraph::Function</innerclass>
+    <innerclass refid="classngraph_1_1log__helper" prot="public">ngraph::log_helper</innerclass>
+    <innerclass refid="classngraph_1_1logger" prot="public">ngraph::logger</innerclass>
+    <innerclass refid="structngraph_1_1ngraph__error" prot="public">ngraph::ngraph_error</innerclass>
+    <innerclass refid="classngraph_1_1Node" prot="public">ngraph::Node</innerclass>
+    <innerclass refid="classngraph_1_1NodeMap" prot="public">ngraph::NodeMap</innerclass>
+    <innerclass refid="classngraph_1_1stopwatch" prot="public">ngraph::stopwatch</innerclass>
+    <innerclass refid="classngraph_1_1TensorViewType" prot="public">ngraph::TensorViewType</innerclass>
+    <innerclass refid="classngraph_1_1thread__starter" prot="public">ngraph::thread_starter</innerclass>
+    <innerclass refid="classngraph_1_1uuid__type" prot="public">ngraph::uuid_type</innerclass>
+    <innernamespace refid="namespacengraph_1_1autodiff">ngraph::autodiff</innernamespace>
+    <innernamespace refid="namespacengraph_1_1builder">ngraph::builder</innernamespace>
+    <innernamespace refid="namespacengraph_1_1codegen">ngraph::codegen</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor">ngraph::descriptor</innernamespace>
+    <innernamespace refid="namespacengraph_1_1element">ngraph::element</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op">ngraph::op</innernamespace>
+    <innernamespace refid="namespacengraph_1_1pass">ngraph::pass</innernamespace>
+    <innernamespace refid="namespacengraph_1_1pattern">ngraph::pattern</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <innernamespace refid="namespacengraph_1_1xla">ngraph::xla</innernamespace>
+      <sectiondef kind="enum">
+      <memberdef kind="enum" id="namespacengraph_1a0cab963f56b737df2702865a13c17db7" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>LOG_TYPE</name>
+        <enumvalue id="namespacengraph_1a0cab963f56b737df2702865a13c17db7a417e67ecba4496e424bc495ca9dbf1d6" prot="public">
+          <name>_LOG_TYPE_ERROR</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacengraph_1a0cab963f56b737df2702865a13c17db7a24f990b5187567258207d251c50681cd" prot="public">
+          <name>_LOG_TYPE_WARNING</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacengraph_1a0cab963f56b737df2702865a13c17db7afe003c11403dd49de514384daf67f1da" prot="public">
+          <name>_LOG_TYPE_INFO</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="namespacengraph_1a0cab963f56b737df2702865a13c17db7ab76fa63c8d287d6cf4ae03552fae2aec" prot="public">
+          <name>_LOG_TYPE_DEBUG</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" bodystart="57" bodyend="63"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespacengraph_1a6f7f8bd6c7300f0ea16962c7be38349f" prot="public" static="no">
+        <type>std::vector&lt; std::shared_ptr&lt; const ValueType &gt; &gt;</type>
+        <definition>using ngraph::ValueTypes = typedef std::vector&lt;std::shared_ptr&lt;const ValueType&gt; &gt;</definition>
+        <argsstring></argsstring>
+        <name>ValueTypes</name>
+        <briefdescription>
+<para>Zero or more value types. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" prot="public" static="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &gt;</type>
+        <definition>using ngraph::Nodes = typedef std::vector&lt;std::shared_ptr&lt;Node&gt; &gt;</definition>
+        <argsstring></argsstring>
+        <name>Nodes</name>
+        <briefdescription>
+<para>Zero or more nodes. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1ace79ef4b996f377753162926c987a2dd" prot="public" static="no">
+        <type>std::vector&lt; size_t &gt;</type>
+        <definition>using ngraph::AxisVector = typedef std::vector&lt;size_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>AxisVector</name>
+        <briefdescription>
+<para>A sequence of axes. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" prot="public" static="no">
+        <type>std::set&lt; size_t &gt;</type>
+        <definition>using ngraph::AxisSet = typedef std::set&lt;size_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>AxisSet</name>
+        <briefdescription>
+<para>A set of axes, for example, reduction axes. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1aafc407652e7de6256895067f6097a666" prot="public" static="no">
+        <type>std::vector&lt; size_t &gt;</type>
+        <definition>using ngraph::Coordinate = typedef std::vector&lt;size_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>Coordinate</name>
+        <briefdescription>
+<para>Coordinate in a tensor. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" prot="public" static="no">
+        <type>std::vector&lt; size_t &gt;</type>
+        <definition>using ngraph::Shape = typedef std::vector&lt;size_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>Shape</name>
+        <briefdescription>
+<para>Shape for a tensor. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" prot="public" static="no">
+        <type>std::vector&lt; size_t &gt;</type>
+        <definition>using ngraph::Strides = typedef std::vector&lt;size_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>Strides</name>
+        <briefdescription>
+<para>Strides of a tensor. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" prot="public" static="no">
+        <type>std::vector&lt; std::ptrdiff_t &gt;</type>
+        <definition>using ngraph::CoordinateDiff = typedef std::vector&lt;std::ptrdiff_t&gt;</definition>
+        <argsstring></argsstring>
+        <name>CoordinateDiff</name>
+        <briefdescription>
+<para>A coordinate-like type whose elements are allowed to be negative. </para>        </briefdescription>
+        <detaileddescription>
+<para>Currently used only to express negative padding; in the future, could conceivably be used to express </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespacengraph_1a37e8cba0e35e652cbbb6cf90552a61ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::numpy_transpose_error</definition>
+        <argsstring>(const AxisVector &amp;order, const Shape &amp;in_shape)</argsstring>
+        <name>numpy_transpose_error</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref> &amp;</type>
+          <declname>order</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>in_shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/numpy_transpose.cpp" line="25" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/numpy_transpose.cpp" bodystart="25" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a5e30d4f5f2d133ce2b1440082272f711" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate ngraph::project_coordinate</definition>
+        <argsstring>(const Coordinate &amp;coord, const AxisSet &amp;deleted_axes)</argsstring>
+        <name>project_coordinate</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>coord</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" kindref="member">AxisSet</ref> &amp;</type>
+          <declname>deleted_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="24" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aaabe13e7b0821c59c5554bdf339cf99d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::project_shape</definition>
+        <argsstring>(const Shape &amp;shape, const AxisSet &amp;deleted_axes)</argsstring>
+        <name>project_shape</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a550e0ad172aface7ca88c0ae5539470a" kindref="member">AxisSet</ref> &amp;</type>
+          <declname>deleted_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="39" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a0739486fa9ddc88a97d5966295eb245f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate ngraph::inject_coordinate</definition>
+        <argsstring>(const Coordinate &amp;coord, size_t new_axis_pos, size_t new_axis_val)</argsstring>
+        <name>inject_coordinate</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>coord</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>new_axis_pos</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>new_axis_val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="68" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="74" bodyend="79"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a85f5edf8014e8cf2d54e3a3a4aa9f5e3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate ngraph::inject_coordinate</definition>
+        <argsstring>(const Coordinate &amp;coord, std::vector&lt; std::pair&lt; size_t, size_t &gt;&gt; new_axis_pos_val_pairs)</argsstring>
+        <name>inject_coordinate</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>coord</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; std::pair&lt; size_t, size_t &gt;&gt;</type>
+          <declname>new_axis_pos_val_pairs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="45" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a8d87c59c5a601fc4568b1300d8da0ecf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::inject_shape</definition>
+        <argsstring>(const Shape &amp;shape, size_t new_axis_pos, size_t new_axis_length)</argsstring>
+        <name>inject_shape</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>new_axis_pos</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>new_axis_length</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="81" bodyend="84"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a4dd48581a2e42c0decd739a2299428e1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::inject_shape</definition>
+        <argsstring>(const Shape &amp;shape, std::vector&lt; std::pair&lt; size_t, size_t &gt;&gt; new_axis_pos_length_pairs)</argsstring>
+        <name>inject_shape</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; std::pair&lt; size_t, size_t &gt;&gt;</type>
+          <declname>new_axis_pos_length_pairs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.cpp" bodystart="86" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ad216a18aaa169b7ec914ce5d6c27b01d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::traverse_nodes</definition>
+        <argsstring>(const std::shared_ptr&lt; const Function &gt; p, std::function&lt; void(std::shared_ptr&lt; Node &gt;)&gt; f)</argsstring>
+        <name>traverse_nodes</name>
+        <param>
+          <type>const std::shared_ptr&lt; const <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void(std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;)&gt;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="32" bodyend="36"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ae2c8a38afd58e6da06b386fde94c533e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::traverse_nodes</definition>
+        <argsstring>(const Function *p, std::function&lt; void(std::shared_ptr&lt; Node &gt;)&gt; f)</argsstring>
+        <name>traverse_nodes</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> *</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void(std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;)&gt;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="38" bodyend="70"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ad44a11b4595b9ffb3e0b44a55f6724e6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::traverse_functions</definition>
+        <argsstring>(std::shared_ptr&lt; Function &gt; p, std::function&lt; void(std::shared_ptr&lt; Function &gt;)&gt; f)</argsstring>
+        <name>traverse_functions</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void(std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;)&gt;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="42" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a409756c230c76e3b81598850e8d3d566" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::free_nodes</definition>
+        <argsstring>(std::shared_ptr&lt; Function &gt;)</argsstring>
+        <name>free_nodes</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="45" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aa85c6038247e3a652797369a58942c43" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::replace_node</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; target, std::shared_ptr&lt; Node &gt; replacement, bool replace_output=false)</argsstring>
+        <name>replace_node</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>target</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>replacement</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>replace_output</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="111" bodyend="136"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a706ae97055ea389be7e105835f3cb313" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::replace_node_users_arguments</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; target, std::shared_ptr&lt; Node &gt; replacement)</argsstring>
+        <name>replace_node_users_arguments</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>target</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>replacement</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="138" bodyend="151"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a9d5a35d3737801f27d6f065c6a5941dd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &gt;</type>
+        <definition>std::list&lt; std::shared_ptr&lt; ngraph::Node &gt; &gt; ngraph::topological_sort</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;nodes)</argsstring>
+        <name>topological_sort</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="154" bodyend="189"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a9793769164e8212e023cb61d2dfa0ede" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::is_equal_to_const_value</definition>
+        <argsstring>(std::string const_value, std::shared_ptr&lt; Node &gt; reduce_constant)</argsstring>
+        <name>is_equal_to_const_value</name>
+        <param>
+          <type>std::string</type>
+          <declname>const_value</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>reduce_constant</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="261" bodyend="281"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a1b4d82b6dc6a2dd62729116741ab4c31" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt; &gt;</type>
+        <definition>std::list&lt; std::shared_ptr&lt; ngraph::Node &gt; &gt; ngraph::clone_nodes</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; ngraph::Node &gt;&gt; &amp;nodes, NodeMap &amp;node_map)</argsstring>
+        <name>clone_nodes</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1NodeMap" kindref="compound">NodeMap</ref> &amp;</type>
+          <declname>node_map</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="96" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="211" bodyend="237"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a7d08dc027a39120fdff93eb891ec1867" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+        <definition>std::shared_ptr&lt; ngraph::Function &gt; ngraph::clone_function</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Function &gt; func, NodeMap &amp;node_map)</argsstring>
+        <name>clone_function</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+          <declname>func</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1NodeMap" kindref="compound">NodeMap</ref> &amp;</type>
+          <declname>node_map</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp" line="101" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp" bodystart="239" bodyend="259"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a876fb37650c4c4ac57215a7ab2d8cb1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>constexpr const char *</type>
+        <definition>constexpr const char* ngraph::find_last</definition>
+        <argsstring>(conststring s, size_t offset, char ch)</argsstring>
+        <name>find_last</name>
+        <param>
+          <type><ref refid="classngraph_1_1conststring" kindref="compound">conststring</ref></type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>offset</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>ch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" bodystart="46" bodyend="50"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a454dfaa7dccadfdd4ae08bf931265662" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>constexpr const char *</type>
+        <definition>constexpr const char* ngraph::find_last</definition>
+        <argsstring>(conststring s, char ch)</argsstring>
+        <name>find_last</name>
+        <param>
+          <type><ref refid="classngraph_1_1conststring" kindref="compound">conststring</ref></type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>ch</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" bodystart="52" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a5497ec24808168a115cfee07dddc9c0c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>constexpr const char *</type>
+        <definition>constexpr const char* ngraph::get_file_name</definition>
+        <argsstring>(conststring s)</argsstring>
+        <name>get_file_name</name>
+        <param>
+          <type><ref refid="classngraph_1_1conststring" kindref="compound">conststring</ref></type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" bodystart="56" bodyend="56"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a1fa4286e869d65213b2de08ddd12f3ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::ostream &amp;</type>
+        <definition>std::ostream &amp; ngraph::get_nil_stream</definition>
+        <argsstring>()</argsstring>
+        <name>get_nil_stream</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.hpp" line="93" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/log.cpp" bodystart="41" bodyend="45"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1afe69b62971f0ffe1f8fcc295077b2972" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>ostream &amp;</type>
+        <definition>ostream&amp; ngraph::operator&lt;&lt;</definition>
+        <argsstring>(ostream &amp;out, const Node &amp;node)</argsstring>
+        <name>operator&lt;&lt;</name>
+        <param>
+          <type>ostream &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &amp;</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/node.cpp" line="194" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/node.cpp" bodystart="194" bodyend="206"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1af76234c7cc3bd67b273d73137e816dd7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Node&gt; ngraph::operator+</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Node &gt; arg0, const std::shared_ptr&lt; ngraph::Node &gt; arg1)</argsstring>
+        <name>operator+</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/add.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/add.hpp" bodystart="63" bodyend="67"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ad2886e36c32a8832f8894e258d077189" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Node&gt; ngraph::operator/</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Node &gt; arg0, const std::shared_ptr&lt; ngraph::Node &gt; arg1)</argsstring>
+        <name>operator/</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/divide.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/divide.hpp" bodystart="52" bodyend="56"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a084a33b2ba4a62d4c2917e231a8f8981" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Node&gt; ngraph::operator*</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Node &gt; arg0, const std::shared_ptr&lt; ngraph::Node &gt; arg1)</argsstring>
+        <name>operator*</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/multiply.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/multiply.hpp" bodystart="55" bodyend="59"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a7a7db1bc6812338b7f2de12b696317c6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Node&gt; ngraph::operator-</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Node &gt; arg0)</argsstring>
+        <name>operator-</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg0</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/negative.hpp" line="51" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/negative.hpp" bodystart="51" bodyend="54"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ae9b208cbf2470c1967bf8b7e5055fa72" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Node&gt; ngraph::operator-</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Node &gt; arg0, const std::shared_ptr&lt; ngraph::Node &gt; arg1)</argsstring>
+        <name>operator-</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg0</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+          <declname>arg1</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/subtract.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/subtract.hpp" bodystart="65" bodyend="69"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a1296120dafb0218fbf06a536ef99435e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::serialize</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Function &gt;, size_t indent=0)</argsstring>
+        <name>serialize</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>indent</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.hpp" line="28" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a8f734705f90f37309603d960e4e0bbf6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+        <definition>shared_ptr&lt; ngraph::Function &gt; ngraph::deserialize</definition>
+        <argsstring>(std::istream &amp;)</argsstring>
+        <name>deserialize</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <defname>in</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp" bodystart="224" bodyend="229"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a8f7e38e5c270e5b7aa5fa0d5d83d79b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+        <definition>shared_ptr&lt; ngraph::Function &gt; ngraph::deserialize</definition>
+        <argsstring>(const std::string &amp;)</argsstring>
+        <name>deserialize</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <defname>s</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.hpp" line="30" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp" bodystart="231" bodyend="243"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aaf2b8d56fdd9e59742bf3190da5efc33" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::shape_size</definition>
+        <argsstring>(const Shape &amp;shape)</argsstring>
+        <name>shape_size</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+<para>Number of elements in spanned by a shape. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" line="28" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.cpp" bodystart="25" bodyend="33"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a8989b8b51f0c6427b89b12fd19faf684" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides ngraph::row_major_strides</definition>
+        <argsstring>(const Shape &amp;shape)</argsstring>
+        <name>row_major_strides</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+<para>Row-major strides for a shape. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" line="31" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.cpp" bodystart="35" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aaf22d1a579344943d8eccbe728188305" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::is_scalar</definition>
+        <argsstring>(const Shape &amp;shape)</argsstring>
+        <name>is_scalar</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" bodystart="33" bodyend="33"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ab7ff0836d305c0b833fce1fd04305108" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::is_vector</definition>
+        <argsstring>(const Shape &amp;shape)</argsstring>
+        <name>is_vector</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/shape.hpp" bodystart="34" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a27a97563daf1f63a3aeea0e86c668c0d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::ostream &amp;</type>
+        <definition>std::ostream &amp; ngraph::operator&lt;&lt;</definition>
+        <argsstring>(std::ostream &amp;, const TensorViewType &amp;)</argsstring>
+        <name>operator&lt;&lt;</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <defname>out</defname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1TensorViewType" kindref="compound">TensorViewType</ref> &amp;</type>
+          <defname>obj</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/type.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/type.cpp" bodystart="57" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_ae1a26c975aaee99c93984a38a5cdc779_1ae1a26c975aaee99c93984a38a5cdc779" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>float</type>
+        <definition>float ngraph::parse_string&lt; float &gt;</definition>
+        <argsstring>(const std::string &amp;s)</argsstring>
+        <name>parse_string&lt; float &gt;</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>template specializations for float and double to handle INFINITY, -INFINITY and NaN values. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" line="284" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="284" bodyend="294"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1afe99a286c9fc39ad1652cad3ea182142" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>double</type>
+        <definition>double ngraph::parse_string&lt; double &gt;</definition>
+        <argsstring>(const std::string &amp;s)</argsstring>
+        <name>parse_string&lt; double &gt;</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" line="297" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="297" bodyend="307"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a17283053d0d9ff07e5b19f2b411d9a01" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::to_cplusplus_sourcecode_literal</definition>
+        <argsstring>(bool val)</argsstring>
+        <name>to_cplusplus_sourcecode_literal</name>
+        <param>
+          <type>bool</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="33" bodyend="36"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ad2f06feeb9a2c616bbb1d51f67d21147" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::string</type>
+        <definition>std::string ngraph::join</definition>
+        <argsstring>(const T &amp;v, const std::string &amp;sep=&quot;, &quot;)</argsstring>
+        <name>join</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>sep</declname>
+          <defval>&quot;, &quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="48" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a28ef6510299d4be2b8896d8caaa13df8" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::string</type>
+        <definition>static std::string ngraph::vector_to_string</definition>
+        <argsstring>(const std::vector&lt; T &gt; &amp;v)</argsstring>
+        <name>vector_to_string</name>
+        <param>
+          <type>const std::vector&lt; T &gt; &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="63" bodyend="68"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a061173dc1169d26152d5b3d819ea415b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename U</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>bool</type>
+        <definition>bool ngraph::contains</definition>
+        <argsstring>(const U &amp;container, const T &amp;obj)</argsstring>
+        <name>contains</name>
+        <param>
+          <type>const U &amp;</type>
+          <declname>container</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="71" bodyend="83"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a67e2df59ec72782ed4006d6b66e160e1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename U</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>bool</type>
+        <definition>bool ngraph::contains_key</definition>
+        <argsstring>(const U &amp;container, const T &amp;obj)</argsstring>
+        <name>contains_key</name>
+        <param>
+          <type>const U &amp;</type>
+          <declname>container</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="86" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="86" bodyend="98"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a9639e41671ef2713b9016b0fa4845dea" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename U</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::remove_from</definition>
+        <argsstring>(U &amp;container, const T &amp;obj)</argsstring>
+        <name>remove_from</name>
+        <param>
+          <type>U &amp;</type>
+          <declname>container</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="101" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="101" bodyend="108"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aa42a3e871d83b95e7923f6d9d500b28f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::hash_combine</definition>
+        <argsstring>(const std::vector&lt; size_t &gt; &amp;list)</argsstring>
+        <name>hash_combine</name>
+        <param>
+          <type>const std::vector&lt; size_t &gt; &amp;</type>
+          <declname>list</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="110" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="139" bodyend="147"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a0a5c6e9234532f2c98a54ce7a954e5a8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::dump</definition>
+        <argsstring>(std::ostream &amp;out, const void *, size_t)</argsstring>
+        <name>dump</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const void *</type>
+          <defname>_data</defname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <defname>_size</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="111" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="38" bodyend="83"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a9b92cdf37356727b89174a67e100019a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::to_lower</definition>
+        <argsstring>(const std::string &amp;s)</argsstring>
+        <name>to_lower</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="113" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="85" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a344fa586687d7c4cefdec36b960e6164" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::trim</definition>
+        <argsstring>(const std::string &amp;s)</argsstring>
+        <name>trim</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="114" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="92" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aadd8e825af7667cb5546684386821000" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; std::string &gt;</type>
+        <definition>vector&lt; string &gt; ngraph::split</definition>
+        <argsstring>(const std::string &amp;s, char delimiter, bool trim=false)</argsstring>
+        <name>split</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <param>
+          <type>char</type>
+          <declname>delimiter</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>trim</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="115" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="111" bodyend="137"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a930c271c2c799f63f77ea702b1de1bb8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T ngraph::parse_string</definition>
+        <argsstring>(const std::string &amp;s)</argsstring>
+        <name>parse_string</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s</declname>
+        </param>
+        <briefdescription>
+<para>Parses a string containing a literal of the underlying type. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="173" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="173" bodyend="188"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a14335cbdd13252ae9d0c790b2bb5009d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::vector&lt; T &gt;</type>
+        <definition>std::vector&lt;T&gt; ngraph::parse_string</definition>
+        <argsstring>(const std::vector&lt; std::string &gt; &amp;ss)</argsstring>
+        <name>parse_string</name>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>ss</declname>
+        </param>
+        <briefdescription>
+<para>Parses a list of strings containing literals of the underlying type. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="199" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="199" bodyend="209"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a566a1afe98914cb4b4a58cd88c5eca96" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>class InputIt</type>
+          </param>
+          <param>
+            <type>class BinaryOp</type>
+          </param>
+        </templateparamlist>
+        <type>std::iterator_traits&lt; InputIt &gt;::value_type</type>
+        <definition>std::iterator_traits&lt;InputIt&gt;::value_type ngraph::reduce</definition>
+        <argsstring>(InputIt first, InputIt last, BinaryOp op)</argsstring>
+        <name>reduce</name>
+        <param>
+          <type>InputIt</type>
+          <declname>first</declname>
+        </param>
+        <param>
+          <type>InputIt</type>
+          <declname>last</declname>
+        </param>
+        <param>
+          <type>BinaryOp</type>
+          <declname>op</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="213" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="213" bodyend="231"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a6d63b92c2106024df9fd03b214aaae28" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T ngraph::plus</definition>
+        <argsstring>(const T &amp;a, const T &amp;b)</argsstring>
+        <name>plus</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="234" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="234" bodyend="237"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aa66721bbd3ca4fc73d163f7251ebfebc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T ngraph::mul</definition>
+        <argsstring>(const T &amp;a, const T &amp;b)</argsstring>
+        <name>mul</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>a</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="240" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="240" bodyend="243"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1ac97cb2fe49a89140cc6db2a6a4c22dae" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T ngraph::ceil_div</definition>
+        <argsstring>(const T &amp;x, const T &amp;y)</argsstring>
+        <name>ceil_div</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const T &amp;</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="246" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="246" bodyend="249"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1aa1027e6d6f486b0375ad60f4d6fe24c9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T ngraph::subtract_or_zero</definition>
+        <argsstring>(T x, T y)</argsstring>
+        <name>subtract_or_zero</name>
+        <param>
+          <type>T</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>T</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="252" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="252" bodyend="255"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a65b1a73cd61a5e56afc2e0a12131a6ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void *</type>
+        <definition>void * ngraph::aligned_alloc</definition>
+        <argsstring>(size_t alignment, size_t size)</argsstring>
+        <name>aligned_alloc</name>
+        <param>
+          <type>size_t</type>
+          <declname>alignment</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>size</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="257" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="149" bodyend="156"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a6b12770cb6c7470108f0e89cc2aea061" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::aligned_free</definition>
+        <argsstring>(void *)</argsstring>
+        <name>aligned_free</name>
+        <param>
+          <type>void *</type>
+          <defname>p</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="258" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="158" bodyend="165"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_1a3265a00786430a83a6d26fbc7c03c057" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::round_up</definition>
+        <argsstring>(size_t size, size_t alignment)</argsstring>
+        <name>round_up</name>
+        <param>
+          <type>size_t</type>
+          <declname>size</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>alignment</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="259" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp" bodystart="167" bodyend="181"/>
+      </memberdef>
+      <memberdef kind="function" id="namespacengraph_aca9cf8bfa59e0cb75ace990f0a0b5b74_1aca9cf8bfa59e0cb75ace990f0a0b5b74" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="structngraph_1_1FpropCache" kindref="compound">FpropCache</ref></type>
+        <definition>FpropCache ngraph::cache_fprop</definition>
+        <argsstring>(std::shared_ptr&lt; Function &gt; fprop, std::shared_ptr&lt; Function &gt; bprop, std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; adjoints)</argsstring>
+        <name>cache_fprop</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>fprop</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>bprop</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt;</type>
+          <declname>adjoints</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>This utility takes forward-propogation and back-propogation XLAunctions and turns them into clone functions where the intermediate values of the forward prop are added to the output of fprop and the input of the bprop to avoid repeat calcualtions. The last argument is the adjoints coming into the bprop function, the output bprop function will have these nodes as the first N input parameters </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="282" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>The Intel Nervana Graph C++ API. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="25" column="1"/>
+  </compounddef>
+</doxygen>

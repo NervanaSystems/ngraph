@@ -1,0 +1,804 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacecblas" kind="namespace" language="C++">
+    <compoundname>cblas</compoundname>
+      <sectiondef kind="enum">
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1aec88445a133d29d57b30f36e661ef66d" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Layout</name>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66dabba47a7c03289a67ca347baa3f55be2f" prot="public">
+          <name>RowMajor</name>
+          <initializer>= 101</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66da9e91437ff30e153a77db79d1a362893a" prot="public">
+          <name>ColMajor</name>
+          <initializer>= 102</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66dabba47a7c03289a67ca347baa3f55be2f" prot="public">
+          <name>RowMajor</name>
+          <initializer>= 101</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66da9e91437ff30e153a77db79d1a362893a" prot="public">
+          <name>ColMajor</name>
+          <initializer>= 102</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="27" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="26" bodyend="30"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1a9577b730b329472012b144254a7e934a" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Transpose</name>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa6adf97f83acf6453d4a6a4b1070f3754" prot="public">
+          <name>None</name>
+          <initializer>= 111</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aaaf70b1ac863830a4e1ce6268c8399f54" prot="public">
+          <name>Transpose</name>
+          <initializer>= 112</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa8d5781583bcedc6e8f087a4269f04350" prot="public">
+          <name>ConjTrans</name>
+          <initializer>= 113</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa6adf97f83acf6453d4a6a4b1070f3754" prot="public">
+          <name>None</name>
+          <initializer>= 111</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aaaf70b1ac863830a4e1ce6268c8399f54" prot="public">
+          <name>Transpose</name>
+          <initializer>= 112</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa8d5781583bcedc6e8f087a4269f04350" prot="public">
+          <name>ConjTrans</name>
+          <initializer>= 113</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="32" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1a6eaeaabd0bca707592cf2edcc761737a" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>UpperLower</name>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aa19de5b94f7b83900d4b296d9fa491aec" prot="public">
+          <name>Upper</name>
+          <initializer>= 121</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aab75fcdd2d72d9e000beab48622402d93" prot="public">
+          <name>Lower</name>
+          <initializer>= 122</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aa19de5b94f7b83900d4b296d9fa491aec" prot="public">
+          <name>Upper</name>
+          <initializer>= 121</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aab75fcdd2d72d9e000beab48622402d93" prot="public">
+          <name>Lower</name>
+          <initializer>= 122</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="39" bodyend="43"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1aff945603d27745a32791e95243f08cfb" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Diag</name>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba70dc07f1d124d30809c4ba5eb36fb147" prot="public">
+          <name>NonUnit</name>
+          <initializer>= 131</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba19c562a36aeb455d09534f93b4f5236f" prot="public">
+          <name>Unit</name>
+          <initializer>= 132</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba70dc07f1d124d30809c4ba5eb36fb147" prot="public">
+          <name>NonUnit</name>
+          <initializer>= 131</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba19c562a36aeb455d09534f93b4f5236f" prot="public">
+          <name>Unit</name>
+          <initializer>= 132</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="45" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1a7588ce436363cd62651c8f2e9471f8e0" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Side</name>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a945d5e233cf7d6240f6b783b36a374ff" prot="public">
+          <name>Left</name>
+          <initializer>= 141</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a92b09c7c48c520c3c55e497875da437c" prot="public">
+          <name>Right</name>
+          <initializer>= 142</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a945d5e233cf7d6240f6b783b36a374ff" prot="public">
+          <name>Left</name>
+          <initializer>= 141</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a92b09c7c48c520c3c55e497875da437c" prot="public">
+          <name>Right</name>
+          <initializer>= 142</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="51" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1aacfec5a0bfff585668a6ca397f587cef" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Storage</name>
+        <enumvalue id="dummy_1aacfec5a0bfff585668a6ca397f587cefaa1977c3f68d4d3bbfe14d0e51a575482" prot="public">
+          <name>Packed</name>
+          <initializer>= 151</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aacfec5a0bfff585668a6ca397f587cefaa1977c3f68d4d3bbfe14d0e51a575482" prot="public">
+          <name>Packed</name>
+          <initializer>= 151</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="57" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1a99b1c76e20c3595e89f6f06b7544fe10" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Ident</name>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10ac06cd8f6bac53adb3d34a7cfa5059551" prot="public">
+          <name>AMatrix</name>
+          <initializer>= 161</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10a642922d85e2cb0623dd77261415b352a" prot="public">
+          <name>BMatrix</name>
+          <initializer>= 162</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10ac06cd8f6bac53adb3d34a7cfa5059551" prot="public">
+          <name>AMatrix</name>
+          <initializer>= 161</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10a642922d85e2cb0623dd77261415b352a" prot="public">
+          <name>BMatrix</name>
+          <initializer>= 162</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="62" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="enum" id="cpu__kernels_8hpp_1a41150bebdecb5988213a181ed73b35bd" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Offset</name>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda1c226a62b3abffa8e2b3f2759d34403c" prot="public">
+          <name>RowOffset</name>
+          <initializer>= 171</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bdadb9207eb05407f42056348c569830034" prot="public">
+          <name>ColOffset</name>
+          <initializer>= 172</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda643a9da07e2ae881f0f82a4beeac9887" prot="public">
+          <name>FixOffset</name>
+          <initializer>= 173</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda1c226a62b3abffa8e2b3f2759d34403c" prot="public">
+          <name>RowOffset</name>
+          <initializer>= 171</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bdadb9207eb05407f42056348c569830034" prot="public">
+          <name>ColOffset</name>
+          <initializer>= 172</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda643a9da07e2ae881f0f82a4beeac9887" prot="public">
+          <name>FixOffset</name>
+          <initializer>= 173</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" bodystart="68" bodyend="73"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1aec88445a133d29d57b30f36e661ef66d" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Layout</name>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66dabba47a7c03289a67ca347baa3f55be2f" prot="public">
+          <name>RowMajor</name>
+          <initializer>= 101</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66da9e91437ff30e153a77db79d1a362893a" prot="public">
+          <name>ColMajor</name>
+          <initializer>= 102</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66dabba47a7c03289a67ca347baa3f55be2f" prot="public">
+          <name>RowMajor</name>
+          <initializer>= 101</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aec88445a133d29d57b30f36e661ef66da9e91437ff30e153a77db79d1a362893a" prot="public">
+          <name>ColMajor</name>
+          <initializer>= 102</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="27" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="26" bodyend="30"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1a9577b730b329472012b144254a7e934a" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Transpose</name>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa6adf97f83acf6453d4a6a4b1070f3754" prot="public">
+          <name>None</name>
+          <initializer>= 111</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aaaf70b1ac863830a4e1ce6268c8399f54" prot="public">
+          <name>Transpose</name>
+          <initializer>= 112</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa8d5781583bcedc6e8f087a4269f04350" prot="public">
+          <name>ConjTrans</name>
+          <initializer>= 113</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa6adf97f83acf6453d4a6a4b1070f3754" prot="public">
+          <name>None</name>
+          <initializer>= 111</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aaaf70b1ac863830a4e1ce6268c8399f54" prot="public">
+          <name>Transpose</name>
+          <initializer>= 112</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a9577b730b329472012b144254a7e934aa8d5781583bcedc6e8f087a4269f04350" prot="public">
+          <name>ConjTrans</name>
+          <initializer>= 113</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="32" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1a6eaeaabd0bca707592cf2edcc761737a" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>UpperLower</name>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aa19de5b94f7b83900d4b296d9fa491aec" prot="public">
+          <name>Upper</name>
+          <initializer>= 121</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aab75fcdd2d72d9e000beab48622402d93" prot="public">
+          <name>Lower</name>
+          <initializer>= 122</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aa19de5b94f7b83900d4b296d9fa491aec" prot="public">
+          <name>Upper</name>
+          <initializer>= 121</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a6eaeaabd0bca707592cf2edcc761737aab75fcdd2d72d9e000beab48622402d93" prot="public">
+          <name>Lower</name>
+          <initializer>= 122</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="39" bodyend="43"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1aff945603d27745a32791e95243f08cfb" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Diag</name>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba70dc07f1d124d30809c4ba5eb36fb147" prot="public">
+          <name>NonUnit</name>
+          <initializer>= 131</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba19c562a36aeb455d09534f93b4f5236f" prot="public">
+          <name>Unit</name>
+          <initializer>= 132</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba70dc07f1d124d30809c4ba5eb36fb147" prot="public">
+          <name>NonUnit</name>
+          <initializer>= 131</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aff945603d27745a32791e95243f08cfba19c562a36aeb455d09534f93b4f5236f" prot="public">
+          <name>Unit</name>
+          <initializer>= 132</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="45" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1a7588ce436363cd62651c8f2e9471f8e0" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Side</name>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a945d5e233cf7d6240f6b783b36a374ff" prot="public">
+          <name>Left</name>
+          <initializer>= 141</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a92b09c7c48c520c3c55e497875da437c" prot="public">
+          <name>Right</name>
+          <initializer>= 142</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a945d5e233cf7d6240f6b783b36a374ff" prot="public">
+          <name>Left</name>
+          <initializer>= 141</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a7588ce436363cd62651c8f2e9471f8e0a92b09c7c48c520c3c55e497875da437c" prot="public">
+          <name>Right</name>
+          <initializer>= 142</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="51" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1aacfec5a0bfff585668a6ca397f587cef" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Storage</name>
+        <enumvalue id="dummy_1aacfec5a0bfff585668a6ca397f587cefaa1977c3f68d4d3bbfe14d0e51a575482" prot="public">
+          <name>Packed</name>
+          <initializer>= 151</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1aacfec5a0bfff585668a6ca397f587cefaa1977c3f68d4d3bbfe14d0e51a575482" prot="public">
+          <name>Packed</name>
+          <initializer>= 151</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="57" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1a99b1c76e20c3595e89f6f06b7544fe10" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Ident</name>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10ac06cd8f6bac53adb3d34a7cfa5059551" prot="public">
+          <name>AMatrix</name>
+          <initializer>= 161</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10a642922d85e2cb0623dd77261415b352a" prot="public">
+          <name>BMatrix</name>
+          <initializer>= 162</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10ac06cd8f6bac53adb3d34a7cfa5059551" prot="public">
+          <name>AMatrix</name>
+          <initializer>= 161</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a99b1c76e20c3595e89f6f06b7544fe10a642922d85e2cb0623dd77261415b352a" prot="public">
+          <name>BMatrix</name>
+          <initializer>= 162</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="62" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="enum" id="int__kernels_8hpp_1a41150bebdecb5988213a181ed73b35bd" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>Offset</name>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda1c226a62b3abffa8e2b3f2759d34403c" prot="public">
+          <name>RowOffset</name>
+          <initializer>= 171</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bdadb9207eb05407f42056348c569830034" prot="public">
+          <name>ColOffset</name>
+          <initializer>= 172</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda643a9da07e2ae881f0f82a4beeac9887" prot="public">
+          <name>FixOffset</name>
+          <initializer>= 173</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda1c226a62b3abffa8e2b3f2759d34403c" prot="public">
+          <name>RowOffset</name>
+          <initializer>= 171</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bdadb9207eb05407f42056348c569830034" prot="public">
+          <name>ColOffset</name>
+          <initializer>= 172</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="dummy_1a41150bebdecb5988213a181ed73b35bda643a9da07e2ae881f0f82a4beeac9887" prot="public">
+          <name>FixOffset</name>
+          <initializer>= 173</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_kernels.hpp" bodystart="68" bodyend="73"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="cpu__kernels_8hpp_1a4ac72da8f76d8384a928ff9e86778f84" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void cblas::cblas_sgemm</definition>
+        <argsstring>(const Layout layout, const Transpose TransA, const Transpose TransB, const int64_t M, const int64_t N, const int64_t K, const float alpha, const float *A, const int64_t lda, const float *B, const int64_t ldb, const float beta, float *C, const int64_t ldc)</argsstring>
+        <name>cblas_sgemm</name>
+        <param>
+          <type>const Layout</type>
+          <declname>layout</declname>
+        </param>
+        <param>
+          <type>const Transpose</type>
+          <declname>TransA</declname>
+        </param>
+        <param>
+          <type>const Transpose</type>
+          <declname>TransB</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>M</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>N</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>K</declname>
+        </param>
+        <param>
+          <type>const float</type>
+          <declname>alpha</declname>
+        </param>
+        <param>
+          <type>const float *</type>
+          <declname>A</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>lda</declname>
+        </param>
+        <param>
+          <type>const float *</type>
+          <declname>B</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>ldb</declname>
+        </param>
+        <param>
+          <type>const float</type>
+          <declname>beta</declname>
+        </param>
+        <param>
+          <type>float *</type>
+          <declname>C</declname>
+        </param>
+        <param>
+          <type>const int64_t</type>
+          <declname>ldc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="76" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_kernels.hpp" line="25" column="1"/>
+  </compounddef>
+</doxygen>

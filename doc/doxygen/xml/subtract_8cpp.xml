@@ -1,0 +1,321 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="subtract_8cpp" kind="file" language="C++">
+    <compoundname>subtract.cpp</compoundname>
+    <includes refid="ops_2subtract_8hpp" local="yes">ngraph/ops/subtract.hpp</includes>
+    <includes refid="negative_8hpp" local="yes">ngraph/ops/negative.hpp</includes>
+    <incdepgraph>
+      <node id="8749">
+        <label>ngraph/ops/subtract.hpp</label>
+        <link refid="ops_2subtract_8hpp_source"/>
+        <childnode refid="8750" relation="include">
+        </childnode>
+      </node>
+      <node id="8761">
+        <label>atomic</label>
+      </node>
+      <node id="8769">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="8763" relation="include">
+        </childnode>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8757" relation="include">
+        </childnode>
+        <childnode refid="8770" relation="include">
+        </childnode>
+      </node>
+      <node id="8770">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8757" relation="include">
+        </childnode>
+        <childnode refid="8771" relation="include">
+        </childnode>
+        <childnode refid="8773" relation="include">
+        </childnode>
+      </node>
+      <node id="8780">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8755" relation="include">
+        </childnode>
+        <childnode refid="8768" relation="include">
+        </childnode>
+        <childnode refid="8781" relation="include">
+        </childnode>
+      </node>
+      <node id="8760">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="8761" relation="include">
+        </childnode>
+        <childnode refid="8762" relation="include">
+        </childnode>
+        <childnode refid="8763" relation="include">
+        </childnode>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8755" relation="include">
+        </childnode>
+        <childnode refid="8759" relation="include">
+        </childnode>
+        <childnode refid="8764" relation="include">
+        </childnode>
+        <childnode refid="8765" relation="include">
+        </childnode>
+        <childnode refid="8766" relation="include">
+        </childnode>
+        <childnode refid="8757" relation="include">
+        </childnode>
+        <childnode refid="8767" relation="include">
+        </childnode>
+        <childnode refid="8753" relation="include">
+        </childnode>
+        <childnode refid="8768" relation="include">
+        </childnode>
+        <childnode refid="8780" relation="include">
+        </childnode>
+        <childnode refid="8769" relation="include">
+        </childnode>
+        <childnode refid="8770" relation="include">
+        </childnode>
+      </node>
+      <node id="8779">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="8762" relation="include">
+        </childnode>
+        <childnode refid="8775" relation="include">
+        </childnode>
+        <childnode refid="8778" relation="include">
+        </childnode>
+      </node>
+      <node id="8778">
+        <label>stdexcept</label>
+      </node>
+      <node id="8752">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="8753" relation="include">
+        </childnode>
+        <childnode refid="8758" relation="include">
+        </childnode>
+      </node>
+      <node id="8759">
+        <label>string</label>
+      </node>
+      <node id="8774">
+        <label>map</label>
+      </node>
+      <node id="8766">
+        <label>unordered_set</label>
+      </node>
+      <node id="8773">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="8774" relation="include">
+        </childnode>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8775" relation="include">
+        </childnode>
+        <childnode refid="8759" relation="include">
+        </childnode>
+        <childnode refid="8776" relation="include">
+        </childnode>
+        <childnode refid="8753" relation="include">
+        </childnode>
+        <childnode refid="8777" relation="include">
+        </childnode>
+        <childnode refid="8779" relation="include">
+        </childnode>
+      </node>
+      <node id="8753">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8755" relation="include">
+        </childnode>
+        <childnode refid="8756" relation="include">
+        </childnode>
+        <childnode refid="8757" relation="include">
+        </childnode>
+      </node>
+      <node id="8768">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8769" relation="include">
+        </childnode>
+        <childnode refid="8770" relation="include">
+        </childnode>
+      </node>
+      <node id="8771">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="8772" relation="include">
+        </childnode>
+        <childnode refid="8763" relation="include">
+        </childnode>
+        <childnode refid="8757" relation="include">
+        </childnode>
+        <childnode refid="8753" relation="include">
+        </childnode>
+      </node>
+      <node id="8767">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8765" relation="include">
+        </childnode>
+        <childnode refid="8753" relation="include">
+        </childnode>
+      </node>
+      <node id="8751">
+        <label>ngraph/ops/util/binary_elementwise.hpp</label>
+        <link refid="binary__elementwise_8hpp_source"/>
+        <childnode refid="8752" relation="include">
+        </childnode>
+      </node>
+      <node id="8758">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="8759" relation="include">
+        </childnode>
+        <childnode refid="8753" relation="include">
+        </childnode>
+        <childnode refid="8760" relation="include">
+        </childnode>
+        <childnode refid="8782" relation="include">
+        </childnode>
+      </node>
+      <node id="8784">
+        <label>ngraph/ops/util/unary_elementwise_arithmetic.hpp</label>
+        <link refid="unary__elementwise__arithmetic_8hpp_source"/>
+        <childnode refid="8785" relation="include">
+        </childnode>
+      </node>
+      <node id="8772">
+        <label>cstdio</label>
+      </node>
+      <node id="8757">
+        <label>vector</label>
+      </node>
+      <node id="8756">
+        <label>utility</label>
+      </node>
+      <node id="8750">
+        <label>ngraph/ops/util/binary_elementwise_arithmetic.hpp</label>
+        <link refid="binary__elementwise__arithmetic_8hpp_source"/>
+        <childnode refid="8751" relation="include">
+        </childnode>
+      </node>
+      <node id="8775">
+        <label>sstream</label>
+      </node>
+      <node id="8748">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/subtract.cpp</label>
+        <link refid="subtract_8cpp"/>
+        <childnode refid="8749" relation="include">
+        </childnode>
+        <childnode refid="8783" relation="include">
+        </childnode>
+      </node>
+      <node id="8763">
+        <label>iostream</label>
+      </node>
+      <node id="8785">
+        <label>ngraph/ops/util/unary_elementwise.hpp</label>
+        <link refid="unary__elementwise_8hpp_source"/>
+        <childnode refid="8752" relation="include">
+        </childnode>
+      </node>
+      <node id="8782">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="8762">
+        <label>deque</label>
+      </node>
+      <node id="8765">
+        <label>unordered_map</label>
+      </node>
+      <node id="8783">
+        <label>ngraph/ops/negative.hpp</label>
+        <link refid="negative_8hpp_source"/>
+        <childnode refid="8784" relation="include">
+        </childnode>
+      </node>
+      <node id="8777">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="8778" relation="include">
+        </childnode>
+      </node>
+      <node id="8776">
+        <label>type_traits</label>
+      </node>
+      <node id="8755">
+        <label>set</label>
+      </node>
+      <node id="8781">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="8754" relation="include">
+        </childnode>
+        <childnode refid="8771" relation="include">
+        </childnode>
+      </node>
+      <node id="8754">
+        <label>memory</label>
+      </node>
+      <node id="8764">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/subtract.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/negative.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ngraph::op::Subtract::generate_adjoints(autodiff::Adjoints&amp;<sp/>adjoints,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>delta)</highlight></codeline>
+<codeline lineno="22"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>x<sp/>=<sp/>get_input_op(0);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>y<sp/>=<sp/>get_input_op(1);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>adjoints.add_delta(x,<sp/>delta);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>adjoints.add_delta(y,<sp/>-delta);</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/subtract.cpp"/>
+  </compounddef>
+</doxygen>

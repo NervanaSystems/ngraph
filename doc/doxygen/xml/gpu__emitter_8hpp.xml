@@ -1,0 +1,627 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="gpu__emitter_8hpp" kind="file" language="C++">
+    <compoundname>gpu_emitter.hpp</compoundname>
+    <includes local="no">string</includes>
+    <includes local="no">vector</includes>
+    <includes refid="code__writer_8hpp" local="yes">ngraph/codegen/code_writer.hpp</includes>
+    <includes refid="node_8hpp" local="yes">ngraph/node.hpp</includes>
+    <includes refid="gpu__external__function_8hpp" local="yes">ngraph/runtime/gpu/gpu_external_function.hpp</includes>
+    <includes refid="gpu__tensor__view__wrapper_8hpp" local="yes">ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp</includes>
+    <includedby refid="gpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.cpp</includedby>
+    <includedby refid="gpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</includedby>
+    <incdepgraph>
+      <node id="14162">
+        <label>list</label>
+      </node>
+      <node id="14134">
+        <label>atomic</label>
+      </node>
+      <node id="14158">
+        <label>ngraph/codegen/compiler.hpp</label>
+        <link refid="compiler_8hpp_source"/>
+        <childnode refid="14156" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+      </node>
+      <node id="14156">
+        <label>functional</label>
+      </node>
+      <node id="14168">
+        <label>cublas_v2.h</label>
+      </node>
+      <node id="14166">
+        <label>ngraph/runtime/external_function.hpp</label>
+        <link refid="external__function_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14138" relation="include">
+        </childnode>
+        <childnode refid="14157" relation="include">
+        </childnode>
+        <childnode refid="14139" relation="include">
+        </childnode>
+        <childnode refid="14160" relation="include">
+        </childnode>
+      </node>
+      <node id="14145">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="14135" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14146" relation="include">
+        </childnode>
+      </node>
+      <node id="14146">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14147" relation="include">
+        </childnode>
+        <childnode refid="14149" relation="include">
+        </childnode>
+      </node>
+      <node id="14153">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14137" relation="include">
+        </childnode>
+        <childnode refid="14144" relation="include">
+        </childnode>
+        <childnode refid="14154" relation="include">
+        </childnode>
+      </node>
+      <node id="14133">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="14134" relation="include">
+        </childnode>
+        <childnode refid="14131" relation="include">
+        </childnode>
+        <childnode refid="14135" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14137" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14138" relation="include">
+        </childnode>
+        <childnode refid="14139" relation="include">
+        </childnode>
+        <childnode refid="14140" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14141" relation="include">
+        </childnode>
+        <childnode refid="14142" relation="include">
+        </childnode>
+        <childnode refid="14144" relation="include">
+        </childnode>
+        <childnode refid="14153" relation="include">
+        </childnode>
+        <childnode refid="14145" relation="include">
+        </childnode>
+        <childnode refid="14146" relation="include">
+        </childnode>
+      </node>
+      <node id="14170">
+        <label>cudnn.h</label>
+      </node>
+      <node id="14169">
+        <label>cuda_runtime.h</label>
+      </node>
+      <node id="14130">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="14131" relation="include">
+        </childnode>
+        <childnode refid="14129" relation="include">
+        </childnode>
+        <childnode refid="14132" relation="include">
+        </childnode>
+      </node>
+      <node id="14132">
+        <label>stdexcept</label>
+      </node>
+      <node id="14176">
+        <label>ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp</label>
+        <link refid="gpu__tensor__view__wrapper_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14154" relation="include">
+        </childnode>
+        <childnode refid="14149" relation="include">
+        </childnode>
+      </node>
+      <node id="14126">
+        <label>string</label>
+      </node>
+      <node id="14150">
+        <label>map</label>
+      </node>
+      <node id="14140">
+        <label>unordered_set</label>
+      </node>
+      <node id="14128">
+        <label>ngraph/codegen/code_writer.hpp</label>
+        <link refid="code__writer_8hpp_source"/>
+        <childnode refid="14129" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14130" relation="include">
+        </childnode>
+      </node>
+      <node id="14149">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="14150" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14129" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14151" relation="include">
+        </childnode>
+        <childnode refid="14142" relation="include">
+        </childnode>
+        <childnode refid="14152" relation="include">
+        </childnode>
+        <childnode refid="14130" relation="include">
+        </childnode>
+      </node>
+      <node id="14142">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14137" relation="include">
+        </childnode>
+        <childnode refid="14143" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+      </node>
+      <node id="14144">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14145" relation="include">
+        </childnode>
+        <childnode refid="14146" relation="include">
+        </childnode>
+      </node>
+      <node id="14147">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="14148" relation="include">
+        </childnode>
+        <childnode refid="14135" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14142" relation="include">
+        </childnode>
+      </node>
+      <node id="14141">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14139" relation="include">
+        </childnode>
+        <childnode refid="14142" relation="include">
+        </childnode>
+      </node>
+      <node id="14165">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="14163" relation="include">
+        </childnode>
+        <childnode refid="14146" relation="include">
+        </childnode>
+      </node>
+      <node id="14163">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14142" relation="include">
+        </childnode>
+        <childnode refid="14133" relation="include">
+        </childnode>
+        <childnode refid="14164" relation="include">
+        </childnode>
+      </node>
+      <node id="14157">
+        <label>typeinfo</label>
+      </node>
+      <node id="14148">
+        <label>cstdio</label>
+      </node>
+      <node id="14125">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp</label>
+        <link refid="gpu__emitter_8hpp"/>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14128" relation="include">
+        </childnode>
+        <childnode refid="14133" relation="include">
+        </childnode>
+        <childnode refid="14155" relation="include">
+        </childnode>
+        <childnode refid="14176" relation="include">
+        </childnode>
+      </node>
+      <node id="14171">
+        <label>ngraph/runtime/call_frame.hpp</label>
+        <link refid="call__frame_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14160" relation="include">
+        </childnode>
+        <childnode refid="14172" relation="include">
+        </childnode>
+      </node>
+      <node id="14127">
+        <label>vector</label>
+      </node>
+      <node id="14143">
+        <label>utility</label>
+      </node>
+      <node id="14129">
+        <label>sstream</label>
+      </node>
+      <node id="14160">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="14134" relation="include">
+        </childnode>
+        <childnode refid="14161" relation="include">
+        </childnode>
+        <childnode refid="14162" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14153" relation="include">
+        </childnode>
+        <childnode refid="14154" relation="include">
+        </childnode>
+        <childnode refid="14130" relation="include">
+        </childnode>
+        <childnode refid="14133" relation="include">
+        </childnode>
+        <childnode refid="14163" relation="include">
+        </childnode>
+        <childnode refid="14165" relation="include">
+        </childnode>
+        <childnode refid="14146" relation="include">
+        </childnode>
+      </node>
+      <node id="14135">
+        <label>iostream</label>
+      </node>
+      <node id="14164">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="14131">
+        <label>deque</label>
+      </node>
+      <node id="14139">
+        <label>unordered_map</label>
+      </node>
+      <node id="14155">
+        <label>ngraph/runtime/gpu/gpu_external_function.hpp</label>
+        <link refid="gpu__external__function_8hpp_source"/>
+        <childnode refid="14156" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14138" relation="include">
+        </childnode>
+        <childnode refid="14157" relation="include">
+        </childnode>
+        <childnode refid="14139" relation="include">
+        </childnode>
+        <childnode refid="14128" relation="include">
+        </childnode>
+        <childnode refid="14158" relation="include">
+        </childnode>
+        <childnode refid="14159" relation="include">
+        </childnode>
+        <childnode refid="14160" relation="include">
+        </childnode>
+        <childnode refid="14166" relation="include">
+        </childnode>
+        <childnode refid="14167" relation="include">
+        </childnode>
+        <childnode refid="14176" relation="include">
+        </childnode>
+      </node>
+      <node id="14175">
+        <label>chrono</label>
+      </node>
+      <node id="14152">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="14132" relation="include">
+        </childnode>
+      </node>
+      <node id="14167">
+        <label>ngraph/runtime/gpu/gpu_call_frame.hpp</label>
+        <link refid="gpu__call__frame_8hpp_source"/>
+        <childnode refid="14168" relation="include">
+        </childnode>
+        <childnode refid="14169" relation="include">
+        </childnode>
+        <childnode refid="14170" relation="include">
+        </childnode>
+        <childnode refid="14156" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14160" relation="include">
+        </childnode>
+        <childnode refid="14171" relation="include">
+        </childnode>
+        <childnode refid="14172" relation="include">
+        </childnode>
+      </node>
+      <node id="14151">
+        <label>type_traits</label>
+      </node>
+      <node id="14137">
+        <label>set</label>
+      </node>
+      <node id="14154">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14147" relation="include">
+        </childnode>
+      </node>
+      <node id="14174">
+        <label>algorithm</label>
+      </node>
+      <node id="14159">
+        <label>ngraph/codegen/execution_engine.hpp</label>
+        <link refid="execution__engine_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14158" relation="include">
+        </childnode>
+      </node>
+      <node id="14173">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="14174" relation="include">
+        </childnode>
+        <childnode refid="14175" relation="include">
+        </childnode>
+        <childnode refid="14131" relation="include">
+        </childnode>
+        <childnode refid="14156" relation="include">
+        </childnode>
+        <childnode refid="14135" relation="include">
+        </childnode>
+        <childnode refid="14162" relation="include">
+        </childnode>
+        <childnode refid="14150" relation="include">
+        </childnode>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14129" relation="include">
+        </childnode>
+        <childnode refid="14126" relation="include">
+        </childnode>
+        <childnode refid="14139" relation="include">
+        </childnode>
+        <childnode refid="14140" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+      </node>
+      <node id="14172">
+        <label>ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp_source"/>
+        <childnode refid="14136" relation="include">
+        </childnode>
+        <childnode refid="14127" relation="include">
+        </childnode>
+        <childnode refid="14154" relation="include">
+        </childnode>
+        <childnode refid="14147" relation="include">
+        </childnode>
+        <childnode refid="14149" relation="include">
+        </childnode>
+        <childnode refid="14173" relation="include">
+        </childnode>
+      </node>
+      <node id="14136">
+        <label>memory</label>
+      </node>
+      <node id="14161">
+        <label>initializer_list</label>
+      </node>
+      <node id="14138">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="14179">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="14178">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.cpp</label>
+        <link refid="gpu__emitter_8cpp_source"/>
+      </node>
+      <node id="14177">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp</label>
+        <link refid="gpu__emitter_8hpp"/>
+        <childnode refid="14178" relation="include">
+        </childnode>
+        <childnode refid="14179" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter" prot="public">ngraph::runtime::gpu::GPU_Emitter</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1gpu">ngraph::runtime::gpu</innernamespace>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="gpu__emitter_8hpp_1aedaa68536b4acc5a6c200416594827ba" prot="public" static="no">
+        <name>EMITTER_DECL</name>
+        <param><defname>E</defname></param>
+        <initializer>E(codegen::CodeWriter&amp; writer,                                                                 \
+      const <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref>* n,                                                                       \
+      const std::vector&lt;<ref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__TensorViewWrapper" kindref="compound">ngraph::runtime::gpu::GPU_TensorViewWrapper</ref>&gt;&amp; args,                        \
+      const std::vector&lt;<ref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__TensorViewWrapper" kindref="compound">ngraph::runtime::gpu::GPU_TensorViewWrapper</ref>&gt;&amp; out)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="27" column="9" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/codegen/code_writer.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/node.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/gpu/gpu_external_function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EMITTER_DECL(E)<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="28"><highlight class="preprocessor"><sp/><sp/><sp/><sp/>E(codegen::CodeWriter&amp;<sp/>writer,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="29"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>ngraph::Node*<sp/>n,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="30"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::vector&lt;ngraph::runtime::gpu::GPU_TensorViewWrapper&gt;&amp;<sp/>args,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\</highlight></codeline>
+<codeline lineno="31"><highlight class="preprocessor"><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::vector&lt;ngraph::runtime::gpu::GPU_TensorViewWrapper&gt;&amp;<sp/>out)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="34"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">runtime</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">gpu</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="39" refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter" kindref="compound">GPU_Emitter</ref></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitNop);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitAdd);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitDot);</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitMultiply);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitGetOutputElement);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitXLAGetTupleElement);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitTuple);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitAbs);</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitConcat);</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitDivide);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitEqual);</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitGreater);</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitGreaterEq);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitLess);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitLessEq);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitLog);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitMaximum);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitMinimum);</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitNegative);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitNotEqual);</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSelect);</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSubtract);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitBroadcast);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitConvert);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitConstant);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitReshape);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitFunctionCall);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitReduce);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSign);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSlice);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSum);</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitExp);</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSin);</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSinh);</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitCos);</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitCosh);</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitTan);</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitTanh);</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitAsin);</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitAcos);</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitAtan);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitPower);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitReplaceSlice);</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitOneHot);</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitFloor);</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitCeiling);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSqrt);</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitConvolution);</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitNot);</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitMaxPool);</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitReverse);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitReduceWindow);</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>EMITTER_DECL(EmitSelectAndScatter);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="98"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp"/>
+  </compounddef>
+</doxygen>

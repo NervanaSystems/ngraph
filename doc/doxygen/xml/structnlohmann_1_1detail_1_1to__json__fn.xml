@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1to__json__fn" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::to_json_fn</compoundname>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1to__json__fn_1ada2ce804ebf3b55f6e3e46ff3a055394" prot="private" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>auto</type>
+        <definition>auto nlohmann::detail::to_json_fn::call</definition>
+        <argsstring>(BasicJsonType &amp;j, T &amp;&amp;val, priority_tag&lt; 1 &gt;) const noexcept(noexcept(to_json(j, std::forward&lt; T &gt;(val)))) -&gt; decltype(to_json(j, std::forward&lt; T &gt;(val)), void())</argsstring>
+        <name>call</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>T &amp;&amp;</type>
+          <declname>val</declname>
+        </param>
+        <param>
+          <type><ref refid="structnlohmann_1_1detail_1_1priority__tag" kindref="compound">priority_tag</ref>&lt; 1 &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1350" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1350" bodyend="1354"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1to__json__fn_1adbd2247cecd3cdd072f9a28ef84e85f4" prot="private" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void nlohmann::detail::to_json_fn::call</definition>
+        <argsstring>(BasicJsonType &amp;, T &amp;&amp;, priority_tag&lt; 0 &gt;) const noexcept</argsstring>
+        <name>call</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+        </param>
+        <param>
+          <type>T &amp;&amp;</type>
+        </param>
+        <param>
+          <type><ref refid="structnlohmann_1_1detail_1_1priority__tag" kindref="compound">priority_tag</ref>&lt; 0 &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1357" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1357" bodyend="1361"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1to__json__fn_1ac63f82d3eed085522f1cbe99a521a4d4" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void nlohmann::detail::to_json_fn::operator()</definition>
+        <argsstring>(BasicJsonType &amp;j, T &amp;&amp;val) const noexcept(noexcept(std::declval&lt; to_json_fn &gt;().call(j, std::forward&lt; T &gt;(val), priority_tag&lt; 1 &gt; {})))</argsstring>
+        <name>operator()</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>T &amp;&amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1365" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1365" bodyend="1369"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1347" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1346" bodyend="1370"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1to__json__fn_1ada2ce804ebf3b55f6e3e46ff3a055394" prot="private" virt="non-virtual"><scope>nlohmann::detail::to_json_fn</scope><name>call</name></member>
+      <member refid="structnlohmann_1_1detail_1_1to__json__fn_1adbd2247cecd3cdd072f9a28ef84e85f4" prot="private" virt="non-virtual"><scope>nlohmann::detail::to_json_fn</scope><name>call</name></member>
+      <member refid="structnlohmann_1_1detail_1_1to__json__fn_1ac63f82d3eed085522f1cbe99a521a4d4" prot="public" virt="non-virtual"><scope>nlohmann::detail::to_json_fn</scope><name>operator()</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

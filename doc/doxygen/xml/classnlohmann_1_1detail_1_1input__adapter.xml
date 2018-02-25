@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1input__adapter" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::input_adapter</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1input__adapter_1ad5a11d0b65b68f6950cfbe8c8366b7da" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacenlohmann_1_1detail_1ae132f8cd5bb24c5e9b40ad0eafedf1c2" kindref="member">input_adapter_t</ref></type>
+        <definition>input_adapter_t nlohmann::detail::input_adapter::ia</definition>
+        <argsstring></argsstring>
+        <name>ia</name>
+        <initializer>= nullptr</initializer>
+        <briefdescription>
+<para>the actual adapter </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1651" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1651" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1ae89f11268d4724b3080473f7218abe86" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(std::istream &amp;i)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>std::istream &amp;</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for input stream </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1560" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1560" bodyend="1561"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1af002dd2e53ac0855a03cb68d0ce626b2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(std::istream &amp;&amp;i)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>std::istream &amp;&amp;</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for input stream </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1564" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1564" bodyend="1565"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1a37816622d79ab4a1a76f4d7e872b65e1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename CharT</type>
+          </param>
+          <param>
+            <type>typename std::enable_if&lt; std::is_pointer&lt; CharT &gt;::value and std::is_integral&lt; typename std::remove_pointer&lt; CharT &gt;::type &gt;::value and sizeof(typename std::remove_pointer&lt; CharT &gt;::type)==1, int &gt;::type</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(CharT b, std::size_t l)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>CharT</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>std::size_t</type>
+          <declname>l</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for buffer </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1575" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1575" bodyend="1576"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1a86f035d9c4319360014b922b5e433ced" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename CharT</type>
+          </param>
+          <param>
+            <type>typename std::enable_if&lt; std::is_pointer&lt; CharT &gt;::value and std::is_integral&lt; typename std::remove_pointer&lt; CharT &gt;::type &gt;::value and sizeof(typename std::remove_pointer&lt; CharT &gt;::type)==1, int &gt;::type</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(CharT b)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>CharT</type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for string literal </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1588" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1588" bodyend="1590"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1ad6824b0f792691f75186c527fa31a6b4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>class IteratorType</type>
+          </param>
+          <param>
+            <type>typename std::enable_if&lt; std::is_same&lt; typename std::iterator_traits&lt; IteratorType &gt;::iterator_category, std::random_access_iterator_tag &gt;::value, int &gt;::type</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(IteratorType first, IteratorType last)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>IteratorType</type>
+          <declname>first</declname>
+        </param>
+        <param>
+          <type>IteratorType</type>
+          <declname>last</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for iterator range with contiguous storage </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1598" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1598" bodyend="1626"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1aa2392138bf8307df1994dc7eb22d51ce" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>class T</type>
+          </param>
+          <param>
+            <type>std::size_t</type>
+            <declname>N</declname>
+            <defname>N</defname>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(T(&amp;array)[N])</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>T(&amp;)</type>
+          <declname>array</declname>
+          <array>[N]</array>
+        </param>
+        <briefdescription>
+<para>input adapter for array </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1630" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1630" bodyend="1631"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1a6f92fe82cb49a508dbfb297c5630cc7f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>class ContiguousContainer</type>
+          </param>
+          <param>
+            <type>typename std::enable_if&lt; not std::is_pointer&lt; ContiguousContainer &gt;::value and std::is_base_of&lt; std::random_access_iterator_tag, typename std::iterator_traits&lt; decltype(std::begin(std::declval&lt; ContiguousContainer const &gt;()))&gt;::iterator_category &gt;::value, int &gt;::type</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::input_adapter</definition>
+        <argsstring>(const ContiguousContainer &amp;c)</argsstring>
+        <name>input_adapter</name>
+        <param>
+          <type>const ContiguousContainer &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+<para>input adapter for contiguous container </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1641" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1641" bodyend="1642"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1input__adapter_1a4ef04b9490247fc38f3d1c2a9e18789b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::input_adapter::operator input_adapter_t</definition>
+        <argsstring>()</argsstring>
+        <name>operator input_adapter_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1644" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1644" bodyend="1647"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1555" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1554" bodyend="1652"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1ad5a11d0b65b68f6950cfbe8c8366b7da" prot="private" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>ia</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1ae89f11268d4724b3080473f7218abe86" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1af002dd2e53ac0855a03cb68d0ce626b2" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1a37816622d79ab4a1a76f4d7e872b65e1" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1a86f035d9c4319360014b922b5e433ced" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1ad6824b0f792691f75186c527fa31a6b4" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1aa2392138bf8307df1994dc7eb22d51ce" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1a6f92fe82cb49a508dbfb297c5630cc7f" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>input_adapter</name></member>
+      <member refid="classnlohmann_1_1detail_1_1input__adapter_1a4ef04b9490247fc38f3d1c2a9e18789b" prot="public" virt="non-virtual"><scope>nlohmann::detail::input_adapter</scope><name>operator input_adapter_t</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

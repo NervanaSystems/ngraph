@@ -1,0 +1,456 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1autodiff_1_1Adjoints" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::autodiff::Adjoints</compoundname>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1autodiff_1_1Adjoints_1ab0ae9e044b214633e1a6356542d873d8" prot="protected" static="no" mutable="no">
+        <type>std::unordered_map&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *, std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &gt;</type>
+        <definition>std::unordered_map&lt;Node*, std::shared_ptr&lt;Node&gt; &gt; ngraph::autodiff::Adjoints::m_adjoint_map</definition>
+        <argsstring></argsstring>
+        <name>m_adjoint_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="75" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_ac6695bf36becf1b4a1254c393689ecf9_1ac6695bf36becf1b4a1254c393689ecf9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>autodiff::Adjoints::Adjoints</definition>
+        <argsstring>(const std::shared_ptr&lt; Node &gt; &amp;y, const std::shared_ptr&lt; Node &gt; &amp;c)</argsstring>
+        <name>Adjoints</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+<para>(dy/dx)(c) for all x used to compute y </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>y</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The dependent value </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>c</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>An expression for where to evaluate the derivatives </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.cpp" bodystart="51" bodyend="109"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_1a29b1a1ef58e3b722d93819c125d13cf6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::autodiff::Adjoints::Adjoints</definition>
+        <argsstring>(const Adjoints &amp;adjoints)=default</argsstring>
+        <name>Adjoints</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">Adjoints</ref> &amp;</type>
+          <declname>adjoints</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="46" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_1a3e5a3c519f8c90cf9fdc1cd3178320a4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">Adjoints</ref> &amp;</type>
+        <definition>Adjoints&amp; ngraph::autodiff::Adjoints::operator=</definition>
+        <argsstring>(const Adjoints &amp;adjoints)=default</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">Adjoints</ref> &amp;</type>
+          <declname>adjoints</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="47" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_1aaf4d64071ea5c404c17c5f1db1f41a78" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::autodiff::Adjoints::Adjoints</definition>
+        <argsstring>()=default</argsstring>
+        <name>Adjoints</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="48" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_aeecc265fbf7b840cc6cd842121c54863_1aeecc265fbf7b840cc6cd842121c54863" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt; Node &gt; autodiff::Adjoints::get</definition>
+        <argsstring>(const std::shared_ptr&lt; Node &gt; &amp;x)</argsstring>
+        <name>get</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>x</declname>
+        </param>
+        <briefdescription>
+<para>(dy/dx)(c) </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The node whose adjoint is desired. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.cpp" bodystart="111" bodyend="121"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_a5fd56c8712a1947ebce69c13d6b623b0_1a5fd56c8712a1947ebce69c13d6b623b0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void autodiff::Adjoints::add_delta</definition>
+        <argsstring>(const std::shared_ptr&lt; Node &gt; &amp;x, const std::shared_ptr&lt; Node &gt; &amp;delta)</argsstring>
+        <name>add_delta</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>delta</declname>
+        </param>
+        <briefdescription>
+<para>Add a backprop contribution to x&apos;s adjoint. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The adjoint node </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>delta</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A backprop contribution </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="59" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.cpp" bodystart="123" bodyend="139"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1autodiff_1_1Adjoints_a1f6b7a99033465fe61dc8f9cac2f1565_1a1f6b7a99033465fe61dc8f9cac2f1565" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void autodiff::Adjoints::add_delta_to_slice</definition>
+        <argsstring>(const std::shared_ptr&lt; Node &gt; &amp;x, const std::shared_ptr&lt; Node &gt; &amp;delta, const Coordinate &amp;lower_bounds, const Coordinate &amp;upper_bounds, const Strides &amp;strides)</argsstring>
+        <name>add_delta_to_slice</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>delta</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>lower_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>upper_bounds</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>strides</declname>
+        </param>
+        <briefdescription>
+<para>Add a backprop contribution to a slice of x&apos;s adjoint. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The adjoint node </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>delta</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A backprop contribution </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>lower_bounds</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Lower bounds of slice to add to </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>upper_bounds</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Upper bounds of slice to add to </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>strides</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Strides of slice to add to </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="68" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.cpp" bodystart="141" bodyend="174"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="3">
+        <label>ngraph::Node</label>
+        <link refid="classngraph_1_1Node"/>
+        <childnode refid="4" relation="public-inheritance">
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>m_outputs</edgelabel>
+        </childnode>
+        <childnode refid="13" relation="usage">
+          <edgelabel>liveness_live_list</edgelabel>
+          <edgelabel>liveness_free_list</edgelabel>
+          <edgelabel>liveness_new_list</edgelabel>
+        </childnode>
+        <childnode refid="21" relation="usage">
+          <edgelabel>m_users</edgelabel>
+        </childnode>
+        <childnode refid="23" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="24" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+        <childnode refid="16" relation="usage">
+          <edgelabel>m_node_type</edgelabel>
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="10">
+        <label>K</label>
+      </node>
+      <node id="12">
+        <label>T</label>
+      </node>
+      <node id="21">
+        <label>std::multiset&lt; ngraph::Node *&gt;</label>
+        <childnode refid="3" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="22" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="25">
+        <label>std::unordered_map&lt; K, T &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="12" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="24">
+        <label>std::unordered_map&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</label>
+        <childnode refid="1" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="25" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="15">
+        <label>ngraph::element::Type</label>
+        <link refid="classngraph_1_1element_1_1Type"/>
+      </node>
+      <node id="6">
+        <label>ngraph::descriptor::Output</label>
+        <link refid="classngraph_1_1descriptor_1_1Output"/>
+        <childnode refid="7" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="14">
+        <label>ngraph::descriptor::Tensor</label>
+        <link refid="classngraph_1_1descriptor_1_1Tensor"/>
+        <childnode refid="15" relation="usage">
+          <edgelabel>m_element_type</edgelabel>
+        </childnode>
+        <childnode refid="16" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+        <childnode refid="18" relation="usage">
+          <edgelabel>m_primary_tensor_view</edgelabel>
+        </childnode>
+      </node>
+      <node id="18">
+        <label>ngraph::descriptor::PrimaryTensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1PrimaryTensorView"/>
+        <childnode refid="19" relation="public-inheritance">
+        </childnode>
+        <childnode refid="14" relation="usage">
+          <edgelabel>m_tensor</edgelabel>
+        </childnode>
+      </node>
+      <node id="19">
+        <label>ngraph::descriptor::TensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1TensorView"/>
+        <childnode refid="16" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="5">
+        <label>std::deque&lt; ngraph::descriptor::Output &gt;</label>
+        <childnode refid="6" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Output &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="17">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="4">
+        <label>std::enable_shared_from_this&lt; Node &gt;</label>
+      </node>
+      <node id="7">
+        <label>std::set&lt; ngraph::descriptor::Input *&gt;</label>
+        <childnode refid="8" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="9" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="9">
+        <label>std::set&lt; K &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="8">
+        <label>ngraph::descriptor::Input</label>
+        <link refid="classngraph_1_1descriptor_1_1Input"/>
+        <childnode refid="6" relation="usage">
+          <edgelabel>m_output</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="22">
+        <label>std::multiset&lt; K &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="23">
+        <label>std::deque&lt; ngraph::descriptor::Input &gt;</label>
+        <childnode refid="8" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="11" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="20">
+        <label>std::unordered_set&lt; K &gt;</label>
+        <childnode refid="10" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="2">
+        <label>std::unordered_map&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</label>
+        <childnode refid="3" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="25" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="13">
+        <label>std::unordered_set&lt; ngraph::descriptor::Tensor *&gt;</label>
+        <childnode refid="14" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="20" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Tensor *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="1">
+        <label>ngraph::autodiff::Adjoints</label>
+        <link refid="classngraph_1_1autodiff_1_1Adjoints"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+      </node>
+      <node id="11">
+        <label>std::deque&lt; T &gt;</label>
+        <childnode refid="12" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="16">
+        <label>std::string</label>
+        <childnode refid="17" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" bodystart="37" bodyend="76"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_a5fd56c8712a1947ebce69c13d6b623b0_1a5fd56c8712a1947ebce69c13d6b623b0" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>add_delta</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_a1f6b7a99033465fe61dc8f9cac2f1565_1a1f6b7a99033465fe61dc8f9cac2f1565" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>add_delta_to_slice</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_ac6695bf36becf1b4a1254c393689ecf9_1ac6695bf36becf1b4a1254c393689ecf9" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>Adjoints</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_1a29b1a1ef58e3b722d93819c125d13cf6" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>Adjoints</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_1aaf4d64071ea5c404c17c5f1db1f41a78" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>Adjoints</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_aeecc265fbf7b840cc6cd842121c54863_1aeecc265fbf7b840cc6cd842121c54863" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>get</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_1ab0ae9e044b214633e1a6356542d873d8" prot="protected" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>m_adjoint_map</name></member>
+      <member refid="classngraph_1_1autodiff_1_1Adjoints_1a3e5a3c519f8c90cf9fdc1cd3178320a4" prot="public" virt="non-virtual"><scope>ngraph::autodiff::Adjoints</scope><name>operator=</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

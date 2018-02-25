@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1external__constructor" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::external_constructor</compoundname>
+    <templateparamlist>
+      <param>
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980f" kindref="member">value_t</ref></type>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="645" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="645" bodyend="-1"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

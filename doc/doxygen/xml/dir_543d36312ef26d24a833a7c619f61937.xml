@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_543d36312ef26d24a833a7c619f61937" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder</compoundname>
+    <innerfile refid="autobroadcast_8cpp">autobroadcast.cpp</innerfile>
+    <innerfile refid="autobroadcast_8hpp">autobroadcast.hpp</innerfile>
+    <innerfile refid="numpy__transpose_8cpp">numpy_transpose.cpp</innerfile>
+    <innerfile refid="numpy__transpose_8hpp">numpy_transpose.hpp</innerfile>
+    <innerfile refid="reduce__ops_8cpp">reduce_ops.cpp</innerfile>
+    <innerfile refid="reduce__ops_8hpp">reduce_ops.hpp</innerfile>
+    <innerfile refid="xla__tuple_8cpp">xla_tuple.cpp</innerfile>
+    <innerfile refid="xla__tuple_8hpp">xla_tuple.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/"/>
+  </compounddef>
+</doxygen>

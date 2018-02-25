@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;</compoundname>
+    <templateparamlist>
+      <param>
+        <type>typename RealIntegerType</type>
+      </param>
+      <param>
+        <type>typename CompatibleNumberIntegerType</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a1bad172320cd124997a3d68990f50a75" prot="public" static="no">
+        <type>std::numeric_limits&lt; RealIntegerType &gt;</type>
+        <definition>using nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;::RealLimits =  std::numeric_limits&lt;RealIntegerType&gt;</definition>
+        <argsstring></argsstring>
+        <name>RealLimits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="890" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="890" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a3bf8ee2f76e74f997258c9ba40c64bc4" prot="public" static="no">
+        <type>std::numeric_limits&lt; CompatibleNumberIntegerType &gt;</type>
+        <definition>using nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;::CompatibleLimits =  std::numeric_limits&lt;CompatibleNumberIntegerType&gt;</definition>
+        <argsstring></argsstring>
+        <name>CompatibleLimits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="891" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="891" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a4c27142452b43418b1d5c0aad01bff50" prot="public" static="yes" mutable="no">
+        <type>constexpr auto</type>
+        <definition>constexpr auto nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;::value</definition>
+        <argsstring></argsstring>
+        <name>value</name>
+        <initializer>=
+        std::is_constructible&lt;RealIntegerType, CompatibleNumberIntegerType&gt;::value and
+        CompatibleLimits::is_integer and
+        RealLimits::is_signed == CompatibleLimits::is_signed</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="893" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="893" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="888" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="887" bodyend="897"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a3bf8ee2f76e74f997258c9ba40c64bc4" prot="public" virt="non-virtual"><scope>nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;</scope><name>CompatibleLimits</name></member>
+      <member refid="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a1bad172320cd124997a3d68990f50a75" prot="public" virt="non-virtual"><scope>nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;</scope><name>RealLimits</name></member>
+      <member refid="structnlohmann_1_1detail_1_1is__compatible__integer__type__impl_3_01true_00_01RealIntegerType_0064332c4ada80cab3523aebd66ccc012a_1a4c27142452b43418b1d5c0aad01bff50" prot="public" virt="non-virtual"><scope>nlohmann::detail::is_compatible_integer_type_impl&lt; true, RealIntegerType, CompatibleNumberIntegerType &gt;</scope><name>value</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

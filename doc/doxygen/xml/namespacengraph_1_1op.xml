@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1op" kind="namespace" language="C++">
+    <compoundname>ngraph::op</compoundname>
+    <innerclass refid="classngraph_1_1op_1_1Abs" prot="public">ngraph::op::Abs</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Acos" prot="public">ngraph::op::Acos</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Add" prot="public">ngraph::op::Add</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Asin" prot="public">ngraph::op::Asin</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Atan" prot="public">ngraph::op::Atan</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1AvgPool" prot="public">ngraph::op::AvgPool</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1AvgPoolBackprop" prot="public">ngraph::op::AvgPoolBackprop</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1BatchNorm" prot="public">ngraph::op::BatchNorm</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Broadcast" prot="public">ngraph::op::Broadcast</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Ceiling" prot="public">ngraph::op::Ceiling</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Concat" prot="public">ngraph::op::Concat</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Constant" prot="public">ngraph::op::Constant</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Convert" prot="public">ngraph::op::Convert</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Convolution" prot="public">ngraph::op::Convolution</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ConvolutionBackpropData" prot="public">ngraph::op::ConvolutionBackpropData</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ConvolutionBackpropFilters" prot="public">ngraph::op::ConvolutionBackpropFilters</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Cos" prot="public">ngraph::op::Cos</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Cosh" prot="public">ngraph::op::Cosh</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Divide" prot="public">ngraph::op::Divide</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Dot" prot="public">ngraph::op::Dot</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Equal" prot="public">ngraph::op::Equal</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Exp" prot="public">ngraph::op::Exp</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Floor" prot="public">ngraph::op::Floor</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1FunctionCall" prot="public">ngraph::op::FunctionCall</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1GetOutputElement" prot="public">ngraph::op::GetOutputElement</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Greater" prot="public">ngraph::op::Greater</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1GreaterEq" prot="public">ngraph::op::GreaterEq</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Less" prot="public">ngraph::op::Less</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1LessEq" prot="public">ngraph::op::LessEq</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Log" prot="public">ngraph::op::Log</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1MatmulBias" prot="public">ngraph::op::MatmulBias</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Max" prot="public">ngraph::op::Max</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Maximum" prot="public">ngraph::op::Maximum</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1MaxPool" prot="public">ngraph::op::MaxPool</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1MaxPoolBackprop" prot="public">ngraph::op::MaxPoolBackprop</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Min" prot="public">ngraph::op::Min</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Minimum" prot="public">ngraph::op::Minimum</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Multiply" prot="public">ngraph::op::Multiply</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Negative" prot="public">ngraph::op::Negative</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Not" prot="public">ngraph::op::Not</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1NotEqual" prot="public">ngraph::op::NotEqual</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1OneHot" prot="public">ngraph::op::OneHot</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Op" prot="public">ngraph::op::Op</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Pad" prot="public">ngraph::op::Pad</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Parameter" prot="public">ngraph::op::Parameter</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Power" prot="public">ngraph::op::Power</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Product" prot="public">ngraph::op::Product</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Reduce" prot="public">ngraph::op::Reduce</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ReduceWindow" prot="public">ngraph::op::ReduceWindow</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Relu" prot="public">ngraph::op::Relu</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ReluBackprop" prot="public">ngraph::op::ReluBackprop</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Remainder" prot="public">ngraph::op::Remainder</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ReplaceSlice" prot="public">ngraph::op::ReplaceSlice</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Reshape" prot="public">ngraph::op::Reshape</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Reverse" prot="public">ngraph::op::Reverse</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Select" prot="public">ngraph::op::Select</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1SelectAndScatter" prot="public">ngraph::op::SelectAndScatter</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Sign" prot="public">ngraph::op::Sign</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Sin" prot="public">ngraph::op::Sin</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Sinh" prot="public">ngraph::op::Sinh</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Slice" prot="public">ngraph::op::Slice</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Sqrt" prot="public">ngraph::op::Sqrt</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Subtract" prot="public">ngraph::op::Subtract</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Sum" prot="public">ngraph::op::Sum</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Tan" prot="public">ngraph::op::Tan</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1Tanh" prot="public">ngraph::op::Tanh</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1XLAGetTupleElement" prot="public">ngraph::op::XLAGetTupleElement</innerclass>
+    <innernamespace refid="namespacengraph_1_1op_1_1util">ngraph::op::util</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespacengraph_1_1op_1a0040a9fa9ec6258f8425a1259aa03274" prot="public" static="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1op_1_1Parameter" kindref="compound">Parameter</ref> &gt; &gt;</type>
+        <definition>using ngraph::op::Parameters = typedef std::vector&lt;std::shared_ptr&lt;Parameter&gt; &gt;</definition>
+        <argsstring></argsstring>
+        <name>Parameters</name>
+        <briefdescription>
+<para>A list of parameters. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespacengraph_1_1op_1a866fc917da78afec81321cb283790920" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::op::Constant::write_to_buffer&lt; std::string &gt;</definition>
+        <argsstring>(const element::Type &amp;target_type, const Shape &amp;target_shape, const std::vector&lt; std::string &gt; &amp;source, void *target, size_t target_element_count)</argsstring>
+        <name>Constant::write_to_buffer&lt; std::string &gt;</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>target_type</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>target_shape</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>target</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>target_element_count</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.cpp" line="162" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.cpp" bodystart="162" bodyend="168"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Ops used in graph-building. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/common.hpp" line="29" column="1"/>
+  </compounddef>
+</doxygen>

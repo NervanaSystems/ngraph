@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1DumpSorted" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::DumpSorted</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1ModulePass" prot="public" virt="non-virtual">ngraph::pass::ModulePass</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1DumpSorted_1a83b832e90cfbd63498c369f10466ed14" prot="private" static="no" mutable="no">
+        <type>const std::string</type>
+        <definition>const std::string ngraph::pass::DumpSorted::m_output_file</definition>
+        <argsstring></argsstring>
+        <name>m_output_file</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1DumpSorted_1a22ad345a0616ce8346dde57bc49e83f4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>pass::DumpSorted::DumpSorted</definition>
+        <argsstring>(const std::string &amp;output_file)</argsstring>
+        <name>DumpSorted</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>output_file</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.cpp" bodystart="27" bodyend="30"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1DumpSorted_1ae14283186d9bad9759c06220dd7a590b" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool pass::DumpSorted::run_on_module</definition>
+        <argsstring>(std::vector&lt; std::shared_ptr&lt; ngraph::Function &gt;&gt; &amp;) override</argsstring>
+        <name>run_on_module</name>
+        <reimplements refid="classngraph_1_1pass_1_1ModulePass_1ae9edbd032dd8a9007e748e472f234e15">run_on_module</reimplements>
+        <param>
+          <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;&gt; &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.cpp" bodystart="32" bodyend="81"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3102">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3100">
+        <label>ngraph::pass::DumpSorted</label>
+        <link refid="classngraph_1_1pass_1_1DumpSorted"/>
+        <childnode refid="3101" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3101">
+        <label>ngraph::pass::ModulePass</label>
+        <link refid="classngraph_1_1pass_1_1ModulePass"/>
+        <childnode refid="3102" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3105">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3103">
+        <label>ngraph::pass::DumpSorted</label>
+        <link refid="classngraph_1_1pass_1_1DumpSorted"/>
+        <childnode refid="3104" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3104">
+        <label>ngraph::pass::ModulePass</label>
+        <link refid="classngraph_1_1pass_1_1ModulePass"/>
+        <childnode refid="3105" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/dump_sorted.hpp" bodystart="31" bodyend="40"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1DumpSorted_1a22ad345a0616ce8346dde57bc49e83f4" prot="public" virt="non-virtual"><scope>ngraph::pass::DumpSorted</scope><name>DumpSorted</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::DumpSorted</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1DumpSorted_1a83b832e90cfbd63498c369f10466ed14" prot="private" virt="non-virtual"><scope>ngraph::pass::DumpSorted</scope><name>m_output_file</name></member>
+      <member refid="classngraph_1_1pass_1_1DumpSorted_1ae14283186d9bad9759c06220dd7a590b" prot="public" virt="virtual"><scope>ngraph::pass::DumpSorted</scope><name>run_on_module</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::DumpSorted</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1ModulePass_1ae3cff670a30498d887d704044b344e53" prot="public" virt="virtual"><scope>ngraph::pass::DumpSorted</scope><name>~ModulePass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::DumpSorted</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,383 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1file__util" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::file_util</compoundname>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1file__util_1a17d17cc07f92444e5b7cae10f503657b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::file_util::get_file_name</definition>
+        <argsstring>(const std::string &amp;)</argsstring>
+        <name>get_file_name</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <defname>s</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="31" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="38" bodyend="47"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1ab98bd6107c6e206e8469492acd8f2913" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::file_util::get_file_ext</definition>
+        <argsstring>(const std::string &amp;)</argsstring>
+        <name>get_file_ext</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <defname>s</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="49" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a8aef02578cf8549a77e3c573e5cdc79c" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::file_util::path_join</definition>
+        <argsstring>(const std::string &amp;s1, const std::string &amp;s2)</argsstring>
+        <name>path_join</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s1</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>s2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="64" bodyend="92"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1af4a19e1a3f2b258baac804442130452e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::file_util::get_file_size</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>get_file_size</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="94" bodyend="105"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a3010e947e81764412d5a7ba0b9800883" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::remove_directory</definition>
+        <argsstring>(const std::string &amp;dir)</argsstring>
+        <name>remove_directory</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="107" bodyend="126"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a89d6e7ec9574bdec8808f1b152cf3f8c" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::file_util::make_directory</definition>
+        <argsstring>(const std::string &amp;dir)</argsstring>
+        <name>make_directory</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>dir</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="133" bodyend="145"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1aae9dd7dce75a3dc16f4a5e39a68123be" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::file_util::make_temp_directory</definition>
+        <argsstring>(const std::string &amp;path=&quot;&quot;)</argsstring>
+        <name>make_temp_directory</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="147" bodyend="158"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a048473b7c7c7c3ceae957799309e02ed" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::file_util::get_temp_directory</definition>
+        <argsstring>()</argsstring>
+        <name>get_temp_directory</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="160" bodyend="179"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a0dd54b8d251abae8cb53728b753ce61b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::remove_file</definition>
+        <argsstring>(const std::string &amp;file)</argsstring>
+        <name>remove_file</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>file</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="128" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1ae6dbdac6e3032bebca9e4aba3b206e1e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; char &gt;</type>
+        <definition>vector&lt; char &gt; ngraph::file_util::read_file_contents</definition>
+        <argsstring>(const std::string &amp;path)</argsstring>
+        <name>read_file_contents</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="181" bodyend="207"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a79f1051046f1bfbea4142ad2e1a339b0" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ngraph::file_util::read_file_to_string</definition>
+        <argsstring>(const std::string &amp;path)</argsstring>
+        <name>read_file_to_string</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="209" bodyend="215"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a95034edbfd6946e01d3fa66ad92bf9d5" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::iterate_files</definition>
+        <argsstring>(const std::string &amp;path, std::function&lt; void(const std::string &amp;file, bool is_dir)&gt; func, bool recurse=false)</argsstring>
+        <name>iterate_files</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void(const std::string &amp;file, bool is_dir)&gt;</type>
+          <declname>func</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>recurse</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="217" bodyend="240"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1af97eaa0f046dc35bf7710ba290848b25" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string ngraph::file_util::tmp_filename</definition>
+        <argsstring>(const std::string &amp;extension=&quot;&quot;)</argsstring>
+        <name>tmp_filename</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>extension</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="283" bodyend="295"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1aafbea265041ad0fe6b613d3ee751f9ed" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::touch</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>touch</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="297" bodyend="307"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a6bd37cf115de536e0e5a954aa7a30648" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::file_util::exists</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>exists</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="309" bodyend="313"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1aff1c67894df665a9e6e811203c41ba70" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int ngraph::file_util::try_get_lock</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>try_get_lock</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="315" bodyend="326"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a84e61505f0778bf5d9a03eed41a5c2ca" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::release_lock</definition>
+        <argsstring>(int fd, const std::string &amp;filename)</argsstring>
+        <name>release_lock</name>
+        <param>
+          <type>int</type>
+          <declname>fd</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="49" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="328" bodyend="335"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1file__util_1a7a12ca07b487a81d5bc6836f4d94e547" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>time_t</type>
+        <definition>time_t ngraph::file_util::get_timestamp</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>get_timestamp</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="337" bodyend="346"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1file__util_1a6ca896fbaa3f978d36b48eba6c1135a3" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::file_util::iterate_files_worker</definition>
+        <argsstring>(const std::string &amp;path, std::function&lt; void(const std::string &amp;file, bool is_dir)&gt; func, bool recurse=false)</argsstring>
+        <name>iterate_files_worker</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>path</declname>
+        </param>
+        <param>
+          <type>std::function&lt; void(const std::string &amp;file, bool is_dir)&gt;</type>
+          <declname>func</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>recurse</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.cpp" bodystart="242" bodyend="281"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/file_util.hpp" bodystart="28" bodyend="56"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1file__util_1a6bd37cf115de536e0e5a954aa7a30648" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>exists</name></member>
+      <member refid="classngraph_1_1file__util_1ab98bd6107c6e206e8469492acd8f2913" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>get_file_ext</name></member>
+      <member refid="classngraph_1_1file__util_1a17d17cc07f92444e5b7cae10f503657b" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>get_file_name</name></member>
+      <member refid="classngraph_1_1file__util_1af4a19e1a3f2b258baac804442130452e" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>get_file_size</name></member>
+      <member refid="classngraph_1_1file__util_1a048473b7c7c7c3ceae957799309e02ed" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>get_temp_directory</name></member>
+      <member refid="classngraph_1_1file__util_1a7a12ca07b487a81d5bc6836f4d94e547" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>get_timestamp</name></member>
+      <member refid="classngraph_1_1file__util_1a95034edbfd6946e01d3fa66ad92bf9d5" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>iterate_files</name></member>
+      <member refid="classngraph_1_1file__util_1a6ca896fbaa3f978d36b48eba6c1135a3" prot="private" virt="non-virtual"><scope>ngraph::file_util</scope><name>iterate_files_worker</name></member>
+      <member refid="classngraph_1_1file__util_1a89d6e7ec9574bdec8808f1b152cf3f8c" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>make_directory</name></member>
+      <member refid="classngraph_1_1file__util_1aae9dd7dce75a3dc16f4a5e39a68123be" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>make_temp_directory</name></member>
+      <member refid="classngraph_1_1file__util_1a8aef02578cf8549a77e3c573e5cdc79c" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>path_join</name></member>
+      <member refid="classngraph_1_1file__util_1ae6dbdac6e3032bebca9e4aba3b206e1e" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>read_file_contents</name></member>
+      <member refid="classngraph_1_1file__util_1a79f1051046f1bfbea4142ad2e1a339b0" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>read_file_to_string</name></member>
+      <member refid="classngraph_1_1file__util_1a84e61505f0778bf5d9a03eed41a5c2ca" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>release_lock</name></member>
+      <member refid="classngraph_1_1file__util_1a3010e947e81764412d5a7ba0b9800883" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>remove_directory</name></member>
+      <member refid="classngraph_1_1file__util_1a0dd54b8d251abae8cb53728b753ce61b" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>remove_file</name></member>
+      <member refid="classngraph_1_1file__util_1af97eaa0f046dc35bf7710ba290848b25" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>tmp_filename</name></member>
+      <member refid="classngraph_1_1file__util_1aafbea265041ad0fe6b613d3ee751f9ed" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>touch</name></member>
+      <member refid="classngraph_1_1file__util_1aff1c67894df665a9e6e811203c41ba70" prot="public" virt="non-virtual"><scope>ngraph::file_util</scope><name>try_get_lock</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

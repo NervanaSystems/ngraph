@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1is__basic__json" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::is_basic_json</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">false_type</basecompoundref>
+    <templateparamlist>
+      <param>
+        <type>typename</type>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3652">
+        <label>nlohmann::detail::is_basic_json&lt; typename &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1is__basic__json"/>
+        <childnode refid="3653" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3653">
+        <label>std::false_type</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3654">
+        <label>nlohmann::detail::is_basic_json&lt; typename &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1is__basic__json"/>
+        <childnode refid="3655" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3655">
+        <label>std::false_type</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="571" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="571" bodyend="571"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

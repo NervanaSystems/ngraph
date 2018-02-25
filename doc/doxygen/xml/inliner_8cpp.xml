@@ -1,0 +1,503 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="inliner_8cpp" kind="file" language="C++">
+    <compoundname>inliner.cpp</compoundname>
+    <includes refid="inliner_8hpp" local="yes">inliner.hpp</includes>
+    <includes refid="graph__util_8hpp" local="yes">ngraph/graph_util.hpp</includes>
+    <includes refid="function__call_8hpp" local="yes">ngraph/ops/function_call.hpp</includes>
+    <incdepgraph>
+      <node id="10490">
+        <label>list</label>
+      </node>
+      <node id="10464">
+        <label>atomic</label>
+      </node>
+      <node id="10459">
+        <label>functional</label>
+      </node>
+      <node id="10476">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="10466" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10477" relation="include">
+        </childnode>
+      </node>
+      <node id="10477">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10478" relation="include">
+        </childnode>
+        <childnode refid="10480" relation="include">
+        </childnode>
+      </node>
+      <node id="10487">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10467" relation="include">
+        </childnode>
+        <childnode refid="10475" relation="include">
+        </childnode>
+        <childnode refid="10488" relation="include">
+        </childnode>
+      </node>
+      <node id="10463">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="10464" relation="include">
+        </childnode>
+        <childnode refid="10465" relation="include">
+        </childnode>
+        <childnode refid="10466" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10467" relation="include">
+        </childnode>
+        <childnode refid="10468" relation="include">
+        </childnode>
+        <childnode refid="10469" relation="include">
+        </childnode>
+        <childnode refid="10470" relation="include">
+        </childnode>
+        <childnode refid="10471" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10472" relation="include">
+        </childnode>
+        <childnode refid="10473" relation="include">
+        </childnode>
+        <childnode refid="10475" relation="include">
+        </childnode>
+        <childnode refid="10487" relation="include">
+        </childnode>
+        <childnode refid="10476" relation="include">
+        </childnode>
+        <childnode refid="10477" relation="include">
+        </childnode>
+      </node>
+      <node id="10458">
+        <label>inliner.hpp</label>
+        <link refid="inliner_8hpp_source"/>
+        <childnode refid="10459" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10462" relation="include">
+        </childnode>
+        <childnode refid="10489" relation="include">
+        </childnode>
+      </node>
+      <node id="10486">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="10465" relation="include">
+        </childnode>
+        <childnode refid="10482" relation="include">
+        </childnode>
+        <childnode refid="10485" relation="include">
+        </childnode>
+      </node>
+      <node id="10485">
+        <label>stdexcept</label>
+      </node>
+      <node id="10489">
+        <label>ngraph/pass/pass.hpp</label>
+        <link refid="pass_8hpp_source"/>
+        <childnode refid="10490" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10491" relation="include">
+        </childnode>
+        <childnode refid="10463" relation="include">
+        </childnode>
+        <childnode refid="10496" relation="include">
+        </childnode>
+      </node>
+      <node id="10468">
+        <label>string</label>
+      </node>
+      <node id="10481">
+        <label>map</label>
+      </node>
+      <node id="10471">
+        <label>unordered_set</label>
+      </node>
+      <node id="10497">
+        <label>ngraph/graph_util.hpp</label>
+        <link refid="graph__util_8hpp_source"/>
+        <childnode refid="10498" relation="include">
+        </childnode>
+        <childnode refid="10499" relation="include">
+        </childnode>
+        <childnode refid="10465" relation="include">
+        </childnode>
+        <childnode refid="10459" relation="include">
+        </childnode>
+        <childnode refid="10466" relation="include">
+        </childnode>
+        <childnode refid="10490" relation="include">
+        </childnode>
+        <childnode refid="10481" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10482" relation="include">
+        </childnode>
+        <childnode refid="10468" relation="include">
+        </childnode>
+        <childnode refid="10470" relation="include">
+        </childnode>
+        <childnode refid="10471" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+      </node>
+      <node id="10480">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="10481" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10482" relation="include">
+        </childnode>
+        <childnode refid="10468" relation="include">
+        </childnode>
+        <childnode refid="10483" relation="include">
+        </childnode>
+        <childnode refid="10473" relation="include">
+        </childnode>
+        <childnode refid="10484" relation="include">
+        </childnode>
+        <childnode refid="10486" relation="include">
+        </childnode>
+      </node>
+      <node id="10462">
+        <label>ngraph/ops/function_call.hpp</label>
+        <link refid="function__call_8hpp_source"/>
+        <childnode refid="10463" relation="include">
+        </childnode>
+      </node>
+      <node id="10473">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10467" relation="include">
+        </childnode>
+        <childnode refid="10474" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+      </node>
+      <node id="10475">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10476" relation="include">
+        </childnode>
+        <childnode refid="10477" relation="include">
+        </childnode>
+      </node>
+      <node id="10478">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="10479" relation="include">
+        </childnode>
+        <childnode refid="10466" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10473" relation="include">
+        </childnode>
+      </node>
+      <node id="10472">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10470" relation="include">
+        </childnode>
+        <childnode refid="10473" relation="include">
+        </childnode>
+      </node>
+      <node id="10495">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="10493" relation="include">
+        </childnode>
+        <childnode refid="10477" relation="include">
+        </childnode>
+      </node>
+      <node id="10493">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="10468" relation="include">
+        </childnode>
+        <childnode refid="10473" relation="include">
+        </childnode>
+        <childnode refid="10463" relation="include">
+        </childnode>
+        <childnode refid="10494" relation="include">
+        </childnode>
+      </node>
+      <node id="10479">
+        <label>cstdio</label>
+      </node>
+      <node id="10461">
+        <label>vector</label>
+      </node>
+      <node id="10474">
+        <label>utility</label>
+      </node>
+      <node id="10482">
+        <label>sstream</label>
+      </node>
+      <node id="10491">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="10464" relation="include">
+        </childnode>
+        <childnode refid="10492" relation="include">
+        </childnode>
+        <childnode refid="10490" relation="include">
+        </childnode>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10468" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10487" relation="include">
+        </childnode>
+        <childnode refid="10488" relation="include">
+        </childnode>
+        <childnode refid="10486" relation="include">
+        </childnode>
+        <childnode refid="10463" relation="include">
+        </childnode>
+        <childnode refid="10493" relation="include">
+        </childnode>
+        <childnode refid="10495" relation="include">
+        </childnode>
+        <childnode refid="10477" relation="include">
+        </childnode>
+      </node>
+      <node id="10466">
+        <label>iostream</label>
+      </node>
+      <node id="10494">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="10465">
+        <label>deque</label>
+      </node>
+      <node id="10470">
+        <label>unordered_map</label>
+      </node>
+      <node id="10499">
+        <label>chrono</label>
+      </node>
+      <node id="10484">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="10485" relation="include">
+        </childnode>
+      </node>
+      <node id="10483">
+        <label>type_traits</label>
+      </node>
+      <node id="10467">
+        <label>set</label>
+      </node>
+      <node id="10488">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10478" relation="include">
+        </childnode>
+      </node>
+      <node id="10498">
+        <label>algorithm</label>
+      </node>
+      <node id="10457">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/inliner.cpp</label>
+        <link refid="inliner_8cpp"/>
+        <childnode refid="10458" relation="include">
+        </childnode>
+        <childnode refid="10497" relation="include">
+        </childnode>
+        <childnode refid="10462" relation="include">
+        </childnode>
+      </node>
+      <node id="10496">
+        <label>ngraph/pass/manager_state.hpp</label>
+        <link refid="manager__state_8hpp_source"/>
+        <childnode refid="10460" relation="include">
+        </childnode>
+        <childnode refid="10461" relation="include">
+        </childnode>
+        <childnode refid="10491" relation="include">
+        </childnode>
+      </node>
+      <node id="10460">
+        <label>memory</label>
+      </node>
+      <node id="10492">
+        <label>initializer_list</label>
+      </node>
+      <node id="10469">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;inliner.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/graph_util.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/function_call.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal">std::vector&lt;std::shared_ptr&lt;ngraph::op::FunctionCall&gt;&gt;</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>ngraph::pass::InlineSmallCalls::create_inlining_plan(std::shared_ptr&lt;ngraph::Function&gt;<sp/>f,</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>depth)</highlight></codeline>
+<codeline lineno="24"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;std::shared_ptr&lt;ngraph::op::FunctionCall&gt;&gt;<sp/>callees;</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>n<sp/>:<sp/>f-&gt;get_ops())</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>fc<sp/>=<sp/>std::dynamic_pointer_cast&lt;op::FunctionCall&gt;(n);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!fc)</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">continue</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callee_function<sp/>=<sp/>fc-&gt;get_functions().at(0);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;InlineSmallCalls<sp/>is<sp/>considering<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>callee_function-&gt;get_name()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>of<sp/>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>fc-&gt;get_name();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>callee_size<sp/>=<sp/>callee_function-&gt;get_ops().size();</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;\t&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>callee_function-&gt;get_name()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>size<sp/>is<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>callee_size</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>,<sp/>depth<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>depth;</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(depth<sp/>&lt;<sp/>m_depth<sp/>&amp;&amp;<sp/>callee_size<sp/>&lt;<sp/>m_call_size_limit)</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>callees.push_back(fc);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>callees;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>ngraph::pass::Inliner::inline_function_call(std::shared_ptr&lt;ngraph::Node&gt;<sp/>inlinee,</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Function&gt;<sp/>caller)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callsite<sp/>=<sp/>std::dynamic_pointer_cast&lt;<ref refid="classngraph_1_1op_1_1FunctionCall" kindref="compound">ngraph::op::FunctionCall</ref>&gt;(inlinee);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!callsite)</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//map<sp/>args<sp/>to<sp/>parms</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callee<sp/>=<sp/>callsite-&gt;<ref refid="classngraph_1_1op_1_1FunctionCall_a4a30060a7bc404461cc7fb070c48bd27_1a4a30060a7bc404461cc7fb070c48bd27" kindref="member">get_functions</ref>().at(0);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(callee-&gt;get_results().size()<sp/>&gt;<sp/>1)</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;<sp/></highlight><highlight class="comment">//relax<sp/>in<sp/>the<sp/>next<sp/>iteration<sp/>(can&apos;t<sp/>just<sp/>use<sp/>replace_node)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1NodeMap" kindref="compound">ngraph::NodeMap</ref><sp/>nm;</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>callee-&gt;get_parameters().size();<sp/>i++)</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>nm.add(callee-&gt;get_parameters().at(i),<sp/>callsite-&gt;get_input_op(i));</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/>ngraph::clone_function(callee,<sp/>nm);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callee_graph<sp/>=<sp/>nm.get(callee-&gt;get_result());</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/>caller-&gt;replace_node(callsite,<sp/>callee_graph);</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Inlined<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>callee-&gt;get_name()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>of<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>callsite-&gt;get_name()<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>into<sp/>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>caller-&gt;get_name();</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>ngraph::pass::Inliner::run_on_function_call(std::shared_ptr&lt;ngraph::op::FunctionCall&gt;<sp/>fc)</highlight></codeline>
+<codeline lineno="80"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>f<sp/>=<sp/>fc-&gt;get_functions().at(0);</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Inliner::run_on_function<sp/>on<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>f-&gt;get_name();</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callees<sp/>=<sp/>m_inlining_heuristics-&gt;create_inlining_plan(f,<sp/>m_depth);</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!callees.size())</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//we<sp/>could<sp/>clone_function<sp/>f<sp/>if<sp/>we<sp/>need<sp/>to<sp/>preserve<sp/>it</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/>run_on_functions(callees,<sp/>f);</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ngraph::pass::Inliner::run_on_functions(</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;std::shared_ptr&lt;ngraph::op::FunctionCall&gt;&gt;<sp/>callees,</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Function&gt;<sp/>caller)</highlight></codeline>
+<codeline lineno="98"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callee<sp/>:<sp/>callees)</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_depth++;</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//recursive<sp/>inlining</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>run_on_function_call(callee);</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_depth--;</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>inline_function_call(callee,<sp/>caller);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>ngraph::pass::Inliner::run_on_module(std::vector&lt;std::shared_ptr&lt;ngraph::Function&gt;&gt;&amp;<sp/>funcs)</highlight></codeline>
+<codeline lineno="110"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>outermost<sp/>=<sp/>funcs.front();</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>NGRAPH_DEBUG<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Outermost<sp/>function<sp/>=<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>outermost-&gt;get_name();</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>callees<sp/>=<sp/>m_inlining_heuristics-&gt;create_inlining_plan(outermost,<sp/>m_depth);</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!callees.size())</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/>run_on_functions(callees,<sp/>outermost);</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="122"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/inliner.cpp"/>
+  </compounddef>
+</doxygen>

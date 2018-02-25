@@ -1,0 +1,350 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="function__call_8cpp" kind="file" language="C++">
+    <compoundname>function_call.cpp</compoundname>
+    <includes refid="function__call_8hpp" local="yes">ngraph/ops/function_call.hpp</includes>
+    <includes refid="function_8hpp" local="yes">ngraph/function.hpp</includes>
+    <incdepgraph>
+      <node id="5658">
+        <label>list</label>
+      </node>
+      <node id="5629">
+        <label>atomic</label>
+      </node>
+      <node id="5643">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="5631" relation="include">
+        </childnode>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+        <childnode refid="5644" relation="include">
+        </childnode>
+      </node>
+      <node id="5626">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/function_call.cpp</label>
+        <link refid="function__call_8cpp"/>
+        <childnode refid="5627" relation="include">
+        </childnode>
+        <childnode refid="5656" relation="include">
+        </childnode>
+      </node>
+      <node id="5644">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+        <childnode refid="5645" relation="include">
+        </childnode>
+        <childnode refid="5647" relation="include">
+        </childnode>
+      </node>
+      <node id="5654">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5633" relation="include">
+        </childnode>
+        <childnode refid="5642" relation="include">
+        </childnode>
+        <childnode refid="5655" relation="include">
+        </childnode>
+      </node>
+      <node id="5628">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="5629" relation="include">
+        </childnode>
+        <childnode refid="5630" relation="include">
+        </childnode>
+        <childnode refid="5631" relation="include">
+        </childnode>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5633" relation="include">
+        </childnode>
+        <childnode refid="5634" relation="include">
+        </childnode>
+        <childnode refid="5635" relation="include">
+        </childnode>
+        <childnode refid="5636" relation="include">
+        </childnode>
+        <childnode refid="5637" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+        <childnode refid="5639" relation="include">
+        </childnode>
+        <childnode refid="5640" relation="include">
+        </childnode>
+        <childnode refid="5642" relation="include">
+        </childnode>
+        <childnode refid="5654" relation="include">
+        </childnode>
+        <childnode refid="5643" relation="include">
+        </childnode>
+        <childnode refid="5644" relation="include">
+        </childnode>
+      </node>
+      <node id="5653">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="5630" relation="include">
+        </childnode>
+        <childnode refid="5649" relation="include">
+        </childnode>
+        <childnode refid="5652" relation="include">
+        </childnode>
+      </node>
+      <node id="5652">
+        <label>stdexcept</label>
+      </node>
+      <node id="5634">
+        <label>string</label>
+      </node>
+      <node id="5648">
+        <label>map</label>
+      </node>
+      <node id="5637">
+        <label>unordered_set</label>
+      </node>
+      <node id="5647">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="5648" relation="include">
+        </childnode>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5649" relation="include">
+        </childnode>
+        <childnode refid="5634" relation="include">
+        </childnode>
+        <childnode refid="5650" relation="include">
+        </childnode>
+        <childnode refid="5640" relation="include">
+        </childnode>
+        <childnode refid="5651" relation="include">
+        </childnode>
+        <childnode refid="5653" relation="include">
+        </childnode>
+      </node>
+      <node id="5627">
+        <label>ngraph/ops/function_call.hpp</label>
+        <link refid="function__call_8hpp_source"/>
+        <childnode refid="5628" relation="include">
+        </childnode>
+      </node>
+      <node id="5640">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5633" relation="include">
+        </childnode>
+        <childnode refid="5641" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+      </node>
+      <node id="5642">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5643" relation="include">
+        </childnode>
+        <childnode refid="5644" relation="include">
+        </childnode>
+      </node>
+      <node id="5645">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="5646" relation="include">
+        </childnode>
+        <childnode refid="5631" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+        <childnode refid="5640" relation="include">
+        </childnode>
+      </node>
+      <node id="5639">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5636" relation="include">
+        </childnode>
+        <childnode refid="5640" relation="include">
+        </childnode>
+      </node>
+      <node id="5661">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="5659" relation="include">
+        </childnode>
+        <childnode refid="5644" relation="include">
+        </childnode>
+      </node>
+      <node id="5659">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="5634" relation="include">
+        </childnode>
+        <childnode refid="5640" relation="include">
+        </childnode>
+        <childnode refid="5628" relation="include">
+        </childnode>
+        <childnode refid="5660" relation="include">
+        </childnode>
+      </node>
+      <node id="5646">
+        <label>cstdio</label>
+      </node>
+      <node id="5638">
+        <label>vector</label>
+      </node>
+      <node id="5641">
+        <label>utility</label>
+      </node>
+      <node id="5649">
+        <label>sstream</label>
+      </node>
+      <node id="5656">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="5629" relation="include">
+        </childnode>
+        <childnode refid="5657" relation="include">
+        </childnode>
+        <childnode refid="5658" relation="include">
+        </childnode>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5634" relation="include">
+        </childnode>
+        <childnode refid="5638" relation="include">
+        </childnode>
+        <childnode refid="5654" relation="include">
+        </childnode>
+        <childnode refid="5655" relation="include">
+        </childnode>
+        <childnode refid="5653" relation="include">
+        </childnode>
+        <childnode refid="5628" relation="include">
+        </childnode>
+        <childnode refid="5659" relation="include">
+        </childnode>
+        <childnode refid="5661" relation="include">
+        </childnode>
+        <childnode refid="5644" relation="include">
+        </childnode>
+      </node>
+      <node id="5631">
+        <label>iostream</label>
+      </node>
+      <node id="5660">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="5630">
+        <label>deque</label>
+      </node>
+      <node id="5636">
+        <label>unordered_map</label>
+      </node>
+      <node id="5651">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="5652" relation="include">
+        </childnode>
+      </node>
+      <node id="5650">
+        <label>type_traits</label>
+      </node>
+      <node id="5633">
+        <label>set</label>
+      </node>
+      <node id="5655">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="5632" relation="include">
+        </childnode>
+        <childnode refid="5645" relation="include">
+        </childnode>
+      </node>
+      <node id="5632">
+        <label>memory</label>
+      </node>
+      <node id="5657">
+        <label>initializer_list</label>
+      </node>
+      <node id="5635">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/function_call.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23" refid="classngraph_1_1op_1_1FunctionCall_ad97feff7bda8c71fcbe3ace7fba7897f_1ad97feff7bda8c71fcbe3ace7fba7897f" refkind="member"><highlight class="normal">op::FunctionCall::FunctionCall(std::shared_ptr&lt;Function&gt;<sp/></highlight><highlight class="keyword">function</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>args)</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/><ref refid="classngraph_1_1Node" kindref="compound">Node</ref>(</highlight><highlight class="stringliteral">&quot;FunctionCall&quot;</highlight><highlight class="normal">,<sp/>args)</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_function(function)</highlight></codeline>
+<codeline lineno="27"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>function_params<sp/>=<sp/>m_function-&gt;get_parameters();</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//TODO<sp/>:<sp/>[nikolayk]<sp/>this<sp/>needs<sp/>to<sp/>be<sp/>rewritten<sp/>as<sp/>follows</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//for<sp/>each<sp/>i<sp/>:<sp/>FunctionCall-&gt;get_inputs.at(i).get_tensor_view_type<sp/>==</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//flatten(function_parms).at(i)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<ref refid="classngraph_1_1Node_1a69c6620b65b11187bf367a2d0e440699" kindref="member">get_input_size</ref>()<sp/>!=<sp/>function_params.size())</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Wrong<sp/>number<sp/>of<sp/>arguments.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/><ref refid="classngraph_1_1Node_1a69c6620b65b11187bf367a2d0e440699" kindref="member">get_input_size</ref>();<sp/>i++)</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(<ref refid="classngraph_1_1Node_1a98841a99a32bdcf64a371ff2aed2abc1" kindref="member">get_input_element_type</ref>(i)<sp/>!=<sp/></highlight><highlight class="keyword">function</highlight><highlight class="normal">-&gt;get_parameters().at(i)-&gt;get_element_type()<sp/>||</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1Node_1a9ff5f656d6b183cc00af753ec6b6144a" kindref="member">get_input_shape</ref>(i)<sp/>!=<sp/></highlight><highlight class="keyword">function</highlight><highlight class="normal">-&gt;get_parameters().at(i)-&gt;get_shape())</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Function<sp/>argument<sp/>type<sp/>mismatch.&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>m_function-&gt;get_output_size();<sp/>++i)</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>add_output(function-&gt;get_output_element_type(i),<sp/></highlight><highlight class="keyword">function</highlight><highlight class="normal">-&gt;get_output_shape(i));</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="51"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/function_call.cpp"/>
+  </compounddef>
+</doxygen>

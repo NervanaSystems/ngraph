@@ -1,0 +1,378 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1element" kind="namespace" language="C++">
+    <compoundname>ngraph::element</compoundname>
+    <innerclass refid="classngraph_1_1element_1_1Type" prot="public">ngraph::element::Type</innerclass>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="element__type_8hpp_1ace1a091102929b3947e6e871840f5b44" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::boolean</definition>
+        <argsstring></argsstring>
+        <name>boolean</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="39" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1a4e39c329dd4f415f1685e9d3b051cb1d" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::f32</definition>
+        <argsstring></argsstring>
+        <name>f32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="40" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1a791847606f7dcd9b09f5e39738715db3" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::f64</definition>
+        <argsstring></argsstring>
+        <name>f64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="41" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1ad9e7169b56a51dce9146b6feddef3b63" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::i8</definition>
+        <argsstring></argsstring>
+        <name>i8</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="42" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1aac20220277df5b036dd6e53e5e356c1d" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::i16</definition>
+        <argsstring></argsstring>
+        <name>i16</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="43" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1aab3638c226bb626b3dfa9dba7aafb413" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::i32</definition>
+        <argsstring></argsstring>
+        <name>i32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="44" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1afb446c0537f40df4a00e58d657eddff2" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::i64</definition>
+        <argsstring></argsstring>
+        <name>i64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="45" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1adc4e9a6381b05e2c65dda16846273908" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::u8</definition>
+        <argsstring></argsstring>
+        <name>u8</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="46" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1ae95bfebe3a5758d42c2b154d2e05cf02" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::u16</definition>
+        <argsstring></argsstring>
+        <name>u16</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="47" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1a511f0442c78bf3862623ff8bdc69e5c4" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::u32</definition>
+        <argsstring></argsstring>
+        <name>u32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="48" column="1"/>
+      </memberdef>
+      <memberdef kind="variable" id="element__type_8hpp_1a57963742b0486d6748f0fbc53008c1fe" prot="public" static="no" mutable="no">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref></type>
+        <definition>const element::Type ngraph::element::u64</definition>
+        <argsstring></argsstring>
+        <name>u64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="49" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="element__type_8cpp_1aad78fdb5aef079d38a1d74780aba03d9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; char &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; char &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="113" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="113" bodyend="116"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a20f118671705f1b1e25dfb85ba01bd28" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; bool &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; bool &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="118" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="118" bodyend="121"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a5ec4c1ed80061e7bf9ec513c2eed43e9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; float &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; float &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="123" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="123" bodyend="126"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a77f4d0a20d637022e84992edc8bc7ac6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; double &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; double &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="128" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="128" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a154fd3b3ea4410320ff1a3594e3852aa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; int8_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; int8_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="133" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="133" bodyend="136"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a56d0a19753356d2162ceabd9b0b19dd6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; int16_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; int16_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="138" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="138" bodyend="141"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1ab54a8f14cfc9cca8811118ecfff7a953" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; int32_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; int32_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="143" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="143" bodyend="146"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a5895d4299b4a9e813e962aeb93f5969d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; int64_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; int64_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="148" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="148" bodyend="151"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a042d22e134f2537d9d358106a8eb1326" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; uint8_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; uint8_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="153" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="153" bodyend="156"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a098d702ec1c5ed5b7233414ae2571651" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; uint16_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; uint16_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="158" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="158" bodyend="161"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a7e6f00ae580fc6a529f0277afcfad540" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; uint32_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; uint32_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="163" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="163" bodyend="166"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8cpp_1a4c60c5f9748101c18d26b34f56abba74" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type &amp; ngraph::element::from&lt; uint64_t &gt;</definition>
+        <argsstring>()</argsstring>
+        <name>from&lt; uint64_t &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" line="168" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="168" bodyend="171"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8hpp_1a08815d5f5492d947a4dcff14d25b8e01" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">Type</ref> &amp;</type>
+        <definition>const Type&amp; ngraph::element::from</definition>
+        <argsstring>()</argsstring>
+        <name>from</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="81" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" bodystart="81" bodyend="84"/>
+      </memberdef>
+      <memberdef kind="function" id="element__type_8hpp_1a9a94794b515f2e7cef0474086ace97a9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::ostream &amp;</type>
+        <definition>std::ostream &amp; ngraph::element::operator&lt;&lt;</definition>
+        <argsstring>(std::ostream &amp;out, const ngraph::element::Type &amp;obj)</argsstring>
+        <name>operator&lt;&lt;</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">ngraph::element::Type</ref> &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.hpp" line="110" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/types/element_type.cpp" bodystart="175" bodyend="180"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="29" column="1"/>
+  </compounddef>
+</doxygen>

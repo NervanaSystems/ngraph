@@ -1,0 +1,480 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="reduce__window_8cpp" kind="file" language="C++">
+    <compoundname>reduce_window.cpp</compoundname>
+    <includes refid="ops_2reduce__window_8hpp" local="yes">ngraph/ops/reduce_window.hpp</includes>
+    <includes refid="function_8hpp" local="yes">ngraph/function.hpp</includes>
+    <includes refid="util_8hpp" local="yes">ngraph/util.hpp</includes>
+    <incdepgraph>
+      <node id="7608">
+        <label>list</label>
+      </node>
+      <node id="7584">
+        <label>atomic</label>
+      </node>
+      <node id="7613">
+        <label>functional</label>
+      </node>
+      <node id="7592">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="7586" relation="include">
+        </childnode>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+        <childnode refid="7593" relation="include">
+        </childnode>
+      </node>
+      <node id="7593">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+        <childnode refid="7594" relation="include">
+        </childnode>
+        <childnode refid="7596" relation="include">
+        </childnode>
+      </node>
+      <node id="7603">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7578" relation="include">
+        </childnode>
+        <childnode refid="7591" relation="include">
+        </childnode>
+        <childnode refid="7604" relation="include">
+        </childnode>
+      </node>
+      <node id="7583">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="7584" relation="include">
+        </childnode>
+        <childnode refid="7585" relation="include">
+        </childnode>
+        <childnode refid="7586" relation="include">
+        </childnode>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7578" relation="include">
+        </childnode>
+        <childnode refid="7582" relation="include">
+        </childnode>
+        <childnode refid="7587" relation="include">
+        </childnode>
+        <childnode refid="7588" relation="include">
+        </childnode>
+        <childnode refid="7589" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+        <childnode refid="7590" relation="include">
+        </childnode>
+        <childnode refid="7576" relation="include">
+        </childnode>
+        <childnode refid="7591" relation="include">
+        </childnode>
+        <childnode refid="7603" relation="include">
+        </childnode>
+        <childnode refid="7592" relation="include">
+        </childnode>
+        <childnode refid="7593" relation="include">
+        </childnode>
+      </node>
+      <node id="7602">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="7585" relation="include">
+        </childnode>
+        <childnode refid="7598" relation="include">
+        </childnode>
+        <childnode refid="7601" relation="include">
+        </childnode>
+      </node>
+      <node id="7601">
+        <label>stdexcept</label>
+      </node>
+      <node id="7575">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="7576" relation="include">
+        </childnode>
+        <childnode refid="7581" relation="include">
+        </childnode>
+      </node>
+      <node id="7582">
+        <label>string</label>
+      </node>
+      <node id="7597">
+        <label>map</label>
+      </node>
+      <node id="7573">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/reduce_window.cpp</label>
+        <link refid="reduce__window_8cpp"/>
+        <childnode refid="7574" relation="include">
+        </childnode>
+        <childnode refid="7606" relation="include">
+        </childnode>
+        <childnode refid="7610" relation="include">
+        </childnode>
+      </node>
+      <node id="7589">
+        <label>unordered_set</label>
+      </node>
+      <node id="7596">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="7597" relation="include">
+        </childnode>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7598" relation="include">
+        </childnode>
+        <childnode refid="7582" relation="include">
+        </childnode>
+        <childnode refid="7599" relation="include">
+        </childnode>
+        <childnode refid="7576" relation="include">
+        </childnode>
+        <childnode refid="7600" relation="include">
+        </childnode>
+        <childnode refid="7602" relation="include">
+        </childnode>
+      </node>
+      <node id="7576">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7578" relation="include">
+        </childnode>
+        <childnode refid="7579" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+      </node>
+      <node id="7591">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7592" relation="include">
+        </childnode>
+        <childnode refid="7593" relation="include">
+        </childnode>
+      </node>
+      <node id="7594">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="7595" relation="include">
+        </childnode>
+        <childnode refid="7586" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+        <childnode refid="7576" relation="include">
+        </childnode>
+      </node>
+      <node id="7590">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7588" relation="include">
+        </childnode>
+        <childnode refid="7576" relation="include">
+        </childnode>
+      </node>
+      <node id="7609">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="7581" relation="include">
+        </childnode>
+        <childnode refid="7593" relation="include">
+        </childnode>
+      </node>
+      <node id="7581">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="7582" relation="include">
+        </childnode>
+        <childnode refid="7576" relation="include">
+        </childnode>
+        <childnode refid="7583" relation="include">
+        </childnode>
+        <childnode refid="7605" relation="include">
+        </childnode>
+      </node>
+      <node id="7595">
+        <label>cstdio</label>
+      </node>
+      <node id="7574">
+        <label>ngraph/ops/reduce_window.hpp</label>
+        <link refid="ops_2reduce__window_8hpp_source"/>
+        <childnode refid="7575" relation="include">
+        </childnode>
+      </node>
+      <node id="7580">
+        <label>vector</label>
+      </node>
+      <node id="7579">
+        <label>utility</label>
+      </node>
+      <node id="7598">
+        <label>sstream</label>
+      </node>
+      <node id="7606">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="7584" relation="include">
+        </childnode>
+        <childnode refid="7607" relation="include">
+        </childnode>
+        <childnode refid="7608" relation="include">
+        </childnode>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7582" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+        <childnode refid="7603" relation="include">
+        </childnode>
+        <childnode refid="7604" relation="include">
+        </childnode>
+        <childnode refid="7602" relation="include">
+        </childnode>
+        <childnode refid="7583" relation="include">
+        </childnode>
+        <childnode refid="7581" relation="include">
+        </childnode>
+        <childnode refid="7609" relation="include">
+        </childnode>
+        <childnode refid="7593" relation="include">
+        </childnode>
+      </node>
+      <node id="7586">
+        <label>iostream</label>
+      </node>
+      <node id="7605">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="7585">
+        <label>deque</label>
+      </node>
+      <node id="7588">
+        <label>unordered_map</label>
+      </node>
+      <node id="7612">
+        <label>chrono</label>
+      </node>
+      <node id="7600">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="7601" relation="include">
+        </childnode>
+      </node>
+      <node id="7599">
+        <label>type_traits</label>
+      </node>
+      <node id="7578">
+        <label>set</label>
+      </node>
+      <node id="7604">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7594" relation="include">
+        </childnode>
+      </node>
+      <node id="7611">
+        <label>algorithm</label>
+      </node>
+      <node id="7610">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="7611" relation="include">
+        </childnode>
+        <childnode refid="7612" relation="include">
+        </childnode>
+        <childnode refid="7585" relation="include">
+        </childnode>
+        <childnode refid="7613" relation="include">
+        </childnode>
+        <childnode refid="7586" relation="include">
+        </childnode>
+        <childnode refid="7608" relation="include">
+        </childnode>
+        <childnode refid="7597" relation="include">
+        </childnode>
+        <childnode refid="7577" relation="include">
+        </childnode>
+        <childnode refid="7598" relation="include">
+        </childnode>
+        <childnode refid="7582" relation="include">
+        </childnode>
+        <childnode refid="7588" relation="include">
+        </childnode>
+        <childnode refid="7589" relation="include">
+        </childnode>
+        <childnode refid="7580" relation="include">
+        </childnode>
+      </node>
+      <node id="7577">
+        <label>memory</label>
+      </node>
+      <node id="7607">
+        <label>initializer_list</label>
+      </node>
+      <node id="7587">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/reduce_window.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/util.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24" refid="classngraph_1_1op_1_1ReduceWindow_a740981a13a14b4ed09b7495cc51e8a6e_1a740981a13a14b4ed09b7495cc51e8a6e" refkind="member"><highlight class="normal">op::ReduceWindow::ReduceWindow(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>arg_reductee,</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>arg_init,</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Function&gt;&amp;<sp/>reduction_function,</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/>window_shape,</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref>&amp;<sp/>window_movement_strides)</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>RequiresTensorViewArgs(</highlight><highlight class="stringliteral">&quot;ReduceWindow&quot;</highlight><highlight class="normal">,<sp/>{arg_reductee,<sp/>arg_init})</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_reduction_function(reduction_function)</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_window_shape(window_shape)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_window_movement_strides(window_movement_strides)</highlight></codeline>
+<codeline lineno="33"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>input_reductee<sp/>=<sp/>get_inputs().at(0);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>input_init<sp/>=<sp/>get_inputs().at(1);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_reductee_shape<sp/>=<sp/>input_reductee.get_shape();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_init_shape<sp/>=<sp/>input_init.get_shape();</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_init.get_shape().size()<sp/>!=<sp/>0)</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Argument<sp/>for<sp/>initial<sp/>value<sp/>is<sp/>not<sp/>a<sp/>scalar&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_init.get_element_type()<sp/>!=<sp/>input_reductee.get_element_type())</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Element<sp/>types<sp/>for<sp/>reductee<sp/>and<sp/>initial<sp/>values<sp/>do<sp/>not<sp/>match&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_reductee_shape.size()<sp/>!=<sp/>window_shape.size())</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Window<sp/>shape<sp/>has<sp/>different<sp/>rank<sp/>from<sp/>input<sp/>tensor&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_reductee_shape.size()<sp/>!=<sp/>window_movement_strides.size())</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Window<sp/>movement<sp/>strides<sp/>have<sp/>different<sp/>rank<sp/>from<sp/>input<sp/>tensor&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>s<sp/>:<sp/>window_shape)</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(s<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Window<sp/>shape<sp/>has<sp/>a<sp/>zero-length<sp/>axis&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>s<sp/>:<sp/>window_movement_strides)</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(s<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Window<sp/>movement<sp/>stride<sp/>for<sp/>some<sp/>axis<sp/>is<sp/>zero&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>input_reductee_shape.size();<sp/>i++)</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(window_shape[i]<sp/>&gt;<sp/>input_reductee_shape[i])</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Reduction<sp/>window<sp/>is<sp/>bigger<sp/>than<sp/>input&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>f_params<sp/>=<sp/>m_reduction_function-&gt;get_parameters();</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(f_params.size()<sp/>!=<sp/>2)</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Reduction<sp/>function<sp/>has<sp/>wrong<sp/>number<sp/>of<sp/>parameters<sp/>(should<sp/>be<sp/>two)&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(f_params.at(0)-&gt;get_element_type()<sp/>!=<sp/>arg_init-&gt;get_element_type())</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Parameter<sp/>0<sp/>of<sp/>reduction<sp/>function<sp/>has<sp/>wrong<sp/>element<sp/>type&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(f_params.at(1)-&gt;get_element_type()<sp/>!=<sp/>arg_init-&gt;get_element_type())</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Parameter<sp/>1<sp/>of<sp/>reduction<sp/>function<sp/>has<sp/>wrong<sp/>element<sp/>type&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(f_params.at(0)-&gt;get_shape()<sp/>!=<sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>{})</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Parameter<sp/>0<sp/>of<sp/>reduction<sp/>function<sp/>is<sp/>not<sp/>a<sp/>scalar&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(f_params.at(1)-&gt;get_shape()<sp/>!=<sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>{})</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Parameter<sp/>1<sp/>of<sp/>reduction<sp/>function<sp/>is<sp/>not<sp/>a<sp/>scalar&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_reduction_function-&gt;get_output_size()<sp/>&gt;<sp/>1)</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Single-output<sp/>reduction<sp/>function<sp/>was<sp/>expected&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_reduction_function-&gt;get_output_element_type(0)<sp/>!=<sp/>arg_init-&gt;get_element_type())</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Return<sp/>element<sp/>type<sp/>from<sp/>reduction<sp/>function<sp/>does<sp/>not<sp/>match<sp/>expected&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_reduction_function-&gt;get_output_shape(0)<sp/>!=<sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>{})</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Return<sp/>shape<sp/>from<sp/>reduction<sp/>function<sp/>is<sp/>not<sp/>a<sp/>scalar&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref><sp/>result_shape;</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>input_reductee_shape.size();<sp/>i++)</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>result_shape.push_back(</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ceil_div(input_reductee_shape[i]<sp/>-<sp/>window_shape[i]<sp/>+<sp/>1,<sp/>window_movement_strides[i]));</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/>set_value_type_checked(input_reductee.get_element_type(),<sp/>result_shape);</highlight></codeline>
+<codeline lineno="131"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/reduce_window.cpp"/>
+  </compounddef>
+</doxygen>

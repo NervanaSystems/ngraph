@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::CPU_Emitter</compoundname>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1afa55f9a265f455bf0c7959079013908e" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename OP</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void ngraph::runtime::cpu::CPU_Emitter::emit</definition>
+        <argsstring>(CPU_ExternalFunction *external_function, codegen::CodeWriter &amp;writer, const ngraph::Node *node, const std::vector&lt; TensorViewWrapper &gt; &amp;args, const std::vector&lt; TensorViewWrapper &gt; &amp;out)</argsstring>
+        <name>emit</name>
+        <param>
+          <type><ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> *</type>
+          <declname>external_function</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> *</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" bodystart="44" bodyend="51"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1a80a5e2b8dc552ac921fda53d37287df4" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::cpu::CPU_Emitter::nop</definition>
+        <argsstring>(CPU_ExternalFunction *external_function, codegen::CodeWriter &amp;writer, const ngraph::Node *node, const std::vector&lt; TensorViewWrapper &gt; &amp;args, const std::vector&lt; TensorViewWrapper &gt; &amp;out)</argsstring>
+        <name>nop</name>
+        <param>
+          <type><ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> *</type>
+          <declname>external_function</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> *</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" bodystart="53" bodyend="59"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1adc22da9e52a381ac4ce6ad933a761bc7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer)</argsstring>
+        <name>emit_mkldnn_preamble</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="61" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp" bodystart="121" bodyend="126"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1ac4007235d845c30e1bf1024c13ae2f8b" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string runtime::cpu::CPU_Emitter::emit_vector</definition>
+        <argsstring>(const TensorViewWrapper &amp;, const std::string &amp;name=&quot;&quot;)</argsstring>
+        <name>emit_vector</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <defname>tvi</defname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp" bodystart="3174" bodyend="3183"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1aa24d2082d8c46f2dc7d67ce59749c9e7" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string runtime::cpu::CPU_Emitter::emit_array1d</definition>
+        <argsstring>(const TensorViewWrapper &amp;, const std::string &amp;name=&quot;&quot;)</argsstring>
+        <name>emit_array1d</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <defname>tvi</defname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp" bodystart="3185" bodyend="3194"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1a7b58e58e743749c3b5b3783b7df45c12" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string runtime::cpu::CPU_Emitter::emit_matrix</definition>
+        <argsstring>(const TensorViewWrapper &amp;, const std::string &amp;name=&quot;&quot;)</argsstring>
+        <name>emit_matrix</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <defname>tvi</defname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="68" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp" bodystart="3196" bodyend="3205"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp" bodystart="40" bodyend="70"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1afa55f9a265f455bf0c7959079013908e" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>emit</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1aa24d2082d8c46f2dc7d67ce59749c9e7" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>emit_array1d</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1a7b58e58e743749c3b5b3783b7df45c12" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>emit_matrix</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1adc22da9e52a381ac4ce6ad933a761bc7" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>emit_mkldnn_preamble</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1ac4007235d845c30e1bf1024c13ae2f8b" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>emit_vector</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Emitter_1a80a5e2b8dc552ac921fda53d37287df4" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_Emitter</scope><name>nop</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,1313 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="ngraph_8hpp" kind="file" language="C++">
+    <compoundname>ngraph.hpp</compoundname>
+    <includes refid="autobroadcast_8hpp" local="yes">ngraph/builder/autobroadcast.hpp</includes>
+    <includes refid="numpy__transpose_8hpp" local="yes">ngraph/builder/numpy_transpose.hpp</includes>
+    <includes refid="reduce__ops_8hpp" local="yes">ngraph/builder/reduce_ops.hpp</includes>
+    <includes refid="common_8hpp" local="yes">ngraph/common.hpp</includes>
+    <includes refid="coordinate__transform_8hpp" local="yes">ngraph/coordinate_transform.hpp</includes>
+    <includes refid="buffer_8hpp" local="yes">ngraph/descriptor/buffer.hpp</includes>
+    <includes refid="input_8hpp" local="yes">ngraph/descriptor/input.hpp</includes>
+    <includes refid="dense__tensor__view__layout_8hpp" local="yes">ngraph/descriptor/layout/dense_tensor_view_layout.hpp</includes>
+    <includes refid="tensor__view__layout_8hpp" local="yes">ngraph/descriptor/layout/tensor_view_layout.hpp</includes>
+    <includes refid="output_8hpp" local="yes">ngraph/descriptor/output.hpp</includes>
+    <includes refid="primary__tensor__view_8hpp" local="yes">ngraph/descriptor/primary_tensor_view.hpp</includes>
+    <includes refid="tensor_8hpp" local="yes">ngraph/descriptor/tensor.hpp</includes>
+    <includes refid="descriptor_2tensor__view_8hpp" local="yes">ngraph/descriptor/tensor_view.hpp</includes>
+    <includes refid="except_8hpp" local="yes">ngraph/except.hpp</includes>
+    <includes refid="function_8hpp" local="yes">ngraph/function.hpp</includes>
+    <includes refid="node_8hpp" local="yes">ngraph/node.hpp</includes>
+    <includes refid="ops_2abs_8hpp" local="yes">ngraph/ops/abs.hpp</includes>
+    <includes refid="ops_2acos_8hpp" local="yes">ngraph/ops/acos.hpp</includes>
+    <includes refid="ops_2add_8hpp" local="yes">ngraph/ops/add.hpp</includes>
+    <includes refid="ops_2asin_8hpp" local="yes">ngraph/ops/asin.hpp</includes>
+    <includes refid="ops_2atan_8hpp" local="yes">ngraph/ops/atan.hpp</includes>
+    <includes refid="ops_2avg__pool_8hpp" local="yes">ngraph/ops/avg_pool.hpp</includes>
+    <includes refid="ops_2broadcast_8hpp" local="yes">ngraph/ops/broadcast.hpp</includes>
+    <includes refid="ops_2ceiling_8hpp" local="yes">ngraph/ops/ceiling.hpp</includes>
+    <includes refid="concatenate_8hpp" local="yes">ngraph/ops/concatenate.hpp</includes>
+    <includes refid="ops_2constant_8hpp" local="yes">ngraph/ops/constant.hpp</includes>
+    <includes refid="ops_2convert_8hpp" local="yes">ngraph/ops/convert.hpp</includes>
+    <includes refid="ops_2convolution_8hpp" local="yes">ngraph/ops/convolution.hpp</includes>
+    <includes refid="ops_2cos_8hpp" local="yes">ngraph/ops/cos.hpp</includes>
+    <includes refid="ops_2cosh_8hpp" local="yes">ngraph/ops/cosh.hpp</includes>
+    <includes refid="ops_2divide_8hpp" local="yes">ngraph/ops/divide.hpp</includes>
+    <includes refid="ops_2dot_8hpp" local="yes">ngraph/ops/dot.hpp</includes>
+    <includes refid="ops_2equal_8hpp" local="yes">ngraph/ops/equal.hpp</includes>
+    <includes refid="ops_2exp_8hpp" local="yes">ngraph/ops/exp.hpp</includes>
+    <includes refid="ops_2floor_8hpp" local="yes">ngraph/ops/floor.hpp</includes>
+    <includes refid="function__call_8hpp" local="yes">ngraph/ops/function_call.hpp</includes>
+    <includes refid="ops_2greater_8hpp" local="yes">ngraph/ops/greater.hpp</includes>
+    <includes refid="ops_2greater__eq_8hpp" local="yes">ngraph/ops/greater_eq.hpp</includes>
+    <includes refid="ops_2less_8hpp" local="yes">ngraph/ops/less.hpp</includes>
+    <includes refid="ops_2less__eq_8hpp" local="yes">ngraph/ops/less_eq.hpp</includes>
+    <includes refid="ops_2log_8hpp" local="yes">ngraph/ops/log.hpp</includes>
+    <includes refid="ops_2max_8hpp" local="yes">ngraph/ops/max.hpp</includes>
+    <includes refid="ops_2max__pool_8hpp" local="yes">ngraph/ops/max_pool.hpp</includes>
+    <includes refid="ops_2maximum_8hpp" local="yes">ngraph/ops/maximum.hpp</includes>
+    <includes refid="ops_2min_8hpp" local="yes">ngraph/ops/min.hpp</includes>
+    <includes refid="ops_2minimum_8hpp" local="yes">ngraph/ops/minimum.hpp</includes>
+    <includes refid="ops_2multiply_8hpp" local="yes">ngraph/ops/multiply.hpp</includes>
+    <includes refid="negative_8hpp" local="yes">ngraph/ops/negative.hpp</includes>
+    <includes refid="ops_2not_8hpp" local="yes">ngraph/ops/not.hpp</includes>
+    <includes refid="ops_2not__equal_8hpp" local="yes">ngraph/ops/not_equal.hpp</includes>
+    <includes refid="ops_2one__hot_8hpp" local="yes">ngraph/ops/one_hot.hpp</includes>
+    <includes refid="op_8hpp" local="yes">ngraph/ops/op.hpp</includes>
+    <includes refid="ops_2pad_8hpp" local="yes">ngraph/ops/pad.hpp</includes>
+    <includes refid="parameter_8hpp" local="yes">ngraph/ops/parameter.hpp</includes>
+    <includes refid="ops_2power_8hpp" local="yes">ngraph/ops/power.hpp</includes>
+    <includes refid="ops_2product_8hpp" local="yes">ngraph/ops/product.hpp</includes>
+    <includes refid="ops_2reduce_8hpp" local="yes">ngraph/ops/reduce.hpp</includes>
+    <includes refid="ops_2reduce__window_8hpp" local="yes">ngraph/ops/reduce_window.hpp</includes>
+    <includes refid="ops_2relu_8hpp" local="yes">ngraph/ops/relu.hpp</includes>
+    <includes refid="remainder_8hpp" local="yes">ngraph/ops/remainder.hpp</includes>
+    <includes refid="ops_2replace__slice_8hpp" local="yes">ngraph/ops/replace_slice.hpp</includes>
+    <includes refid="ops_2reshape_8hpp" local="yes">ngraph/ops/reshape.hpp</includes>
+    <includes refid="ops_2reverse_8hpp" local="yes">ngraph/ops/reverse.hpp</includes>
+    <includes refid="ops_2select_8hpp" local="yes">ngraph/ops/select.hpp</includes>
+    <includes refid="ops_2select__and__scatter_8hpp" local="yes">ngraph/ops/select_and_scatter.hpp</includes>
+    <includes refid="ops_2sign_8hpp" local="yes">ngraph/ops/sign.hpp</includes>
+    <includes refid="ops_2sin_8hpp" local="yes">ngraph/ops/sin.hpp</includes>
+    <includes refid="ops_2sinh_8hpp" local="yes">ngraph/ops/sinh.hpp</includes>
+    <includes refid="ops_2slice_8hpp" local="yes">ngraph/ops/slice.hpp</includes>
+    <includes refid="ops_2sqrt_8hpp" local="yes">ngraph/ops/sqrt.hpp</includes>
+    <includes refid="ops_2subtract_8hpp" local="yes">ngraph/ops/subtract.hpp</includes>
+    <includes refid="ops_2sum_8hpp" local="yes">ngraph/ops/sum.hpp</includes>
+    <includes refid="ops_2tan_8hpp" local="yes">ngraph/ops/tan.hpp</includes>
+    <includes refid="ops_2tanh_8hpp" local="yes">ngraph/ops/tanh.hpp</includes>
+    <includes refid="backend_8hpp" local="yes">ngraph/runtime/backend.hpp</includes>
+    <includes refid="call__frame_8hpp" local="yes">ngraph/runtime/call_frame.hpp</includes>
+    <includes refid="external__function_8hpp" local="yes">ngraph/runtime/external_function.hpp</includes>
+    <includes refid="runtime_2manager_8hpp" local="yes">ngraph/runtime/manager.hpp</includes>
+    <includes refid="runtime_2tensor__view_8hpp" local="yes">ngraph/runtime/tensor_view.hpp</includes>
+    <includes refid="shape_8hpp" local="yes">ngraph/shape.hpp</includes>
+    <includes refid="element__type_8hpp" local="yes">ngraph/types/element_type.hpp</includes>
+    <includes refid="type_8hpp" local="yes">ngraph/types/type.hpp</includes>
+    <incdepgraph>
+      <node id="3520">
+        <label>list</label>
+      </node>
+      <node id="3598">
+        <label>ngraph/ops/subtract.hpp</label>
+        <link refid="ops_2subtract_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3540">
+        <label>ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="3534" relation="include">
+        </childnode>
+        <childnode refid="3535" relation="include">
+        </childnode>
+      </node>
+      <node id="3492">
+        <label>atomic</label>
+      </node>
+      <node id="3561">
+        <label>ngraph/ops/equal.hpp</label>
+        <link refid="ops_2equal_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3559">
+        <label>ngraph/ops/divide.hpp</label>
+        <link refid="ops_2divide_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3529">
+        <label>functional</label>
+      </node>
+      <node id="3595">
+        <label>ngraph/ops/sinh.hpp</label>
+        <link refid="ops_2sinh_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3587">
+        <label>ngraph/ops/remainder.hpp</label>
+        <link refid="remainder_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3517">
+        <label>ngraph/builder/numpy_transpose.hpp</label>
+        <link refid="numpy__transpose_8hpp_source"/>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3518" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3524" relation="include">
+        </childnode>
+        <childnode refid="3523" relation="include">
+        </childnode>
+        <childnode refid="3530" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3605">
+        <label>ngraph/runtime/external_function.hpp</label>
+        <link refid="external__function_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3498" relation="include">
+        </childnode>
+        <childnode refid="3606" relation="include">
+        </childnode>
+        <childnode refid="3499" relation="include">
+        </childnode>
+        <childnode refid="3518" relation="include">
+        </childnode>
+      </node>
+      <node id="3542">
+        <label>ngraph/ops/abs.hpp</label>
+        <link refid="ops_2abs_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3586">
+        <label>ngraph/ops/relu.hpp</label>
+        <link refid="ops_2relu_8hpp_source"/>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3521" relation="include">
+        </childnode>
+        <childnode refid="3531" relation="include">
+        </childnode>
+        <childnode refid="3543" relation="include">
+        </childnode>
+        <childnode refid="3526" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+      </node>
+      <node id="3506">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="3494" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3556">
+        <label>ngraph/ops/convolution.hpp</label>
+        <link refid="ops_2convolution_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3507">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3508" relation="include">
+        </childnode>
+        <childnode refid="3510" relation="include">
+        </childnode>
+      </node>
+      <node id="3515">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3496" relation="include">
+        </childnode>
+        <childnode refid="3505" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+      </node>
+      <node id="3566">
+        <label>ngraph/ops/greater.hpp</label>
+        <link refid="ops_2greater_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3491">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="3492" relation="include">
+        </childnode>
+        <childnode refid="3493" relation="include">
+        </childnode>
+        <childnode refid="3494" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3496" relation="include">
+        </childnode>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3498" relation="include">
+        </childnode>
+        <childnode refid="3499" relation="include">
+        </childnode>
+        <childnode refid="3500" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3502" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3505" relation="include">
+        </childnode>
+        <childnode refid="3515" relation="include">
+        </childnode>
+        <childnode refid="3506" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3557">
+        <label>ngraph/ops/cos.hpp</label>
+        <link refid="ops_2cos_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3588">
+        <label>ngraph/ops/replace_slice.hpp</label>
+        <link refid="ops_2replace__slice_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3533">
+        <label>ngraph/coordinate_transform.hpp</label>
+        <link refid="coordinate__transform_8hpp_source"/>
+        <childnode refid="3534" relation="include">
+        </childnode>
+        <childnode refid="3509" relation="include">
+        </childnode>
+        <childnode refid="3494" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+      </node>
+      <node id="3534">
+        <label>cassert</label>
+      </node>
+      <node id="3514">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="3493" relation="include">
+        </childnode>
+        <childnode refid="3512" relation="include">
+        </childnode>
+        <childnode refid="3490" relation="include">
+        </childnode>
+      </node>
+      <node id="3490">
+        <label>stdexcept</label>
+      </node>
+      <node id="3536">
+        <label>ngraph/descriptor/layout/dense_tensor_view_layout.hpp</label>
+        <link refid="dense__tensor__view__layout_8hpp_source"/>
+        <childnode refid="3537" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3538" relation="include">
+        </childnode>
+      </node>
+      <node id="3531">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3521" relation="include">
+        </childnode>
+      </node>
+      <node id="3497">
+        <label>string</label>
+      </node>
+      <node id="3558">
+        <label>ngraph/ops/cosh.hpp</label>
+        <link refid="ops_2cosh_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3546">
+        <label>ngraph/ops/add.hpp</label>
+        <link refid="ops_2add_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3511">
+        <label>map</label>
+      </node>
+      <node id="3532">
+        <label>ngraph/builder/reduce_ops.hpp</label>
+        <link refid="reduce__ops_8hpp_source"/>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3518" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3524" relation="include">
+        </childnode>
+        <childnode refid="3523" relation="include">
+        </childnode>
+        <childnode refid="3530" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3573">
+        <label>ngraph/ops/max_pool.hpp</label>
+        <link refid="ops_2max__pool_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3500">
+        <label>unordered_set</label>
+      </node>
+      <node id="3535">
+        <label>ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp_source"/>
+      </node>
+      <node id="3550">
+        <label>ngraph/ops/atan.hpp</label>
+        <link refid="ops_2atan_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3582">
+        <label>ngraph/ops/pad.hpp</label>
+        <link refid="ops_2pad_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3575">
+        <label>ngraph/ops/min.hpp</label>
+        <link refid="ops_2min_8hpp_source"/>
+        <childnode refid="3572" relation="include">
+        </childnode>
+      </node>
+      <node id="3581">
+        <label>ngraph/ops/one_hot.hpp</label>
+        <link refid="ops_2one__hot_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3569">
+        <label>ngraph/ops/less_eq.hpp</label>
+        <link refid="ops_2less__eq_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3580">
+        <label>ngraph/ops/not_equal.hpp</label>
+        <link refid="ops_2not__equal_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3510">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="3511" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3512" relation="include">
+        </childnode>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3513" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3489" relation="include">
+        </childnode>
+        <childnode refid="3514" relation="include">
+        </childnode>
+      </node>
+      <node id="3565">
+        <label>ngraph/ops/function_call.hpp</label>
+        <link refid="function__call_8hpp_source"/>
+        <childnode refid="3491" relation="include">
+        </childnode>
+      </node>
+      <node id="3503">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3496" relation="include">
+        </childnode>
+        <childnode refid="3504" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+      </node>
+      <node id="3597">
+        <label>ngraph/ops/sqrt.hpp</label>
+        <link refid="ops_2sqrt_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3607">
+        <label>ngraph/runtime/manager.hpp</label>
+        <link refid="runtime_2manager_8hpp_source"/>
+        <childnode refid="3529" relation="include">
+        </childnode>
+        <childnode refid="3511" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+      </node>
+      <node id="3596">
+        <label>ngraph/ops/slice.hpp</label>
+        <link refid="ops_2slice_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3553">
+        <label>ngraph/ops/ceiling.hpp</label>
+        <link refid="ops_2ceiling_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3590">
+        <label>ngraph/ops/reverse.hpp</label>
+        <link refid="ops_2reverse_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3505">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3506" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3584">
+        <label>ngraph/ops/product.hpp</label>
+        <link refid="ops_2product_8hpp_source"/>
+        <childnode refid="3572" relation="include">
+        </childnode>
+      </node>
+      <node id="3599">
+        <label>ngraph/ops/sum.hpp</label>
+        <link refid="ops_2sum_8hpp_source"/>
+        <childnode refid="3572" relation="include">
+        </childnode>
+      </node>
+      <node id="3508">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="3509" relation="include">
+        </childnode>
+        <childnode refid="3494" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+      </node>
+      <node id="3530">
+        <label>ngraph/ops/reduce.hpp</label>
+        <link refid="ops_2reduce_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3560">
+        <label>ngraph/ops/dot.hpp</label>
+        <link refid="ops_2dot_8hpp_source"/>
+        <childnode refid="3504" relation="include">
+        </childnode>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3555">
+        <label>ngraph/ops/convert.hpp</label>
+        <link refid="ops_2convert_8hpp_source"/>
+        <childnode refid="3544" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3502">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3499" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+      </node>
+      <node id="3523">
+        <label>ngraph/ops/parameter.hpp</label>
+        <link refid="parameter_8hpp_source"/>
+        <childnode refid="3521" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3548">
+        <label>ngraph/ops/util/binary_elementwise.hpp</label>
+        <link refid="binary__elementwise_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3521">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3522" relation="include">
+        </childnode>
+      </node>
+      <node id="3564">
+        <label>ngraph/ops/floor.hpp</label>
+        <link refid="ops_2floor_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3601">
+        <label>ngraph/ops/tanh.hpp</label>
+        <link refid="ops_2tanh_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3606">
+        <label>typeinfo</label>
+      </node>
+      <node id="3543">
+        <label>ngraph/ops/util/unary_elementwise_arithmetic.hpp</label>
+        <link refid="unary__elementwise__arithmetic_8hpp_source"/>
+        <childnode refid="3544" relation="include">
+        </childnode>
+      </node>
+      <node id="3509">
+        <label>cstdio</label>
+      </node>
+      <node id="3539">
+        <label>tuple</label>
+      </node>
+      <node id="3592">
+        <label>ngraph/ops/select_and_scatter.hpp</label>
+        <link refid="ops_2select__and__scatter_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3585">
+        <label>ngraph/ops/reduce_window.hpp</label>
+        <link refid="ops_2reduce__window_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3552">
+        <label>ngraph/ops/broadcast.hpp</label>
+        <link refid="ops_2broadcast_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3562">
+        <label>ngraph/ops/util/binary_elementwise_comparison.hpp</label>
+        <link refid="binary__elementwise__comparison_8hpp_source"/>
+        <childnode refid="3548" relation="include">
+        </childnode>
+      </node>
+      <node id="3603">
+        <label>ngraph/runtime/call_frame.hpp</label>
+        <link refid="call__frame_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3518" relation="include">
+        </childnode>
+        <childnode refid="3604" relation="include">
+        </childnode>
+      </node>
+      <node id="3501">
+        <label>vector</label>
+      </node>
+      <node id="3541">
+        <label>ngraph/descriptor/primary_tensor_view.hpp</label>
+        <link refid="primary__tensor__view_8hpp_source"/>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3506" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+        <childnode refid="3514" relation="include">
+        </childnode>
+        <childnode refid="3508" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3570">
+        <label>ngraph/ops/log.hpp</label>
+        <link refid="ops_2log_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3600">
+        <label>ngraph/ops/tan.hpp</label>
+        <link refid="ops_2tan_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3504">
+        <label>utility</label>
+      </node>
+      <node id="3545">
+        <label>ngraph/ops/acos.hpp</label>
+        <link refid="ops_2acos_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3547">
+        <label>ngraph/ops/util/binary_elementwise_arithmetic.hpp</label>
+        <link refid="binary__elementwise__arithmetic_8hpp_source"/>
+        <childnode refid="3548" relation="include">
+        </childnode>
+      </node>
+      <node id="3512">
+        <label>sstream</label>
+      </node>
+      <node id="3488">
+        <label>ngraph/builder/autobroadcast.hpp</label>
+        <link refid="autobroadcast_8hpp_source"/>
+        <childnode refid="3489" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3504" relation="include">
+        </childnode>
+      </node>
+      <node id="3576">
+        <label>ngraph/ops/minimum.hpp</label>
+        <link refid="ops_2minimum_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3524">
+        <label>ngraph/ops/constant.hpp</label>
+        <link refid="ops_2constant_8hpp_source"/>
+        <childnode refid="3525" relation="include">
+        </childnode>
+        <childnode refid="3512" relation="include">
+        </childnode>
+        <childnode refid="3514" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3510" relation="include">
+        </childnode>
+        <childnode refid="3526" relation="include">
+        </childnode>
+      </node>
+      <node id="3538">
+        <label>ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3539" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3540" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+      </node>
+      <node id="3567">
+        <label>ngraph/ops/greater_eq.hpp</label>
+        <link refid="ops_2greater__eq_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3602">
+        <label>ngraph/runtime/backend.hpp</label>
+        <link refid="backend_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3514" relation="include">
+        </childnode>
+        <childnode refid="3510" relation="include">
+        </childnode>
+      </node>
+      <node id="3591">
+        <label>ngraph/ops/select.hpp</label>
+        <link refid="ops_2select_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3518">
+        <label>ngraph/function.hpp</label>
+        <link refid="function_8hpp_source"/>
+        <childnode refid="3492" relation="include">
+        </childnode>
+        <childnode refid="3519" relation="include">
+        </childnode>
+        <childnode refid="3520" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3515" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+        <childnode refid="3514" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3521" relation="include">
+        </childnode>
+        <childnode refid="3523" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3577">
+        <label>ngraph/ops/multiply.hpp</label>
+        <link refid="ops_2multiply_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3494">
+        <label>iostream</label>
+      </node>
+      <node id="3544">
+        <label>ngraph/ops/util/unary_elementwise.hpp</label>
+        <link refid="unary__elementwise_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3522">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="3537">
+        <label>cstddef</label>
+      </node>
+      <node id="3493">
+        <label>deque</label>
+      </node>
+      <node id="3583">
+        <label>ngraph/ops/power.hpp</label>
+        <link refid="ops_2power_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3499">
+        <label>unordered_map</label>
+      </node>
+      <node id="3593">
+        <label>ngraph/ops/sign.hpp</label>
+        <link refid="ops_2sign_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3571">
+        <label>ngraph/ops/max.hpp</label>
+        <link refid="ops_2max_8hpp_source"/>
+        <childnode refid="3572" relation="include">
+        </childnode>
+      </node>
+      <node id="3578">
+        <label>ngraph/ops/negative.hpp</label>
+        <link refid="negative_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3528">
+        <label>chrono</label>
+      </node>
+      <node id="3489">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="3490" relation="include">
+        </childnode>
+      </node>
+      <node id="3572">
+        <label>ngraph/ops/util/arithmetic_reduction.hpp</label>
+        <link refid="arithmetic__reduction_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3487">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp"/>
+        <childnode refid="3488" relation="include">
+        </childnode>
+        <childnode refid="3517" relation="include">
+        </childnode>
+        <childnode refid="3532" relation="include">
+        </childnode>
+        <childnode refid="3503" relation="include">
+        </childnode>
+        <childnode refid="3533" relation="include">
+        </childnode>
+        <childnode refid="3535" relation="include">
+        </childnode>
+        <childnode refid="3505" relation="include">
+        </childnode>
+        <childnode refid="3536" relation="include">
+        </childnode>
+        <childnode refid="3538" relation="include">
+        </childnode>
+        <childnode refid="3515" relation="include">
+        </childnode>
+        <childnode refid="3541" relation="include">
+        </childnode>
+        <childnode refid="3506" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+        <childnode refid="3489" relation="include">
+        </childnode>
+        <childnode refid="3518" relation="include">
+        </childnode>
+        <childnode refid="3491" relation="include">
+        </childnode>
+        <childnode refid="3542" relation="include">
+        </childnode>
+        <childnode refid="3545" relation="include">
+        </childnode>
+        <childnode refid="3546" relation="include">
+        </childnode>
+        <childnode refid="3549" relation="include">
+        </childnode>
+        <childnode refid="3550" relation="include">
+        </childnode>
+        <childnode refid="3551" relation="include">
+        </childnode>
+        <childnode refid="3552" relation="include">
+        </childnode>
+        <childnode refid="3553" relation="include">
+        </childnode>
+        <childnode refid="3554" relation="include">
+        </childnode>
+        <childnode refid="3524" relation="include">
+        </childnode>
+        <childnode refid="3555" relation="include">
+        </childnode>
+        <childnode refid="3556" relation="include">
+        </childnode>
+        <childnode refid="3557" relation="include">
+        </childnode>
+        <childnode refid="3558" relation="include">
+        </childnode>
+        <childnode refid="3559" relation="include">
+        </childnode>
+        <childnode refid="3560" relation="include">
+        </childnode>
+        <childnode refid="3561" relation="include">
+        </childnode>
+        <childnode refid="3563" relation="include">
+        </childnode>
+        <childnode refid="3564" relation="include">
+        </childnode>
+        <childnode refid="3565" relation="include">
+        </childnode>
+        <childnode refid="3566" relation="include">
+        </childnode>
+        <childnode refid="3567" relation="include">
+        </childnode>
+        <childnode refid="3568" relation="include">
+        </childnode>
+        <childnode refid="3569" relation="include">
+        </childnode>
+        <childnode refid="3570" relation="include">
+        </childnode>
+        <childnode refid="3571" relation="include">
+        </childnode>
+        <childnode refid="3573" relation="include">
+        </childnode>
+        <childnode refid="3574" relation="include">
+        </childnode>
+        <childnode refid="3575" relation="include">
+        </childnode>
+        <childnode refid="3576" relation="include">
+        </childnode>
+        <childnode refid="3577" relation="include">
+        </childnode>
+        <childnode refid="3578" relation="include">
+        </childnode>
+        <childnode refid="3579" relation="include">
+        </childnode>
+        <childnode refid="3580" relation="include">
+        </childnode>
+        <childnode refid="3581" relation="include">
+        </childnode>
+        <childnode refid="3521" relation="include">
+        </childnode>
+        <childnode refid="3582" relation="include">
+        </childnode>
+        <childnode refid="3523" relation="include">
+        </childnode>
+        <childnode refid="3583" relation="include">
+        </childnode>
+        <childnode refid="3584" relation="include">
+        </childnode>
+        <childnode refid="3530" relation="include">
+        </childnode>
+        <childnode refid="3585" relation="include">
+        </childnode>
+        <childnode refid="3586" relation="include">
+        </childnode>
+        <childnode refid="3587" relation="include">
+        </childnode>
+        <childnode refid="3588" relation="include">
+        </childnode>
+        <childnode refid="3589" relation="include">
+        </childnode>
+        <childnode refid="3590" relation="include">
+        </childnode>
+        <childnode refid="3591" relation="include">
+        </childnode>
+        <childnode refid="3592" relation="include">
+        </childnode>
+        <childnode refid="3593" relation="include">
+        </childnode>
+        <childnode refid="3594" relation="include">
+        </childnode>
+        <childnode refid="3595" relation="include">
+        </childnode>
+        <childnode refid="3596" relation="include">
+        </childnode>
+        <childnode refid="3597" relation="include">
+        </childnode>
+        <childnode refid="3598" relation="include">
+        </childnode>
+        <childnode refid="3599" relation="include">
+        </childnode>
+        <childnode refid="3600" relation="include">
+        </childnode>
+        <childnode refid="3601" relation="include">
+        </childnode>
+        <childnode refid="3602" relation="include">
+        </childnode>
+        <childnode refid="3603" relation="include">
+        </childnode>
+        <childnode refid="3605" relation="include">
+        </childnode>
+        <childnode refid="3607" relation="include">
+        </childnode>
+        <childnode refid="3604" relation="include">
+        </childnode>
+        <childnode refid="3508" relation="include">
+        </childnode>
+        <childnode refid="3510" relation="include">
+        </childnode>
+        <childnode refid="3507" relation="include">
+        </childnode>
+      </node>
+      <node id="3579">
+        <label>ngraph/ops/not.hpp</label>
+        <link refid="ops_2not_8hpp_source"/>
+        <childnode refid="3544" relation="include">
+        </childnode>
+      </node>
+      <node id="3549">
+        <label>ngraph/ops/asin.hpp</label>
+        <link refid="ops_2asin_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3513">
+        <label>type_traits</label>
+      </node>
+      <node id="3496">
+        <label>set</label>
+      </node>
+      <node id="3574">
+        <label>ngraph/ops/maximum.hpp</label>
+        <link refid="ops_2maximum_8hpp_source"/>
+        <childnode refid="3547" relation="include">
+        </childnode>
+      </node>
+      <node id="3568">
+        <label>ngraph/ops/less.hpp</label>
+        <link refid="ops_2less_8hpp_source"/>
+        <childnode refid="3562" relation="include">
+        </childnode>
+      </node>
+      <node id="3554">
+        <label>ngraph/ops/concatenate.hpp</label>
+        <link refid="concatenate_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3516">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3508" relation="include">
+        </childnode>
+      </node>
+      <node id="3527">
+        <label>algorithm</label>
+      </node>
+      <node id="3551">
+        <label>ngraph/ops/avg_pool.hpp</label>
+        <link refid="ops_2avg__pool_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3526">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="3527" relation="include">
+        </childnode>
+        <childnode refid="3528" relation="include">
+        </childnode>
+        <childnode refid="3493" relation="include">
+        </childnode>
+        <childnode refid="3529" relation="include">
+        </childnode>
+        <childnode refid="3494" relation="include">
+        </childnode>
+        <childnode refid="3520" relation="include">
+        </childnode>
+        <childnode refid="3511" relation="include">
+        </childnode>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3512" relation="include">
+        </childnode>
+        <childnode refid="3497" relation="include">
+        </childnode>
+        <childnode refid="3499" relation="include">
+        </childnode>
+        <childnode refid="3500" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+      </node>
+      <node id="3604">
+        <label>ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp_source"/>
+        <childnode refid="3495" relation="include">
+        </childnode>
+        <childnode refid="3501" relation="include">
+        </childnode>
+        <childnode refid="3516" relation="include">
+        </childnode>
+        <childnode refid="3508" relation="include">
+        </childnode>
+        <childnode refid="3510" relation="include">
+        </childnode>
+        <childnode refid="3526" relation="include">
+        </childnode>
+      </node>
+      <node id="3525">
+        <label>cstring</label>
+      </node>
+      <node id="3495">
+        <label>memory</label>
+      </node>
+      <node id="3589">
+        <label>ngraph/ops/reshape.hpp</label>
+        <link refid="ops_2reshape_8hpp_source"/>
+        <childnode refid="3531" relation="include">
+        </childnode>
+      </node>
+      <node id="3519">
+        <label>initializer_list</label>
+      </node>
+      <node id="3563">
+        <label>ngraph/ops/exp.hpp</label>
+        <link refid="ops_2exp_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+      <node id="3498">
+        <label>typeindex</label>
+      </node>
+      <node id="3594">
+        <label>ngraph/ops/sin.hpp</label>
+        <link refid="ops_2sin_8hpp_source"/>
+        <childnode refid="3543" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor">ngraph::descriptor</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor_1_1layout">ngraph::descriptor::layout</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op">ngraph::op</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <innernamespace refid="namespacengraph_1_1builder">ngraph::builder</innernamespace>
+    <innernamespace refid="namespacengraph_1_1xla">ngraph::xla</innernamespace>
+    <innernamespace refid="namespacengraph_1_1xla_1_1op">ngraph::xla::op</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="comment">//<sp/>The<sp/>public<sp/>API<sp/>for<sp/>ngraph++</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>IN_NGRAPH_LIBRARY</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#error(&quot;ngraph.hpp<sp/>is<sp/>for<sp/>external<sp/>use<sp/>only&quot;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"></codeline>
+<codeline lineno="32"></codeline>
+<codeline lineno="35"></codeline>
+<codeline lineno="38"></codeline>
+<codeline lineno="41"></codeline>
+<codeline lineno="45"></codeline>
+<codeline lineno="48"></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/builder/autobroadcast.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/builder/numpy_transpose.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/builder/reduce_ops.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/common.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/coordinate_transform.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/buffer.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/input.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/layout/dense_tensor_view_layout.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/layout/tensor_view_layout.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/output.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/primary_tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/tensor.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/except.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/node.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/abs.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/acos.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/add.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/asin.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/atan.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/avg_pool.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/broadcast.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/ceiling.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/concatenate.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/constant.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/convert.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/convolution.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/cos.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/cosh.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/divide.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/dot.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/equal.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/exp.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/floor.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/function_call.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/greater.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/greater_eq.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/less.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/less_eq.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/log.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/max.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/max_pool.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/maximum.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/min.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/minimum.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/multiply.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/negative.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/not.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/not_equal.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/one_hot.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/op.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/pad.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/parameter.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/power.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/product.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/reduce.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/reduce_window.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/relu.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/remainder.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/replace_slice.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/reshape.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/reverse.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/select.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/select_and_scatter.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="117"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/sign.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/sin.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/sinh.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/slice.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/sqrt.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/subtract.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/sum.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="124"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/tan.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="125"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/tanh.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/backend.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/call_frame.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/external_function.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/manager.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="131"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/shape.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/types/element_type.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/types/type.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight><highlight class="preprocessor">#ifdef<sp/>NGRAPH_DISTRIBUTED</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/allreduce.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp"/>
+  </compounddef>
+</doxygen>

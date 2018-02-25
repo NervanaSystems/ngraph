@@ -1,0 +1,455 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="ops_2relu_8hpp" kind="file" language="C++">
+    <compoundname>relu.hpp</compoundname>
+    <includes refid="node_8hpp" local="yes">ngraph/node.hpp</includes>
+    <includes refid="op_8hpp" local="yes">ngraph/ops/op.hpp</includes>
+    <includes refid="requires__tensor__view__args_8hpp" local="yes">ngraph/ops/util/requires_tensor_view_args.hpp</includes>
+    <includes refid="unary__elementwise__arithmetic_8hpp" local="yes">ngraph/ops/util/unary_elementwise_arithmetic.hpp</includes>
+    <includes refid="util_8hpp" local="yes">ngraph/util.hpp</includes>
+    <includes local="no">memory</includes>
+    <includedby refid="ngraph_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</includedby>
+    <includedby refid="relu_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.cpp</includedby>
+    <includedby refid="core__fusion_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp</includedby>
+    <includedby refid="cpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</includedby>
+    <includedby refid="cpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</includedby>
+    <includedby refid="mkldnn__utils_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</includedby>
+    <includedby refid="int__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</includedby>
+    <includedby refid="serializer_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</includedby>
+    <incdepgraph>
+      <node id="7758">
+        <label>list</label>
+      </node>
+      <node id="7722">
+        <label>atomic</label>
+      </node>
+      <node id="7757">
+        <label>functional</label>
+      </node>
+      <node id="7720">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.hpp</label>
+        <link refid="ops_2relu_8hpp"/>
+        <childnode refid="7721" relation="include">
+        </childnode>
+        <childnode refid="7749" relation="include">
+        </childnode>
+        <childnode refid="7751" relation="include">
+        </childnode>
+        <childnode refid="7752" relation="include">
+        </childnode>
+        <childnode refid="7754" relation="include">
+        </childnode>
+        <childnode refid="7725" relation="include">
+        </childnode>
+      </node>
+      <node id="7736">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="7724" relation="include">
+        </childnode>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+        <childnode refid="7737" relation="include">
+        </childnode>
+      </node>
+      <node id="7737">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+        <childnode refid="7738" relation="include">
+        </childnode>
+        <childnode refid="7740" relation="include">
+        </childnode>
+      </node>
+      <node id="7747">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7726" relation="include">
+        </childnode>
+        <childnode refid="7735" relation="include">
+        </childnode>
+        <childnode refid="7748" relation="include">
+        </childnode>
+      </node>
+      <node id="7721">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="7722" relation="include">
+        </childnode>
+        <childnode refid="7723" relation="include">
+        </childnode>
+        <childnode refid="7724" relation="include">
+        </childnode>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7726" relation="include">
+        </childnode>
+        <childnode refid="7727" relation="include">
+        </childnode>
+        <childnode refid="7728" relation="include">
+        </childnode>
+        <childnode refid="7729" relation="include">
+        </childnode>
+        <childnode refid="7730" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+        <childnode refid="7732" relation="include">
+        </childnode>
+        <childnode refid="7733" relation="include">
+        </childnode>
+        <childnode refid="7735" relation="include">
+        </childnode>
+        <childnode refid="7747" relation="include">
+        </childnode>
+        <childnode refid="7736" relation="include">
+        </childnode>
+        <childnode refid="7737" relation="include">
+        </childnode>
+      </node>
+      <node id="7746">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="7723" relation="include">
+        </childnode>
+        <childnode refid="7742" relation="include">
+        </childnode>
+        <childnode refid="7745" relation="include">
+        </childnode>
+      </node>
+      <node id="7745">
+        <label>stdexcept</label>
+      </node>
+      <node id="7751">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="7733" relation="include">
+        </childnode>
+        <childnode refid="7749" relation="include">
+        </childnode>
+      </node>
+      <node id="7727">
+        <label>string</label>
+      </node>
+      <node id="7741">
+        <label>map</label>
+      </node>
+      <node id="7730">
+        <label>unordered_set</label>
+      </node>
+      <node id="7740">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="7741" relation="include">
+        </childnode>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7742" relation="include">
+        </childnode>
+        <childnode refid="7727" relation="include">
+        </childnode>
+        <childnode refid="7743" relation="include">
+        </childnode>
+        <childnode refid="7733" relation="include">
+        </childnode>
+        <childnode refid="7744" relation="include">
+        </childnode>
+        <childnode refid="7746" relation="include">
+        </childnode>
+      </node>
+      <node id="7733">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7726" relation="include">
+        </childnode>
+        <childnode refid="7734" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+      </node>
+      <node id="7735">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7736" relation="include">
+        </childnode>
+        <childnode refid="7737" relation="include">
+        </childnode>
+      </node>
+      <node id="7738">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="7739" relation="include">
+        </childnode>
+        <childnode refid="7724" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+        <childnode refid="7733" relation="include">
+        </childnode>
+      </node>
+      <node id="7732">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7729" relation="include">
+        </childnode>
+        <childnode refid="7733" relation="include">
+        </childnode>
+      </node>
+      <node id="7749">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="7727" relation="include">
+        </childnode>
+        <childnode refid="7733" relation="include">
+        </childnode>
+        <childnode refid="7721" relation="include">
+        </childnode>
+        <childnode refid="7750" relation="include">
+        </childnode>
+      </node>
+      <node id="7752">
+        <label>ngraph/ops/util/unary_elementwise_arithmetic.hpp</label>
+        <link refid="unary__elementwise__arithmetic_8hpp_source"/>
+        <childnode refid="7753" relation="include">
+        </childnode>
+      </node>
+      <node id="7739">
+        <label>cstdio</label>
+      </node>
+      <node id="7731">
+        <label>vector</label>
+      </node>
+      <node id="7734">
+        <label>utility</label>
+      </node>
+      <node id="7742">
+        <label>sstream</label>
+      </node>
+      <node id="7724">
+        <label>iostream</label>
+      </node>
+      <node id="7753">
+        <label>ngraph/ops/util/unary_elementwise.hpp</label>
+        <link refid="unary__elementwise_8hpp_source"/>
+        <childnode refid="7751" relation="include">
+        </childnode>
+      </node>
+      <node id="7750">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="7723">
+        <label>deque</label>
+      </node>
+      <node id="7729">
+        <label>unordered_map</label>
+      </node>
+      <node id="7756">
+        <label>chrono</label>
+      </node>
+      <node id="7744">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="7745" relation="include">
+        </childnode>
+      </node>
+      <node id="7743">
+        <label>type_traits</label>
+      </node>
+      <node id="7726">
+        <label>set</label>
+      </node>
+      <node id="7748">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7738" relation="include">
+        </childnode>
+      </node>
+      <node id="7755">
+        <label>algorithm</label>
+      </node>
+      <node id="7754">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="7755" relation="include">
+        </childnode>
+        <childnode refid="7756" relation="include">
+        </childnode>
+        <childnode refid="7723" relation="include">
+        </childnode>
+        <childnode refid="7757" relation="include">
+        </childnode>
+        <childnode refid="7724" relation="include">
+        </childnode>
+        <childnode refid="7758" relation="include">
+        </childnode>
+        <childnode refid="7741" relation="include">
+        </childnode>
+        <childnode refid="7725" relation="include">
+        </childnode>
+        <childnode refid="7742" relation="include">
+        </childnode>
+        <childnode refid="7727" relation="include">
+        </childnode>
+        <childnode refid="7729" relation="include">
+        </childnode>
+        <childnode refid="7730" relation="include">
+        </childnode>
+        <childnode refid="7731" relation="include">
+        </childnode>
+      </node>
+      <node id="7725">
+        <label>memory</label>
+      </node>
+      <node id="7728">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="7766">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="7765">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</label>
+        <link refid="mkldnn__utils_8cpp_source"/>
+      </node>
+      <node id="7759">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.hpp</label>
+        <link refid="ops_2relu_8hpp"/>
+        <childnode refid="7760" relation="include">
+        </childnode>
+        <childnode refid="7761" relation="include">
+        </childnode>
+        <childnode refid="7762" relation="include">
+        </childnode>
+        <childnode refid="7763" relation="include">
+        </childnode>
+        <childnode refid="7764" relation="include">
+        </childnode>
+        <childnode refid="7765" relation="include">
+        </childnode>
+        <childnode refid="7766" relation="include">
+        </childnode>
+        <childnode refid="7767" relation="include">
+        </childnode>
+      </node>
+      <node id="7767">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</label>
+        <link refid="serializer_8cpp_source"/>
+      </node>
+      <node id="7762">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp</label>
+        <link refid="core__fusion_8cpp_source"/>
+      </node>
+      <node id="7763">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="7764">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="7760">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="7761">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.cpp</label>
+        <link refid="relu_8cpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1op_1_1Relu" prot="public">ngraph::op::Relu</innerclass>
+    <innerclass refid="classngraph_1_1op_1_1ReluBackprop" prot="public">ngraph::op::ReluBackprop</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op">ngraph::op</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/node.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/op.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/util/requires_tensor_view_args.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/util/unary_elementwise_arithmetic.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/util.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="28"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">op</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33" refid="classngraph_1_1op_1_1Relu" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1Relu" kindref="compound">Relu</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1UnaryElementwiseArithmetic" kindref="compound">ngraph::op::util::UnaryElementwiseArithmetic</ref></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1Relu_aa2ba1a99fa8ec2ff91cb3f8561261444_1aa2ba1a99fa8ec2ff91cb3f8561261444" kindref="member">Relu</ref>(std::shared_ptr&lt;ngraph::Node&gt;<sp/>arg);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;<sp/>copy_with_new_args(</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>new_args)</highlight><highlight class="keyword"><sp/>const<sp/>override</highlight></codeline>
+<codeline lineno="43"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(new_args.size()<sp/>!=<sp/>1)</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Incorrect<sp/>number<sp/>of<sp/>new<sp/>arguments&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::make_shared&lt;Relu&gt;(new_args.at(0));</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>generate_adjoints(<ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">autodiff::Adjoints</ref>&amp;<sp/>adjoints,</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>delta)<sp/></highlight><highlight class="keyword">override</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="57" refid="classngraph_1_1op_1_1ReluBackprop" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1ReluBackprop" kindref="compound">ReluBackprop</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1RequiresTensorViewArgs" kindref="compound">ngraph::op::util::RequiresTensorViewArgs</ref></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1ReluBackprop_a6966f43b2b8cb1642740382e99ecbd62_1a6966f43b2b8cb1642740382e99ecbd62" kindref="member">ReluBackprop</ref>(std::shared_ptr&lt;ngraph::Node&gt;<sp/>arg,<sp/>std::shared_ptr&lt;ngraph::Node&gt;<sp/>delta);</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;<sp/>copy_with_new_args(</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::vector&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>new_args)</highlight><highlight class="keyword"><sp/>const<sp/>override</highlight></codeline>
+<codeline lineno="67"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(new_args.size()<sp/>!=<sp/>2)</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Incorrect<sp/>number<sp/>of<sp/>new<sp/>arguments&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::make_shared&lt;ReluBackprop&gt;(new_args.at(0),<sp/>new_args.at(1));</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="76"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.hpp"/>
+  </compounddef>
+</doxygen>

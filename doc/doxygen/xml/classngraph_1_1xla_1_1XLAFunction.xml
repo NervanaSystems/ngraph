@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1xla_1_1XLAFunction" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::xla::XLAFunction</compoundname>
+    <basecompoundref refid="classngraph_1_1Function" prot="public" virt="non-virtual">ngraph::Function</basecompoundref>
+    <includes refid="xla__tuple_8hpp" local="no">xla_tuple.hpp</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLAFunction_1af1c3ebdc6d2037fbcdba58b513e273c8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xla::XLAFunction::XLAFunction</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;results, const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;parameters, const std::string &amp;name=&quot;&quot;)</argsstring>
+        <name>XLAFunction</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>results</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>parameters</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="67" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="106" bodyend="111"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Extends functions to let results include <ref refid="classngraph_1_1xla_1_1op_1_1Tuple" kindref="compound">xla::op::Tuple</ref>, and paramaters to include <ref refid="classngraph_1_1xla_1_1op_1_1Tuple" kindref="compound">xla::op::Tuple</ref> of <ref refid="classngraph_1_1op_1_1Parameter" kindref="compound">op::Parameter</ref> trees. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3549">
+        <label>ngraph::Function</label>
+        <link refid="classngraph_1_1Function"/>
+      </node>
+      <node id="3548">
+        <label>ngraph::xla::XLAFunction</label>
+        <link refid="classngraph_1_1xla_1_1XLAFunction"/>
+        <childnode refid="3549" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3554">
+        <label>T</label>
+      </node>
+      <node id="3553">
+        <label>std::vector&lt; T &gt;</label>
+        <childnode refid="3554" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="3557">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="3551">
+        <label>ngraph::Function</label>
+        <link refid="classngraph_1_1Function"/>
+        <childnode refid="3552" relation="usage">
+          <edgelabel>m_parameters</edgelabel>
+        </childnode>
+        <childnode refid="3555" relation="usage">
+          <edgelabel>m_results</edgelabel>
+        </childnode>
+        <childnode refid="3556" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="3555">
+        <label>std::vector&lt; std::shared_ptr&lt; Node &gt; &gt;</label>
+        <childnode refid="3553" relation="template-instance">
+          <edgelabel>&lt; std::shared_ptr&lt; Node &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="3552">
+        <label>std::vector&lt; std::shared_ptr&lt; ngraph::op::Parameter &gt; &gt;</label>
+        <childnode refid="3553" relation="template-instance">
+          <edgelabel>&lt; std::shared_ptr&lt; ngraph::op::Parameter &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="3556">
+        <label>std::string</label>
+        <childnode refid="3557" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3550">
+        <label>ngraph::xla::XLAFunction</label>
+        <link refid="classngraph_1_1xla_1_1XLAFunction"/>
+        <childnode refid="3551" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" bodystart="64" bodyend="70"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1Function_1aeddb80a549de65b5ce4194536aa3a55d" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>Function</name></member>
+      <member refid="classngraph_1_1Function_1a28959023204ebcde23d773f60a9df5be" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>Function</name></member>
+      <member refid="classngraph_1_1Function_1aa56c6c64ddd75347a6d93f896bdad34f" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_instance_id</name></member>
+      <member refid="classngraph_1_1Function_1a2e8ab3ccb4118fd7333c6809a0883181" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_name</name></member>
+      <member refid="classngraph_1_1Function_1a9a2ab6a85377264d4c219b313e806c7a" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_ops</name></member>
+      <member refid="classngraph_1_1Function_1a4c423146922fadbd8c15290ab8d88cd9" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_ordered_ops</name></member>
+      <member refid="classngraph_1_1Function_1a85d48579c5b0022a5be07074b6928a8a" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_output_element_type</name></member>
+      <member refid="classngraph_1_1Function_1abcf44df0bfb45c41605a36318b27d6e8" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_output_op</name></member>
+      <member refid="classngraph_1_1Function_1aefd82188d979cff5fb69eb243d742024" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_output_shape</name></member>
+      <member refid="classngraph_1_1Function_1a041c69423241cb251fdd1e1779aaeb6a" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_output_size</name></member>
+      <member refid="classngraph_1_1Function_1ac20686ba123b3a9d38b32f3bffae6474" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_parameters</name></member>
+      <member refid="classngraph_1_1Function_1a9593d8f5361f8b14385978b54b9d0380" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_result</name></member>
+      <member refid="classngraph_1_1Function_1a3210ad84a27bba0e5acc83fdc8fbc6a7" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_results</name></member>
+      <member refid="classngraph_1_1Function_1a8ad03b0a5ae5b2d09fd15be0e0e0a19a" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>get_temporary_pool_size</name></member>
+      <member refid="classngraph_1_1Function_1a7df18355dc84a6b1d43bbd7e4d77d08b" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>m_name</name></member>
+      <member refid="classngraph_1_1Function_1a03415aee847577ad488095c0481be198" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>m_parameters</name></member>
+      <member refid="classngraph_1_1Function_1a601070c34e89f863a4ed425a857d3cd3" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>m_results</name></member>
+      <member refid="classngraph_1_1Function_1a33971ec6b0fd30f829620551a4d0b592" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>m_temporary_pool_size</name></member>
+      <member refid="classngraph_1_1Function_1a781da9ca2d30570883bd5d76c7a962cb" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>replace_node</name></member>
+      <member refid="classngraph_1_1Function_1a4d530f486d5f0a320f047b66ccade843" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>replace_output_op</name></member>
+      <member refid="classngraph_1_1Function_1a6fa06d4f8d4537435a681d1f1829e40b" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>set_name</name></member>
+      <member refid="classngraph_1_1Function_1acda49a6e4c3e80b35c8683808df6079c" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>set_temporary_pool_size</name></member>
+      <member refid="classngraph_1_1xla_1_1XLAFunction_1af1c3ebdc6d2037fbcdba58b513e273c8" prot="public" virt="non-virtual"><scope>ngraph::xla::XLAFunction</scope><name>XLAFunction</name></member>
+      <member refid="classngraph_1_1Function_1ade3836a9100bf35ad0d4ca0fab2a7ad1" prot="public" virt="virtual"><scope>ngraph::xla::XLAFunction</scope><name>~Function</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,561 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="runtime_2tensor__view_8hpp" kind="file" language="C++">
+    <compoundname>tensor_view.hpp</compoundname>
+    <includes local="no">memory</includes>
+    <includes local="no">vector</includes>
+    <includes refid="descriptor_2tensor__view_8hpp" local="yes">ngraph/descriptor/tensor_view.hpp</includes>
+    <includes refid="shape_8hpp" local="yes">ngraph/shape.hpp</includes>
+    <includes refid="element__type_8hpp" local="yes">ngraph/types/element_type.hpp</includes>
+    <includes refid="util_8hpp" local="yes">ngraph/util.hpp</includes>
+    <includedby refid="xla__tuple_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp</includedby>
+    <includedby refid="ngraph_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</includedby>
+    <includedby refid="call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/call_frame.hpp</includedby>
+    <includedby refid="cpu__call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp</includedby>
+    <includedby refid="cpu__tensor__view_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.hpp</includedby>
+    <includedby refid="gpu__call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp</includedby>
+    <includedby refid="gpu__tensor__view_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.hpp</includedby>
+    <includedby refid="host__tensor__view_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.hpp</includedby>
+    <includedby refid="int__call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</includedby>
+    <includedby refid="runtime_2tensor__view_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.cpp</includedby>
+    <incdepgraph>
+      <node id="2527">
+        <label>list</label>
+      </node>
+      <node id="2526">
+        <label>functional</label>
+      </node>
+      <node id="2521">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="2522" relation="include">
+        </childnode>
+        <childnode refid="2516" relation="include">
+        </childnode>
+        <childnode refid="2520" relation="include">
+        </childnode>
+      </node>
+      <node id="2520">
+        <label>stdexcept</label>
+      </node>
+      <node id="2517">
+        <label>string</label>
+      </node>
+      <node id="2515">
+        <label>map</label>
+      </node>
+      <node id="2529">
+        <label>unordered_set</label>
+      </node>
+      <node id="2514">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="2515" relation="include">
+        </childnode>
+        <childnode refid="2505" relation="include">
+        </childnode>
+        <childnode refid="2516" relation="include">
+        </childnode>
+        <childnode refid="2517" relation="include">
+        </childnode>
+        <childnode refid="2518" relation="include">
+        </childnode>
+        <childnode refid="2511" relation="include">
+        </childnode>
+        <childnode refid="2519" relation="include">
+        </childnode>
+        <childnode refid="2521" relation="include">
+        </childnode>
+      </node>
+      <node id="2511">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="2505" relation="include">
+        </childnode>
+        <childnode refid="2512" relation="include">
+        </childnode>
+        <childnode refid="2513" relation="include">
+        </childnode>
+        <childnode refid="2506" relation="include">
+        </childnode>
+      </node>
+      <node id="2508">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="2509" relation="include">
+        </childnode>
+        <childnode refid="2510" relation="include">
+        </childnode>
+        <childnode refid="2506" relation="include">
+        </childnode>
+        <childnode refid="2511" relation="include">
+        </childnode>
+      </node>
+      <node id="2509">
+        <label>cstdio</label>
+      </node>
+      <node id="2506">
+        <label>vector</label>
+      </node>
+      <node id="2513">
+        <label>utility</label>
+      </node>
+      <node id="2516">
+        <label>sstream</label>
+      </node>
+      <node id="2510">
+        <label>iostream</label>
+      </node>
+      <node id="2522">
+        <label>deque</label>
+      </node>
+      <node id="2528">
+        <label>unordered_map</label>
+      </node>
+      <node id="2525">
+        <label>chrono</label>
+      </node>
+      <node id="2519">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="2520" relation="include">
+        </childnode>
+      </node>
+      <node id="2518">
+        <label>type_traits</label>
+      </node>
+      <node id="2512">
+        <label>set</label>
+      </node>
+      <node id="2507">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="2505" relation="include">
+        </childnode>
+        <childnode refid="2508" relation="include">
+        </childnode>
+      </node>
+      <node id="2524">
+        <label>algorithm</label>
+      </node>
+      <node id="2523">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="2524" relation="include">
+        </childnode>
+        <childnode refid="2525" relation="include">
+        </childnode>
+        <childnode refid="2522" relation="include">
+        </childnode>
+        <childnode refid="2526" relation="include">
+        </childnode>
+        <childnode refid="2510" relation="include">
+        </childnode>
+        <childnode refid="2527" relation="include">
+        </childnode>
+        <childnode refid="2515" relation="include">
+        </childnode>
+        <childnode refid="2505" relation="include">
+        </childnode>
+        <childnode refid="2516" relation="include">
+        </childnode>
+        <childnode refid="2517" relation="include">
+        </childnode>
+        <childnode refid="2528" relation="include">
+        </childnode>
+        <childnode refid="2529" relation="include">
+        </childnode>
+        <childnode refid="2506" relation="include">
+        </childnode>
+      </node>
+      <node id="2504">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp"/>
+        <childnode refid="2505" relation="include">
+        </childnode>
+        <childnode refid="2506" relation="include">
+        </childnode>
+        <childnode refid="2507" relation="include">
+        </childnode>
+        <childnode refid="2508" relation="include">
+        </childnode>
+        <childnode refid="2514" relation="include">
+        </childnode>
+        <childnode refid="2523" relation="include">
+        </childnode>
+      </node>
+      <node id="2505">
+        <label>memory</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2547">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</label>
+        <link refid="cpu__layout_8cpp_source"/>
+      </node>
+      <node id="2557">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="2568">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_backend.cpp</label>
+        <link refid="int__backend_8cpp_source"/>
+      </node>
+      <node id="2567">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.cpp</label>
+        <link refid="host__tensor__view_8cpp_source"/>
+      </node>
+      <node id="2541">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_manager.cpp</label>
+        <link refid="cpu__manager_8cpp_source"/>
+      </node>
+      <node id="2544">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp</label>
+        <link refid="cpu__assignment_8hpp_source"/>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2545" relation="include">
+        </childnode>
+      </node>
+      <node id="2561">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_backend.cpp</label>
+        <link refid="cpu__backend_8cpp_source"/>
+      </node>
+      <node id="2550">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="2542">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.hpp</label>
+        <link refid="cpu__tracing_8hpp_source"/>
+        <childnode refid="2536" relation="include">
+        </childnode>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2543" relation="include">
+        </childnode>
+      </node>
+      <node id="2549">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.cpp</label>
+        <link refid="gpu__call__frame_8cpp_source"/>
+      </node>
+      <node id="2535">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp</label>
+        <link refid="cpu__call__frame_8hpp_source"/>
+        <childnode refid="2536" relation="include">
+        </childnode>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2538" relation="include">
+        </childnode>
+      </node>
+      <node id="2558">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp</label>
+        <link refid="int__external__function_8hpp_source"/>
+        <childnode refid="2557" relation="include">
+        </childnode>
+        <childnode refid="2559" relation="include">
+        </childnode>
+      </node>
+      <node id="2546">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp</label>
+        <link refid="cpu__layout_8hpp_source"/>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2547" relation="include">
+        </childnode>
+      </node>
+      <node id="2554">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_manager.cpp</label>
+        <link refid="gpu__manager_8cpp_source"/>
+      </node>
+      <node id="2553">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.cpp</label>
+        <link refid="gpu__emitter_8cpp_source"/>
+      </node>
+      <node id="2538">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp</label>
+        <link refid="cpu__external__function_8hpp_source"/>
+        <childnode refid="2536" relation="include">
+        </childnode>
+        <childnode refid="2539" relation="include">
+        </childnode>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2541" relation="include">
+        </childnode>
+        <childnode refid="2542" relation="include">
+        </childnode>
+        <childnode refid="2544" relation="include">
+        </childnode>
+        <childnode refid="2546" relation="include">
+        </childnode>
+      </node>
+      <node id="2543">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.cpp</label>
+        <link refid="cpu__tracing_8cpp_source"/>
+      </node>
+      <node id="2532">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp</label>
+        <link refid="xla__tuple_8cpp_source"/>
+      </node>
+      <node id="2536">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp</label>
+        <link refid="cpu__call__frame_8cpp_source"/>
+      </node>
+      <node id="2552">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp</label>
+        <link refid="gpu__emitter_8hpp_source"/>
+        <childnode refid="2553" relation="include">
+        </childnode>
+        <childnode refid="2550" relation="include">
+        </childnode>
+      </node>
+      <node id="2540">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="2534">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/call_frame.hpp</label>
+        <link refid="call__frame_8hpp_source"/>
+        <childnode refid="2532" relation="include">
+        </childnode>
+        <childnode refid="2533" relation="include">
+        </childnode>
+        <childnode refid="2535" relation="include">
+        </childnode>
+        <childnode refid="2548" relation="include">
+        </childnode>
+        <childnode refid="2555" relation="include">
+        </childnode>
+      </node>
+      <node id="2560">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.hpp</label>
+        <link refid="cpu__tensor__view_8hpp_source"/>
+        <childnode refid="2561" relation="include">
+        </childnode>
+        <childnode refid="2536" relation="include">
+        </childnode>
+        <childnode refid="2537" relation="include">
+        </childnode>
+        <childnode refid="2562" relation="include">
+        </childnode>
+        <childnode refid="2544" relation="include">
+        </childnode>
+      </node>
+      <node id="2537">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="2555">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</label>
+        <link refid="int__call__frame_8hpp_source"/>
+        <childnode refid="2556" relation="include">
+        </childnode>
+        <childnode refid="2557" relation="include">
+        </childnode>
+        <childnode refid="2558" relation="include">
+        </childnode>
+      </node>
+      <node id="2569">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.cpp</label>
+        <link refid="runtime_2tensor__view_8cpp_source"/>
+      </node>
+      <node id="2563">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.hpp</label>
+        <link refid="gpu__tensor__view_8hpp_source"/>
+        <childnode refid="2564" relation="include">
+        </childnode>
+        <childnode refid="2549" relation="include">
+        </childnode>
+        <childnode refid="2565" relation="include">
+        </childnode>
+      </node>
+      <node id="2531">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp</label>
+        <link refid="xla__tuple_8hpp_source"/>
+        <childnode refid="2532" relation="include">
+        </childnode>
+      </node>
+      <node id="2559">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.cpp</label>
+        <link refid="int__manager_8cpp_source"/>
+      </node>
+      <node id="2566">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.hpp</label>
+        <link refid="host__tensor__view_8hpp_source"/>
+        <childnode refid="2567" relation="include">
+        </childnode>
+        <childnode refid="2568" relation="include">
+        </childnode>
+        <childnode refid="2556" relation="include">
+        </childnode>
+        <childnode refid="2555" relation="include">
+        </childnode>
+      </node>
+      <node id="2551">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.hpp</label>
+        <link refid="gpu__external__function_8hpp_source"/>
+        <childnode refid="2549" relation="include">
+        </childnode>
+        <childnode refid="2552" relation="include">
+        </childnode>
+        <childnode refid="2550" relation="include">
+        </childnode>
+        <childnode refid="2554" relation="include">
+        </childnode>
+      </node>
+      <node id="2545">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</label>
+        <link refid="cpu__assignment_8cpp_source"/>
+      </node>
+      <node id="2564">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_backend.cpp</label>
+        <link refid="gpu__backend_8cpp_source"/>
+      </node>
+      <node id="2539">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp</label>
+        <link refid="cpu__emitter_8hpp_source"/>
+        <childnode refid="2540" relation="include">
+        </childnode>
+        <childnode refid="2537" relation="include">
+        </childnode>
+      </node>
+      <node id="2562">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp</label>
+        <link refid="cpu__tensor__view_8cpp_source"/>
+      </node>
+      <node id="2548">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_call_frame.hpp</label>
+        <link refid="gpu__call__frame_8hpp_source"/>
+        <childnode refid="2549" relation="include">
+        </childnode>
+        <childnode refid="2550" relation="include">
+        </childnode>
+        <childnode refid="2551" relation="include">
+        </childnode>
+      </node>
+      <node id="2533">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="2556">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp</label>
+        <link refid="int__call__frame_8cpp_source"/>
+      </node>
+      <node id="2565">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.cpp</label>
+        <link refid="gpu__tensor__view_8cpp_source"/>
+      </node>
+      <node id="2530">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp"/>
+        <childnode refid="2531" relation="include">
+        </childnode>
+        <childnode refid="2533" relation="include">
+        </childnode>
+        <childnode refid="2534" relation="include">
+        </childnode>
+        <childnode refid="2535" relation="include">
+        </childnode>
+        <childnode refid="2560" relation="include">
+        </childnode>
+        <childnode refid="2548" relation="include">
+        </childnode>
+        <childnode refid="2563" relation="include">
+        </childnode>
+        <childnode refid="2566" relation="include">
+        </childnode>
+        <childnode refid="2555" relation="include">
+        </childnode>
+        <childnode refid="2569" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1runtime_1_1TensorView" prot="public">ngraph::runtime::TensorView</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor">ngraph::descriptor</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/shape.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/types/element_type.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/util.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="28"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">descriptor</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal">Value;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">runtime</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="36" refid="classngraph_1_1runtime_1_1TensorView" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;ngraph::descriptor::TensorView&gt;&amp;<sp/>descriptor)</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>m_descriptor(descriptor)</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>~<ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref>&amp;<sp/>operator=(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref>&amp;)<sp/>=<sp/></highlight><highlight class="keywordflow">default</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;const<sp/>ngraph::descriptor::TensorView&gt;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_tensor_view_descriptor()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;descriptor::TensorView&gt;<sp/>get_descriptor()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>collect_tensor_views(std::vector&lt;std::shared_ptr&lt;TensorView&gt;&gt;&amp;<sp/>views,</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;TensorView&gt;&amp;<sp/>value)<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">ngraph::Shape</ref>&amp;<sp/>get_shape()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">ngraph::Strides</ref>&amp;<sp/>get_strides()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>get_element_count()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1descriptor_1_1Tensor" kindref="compound">ngraph::descriptor::Tensor</ref>&amp;<sp/>get_tensor()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::descriptor::layout::TensorViewLayout&gt;</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_tensor_view_layout()<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1TensorView_aac6f07af8edea9ba3669426f75db6dd0_1aac6f07af8edea9ba3669426f75db6dd0" kindref="member">write</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*<sp/>p,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>tensor_offset,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1TensorView_ab915ec67d4423d3150edcba127206829_1ab915ec67d4423d3150edcba127206829" kindref="member">read</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*<sp/>p,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>tensor_offset,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::descriptor::TensorView&gt;<sp/>m_descriptor;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">using</highlight><highlight class="normal"><sp/>TensorViewPtrs<sp/>=<sp/>std::vector&lt;std::shared_ptr&lt;TensorView&gt;&gt;;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.hpp"/>
+  </compounddef>
+</doxygen>

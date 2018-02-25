@@ -1,0 +1,794 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="unary__elementwise__arithmetic_8hpp" kind="file" language="C++">
+    <compoundname>unary_elementwise_arithmetic.hpp</compoundname>
+    <includes refid="unary__elementwise_8hpp" local="yes">ngraph/ops/util/unary_elementwise.hpp</includes>
+    <includedby refid="ops_2abs_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/abs.hpp</includedby>
+    <includedby refid="ops_2acos_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/acos.hpp</includedby>
+    <includedby refid="ops_2asin_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/asin.hpp</includedby>
+    <includedby refid="ops_2atan_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/atan.hpp</includedby>
+    <includedby refid="ops_2ceiling_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/ceiling.hpp</includedby>
+    <includedby refid="ops_2cos_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cos.hpp</includedby>
+    <includedby refid="ops_2cosh_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cosh.hpp</includedby>
+    <includedby refid="ops_2exp_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/exp.hpp</includedby>
+    <includedby refid="ops_2floor_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/floor.hpp</includedby>
+    <includedby refid="ops_2log_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/log.hpp</includedby>
+    <includedby refid="negative_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/negative.hpp</includedby>
+    <includedby refid="ops_2relu_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.hpp</includedby>
+    <includedby refid="ops_2sign_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sign.hpp</includedby>
+    <includedby refid="ops_2sin_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sin.hpp</includedby>
+    <includedby refid="ops_2sinh_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sinh.hpp</includedby>
+    <includedby refid="ops_2sqrt_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sqrt.hpp</includedby>
+    <includedby refid="ops_2tan_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tan.hpp</includedby>
+    <includedby refid="ops_2tanh_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tanh.hpp</includedby>
+    <includedby refid="unary__elementwise__arithmetic_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/unary_elementwise_arithmetic.cpp</includedby>
+    <incdepgraph>
+      <node id="10096">
+        <label>atomic</label>
+      </node>
+      <node id="10104">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="10098" relation="include">
+        </childnode>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10092" relation="include">
+        </childnode>
+        <childnode refid="10105" relation="include">
+        </childnode>
+      </node>
+      <node id="10105">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10092" relation="include">
+        </childnode>
+        <childnode refid="10106" relation="include">
+        </childnode>
+        <childnode refid="10108" relation="include">
+        </childnode>
+      </node>
+      <node id="10115">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10090" relation="include">
+        </childnode>
+        <childnode refid="10103" relation="include">
+        </childnode>
+        <childnode refid="10116" relation="include">
+        </childnode>
+      </node>
+      <node id="10095">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="10096" relation="include">
+        </childnode>
+        <childnode refid="10097" relation="include">
+        </childnode>
+        <childnode refid="10098" relation="include">
+        </childnode>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10090" relation="include">
+        </childnode>
+        <childnode refid="10094" relation="include">
+        </childnode>
+        <childnode refid="10099" relation="include">
+        </childnode>
+        <childnode refid="10100" relation="include">
+        </childnode>
+        <childnode refid="10101" relation="include">
+        </childnode>
+        <childnode refid="10092" relation="include">
+        </childnode>
+        <childnode refid="10102" relation="include">
+        </childnode>
+        <childnode refid="10088" relation="include">
+        </childnode>
+        <childnode refid="10103" relation="include">
+        </childnode>
+        <childnode refid="10115" relation="include">
+        </childnode>
+        <childnode refid="10104" relation="include">
+        </childnode>
+        <childnode refid="10105" relation="include">
+        </childnode>
+      </node>
+      <node id="10114">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="10097" relation="include">
+        </childnode>
+        <childnode refid="10110" relation="include">
+        </childnode>
+        <childnode refid="10113" relation="include">
+        </childnode>
+      </node>
+      <node id="10113">
+        <label>stdexcept</label>
+      </node>
+      <node id="10087">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="10088" relation="include">
+        </childnode>
+        <childnode refid="10093" relation="include">
+        </childnode>
+      </node>
+      <node id="10094">
+        <label>string</label>
+      </node>
+      <node id="10109">
+        <label>map</label>
+      </node>
+      <node id="10101">
+        <label>unordered_set</label>
+      </node>
+      <node id="10108">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="10109" relation="include">
+        </childnode>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10110" relation="include">
+        </childnode>
+        <childnode refid="10094" relation="include">
+        </childnode>
+        <childnode refid="10111" relation="include">
+        </childnode>
+        <childnode refid="10088" relation="include">
+        </childnode>
+        <childnode refid="10112" relation="include">
+        </childnode>
+        <childnode refid="10114" relation="include">
+        </childnode>
+      </node>
+      <node id="10088">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10090" relation="include">
+        </childnode>
+        <childnode refid="10091" relation="include">
+        </childnode>
+        <childnode refid="10092" relation="include">
+        </childnode>
+      </node>
+      <node id="10103">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10104" relation="include">
+        </childnode>
+        <childnode refid="10105" relation="include">
+        </childnode>
+      </node>
+      <node id="10106">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="10107" relation="include">
+        </childnode>
+        <childnode refid="10098" relation="include">
+        </childnode>
+        <childnode refid="10092" relation="include">
+        </childnode>
+        <childnode refid="10088" relation="include">
+        </childnode>
+      </node>
+      <node id="10102">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10100" relation="include">
+        </childnode>
+        <childnode refid="10088" relation="include">
+        </childnode>
+      </node>
+      <node id="10093">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="10094" relation="include">
+        </childnode>
+        <childnode refid="10088" relation="include">
+        </childnode>
+        <childnode refid="10095" relation="include">
+        </childnode>
+        <childnode refid="10117" relation="include">
+        </childnode>
+      </node>
+      <node id="10107">
+        <label>cstdio</label>
+      </node>
+      <node id="10085">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/unary_elementwise_arithmetic.hpp</label>
+        <link refid="unary__elementwise__arithmetic_8hpp"/>
+        <childnode refid="10086" relation="include">
+        </childnode>
+      </node>
+      <node id="10092">
+        <label>vector</label>
+      </node>
+      <node id="10091">
+        <label>utility</label>
+      </node>
+      <node id="10110">
+        <label>sstream</label>
+      </node>
+      <node id="10098">
+        <label>iostream</label>
+      </node>
+      <node id="10086">
+        <label>ngraph/ops/util/unary_elementwise.hpp</label>
+        <link refid="unary__elementwise_8hpp_source"/>
+        <childnode refid="10087" relation="include">
+        </childnode>
+      </node>
+      <node id="10117">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="10097">
+        <label>deque</label>
+      </node>
+      <node id="10100">
+        <label>unordered_map</label>
+      </node>
+      <node id="10112">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="10113" relation="include">
+        </childnode>
+      </node>
+      <node id="10111">
+        <label>type_traits</label>
+      </node>
+      <node id="10090">
+        <label>set</label>
+      </node>
+      <node id="10116">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="10089" relation="include">
+        </childnode>
+        <childnode refid="10106" relation="include">
+        </childnode>
+      </node>
+      <node id="10089">
+        <label>memory</label>
+      </node>
+      <node id="10099">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="10125">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="10152">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</label>
+        <link refid="mkldnn__utils_8cpp_source"/>
+      </node>
+      <node id="10155">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sinh.hpp</label>
+        <link refid="ops_2sinh_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10136" relation="include">
+        </childnode>
+        <childnode refid="10137" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10124">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="10119">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/abs.hpp</label>
+        <link refid="ops_2abs_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10121" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10149">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.hpp</label>
+        <link refid="ops_2relu_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10150" relation="include">
+        </childnode>
+        <childnode refid="10151" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10152" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10157">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sqrt.cpp</label>
+        <link refid="sqrt_8cpp_source"/>
+      </node>
+      <node id="10131">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cos.hpp</label>
+        <link refid="ops_2cos_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10132" relation="include">
+        </childnode>
+        <childnode refid="10133" relation="include">
+        </childnode>
+        <childnode refid="10134" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10126">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</label>
+        <link refid="serializer_8cpp_source"/>
+      </node>
+      <node id="10140">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/exp.cpp</label>
+        <link refid="exp_8cpp_source"/>
+      </node>
+      <node id="10133">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sin.cpp</label>
+        <link refid="sin_8cpp_source"/>
+      </node>
+      <node id="10135">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cosh.hpp</label>
+        <link refid="ops_2cosh_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10136" relation="include">
+        </childnode>
+        <childnode refid="10137" relation="include">
+        </childnode>
+        <childnode refid="10138" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10138">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tanh.cpp</label>
+        <link refid="tanh_8cpp_source"/>
+      </node>
+      <node id="10151">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp</label>
+        <link refid="core__fusion_8cpp_source"/>
+      </node>
+      <node id="10121">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/abs.cpp</label>
+        <link refid="abs_8cpp_source"/>
+      </node>
+      <node id="10129">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/atan.hpp</label>
+        <link refid="ops_2atan_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10156">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sqrt.hpp</label>
+        <link refid="ops_2sqrt_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10157" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10158" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10130">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/ceiling.hpp</label>
+        <link refid="ops_2ceiling_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10132">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cos.cpp</label>
+        <link refid="cos_8cpp_source"/>
+      </node>
+      <node id="10144">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/power.cpp</label>
+        <link refid="power_8cpp_source"/>
+      </node>
+      <node id="10141">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/floor.hpp</label>
+        <link refid="ops_2floor_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10160">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tanh.hpp</label>
+        <link refid="ops_2tanh_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10138" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10118">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/unary_elementwise_arithmetic.hpp</label>
+        <link refid="unary__elementwise__arithmetic_8hpp"/>
+        <childnode refid="10119" relation="include">
+        </childnode>
+        <childnode refid="10127" relation="include">
+        </childnode>
+        <childnode refid="10128" relation="include">
+        </childnode>
+        <childnode refid="10129" relation="include">
+        </childnode>
+        <childnode refid="10130" relation="include">
+        </childnode>
+        <childnode refid="10131" relation="include">
+        </childnode>
+        <childnode refid="10135" relation="include">
+        </childnode>
+        <childnode refid="10139" relation="include">
+        </childnode>
+        <childnode refid="10141" relation="include">
+        </childnode>
+        <childnode refid="10142" relation="include">
+        </childnode>
+        <childnode refid="10145" relation="include">
+        </childnode>
+        <childnode refid="10149" relation="include">
+        </childnode>
+        <childnode refid="10153" relation="include">
+        </childnode>
+        <childnode refid="10154" relation="include">
+        </childnode>
+        <childnode refid="10155" relation="include">
+        </childnode>
+        <childnode refid="10156" relation="include">
+        </childnode>
+        <childnode refid="10159" relation="include">
+        </childnode>
+        <childnode refid="10160" relation="include">
+        </childnode>
+        <childnode refid="10161" relation="include">
+        </childnode>
+      </node>
+      <node id="10136">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/cosh.cpp</label>
+        <link refid="cosh_8cpp_source"/>
+      </node>
+      <node id="10122">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="10147">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/negative.cpp</label>
+        <link refid="negative_8cpp_source"/>
+      </node>
+      <node id="10123">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="10142">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/log.hpp</label>
+        <link refid="ops_2log_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10143" relation="include">
+        </childnode>
+        <childnode refid="10144" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10159">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tan.hpp</label>
+        <link refid="ops_2tan_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10134" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10158">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_fusion.cpp</label>
+        <link refid="cpu__fusion_8cpp_source"/>
+      </node>
+      <node id="10127">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/acos.hpp</label>
+        <link refid="ops_2acos_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10148">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/subtract.cpp</label>
+        <link refid="subtract_8cpp_source"/>
+      </node>
+      <node id="10153">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sign.hpp</label>
+        <link refid="ops_2sign_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10121" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10146">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/divide.cpp</label>
+        <link refid="divide_8cpp_source"/>
+      </node>
+      <node id="10161">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/unary_elementwise_arithmetic.cpp</label>
+        <link refid="unary__elementwise__arithmetic_8cpp_source"/>
+      </node>
+      <node id="10145">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/negative.hpp</label>
+        <link refid="negative_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10132" relation="include">
+        </childnode>
+        <childnode refid="10146" relation="include">
+        </childnode>
+        <childnode refid="10147" relation="include">
+        </childnode>
+        <childnode refid="10148" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10137">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sinh.cpp</label>
+        <link refid="sinh_8cpp_source"/>
+      </node>
+      <node id="10120">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="10150">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/relu.cpp</label>
+        <link refid="relu_8cpp_source"/>
+      </node>
+      <node id="10128">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/asin.hpp</label>
+        <link refid="ops_2asin_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10143">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/log.cpp</label>
+        <link refid="ops_2log_8cpp_source"/>
+      </node>
+      <node id="10134">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/tan.cpp</label>
+        <link refid="tan_8cpp_source"/>
+      </node>
+      <node id="10139">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/exp.hpp</label>
+        <link refid="ops_2exp_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10140" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+      <node id="10154">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/sin.hpp</label>
+        <link refid="ops_2sin_8hpp_source"/>
+        <childnode refid="10120" relation="include">
+        </childnode>
+        <childnode refid="10132" relation="include">
+        </childnode>
+        <childnode refid="10133" relation="include">
+        </childnode>
+        <childnode refid="10122" relation="include">
+        </childnode>
+        <childnode refid="10123" relation="include">
+        </childnode>
+        <childnode refid="10124" relation="include">
+        </childnode>
+        <childnode refid="10125" relation="include">
+        </childnode>
+        <childnode refid="10126" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1op_1_1util_1_1UnaryElementwiseArithmetic" prot="public">ngraph::op::util::UnaryElementwiseArithmetic</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op">ngraph::op</innernamespace>
+    <innernamespace refid="namespacengraph_1_1op_1_1util">ngraph::op::util</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/util/unary_elementwise.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="22"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">op</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">util</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="44" refid="classngraph_1_1op_1_1util_1_1UnaryElementwiseArithmetic" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1op_1_1util_1_1UnaryElementwiseArithmetic" kindref="compound">UnaryElementwiseArithmetic</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1op_1_1util_1_1UnaryElementwise" kindref="compound">UnaryElementwise</ref></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1op_1_1util_1_1UnaryElementwiseArithmetic_ad7ecbfead0a52e05b8b87888bfb66558_1ad7ecbfead0a52e05b8b87888bfb66558" kindref="member">UnaryElementwiseArithmetic</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>node_type,</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>arg);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="55"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/unary_elementwise_arithmetic.hpp"/>
+  </compounddef>
+</doxygen>

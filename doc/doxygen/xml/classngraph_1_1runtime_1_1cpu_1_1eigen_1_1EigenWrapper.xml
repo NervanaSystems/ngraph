@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::eigen::EigenWrapper</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">BASE</basecompoundref>
+    <templateparamlist>
+      <param>
+        <type>typename</type>
+        <declname>T</declname>
+        <defname>T</defname>
+      </param>
+      <param>
+        <type>typename</type>
+        <declname>FMT</declname>
+        <defname>FMT</defname>
+      </param>
+      <param>
+        <type>typename</type>
+        <declname>BASE</declname>
+        <defname>BASE</defname>
+      </param>
+      <param>
+        <type>typename</type>
+        <declname>STRIDES</declname>
+        <defname>STRIDES</defname>
+        <defval>DynamicStrides</defval>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1a2c9b13a65d4c517fb4c76c7639ae1258" prot="private" static="no">
+        <type>BASE</type>
+        <definition>using ngraph::runtime::cpu::eigen::EigenWrapper&lt; T, FMT, BASE, STRIDES &gt;::base =  BASE</definition>
+        <argsstring></argsstring>
+        <name>base</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" line="102" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" bodystart="102" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1a35be71e34d7f7e3f68fbd0bee54bade4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::runtime::cpu::eigen::EigenWrapper&lt; T, FMT, BASE, STRIDES &gt;::EigenWrapper</definition>
+        <argsstring>(T *t, const FMT &amp;fmt)</argsstring>
+        <name>EigenWrapper</name>
+        <param>
+          <type>T *</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>const FMT &amp;</type>
+          <declname>fmt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" line="105" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" bodystart="105" bodyend="108"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1acdd05e8784470d7d4c471b4c4f83cf6c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename U</type>
+          </param>
+        </templateparamlist>
+        <type><ref refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper" kindref="compound">EigenWrapper</ref> &amp;</type>
+        <definition>EigenWrapper&amp; ngraph::runtime::cpu::eigen::EigenWrapper&lt; T, FMT, BASE, STRIDES &gt;::operator=</definition>
+        <argsstring>(const U &amp;other)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const U &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" line="111" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" bodystart="111" bodyend="115"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3351">
+        <label>ngraph::runtime::cpu::eigen::EigenWrapper&lt; T, FMT, BASE, STRIDES &gt;</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper"/>
+        <childnode refid="3352" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3352">
+        <label>BASE</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3353">
+        <label>ngraph::runtime::cpu::eigen::EigenWrapper&lt; T, FMT, BASE, STRIDES &gt;</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper"/>
+        <childnode refid="3354" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3354">
+        <label>BASE</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" line="101" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_eigen_utils.hpp" bodystart="100" bodyend="116"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1a2c9b13a65d4c517fb4c76c7639ae1258" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::eigen::EigenWrapper</scope><name>base</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1a35be71e34d7f7e3f68fbd0bee54bade4" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::eigen::EigenWrapper</scope><name>EigenWrapper</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1eigen_1_1EigenWrapper_1acdd05e8784470d7d4c471b4c4f83cf6c" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::eigen::EigenWrapper</scope><name>operator=</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

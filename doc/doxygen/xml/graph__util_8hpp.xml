@@ -1,0 +1,346 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="graph__util_8hpp" kind="file" language="C++">
+    <compoundname>graph_util.hpp</compoundname>
+    <includes local="no">algorithm</includes>
+    <includes local="no">chrono</includes>
+    <includes local="no">deque</includes>
+    <includes local="no">functional</includes>
+    <includes local="no">iostream</includes>
+    <includes local="no">list</includes>
+    <includes local="no">map</includes>
+    <includes local="no">memory</includes>
+    <includes local="no">sstream</includes>
+    <includes local="no">string</includes>
+    <includes local="no">unordered_map</includes>
+    <includes local="no">unordered_set</includes>
+    <includes local="no">vector</includes>
+    <includedby refid="function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/function.cpp</includedby>
+    <includedby refid="graph__util_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp</includedby>
+    <includedby refid="inliner_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/inliner.cpp</includedby>
+    <includedby refid="liveness_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.cpp</includedby>
+    <includedby refid="pass_2manager_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp</includedby>
+    <includedby refid="memory__visualize_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp</includedby>
+    <includedby refid="reshape__elimination_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.cpp</includedby>
+    <includedby refid="visualize__tree_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/visualize_tree.cpp</includedby>
+    <includedby refid="core__fusion_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp</includedby>
+    <includedby refid="cpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</includedby>
+    <includedby refid="cpu__fusion_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_fusion.cpp</includedby>
+    <includedby refid="cpu__layout_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</includedby>
+    <includedby refid="gpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</includedby>
+    <includedby refid="int__call__frame_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</includedby>
+    <includedby refid="serializer_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</includedby>
+    <includedby refid="util_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp</includedby>
+    <incdepgraph>
+      <node id="3060">
+        <label>list</label>
+      </node>
+      <node id="3058">
+        <label>functional</label>
+      </node>
+      <node id="3064">
+        <label>string</label>
+      </node>
+      <node id="3061">
+        <label>map</label>
+      </node>
+      <node id="3066">
+        <label>unordered_set</label>
+      </node>
+      <node id="3054">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp</label>
+        <link refid="graph__util_8hpp"/>
+        <childnode refid="3055" relation="include">
+        </childnode>
+        <childnode refid="3056" relation="include">
+        </childnode>
+        <childnode refid="3057" relation="include">
+        </childnode>
+        <childnode refid="3058" relation="include">
+        </childnode>
+        <childnode refid="3059" relation="include">
+        </childnode>
+        <childnode refid="3060" relation="include">
+        </childnode>
+        <childnode refid="3061" relation="include">
+        </childnode>
+        <childnode refid="3062" relation="include">
+        </childnode>
+        <childnode refid="3063" relation="include">
+        </childnode>
+        <childnode refid="3064" relation="include">
+        </childnode>
+        <childnode refid="3065" relation="include">
+        </childnode>
+        <childnode refid="3066" relation="include">
+        </childnode>
+        <childnode refid="3067" relation="include">
+        </childnode>
+      </node>
+      <node id="3067">
+        <label>vector</label>
+      </node>
+      <node id="3063">
+        <label>sstream</label>
+      </node>
+      <node id="3059">
+        <label>iostream</label>
+      </node>
+      <node id="3057">
+        <label>deque</label>
+      </node>
+      <node id="3065">
+        <label>unordered_map</label>
+      </node>
+      <node id="3056">
+        <label>chrono</label>
+      </node>
+      <node id="3055">
+        <label>algorithm</label>
+      </node>
+      <node id="3062">
+        <label>memory</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3080">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</label>
+        <link refid="cpu__layout_8cpp_source"/>
+      </node>
+      <node id="3084">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="3081">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="3087">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/serializer.cpp</label>
+        <link refid="serializer_8cpp_source"/>
+      </node>
+      <node id="3085">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp</label>
+        <link refid="int__external__function_8hpp_source"/>
+        <childnode refid="3084" relation="include">
+        </childnode>
+        <childnode refid="3086" relation="include">
+        </childnode>
+      </node>
+      <node id="3068">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp</label>
+        <link refid="graph__util_8hpp"/>
+        <childnode refid="3069" relation="include">
+        </childnode>
+        <childnode refid="3070" relation="include">
+        </childnode>
+        <childnode refid="3071" relation="include">
+        </childnode>
+        <childnode refid="3072" relation="include">
+        </childnode>
+        <childnode refid="3073" relation="include">
+        </childnode>
+        <childnode refid="3074" relation="include">
+        </childnode>
+        <childnode refid="3075" relation="include">
+        </childnode>
+        <childnode refid="3076" relation="include">
+        </childnode>
+        <childnode refid="3077" relation="include">
+        </childnode>
+        <childnode refid="3078" relation="include">
+        </childnode>
+        <childnode refid="3079" relation="include">
+        </childnode>
+        <childnode refid="3080" relation="include">
+        </childnode>
+        <childnode refid="3081" relation="include">
+        </childnode>
+        <childnode refid="3082" relation="include">
+        </childnode>
+        <childnode refid="3087" relation="include">
+        </childnode>
+        <childnode refid="3088" relation="include">
+        </childnode>
+      </node>
+      <node id="3077">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp</label>
+        <link refid="core__fusion_8cpp_source"/>
+      </node>
+      <node id="3069">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/function.cpp</label>
+        <link refid="function_8cpp_source"/>
+      </node>
+      <node id="3075">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.cpp</label>
+        <link refid="reshape__elimination_8cpp_source"/>
+      </node>
+      <node id="3070">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.cpp</label>
+        <link refid="graph__util_8cpp_source"/>
+      </node>
+      <node id="3073">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp</label>
+        <link refid="pass_2manager_8cpp_source"/>
+      </node>
+      <node id="3078">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="3082">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp</label>
+        <link refid="int__call__frame_8hpp_source"/>
+        <childnode refid="3083" relation="include">
+        </childnode>
+        <childnode refid="3084" relation="include">
+        </childnode>
+        <childnode refid="3085" relation="include">
+        </childnode>
+      </node>
+      <node id="3079">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_fusion.cpp</label>
+        <link refid="cpu__fusion_8cpp_source"/>
+      </node>
+      <node id="3072">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.cpp</label>
+        <link refid="liveness_8cpp_source"/>
+      </node>
+      <node id="3088">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.cpp</label>
+        <link refid="util_8cpp_source"/>
+      </node>
+      <node id="3086">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.cpp</label>
+        <link refid="int__manager_8cpp_source"/>
+      </node>
+      <node id="3076">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/visualize_tree.cpp</label>
+        <link refid="visualize__tree_8cpp_source"/>
+      </node>
+      <node id="3083">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp</label>
+        <link refid="int__call__frame_8cpp_source"/>
+      </node>
+      <node id="3071">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/inliner.cpp</label>
+        <link refid="inliner_8cpp_source"/>
+      </node>
+      <node id="3074">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp</label>
+        <link refid="memory__visualize_8cpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1NodeMap" prot="public">ngraph::NodeMap</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;chrono&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;deque&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;functional&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;list&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sstream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;unordered_map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;unordered_set&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="34"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal">Node;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal">Function;</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>traverse_nodes(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;const<sp/>Function&gt;<sp/>p,</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::function&lt;</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">(std::shared_ptr&lt;Node&gt;)&gt;<sp/>f);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>traverse_nodes(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>Function*<sp/>p,<sp/>std::function&lt;</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">(std::shared_ptr&lt;Node&gt;)&gt;<sp/>f);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>traverse_functions(std::shared_ptr&lt;Function&gt;<sp/>p,</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::function&lt;</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">(std::shared_ptr&lt;Function&gt;)&gt;<sp/>f);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>free_nodes(std::shared_ptr&lt;Function&gt;);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>replace_node(std::shared_ptr&lt;Node&gt;<sp/>target,</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;Node&gt;<sp/>replacement,</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>replace_output<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>replace_node_users_arguments(std::shared_ptr&lt;Node&gt;<sp/>target,</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;Node&gt;<sp/>replacement);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>std::list&lt;std::shared_ptr&lt;Node&gt;&gt;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>topological_sort(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::list&lt;std::shared_ptr&lt;Node&gt;&gt;&amp;<sp/>nodes);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>is_equal_to_const_value(std::string<sp/>const_value,<sp/>std::shared_ptr&lt;Node&gt;<sp/>reduce_constant);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>maps<sp/>original<sp/>to<sp/>replacement<sp/>nodes<sp/>e.g.<sp/>for<sp/>clone<sp/>utilities</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>performs<sp/>index<sp/>checking<sp/>on<sp/>access</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60" refid="classngraph_1_1NodeMap" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1NodeMap" kindref="compound">NodeMap</ref></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>map<sp/>original<sp/>node<sp/>to<sp/>replcacement<sp/>node</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>throws<sp/>ngraph_error<sp/>if<sp/>key<sp/>already<sp/>exists</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>add(std::shared_ptr&lt;ngraph::Node&gt;<sp/>orig,<sp/>std::shared_ptr&lt;ngraph::Node&gt;<sp/>replacement);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>get<sp/>replacement<sp/>node<sp/>from<sp/>original<sp/>node</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>throws<sp/>ngrah_error<sp/>if<sp/>key<sp/>does<sp/>not<sp/>exist</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Node&gt;<sp/></highlight><highlight class="keyword">get</highlight><highlight class="normal">(std::shared_ptr&lt;ngraph::Node&gt;<sp/>orig)<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>returns<sp/>true<sp/>if<sp/>original<sp/>node<sp/>is<sp/>already<sp/>mapped</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>exists(std::shared_ptr&lt;ngraph::Node&gt;<sp/>orig)</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="73"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>(m_node_map.count(orig)<sp/>!=<sp/>0);</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;,<sp/>std::shared_ptr&lt;ngraph::Node&gt;&gt;&amp;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_node_map()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="79"><highlight class="keyword"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_node_map;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;,<sp/>std::shared_ptr&lt;ngraph::Node&gt;&gt;&amp;</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_node_map()</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_node_map;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::unordered_map&lt;std::shared_ptr&lt;ngraph::Node&gt;,<sp/>std::shared_ptr&lt;ngraph::Node&gt;&gt;<sp/>m_node_map;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>input<sp/>nodes<sp/>are<sp/>cloned<sp/>and<sp/>returned</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>NodeMap<sp/>input<sp/>may<sp/>contain<sp/>default<sp/>node<sp/>mapping<sp/>i.e.<sp/>pre-cloned<sp/>nodes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>NodeMap<sp/>output<sp/>(by<sp/>reference)<sp/>fully<sp/>maps<sp/>input<sp/>and<sp/>cloned<sp/>nodes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>std::list&lt;std::shared_ptr&lt;ngraph::Node&gt;&gt;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>clone_nodes(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::list&lt;std::shared_ptr&lt;ngraph::Node&gt;&gt;&amp;<sp/>nodes,<sp/><ref refid="classngraph_1_1NodeMap" kindref="compound">NodeMap</ref>&amp;<sp/>node_map);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>input<sp/>function<sp/>is<sp/>cloned<sp/>and<sp/>returned</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>NodeMap<sp/>input<sp/>may<sp/>contain<sp/>default<sp/>node<sp/>mapping<sp/>i.e.<sp/>pre-cloned<sp/>nodes</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>NodeMap<sp/>output<sp/>(by<sp/>reference)<sp/>fully<sp/>maps<sp/>input<sp/>and<sp/>cloned<sp/>function<sp/>ops</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/>std::shared_ptr&lt;ngraph::Function&gt;<sp/>clone_function(std::shared_ptr&lt;ngraph::Function&gt;<sp/>func,</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classngraph_1_1NodeMap" kindref="compound">NodeMap</ref>&amp;<sp/>node_map);</highlight></codeline>
+<codeline lineno="103"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/graph_util.hpp"/>
+  </compounddef>
+</doxygen>

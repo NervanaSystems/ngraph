@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_f53bd1b7b9c34f13fb3cc4200baf1b7f" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern</compoundname>
+    <innerdir refid="dir_315ad5e2ba2f015d417b5f3fc7646c7d">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/op</innerdir>
+    <innerfile refid="core__fusion_8cpp">core_fusion.cpp</innerfile>
+    <innerfile refid="core__fusion_8hpp">core_fusion.hpp</innerfile>
+    <innerfile refid="matcher_8cpp">matcher.cpp</innerfile>
+    <innerfile refid="matcher_8hpp">matcher.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/"/>
+  </compounddef>
+</doxygen>

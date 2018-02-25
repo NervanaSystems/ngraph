@@ -1,0 +1,265 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1MemoryVisualize" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::MemoryVisualize</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1ModulePass" prot="public" virt="non-virtual">ngraph::pass::ModulePass</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1MemoryVisualize_1aa5ce8779a14cca269ec0c58826fb4b25" prot="private" static="no" mutable="no">
+        <type>const std::string</type>
+        <definition>const std::string ngraph::pass::MemoryVisualize::m_filename</definition>
+        <argsstring></argsstring>
+        <name>m_filename</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1acc155af4640540f48ec82c156412f8d6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>pass::MemoryVisualize::MemoryVisualize</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>MemoryVisualize</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="32" bodyend="35"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1aa75fd4cabbdec85ba27c1ca6514df78e" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool pass::MemoryVisualize::run_on_module</definition>
+        <argsstring>(std::vector&lt; std::shared_ptr&lt; ngraph::Function &gt;&gt; &amp;) override</argsstring>
+        <name>run_on_module</name>
+        <reimplements refid="classngraph_1_1pass_1_1ModulePass_1ae9edbd032dd8a9007e748e472f234e15">run_on_module</reimplements>
+        <param>
+          <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;&gt; &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="37" bodyend="99"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1af6fc95301ccd94626506777f6766d14d" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>shared_ptr&lt; Node &gt; pass::MemoryVisualize::find_largest_op</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;nodes)</argsstring>
+        <name>find_largest_op</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="101" bodyend="119"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1aa3bb57c8613c0d8928799f76d9ba8b2e" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void pass::MemoryVisualize::draw_tensor_weight</definition>
+        <argsstring>(std::ostream &amp;file, const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;nodes)</argsstring>
+        <name>draw_tensor_weight</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>file</declname>
+        </param>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="121" bodyend="184"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1a5862532da80dddd825aa66d9815d6d23" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void pass::MemoryVisualize::draw_histogram</definition>
+        <argsstring>(std::ostream &amp;file, const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;nodes)</argsstring>
+        <name>draw_histogram</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>file</declname>
+        </param>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="186" bodyend="225"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1a1713456e24656e5d857f87b0b167f6d7" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void pass::MemoryVisualize::draw_op_influence</definition>
+        <argsstring>(std::ostream &amp;file, const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;nodes)</argsstring>
+        <name>draw_op_influence</name>
+        <param>
+          <type>std::ostream &amp;</type>
+          <declname>file</declname>
+        </param>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="43" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="227" bodyend="242"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1a04ce49c07f662e3cd3b30eafe46fc5ed" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int pass::MemoryVisualize::compute_op_weight</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; exop)</argsstring>
+        <name>compute_op_weight</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>exop</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="244" bodyend="270"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1a00dfef3f14f12ae0e22f5c0d057e3ab2" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t pass::MemoryVisualize::memory_usage</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt;)</argsstring>
+        <name>memory_usage</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.cpp" bodystart="272" bodyend="275"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1aefca43c59843f2d05c2900723f7c8ce3" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>static size_t ngraph::pass::MemoryVisualize::memory_footprint</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt;)</argsstring>
+        <name>memory_footprint</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="47" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1MemoryVisualize_1a8f3fb2073970de7af01def53338a0635" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>static size_t ngraph::pass::MemoryVisualize::memory_footprint</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;)</argsstring>
+        <name>memory_footprint</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="48" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3159">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3157">
+        <label>ngraph::pass::MemoryVisualize</label>
+        <link refid="classngraph_1_1pass_1_1MemoryVisualize"/>
+        <childnode refid="3158" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3158">
+        <label>ngraph::pass::ModulePass</label>
+        <link refid="classngraph_1_1pass_1_1ModulePass"/>
+        <childnode refid="3159" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3162">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3160">
+        <label>ngraph::pass::MemoryVisualize</label>
+        <link refid="classngraph_1_1pass_1_1MemoryVisualize"/>
+        <childnode refid="3161" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3161">
+        <label>ngraph::pass::ModulePass</label>
+        <link refid="classngraph_1_1pass_1_1ModulePass"/>
+        <childnode refid="3162" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/memory_visualize.hpp" bodystart="33" bodyend="51"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1a04ce49c07f662e3cd3b30eafe46fc5ed" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>compute_op_weight</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1a5862532da80dddd825aa66d9815d6d23" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>draw_histogram</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1a1713456e24656e5d857f87b0b167f6d7" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>draw_op_influence</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1aa3bb57c8613c0d8928799f76d9ba8b2e" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>draw_tensor_weight</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1af6fc95301ccd94626506777f6766d14d" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>find_largest_op</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1aa5ce8779a14cca269ec0c58826fb4b25" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>m_filename</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1aefca43c59843f2d05c2900723f7c8ce3" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>memory_footprint</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1a8f3fb2073970de7af01def53338a0635" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>memory_footprint</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1a00dfef3f14f12ae0e22f5c0d057e3ab2" prot="private" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>memory_usage</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1acc155af4640540f48ec82c156412f8d6" prot="public" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>MemoryVisualize</name></member>
+      <member refid="classngraph_1_1pass_1_1MemoryVisualize_1aa75fd4cabbdec85ba27c1ca6514df78e" prot="public" virt="virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>run_on_module</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1ModulePass_1ae3cff670a30498d887d704044b344e53" prot="public" virt="virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>~ModulePass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::MemoryVisualize</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

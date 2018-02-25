@@ -1,0 +1,304 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="buffer_8hpp" kind="file" language="C++">
+    <compoundname>buffer.hpp</compoundname>
+    <includedby refid="buffer__pos_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/buffer_pos.hpp</includedby>
+    <includedby refid="ngraph_8hpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</includedby>
+    <invincdepgraph>
+      <node id="1169">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</label>
+        <link refid="cpu__layout_8cpp_source"/>
+      </node>
+      <node id="1153">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp</label>
+        <link refid="int__external__function_8cpp_source"/>
+      </node>
+      <node id="1145">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="1146" relation="include">
+        </childnode>
+      </node>
+      <node id="1172">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp</label>
+        <link refid="mkldnn__emitter_8cpp_source"/>
+      </node>
+      <node id="1178">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view_wrapper.cpp</label>
+        <link refid="gpu__tensor__view__wrapper_8cpp_source"/>
+      </node>
+      <node id="1152">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.cpp</label>
+        <link refid="host__tensor__view_8cpp_source"/>
+      </node>
+      <node id="1163">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_manager.cpp</label>
+        <link refid="cpu__manager_8cpp_source"/>
+      </node>
+      <node id="1175">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</label>
+        <link refid="mkldnn__utils_8cpp_source"/>
+      </node>
+      <node id="1166">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp</label>
+        <link refid="cpu__assignment_8hpp_source"/>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1167" relation="include">
+        </childnode>
+      </node>
+      <node id="1150">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_external_function.cpp</label>
+        <link refid="gpu__external__function_8cpp_source"/>
+      </node>
+      <node id="1164">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.hpp</label>
+        <link refid="cpu__tracing_8hpp_source"/>
+        <childnode refid="1158" relation="include">
+        </childnode>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1165" relation="include">
+        </childnode>
+      </node>
+      <node id="1157">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp</label>
+        <link refid="cpu__call__frame_8hpp_source"/>
+        <childnode refid="1158" relation="include">
+        </childnode>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1160" relation="include">
+        </childnode>
+      </node>
+      <node id="1147">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.hpp</label>
+        <link refid="dense__tensor__view__layout_8hpp_source"/>
+        <childnode refid="1148" relation="include">
+        </childnode>
+        <childnode refid="1149" relation="include">
+        </childnode>
+        <childnode refid="1150" relation="include">
+        </childnode>
+        <childnode refid="1151" relation="include">
+        </childnode>
+        <childnode refid="1152" relation="include">
+        </childnode>
+        <childnode refid="1153" relation="include">
+        </childnode>
+      </node>
+      <node id="1168">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp</label>
+        <link refid="cpu__layout_8hpp_source"/>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1169" relation="include">
+        </childnode>
+      </node>
+      <node id="1176">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/ops/convert_layout.cpp</label>
+        <link refid="convert__layout_8cpp_source"/>
+      </node>
+      <node id="1144">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp"/>
+        <childnode refid="1145" relation="include">
+        </childnode>
+        <childnode refid="1149" relation="include">
+        </childnode>
+      </node>
+      <node id="1160">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp</label>
+        <link refid="cpu__external__function_8hpp_source"/>
+        <childnode refid="1158" relation="include">
+        </childnode>
+        <childnode refid="1161" relation="include">
+        </childnode>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1163" relation="include">
+        </childnode>
+        <childnode refid="1164" relation="include">
+        </childnode>
+        <childnode refid="1166" relation="include">
+        </childnode>
+        <childnode refid="1168" relation="include">
+        </childnode>
+      </node>
+      <node id="1174">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_invoke.cpp</label>
+        <link refid="mkldnn__invoke_8cpp_source"/>
+      </node>
+      <node id="1165">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tracing.cpp</label>
+        <link refid="cpu__tracing_8cpp_source"/>
+      </node>
+      <node id="1158">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp</label>
+        <link refid="cpu__call__frame_8cpp_source"/>
+      </node>
+      <node id="1148">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/dense_tensor_view_layout.cpp</label>
+        <link refid="dense__tensor__view__layout_8cpp_source"/>
+      </node>
+      <node id="1162">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="1159">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="1179">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.cpp</label>
+        <link refid="runtime_2tensor__view_8cpp_source"/>
+      </node>
+      <node id="1170">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_layout_descriptor.cpp</label>
+        <link refid="cpu__layout__descriptor_8cpp_source"/>
+      </node>
+      <node id="1146">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="1147" relation="include">
+        </childnode>
+        <childnode refid="1154" relation="include">
+        </childnode>
+        <childnode refid="1149" relation="include">
+        </childnode>
+        <childnode refid="1155" relation="include">
+        </childnode>
+        <childnode refid="1156" relation="include">
+        </childnode>
+        <childnode refid="1171" relation="include">
+        </childnode>
+        <childnode refid="1177" relation="include">
+        </childnode>
+        <childnode refid="1178" relation="include">
+        </childnode>
+        <childnode refid="1179" relation="include">
+        </childnode>
+      </node>
+      <node id="1177">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp</label>
+        <link refid="cpu__tensor__view__wrapper_8cpp_source"/>
+      </node>
+      <node id="1173">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.hpp</label>
+        <link refid="mkldnn__utils_8hpp_source"/>
+        <childnode refid="1162" relation="include">
+        </childnode>
+        <childnode refid="1159" relation="include">
+        </childnode>
+        <childnode refid="1171" relation="include">
+        </childnode>
+        <childnode refid="1172" relation="include">
+        </childnode>
+        <childnode refid="1174" relation="include">
+        </childnode>
+        <childnode refid="1175" relation="include">
+        </childnode>
+        <childnode refid="1167" relation="include">
+        </childnode>
+        <childnode refid="1169" relation="include">
+        </childnode>
+      </node>
+      <node id="1167">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</label>
+        <link refid="cpu__assignment_8cpp_source"/>
+      </node>
+      <node id="1161">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.hpp</label>
+        <link refid="cpu__emitter_8hpp_source"/>
+        <childnode refid="1162" relation="include">
+        </childnode>
+        <childnode refid="1159" relation="include">
+        </childnode>
+      </node>
+      <node id="1171">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp</label>
+        <link refid="cpu__tensor__view_8cpp_source"/>
+      </node>
+      <node id="1149">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ngraph.hpp</label>
+        <link refid="ngraph_8hpp_source"/>
+      </node>
+      <node id="1151">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_tensor_view.cpp</label>
+        <link refid="gpu__tensor__view_8cpp_source"/>
+      </node>
+      <node id="1155">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/node.cpp</label>
+        <link refid="node_8cpp_source"/>
+      </node>
+      <node id="1154">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.cpp</label>
+        <link refid="tensor__view__layout_8cpp_source"/>
+      </node>
+      <node id="1156">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_layout_descriptor.hpp</label>
+        <link refid="cpu__layout__descriptor_8hpp_source"/>
+        <childnode refid="1157" relation="include">
+        </childnode>
+        <childnode refid="1160" relation="include">
+        </childnode>
+        <childnode refid="1170" relation="include">
+        </childnode>
+        <childnode refid="1171" relation="include">
+        </childnode>
+        <childnode refid="1172" relation="include">
+        </childnode>
+        <childnode refid="1173" relation="include">
+        </childnode>
+        <childnode refid="1176" relation="include">
+        </childnode>
+        <childnode refid="1169" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classngraph_1_1descriptor_1_1Buffer" prot="public">ngraph::descriptor::Buffer</innerclass>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1descriptor">ngraph::descriptor</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="20"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="21" refid="namespacengraph_1_1descriptor" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">descriptor</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>A<sp/>buffer<sp/>identfies<sp/>a<sp/>chunk<sp/>of<sp/>storage</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>In<sp/>descriptors,<sp/>we<sp/>are<sp/>identifying<sp/>what<sp/>will<sp/>be<sp/>associated<sp/>with<sp/>actual<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>during<sp/>execution.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="classngraph_1_1descriptor_1_1Buffer" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classngraph_1_1descriptor_1_1Buffer" kindref="compound">Buffer</ref></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>size()</highlight><highlight class="keyword"><sp/>const<sp/></highlight><highlight class="normal">{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_size;<sp/>}</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>m_size;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/buffer.hpp"/>
+  </compounddef>
+</doxygen>

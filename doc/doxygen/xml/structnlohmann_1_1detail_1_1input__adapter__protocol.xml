@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1input__adapter__protocol" kind="struct" language="C++" prot="public" abstract="yes">
+    <compoundname>nlohmann::detail::input_adapter_protocol</compoundname>
+    <derivedcompoundref refid="classnlohmann_1_1detail_1_1input__buffer__adapter" prot="public" virt="non-virtual">nlohmann::detail::input_buffer_adapter</derivedcompoundref>
+    <derivedcompoundref refid="classnlohmann_1_1detail_1_1input__stream__adapter" prot="public" virt="non-virtual">nlohmann::detail::input_stream_adapter</derivedcompoundref>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1input__adapter__protocol_1aac10a6a4048a8ce8e2ed50277692a3ca" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::char_traits&lt; char &gt;::int_type</type>
+        <definition>virtual std::char_traits&lt;char&gt;::int_type nlohmann::detail::input_adapter_protocol::get_character</definition>
+        <argsstring>()=0</argsstring>
+        <name>get_character</name>
+        <reimplementedby refid="classnlohmann_1_1detail_1_1input__stream__adapter_1ae0760af923583de6354725e901d1869d">get_character</reimplementedby>
+        <reimplementedby refid="classnlohmann_1_1detail_1_1input__buffer__adapter_1ae9e195b04f3551fafb0925aafba00124">get_character</reimplementedby>
+        <briefdescription>
+<para>get a character [0,255] or std::char_traits&lt;char&gt;::eof(). </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1427" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1input__adapter__protocol_1aeb5cac3e86e8df6cfe48cc42de2e9225" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void nlohmann::detail::input_adapter_protocol::unget_character</definition>
+        <argsstring>()=0</argsstring>
+        <name>unget_character</name>
+        <reimplementedby refid="classnlohmann_1_1detail_1_1input__stream__adapter_1ab6a65d3816ce4027ef4d2013a13ee697">unget_character</reimplementedby>
+        <reimplementedby refid="classnlohmann_1_1detail_1_1input__buffer__adapter_1ae2464d8e963d2ae617b080f2df2550a1">unget_character</reimplementedby>
+        <briefdescription>
+<para>restore the last non-eof() character to input </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1429" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1input__adapter__protocol_1a92dac74def4ac5adacd0684088bd4082" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>virtual nlohmann::detail::input_adapter_protocol::~input_adapter_protocol</definition>
+        <argsstring>()=default</argsstring>
+        <name>~input_adapter_protocol</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1430" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>abstract input adapter interface </para>    </briefdescription>
+    <detaileddescription>
+<para>Produces a stream of std::char_traits&lt;char&gt;::int_type characters from a std::istream, a buffer, or some other input type. Accepts the return of exactly one non-EOF character for future input. The int_type characters returned consist of all valid char values as positive values (typically unsigned char), plus an EOF value outside that range, specified by the value of the function std::char_traits&lt;char&gt;::eof(). This value is typically -1, but could be any arbitrary value which is not a valid char value. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3630">
+        <label>nlohmann::detail::input_adapter_protocol</label>
+        <link refid="structnlohmann_1_1detail_1_1input__adapter__protocol"/>
+      </node>
+      <node id="3632">
+        <label>nlohmann::detail::input_stream_adapter</label>
+        <link refid="classnlohmann_1_1detail_1_1input__stream__adapter"/>
+        <childnode refid="3630" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3631">
+        <label>nlohmann::detail::input_buffer_adapter</label>
+        <link refid="classnlohmann_1_1detail_1_1input__buffer__adapter"/>
+        <childnode refid="3630" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1425" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1424" bodyend="1431"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1input__adapter__protocol_1aac10a6a4048a8ce8e2ed50277692a3ca" prot="public" virt="pure-virtual"><scope>nlohmann::detail::input_adapter_protocol</scope><name>get_character</name></member>
+      <member refid="structnlohmann_1_1detail_1_1input__adapter__protocol_1aeb5cac3e86e8df6cfe48cc42de2e9225" prot="public" virt="pure-virtual"><scope>nlohmann::detail::input_adapter_protocol</scope><name>unget_character</name></member>
+      <member refid="structnlohmann_1_1detail_1_1input__adapter__protocol_1a92dac74def4ac5adacd0684088bd4082" prot="public" virt="virtual"><scope>nlohmann::detail::input_adapter_protocol</scope><name>~input_adapter_protocol</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

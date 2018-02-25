@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1xla_1_1op" kind="namespace" language="C++">
+    <compoundname>ngraph::xla::op</compoundname>
+    <innerclass refid="classngraph_1_1xla_1_1op_1_1Tuple" prot="public">ngraph::xla::op::Tuple</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespacengraph_1_1xla_1_1op_1ad1888665b1fc7795d46c985ce634973e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;Node&gt; ngraph::xla::op::get_tuple_element</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; tuple, size_t i)</argsstring>
+        <name>get_tuple_element</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>tuple</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="59" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operators specific to nGraph&apos;s support for XLA/HLO. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="38" column="1"/>
+  </compounddef>
+</doxygen>

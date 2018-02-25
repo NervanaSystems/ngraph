@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1make__index__sequence" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::make_index_sequence</compoundname>
+    <basecompoundref refid="structnlohmann_1_1detail_1_1merge__and__renumber" prot="public" virt="non-virtual">nlohmann::detail::merge_and_renumber&lt; make_index_sequence&lt; N/2 &gt;::type, make_index_sequence&lt; N - N/2 &gt;::type &gt;</basecompoundref>
+    <templateparamlist>
+      <param>
+        <type>std::size_t</type>
+        <declname>N</declname>
+        <defname>N</defname>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3698">
+        <label>nlohmann::detail::merge_and_renumber&lt; Sequence1, Sequence2 &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber"/>
+      </node>
+      <node id="3696">
+        <label>nlohmann::detail::make_index_sequence&lt; N &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1make__index__sequence"/>
+        <childnode refid="3697" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3697">
+        <label>nlohmann::detail::merge_and_renumber&lt; make_index_sequence&lt; N/2 &gt;::type, make_index_sequence&lt; N - N/2 &gt;::type &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber"/>
+        <childnode refid="3698" relation="template-instance">
+          <edgelabel>&lt; make_index_sequence&lt; N/2 &gt;::type, make_index_sequence&lt; N - N/2 &gt;::type &gt;</edgelabel>
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3701">
+        <label>nlohmann::detail::merge_and_renumber&lt; Sequence1, Sequence2 &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber"/>
+      </node>
+      <node id="3699">
+        <label>nlohmann::detail::make_index_sequence&lt; N &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1make__index__sequence"/>
+        <childnode refid="3700" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3700">
+        <label>nlohmann::detail::merge_and_renumber&lt; make_index_sequence&lt; N/2 &gt;::type, make_index_sequence&lt; N - N/2 &gt;::type &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber"/>
+        <childnode refid="3701" relation="template-instance">
+          <edgelabel>&lt; make_index_sequence&lt; N/2 &gt;::type, make_index_sequence&lt; N - N/2 &gt;::type &gt;</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="608" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="605" bodyend="608"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

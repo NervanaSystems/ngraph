@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1boolean_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::external_constructor&lt; value_t::boolean &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1boolean_01_4_1a867122bcf0856c757bd6bcbfb8be74bc" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::boolean &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, typename BasicJsonType::boolean_t b) noexcept</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>typename BasicJsonType::boolean_t</type>
+          <declname>b</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="651" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="651" bodyend="656"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="649" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="648" bodyend="657"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1boolean_01_4_1a867122bcf0856c757bd6bcbfb8be74bc" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::boolean &gt;</scope><name>construct</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

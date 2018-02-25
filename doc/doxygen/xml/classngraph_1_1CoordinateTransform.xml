@@ -1,0 +1,646 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1CoordinateTransform" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::CoordinateTransform</compoundname>
+    <innerclass refid="classngraph_1_1CoordinateTransform_1_1Iterator" prot="public">ngraph::CoordinateTransform::Iterator</innerclass>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a007ebb2722f3349c1d363dd20b7f86a4" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::CoordinateTransform::m_source_shape</definition>
+        <argsstring></argsstring>
+        <name>m_source_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="106" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a990d6a49fe271bf923bddb99502d1cfd" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::CoordinateTransform::m_source_start_corner</definition>
+        <argsstring></argsstring>
+        <name>m_source_start_corner</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="107" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="107" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1ac4fec03b2ad0a8346ad4597793a4af39" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::CoordinateTransform::m_source_end_corner</definition>
+        <argsstring></argsstring>
+        <name>m_source_end_corner</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="108" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a10acc2084a08cfedefd9bc5db4047add" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides ngraph::CoordinateTransform::m_source_strides</definition>
+        <argsstring></argsstring>
+        <name>m_source_strides</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="109" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="109" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a0fcac6cbfc6a5be1ea26ad1b89ccec43" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref></type>
+        <definition>AxisVector ngraph::CoordinateTransform::m_source_axis_order</definition>
+        <argsstring></argsstring>
+        <name>m_source_axis_order</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="110" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="110" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a82f566e12695c037cd3253f91d780171" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref></type>
+        <definition>CoordinateDiff ngraph::CoordinateTransform::m_target_padding_below</definition>
+        <argsstring></argsstring>
+        <name>m_target_padding_below</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="111" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="111" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1afa64d75c93f2c0282a9850b2a00b9ee1" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref></type>
+        <definition>CoordinateDiff ngraph::CoordinateTransform::m_target_padding_above</definition>
+        <argsstring></argsstring>
+        <name>m_target_padding_above</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="112" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="112" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a09fd6f8541e5f628046f43c7661f76ed" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides ngraph::CoordinateTransform::m_target_dilation_strides</definition>
+        <argsstring></argsstring>
+        <name>m_target_dilation_strides</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="113" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="113" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a7460078e70da5739139f88feca2295fb" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::CoordinateTransform::m_target_shape</definition>
+        <argsstring></argsstring>
+        <name>m_target_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="115" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="115" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1CoordinateTransform_1a64e463864c2d9547f7a6ec8ec4953423" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::CoordinateTransform::m_n_axes</definition>
+        <argsstring></argsstring>
+        <name>m_n_axes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="116" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a8699a9e630144afdedaf147416fbd6c0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape, const Coordinate &amp;source_start_corner, const Coordinate &amp;source_end_corner, const Strides &amp;source_strides, const AxisVector &amp;source_axis_order, const CoordinateDiff &amp;target_padding_below, const CoordinateDiff &amp;target_padding_above, const Strides &amp;source_dilation_strides)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_start_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_end_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>source_strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref> &amp;</type>
+          <declname>source_axis_order</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref> &amp;</type>
+          <declname>target_padding_below</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref> &amp;</type>
+          <declname>target_padding_above</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>source_dilation_strides</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="31" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="30" bodyend="166"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aa3b7c31d09dfd135bbae55336977f826" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape, const Coordinate &amp;source_start_corner, const Coordinate &amp;source_end_corner, const Strides &amp;source_strides, const AxisVector &amp;source_axis_order, const CoordinateDiff &amp;target_padding_below, const CoordinateDiff &amp;target_padding_above)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_start_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_end_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>source_strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref> &amp;</type>
+          <declname>source_axis_order</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref> &amp;</type>
+          <declname>target_padding_below</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref> &amp;</type>
+          <declname>target_padding_above</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="173" bodyend="189"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a664fab09143ccb73dfb8b6bcd3329e31" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape, const Coordinate &amp;source_start_corner, const Coordinate &amp;source_end_corner, const Strides &amp;source_strides, const AxisVector &amp;source_axis_order)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_start_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_end_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>source_strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref> &amp;</type>
+          <declname>source_axis_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="196" bodyend="210"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1ab7eafa41aeb87232cbe33421f8a70865" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape, const Coordinate &amp;source_start_corner, const Coordinate &amp;source_end_corner, const Strides &amp;source_strides)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_start_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_end_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+          <declname>source_strides</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="221" bodyend="234"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a549f32abeb305d4416bde606fd9fd3db" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape, const Coordinate &amp;source_start_corner, const Coordinate &amp;source_end_corner)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_start_corner</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>source_end_corner</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="59" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="236" bodyend="248"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aa9aea58a4c473f20e85fc353425c5f50" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CoordinateTransform::CoordinateTransform</definition>
+        <argsstring>(const Shape &amp;source_shape)</argsstring>
+        <name>CoordinateTransform</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="260" bodyend="270"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a2ad8dbb7fcff7720496f597a6b9164b2" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t CoordinateTransform::index</definition>
+        <argsstring>(const Coordinate &amp;c) const</argsstring>
+        <name>index</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="65" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="288" bodyend="291"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1abb77aec7cc7486c0bfee888783ad94e0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool CoordinateTransform::has_source_coordinate</definition>
+        <argsstring>(const Coordinate &amp;c) const</argsstring>
+        <name>has_source_coordinate</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="321" bodyend="368"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1ac34a66c69551612a3bf4a4f68a890903" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate CoordinateTransform::to_source_coordinate</definition>
+        <argsstring>(const Coordinate &amp;c) const</argsstring>
+        <name>to_source_coordinate</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="67" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="294" bodyend="317"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a0225b210cecbe2587266b9e1185e80b2" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate CoordinateTransform::get_target_shape</definition>
+        <argsstring>() const</argsstring>
+        <name>get_target_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="68" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="370" bodyend="373"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a9e436ab662276f49b3c78e9d161aaa73" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::CoordinateTransform::get_source_shape</definition>
+        <argsstring>()</argsstring>
+        <name>get_source_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="70" bodyend="70"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aadfb124d842cc357883f88fdf68728ff" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate ngraph::CoordinateTransform::get_source_start_corner</definition>
+        <argsstring>()</argsstring>
+        <name>get_source_start_corner</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="71" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a4b872d5f06aea26e84b0d3fd32951f82" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate ngraph::CoordinateTransform::get_source_end_corner</definition>
+        <argsstring>()</argsstring>
+        <name>get_source_end_corner</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="72" bodyend="72"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aae0dd7bfdb7fbbbfcc6eb20a16dac732" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides ngraph::CoordinateTransform::get_source_strides</definition>
+        <argsstring>()</argsstring>
+        <name>get_source_strides</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="73" bodyend="73"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a1dbb4fa5054ca9b157b073099b8c55fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref></type>
+        <definition>AxisVector ngraph::CoordinateTransform::get_source_axis_order</definition>
+        <argsstring>()</argsstring>
+        <name>get_source_axis_order</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="74" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="74" bodyend="74"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a4502536b28534cd13a006d23c48ce936" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides ngraph::CoordinateTransform::get_target_dilation_strides</definition>
+        <argsstring>()</argsstring>
+        <name>get_target_dilation_strides</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="75" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="75" bodyend="75"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aa7439f83ca1585fb48da43f5359e75e0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classngraph_1_1CoordinateTransform_1_1Iterator" kindref="compound">Iterator</ref></type>
+        <definition>Iterator ngraph::CoordinateTransform::begin</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>begin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="96" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="96" bodyend="96"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a079f96f790bdd037aed677d6d37c114b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classngraph_1_1CoordinateTransform_1_1Iterator" kindref="compound">Iterator</ref></type>
+        <definition>Iterator ngraph::CoordinateTransform::end</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>end</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="97" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="97" bodyend="97"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1aa5c6b9b44627ea99c6a72c56f7df39b9" prot="private" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t CoordinateTransform::index_source</definition>
+        <argsstring>(const Coordinate &amp;c) const</argsstring>
+        <name>index_source</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref> &amp;</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="99" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="273" bodyend="285"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1ab010f52732f69d5dfc0e98b463d5ff2a" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref></type>
+        <definition>Strides CoordinateTransform::default_strides</definition>
+        <argsstring>(size_t n_axes)</argsstring>
+        <name>default_strides</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="100" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="168" bodyend="171"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1ae78d17a769486caf3b2483721f3df394" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">CoordinateDiff</ref></type>
+        <definition>CoordinateDiff CoordinateTransform::default_padding</definition>
+        <argsstring>(size_t n_axes)</argsstring>
+        <name>default_padding</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="101" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="191" bodyend="194"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a902f51791330d74525516aa9d0da98f2" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1ace79ef4b996f377753162926c987a2dd" kindref="member">AxisVector</ref></type>
+        <definition>AxisVector CoordinateTransform::default_axis_order</definition>
+        <argsstring>(size_t n_axes)</argsstring>
+        <name>default_axis_order</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="102" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="212" bodyend="219"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a4c112cff9a8372bc29be404d828827ff" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate CoordinateTransform::default_source_start_corner</definition>
+        <argsstring>(size_t n_axes)</argsstring>
+        <name>default_source_start_corner</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_axes</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="103" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="250" bodyend="253"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1CoordinateTransform_1a2639ffc7cfad20bd7e1b60bd2e620051" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref></type>
+        <definition>Coordinate CoordinateTransform::default_source_end_corner</definition>
+        <argsstring>(const Shape &amp;source_shape)</argsstring>
+        <name>default_source_end_corner</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>source_shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="104" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.cpp" bodystart="255" bodyend="258"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/coordinate_transform.hpp" bodystart="28" bodyend="117"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1CoordinateTransform_1aa7439f83ca1585fb48da43f5359e75e0" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>begin</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a8699a9e630144afdedaf147416fbd6c0" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1aa3b7c31d09dfd135bbae55336977f826" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a664fab09143ccb73dfb8b6bcd3329e31" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1ab7eafa41aeb87232cbe33421f8a70865" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a549f32abeb305d4416bde606fd9fd3db" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1aa9aea58a4c473f20e85fc353425c5f50" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>CoordinateTransform</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a902f51791330d74525516aa9d0da98f2" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>default_axis_order</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1ae78d17a769486caf3b2483721f3df394" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>default_padding</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a2639ffc7cfad20bd7e1b60bd2e620051" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>default_source_end_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a4c112cff9a8372bc29be404d828827ff" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>default_source_start_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1ab010f52732f69d5dfc0e98b463d5ff2a" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>default_strides</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a079f96f790bdd037aed677d6d37c114b" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>end</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a1dbb4fa5054ca9b157b073099b8c55fb" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_source_axis_order</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a4b872d5f06aea26e84b0d3fd32951f82" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_source_end_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a9e436ab662276f49b3c78e9d161aaa73" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_source_shape</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1aadfb124d842cc357883f88fdf68728ff" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_source_start_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1aae0dd7bfdb7fbbbfcc6eb20a16dac732" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_source_strides</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a4502536b28534cd13a006d23c48ce936" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_target_dilation_strides</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a0225b210cecbe2587266b9e1185e80b2" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>get_target_shape</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1abb77aec7cc7486c0bfee888783ad94e0" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>has_source_coordinate</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a2ad8dbb7fcff7720496f597a6b9164b2" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>index</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1aa5c6b9b44627ea99c6a72c56f7df39b9" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>index_source</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a64e463864c2d9547f7a6ec8ec4953423" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_n_axes</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a0fcac6cbfc6a5be1ea26ad1b89ccec43" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_source_axis_order</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1ac4fec03b2ad0a8346ad4597793a4af39" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_source_end_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a007ebb2722f3349c1d363dd20b7f86a4" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_source_shape</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a990d6a49fe271bf923bddb99502d1cfd" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_source_start_corner</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a10acc2084a08cfedefd9bc5db4047add" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_source_strides</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a09fd6f8541e5f628046f43c7661f76ed" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_target_dilation_strides</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1afa64d75c93f2c0282a9850b2a00b9ee1" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_target_padding_above</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a82f566e12695c037cd3253f91d780171" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_target_padding_below</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1a7460078e70da5739139f88feca2295fb" prot="private" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>m_target_shape</name></member>
+      <member refid="classngraph_1_1CoordinateTransform_1ac34a66c69551612a3bf4a4f68a890903" prot="public" virt="non-virtual"><scope>ngraph::CoordinateTransform</scope><name>to_source_coordinate</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

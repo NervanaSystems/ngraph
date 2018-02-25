@@ -1,0 +1,249 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1xla_1_1XLATuple" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::xla::XLATuple</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1TensorView" prot="public" virt="non-virtual">ngraph::runtime::TensorView</basecompoundref>
+    <includes refid="xla__tuple_8hpp" local="no">xla_tuple.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1xla_1_1XLATuple_1a9d57853a549a24a69b19939bf26eae23" prot="protected" static="no" mutable="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;runtime::TensorView&gt; &gt; ngraph::xla::XLATuple::m_elements</definition>
+        <argsstring></argsstring>
+        <name>m_elements</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="88" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_1a7dcd7060cba26957e8177fe9e2c0a24b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>xla::XLATuple::XLATuple</definition>
+        <argsstring>(const XLAValues &amp;elements)</argsstring>
+        <name>XLATuple</name>
+        <param>
+          <type>const XLAValues &amp;</type>
+          <declname>elements</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="79" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="113" bodyend="123"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_1a9aeb36244a894aa738fadef45c7e2ccc" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const ngraph::runtime::TensorViewPtrs &amp;</type>
+        <definition>const vector&lt; shared_ptr&lt; runtime::TensorView &gt; &gt; &amp; xla::XLATuple::get_elements</definition>
+        <argsstring>() const</argsstring>
+        <name>get_elements</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="81" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="125" bodyend="128"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_1a61ad4fd698dae85ca0719374a76dbe61" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;</type>
+        <definition>shared_ptr&lt; runtime::TensorView &gt; xla::XLATuple::get_tuple_element</definition>
+        <argsstring>(size_t i) const</argsstring>
+        <name>get_tuple_element</name>
+        <param>
+          <type>size_t</type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="82" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="135" bodyend="138"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_1abf5258ba857a71c36562dd3152fb55db" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t xla::XLATuple::get_tuple_size</definition>
+        <argsstring>() const</argsstring>
+        <name>get_tuple_size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="83" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="130" bodyend="133"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_acc37a02da46106b95ae13eb72f05a5fb_1acc37a02da46106b95ae13eb72f05a5fb" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void xla::XLATuple::write</definition>
+        <argsstring>(const void *p, size_t tensor_offset, size_t n) override</argsstring>
+        <name>write</name>
+        <reimplements refid="classngraph_1_1runtime_1_1TensorView_aac6f07af8edea9ba3669426f75db6dd0_1aac6f07af8edea9ba3669426f75db6dd0">write</reimplements>
+        <param>
+          <type>const void *</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>tensor_offset</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+<para>Write bytes directly into the tensor. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>p</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to source of data </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tensor_offset</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Offset into tensor storage to begin writing. Must be element-aligned. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>n</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Number of bytes to write, must be integral number of elements. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="84" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="140" bodyend="143"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1xla_1_1XLATuple_a7bb01eff0cfb4033dc8417d334213b17_1a7bb01eff0cfb4033dc8417d334213b17" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void xla::XLATuple::read</definition>
+        <argsstring>(void *p, size_t tensor_offset, size_t n) const override</argsstring>
+        <name>read</name>
+        <reimplements refid="classngraph_1_1runtime_1_1TensorView_ab915ec67d4423d3150edcba127206829_1ab915ec67d4423d3150edcba127206829">read</reimplements>
+        <param>
+          <type>void *</type>
+          <declname>p</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>tensor_offset</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+<para>Read bytes directly from the tensor. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>p</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Pointer to destination for data </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tensor_offset</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Offset into tensor storage to begin reading. Must be element-aligned. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>n</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Number of bytes to read, must be integral number of elements. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="85" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.cpp" bodystart="145" bodyend="148"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>An <ref refid="classngraph_1_1xla_1_1XLATuple" kindref="compound">XLATuple</ref> is a implemented as an extension of a float scalar so that it fits in nicely with the nGraph type hierarchy. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3558">
+        <label>ngraph::xla::XLATuple</label>
+        <link refid="classngraph_1_1xla_1_1XLATuple"/>
+        <childnode refid="3559" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3559">
+        <label>ngraph::runtime::TensorView</label>
+        <link refid="classngraph_1_1runtime_1_1TensorView"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3564">
+        <label>T</label>
+      </node>
+      <node id="3560">
+        <label>ngraph::xla::XLATuple</label>
+        <link refid="classngraph_1_1xla_1_1XLATuple"/>
+        <childnode refid="3561" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3562" relation="usage">
+          <edgelabel>m_elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="3563">
+        <label>std::vector&lt; T &gt;</label>
+        <childnode refid="3564" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="3561">
+        <label>ngraph::runtime::TensorView</label>
+        <link refid="classngraph_1_1runtime_1_1TensorView"/>
+      </node>
+      <node id="3562">
+        <label>std::vector&lt; std::shared_ptr&lt; ngraph::runtime::TensorView &gt; &gt;</label>
+        <childnode refid="3563" relation="template-instance">
+          <edgelabel>&lt; std::shared_ptr&lt; ngraph::runtime::TensorView &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" line="77" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder/xla_tuple.hpp" bodystart="76" bodyend="89"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1ad1764bb300707248204d46f15134e656" prot="public" virt="virtual"><scope>ngraph::xla::XLATuple</scope><name>collect_tensor_views</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1a239a26765cc26292ecf0c482b14f4d43" prot="public" virt="virtual"><scope>ngraph::xla::XLATuple</scope><name>get_descriptor</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1af44b3c14def552ca7981f6c5647831cd" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_element_count</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_1a9aeb36244a894aa738fadef45c7e2ccc" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_elements</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1afc8b93cfa917971c5e8fbaf96e45543e" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_shape</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1ad11c559f7385928263c6f697ffd2c748" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_strides</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1ae18e1c6d9e760f7943244e252659fcda" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_tensor</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1a2c44621509e6498e8c01cfba06fd8cb1" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_tensor_view_descriptor</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1aeae13532d6171e5bd03c41bc21316f7a" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_tensor_view_layout</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_1a61ad4fd698dae85ca0719374a76dbe61" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_tuple_element</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_1abf5258ba857a71c36562dd3152fb55db" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>get_tuple_size</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1a1ec14ed96427f29fca41b949d7d1acb7" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>m_descriptor</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_1a9d57853a549a24a69b19939bf26eae23" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>m_elements</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1adcd7e76e74ac59fd95cb40a7ca50b6ff" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>operator=</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_a7bb01eff0cfb4033dc8417d334213b17_1a7bb01eff0cfb4033dc8417d334213b17" prot="public" virt="virtual"><scope>ngraph::xla::XLATuple</scope><name>read</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1a623ff05cd064d5ef8bfdcc4599f68bd2" prot="protected" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>TensorView</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_acc37a02da46106b95ae13eb72f05a5fb_1acc37a02da46106b95ae13eb72f05a5fb" prot="public" virt="virtual"><scope>ngraph::xla::XLATuple</scope><name>write</name></member>
+      <member refid="classngraph_1_1xla_1_1XLATuple_1a7dcd7060cba26957e8177fe9e2c0a24b" prot="public" virt="non-virtual"><scope>ngraph::xla::XLATuple</scope><name>XLATuple</name></member>
+      <member refid="classngraph_1_1runtime_1_1TensorView_1a72534a810ad5e9279b61e23a25c090e0" prot="public" virt="virtual"><scope>ngraph::xla::XLATuple</scope><name>~TensorView</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

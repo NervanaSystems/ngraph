@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1merge__and__renumber_3_01index__sequence_3_01I1_8_8_8_01_4_00_01inde4885d6f1d93a04f25932afbd429c4793" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</compoundname>
+    <basecompoundref refid="structnlohmann_1_1detail_1_1index__sequence" prot="public" virt="non-virtual">nlohmann::detail::index_sequence&lt; I1...,(sizeof...(I1)+I2)... &gt;</basecompoundref>
+    <templateparamlist>
+      <param>
+        <type>std::size_t...</type>
+        <declname>I1</declname>
+        <defname>I1</defname>
+      </param>
+      <param>
+        <type>std::size_t...</type>
+        <declname>I2</declname>
+        <defname>I2</defname>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3718">
+        <label>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber_3_01index__sequence_3_01I1_8_8_8_01_4_00_01inde4885d6f1d93a04f25932afbd429c4793"/>
+        <childnode refid="3719" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3720">
+        <label>nlohmann::detail::index_sequence&lt; Ints &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1index__sequence"/>
+      </node>
+      <node id="3719">
+        <label>nlohmann::detail::index_sequence&lt; I1...,(sizeof...(I1)+I2)... &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1index__sequence"/>
+        <childnode refid="3720" relation="template-instance">
+          <edgelabel>&lt; I1...,(sizeof...(I1)+I2)... &gt;</edgelabel>
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3721">
+        <label>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1merge__and__renumber_3_01index__sequence_3_01I1_8_8_8_01_4_00_01inde4885d6f1d93a04f25932afbd429c4793"/>
+        <childnode refid="3722" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3723">
+        <label>nlohmann::detail::index_sequence&lt; Ints &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1index__sequence"/>
+      </node>
+      <node id="3722">
+        <label>nlohmann::detail::index_sequence&lt; I1...,(sizeof...(I1)+I2)... &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1index__sequence"/>
+        <childnode refid="3723" relation="template-instance">
+          <edgelabel>&lt; I1...,(sizeof...(I1)+I2)... &gt;</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="602" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="600" bodyend="602"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1index__sequence_1a7ac529419787d775f52408135304b337" prot="public" virt="non-virtual"><scope>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</scope><name>size</name></member>
+      <member refid="structnlohmann_1_1detail_1_1index__sequence_1a3c14c4ab277de72b166806193ff4fa10" prot="public" virt="non-virtual"><scope>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</scope><name>type</name></member>
+      <member refid="structnlohmann_1_1detail_1_1index__sequence_1a2eca43d08fc1eb68bd5fa75b6714d21d" prot="public" virt="non-virtual"><scope>nlohmann::detail::merge_and_renumber&lt; index_sequence&lt; I1... &gt;, index_sequence&lt; I2... &gt; &gt;</scope><name>value_type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

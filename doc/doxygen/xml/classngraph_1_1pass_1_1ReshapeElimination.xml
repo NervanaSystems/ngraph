@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1ReshapeElimination" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::ReshapeElimination</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1GraphRewrite" prot="public" virt="non-virtual">ngraph::pass::GraphRewrite</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1ReshapeElimination_1a3edc8302cd446c192f5cae17cac9b4ab" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::pass::ReshapeElimination::ReshapeElimination</definition>
+        <argsstring>()</argsstring>
+        <name>ReshapeElimination</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" bodystart="32" bodyend="37"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1ReshapeElimination_1a49d7f740f7236b4d321df699facb1756" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern</definition>
+        <argsstring>()</argsstring>
+        <name>construct_identity_reshape_pattern</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.cpp" bodystart="54" bodyend="92"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1ReshapeElimination_1aacc926a2aca7b41e24ffc049b1a85860" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern</definition>
+        <argsstring>()</argsstring>
+        <name>construct_reshapex2_pattern</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.cpp" bodystart="94" bodyend="152"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3194">
+        <label>ngraph::pass::ReshapeElimination</label>
+        <link refid="classngraph_1_1pass_1_1ReshapeElimination"/>
+        <childnode refid="3195" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3197">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3195">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3196" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3196">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3197" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3198">
+        <label>ngraph::pass::ReshapeElimination</label>
+        <link refid="classngraph_1_1pass_1_1ReshapeElimination"/>
+        <childnode refid="3199" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3201">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3199">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3200" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3200">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3201" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" line="30" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/reshape_elimination.hpp" bodystart="29" bodyend="42"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7042a707416d6a419923eb78a79a009b" prot="public" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>add_matcher</name></member>
+      <member refid="classngraph_1_1pass_1_1ReshapeElimination_1a49d7f740f7236b4d321df699facb1756" prot="private" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>construct_identity_reshape_pattern</name></member>
+      <member refid="classngraph_1_1pass_1_1ReshapeElimination_1aacc926a2aca7b41e24ffc049b1a85860" prot="private" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>construct_reshapex2_pattern</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a30b5d50eb96f95dffd2ed666433b50eb" prot="public" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>GraphRewrite</name></member>
+      <member refid="classngraph_1_1pass_1_1ReshapeElimination_1a3edc8302cd446c192f5cae17cac9b4ab" prot="public" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>ReshapeElimination</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7544c086df6febdaaff801d518231862" prot="public" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>run_matchers_on_nodes_list</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a5da7dbf12f58f509da8dc1cdddf21522" prot="public" virt="virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>run_on_function</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1FunctionPass_1a9382faaeebeadf8abc778f5ae638ad30" prot="public" virt="virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>~FunctionPass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::ReshapeElimination</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

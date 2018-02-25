@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1runtime" kind="namespace" language="C++">
+    <compoundname>ngraph::runtime</compoundname>
+    <innerclass refid="classngraph_1_1runtime_1_1AlignedBuffer" prot="public">ngraph::runtime::AlignedBuffer</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1Backend" prot="public">ngraph::runtime::Backend</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1CallFrame" prot="public">ngraph::runtime::CallFrame</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1ExternalFunction" prot="public">ngraph::runtime::ExternalFunction</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1HostTensorView" prot="public">ngraph::runtime::HostTensorView</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1Manager" prot="public">ngraph::runtime::Manager</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1PerformanceCounter" prot="public">ngraph::runtime::PerformanceCounter</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1TensorView" prot="public">ngraph::runtime::TensorView</innerclass>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu">ngraph::runtime::cpu</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1gpu">ngraph::runtime::gpu</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1interpreter">ngraph::runtime::interpreter</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1kernel">ngraph::runtime::kernel</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespacengraph_1_1runtime_1a2e4415bceeffa02c90f4c35b21163f21" prot="public" static="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt; &gt;</type>
+        <definition>using ngraph::runtime::TensorViewPtrs = typedef std::vector&lt;std::shared_ptr&lt;TensorView&gt; &gt;</definition>
+        <argsstring></argsstring>
+        <name>TensorViewPtrs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.hpp" line="80" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/tensor_view.hpp" bodystart="80" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="namespacengraph_1_1runtime_1ae5ea2e102ef8a75a3d439ecf687fc093" prot="public" static="yes" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::runtime::alignment</definition>
+        <argsstring></argsstring>
+        <name>alignment</name>
+        <initializer>= 64</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.hpp" line="28" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/host_tensor_view.hpp" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>The objects used for executing the graph. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff/adjoints.hpp" line="30" column="1"/>
+  </compounddef>
+</doxygen>

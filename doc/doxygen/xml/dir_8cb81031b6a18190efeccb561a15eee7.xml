@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_8cb81031b6a18190efeccb561a15eee7" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime</compoundname>
+    <innerdir refid="dir_561ab58082514a560f67f0ebe7c61673">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu</innerdir>
+    <innerdir refid="dir_194d7d165c638a6fe474b36708b4a6cb">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu</innerdir>
+    <innerdir refid="dir_d3e2f15c57606049a1fe7ecd8fe31318">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter</innerdir>
+    <innerdir refid="dir_26a62b6437df5c602b0f80b2e947d157">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/kernel</innerdir>
+    <innerfile refid="aligned__buffer_8cpp">aligned_buffer.cpp</innerfile>
+    <innerfile refid="aligned__buffer_8hpp">aligned_buffer.hpp</innerfile>
+    <innerfile refid="backend_8hpp">backend.hpp</innerfile>
+    <innerfile refid="call__frame_8hpp">call_frame.hpp</innerfile>
+    <innerfile refid="external__function_8hpp">external_function.hpp</innerfile>
+    <innerfile refid="host__tensor__view_8cpp">host_tensor_view.cpp</innerfile>
+    <innerfile refid="host__tensor__view_8hpp">host_tensor_view.hpp</innerfile>
+    <innerfile refid="runtime_2manager_8cpp">manager.cpp</innerfile>
+    <innerfile refid="runtime_2manager_8hpp">manager.hpp</innerfile>
+    <innerfile refid="runtime_2tensor__view_8cpp">tensor_view.cpp</innerfile>
+    <innerfile refid="runtime_2tensor__view_8hpp">tensor_view.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/"/>
+  </compounddef>
+</doxygen>

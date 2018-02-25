@@ -1,0 +1,239 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::CPU_CallFrame</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1CallFrame" prot="public" virt="non-virtual">ngraph::runtime::CallFrame</basecompoundref>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a35f1e91886807ae5bc9a052c5c006b54" prot="protected" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;CPU_ExternalFunction&gt; ngraph::runtime::cpu::CPU_CallFrame::m_external_function</definition>
+        <argsstring></argsstring>
+        <name>m_external_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="74" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a11d6758330a2042ecbbc5b69c7e91f49" prot="protected" static="no" mutable="no">
+        <type>EntryPoint</type>
+        <definition>EntryPoint ngraph::runtime::cpu::CPU_CallFrame::m_compiled_function</definition>
+        <argsstring></argsstring>
+        <name>m_compiled_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="75" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1acb795944425e230f0194d7c85d9ce631" prot="protected" static="no" mutable="no">
+        <type><ref refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext" kindref="compound">CPURuntimeContext</ref> *</type>
+        <definition>CPURuntimeContext* ngraph::runtime::cpu::CPU_CallFrame::ctx</definition>
+        <argsstring></argsstring>
+        <name>ctx</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="76" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a40bf5815a4d59fbee521a9b11bfa5860" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::cpu::CPU_CallFrame::CPU_CallFrame</definition>
+        <argsstring>(std::shared_ptr&lt; CPU_ExternalFunction &gt; external_function, EntryPoint compiled_function)</argsstring>
+        <name>CPU_CallFrame</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> &gt;</type>
+          <declname>external_function</declname>
+        </param>
+        <param>
+          <type>EntryPoint</type>
+          <declname>compiled_function</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="27" bodyend="33"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1ab34d298e0a0259ee238e75ce588f90fd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::cpu::CPU_CallFrame::~CPU_CallFrame</definition>
+        <argsstring>()</argsstring>
+        <name>~CPU_CallFrame</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="35" bodyend="38"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_ac4cf30c7ab703cc587924913742098a0_1ac4cf30c7ab703cc587924913742098a0" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_CallFrame::call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>call</name>
+        <reimplements refid="classngraph_1_1runtime_1_1CallFrame_1ac420690641ece0b6a9b5a3dc5f045db4">call</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with values matching the signature of the function. </para>        </briefdescription>
+        <detaileddescription>
+<para>Tuples will be expanded into their tensor views to build the call frame. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="72" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a97e698f0d9442b3e5497982bf8bf9563" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_CallFrame::tensor_call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>tensor_call</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with tuples pre-expanded to their underlying tensor views. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="61" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="40" bodyend="70"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a38501047e2881da2dceb3c104ca9b62f" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_CallFrame::propagate_layouts</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;tvs, const LayoutDescriptorPtrs &amp;layouts) const</argsstring>
+        <name>propagate_layouts</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>tvs</declname>
+        </param>
+        <param>
+          <type>const LayoutDescriptorPtrs &amp;</type>
+          <declname>layouts</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="92" bodyend="110"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1aa12573ae025aa119297fce1b284e633a" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>std::vector&lt; <ref refid="classngraph_1_1runtime_1_1PerformanceCounter" kindref="compound">ngraph::runtime::PerformanceCounter</ref> &gt;</type>
+        <definition>vector&lt; runtime::PerformanceCounter &gt; runtime::cpu::CPU_CallFrame::get_performance_data</definition>
+        <argsstring>() const override</argsstring>
+        <name>get_performance_data</name>
+        <reimplements refid="classngraph_1_1runtime_1_1CallFrame_1a7e1246898c12577fa16f7319d23a3297">get_performance_data</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="68" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="112" bodyend="134"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1abe0eb5c462922411613b1eb5ea120cb8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_CallFrame::setup_runtime_context</definition>
+        <argsstring>()</argsstring>
+        <name>setup_runtime_context</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="136" bodyend="147"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a015d61960b870b59cec3ccde0047dfdb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_CallFrame::cleanup_runtime_context</definition>
+        <argsstring>()</argsstring>
+        <name>cleanup_runtime_context</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.cpp" bodystart="149" bodyend="153"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3323">
+        <label>ngraph::runtime::cpu::CPU_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame"/>
+        <childnode refid="3324" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3324">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3325">
+        <label>ngraph::runtime::cpu::CPU_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame"/>
+        <childnode refid="3326" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3327" relation="usage">
+          <edgelabel>ctx</edgelabel>
+        </childnode>
+      </node>
+      <node id="3327">
+        <label>ngraph::runtime::cpu::CPURuntimeContext</label>
+        <link refid="structngraph_1_1runtime_1_1cpu_1_1CPURuntimeContext"/>
+      </node>
+      <node id="3326">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_call_frame.hpp" bodystart="45" bodyend="77"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_ac4cf30c7ab703cc587924913742098a0_1ac4cf30c7ab703cc587924913742098a0" prot="public" virt="virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>call</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a015d61960b870b59cec3ccde0047dfdb" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>cleanup_runtime_context</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a40bf5815a4d59fbee521a9b11bfa5860" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>CPU_CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1acb795944425e230f0194d7c85d9ce631" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>ctx</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1aa12573ae025aa119297fce1b284e633a" prot="public" virt="virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>get_performance_data</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a11d6758330a2042ecbbc5b69c7e91f49" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>m_compiled_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a35f1e91886807ae5bc9a052c5c006b54" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>m_external_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a38501047e2881da2dceb3c104ca9b62f" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>propagate_layouts</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1abe0eb5c462922411613b1eb5ea120cb8" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>setup_runtime_context</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1a97e698f0d9442b3e5497982bf8bf9563" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a611514d20e9a298fb48deaf611ff0cba" prot="public" virt="pure-virtual" ambiguityscope="ngraph::runtime::CallFrame::"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a37e6cbe23dc687451a8f52a067054c3f" prot="public" virt="virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>~CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__CallFrame_1ab34d298e0a0259ee238e75ce588f90fd" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_CallFrame</scope><name>~CPU_CallFrame</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1runtime_1_1cpu_1_1pass" kind="namespace" language="C++">
+    <compoundname>ngraph::runtime::cpu::pass</compoundname>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1pass_1_1CPUAssignment" prot="public">ngraph::runtime::cpu::pass::CPUAssignment</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1pass_1_1CPUFusion" prot="public">ngraph::runtime::cpu::pass::CPUFusion</innerclass>
+    <innerclass refid="classngraph_1_1runtime_1_1cpu_1_1pass_1_1CPULayout" prot="public">ngraph::runtime::cpu::pass::CPULayout</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="cpu__assignment_8hpp_1a35d550781cc723873a52cbb8413324f7" prot="public" static="no">
+        <type>std::function&lt; void(<ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> *, <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> *)&gt;</type>
+        <definition>using ngraph::runtime::cpu::pass::AssignFunction = typedef std::function&lt;void(CPU_ExternalFunction*, ngraph::Node*)&gt;</definition>
+        <argsstring></argsstring>
+        <name>AssignFunction</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__assignment_8hpp_1acd30f8342be061ea1f1d085b4a16f6a6" prot="public" static="no">
+        <type>std::unordered_map&lt; std::type_index, AssignFunction &gt;</type>
+        <definition>using ngraph::runtime::cpu::pass::AssignOpMap = typedef std::unordered_map&lt;std::type_index, AssignFunction&gt;</definition>
+        <argsstring></argsstring>
+        <name>AssignOpMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.hpp" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__layout_8hpp_1aca59ffe514ea6cb127979ed3de2cf484" prot="public" static="no">
+        <type>std::function&lt; void(<ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> *, std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;)&gt;</type>
+        <definition>using ngraph::runtime::cpu::pass::LayoutFunction = typedef std::function&lt;void(CPU_ExternalFunction*, std::shared_ptr&lt;ngraph::Node&gt;)&gt;</definition>
+        <argsstring></argsstring>
+        <name>LayoutFunction</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp" line="34" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="cpu__layout_8hpp_1aa4e21d169e5424ff6f22880a6679a631" prot="public" static="no">
+        <type>std::unordered_map&lt; std::type_index, LayoutFunction &gt;</type>
+        <definition>using ngraph::runtime::cpu::pass::LayoutOpMap = typedef std::unordered_map&lt;std::type_index, LayoutFunction&gt;</definition>
+        <argsstring></argsstring>
+        <name>LayoutOpMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.hpp" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp" line="42" column="1"/>
+  </compounddef>
+</doxygen>

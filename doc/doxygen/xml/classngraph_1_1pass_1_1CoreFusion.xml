@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1CoreFusion" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::CoreFusion</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1GraphRewrite" prot="public" virt="non-virtual">ngraph::pass::GraphRewrite</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1CoreFusion_1ab9ba6e6f339d61d1dc05d049042a7a02" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::pass::CoreFusion::CoreFusion</definition>
+        <argsstring>()</argsstring>
+        <name>CoreFusion</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.hpp" line="32" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.hpp" bodystart="32" bodyend="36"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1CoreFusion_1a35cd05117e30075de753cb0446f559e9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void pass::CoreFusion::construct_relu_pattern</definition>
+        <argsstring>()</argsstring>
+        <name>construct_relu_pattern</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.cpp" bodystart="49" bodyend="81"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3095">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3093">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3094" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3094">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3095" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3092">
+        <label>ngraph::pass::CoreFusion</label>
+        <link refid="classngraph_1_1pass_1_1CoreFusion"/>
+        <childnode refid="3093" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3099">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3097">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3098" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3098">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3099" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3096">
+        <label>ngraph::pass::CoreFusion</label>
+        <link refid="classngraph_1_1pass_1_1CoreFusion"/>
+        <childnode refid="3097" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.hpp" line="30" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/core_fusion.hpp" bodystart="29" bodyend="38"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7042a707416d6a419923eb78a79a009b" prot="public" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>add_matcher</name></member>
+      <member refid="classngraph_1_1pass_1_1CoreFusion_1a35cd05117e30075de753cb0446f559e9" prot="public" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>construct_relu_pattern</name></member>
+      <member refid="classngraph_1_1pass_1_1CoreFusion_1ab9ba6e6f339d61d1dc05d049042a7a02" prot="public" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>CoreFusion</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a30b5d50eb96f95dffd2ed666433b50eb" prot="public" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>GraphRewrite</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7544c086df6febdaaff801d518231862" prot="public" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>run_matchers_on_nodes_list</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a5da7dbf12f58f509da8dc1cdddf21522" prot="public" virt="virtual"><scope>ngraph::pass::CoreFusion</scope><name>run_on_function</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::CoreFusion</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1FunctionPass_1a9382faaeebeadf8abc778f5ae638ad30" prot="public" virt="virtual"><scope>ngraph::pass::CoreFusion</scope><name>~FunctionPass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::CoreFusion</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1type__error" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::type_error</compoundname>
+    <basecompoundref refid="classnlohmann_1_1detail_1_1exception" prot="public" virt="non-virtual">nlohmann::detail::exception</basecompoundref>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1type__error_1aecc083aea4b698c33d042670ba50c10f" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1type__error" kindref="compound">type_error</ref></type>
+        <definition>static type_error nlohmann::detail::type_error::create</definition>
+        <argsstring>(int id_, const std::string &amp;what_arg)</argsstring>
+        <name>create</name>
+        <param>
+          <type>int</type>
+          <declname>id_</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref> &amp;</type>
+          <declname>what_arg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="404" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="404" bodyend="408"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1type__error_1aa01edaa0bf18b853368f0b900e485cd7" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::type_error::type_error</definition>
+        <argsstring>(int id_, const char *what_arg)</argsstring>
+        <name>type_error</name>
+        <param>
+          <type>int</type>
+          <declname>id_</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>what_arg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="411" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="411" bodyend="411"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>exception indicating executing a member function with a wrong type </para>    </briefdescription>
+    <detaileddescription>
+<para>This exception is thrown in case of a type error; that is, a library function is executed on a JSON value whose type does not match the expected semantics.</para><para>Exceptions have ids 3xx.</para><para><table rows="16" cols="3"><row>
+<entry thead="yes"><para>name / id  </para></entry><entry thead="yes"><para>example message  </para></entry><entry thead="yes"><para>description ----------<mdash/>   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.301  </para></entry><entry thead="no"><para>cannot create object from initializer list  </para></entry><entry thead="no"><para>To create an object from an initializer list, the initializer list must consist only of a list of pairs whose first element is a string. When this constraint is violated, an array is created instead.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.302  </para></entry><entry thead="no"><para>type must be object, but is array  </para></entry><entry thead="no"><para>During implicit or explicit value conversion, the JSON type must be compatible to the target type. For instance, a JSON string can only be converted into string types, but not into numbers or boolean types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.303  </para></entry><entry thead="no"><para>incompatible ReferenceType for get_ref, actual type is object  </para></entry><entry thead="no"><para>To retrieve a reference to a value stored in a <ref refid="classnlohmann_1_1basic__json" kindref="compound">basic_json</ref> object with get_ref, the type of the reference must match the value type. For instance, for a JSON array, the <emphasis>ReferenceType</emphasis> must be array_t&amp;.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.304  </para></entry><entry thead="no"><para>cannot use at() with string  </para></entry><entry thead="no"><para>The at() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.305  </para></entry><entry thead="no"><para>cannot use operator[] with string  </para></entry><entry thead="no"><para>The operator[] member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.306  </para></entry><entry thead="no"><para>cannot use value() with string  </para></entry><entry thead="no"><para>The value() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.307  </para></entry><entry thead="no"><para>cannot use erase() with string  </para></entry><entry thead="no"><para>The erase() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.308  </para></entry><entry thead="no"><para>cannot use push_back() with string  </para></entry><entry thead="no"><para>The push_back() and operator+= member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.309  </para></entry><entry thead="no"><para>cannot use insert() with  </para></entry><entry thead="no"><para>The insert() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.310  </para></entry><entry thead="no"><para>cannot use swap() with number  </para></entry><entry thead="no"><para>The swap() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.311  </para></entry><entry thead="no"><para>cannot use emplace_back() with string  </para></entry><entry thead="no"><para>The emplace_back() member function can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.312  </para></entry><entry thead="no"><para>cannot use update() with string  </para></entry><entry thead="no"><para>The update() member functions can only be executed for certain JSON types.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.313  </para></entry><entry thead="no"><para>invalid value to unflatten  </para></entry><entry thead="no"><para>The unflatten function converts an object whose keys are JSON Pointers back into an arbitrary nested JSON value. The JSON Pointers must not overlap, because then the resulting value would not be well defined.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.314  </para></entry><entry thead="no"><para>only objects can be unflattened  </para></entry><entry thead="no"><para>The unflatten function only works for an object whose keys are JSON Pointers.   </para></entry></row>
+<row>
+<entry thead="no"><para>json.exception.type_error.315  </para></entry><entry thead="no"><para>values in object must be primitive  </para></entry><entry thead="no"><para>The unflatten function only works for an object whose keys are JSON Pointers and whose values are primitive.   </para></entry></row>
+</table>
+</para><para>{The following code shows how a <computeroutput><ref refid="classnlohmann_1_1detail_1_1type__error" kindref="compound">type_error</ref></computeroutput> exception can be caught.,<ref refid="classnlohmann_1_1detail_1_1type__error" kindref="compound">type_error</ref>}</para><para><simplesect kind="see"><para><ref refid="classnlohmann_1_1detail_1_1exception" kindref="compound">exception</ref> for the base class of the library exceptions </para></simplesect>
+<simplesect kind="see"><para><ref refid="classnlohmann_1_1detail_1_1parse__error" kindref="compound">parse_error</ref> for exceptions indicating a parse error </para></simplesect>
+<simplesect kind="see"><para><ref refid="classnlohmann_1_1detail_1_1invalid__iterator" kindref="compound">invalid_iterator</ref> for exceptions indicating errors with iterators </para></simplesect>
+<simplesect kind="see"><para><ref refid="classnlohmann_1_1detail_1_1out__of__range" kindref="compound">out_of_range</ref> for exceptions indicating access out of the defined range </para></simplesect>
+<simplesect kind="see"><para><ref refid="classnlohmann_1_1detail_1_1other__error" kindref="compound">other_error</ref> for exceptions indicating other library errors</para></simplesect>
+<simplesect kind="since"><para>version 3.0.0 </para></simplesect>
+</para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3781">
+        <label>std::exception</label>
+      </node>
+      <node id="3779">
+        <label>nlohmann::detail::type_error</label>
+        <link refid="classnlohmann_1_1detail_1_1type__error"/>
+        <childnode refid="3780" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3780">
+        <label>nlohmann::detail::exception</label>
+        <link refid="classnlohmann_1_1detail_1_1exception"/>
+        <childnode refid="3781" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3784">
+        <label>std::exception</label>
+      </node>
+      <node id="3782">
+        <label>nlohmann::detail::type_error</label>
+        <link refid="classnlohmann_1_1detail_1_1type__error"/>
+        <childnode refid="3783" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3783">
+        <label>nlohmann::detail::exception</label>
+        <link refid="classnlohmann_1_1detail_1_1exception"/>
+        <childnode refid="3784" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="402" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="401" bodyend="412"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1type__error_1aecc083aea4b698c33d042670ba50c10f" prot="public" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>create</name></member>
+      <member refid="classnlohmann_1_1detail_1_1exception_1ae323ad0d53bc724414c2233164e65657" prot="protected" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>exception</name></member>
+      <member refid="classnlohmann_1_1detail_1_1exception_1a0d4589a3fb54e81646d986c05efa3b9a" prot="public" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>id</name></member>
+      <member refid="classnlohmann_1_1detail_1_1exception_1abf41a7e9178356314082284e6cfea278" prot="protected" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>name</name></member>
+      <member refid="classnlohmann_1_1detail_1_1type__error_1aa01edaa0bf18b853368f0b900e485cd7" prot="private" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>type_error</name></member>
+      <member refid="classnlohmann_1_1detail_1_1exception_1a0672c25ecdf14d1a071d4d6478a65af0" prot="public" virt="non-virtual"><scope>nlohmann::detail::type_error</scope><name>what</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

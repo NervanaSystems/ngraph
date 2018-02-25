@@ -1,0 +1,386 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="concatenate_8cpp" kind="file" language="C++">
+    <compoundname>concatenate.cpp</compoundname>
+    <includes local="no">cassert</includes>
+    <includes local="no">memory</includes>
+    <includes refid="concatenate_8hpp" local="yes">ngraph/ops/concatenate.hpp</includes>
+    <includes refid="ops_2slice_8hpp" local="yes">ngraph/ops/slice.hpp</includes>
+    <incdepgraph>
+      <node id="4666">
+        <label>atomic</label>
+      </node>
+      <node id="4674">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="4668" relation="include">
+        </childnode>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4662" relation="include">
+        </childnode>
+        <childnode refid="4675" relation="include">
+        </childnode>
+      </node>
+      <node id="4675">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4662" relation="include">
+        </childnode>
+        <childnode refid="4676" relation="include">
+        </childnode>
+        <childnode refid="4678" relation="include">
+        </childnode>
+      </node>
+      <node id="4685">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4660" relation="include">
+        </childnode>
+        <childnode refid="4673" relation="include">
+        </childnode>
+        <childnode refid="4686" relation="include">
+        </childnode>
+      </node>
+      <node id="4665">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="4666" relation="include">
+        </childnode>
+        <childnode refid="4667" relation="include">
+        </childnode>
+        <childnode refid="4668" relation="include">
+        </childnode>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4660" relation="include">
+        </childnode>
+        <childnode refid="4664" relation="include">
+        </childnode>
+        <childnode refid="4669" relation="include">
+        </childnode>
+        <childnode refid="4670" relation="include">
+        </childnode>
+        <childnode refid="4671" relation="include">
+        </childnode>
+        <childnode refid="4662" relation="include">
+        </childnode>
+        <childnode refid="4672" relation="include">
+        </childnode>
+        <childnode refid="4659" relation="include">
+        </childnode>
+        <childnode refid="4673" relation="include">
+        </childnode>
+        <childnode refid="4685" relation="include">
+        </childnode>
+        <childnode refid="4674" relation="include">
+        </childnode>
+        <childnode refid="4675" relation="include">
+        </childnode>
+      </node>
+      <node id="4654">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.cpp</label>
+        <link refid="concatenate_8cpp"/>
+        <childnode refid="4655" relation="include">
+        </childnode>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4657" relation="include">
+        </childnode>
+        <childnode refid="4688" relation="include">
+        </childnode>
+      </node>
+      <node id="4684">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="4667" relation="include">
+        </childnode>
+        <childnode refid="4680" relation="include">
+        </childnode>
+        <childnode refid="4683" relation="include">
+        </childnode>
+      </node>
+      <node id="4655">
+        <label>cassert</label>
+      </node>
+      <node id="4683">
+        <label>stdexcept</label>
+      </node>
+      <node id="4658">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="4659" relation="include">
+        </childnode>
+        <childnode refid="4663" relation="include">
+        </childnode>
+      </node>
+      <node id="4664">
+        <label>string</label>
+      </node>
+      <node id="4679">
+        <label>map</label>
+      </node>
+      <node id="4671">
+        <label>unordered_set</label>
+      </node>
+      <node id="4678">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="4679" relation="include">
+        </childnode>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4680" relation="include">
+        </childnode>
+        <childnode refid="4664" relation="include">
+        </childnode>
+        <childnode refid="4681" relation="include">
+        </childnode>
+        <childnode refid="4659" relation="include">
+        </childnode>
+        <childnode refid="4682" relation="include">
+        </childnode>
+        <childnode refid="4684" relation="include">
+        </childnode>
+      </node>
+      <node id="4659">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4660" relation="include">
+        </childnode>
+        <childnode refid="4661" relation="include">
+        </childnode>
+        <childnode refid="4662" relation="include">
+        </childnode>
+      </node>
+      <node id="4688">
+        <label>ngraph/ops/slice.hpp</label>
+        <link refid="ops_2slice_8hpp_source"/>
+        <childnode refid="4658" relation="include">
+        </childnode>
+      </node>
+      <node id="4673">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4674" relation="include">
+        </childnode>
+        <childnode refid="4675" relation="include">
+        </childnode>
+      </node>
+      <node id="4676">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="4677" relation="include">
+        </childnode>
+        <childnode refid="4668" relation="include">
+        </childnode>
+        <childnode refid="4662" relation="include">
+        </childnode>
+        <childnode refid="4659" relation="include">
+        </childnode>
+      </node>
+      <node id="4672">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4670" relation="include">
+        </childnode>
+        <childnode refid="4659" relation="include">
+        </childnode>
+      </node>
+      <node id="4663">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="4664" relation="include">
+        </childnode>
+        <childnode refid="4659" relation="include">
+        </childnode>
+        <childnode refid="4665" relation="include">
+        </childnode>
+        <childnode refid="4687" relation="include">
+        </childnode>
+      </node>
+      <node id="4677">
+        <label>cstdio</label>
+      </node>
+      <node id="4662">
+        <label>vector</label>
+      </node>
+      <node id="4661">
+        <label>utility</label>
+      </node>
+      <node id="4680">
+        <label>sstream</label>
+      </node>
+      <node id="4668">
+        <label>iostream</label>
+      </node>
+      <node id="4687">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="4667">
+        <label>deque</label>
+      </node>
+      <node id="4670">
+        <label>unordered_map</label>
+      </node>
+      <node id="4682">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="4683" relation="include">
+        </childnode>
+      </node>
+      <node id="4681">
+        <label>type_traits</label>
+      </node>
+      <node id="4660">
+        <label>set</label>
+      </node>
+      <node id="4657">
+        <label>ngraph/ops/concatenate.hpp</label>
+        <link refid="concatenate_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4658" relation="include">
+        </childnode>
+      </node>
+      <node id="4686">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="4656" relation="include">
+        </childnode>
+        <childnode refid="4676" relation="include">
+        </childnode>
+      </node>
+      <node id="4656">
+        <label>memory</label>
+      </node>
+      <node id="4669">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cassert&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/concatenate.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/slice.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal">op::Concat::Concat(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref>&amp;<sp/>args,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>concatenation_axis)</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>RequiresTensorViewArgs(</highlight><highlight class="stringliteral">&quot;Concat&quot;</highlight><highlight class="normal">,<sp/>args)</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_concatenation_axis(concatenation_axis)</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_inputs.size()<sp/>&lt;<sp/>1)</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;At<sp/>least<sp/>one<sp/>argument<sp/>required&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>input_0<sp/>=<sp/>get_inputs().at(0);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_0_shape<sp/>=<sp/>input_0.get_shape();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_concatenation_axis<sp/>&gt;=<sp/>input_0_shape.size())</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Concatenation<sp/>axis<sp/>is<sp/>out<sp/>of<sp/>bounds&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>concatenation_axis_length<sp/>=<sp/>input_0_shape.at(m_concatenation_axis);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>input_0_element_type<sp/>=<sp/>input_0.get_element_type();</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>1;<sp/>i<sp/>&lt;<sp/>get_inputs().size();<sp/>i++)</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal">&amp;<sp/>input_i<sp/>=<sp/>get_inputs().at(i);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_i_shape<sp/>=<sp/>input_i.get_shape();</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_i_shape.size()<sp/>!=<sp/>input_0_shape.size())</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Arguments<sp/>to<sp/>concat<sp/>do<sp/>not<sp/>have<sp/>same<sp/>rank&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(input_i.get_element_type()<sp/>!=<sp/>input_0_element_type)</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Argument<sp/>element<sp/>types<sp/>do<sp/>not<sp/>match&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>j<sp/>=<sp/>0;<sp/>j<sp/>&lt;<sp/>input_i_shape.size();<sp/>j++)</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(j<sp/>!=<sp/>m_concatenation_axis<sp/>&amp;&amp;<sp/>input_0_shape.at(j)<sp/>!=<sp/>input_i_shape.at(j))</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;Arguments<sp/>to<sp/>concat<sp/>do<sp/>not<sp/>have<sp/>same<sp/>dimension<sp/>on<sp/>a<sp/>non-concatenation<sp/>axis&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(j<sp/>==<sp/>m_concatenation_axis)</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>concatenation_axis_length<sp/>+=<sp/>input_i_shape.at(j);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>vector&lt;size_t&gt;<sp/>concatenated_shape<sp/>=<sp/>input_0_shape;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/>concatenated_shape.at(m_concatenation_axis)<sp/>=<sp/>concatenation_axis_length;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/>set_value_type_checked(make_shared&lt;TensorViewType&gt;(input_0_element_type,<sp/>concatenated_shape));</highlight></codeline>
+<codeline lineno="76"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>op::Concat::generate_adjoints(<ref refid="classngraph_1_1autodiff_1_1Adjoints" kindref="compound">autodiff::Adjoints</ref>&amp;<sp/>adjoints,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>delta)</highlight></codeline>
+<codeline lineno="79"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>concat_result_shape<sp/>=<sp/>get_outputs().at(0).get_shape();</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref><sp/>arg_delta_slice_lower<sp/>=<sp/><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref>(concat_result_shape.size(),<sp/>0);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref><sp/>arg_delta_slice_upper<sp/>=<sp/>concat_result_shape;</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref><sp/>arg_delta_slice_strides<sp/>=<sp/><ref refid="namespacengraph_1aafc407652e7de6256895067f6097a666" kindref="member">Coordinate</ref>(concat_result_shape.size(),<sp/>1);</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>pos<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"></highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>arg<sp/>:<sp/>get_input_ops())</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>arg_shape<sp/>=<sp/>arg-&gt;get_shape();</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>slice_width<sp/>=<sp/>arg_shape[m_concatenation_axis];</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>next_pos<sp/>=<sp/>pos<sp/>+<sp/>slice_width;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>arg_delta_slice_lower[m_concatenation_axis]<sp/>=<sp/>pos;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>arg_delta_slice_upper[m_concatenation_axis]<sp/>=<sp/>next_pos;</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>adjoints.<ref refid="classngraph_1_1autodiff_1_1Adjoints_a5fd56c8712a1947ebce69c13d6b623b0_1a5fd56c8712a1947ebce69c13d6b623b0" kindref="member">add_delta</ref>(</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>arg,</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>make_shared&lt;op::Slice&gt;(</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>delta,<sp/>arg_delta_slice_lower,<sp/>arg_delta_slice_upper,<sp/>arg_delta_slice_strides));</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>pos<sp/>=<sp/>next_pos;</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="106"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/concatenate.cpp"/>
+  </compounddef>
+</doxygen>

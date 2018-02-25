@@ -1,0 +1,297 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="binary__elementwise__comparison_8cpp" kind="file" language="C++">
+    <compoundname>binary_elementwise_comparison.cpp</compoundname>
+    <includes refid="binary__elementwise__comparison_8hpp" local="yes">ngraph/ops/util/binary_elementwise_comparison.hpp</includes>
+    <incdepgraph>
+      <node id="9453">
+        <label>atomic</label>
+      </node>
+      <node id="9461">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="9455" relation="include">
+        </childnode>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9449" relation="include">
+        </childnode>
+        <childnode refid="9462" relation="include">
+        </childnode>
+      </node>
+      <node id="9462">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9449" relation="include">
+        </childnode>
+        <childnode refid="9463" relation="include">
+        </childnode>
+        <childnode refid="9465" relation="include">
+        </childnode>
+      </node>
+      <node id="9472">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9447" relation="include">
+        </childnode>
+        <childnode refid="9460" relation="include">
+        </childnode>
+        <childnode refid="9473" relation="include">
+        </childnode>
+      </node>
+      <node id="9452">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="9453" relation="include">
+        </childnode>
+        <childnode refid="9454" relation="include">
+        </childnode>
+        <childnode refid="9455" relation="include">
+        </childnode>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9447" relation="include">
+        </childnode>
+        <childnode refid="9451" relation="include">
+        </childnode>
+        <childnode refid="9456" relation="include">
+        </childnode>
+        <childnode refid="9457" relation="include">
+        </childnode>
+        <childnode refid="9458" relation="include">
+        </childnode>
+        <childnode refid="9449" relation="include">
+        </childnode>
+        <childnode refid="9459" relation="include">
+        </childnode>
+        <childnode refid="9445" relation="include">
+        </childnode>
+        <childnode refid="9460" relation="include">
+        </childnode>
+        <childnode refid="9472" relation="include">
+        </childnode>
+        <childnode refid="9461" relation="include">
+        </childnode>
+        <childnode refid="9462" relation="include">
+        </childnode>
+      </node>
+      <node id="9471">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="9454" relation="include">
+        </childnode>
+        <childnode refid="9467" relation="include">
+        </childnode>
+        <childnode refid="9470" relation="include">
+        </childnode>
+      </node>
+      <node id="9470">
+        <label>stdexcept</label>
+      </node>
+      <node id="9444">
+        <label>ngraph/ops/util/requires_tensor_view_args.hpp</label>
+        <link refid="requires__tensor__view__args_8hpp_source"/>
+        <childnode refid="9445" relation="include">
+        </childnode>
+        <childnode refid="9450" relation="include">
+        </childnode>
+      </node>
+      <node id="9451">
+        <label>string</label>
+      </node>
+      <node id="9466">
+        <label>map</label>
+      </node>
+      <node id="9458">
+        <label>unordered_set</label>
+      </node>
+      <node id="9441">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/binary_elementwise_comparison.cpp</label>
+        <link refid="binary__elementwise__comparison_8cpp"/>
+        <childnode refid="9442" relation="include">
+        </childnode>
+      </node>
+      <node id="9465">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="9466" relation="include">
+        </childnode>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9467" relation="include">
+        </childnode>
+        <childnode refid="9451" relation="include">
+        </childnode>
+        <childnode refid="9468" relation="include">
+        </childnode>
+        <childnode refid="9445" relation="include">
+        </childnode>
+        <childnode refid="9469" relation="include">
+        </childnode>
+        <childnode refid="9471" relation="include">
+        </childnode>
+      </node>
+      <node id="9445">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9447" relation="include">
+        </childnode>
+        <childnode refid="9448" relation="include">
+        </childnode>
+        <childnode refid="9449" relation="include">
+        </childnode>
+      </node>
+      <node id="9460">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9461" relation="include">
+        </childnode>
+        <childnode refid="9462" relation="include">
+        </childnode>
+      </node>
+      <node id="9463">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="9464" relation="include">
+        </childnode>
+        <childnode refid="9455" relation="include">
+        </childnode>
+        <childnode refid="9449" relation="include">
+        </childnode>
+        <childnode refid="9445" relation="include">
+        </childnode>
+      </node>
+      <node id="9459">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9457" relation="include">
+        </childnode>
+        <childnode refid="9445" relation="include">
+        </childnode>
+      </node>
+      <node id="9443">
+        <label>ngraph/ops/util/binary_elementwise.hpp</label>
+        <link refid="binary__elementwise_8hpp_source"/>
+        <childnode refid="9444" relation="include">
+        </childnode>
+      </node>
+      <node id="9450">
+        <label>ngraph/ops/op.hpp</label>
+        <link refid="op_8hpp_source"/>
+        <childnode refid="9451" relation="include">
+        </childnode>
+        <childnode refid="9445" relation="include">
+        </childnode>
+        <childnode refid="9452" relation="include">
+        </childnode>
+        <childnode refid="9474" relation="include">
+        </childnode>
+      </node>
+      <node id="9464">
+        <label>cstdio</label>
+      </node>
+      <node id="9442">
+        <label>ngraph/ops/util/binary_elementwise_comparison.hpp</label>
+        <link refid="binary__elementwise__comparison_8hpp_source"/>
+        <childnode refid="9443" relation="include">
+        </childnode>
+      </node>
+      <node id="9449">
+        <label>vector</label>
+      </node>
+      <node id="9448">
+        <label>utility</label>
+      </node>
+      <node id="9467">
+        <label>sstream</label>
+      </node>
+      <node id="9455">
+        <label>iostream</label>
+      </node>
+      <node id="9474">
+        <label>ngraph/ops/util/op_annotations.hpp</label>
+        <link refid="op__annotations_8hpp_source"/>
+      </node>
+      <node id="9454">
+        <label>deque</label>
+      </node>
+      <node id="9457">
+        <label>unordered_map</label>
+      </node>
+      <node id="9469">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="9470" relation="include">
+        </childnode>
+      </node>
+      <node id="9468">
+        <label>type_traits</label>
+      </node>
+      <node id="9447">
+        <label>set</label>
+      </node>
+      <node id="9473">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="9446" relation="include">
+        </childnode>
+        <childnode refid="9463" relation="include">
+        </childnode>
+      </node>
+      <node id="9446">
+        <label>memory</label>
+      </node>
+      <node id="9456">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/util/binary_elementwise_comparison.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22" refid="classngraph_1_1op_1_1util_1_1BinaryElementwiseComparison_ae744352903d2a009c5260e6c8290c55f_1ae744352903d2a009c5260e6c8290c55f" refkind="member"><highlight class="normal">op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">string</highlight><highlight class="normal">&amp;<sp/>node_type,</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>shared_ptr&lt;Node&gt;&amp;<sp/>arg0,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>shared_ptr&lt;Node&gt;&amp;<sp/>arg1)</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/><ref refid="classngraph_1_1op_1_1util_1_1BinaryElementwise" kindref="compound">BinaryElementwise</ref>(node_type,<sp/>element::boolean,<sp/>arg0,<sp/>arg1)</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(arg0-&gt;get_element_type()<sp/>!=<sp/>arg1-&gt;get_element_type())</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Arguments<sp/>must<sp/>have<sp/>the<sp/>same<sp/>tensor<sp/>view<sp/>element<sp/>type&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="31"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/binary_elementwise_comparison.cpp"/>
+  </compounddef>
+</doxygen>

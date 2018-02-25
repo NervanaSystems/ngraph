@@ -1,0 +1,310 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="xla__get__tuple__element_8cpp" kind="file" language="C++">
+    <compoundname>xla_get_tuple_element.cpp</compoundname>
+    <includes local="no">memory</includes>
+    <includes local="no">sstream</includes>
+    <includes refid="xla__get__tuple__element_8hpp" local="yes">ngraph/ops/xla_get_tuple_element.hpp</includes>
+    <includes local="yes">ngraph/ops/xla_tuple.hpp</includes>
+    <incdepgraph>
+      <node id="10167">
+        <label>atomic</label>
+      </node>
+      <node id="10165">
+        <label>ngraph/ops/xla_get_tuple_element.hpp</label>
+        <link refid="xla__get__tuple__element_8hpp_source"/>
+        <childnode refid="10166" relation="include">
+        </childnode>
+        <childnode refid="10192" relation="include">
+        </childnode>
+      </node>
+      <node id="10193">
+        <label>ngraph/ops/xla_tuple.hpp</label>
+      </node>
+      <node id="10180">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="10169" relation="include">
+        </childnode>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10175" relation="include">
+        </childnode>
+        <childnode refid="10181" relation="include">
+        </childnode>
+      </node>
+      <node id="10181">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10175" relation="include">
+        </childnode>
+        <childnode refid="10182" relation="include">
+        </childnode>
+        <childnode refid="10184" relation="include">
+        </childnode>
+      </node>
+      <node id="10190">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10170" relation="include">
+        </childnode>
+        <childnode refid="10179" relation="include">
+        </childnode>
+        <childnode refid="10191" relation="include">
+        </childnode>
+      </node>
+      <node id="10166">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="10167" relation="include">
+        </childnode>
+        <childnode refid="10168" relation="include">
+        </childnode>
+        <childnode refid="10169" relation="include">
+        </childnode>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10170" relation="include">
+        </childnode>
+        <childnode refid="10171" relation="include">
+        </childnode>
+        <childnode refid="10172" relation="include">
+        </childnode>
+        <childnode refid="10173" relation="include">
+        </childnode>
+        <childnode refid="10174" relation="include">
+        </childnode>
+        <childnode refid="10175" relation="include">
+        </childnode>
+        <childnode refid="10176" relation="include">
+        </childnode>
+        <childnode refid="10177" relation="include">
+        </childnode>
+        <childnode refid="10179" relation="include">
+        </childnode>
+        <childnode refid="10190" relation="include">
+        </childnode>
+        <childnode refid="10180" relation="include">
+        </childnode>
+        <childnode refid="10181" relation="include">
+        </childnode>
+      </node>
+      <node id="10189">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="10168" relation="include">
+        </childnode>
+        <childnode refid="10164" relation="include">
+        </childnode>
+        <childnode refid="10188" relation="include">
+        </childnode>
+      </node>
+      <node id="10188">
+        <label>stdexcept</label>
+      </node>
+      <node id="10171">
+        <label>string</label>
+      </node>
+      <node id="10162">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp</label>
+        <link refid="xla__get__tuple__element_8cpp"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10164" relation="include">
+        </childnode>
+        <childnode refid="10165" relation="include">
+        </childnode>
+        <childnode refid="10193" relation="include">
+        </childnode>
+      </node>
+      <node id="10185">
+        <label>map</label>
+      </node>
+      <node id="10174">
+        <label>unordered_set</label>
+      </node>
+      <node id="10184">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="10185" relation="include">
+        </childnode>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10164" relation="include">
+        </childnode>
+        <childnode refid="10171" relation="include">
+        </childnode>
+        <childnode refid="10186" relation="include">
+        </childnode>
+        <childnode refid="10177" relation="include">
+        </childnode>
+        <childnode refid="10187" relation="include">
+        </childnode>
+        <childnode refid="10189" relation="include">
+        </childnode>
+      </node>
+      <node id="10177">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10170" relation="include">
+        </childnode>
+        <childnode refid="10178" relation="include">
+        </childnode>
+        <childnode refid="10175" relation="include">
+        </childnode>
+      </node>
+      <node id="10179">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10180" relation="include">
+        </childnode>
+        <childnode refid="10181" relation="include">
+        </childnode>
+      </node>
+      <node id="10182">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="10183" relation="include">
+        </childnode>
+        <childnode refid="10169" relation="include">
+        </childnode>
+        <childnode refid="10175" relation="include">
+        </childnode>
+        <childnode refid="10177" relation="include">
+        </childnode>
+      </node>
+      <node id="10176">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10173" relation="include">
+        </childnode>
+        <childnode refid="10177" relation="include">
+        </childnode>
+      </node>
+      <node id="10183">
+        <label>cstdio</label>
+      </node>
+      <node id="10175">
+        <label>vector</label>
+      </node>
+      <node id="10178">
+        <label>utility</label>
+      </node>
+      <node id="10164">
+        <label>sstream</label>
+      </node>
+      <node id="10169">
+        <label>iostream</label>
+      </node>
+      <node id="10192">
+        <label>ngraph/ops/xla_node.hpp</label>
+      </node>
+      <node id="10168">
+        <label>deque</label>
+      </node>
+      <node id="10173">
+        <label>unordered_map</label>
+      </node>
+      <node id="10187">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="10188" relation="include">
+        </childnode>
+      </node>
+      <node id="10186">
+        <label>type_traits</label>
+      </node>
+      <node id="10170">
+        <label>set</label>
+      </node>
+      <node id="10191">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="10163" relation="include">
+        </childnode>
+        <childnode refid="10182" relation="include">
+        </childnode>
+      </node>
+      <node id="10163">
+        <label>memory</label>
+      </node>
+      <node id="10172">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sstream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/xla_get_tuple_element.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/ops/xla_tuple.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26" refid="classngraph_1_1op_1_1XLAGetTupleElement_a4fad552750646d3f38986925414eccf3_1a4fad552750646d3f38986925414eccf3" refkind="member"><highlight class="normal">op::XLAGetTupleElement::XLAGetTupleElement(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::shared_ptr&lt;Node&gt;&amp;<sp/>arg,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>XLANode(</highlight><highlight class="stringliteral">&quot;XLAGetTupleElement&quot;</highlight><highlight class="normal">,<sp/>{arg})</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>m_n{n}</highlight></codeline>
+<codeline lineno="29"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/>m_arg<sp/>=<sp/>dynamic_pointer_cast&lt;XLANode&gt;(arg);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_arg<sp/>==<sp/></highlight><highlight class="keyword">nullptr</highlight><highlight class="normal"><sp/>||<sp/>m_arg-&gt;get_tuple_value()<sp/>==<sp/></highlight><highlight class="keyword">nullptr</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Argument<sp/>must<sp/>be<sp/>a<sp/>tuple<sp/>view&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref>&amp;<sp/>elements<sp/>=<sp/>m_arg-&gt;get_tuple_elements();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(m_n<sp/>&gt;=<sp/>elements.size())</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Indexing<sp/>tuple<sp/>beyond<sp/>its<sp/>size&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="42"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref><sp/>op::XLAGetTupleElement::get_input_ops()<sp/></highlight><highlight class="comment">//const</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref>{m_arg};</highlight></codeline>
+<codeline lineno="47"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal">shared_ptr&lt;const<sp/>op::XLATuple&gt;<sp/>op::XLAGetTupleElement::get_tuple_value()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="50"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>dynamic_pointer_cast&lt;</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>op::XLATuple&gt;(m_arg-&gt;get_tuple_elements().at(m_n));</highlight></codeline>
+<codeline lineno="52"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref>&amp;<sp/>op::XLAGetTupleElement::get_tuple_elements()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="55"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>get_tuple_value()-&gt;get_tuple_elements();</highlight></codeline>
+<codeline lineno="57"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp"/>
+  </compounddef>
+</doxygen>

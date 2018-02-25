@@ -1,0 +1,391 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::interpreter::INT_CallFrame</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1CallFrame" prot="public" virt="non-virtual">ngraph::runtime::CallFrame</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a97b09cb10c6e5b9c673c6f054cb1c225" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction" kindref="compound">ExternalFunction</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ExternalFunction&gt; ngraph::runtime::interpreter::INT_CallFrame::m_external_function</definition>
+        <argsstring></argsstring>
+        <name>m_external_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="154" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="154" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a86c39b1a7ebe8b7a20d6fc019e1523d3" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;Function&gt; ngraph::runtime::interpreter::INT_CallFrame::m_function</definition>
+        <argsstring></argsstring>
+        <name>m_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="155" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="155" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ae6df2c3a46fe8d089bffc0ca4f81dac9" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::runtime::interpreter::INT_CallFrame::m_emit_timing</definition>
+        <argsstring></argsstring>
+        <name>m_emit_timing</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="156" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="156" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aaeec9dd060cf63378cbacc12b94423cc" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::runtime::interpreter::INT_CallFrame::m_nan_check</definition>
+        <argsstring></argsstring>
+        <name>m_nan_check</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="157" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="157" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a367cfca19719824992fdf9e118e549ab" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *, <ref refid="classngraph_1_1stopwatch" kindref="compound">stopwatch</ref> &gt;</type>
+        <definition>std::unordered_map&lt;const Node*, stopwatch&gt; ngraph::runtime::interpreter::INT_CallFrame::m_timer_map</definition>
+        <argsstring></argsstring>
+        <name>m_timer_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="158" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="158" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aa227a1b911ebbcb99eec5eb487fbdadd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::interpreter::INT_CallFrame::INT_CallFrame</definition>
+        <argsstring>(std::shared_ptr&lt; ExternalFunction &gt; external_function, std::shared_ptr&lt; Function &gt; func)</argsstring>
+        <name>INT_CallFrame</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction" kindref="compound">ExternalFunction</ref> &gt;</type>
+          <declname>external_function</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>func</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="128" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp" bodystart="27" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_a5259131a45b47f9670e80eb77864100b_1a5259131a45b47f9670e80eb77864100b" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; runtime::TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>call</name>
+        <reimplements refid="classngraph_1_1runtime_1_1CallFrame_1ac420690641ece0b6a9b5a3dc5f045db4">call</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">runtime::TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with values matching the signature of the function. </para>        </briefdescription>
+        <detaileddescription>
+<para>Tuples will be expanded into their tensor views to build the call frame. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="134" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a315771bcdb6e71b65a97366dfbde5da4" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>std::vector&lt; <ref refid="classngraph_1_1runtime_1_1PerformanceCounter" kindref="compound">runtime::PerformanceCounter</ref> &gt;</type>
+        <definition>vector&lt; runtime::PerformanceCounter &gt; runtime::interpreter::INT_CallFrame::get_performance_data</definition>
+        <argsstring>() const override</argsstring>
+        <name>get_performance_data</name>
+        <reimplements refid="classngraph_1_1runtime_1_1CallFrame_1a7e1246898c12577fa16f7319d23a3297">get_performance_data</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="136" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp" bodystart="294" bodyend="304"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a0e9b6503994c4bda76e97539b63089b0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::interpreter::INT_CallFrame::set_nan_check</definition>
+        <argsstring>(bool)</argsstring>
+        <name>set_nan_check</name>
+        <param>
+          <type>bool</type>
+          <defname>value</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="138" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp" bodystart="355" bodyend="358"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aeeb0f83b91c62e96c2b3a79978fbfad4" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::tensor_call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; TensorView &gt;&gt; &amp;outputs) override</argsstring>
+        <name>tensor_call</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">TensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+<para>Invoke the function with tuples pre-expanded to their underlying tensor views. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="143" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aa7073df1624490b6bba8befebac894b1" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::tensor_call</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;inputs, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;outputs)</argsstring>
+        <name>tensor_call</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>inputs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>outputs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="145" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1afbdd5456776b7ff953e092877a5017f6" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::call</definition>
+        <argsstring>(std::shared_ptr&lt; Function &gt; function, const std::vector&lt; std::shared_ptr&lt; runtime::HostTensorView &gt;&gt; &amp;input_tvs, const std::vector&lt; std::shared_ptr&lt; runtime::HostTensorView &gt;&gt; &amp;output_tvs)</argsstring>
+        <name>call</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+          <declname>function</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">runtime::HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>input_tvs</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">runtime::HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>output_tvs</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="147" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a4efe468a7347d3eb03e02f0302858422" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::interpreter::INT_CallFrame::generate_calls</definition>
+        <argsstring>(const element::Type &amp;base_type, const element::Type &amp;secondary_type, ngraph::Node &amp;op, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;args, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;out)</argsstring>
+        <name>generate_calls</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>base_type</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>secondary_type</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &amp;</type>
+          <declname>op</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="160" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp" bodystart="191" bodyend="248"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ab56452e5bb8db1a4362a9a25719377c0" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BASE</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::generate_calls</definition>
+        <argsstring>(const element::Type &amp;type, ngraph::Node &amp;op, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;args, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;out)</argsstring>
+        <name>generate_calls</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &amp;</type>
+          <declname>op</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="167" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="167" bodyend="222"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aff96d93db31357d5086ee84bfb9cb5f5" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+          <param>
+            <type>typename S</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::runtime::interpreter::INT_CallFrame::op_engine</definition>
+        <argsstring>(ngraph::Node &amp;node, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;args, const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;out)</argsstring>
+        <name>op_engine</name>
+        <param>
+          <type><ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &amp;</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>args</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="225" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="225" bodyend="855"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ae228e8bd7085b931bc4551a60378a89d" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::interpreter::INT_CallFrame::perform_nan_check</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; HostTensorView &gt;&gt; &amp;, const Node *op=nullptr)</argsstring>
+        <name>perform_nan_check</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1HostTensorView" kindref="compound">HostTensorView</ref> &gt;&gt; &amp;</type>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *</type>
+          <declname>op</declname>
+          <defval>nullptr</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="151" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.cpp" bodystart="306" bodyend="353"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3483">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+      <node id="3482">
+        <label>ngraph::runtime::interpreter::INT_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame"/>
+        <childnode refid="3483" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3485">
+        <label>ngraph::runtime::CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1CallFrame"/>
+      </node>
+      <node id="3484">
+        <label>ngraph::runtime::interpreter::INT_CallFrame</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame"/>
+        <childnode refid="3485" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" line="126" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_call_frame.hpp" bodystart="125" bodyend="856"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_a5259131a45b47f9670e80eb77864100b_1a5259131a45b47f9670e80eb77864100b" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>call</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1afbdd5456776b7ff953e092877a5017f6" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>call</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a4efe468a7347d3eb03e02f0302858422" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>generate_calls</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ab56452e5bb8db1a4362a9a25719377c0" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>generate_calls</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a315771bcdb6e71b65a97366dfbde5da4" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>get_performance_data</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aa227a1b911ebbcb99eec5eb487fbdadd" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>INT_CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ae6df2c3a46fe8d089bffc0ca4f81dac9" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>m_emit_timing</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a97b09cb10c6e5b9c673c6f054cb1c225" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>m_external_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a86c39b1a7ebe8b7a20d6fc019e1523d3" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>m_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aaeec9dd060cf63378cbacc12b94423cc" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>m_nan_check</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a367cfca19719824992fdf9e118e549ab" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>m_timer_map</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aff96d93db31357d5086ee84bfb9cb5f5" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>op_engine</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1ae228e8bd7085b931bc4551a60378a89d" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>perform_nan_check</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1a0e9b6503994c4bda76e97539b63089b0" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>set_nan_check</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aeeb0f83b91c62e96c2b3a79978fbfad4" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__CallFrame_1aa7073df1624490b6bba8befebac894b1" prot="private" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a611514d20e9a298fb48deaf611ff0cba" prot="public" virt="pure-virtual" ambiguityscope="ngraph::runtime::CallFrame::"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>tensor_call</name></member>
+      <member refid="classngraph_1_1runtime_1_1CallFrame_1a37e6cbe23dc687451a8f52a067054c3f" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_CallFrame</scope><name>~CallFrame</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

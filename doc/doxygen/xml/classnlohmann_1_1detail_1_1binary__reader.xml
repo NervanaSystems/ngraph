@@ -1,0 +1,545 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1binary__reader" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::binary_reader</compoundname>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+    <templateparamlist>
+      <param>
+        <type>typename BasicJsonType</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1binary__reader_1ac6065302a10df2e78ed23a0e02e832bf" prot="private" static="no">
+        <type>typename BasicJsonType::number_integer_t</type>
+        <definition>using nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::number_integer_t =  typename BasicJsonType::number_integer_t</definition>
+        <argsstring></argsstring>
+        <name>number_integer_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4495" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4495" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1binary__reader_1a6e87a28ccbfdb4afcc2c93df9f9dbe74" prot="private" static="no">
+        <type>typename BasicJsonType::number_unsigned_t</type>
+        <definition>using nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::number_unsigned_t =  typename BasicJsonType::number_unsigned_t</definition>
+        <argsstring></argsstring>
+        <name>number_unsigned_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4496" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4496" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1binary__reader_1adae482b45b2bb733cad3efce034a8b71" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacenlohmann_1_1detail_1ae132f8cd5bb24c5e9b40ad0eafedf1c2" kindref="member">input_adapter_t</ref></type>
+        <definition>input_adapter_t nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::ia</definition>
+        <argsstring></argsstring>
+        <name>ia</name>
+        <initializer>= nullptr</initializer>
+        <briefdescription>
+<para>input adapter </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5536" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5536" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1binary__reader_1a7e994e201b215cd6d6ae28a1853f43e0" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::current</definition>
+        <argsstring></argsstring>
+        <name>current</name>
+        <initializer>= std::char_traits&lt;char&gt;::eof()</initializer>
+        <briefdescription>
+<para>the current character </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5539" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5539" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1binary__reader_1a2dbde0b7390100efe0bfc54e21c3a34b" prot="private" static="no" mutable="no">
+        <type>std::size_t</type>
+        <definition>std::size_t nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::chars_read</definition>
+        <argsstring></argsstring>
+        <name>chars_read</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+<para>the number of characters read </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5542" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5542" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1binary__reader_1a54c18bdb48cccf35a8f941640e0fcea4" prot="private" static="no" mutable="no">
+        <type>const bool</type>
+        <definition>const bool nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::is_little_endian</definition>
+        <argsstring></argsstring>
+        <name>is_little_endian</name>
+        <initializer>= <ref refid="classnlohmann_1_1detail_1_1binary__reader_a1d8f70f95d241354f86a0b9ae711c1c3_1a1d8f70f95d241354f86a0b9ae711c1c3" kindref="member">little_endianess</ref>()</initializer>
+        <briefdescription>
+<para>whether we can assume little endianess </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5545" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5545" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_a7e643baadaf4c31718cd74833bdd542f_1a7e643baadaf4c31718cd74833bdd542f" prot="public" static="no" const="no" explicit="yes" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::binary_reader</definition>
+        <argsstring>(input_adapter_t adapter)</argsstring>
+        <name>binary_reader</name>
+        <param>
+          <type><ref refid="namespacenlohmann_1_1detail_1ae132f8cd5bb24c5e9b40ad0eafedf1c2" kindref="member">input_adapter_t</ref></type>
+          <declname>adapter</declname>
+        </param>
+        <briefdescription>
+<para>create a binary reader </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">adapter</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>input adapter to read from </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4504" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4504" bodyend="4507"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_a04bcdc8f55b26fafa9775a2f89e48fc2_1a04bcdc8f55b26fafa9775a2f89e48fc2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::parse_cbor</definition>
+        <argsstring>(const bool strict)</argsstring>
+        <name>parse_cbor</name>
+        <param>
+          <type>const bool</type>
+          <declname>strict</declname>
+        </param>
+        <briefdescription>
+<para>create a JSON value from CBOR input </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">strict</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>whether to expect the input to be consumed completed </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>JSON value created from CBOR input</para></simplesect>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input ended unexpectedly or the end of file was not reached when <emphasis>strict</emphasis> was set to true </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>parse_error.112</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if unsupported byte was read </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4519" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4519" bodyend="4528"/>
+        <referencedby refid="classnlohmann_1_1basic__json_aa9be366b887378bb10c0f1ab510c2f0c_1aa9be366b887378bb10c0f1ab510c2f0c" compoundref="json_8hpp" startline="13410" endline="13414">nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::from_cbor</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_ab4a4a6f5ab3cc77aac374c9c889e580e_1ab4a4a6f5ab3cc77aac374c9c889e580e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::parse_msgpack</definition>
+        <argsstring>(const bool strict)</argsstring>
+        <name>parse_msgpack</name>
+        <param>
+          <type>const bool</type>
+          <declname>strict</declname>
+        </param>
+        <briefdescription>
+<para>create a JSON value from MessagePack input </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">strict</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>whether to expect the input to be consumed completed </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>JSON value created from MessagePack input</para></simplesect>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input ended unexpectedly or the end of file was not reached when <emphasis>strict</emphasis> was set to true </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>parse_error.112</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if unsupported byte was read </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4540" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4540" bodyend="4549"/>
+        <referencedby refid="classnlohmann_1_1basic__json_aab804530006701b136ef9a0bc961434b_1aab804530006701b136ef9a0bc961434b" compoundref="json_8hpp" startline="13497" endline="13501">nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::from_msgpack</referencedby>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_a1d8f70f95d241354f86a0b9ae711c1c3_1a1d8f70f95d241354f86a0b9ae711c1c3" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr bool</type>
+        <definition>static constexpr bool nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::little_endianess</definition>
+        <argsstring>(int num=1) noexcept</argsstring>
+        <name>little_endianess</name>
+        <param>
+          <type>int</type>
+          <declname>num</declname>
+          <defval>1</defval>
+        </param>
+        <briefdescription>
+<para>determine system byte order </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>true if and only if system&apos;s byte order is little endian</para></simplesect>
+<simplesect kind="note"><para>from <ulink url="http://stackoverflow.com/a/1001328/266378">http://stackoverflow.com/a/1001328/266378</ulink> </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4558" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4558" bodyend="4561"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a0d919ee892fbbeedb27ff95c4e4010e1" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::parse_cbor_internal</definition>
+        <argsstring>(const bool get_char=true)</argsstring>
+        <name>parse_cbor_internal</name>
+        <param>
+          <type>const bool</type>
+          <declname>get_char</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">get_char</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>whether a new character should be retrieved from the input (true, default) or whether the last read character should be considered instead </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4569" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4569" bodyend="4885"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1ac6dc6270ddddd0aac65fe6cab53d7cc2" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::parse_msgpack_internal</definition>
+        <argsstring>()</argsstring>
+        <name>parse_msgpack_internal</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4887" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4887" bodyend="5210"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a715bbe54c5066921fcb72f0067871a72" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get</definition>
+        <argsstring>()</argsstring>
+        <name>get</name>
+        <briefdescription>
+<para>get next character from the input </para>        </briefdescription>
+        <detaileddescription>
+<para>This function provides the interface to the used input adapter. It does not throw in case the input reached EOF, but returns a -&apos;ve valued <computeroutput>std::char_traits&lt;char&gt;::eof()</computeroutput> in that case.</para><para><simplesect kind="return"><para>character read from the input </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5221" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5221" bodyend="5225"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a3e87e5b33764fc085bfce41d64247279" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type>NumberType</type>
+        <definition>NumberType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_number</definition>
+        <argsstring>()</argsstring>
+        <name>get_number</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5240" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5240" bodyend="5264"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a0146b9454b06d433fdac41c4221794bd" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_string</definition>
+        <argsstring>(const NumberType len)</argsstring>
+        <name>get_string</name>
+        <param>
+          <type>const NumberType</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+<para>create a string by reading characters from the input </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">len</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>number of bytes to read</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="note"><para>We can not reserve <emphasis>len</emphasis> bytes for the result, because <emphasis>len</emphasis> may be too large. Usually, check_eof() detects the end of the input before we run out of string memory.</para></simplesect>
+<simplesect kind="return"><para>string created by reading <emphasis>len</emphasis> bytes</para></simplesect>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input has less than <emphasis>len</emphasis> bytes </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5280" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5280" bodyend="5290"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a1c670949582613c9104109b3cf826b09" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_cbor_string</definition>
+        <argsstring>()</argsstring>
+        <name>get_cbor_string</name>
+        <briefdescription>
+<para>reads a CBOR string </para>        </briefdescription>
+        <detaileddescription>
+<para>This function first reads starting bytes to determine the expected string length and then copies this number of bytes into a string. Additionally, CBOR&apos;s strings with indefinite lengths are supported.</para><para><simplesect kind="return"><para>string</para></simplesect>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input ended </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>parse_error.113</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if an unexpected byte is read </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5304" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5304" bodyend="5377"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a3ee69f0eabc2325477dd00689a00449b" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_cbor_array</definition>
+        <argsstring>(const NumberType len)</argsstring>
+        <name>get_cbor_array</name>
+        <param>
+          <type>const NumberType</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5380" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5380" bodyend="5388"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1ac10de53e05ff19b4860c73f52a6871a9" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_cbor_object</definition>
+        <argsstring>(const NumberType len)</argsstring>
+        <name>get_cbor_object</name>
+        <param>
+          <type>const NumberType</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5391" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5391" bodyend="5404"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a9f3d75969d2ab386beea1c5a4d11a513" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_msgpack_string</definition>
+        <argsstring>()</argsstring>
+        <name>get_msgpack_string</name>
+        <briefdescription>
+<para>reads a MessagePack string </para>        </briefdescription>
+        <detaileddescription>
+<para>This function first reads starting bytes to determine the expected string length and then copies this number of bytes into a string.</para><para><simplesect kind="return"><para>string</para></simplesect>
+<parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input ended </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>parse_error.113</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if an unexpected byte is read </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5417" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5417" bodyend="5483"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a7adeb751743afe4233d75d351252bc93" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_msgpack_array</definition>
+        <argsstring>(const NumberType len)</argsstring>
+        <name>get_msgpack_array</name>
+        <param>
+          <type>const NumberType</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5486" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5486" bodyend="5494"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a8fd9972d8bbb03b49acbaaf641151859" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename NumberType</type>
+          </param>
+        </templateparamlist>
+        <type>BasicJsonType</type>
+        <definition>BasicJsonType nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::get_msgpack_object</definition>
+        <argsstring>(const NumberType len)</argsstring>
+        <name>get_msgpack_object</name>
+        <param>
+          <type>const NumberType</type>
+          <declname>len</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5497" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5497" bodyend="5510"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1binary__reader_1a75607986bf6527e5daed9e27b1d2b4ef" prot="private" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::binary_reader&lt; BasicJsonType &gt;::check_eof</definition>
+        <argsstring>(const bool expect_eof=false) const</argsstring>
+        <name>check_eof</name>
+        <param>
+          <type>const bool</type>
+          <declname>expect_eof</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+<para>check if input ended </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>parse_error.110</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>if input ended </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="5516" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="5516" bodyend="5532"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>deserialization of CBOR and MessagePack values </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4494" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4493" bodyend="5546"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_a7e643baadaf4c31718cd74833bdd542f_1a7e643baadaf4c31718cd74833bdd542f" prot="public" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>binary_reader</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a2dbde0b7390100efe0bfc54e21c3a34b" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>chars_read</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a75607986bf6527e5daed9e27b1d2b4ef" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>check_eof</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a7e994e201b215cd6d6ae28a1853f43e0" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>current</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a715bbe54c5066921fcb72f0067871a72" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a3ee69f0eabc2325477dd00689a00449b" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_cbor_array</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1ac10de53e05ff19b4860c73f52a6871a9" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_cbor_object</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a1c670949582613c9104109b3cf826b09" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_cbor_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a7adeb751743afe4233d75d351252bc93" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_msgpack_array</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a8fd9972d8bbb03b49acbaaf641151859" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_msgpack_object</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a9f3d75969d2ab386beea1c5a4d11a513" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_msgpack_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a3e87e5b33764fc085bfce41d64247279" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_number</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a0146b9454b06d433fdac41c4221794bd" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>get_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1adae482b45b2bb733cad3efce034a8b71" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>ia</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a54c18bdb48cccf35a8f941640e0fcea4" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>is_little_endian</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_a1d8f70f95d241354f86a0b9ae711c1c3_1a1d8f70f95d241354f86a0b9ae711c1c3" prot="public" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>little_endianess</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1ac6065302a10df2e78ed23a0e02e832bf" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>number_integer_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a6e87a28ccbfdb4afcc2c93df9f9dbe74" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>number_unsigned_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_a04bcdc8f55b26fafa9775a2f89e48fc2_1a04bcdc8f55b26fafa9775a2f89e48fc2" prot="public" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>parse_cbor</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1a0d919ee892fbbeedb27ff95c4e4010e1" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>parse_cbor_internal</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_ab4a4a6f5ab3cc77aac374c9c889e580e_1ab4a4a6f5ab3cc77aac374c9c889e580e" prot="public" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>parse_msgpack</name></member>
+      <member refid="classnlohmann_1_1detail_1_1binary__reader_1ac6dc6270ddddd0aac65fe6cab53d7cc2" prot="private" virt="non-virtual"><scope>nlohmann::detail::binary_reader</scope><name>parse_msgpack_internal</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>ngraph::descriptor::layout::TensorViewLayout</compoundname>
+    <derivedcompoundref refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout" prot="public" virt="non-virtual">ngraph::descriptor::layout::DenseTensorViewLayout</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor" prot="public" virt="non-virtual">ngraph::runtime::cpu::LayoutDescriptor</derivedcompoundref>
+    <includes refid="tensor__view__layout_8hpp" local="no">tensor_view_layout.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a45a925bde4c4d69227cf8d084e231750" prot="protected" static="no" mutable="no">
+        <type>std::shared_ptr&lt; const <ref refid="classngraph_1_1TensorViewType" kindref="compound">TensorViewType</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;const TensorViewType&gt; ngraph::descriptor::layout::TensorViewLayout::m_tensor_view_type</definition>
+        <argsstring></argsstring>
+        <name>m_tensor_view_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a3ba05c38e84717bdf7bc904c1084f6ab" prot="protected" static="no" mutable="no">
+        <type><ref refid="classngraph_1_1descriptor_1_1BufferPos" kindref="compound">BufferPos</ref></type>
+        <definition>BufferPos ngraph::descriptor::layout::TensorViewLayout::m_buffer_pos</definition>
+        <argsstring></argsstring>
+        <name>m_buffer_pos</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1ae55b06ad1712f777241b69ac0b7eff01" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>descriptor::layout::TensorViewLayout::TensorViewLayout</definition>
+        <argsstring>(const ngraph::descriptor::TensorView &amp;tensor_view)</argsstring>
+        <name>TensorViewLayout</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">ngraph::descriptor::TensorView</ref> &amp;</type>
+          <declname>tensor_view</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.cpp" bodystart="24" bodyend="27"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a978e4258130e77e751297cf9871143d6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual ngraph::descriptor::layout::TensorViewLayout::~TensorViewLayout</definition>
+        <argsstring>()</argsstring>
+        <name>~TensorViewLayout</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="48" bodyend="48"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_a3833e863e1681ee021a96ec2f73514c1_1a3833e863e1681ee021a96ec2f73514c1" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>size_t</type>
+        <definition>virtual size_t ngraph::descriptor::layout::TensorViewLayout::get_size</definition>
+        <argsstring>()=0</argsstring>
+        <name>get_size</name>
+        <reimplementedby refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_a46236c9303d19578df640452c578efcd_1a46236c9303d19578df640452c578efcd">get_size</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor_a66d8d7911bb17424001a86db68eb8d41_1a66d8d7911bb17424001a86db68eb8d41">get_size</reimplementedby>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Extent of this view in buffer.</para><para>When we support non-linear buffers, this will need to be something other than size_t. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="52" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_a56b6c28b627d5487abafd3d51b384756_1a56b6c28b627d5487abafd3d51b384756" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>size_t</type>
+        <definition>virtual size_t ngraph::descriptor::layout::TensorViewLayout::get_index_offset</definition>
+        <argsstring>(const std::vector&lt; size_t &gt; &amp;indices)=0</argsstring>
+        <name>get_index_offset</name>
+        <reimplementedby refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_a8c79f1a8bbb9314ea26c09e40686a865_1a8c79f1a8bbb9314ea26c09e40686a865">get_index_offset</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor_a552090989f110381327cb1e13240b16e_1a552090989f110381327cb1e13240b16e">get_index_offset</reimplementedby>
+        <param>
+          <type>const std::vector&lt; size_t &gt; &amp;</type>
+          <declname>indices</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Offset of an index; useful for slice implementation.</para><para>With non-linear buffers, this will need to be something other than size_t. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="57" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a515155f704ddd0744b63353af167a17e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+        <definition>const element::Type &amp; descriptor::layout::TensorViewLayout::get_element_type</definition>
+        <argsstring>() const</argsstring>
+        <name>get_element_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="59" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.cpp" bodystart="29" bodyend="32"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1ace2e7ea85afebbb9d88e6ebf18ebfa01" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+        <definition>const Shape &amp; descriptor::layout::TensorViewLayout::get_shape</definition>
+        <argsstring>() const</argsstring>
+        <name>get_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="60" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.cpp" bodystart="34" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a7cafe29b610d985dc9f347821a634d38" prot="public" static="no" const="yes" explicit="no" inline="no" virt="pure-virtual">
+        <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">Strides</ref> &amp;</type>
+        <definition>virtual const Strides&amp; ngraph::descriptor::layout::TensorViewLayout::get_strides</definition>
+        <argsstring>() const =0</argsstring>
+        <name>get_strides</name>
+        <reimplementedby refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_1afd9fb02e2007944ca3574bb05cf010ba">get_strides</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor_1aeeac654227b442e488766217f4f25fb1">get_strides</reimplementedby>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="61" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a1bc4fe151c2f451a3cc7c0ae19482dba" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const <ref refid="classngraph_1_1descriptor_1_1BufferPos" kindref="compound">BufferPos</ref> &amp;</type>
+        <definition>const BufferPos&amp; ngraph::descriptor::layout::TensorViewLayout::get_buffer_pos</definition>
+        <argsstring>() const</argsstring>
+        <name>get_buffer_pos</name>
+        <briefdescription>
+<para>Where this view is located in the buffer. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="63" bodyend="63"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a5ddaaf9c34be8247148cab066928d64e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classngraph_1_1descriptor_1_1BufferPos" kindref="compound">BufferPos</ref> &amp;</type>
+        <definition>BufferPos&amp; ngraph::descriptor::layout::TensorViewLayout::get_buffer_pos</definition>
+        <argsstring>()</argsstring>
+        <name>get_buffer_pos</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="64" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a4c23ae769df2c6a2385cc171ab2524e3" prot="public" static="no" const="yes" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool ngraph::descriptor::layout::TensorViewLayout::operator==</definition>
+        <argsstring>(const TensorViewLayout &amp;other) const =0</argsstring>
+        <name>operator==</name>
+        <reimplementedby refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout_1ad2c4b90ff593f091289bb48bfc1e3d03">operator==</reimplementedby>
+        <param>
+          <type>const <ref refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout" kindref="compound">TensorViewLayout</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>Return true if this and other have the same element interpretation. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="66" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a872526e79739f2b59f492a4421fff8ba" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::descriptor::layout::TensorViewLayout::operator!=</definition>
+        <argsstring>(const TensorViewLayout &amp;other) const</argsstring>
+        <name>operator!=</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout" kindref="compound">TensorViewLayout</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="67" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="67" bodyend="67"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Interface for describing implementations of tensor views. </para>    </briefdescription>
+    <detaileddescription>
+<para>Kernel selection will need to pay attention to the layout. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="98">
+        <label>ngraph::runtime::cpu::LayoutDescriptor</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor"/>
+        <childnode refid="96" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="96">
+        <label>ngraph::descriptor::layout::TensorViewLayout</label>
+        <link refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout"/>
+      </node>
+      <node id="97">
+        <label>ngraph::descriptor::layout::DenseTensorViewLayout</label>
+        <link refid="classngraph_1_1descriptor_1_1layout_1_1DenseTensorViewLayout"/>
+        <childnode refid="96" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="100">
+        <label>ngraph::descriptor::BufferPos</label>
+        <link refid="classngraph_1_1descriptor_1_1BufferPos"/>
+      </node>
+      <node id="99">
+        <label>ngraph::descriptor::layout::TensorViewLayout</label>
+        <link refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout"/>
+        <childnode refid="100" relation="usage">
+          <edgelabel>m_buffer_pos</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" line="43" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/layout/tensor_view_layout.hpp" bodystart="42" bodyend="71"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a1bc4fe151c2f451a3cc7c0ae19482dba" prot="public" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_buffer_pos</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a5ddaaf9c34be8247148cab066928d64e" prot="public" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_buffer_pos</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a515155f704ddd0744b63353af167a17e" prot="public" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_element_type</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_a56b6c28b627d5487abafd3d51b384756_1a56b6c28b627d5487abafd3d51b384756" prot="public" virt="pure-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_index_offset</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1ace2e7ea85afebbb9d88e6ebf18ebfa01" prot="public" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_shape</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_a3833e863e1681ee021a96ec2f73514c1_1a3833e863e1681ee021a96ec2f73514c1" prot="public" virt="pure-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_size</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a7cafe29b610d985dc9f347821a634d38" prot="public" virt="pure-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>get_strides</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a3ba05c38e84717bdf7bc904c1084f6ab" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>m_buffer_pos</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a45a925bde4c4d69227cf8d084e231750" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>m_tensor_view_type</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a872526e79739f2b59f492a4421fff8ba" prot="public" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>operator!=</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a4c23ae769df2c6a2385cc171ab2524e3" prot="public" virt="pure-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>operator==</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1ae55b06ad1712f777241b69ac0b7eff01" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>TensorViewLayout</name></member>
+      <member refid="classngraph_1_1descriptor_1_1layout_1_1TensorViewLayout_1a978e4258130e77e751297cf9871143d6" prot="public" virt="virtual"><scope>ngraph::descriptor::layout::TensorViewLayout</scope><name>~TensorViewLayout</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

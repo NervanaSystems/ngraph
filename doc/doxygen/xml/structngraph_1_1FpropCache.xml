@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structngraph_1_1FpropCache" kind="struct" language="C++" prot="public">
+    <compoundname>ngraph::FpropCache</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structngraph_1_1FpropCache_1add0d1b2fe102611a02ca719a6d7a8ae8" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;Function&gt; ngraph::FpropCache::fprop</definition>
+        <argsstring></argsstring>
+        <name>fprop</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="269" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="269" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structngraph_1_1FpropCache_1ad7640b296e58479261026fdce118fe1e" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;Function&gt; ngraph::FpropCache::bprop</definition>
+        <argsstring></argsstring>
+        <name>bprop</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="270" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="270" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structngraph_1_1FpropCache_1a006203c8456aaff2cde933c13bc0b537" prot="public" static="no" mutable="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;Node&gt; &gt; ngraph::FpropCache::fprop_output_nodes</definition>
+        <argsstring></argsstring>
+        <name>fprop_output_nodes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="271" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="271" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="155">
+        <label>T</label>
+      </node>
+      <node id="154">
+        <label>std::vector&lt; T &gt;</label>
+        <childnode refid="155" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="153">
+        <label>std::vector&lt; std::shared_ptr&lt; ngraph::Node &gt; &gt;</label>
+        <childnode refid="154" relation="template-instance">
+          <edgelabel>&lt; std::shared_ptr&lt; ngraph::Node &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="152">
+        <label>ngraph::FpropCache</label>
+        <link refid="structngraph_1_1FpropCache"/>
+        <childnode refid="153" relation="usage">
+          <edgelabel>fprop_output_nodes</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" line="268" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/util.hpp" bodystart="267" bodyend="272"/>
+    <listofallmembers>
+      <member refid="structngraph_1_1FpropCache_1ad7640b296e58479261026fdce118fe1e" prot="public" virt="non-virtual"><scope>ngraph::FpropCache</scope><name>bprop</name></member>
+      <member refid="structngraph_1_1FpropCache_1add0d1b2fe102611a02ca719a6d7a8ae8" prot="public" virt="non-virtual"><scope>ngraph::FpropCache</scope><name>fprop</name></member>
+      <member refid="structngraph_1_1FpropCache_1a006203c8456aaff2cde933c13bc0b537" prot="public" virt="non-virtual"><scope>ngraph::FpropCache</scope><name>fprop_output_nodes</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

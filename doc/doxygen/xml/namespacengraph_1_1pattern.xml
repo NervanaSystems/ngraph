@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="namespacengraph_1_1pattern" kind="namespace" language="C++">
+    <compoundname>ngraph::pattern</compoundname>
+    <innerclass refid="classngraph_1_1pattern_1_1Matcher" prot="public">ngraph::pattern::Matcher</innerclass>
+    <innernamespace refid="namespacengraph_1_1pattern_1_1op">ngraph::pattern::op</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="matcher_8hpp_1a6be170dad78a59e698a503c5c607c04f" prot="public" static="no">
+        <type>std::function&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;(class <ref refid="classngraph_1_1pattern_1_1Matcher" kindref="compound">Matcher</ref> &amp;m)&gt;</type>
+        <definition>using ngraph::pattern::gr_callback_fn = typedef std::function&lt;std::shared_ptr&lt;Node&gt;(class Matcher&amp; m)&gt;</definition>
+        <argsstring></argsstring>
+        <name>gr_callback_fn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.hpp" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="matcher_8cpp_1ae3ef9b47885ff18cc378906062d010df" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &gt;</type>
+        <definition>static std::vector&lt;std::shared_ptr&lt;Node&gt; &gt; ngraph::pattern::get_arguments</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; n)</argsstring>
+        <name>get_arguments</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.cpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.cpp" bodystart="29" bodyend="39"/>
+      </memberdef>
+      <memberdef kind="function" id="matcher_8cpp_1a44e8a43d28f004c7a32929c928590b8b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref></type>
+        <definition>static Nodes ngraph::pattern::get_users</definition>
+        <argsstring>(std::shared_ptr&lt; Node &gt; node)</argsstring>
+        <name>get_users</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+          <declname>node</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.cpp" line="225" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern/matcher.cpp" bodystart="225" bodyend="238"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="30" column="1"/>
+  </compounddef>
+</doxygen>

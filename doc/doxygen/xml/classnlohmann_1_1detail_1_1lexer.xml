@@ -1,0 +1,831 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1lexer" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::lexer</compoundname>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+    <templateparamlist>
+      <param>
+        <type>typename BasicJsonType</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="enum" id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" prot="public" static="no" strong="yes">
+        <type></type>
+        <name>token_type</name>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a42dd1a73d072bb6bf3f494f22b15db8e" prot="public">
+          <name>uninitialized</name>
+          <briefdescription>
+<para>indicating the scanner is uninitialized </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a85cc1a37b0aaa52de40e72f0ed4e0c0d" prot="public">
+          <name>literal_true</name>
+          <briefdescription>
+<para>the <computeroutput>true</computeroutput> literal </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098afab1694b1b3937a079f4625fe0b6108b" prot="public">
+          <name>literal_false</name>
+          <briefdescription>
+<para>the <computeroutput>false</computeroutput> literal </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098ab7ae4c0e46d86f884677768160b26e9e" prot="public">
+          <name>literal_null</name>
+          <briefdescription>
+<para>the <computeroutput>null</computeroutput> literal </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a2b490e8bf366b4cbe3ebd99b26ce15ce" prot="public">
+          <name>value_string</name>
+          <briefdescription>
+<para>a string <ndash/> use get_string() for actual value </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098aaf1f040fcd2f674d2e5893d7a731078f" prot="public">
+          <name>value_unsigned</name>
+          <briefdescription>
+<para>an unsigned integer <ndash/> use <ref refid="classnlohmann_1_1detail_1_1lexer_1a56640fb92293e0c17742ca3c814d74d6" kindref="member">get_number_unsigned()</ref> for actual value </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a5064b6655d88a50ae16665cf7751c0ee" prot="public">
+          <name>value_integer</name>
+          <briefdescription>
+<para>a signed integer <ndash/> use <ref refid="classnlohmann_1_1detail_1_1lexer_1afa338d17c0a7e834c73104258a2c8ced" kindref="member">get_number_integer()</ref> for actual value </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a0d2671a6f81efb91e77f6ac3bdb11443" prot="public">
+          <name>value_float</name>
+          <briefdescription>
+<para>an floating point number <ndash/> use <ref refid="classnlohmann_1_1detail_1_1lexer_1ac013af35a21e9387993b19da5b3e0ae2" kindref="member">get_number_float()</ref> for actual value </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a16c226b4425b68560fea322b46dabe01" prot="public">
+          <name>begin_array</name>
+          <briefdescription>
+<para>the character for array begin <computeroutput>[</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a9a9ffd53b6869d4eca271b1ed5b57fe8" prot="public">
+          <name>begin_object</name>
+          <briefdescription>
+<para>the character for object begin <computeroutput>{</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a2f3e68e7f111a1e5c7728742b3ca2b7f" prot="public">
+          <name>end_array</name>
+          <briefdescription>
+<para>the character for array end <computeroutput>]</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a7d5b4427866814de4d8f132721d59c87" prot="public">
+          <name>end_object</name>
+          <briefdescription>
+<para>the character for object end <computeroutput>}</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098acc3c64f8ae08c00de1b33f19a4d2913a" prot="public">
+          <name>name_separator</name>
+          <briefdescription>
+<para>the name separator <computeroutput>:</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a745373036100d7392ad62c617cab59af" prot="public">
+          <name>value_separator</name>
+          <briefdescription>
+<para>the value separator <computeroutput>,</computeroutput> </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a456e19aeafa334241c7ff3f589547f9d" prot="public">
+          <name>parse_error</name>
+          <briefdescription>
+<para>indicating a parse error </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098aca11f56dd477c09e06583dbdcda0985f" prot="public">
+          <name>end_of_input</name>
+          <briefdescription>
+<para>indicating the end of the input buffer </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098ad2a8e6f6721cccec0b466301dd9495a5" prot="public">
+          <name>literal_or_value</name>
+          <briefdescription>
+<para>a literal or the begin of a value (only for diagnostics) </para>          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>token types for the parser </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1673" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1672" bodyend="1691"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1lexer_1a9cd1b11cc67edbfb2613c788b5bd337c" prot="private" static="no">
+        <type>typename BasicJsonType::number_integer_t</type>
+        <definition>using nlohmann::detail::lexer&lt; BasicJsonType &gt;::number_integer_t =  typename BasicJsonType::number_integer_t</definition>
+        <argsstring></argsstring>
+        <name>number_integer_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1666" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1666" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1lexer_1a105d1dfeab414a572655895cdd96a52a" prot="private" static="no">
+        <type>typename BasicJsonType::number_unsigned_t</type>
+        <definition>using nlohmann::detail::lexer&lt; BasicJsonType &gt;::number_unsigned_t =  typename BasicJsonType::number_unsigned_t</definition>
+        <argsstring></argsstring>
+        <name>number_unsigned_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1667" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1667" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1lexer_1aa7f9e7b2bcd311fb86e2da43761a6619" prot="private" static="no">
+        <type>typename BasicJsonType::number_float_t</type>
+        <definition>using nlohmann::detail::lexer&lt; BasicJsonType &gt;::number_float_t =  typename BasicJsonType::number_float_t</definition>
+        <argsstring></argsstring>
+        <name>number_float_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1668" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1668" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1aa7e69cd9d51451fd798eaf501b40421f" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacenlohmann_1_1detail_1ae132f8cd5bb24c5e9b40ad0eafedf1c2" kindref="member">detail::input_adapter_t</ref></type>
+        <definition>detail::input_adapter_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::ia</definition>
+        <argsstring></argsstring>
+        <name>ia</name>
+        <initializer>= nullptr</initializer>
+        <briefdescription>
+<para>input adapter </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2880" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2880" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1a47169f9aaf0da4c9885e61d3109859aa" prot="private" static="no" mutable="no">
+        <type>std::char_traits&lt; char &gt;::int_type</type>
+        <definition>std::char_traits&lt;char&gt;::int_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::current</definition>
+        <argsstring></argsstring>
+        <name>current</name>
+        <initializer>= std::char_traits&lt;char&gt;::eof()</initializer>
+        <briefdescription>
+<para>the current character </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2883" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2883" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1aab991bcbf230c372b276742f1790ba5b" prot="private" static="no" mutable="no">
+        <type>std::size_t</type>
+        <definition>std::size_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::chars_read</definition>
+        <argsstring></argsstring>
+        <name>chars_read</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+<para>the number of characters read </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2886" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2886" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1ad2960e3d54af8fb8d572a8f6f7731d62" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; char &gt;</type>
+        <definition>std::vector&lt;char&gt; nlohmann::detail::lexer&lt; BasicJsonType &gt;::token_string</definition>
+        <argsstring></argsstring>
+        <name>token_string</name>
+        <initializer>{ }</initializer>
+        <briefdescription>
+<para>raw input token string (for error messages) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2889" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2889" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1aaf0fed9b2dda562244ba5680b0b5b559" prot="private" static="no" mutable="no">
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::lexer&lt; BasicJsonType &gt;::yytext</definition>
+        <argsstring></argsstring>
+        <name>yytext</name>
+        <initializer>{ }</initializer>
+        <briefdescription>
+<para>buffer for variable-length tokens (numbers, strings) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2892" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2892" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1ae2a15e440f1889e0ab0c6a35344e48df" prot="private" static="no" mutable="no">
+        <type>const char *</type>
+        <definition>const char* nlohmann::detail::lexer&lt; BasicJsonType &gt;::error_message</definition>
+        <argsstring></argsstring>
+        <name>error_message</name>
+        <initializer>= &quot;&quot;</initializer>
+        <briefdescription>
+<para>a description of occurred lexer errors </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2895" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2895" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1a353d8eeca5b2f21b3e88540c17afb9bc" prot="private" static="no" mutable="no">
+        <type>number_integer_t</type>
+        <definition>number_integer_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_integer</definition>
+        <argsstring></argsstring>
+        <name>value_integer</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2898" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2898" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1af250180459c23ca71c3e10a99fb5ba3e" prot="private" static="no" mutable="no">
+        <type>number_unsigned_t</type>
+        <definition>number_unsigned_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_unsigned</definition>
+        <argsstring></argsstring>
+        <name>value_unsigned</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2899" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2899" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1a861ce804da2d257ee373d1e0b55780e1" prot="private" static="no" mutable="no">
+        <type>number_float_t</type>
+        <definition>number_float_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_float</definition>
+        <argsstring></argsstring>
+        <name>value_float</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2900" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2900" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1lexer_1a16593b0475f6d1cddd5eaf7c045771f3" prot="private" static="no" mutable="no">
+        <type>const char</type>
+        <definition>const char nlohmann::detail::lexer&lt; BasicJsonType &gt;::decimal_point_char</definition>
+        <argsstring></argsstring>
+        <name>decimal_point_char</name>
+        <initializer>= &apos;.&apos;</initializer>
+        <briefdescription>
+<para>the decimal point </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2903" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2903" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1ae514e2005f0ce185f1ad366139e541e8" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>const char *</type>
+        <definition>static const char* nlohmann::detail::lexer&lt; BasicJsonType &gt;::token_type_name</definition>
+        <argsstring>(const token_type t) noexcept</argsstring>
+        <name>token_type_name</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+<para>return name of values of type token_type (only used for errors) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1694" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1694" bodyend="1733"/>
+        <references refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098aaf1f040fcd2f674d2e5893d7a731078f">nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_unsigned</references>
+        <references refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a5064b6655d88a50ae16665cf7751c0ee">nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_integer</references>
+        <references refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a0d2671a6f81efb91e77f6ac3bdb11443">nlohmann::detail::lexer&lt; BasicJsonType &gt;::value_float</references>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a0d7de7b99bc839ea9a39dd738d05d89c" prot="public" static="no" const="no" explicit="yes" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::lexer&lt; BasicJsonType &gt;::lexer</definition>
+        <argsstring>(detail::input_adapter_t adapter)</argsstring>
+        <name>lexer</name>
+        <param>
+          <type><ref refid="namespacenlohmann_1_1detail_1ae132f8cd5bb24c5e9b40ad0eafedf1c2" kindref="member">detail::input_adapter_t</ref></type>
+          <declname>adapter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1735" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1735" bodyend="1736"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a2e8ce2a0d266d148b69dfbcc2e4ad71a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::lexer&lt; BasicJsonType &gt;::lexer</definition>
+        <argsstring>(const lexer &amp;)=delete</argsstring>
+        <name>lexer</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1lexer" kindref="compound">lexer</ref> &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1739" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a33e97dee7c5faf1b36aff5b74a6c8f55" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1lexer" kindref="compound">lexer</ref> &amp;</type>
+        <definition>lexer&amp; nlohmann::detail::lexer&lt; BasicJsonType &gt;::operator=</definition>
+        <argsstring>(lexer &amp;)=delete</argsstring>
+        <name>operator=</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1lexer" kindref="compound">lexer</ref> &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1740" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1afa338d17c0a7e834c73104258a2c8ced" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr number_integer_t</type>
+        <definition>constexpr number_integer_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_number_integer</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>get_number_integer</name>
+        <briefdescription>
+<para>return integer value </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2744" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2744" bodyend="2747"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a56640fb92293e0c17742ca3c814d74d6" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr number_unsigned_t</type>
+        <definition>constexpr number_unsigned_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_number_unsigned</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>get_number_unsigned</name>
+        <briefdescription>
+<para>return unsigned integer value </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2750" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2750" bodyend="2753"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1ac013af35a21e9387993b19da5b3e0ae2" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr number_float_t</type>
+        <definition>constexpr number_float_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_number_float</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>get_number_float</name>
+        <briefdescription>
+<para>return floating-point value </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2756" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2756" bodyend="2759"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a73216fe28e91a0aa3bdae77a89ce554b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::lexer&lt; BasicJsonType &gt;::move_string</definition>
+        <argsstring>()</argsstring>
+        <name>move_string</name>
+        <briefdescription>
+<para>return current string value (implicitly resets the token; useful only once) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2762" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2762" bodyend="2765"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a2a00465a3d5d70c84809cdb27658db79" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr std::size_t</type>
+        <definition>constexpr std::size_t nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_position</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>get_position</name>
+        <briefdescription>
+<para>return position of last read token </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2772" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2772" bodyend="2775"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_a4aef7e72e539be04e139c34872421f2a_1a4aef7e72e539be04e139c34872421f2a" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21" kindref="member">std::string</ref></type>
+        <definition>std::string nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_token_string</definition>
+        <argsstring>() const</argsstring>
+        <name>get_token_string</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>return the last read token (for errors only). Will never contain EOF (an arbitrary value that is not a valid char value, often -1), because 255 may legitimately occur. May contain NUL, which should be escaped. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2780" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2780" bodyend="2802"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fab45cffe084dd3d20d928bee85e7b0f21">nlohmann::detail::string</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a53cebbc684ef97fa49651eb442d58f86" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>constexpr const char *</type>
+        <definition>constexpr const char* nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_error_message</definition>
+        <argsstring>() const noexcept</argsstring>
+        <name>get_error_message</name>
+        <briefdescription>
+<para>return syntax error message </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2805" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2805" bodyend="2808"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1aac3041cd2b9291e64fee38db422863c9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+        <definition>token_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::scan</definition>
+        <argsstring>()</argsstring>
+        <name>scan</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2814" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2814" bodyend="2876"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1ae545b0856f57220645d749ab8c494f47" prot="private" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>char</type>
+        <definition>static char nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_decimal_point</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>get_decimal_point</name>
+        <briefdescription>
+<para>return the locale-dependent decimal point </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1748" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1748" bodyend="1753"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a1a2d4cc5d9fed4783aa2a98497925511" prot="private" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>static void nlohmann::detail::lexer&lt; BasicJsonType &gt;::strtof</definition>
+        <argsstring>(float &amp;f, const char *str, char **endptr) noexcept</argsstring>
+        <name>strtof</name>
+        <param>
+          <type>float &amp;</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>str</declname>
+        </param>
+        <param>
+          <type>char **</type>
+          <declname>endptr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2285" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2285" bodyend="2288"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a8cd877d10b31bc819e4f030292737ea6" prot="private" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>static void nlohmann::detail::lexer&lt; BasicJsonType &gt;::strtof</definition>
+        <argsstring>(double &amp;f, const char *str, char **endptr) noexcept</argsstring>
+        <name>strtof</name>
+        <param>
+          <type>double &amp;</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>str</declname>
+        </param>
+        <param>
+          <type>char **</type>
+          <declname>endptr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2290" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2290" bodyend="2293"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a0e28dda9a1e007d55d03e8d39dd3b9fa" prot="private" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>static void nlohmann::detail::lexer&lt; BasicJsonType &gt;::strtof</definition>
+        <argsstring>(long double &amp;f, const char *str, char **endptr) noexcept</argsstring>
+        <name>strtof</name>
+        <param>
+          <type>long double &amp;</type>
+          <declname>f</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>str</declname>
+        </param>
+        <param>
+          <type>char **</type>
+          <declname>endptr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2295" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2295" bodyend="2298"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a820b20e25ff255c3c791c37f2bf48380" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int nlohmann::detail::lexer&lt; BasicJsonType &gt;::get_codepoint</definition>
+        <argsstring>()</argsstring>
+        <name>get_codepoint</name>
+        <briefdescription>
+<para>get codepoint from 4 hex characters following <computeroutput>\u</computeroutput> </para>        </briefdescription>
+        <detaileddescription>
+<para>For input &quot;\u c1 c2 c3 c4&quot; the codepoint is: (c1 * 0x1000) + (c2 * 0x0100) + (c3 * 0x0010) + c4 = (c1 &lt;&lt; 12) + (c2 &lt;&lt; 8) + (c3 &lt;&lt; 4) + (c4 &lt;&lt; 0)</para><para>Furthermore, the possible characters &apos;0&apos;..&apos;9&apos;, &apos;A&apos;..&apos;F&apos;, and &apos;a&apos;..&apos;f&apos; must be converted to the integers 0x0..0x9, 0xA..0xF, 0xA..0xF, resp. The conversion is done by subtracting the offset (0x30, 0x37, and 0x57) between the ASCII value of the character and the desired integer value.</para><para><simplesect kind="return"><para>codepoint (0x0000..0xFFFF) or -1 in case of an error (e.g. EOF or non-hex character) </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1774" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1774" bodyend="1805"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a2faa544ab5475523ead81f9cdef41a0a" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::lexer&lt; BasicJsonType &gt;::next_byte_in_range</definition>
+        <argsstring>(std::initializer_list&lt; int &gt; ranges)</argsstring>
+        <name>next_byte_in_range</name>
+        <param>
+          <type>std::initializer_list&lt; int &gt;</type>
+          <declname>ranges</declname>
+        </param>
+        <briefdescription>
+<para>check if the next byte(s) are inside a given range </para>        </briefdescription>
+        <detaileddescription>
+<para>Adds the current byte and, for each passed range, reads a new byte and checks if it is inside the range. If a violation was detected, set up an error message and return false. Otherwise, return true.</para><para><simplesect kind="return"><para>true if and only if no range violation was detected </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1816" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1816" bodyend="1836"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1ad271045d1c91df9d6a119482b4aeae7f" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+        <definition>token_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::scan_string</definition>
+        <argsstring>()</argsstring>
+        <name>scan_string</name>
+        <briefdescription>
+<para>scan a string literal </para>        </briefdescription>
+        <detaileddescription>
+<para>This function scans a string according to Sect. 7 of RFC 7159. While scanning, bytes are escaped and copied into buffer yytext. Then the function returns successfully, yytext is <emphasis>not</emphasis> null-terminated (as it may contain \0 bytes), and yytext.size() is the number of bytes in the string.</para><para><simplesect kind="return"><para><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a2b490e8bf366b4cbe3ebd99b26ce15ce" kindref="member">token_type::value_string</ref> if string could be successfully scanned, <ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a456e19aeafa334241c7ff3f589547f9d" kindref="member">token_type::parse_error</ref> otherwise</para></simplesect>
+<simplesect kind="note"><para>In case of errors, variable error_message contains a textual description. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1852" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1852" bodyend="2283"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a6bd7e6cdb0380a9df663f1c7f115f34f" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+        <definition>token_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::scan_number</definition>
+        <argsstring>()</argsstring>
+        <name>scan_number</name>
+        <briefdescription>
+<para>scan a number literal </para>        </briefdescription>
+        <detaileddescription>
+<para>This function scans a string according to Sect. 6 of RFC 7159.</para><para>The function is realized with a deterministic finite state machine derived from the grammar described in RFC 7159. Starting in state &quot;init&quot;, the input is read and used to determined the next state. Only state &quot;done&quot; accepts the number. State &quot;error&quot; is a trap state to model errors. In the table below, &quot;anything&quot; means any character but the ones listed before.</para><para><table rows="10" cols="8"><row>
+<entry thead="yes"><para>state  </para></entry><entry thead="yes"><para>0  </para></entry><entry thead="yes"><para>1-9  </para></entry><entry thead="yes"><para>e E  </para></entry><entry thead="yes"><para>+  </para></entry><entry thead="yes"><para>-  </para></entry><entry thead="yes"><para>.  </para></entry><entry thead="yes"><para>anything<itemizedlist>
+<listitem></listitem></itemizedlist>
+</para></entry></row>
+<row>
+<entry thead="no"><para>init  </para></entry><entry thead="no"><para>zero  </para></entry><entry thead="no"><para>any1  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>minus  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]   </para></entry></row>
+<row>
+<entry thead="no"><para>minus  </para></entry><entry thead="no"><para>zero  </para></entry><entry thead="no"><para>any1  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]   </para></entry></row>
+<row>
+<entry thead="no"><para>zero  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>exponent  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>decimal1  </para></entry><entry thead="no"><para>done   </para></entry></row>
+<row>
+<entry thead="no"><para>any1  </para></entry><entry thead="no"><para>any1  </para></entry><entry thead="no"><para>any1  </para></entry><entry thead="no"><para>exponent  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>decimal1  </para></entry><entry thead="no"><para>done   </para></entry></row>
+<row>
+<entry thead="no"><para>decimal1  </para></entry><entry thead="no"><para>decimal2  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]   </para></entry></row>
+<row>
+<entry thead="no"><para>decimal2  </para></entry><entry thead="no"><para>decimal2  </para></entry><entry thead="no"><para>decimal2  </para></entry><entry thead="no"><para>exponent  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done   </para></entry></row>
+<row>
+<entry thead="no"><para>exponent  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>sign  </para></entry><entry thead="no"><para>sign  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]   </para></entry></row>
+<row>
+<entry thead="no"><para>sign  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]  </para></entry><entry thead="no"><para>[error]   </para></entry></row>
+<row>
+<entry thead="no"><para>any2  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>any2  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done  </para></entry><entry thead="no"><para>done   </para></entry></row>
+</table>
+</para><para>The state machine is realized with one label per state (prefixed with &quot;scan_number_&quot;) and <computeroutput>goto</computeroutput> statements between them. The state machine contains cycles, but any cycle can be left when EOF is read. Therefore, the function is guaranteed to terminate.</para><para>During scanning, the read bytes are stored in yytext. This string is then converted to a signed integer, an unsigned integer, or a floating-point number.</para><para><simplesect kind="return"><para><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098aaf1f040fcd2f674d2e5893d7a731078f" kindref="member">token_type::value_unsigned</ref>, <ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a5064b6655d88a50ae16665cf7751c0ee" kindref="member">token_type::value_integer</ref>, or <ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a0d2671a6f81efb91e77f6ac3bdb11443" kindref="member">token_type::value_float</ref> if number could be successfully scanned, <ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098a456e19aeafa334241c7ff3f589547f9d" kindref="member">token_type::parse_error</ref> otherwise</para></simplesect>
+<simplesect kind="note"><para>The scanner is independent of the current locale. Internally, the locale&apos;s decimal point is used instead of <computeroutput>.</computeroutput> to work with the locale-dependent converters. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2340" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2340" bodyend="2665"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a6f717deb553337736f27cdacccaee536" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+        <definition>token_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::scan_literal</definition>
+        <argsstring>(const char *literal_text, const std::size_t length, token_type return_type)</argsstring>
+        <name>scan_literal</name>
+        <param>
+          <type>const char *</type>
+          <declname>literal_text</declname>
+        </param>
+        <param>
+          <type>const std::size_t</type>
+          <declname>length</declname>
+        </param>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" kindref="member">token_type</ref></type>
+          <declname>return_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">literal_text</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the literal text to expect </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">length</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the length of the passed literal text </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">return_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the token type to return on success </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2672" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2672" bodyend="2685"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1acba34bc18af19f93186e682d02c3942d" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::lexer&lt; BasicJsonType &gt;::reset</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>reset</name>
+        <briefdescription>
+<para>reset yytext; current character is beginning of token </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2692" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2692" bodyend="2697"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a901e45a34e1fb1d97ab62350b0c3ef26" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::char_traits&lt; char &gt;::int_type</type>
+        <definition>std::char_traits&lt;char&gt;::int_type nlohmann::detail::lexer&lt; BasicJsonType &gt;::get</definition>
+        <argsstring>()</argsstring>
+        <name>get</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2709" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2709" bodyend="2718"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1a626f145768762057dc68a4666eb577db" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::lexer&lt; BasicJsonType &gt;::unget</definition>
+        <argsstring>()</argsstring>
+        <name>unget</name>
+        <briefdescription>
+<para>unget current character (return it again on next get) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2721" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2721" bodyend="2730"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1lexer_1acec899d31af1fd647911e46e8535c283" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::lexer&lt; BasicJsonType &gt;::add</definition>
+        <argsstring>(int c)</argsstring>
+        <name>add</name>
+        <param>
+          <type>int</type>
+          <declname>c</declname>
+        </param>
+        <briefdescription>
+<para>add a character to yytext </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="2733" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="2733" bodyend="2736"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>lexical analysis </para>    </briefdescription>
+    <detaileddescription>
+<para>This class organizes the lexical analysis during JSON deserialization. </para>    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="1665" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="1664" bodyend="2904"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1acec899d31af1fd647911e46e8535c283" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>add</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1aab991bcbf230c372b276742f1790ba5b" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>chars_read</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a47169f9aaf0da4c9885e61d3109859aa" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>current</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a16593b0475f6d1cddd5eaf7c045771f3" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>decimal_point_char</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ae2a15e440f1889e0ab0c6a35344e48df" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>error_message</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a901e45a34e1fb1d97ab62350b0c3ef26" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a820b20e25ff255c3c791c37f2bf48380" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_codepoint</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ae545b0856f57220645d749ab8c494f47" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_decimal_point</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a53cebbc684ef97fa49651eb442d58f86" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_error_message</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ac013af35a21e9387993b19da5b3e0ae2" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_number_float</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1afa338d17c0a7e834c73104258a2c8ced" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_number_integer</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a56640fb92293e0c17742ca3c814d74d6" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_number_unsigned</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a2a00465a3d5d70c84809cdb27658db79" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_position</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_a4aef7e72e539be04e139c34872421f2a_1a4aef7e72e539be04e139c34872421f2a" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>get_token_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1aa7e69cd9d51451fd798eaf501b40421f" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>ia</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a0d7de7b99bc839ea9a39dd738d05d89c" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>lexer</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a2e8ce2a0d266d148b69dfbcc2e4ad71a" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>lexer</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a73216fe28e91a0aa3bdae77a89ce554b" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>move_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a2faa544ab5475523ead81f9cdef41a0a" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>next_byte_in_range</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1aa7f9e7b2bcd311fb86e2da43761a6619" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>number_float_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a9cd1b11cc67edbfb2613c788b5bd337c" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>number_integer_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a105d1dfeab414a572655895cdd96a52a" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>number_unsigned_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a33e97dee7c5faf1b36aff5b74a6c8f55" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>operator=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1acba34bc18af19f93186e682d02c3942d" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>reset</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1aac3041cd2b9291e64fee38db422863c9" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>scan</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a6f717deb553337736f27cdacccaee536" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>scan_literal</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a6bd7e6cdb0380a9df663f1c7f115f34f" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>scan_number</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ad271045d1c91df9d6a119482b4aeae7f" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>scan_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a1a2d4cc5d9fed4783aa2a98497925511" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>strtof</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a8cd877d10b31bc819e4f030292737ea6" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>strtof</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a0e28dda9a1e007d55d03e8d39dd3b9fa" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>strtof</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ad2960e3d54af8fb8d572a8f6f7731d62" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>token_string</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_a3f313cdbe187cababfc5e06f0b69b098_1a3f313cdbe187cababfc5e06f0b69b098" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>token_type</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1ae514e2005f0ce185f1ad366139e541e8" prot="public" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>token_type_name</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a626f145768762057dc68a4666eb577db" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>unget</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a861ce804da2d257ee373d1e0b55780e1" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>value_float</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1a353d8eeca5b2f21b3e88540c17afb9bc" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>value_integer</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1af250180459c23ca71c3e10a99fb5ba3e" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>value_unsigned</name></member>
+      <member refid="classnlohmann_1_1detail_1_1lexer_1aaf0fed9b2dda562244ba5680b0b5b559" prot="private" virt="non-virtual"><scope>nlohmann::detail::lexer</scope><name>yytext</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1conjunction_3_01B1_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::conjunction&lt; B1 &gt;</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">B1</basecompoundref>
+    <templateparamlist>
+      <param>
+        <type>class B1</type>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3580">
+        <label>B1</label>
+      </node>
+      <node id="3579">
+        <label>nlohmann::detail::conjunction&lt; B1 &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1conjunction_3_01B1_01_4"/>
+        <childnode refid="3580" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3582">
+        <label>B1</label>
+      </node>
+      <node id="3581">
+        <label>nlohmann::detail::conjunction&lt; B1 &gt;</label>
+        <link refid="structnlohmann_1_1detail_1_1conjunction_3_01B1_01_4"/>
+        <childnode refid="3582" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="630" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="630" bodyend="630"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

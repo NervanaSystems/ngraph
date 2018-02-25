@@ -1,0 +1,297 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::MKLDNNEmitter</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ab058f2ddedcf76c11ce7ac8f4911c8e1" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;CPU_ExternalFunction&gt; ngraph::runtime::cpu::MKLDNNEmitter::external_function</definition>
+        <argsstring></argsstring>
+        <name>external_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a73e8b5b6ce0575399dd8dc59dd38d1ec" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; mkldnn::primitive * &gt;</type>
+        <definition>std::vector&lt;mkldnn::primitive*&gt; ngraph::runtime::cpu::MKLDNNEmitter::mkldnn_primitives</definition>
+        <argsstring></argsstring>
+        <name>mkldnn_primitives</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a6a9c61356fd41e2bf29ea1985cacd4ca" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; mkldnn::stream &gt;</type>
+        <definition>std::vector&lt;mkldnn::stream&gt; ngraph::runtime::cpu::MKLDNNEmitter::mkldnn_streams</definition>
+        <argsstring></argsstring>
+        <name>mkldnn_streams</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="74" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ab563f9184531d3bb84ba3becabfc1111" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; size_t, std::vector&lt; size_t &gt; &gt;</type>
+        <definition>std::unordered_map&lt;size_t, std::vector&lt;size_t&gt; &gt; ngraph::runtime::cpu::MKLDNNEmitter::primitive_deps</definition>
+        <argsstring></argsstring>
+        <name>primitive_deps</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="75" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1aa5614e1b1f39b599b9fef7a36079342d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::runtime::cpu::MKLDNNEmitter::MKLDNNEmitter</definition>
+        <argsstring>(std::shared_ptr&lt; CPU_ExternalFunction &gt; ef)</argsstring>
+        <name>MKLDNNEmitter</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kindref="compound">CPU_ExternalFunction</ref> &gt;</type>
+          <declname>ef</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="39" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1acc0e16d9f996d992b1d6a510f459ec8a" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::vector&lt; mkldnn::primitive * &gt; &amp;</type>
+        <definition>const std::vector&lt; mkldnn::primitive * &gt; &amp; MKLDNNEmitter::get_mkldnn_primitives</definition>
+        <argsstring>() const</argsstring>
+        <name>get_mkldnn_primitives</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="28" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1aab89d4abf5358154c9aa086628459569" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t MKLDNNEmitter::insert_primitive</definition>
+        <argsstring>(mkldnn::primitive *primitive)</argsstring>
+        <name>insert_primitive</name>
+        <param>
+          <type>mkldnn::primitive *</type>
+          <declname>primitive</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="33" bodyend="37"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1af9c6ba3f6e2b7805420d9ea8a58602e9" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::vector&lt; size_t &gt; &amp;</type>
+        <definition>const std::vector&lt; size_t &gt; &amp; MKLDNNEmitter::get_primitive_deps</definition>
+        <argsstring>(size_t index) const</argsstring>
+        <name>get_primitive_deps</name>
+        <param>
+          <type>size_t</type>
+          <declname>index</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="39" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a2e0413d00b4a42115402c431ae057c85" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>mkldnn::memory::desc</type>
+        <definition>mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor</definition>
+        <argsstring>(const TensorViewWrapper &amp;tvw, mkldnn::memory::format fmt) const</argsstring>
+        <name>build_memory_descriptor</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <declname>tvw</declname>
+        </param>
+        <param>
+          <type>mkldnn::memory::format</type>
+          <declname>fmt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="50" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="44" bodyend="51"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1acf3f410e8b8201a40843813ac27280ce" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>mkldnn::memory::desc</type>
+        <definition>mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor</definition>
+        <argsstring>(const TensorViewWrapper &amp;tvw) const</argsstring>
+        <name>build_memory_descriptor</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <declname>tvw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="53" bodyend="59"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a5b52f991cc296cec4fe8079b2a546e6e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>mkldnn::memory</type>
+        <definition>mkldnn::memory MKLDNNEmitter::build_memory_primitive</definition>
+        <argsstring>(const TensorViewWrapper &amp;tvw) const</argsstring>
+        <name>build_memory_primitive</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &amp;</type>
+          <declname>tvw</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="61" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a6c00413534b127851f368ff090d72a6d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t MKLDNNEmitter::build_memory_primitive</definition>
+        <argsstring>(const mkldnn::memory::desc &amp;desc)</argsstring>
+        <name>build_memory_primitive</name>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>desc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="66" bodyend="74"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ae21fc35561bf0c582e2e5337937616df" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t MKLDNNEmitter::build_convolution_forward</definition>
+        <argsstring>(const mkldnn::memory::desc &amp;input_data_desc, const mkldnn::memory::desc &amp;weights_desc, const mkldnn::memory::desc &amp;result_desc, const ngraph::Strides &amp;strides, const ngraph::CoordinateDiff &amp;padding_below, const ngraph::CoordinateDiff &amp;padding_above)</argsstring>
+        <name>build_convolution_forward</name>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>input_data_desc</declname>
+        </param>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>weights_desc</declname>
+        </param>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>result_desc</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">ngraph::Strides</ref> &amp;</type>
+          <declname>strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">ngraph::CoordinateDiff</ref> &amp;</type>
+          <declname>padding_below</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">ngraph::CoordinateDiff</ref> &amp;</type>
+          <declname>padding_above</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="76" bodyend="105"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a15de757fd4bec149df6c359cd4ec7fd2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t MKLDNNEmitter::build_convolution_forward</definition>
+        <argsstring>(const mkldnn::memory::desc &amp;input_data_desc, const mkldnn::memory::desc &amp;weights_desc, const mkldnn::memory::desc &amp;result_desc, const ngraph::Strides &amp;strides, const ngraph::Strides &amp;dilation_strides, const ngraph::CoordinateDiff &amp;padding_below, const ngraph::CoordinateDiff &amp;padding_above)</argsstring>
+        <name>build_convolution_forward</name>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>input_data_desc</declname>
+        </param>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>weights_desc</declname>
+        </param>
+        <param>
+          <type>const mkldnn::memory::desc &amp;</type>
+          <declname>result_desc</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">ngraph::Strides</ref> &amp;</type>
+          <declname>strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4f18980b4c7d5cfb11ccf07edf928344" kindref="member">ngraph::Strides</ref> &amp;</type>
+          <declname>dilation_strides</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">ngraph::CoordinateDiff</ref> &amp;</type>
+          <declname>padding_below</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_ada8b29c0d389e69303dd3eeb0c2a53a0_1ada8b29c0d389e69303dd3eeb0c2a53a0" kindref="member">ngraph::CoordinateDiff</ref> &amp;</type>
+          <declname>padding_above</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp" bodystart="107" bodyend="138"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.hpp" bodystart="36" bodyend="76"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ae21fc35561bf0c582e2e5337937616df" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_convolution_forward</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a15de757fd4bec149df6c359cd4ec7fd2" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_convolution_forward</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a2e0413d00b4a42115402c431ae057c85" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_memory_descriptor</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1acf3f410e8b8201a40843813ac27280ce" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_memory_descriptor</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a5b52f991cc296cec4fe8079b2a546e6e" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_memory_primitive</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a6c00413534b127851f368ff090d72a6d" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>build_memory_primitive</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ab058f2ddedcf76c11ce7ac8f4911c8e1" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>external_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1acc0e16d9f996d992b1d6a510f459ec8a" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>get_mkldnn_primitives</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1af9c6ba3f6e2b7805420d9ea8a58602e9" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>get_primitive_deps</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1aab89d4abf5358154c9aa086628459569" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>insert_primitive</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a73e8b5b6ce0575399dd8dc59dd38d1ec" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>mkldnn_primitives</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1a6a9c61356fd41e2bf29ea1985cacd4ca" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>mkldnn_streams</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1aa5614e1b1f39b599b9fef7a36079342d" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>MKLDNNEmitter</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter_1ab563f9184531d3bb84ba3becabfc1111" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::MKLDNNEmitter</scope><name>primitive_deps</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

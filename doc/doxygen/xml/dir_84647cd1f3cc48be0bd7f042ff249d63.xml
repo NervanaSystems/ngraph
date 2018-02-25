@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_84647cd1f3cc48be0bd7f042ff249d63" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass</compoundname>
+    <innerfile refid="assign__layout_8hpp">assign_layout.hpp</innerfile>
+    <innerfile refid="dump__sorted_8cpp">dump_sorted.cpp</innerfile>
+    <innerfile refid="dump__sorted_8hpp">dump_sorted.hpp</innerfile>
+    <innerfile refid="graph__rewrite_8cpp">graph_rewrite.cpp</innerfile>
+    <innerfile refid="graph__rewrite_8hpp">graph_rewrite.hpp</innerfile>
+    <innerfile refid="inliner_8cpp">inliner.cpp</innerfile>
+    <innerfile refid="inliner_8hpp">inliner.hpp</innerfile>
+    <innerfile refid="liveness_8cpp">liveness.cpp</innerfile>
+    <innerfile refid="liveness_8hpp">liveness.hpp</innerfile>
+    <innerfile refid="pass_2manager_8cpp">manager.cpp</innerfile>
+    <innerfile refid="pass_2manager_8hpp">manager.hpp</innerfile>
+    <innerfile refid="manager__state_8cpp">manager_state.cpp</innerfile>
+    <innerfile refid="manager__state_8hpp">manager_state.hpp</innerfile>
+    <innerfile refid="memory__layout_8cpp">memory_layout.cpp</innerfile>
+    <innerfile refid="memory__layout_8hpp">memory_layout.hpp</innerfile>
+    <innerfile refid="memory__visualize_8cpp">memory_visualize.cpp</innerfile>
+    <innerfile refid="memory__visualize_8hpp">memory_visualize.hpp</innerfile>
+    <innerfile refid="pass_8cpp">pass.cpp</innerfile>
+    <innerfile refid="pass_8hpp">pass.hpp</innerfile>
+    <innerfile refid="reshape__elimination_8cpp">reshape_elimination.cpp</innerfile>
+    <innerfile refid="reshape__elimination_8hpp">reshape_elimination.hpp</innerfile>
+    <innerfile refid="visualize__tree_8cpp">visualize_tree.cpp</innerfile>
+    <innerfile refid="visualize__tree_8hpp">visualize_tree.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/"/>
+  </compounddef>
+</doxygen>

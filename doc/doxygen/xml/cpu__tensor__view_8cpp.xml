@@ -1,0 +1,552 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="cpu__tensor__view_8cpp" kind="file" language="C++">
+    <compoundname>cpu_tensor_view.cpp</compoundname>
+    <includes local="no">cstring</includes>
+    <includes local="no">memory</includes>
+    <includes refid="cpu__tensor__view_8hpp" local="yes">cpu_tensor_view.hpp</includes>
+    <includes refid="tensor__view__layout_8hpp" local="yes">ngraph/descriptor/layout/tensor_view_layout.hpp</includes>
+    <includes refid="primary__tensor__view_8hpp" local="yes">ngraph/descriptor/primary_tensor_view.hpp</includes>
+    <includes refid="except_8hpp" local="yes">ngraph/except.hpp</includes>
+    <includes refid="cpu__layout__descriptor_8hpp" local="yes">ngraph/runtime/cpu/cpu_layout_descriptor.hpp</includes>
+    <includes refid="mkldnn__utils_8hpp" local="yes">ngraph/runtime/cpu/mkldnn_utils.hpp</includes>
+    <includes refid="shape_8hpp" local="yes">ngraph/shape.hpp</includes>
+    <incdepgraph>
+      <node id="12784">
+        <label>list</label>
+      </node>
+      <node id="12789">
+        <label>ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="12790" relation="include">
+        </childnode>
+        <childnode refid="12791" relation="include">
+        </childnode>
+      </node>
+      <node id="12800">
+        <label>atomic</label>
+      </node>
+      <node id="12783">
+        <label>functional</label>
+      </node>
+      <node id="12793">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="12768" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12794" relation="include">
+        </childnode>
+      </node>
+      <node id="12796">
+        <label>cstdint</label>
+      </node>
+      <node id="12794">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+        <childnode refid="12772" relation="include">
+        </childnode>
+      </node>
+      <node id="12804">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12770" relation="include">
+        </childnode>
+        <childnode refid="12803" relation="include">
+        </childnode>
+        <childnode refid="12765" relation="include">
+        </childnode>
+      </node>
+      <node id="12799">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="12800" relation="include">
+        </childnode>
+        <childnode refid="12779" relation="include">
+        </childnode>
+        <childnode refid="12768" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12770" relation="include">
+        </childnode>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12801" relation="include">
+        </childnode>
+        <childnode refid="12785" relation="include">
+        </childnode>
+        <childnode refid="12786" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12802" relation="include">
+        </childnode>
+        <childnode refid="12769" relation="include">
+        </childnode>
+        <childnode refid="12803" relation="include">
+        </childnode>
+        <childnode refid="12804" relation="include">
+        </childnode>
+        <childnode refid="12793" relation="include">
+        </childnode>
+        <childnode refid="12794" relation="include">
+        </childnode>
+      </node>
+      <node id="12790">
+        <label>cassert</label>
+      </node>
+      <node id="12778">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="12779" relation="include">
+        </childnode>
+        <childnode refid="12774" relation="include">
+        </childnode>
+        <childnode refid="12777" relation="include">
+        </childnode>
+      </node>
+      <node id="12777">
+        <label>stdexcept</label>
+      </node>
+      <node id="12762">
+        <label>string</label>
+      </node>
+      <node id="12773">
+        <label>map</label>
+      </node>
+      <node id="12786">
+        <label>unordered_set</label>
+      </node>
+      <node id="12791">
+        <label>ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp_source"/>
+      </node>
+      <node id="12797">
+        <label>mkldnn.hpp</label>
+      </node>
+      <node id="12772">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="12773" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12774" relation="include">
+        </childnode>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12775" relation="include">
+        </childnode>
+        <childnode refid="12769" relation="include">
+        </childnode>
+        <childnode refid="12776" relation="include">
+        </childnode>
+        <childnode refid="12778" relation="include">
+        </childnode>
+      </node>
+      <node id="12769">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12770" relation="include">
+        </childnode>
+        <childnode refid="12771" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+      </node>
+      <node id="12803">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12793" relation="include">
+        </childnode>
+        <childnode refid="12794" relation="include">
+        </childnode>
+      </node>
+      <node id="12766">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="12767" relation="include">
+        </childnode>
+        <childnode refid="12768" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12769" relation="include">
+        </childnode>
+      </node>
+      <node id="12802">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12785" relation="include">
+        </childnode>
+        <childnode refid="12769" relation="include">
+        </childnode>
+      </node>
+      <node id="12767">
+        <label>cstdio</label>
+      </node>
+      <node id="12788">
+        <label>tuple</label>
+      </node>
+      <node id="12761">
+        <label>cpu_tensor_view.hpp</label>
+        <link refid="cpu__tensor__view_8hpp_source"/>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12763" relation="include">
+        </childnode>
+        <childnode refid="12772" relation="include">
+        </childnode>
+      </node>
+      <node id="12764">
+        <label>vector</label>
+      </node>
+      <node id="12792">
+        <label>ngraph/descriptor/primary_tensor_view.hpp</label>
+        <link refid="primary__tensor__view_8hpp_source"/>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12793" relation="include">
+        </childnode>
+        <childnode refid="12765" relation="include">
+        </childnode>
+        <childnode refid="12778" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+        <childnode refid="12794" relation="include">
+        </childnode>
+      </node>
+      <node id="12771">
+        <label>utility</label>
+      </node>
+      <node id="12774">
+        <label>sstream</label>
+      </node>
+      <node id="12787">
+        <label>ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12788" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12789" relation="include">
+        </childnode>
+        <childnode refid="12765" relation="include">
+        </childnode>
+      </node>
+      <node id="12768">
+        <label>iostream</label>
+      </node>
+      <node id="12779">
+        <label>deque</label>
+      </node>
+      <node id="12785">
+        <label>unordered_map</label>
+      </node>
+      <node id="12798">
+        <label>ngraph/runtime/cpu/mkldnn_utils.hpp</label>
+        <link refid="mkldnn__utils_8hpp_source"/>
+        <childnode refid="12797" relation="include">
+        </childnode>
+        <childnode refid="12799" relation="include">
+        </childnode>
+        <childnode refid="12795" relation="include">
+        </childnode>
+        <childnode refid="12772" relation="include">
+        </childnode>
+      </node>
+      <node id="12782">
+        <label>chrono</label>
+      </node>
+      <node id="12758">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp</label>
+        <link refid="cpu__tensor__view_8cpp"/>
+        <childnode refid="12759" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12761" relation="include">
+        </childnode>
+        <childnode refid="12787" relation="include">
+        </childnode>
+        <childnode refid="12792" relation="include">
+        </childnode>
+        <childnode refid="12776" relation="include">
+        </childnode>
+        <childnode refid="12795" relation="include">
+        </childnode>
+        <childnode refid="12798" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+      </node>
+      <node id="12776">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="12777" relation="include">
+        </childnode>
+      </node>
+      <node id="12775">
+        <label>type_traits</label>
+      </node>
+      <node id="12770">
+        <label>set</label>
+      </node>
+      <node id="12765">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+      </node>
+      <node id="12781">
+        <label>algorithm</label>
+      </node>
+      <node id="12780">
+        <label>ngraph/util.hpp</label>
+        <link refid="util_8hpp_source"/>
+        <childnode refid="12781" relation="include">
+        </childnode>
+        <childnode refid="12782" relation="include">
+        </childnode>
+        <childnode refid="12779" relation="include">
+        </childnode>
+        <childnode refid="12783" relation="include">
+        </childnode>
+        <childnode refid="12768" relation="include">
+        </childnode>
+        <childnode refid="12784" relation="include">
+        </childnode>
+        <childnode refid="12773" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12774" relation="include">
+        </childnode>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12785" relation="include">
+        </childnode>
+        <childnode refid="12786" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+      </node>
+      <node id="12763">
+        <label>ngraph/runtime/tensor_view.hpp</label>
+        <link refid="runtime_2tensor__view_8hpp_source"/>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12765" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+        <childnode refid="12772" relation="include">
+        </childnode>
+        <childnode refid="12780" relation="include">
+        </childnode>
+      </node>
+      <node id="12795">
+        <label>ngraph/runtime/cpu/cpu_layout_descriptor.hpp</label>
+        <link refid="cpu__layout__descriptor_8hpp_source"/>
+        <childnode refid="12796" relation="include">
+        </childnode>
+        <childnode refid="12760" relation="include">
+        </childnode>
+        <childnode refid="12762" relation="include">
+        </childnode>
+        <childnode refid="12764" relation="include">
+        </childnode>
+        <childnode refid="12797" relation="include">
+        </childnode>
+        <childnode refid="12769" relation="include">
+        </childnode>
+        <childnode refid="12787" relation="include">
+        </childnode>
+        <childnode refid="12766" relation="include">
+        </childnode>
+        <childnode refid="12794" relation="include">
+        </childnode>
+      </node>
+      <node id="12759">
+        <label>cstring</label>
+      </node>
+      <node id="12760">
+        <label>memory</label>
+      </node>
+      <node id="12801">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstring&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;memory&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cpu_tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/layout/tensor_view_layout.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/descriptor/primary_tensor_view.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/except.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/cpu/cpu_layout_descriptor.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/cpu/mkldnn_utils.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/shape.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacemkldnn" kindref="compound">mkldnn</ref>;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespacestd" kindref="compound">std</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="comment">//<sp/>TODO(jmenon):<sp/>Refactor<sp/>all<sp/>the<sp/>alignment<sp/>specifications<sp/>into</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="comment">//<sp/>a<sp/>single<sp/>place<sp/>and<sp/>allow<sp/>lower<sp/>or<sp/>no<sp/>alignment<sp/>when<sp/>possible</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>runtime::cpu::CPUTensorView::BufferAlignment<sp/>=<sp/>64;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal">runtime::cpu::CPUTensorView::CPUTensorView(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1element_1_1Type" kindref="compound">ngraph::element::Type</ref>&amp;<sp/>element_type,</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref>&amp;<sp/>shape,</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">string</highlight><highlight class="normal">&amp;<sp/>name)</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>:<sp/>runtime::TensorView(<ref refid="namespacestd" kindref="compound">std</ref>::make_shared&lt;<ref refid="namespacengraph" kindref="compound">ngraph</ref>::descriptor::PrimaryTensorView&gt;(</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespacestd" kindref="compound">std</ref>::make_shared&lt;<ref refid="namespacengraph" kindref="compound">ngraph</ref>::<ref refid="classngraph_1_1TensorViewType" kindref="compound">TensorViewType</ref>&gt;(element_type,<sp/>shape),<sp/>name,<sp/>true,<sp/>true,<sp/>false))</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>buffer(nullptr)</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>,<sp/>aligned_buffer(nullptr)</highlight></codeline>
+<codeline lineno="44"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>TODO(jmenon):<sp/>A<sp/>fallback<sp/>layout<sp/>should<sp/>not<sp/>be<sp/>needed<sp/>but<sp/>is<sp/>required</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>because<sp/>of<sp/>how<sp/>some<sp/>unit<sp/>test<sp/>functionality<sp/>is<sp/>written<sp/>(ex.<sp/>&apos;backprop_derivative&apos;)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>This<sp/>needs<sp/>to<sp/>be<sp/>removed</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>m_descriptor-&gt;set_tensor_view_layout(std::make_shared&lt;runtime::cpu::LayoutDescriptor&gt;(</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*m_descriptor,<sp/>runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>buffer_size<sp/>=<sp/><ref refid="namespacengraph_1aaf2b8d56fdd9e59742bf3190da5efc33" kindref="member">shape_size</ref>(shape)<sp/>*<sp/>element_type.size();</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(buffer_size)</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>allocation_size<sp/>=<sp/>buffer_size<sp/>+<sp/>BufferAlignment;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>ptr<sp/>=<sp/>malloc(allocation_size);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(!ptr)</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/><ref refid="structngraph_1_1ngraph__error" kindref="compound">ngraph_error</ref>(</highlight><highlight class="stringliteral">&quot;Error<sp/>allocating<sp/>CPU<sp/>Tensor<sp/>View<sp/>memory&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>buffer<sp/>=<sp/></highlight><highlight class="keyword">static_cast&lt;</highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(ptr);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="comment">//<sp/>GCC<sp/>major<sp/>versions<sp/>below<sp/>5<sp/>do<sp/>not<sp/>implement<sp/>C++11<sp/>std::align</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>!defined(__GNUC__)<sp/>||<sp/>__GNUC__<sp/>&gt;=<sp/>5</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::align(BufferAlignment,<sp/>buffer_size,<sp/>ptr,<sp/>allocation_size);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ptr<sp/>=<sp/></highlight><highlight class="keyword">static_cast&lt;</highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(ptr)<sp/>+<sp/>(BufferAlignment<sp/>-<sp/>1);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ptr<sp/>=<sp/></highlight><highlight class="keyword">reinterpret_cast&lt;</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(</highlight><highlight class="keyword">reinterpret_cast&lt;</highlight><highlight class="normal">uintptr_t</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(ptr)<sp/>&amp;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>~(uintptr_t(BufferAlignment<sp/>-<sp/>1)));</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>aligned_buffer<sp/>=<sp/></highlight><highlight class="keyword">static_cast&lt;</highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(ptr);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="73"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal">runtime::cpu::CPUTensorView::~CPUTensorView()</highlight></codeline>
+<codeline lineno="76"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/>free(buffer);</highlight></codeline>
+<codeline lineno="78"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>runtime::cpu::CPUTensorView::get_data_ptr()</highlight></codeline>
+<codeline lineno="81"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>aligned_buffer;</highlight></codeline>
+<codeline lineno="83"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>runtime::cpu::CPUTensorView::get_data_ptr()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="86"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>aligned_buffer;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90" refid="classngraph_1_1runtime_1_1cpu_1_1CPUTensorView_ad05e8bbb4f9dc4e7111c8591bd2a7273_1ad05e8bbb4f9dc4e7111c8591bd2a7273" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1CPUTensorView_ad05e8bbb4f9dc4e7111c8591bd2a7273_1ad05e8bbb4f9dc4e7111c8591bd2a7273" kindref="member">runtime::cpu::CPUTensorView::write</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*<sp/>source,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>tensor_offset,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)</highlight></codeline>
+<codeline lineno="91"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(tensor_offset<sp/>+<sp/>n<sp/>&gt;<sp/>buffer_size)</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>out_of_range(</highlight><highlight class="stringliteral">&quot;write<sp/>access<sp/>past<sp/>end<sp/>of<sp/>tensor&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>target<sp/>=<sp/>get_data_ptr();</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>memcpy(&amp;target[tensor_offset],<sp/>source,<sp/>n);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100" refid="classngraph_1_1runtime_1_1cpu_1_1CPUTensorView_a622288996fed12aa8ed2853ee1c7e817_1a622288996fed12aa8ed2853ee1c7e817" refkind="member"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1CPUTensorView_a622288996fed12aa8ed2853ee1c7e817_1a622288996fed12aa8ed2853ee1c7e817" kindref="member">runtime::cpu::CPUTensorView::read</ref>(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*<sp/>target,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>tensor_offset,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n)</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="101"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(tensor_offset<sp/>+<sp/>n<sp/>&gt;<sp/>buffer_size)</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">throw</highlight><highlight class="normal"><sp/>out_of_range(</highlight><highlight class="stringliteral">&quot;read<sp/>access<sp/>past<sp/>end<sp/>of<sp/>tensor&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>tvl<sp/>=<sp/>this-&gt;get_tensor_view_layout();</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>cpu_tvl<sp/>=<sp/></highlight><highlight class="keyword">dynamic_cast&lt;</highlight><highlight class="normal"><ref refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor" kindref="compound">runtime::cpu::LayoutDescriptor</ref>*</highlight><highlight class="keyword">&gt;</highlight><highlight class="normal">(tvl.get());</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(cpu_tvl<sp/>&amp;&amp;<sp/>cpu_tvl-&gt;get_mkldnn_format()<sp/>!=<sp/>memory::format::format_undef<sp/>&amp;&amp;</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>cpu_tvl-&gt;get_mkldnn_format()<sp/>!=</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl))</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>tensor_shape<sp/>=<sp/>this-&gt;get_shape();</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>input_format<sp/>=<sp/>cpu_tvl-&gt;get_mkldnn_format();</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/>output_format<sp/>=<sp/>runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory::data_type<sp/>et<sp/>=<sp/>runtime::cpu::mkldnn_utils::get_mkldnn_data_type(</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>this-&gt;get_descriptor()-&gt;get_tensor_view_type()-&gt;get_element_type());</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"></highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>engine<sp/>cpu_engine{engine::cpu,<sp/>0};</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory::dims<sp/>mkldnn_shape{tensor_shape.begin(),<sp/>tensor_shape.end()};</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory::desc<sp/>input_desc{mkldnn_shape,<sp/>et,<sp/>input_format};</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory::desc<sp/>output_desc{mkldnn_shape,<sp/>et,<sp/>output_format};</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory<sp/>input{{input_desc,<sp/>cpu_engine},<sp/>aligned_buffer};</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memory<sp/>output{{output_desc,<sp/>cpu_engine},<sp/>target};</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>reorder<sp/>prim{input,<sp/>output};</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mkldnn::stream<sp/>s(mkldnn::stream::kind::eager);</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>s.submit({prim}).wait();</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>source<sp/>=<sp/>get_data_ptr();</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>memcpy(target,<sp/>&amp;source[tensor_offset],<sp/>n);</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="134"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>runtime::cpu::CPUTensorView::get_size()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="137"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>get_element_count();</highlight></codeline>
+<codeline lineno="139"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp"/>
+  </compounddef>
+</doxygen>

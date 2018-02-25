@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1NodePass" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>ngraph::pass::NodePass</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1PassBase" prot="public" virt="non-virtual">ngraph::pass::PassBase</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1NodePass_1a5e703bf3e43bf75eb38fabef9d2819cb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual ngraph::pass::NodePass::~NodePass</definition>
+        <argsstring>()</argsstring>
+        <name>~NodePass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/pass.hpp" line="71" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/pass.hpp" bodystart="71" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1NodePass_1a81a54f10a4b230d442aec17fc7ddca4c" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>bool</type>
+        <definition>virtual bool ngraph::pass::NodePass::run_on_node</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Node &gt;)=0</argsstring>
+        <name>run_on_node</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/pass.hpp" line="72" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3172">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3171">
+        <label>ngraph::pass::NodePass</label>
+        <link refid="classngraph_1_1pass_1_1NodePass"/>
+        <childnode refid="3172" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3174">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3173">
+        <label>ngraph::pass::NodePass</label>
+        <link refid="classngraph_1_1pass_1_1NodePass"/>
+        <childnode refid="3174" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/pass.hpp" line="69" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/pass.hpp" bodystart="68" bodyend="73"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::NodePass</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1NodePass_1a81a54f10a4b230d442aec17fc7ddca4c" prot="public" virt="pure-virtual"><scope>ngraph::pass::NodePass</scope><name>run_on_node</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::NodePass</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1NodePass_1a5e703bf3e43bf75eb38fabef9d2819cb" prot="public" virt="virtual"><scope>ngraph::pass::NodePass</scope><name>~NodePass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::NodePass</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

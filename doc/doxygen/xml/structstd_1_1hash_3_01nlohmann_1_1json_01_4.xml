@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structstd_1_1hash_3_01nlohmann_1_1json_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>std::hash&lt; nlohmann::json &gt;</compoundname>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structstd_1_1hash_3_01nlohmann_1_1json_01_4_aec1567d1fa47dbe5b77954dce3a55b64_1aec1567d1fa47dbe5b77954dce3a55b64" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::size_t</type>
+        <definition>std::size_t std::hash&lt; nlohmann::json &gt;::operator()</definition>
+        <argsstring>(const nlohmann::json &amp;j) const</argsstring>
+        <name>operator()</name>
+        <param>
+          <type>const <ref refid="namespacenlohmann_a2bfd99e845a2e5cd90aeaf1b1431f474_1a2bfd99e845a2e5cd90aeaf1b1431f474" kindref="member">nlohmann::json</ref> &amp;</type>
+          <declname>j</declname>
+        </param>
+        <briefdescription>
+<para>return a hash value for a JSON object </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="since"><para>version 1.0.0 </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="14649" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="14649" bodyend="14654"/>
+        <references refid="classnlohmann_1_1basic__json_a5adea76fedba9898d404fef8598aa663_1a5adea76fedba9898d404fef8598aa663" compoundref="json_8hpp" startline="8981" endline="8997">nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::dump</references>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>hash value for JSON objects </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="14643" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="14642" bodyend="14655"/>
+    <listofallmembers>
+      <member refid="structstd_1_1hash_3_01nlohmann_1_1json_01_4_aec1567d1fa47dbe5b77954dce3a55b64_1aec1567d1fa47dbe5b77954dce3a55b64" prot="public" virt="non-virtual"><scope>std::hash&lt; nlohmann::json &gt;</scope><name>operator()</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

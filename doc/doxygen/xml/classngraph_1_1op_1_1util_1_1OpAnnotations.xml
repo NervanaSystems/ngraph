@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1op_1_1util_1_1OpAnnotations" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::op::util::OpAnnotations</compoundname>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1cpu_1_1CPUOpAnnotations" prot="public" virt="non-virtual">ngraph::runtime::cpu::CPUOpAnnotations</derivedcompoundref>
+    <includes refid="op__annotations_8hpp" local="no">op_annotations.hpp</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1util_1_1OpAnnotations_1a9363fb9e5f4a4c135db9c53c521b49e3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::op::util::OpAnnotations::OpAnnotations</definition>
+        <argsstring>()</argsstring>
+        <name>OpAnnotations</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/op_annotations.hpp" line="29" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/op_annotations.hpp" bodystart="29" bodyend="29"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Abstract base class for annotations added to graph ops. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2865">
+        <label>ngraph::op::util::OpAnnotations</label>
+        <link refid="classngraph_1_1op_1_1util_1_1OpAnnotations"/>
+      </node>
+      <node id="2866">
+        <label>ngraph::runtime::cpu::CPUOpAnnotations</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPUOpAnnotations"/>
+        <childnode refid="2865" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/op_annotations.hpp" line="27" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/op_annotations.hpp" bodystart="26" bodyend="30"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1op_1_1util_1_1OpAnnotations_1a9363fb9e5f4a4c135db9c53c521b49e3" prot="public" virt="non-virtual"><scope>ngraph::op::util::OpAnnotations</scope><name>OpAnnotations</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

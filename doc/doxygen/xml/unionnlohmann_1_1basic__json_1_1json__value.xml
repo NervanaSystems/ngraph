@@ -1,0 +1,366 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="unionnlohmann_1_1basic__json_1_1json__value" kind="union" language="C++" prot="private">
+    <compoundname>nlohmann::basic_json::json_value</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1a4a2209bb26e7088cd36bf24824ab5521" prot="public" static="no" mutable="no">
+        <type>object_t *</type>
+        <definition>object_t* nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::object</definition>
+        <argsstring></argsstring>
+        <name>object</name>
+        <briefdescription>
+<para>object (stored with pointer to save storage) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7984" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7984" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1a7947687f3ae1911d6e9847e2b3226157" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_ae095578e03df97c5b3991787f1056374_1ae095578e03df97c5b3991787f1056374" kindref="member">array_t</ref> *</type>
+        <definition>array_t* nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::array</definition>
+        <argsstring></argsstring>
+        <name>array</name>
+        <briefdescription>
+<para>array (stored with pointer to save storage) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7986" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7986" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1a9856fb4271b50d738e14c5a9a2f05118" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_a61f8566a1a85a424c7266fb531dca005_1a61f8566a1a85a424c7266fb531dca005" kindref="member">string_t</ref> *</type>
+        <definition>string_t* nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::string</definition>
+        <argsstring></argsstring>
+        <name>string</name>
+        <briefdescription>
+<para>string (stored with pointer to save storage) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7988" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7988" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1afd0f8ec00c40301efffd01a276959371" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_a4c919102a9b4fe0d588af64801436082_1a4c919102a9b4fe0d588af64801436082" kindref="member">boolean_t</ref></type>
+        <definition>boolean_t nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::boolean</definition>
+        <argsstring></argsstring>
+        <name>boolean</name>
+        <briefdescription>
+<para>boolean </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7990" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7990" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1afa3c414445aeffb56a7c6926f9420941" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_a98e611d67b7bd75307de99c9358ab2dc_1a98e611d67b7bd75307de99c9358ab2dc" kindref="member">number_integer_t</ref></type>
+        <definition>number_integer_t nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::number_integer</definition>
+        <argsstring></argsstring>
+        <name>number_integer</name>
+        <briefdescription>
+<para>number (integer) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7992" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7992" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1a0299a6aa3bc4d45d54130e52970f73d3" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_ab906e29b5d83ac162e823ada2156b989_1ab906e29b5d83ac162e823ada2156b989" kindref="member">number_unsigned_t</ref></type>
+        <definition>number_unsigned_t nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::number_unsigned</definition>
+        <argsstring></argsstring>
+        <name>number_unsigned</name>
+        <briefdescription>
+<para>number (unsigned integer) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7994" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7994" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionnlohmann_1_1basic__json_1_1json__value_1ad003495e39e78b8096e0b6fc690d146f" prot="public" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1basic__json_a88d6103cb3620410b35200ee8e313d97_1a88d6103cb3620410b35200ee8e313d97" kindref="member">number_float_t</ref></type>
+        <definition>number_float_t nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::number_float</definition>
+        <argsstring></argsstring>
+        <name>number_float</name>
+        <briefdescription>
+<para>number (floating-point) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7996" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7996" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a3507013b18c19fcf945618fe97a69f0f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>()=default</argsstring>
+        <name>json_value</name>
+        <briefdescription>
+<para>default constructor (for null values) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7999" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a2538617eb31ab405a3d4dd7b4a824654" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(boolean_t v) noexcept</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_a4c919102a9b4fe0d588af64801436082_1a4c919102a9b4fe0d588af64801436082" kindref="member">boolean_t</ref></type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+<para>constructor for booleans </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8001" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8001" bodyend="8001"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a590de5a8704d5e3f0dba1cc47b8314a5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(number_integer_t v) noexcept</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_a98e611d67b7bd75307de99c9358ab2dc_1a98e611d67b7bd75307de99c9358ab2dc" kindref="member">number_integer_t</ref></type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+<para>constructor for numbers (integer) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8003" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8003" bodyend="8003"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a0bac352145b02ec3dd280bbfef997a55" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(number_unsigned_t v) noexcept</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_ab906e29b5d83ac162e823ada2156b989_1ab906e29b5d83ac162e823ada2156b989" kindref="member">number_unsigned_t</ref></type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+<para>constructor for numbers (unsigned) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8005" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8005" bodyend="8005"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a39a41858abe635623710e1b0ce827593" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(number_float_t v) noexcept</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_a88d6103cb3620410b35200ee8e313d97_1a88d6103cb3620410b35200ee8e313d97" kindref="member">number_float_t</ref></type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+<para>constructor for numbers (floating-point) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8007" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8007" bodyend="8007"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a34114e47b2d6391ba97678cefef700c4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(value_t t)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980f" kindref="member">value_t</ref></type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+<para>constructor for empty values of a given type </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8009" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8009" bodyend="8069"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a8f75abc358ee45b9bbdc601c974d6c91" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(const string_t &amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1basic__json_a61f8566a1a85a424c7266fb531dca005_1a61f8566a1a85a424c7266fb531dca005" kindref="member">string_t</ref> &amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for strings </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8072" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8072" bodyend="8075"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1ab9c8696a9477ec8a9bce79dec04ef418" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(string_t &amp;&amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_a61f8566a1a85a424c7266fb531dca005_1a61f8566a1a85a424c7266fb531dca005" kindref="member">string_t</ref> &amp;&amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for rvalue strings </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8078" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8078" bodyend="8081"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a74330ab1bc8ce1d0c6e2ee711c150563" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(const object_t &amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type>const object_t &amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for objects </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8084" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8084" bodyend="8087"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a82815d53bd7c983995fbcbe85131a110" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(object_t &amp;&amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type>object_t &amp;&amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for rvalue objects </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8090" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8090" bodyend="8093"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a23a4858ed8fc824e5544edaf8a01a974" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(const array_t &amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1basic__json_ae095578e03df97c5b3991787f1056374_1ae095578e03df97c5b3991787f1056374" kindref="member">array_t</ref> &amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for arrays </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8096" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8096" bodyend="8099"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1a69cd49ed5ddf12af184de009c38e90b4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::json_value</definition>
+        <argsstring>(array_t &amp;&amp;value)</argsstring>
+        <name>json_value</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1basic__json_ae095578e03df97c5b3991787f1056374_1ae095578e03df97c5b3991787f1056374" kindref="member">array_t</ref> &amp;&amp;</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+<para>constructor for rvalue arrays </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8102" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8102" bodyend="8105"/>
+      </memberdef>
+      <memberdef kind="function" id="unionnlohmann_1_1basic__json_1_1json__value_1ab280daf3f72621e667c4537a780cbcec" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::basic_json&lt; ObjectType, ArrayType, StringType, BooleanType, NumberIntegerType, NumberUnsignedType, NumberFloatType, AllocatorType, JSONSerializer &gt;::json_value::destroy</definition>
+        <argsstring>(value_t t)</argsstring>
+        <name>destroy</name>
+        <param>
+          <type><ref refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980f" kindref="member">value_t</ref></type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="8107" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="8107" bodyend="8140"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>a JSON value </para>    </briefdescription>
+    <detaileddescription>
+<para>The actual storage for a JSON value of the <ref refid="classnlohmann_1_1basic__json" kindref="compound">basic_json</ref> class. This union combines the different storage types for the JSON value types defined in value_t.</para><para><table rows="9" cols="3"><row>
+<entry thead="yes"><para>JSON type  </para></entry><entry thead="yes"><para>value_t type  </para></entry><entry thead="yes"><para>used type ------<mdash/>   </para></entry></row>
+<row>
+<entry thead="no"><para>object  </para></entry><entry thead="no"><para>object  </para></entry><entry thead="no"><para>pointer to object_t   </para></entry></row>
+<row>
+<entry thead="no"><para>array  </para></entry><entry thead="no"><para>array  </para></entry><entry thead="no"><para>pointer to <ref refid="classnlohmann_1_1basic__json_ae095578e03df97c5b3991787f1056374_1ae095578e03df97c5b3991787f1056374" kindref="member">array_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>string  </para></entry><entry thead="no"><para>string  </para></entry><entry thead="no"><para>pointer to <ref refid="classnlohmann_1_1basic__json_a61f8566a1a85a424c7266fb531dca005_1a61f8566a1a85a424c7266fb531dca005" kindref="member">string_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>boolean  </para></entry><entry thead="no"><para>boolean  </para></entry><entry thead="no"><para><ref refid="classnlohmann_1_1basic__json_a4c919102a9b4fe0d588af64801436082_1a4c919102a9b4fe0d588af64801436082" kindref="member">boolean_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>number  </para></entry><entry thead="no"><para>number_integer  </para></entry><entry thead="no"><para><ref refid="classnlohmann_1_1basic__json_a98e611d67b7bd75307de99c9358ab2dc_1a98e611d67b7bd75307de99c9358ab2dc" kindref="member">number_integer_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>number  </para></entry><entry thead="no"><para>number_unsigned  </para></entry><entry thead="no"><para><ref refid="classnlohmann_1_1basic__json_ab906e29b5d83ac162e823ada2156b989_1ab906e29b5d83ac162e823ada2156b989" kindref="member">number_unsigned_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>number  </para></entry><entry thead="no"><para>number_float  </para></entry><entry thead="no"><para><ref refid="classnlohmann_1_1basic__json_a88d6103cb3620410b35200ee8e313d97_1a88d6103cb3620410b35200ee8e313d97" kindref="member">number_float_t</ref>   </para></entry></row>
+<row>
+<entry thead="no"><para>null  </para></entry><entry thead="no"><para>null  </para></entry><entry thead="no"><para><emphasis>no value is stored</emphasis>   </para></entry></row>
+</table>
+</para><para><simplesect kind="note"><para>Variable-length types (objects, arrays, and strings) are stored as pointers. The size of the union should not exceed 64 bits if the default value types are used.</para></simplesect>
+<simplesect kind="since"><para>version 1.0.0 </para></simplesect>
+</para>    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="7982" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="7981" bodyend="8141"/>
+    <listofallmembers>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a7947687f3ae1911d6e9847e2b3226157" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>array</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1afd0f8ec00c40301efffd01a276959371" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>boolean</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1ab280daf3f72621e667c4537a780cbcec" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>destroy</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a3507013b18c19fcf945618fe97a69f0f" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a2538617eb31ab405a3d4dd7b4a824654" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a590de5a8704d5e3f0dba1cc47b8314a5" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a0bac352145b02ec3dd280bbfef997a55" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a39a41858abe635623710e1b0ce827593" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a34114e47b2d6391ba97678cefef700c4" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a8f75abc358ee45b9bbdc601c974d6c91" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1ab9c8696a9477ec8a9bce79dec04ef418" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a74330ab1bc8ce1d0c6e2ee711c150563" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a82815d53bd7c983995fbcbe85131a110" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a23a4858ed8fc824e5544edaf8a01a974" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a69cd49ed5ddf12af184de009c38e90b4" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>json_value</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1ad003495e39e78b8096e0b6fc690d146f" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>number_float</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1afa3c414445aeffb56a7c6926f9420941" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>number_integer</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a0299a6aa3bc4d45d54130e52970f73d3" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>number_unsigned</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a4a2209bb26e7088cd36bf24824ab5521" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>object</name></member>
+      <member refid="unionnlohmann_1_1basic__json_1_1json__value_1a9856fb4271b50d738e14c5a9a2f05118" prot="public" virt="non-virtual"><scope>nlohmann::basic_json::json_value</scope><name>string</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

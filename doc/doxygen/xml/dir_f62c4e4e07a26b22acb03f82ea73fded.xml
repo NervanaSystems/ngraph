@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_f62c4e4e07a26b22acb03f82ea73fded" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util</compoundname>
+    <innerfile refid="arithmetic__reduction_8cpp">arithmetic_reduction.cpp</innerfile>
+    <innerfile refid="arithmetic__reduction_8hpp">arithmetic_reduction.hpp</innerfile>
+    <innerfile refid="binary__elementwise_8cpp">binary_elementwise.cpp</innerfile>
+    <innerfile refid="binary__elementwise_8hpp">binary_elementwise.hpp</innerfile>
+    <innerfile refid="binary__elementwise__arithmetic_8cpp">binary_elementwise_arithmetic.cpp</innerfile>
+    <innerfile refid="binary__elementwise__arithmetic_8hpp">binary_elementwise_arithmetic.hpp</innerfile>
+    <innerfile refid="binary__elementwise__comparison_8cpp">binary_elementwise_comparison.cpp</innerfile>
+    <innerfile refid="binary__elementwise__comparison_8hpp">binary_elementwise_comparison.hpp</innerfile>
+    <innerfile refid="op__annotations_8hpp">op_annotations.hpp</innerfile>
+    <innerfile refid="requires__tensor__view__args_8cpp">requires_tensor_view_args.cpp</innerfile>
+    <innerfile refid="requires__tensor__view__args_8hpp">requires_tensor_view_args.hpp</innerfile>
+    <innerfile refid="unary__elementwise_8cpp">unary_elementwise.cpp</innerfile>
+    <innerfile refid="unary__elementwise_8hpp">unary_elementwise.hpp</innerfile>
+    <innerfile refid="unary__elementwise__arithmetic_8cpp">unary_elementwise_arithmetic.cpp</innerfile>
+    <innerfile refid="unary__elementwise__arithmetic_8hpp">unary_elementwise_arithmetic.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/util/"/>
+  </compounddef>
+</doxygen>

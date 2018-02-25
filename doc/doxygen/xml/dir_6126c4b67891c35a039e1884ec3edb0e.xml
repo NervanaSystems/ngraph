@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="dir_6126c4b67891c35a039e1884ec3edb0e" kind="dir">
+    <compoundname>/home/indie/libraries/private-ngraph-cpp/src/ngraph</compoundname>
+    <innerdir refid="dir_ca3d19d69f08dbfadc3960b59d82ffad">/home/indie/libraries/private-ngraph-cpp/src/ngraph/autodiff</innerdir>
+    <innerdir refid="dir_543d36312ef26d24a833a7c619f61937">/home/indie/libraries/private-ngraph-cpp/src/ngraph/builder</innerdir>
+    <innerdir refid="dir_8de0da860f84f9619c000f2ae4d63b55">/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen</innerdir>
+    <innerdir refid="dir_2e669b5eda9dd04ab7dcc8c81aa0b09a">/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor</innerdir>
+    <innerdir refid="dir_f31155f53cb3e98599740034004606ae">/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops</innerdir>
+    <innerdir refid="dir_84647cd1f3cc48be0bd7f042ff249d63">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass</innerdir>
+    <innerdir refid="dir_f53bd1b7b9c34f13fb3cc4200baf1b7f">/home/indie/libraries/private-ngraph-cpp/src/ngraph/pattern</innerdir>
+    <innerdir refid="dir_8cb81031b6a18190efeccb561a15eee7">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime</innerdir>
+    <innerdir refid="dir_95e9af03385bcca63133ae81ab64e105">/home/indie/libraries/private-ngraph-cpp/src/ngraph/types</innerdir>
+    <innerfile refid="common_8cpp">common.cpp</innerfile>
+    <innerfile refid="common_8hpp">common.hpp</innerfile>
+    <innerfile refid="coordinate__transform_8cpp">coordinate_transform.cpp</innerfile>
+    <innerfile refid="coordinate__transform_8hpp">coordinate_transform.hpp</innerfile>
+    <innerfile refid="except_8hpp">except.hpp</innerfile>
+    <innerfile refid="file__util_8cpp">file_util.cpp</innerfile>
+    <innerfile refid="file__util_8hpp">file_util.hpp</innerfile>
+    <innerfile refid="function_8cpp">function.cpp</innerfile>
+    <innerfile refid="function_8hpp">function.hpp</innerfile>
+    <innerfile refid="graph__util_8cpp">graph_util.cpp</innerfile>
+    <innerfile refid="graph__util_8hpp">graph_util.hpp</innerfile>
+    <innerfile refid="json_8hpp">json.hpp</innerfile>
+    <innerfile refid="log_8cpp">log.cpp</innerfile>
+    <innerfile refid="log_8hpp">log.hpp</innerfile>
+    <innerfile refid="ngraph_8hpp">ngraph.hpp</innerfile>
+    <innerfile refid="node_8cpp">node.cpp</innerfile>
+    <innerfile refid="node_8hpp">node.hpp</innerfile>
+    <innerfile refid="serializer_8cpp">serializer.cpp</innerfile>
+    <innerfile refid="serializer_8hpp">serializer.hpp</innerfile>
+    <innerfile refid="shape_8cpp">shape.cpp</innerfile>
+    <innerfile refid="shape_8hpp">shape.hpp</innerfile>
+    <innerfile refid="util_8cpp">util.cpp</innerfile>
+    <innerfile refid="util_8hpp">util.hpp</innerfile>
+    <innerfile refid="uuid_8hpp">uuid.hpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/"/>
+  </compounddef>
+</doxygen>

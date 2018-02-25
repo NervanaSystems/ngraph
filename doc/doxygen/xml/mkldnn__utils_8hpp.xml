@@ -1,0 +1,409 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="mkldnn__utils_8hpp" kind="file" language="C++">
+    <compoundname>mkldnn_utils.hpp</compoundname>
+    <includes local="no">mkldnn.hpp</includes>
+    <includes refid="node_8hpp" local="yes">ngraph/node.hpp</includes>
+    <includes refid="cpu__layout__descriptor_8hpp" local="yes">ngraph/runtime/cpu/cpu_layout_descriptor.hpp</includes>
+    <includes refid="element__type_8hpp" local="yes">ngraph/types/element_type.hpp</includes>
+    <includedby refid="cpu__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</includedby>
+    <includedby refid="cpu__external__function_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</includedby>
+    <includedby refid="cpu__tensor__view_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp</includedby>
+    <includedby refid="mkldnn__emitter_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp</includedby>
+    <includedby refid="mkldnn__invoke_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_invoke.cpp</includedby>
+    <includedby refid="mkldnn__utils_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</includedby>
+    <includedby refid="cpu__assignment_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</includedby>
+    <includedby refid="cpu__layout_8cpp" local="yes">/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</includedby>
+    <incdepgraph>
+      <node id="13258">
+        <label>ngraph/descriptor/buffer_pos.hpp</label>
+        <link refid="buffer__pos_8hpp_source"/>
+        <childnode refid="13259" relation="include">
+        </childnode>
+        <childnode refid="13260" relation="include">
+        </childnode>
+      </node>
+      <node id="13227">
+        <label>atomic</label>
+      </node>
+      <node id="13241">
+        <label>ngraph/descriptor/tensor.hpp</label>
+        <link refid="tensor_8hpp_source"/>
+        <childnode refid="13229" relation="include">
+        </childnode>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13242" relation="include">
+        </childnode>
+      </node>
+      <node id="13255">
+        <label>cstdint</label>
+      </node>
+      <node id="13242">
+        <label>ngraph/types/type.hpp</label>
+        <link refid="type_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13243" relation="include">
+        </childnode>
+        <childnode refid="13245" relation="include">
+        </childnode>
+      </node>
+      <node id="13252">
+        <label>ngraph/descriptor/output.hpp</label>
+        <link refid="output_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13231" relation="include">
+        </childnode>
+        <childnode refid="13240" relation="include">
+        </childnode>
+        <childnode refid="13253" relation="include">
+        </childnode>
+      </node>
+      <node id="13226">
+        <label>ngraph/node.hpp</label>
+        <link refid="node_8hpp_source"/>
+        <childnode refid="13227" relation="include">
+        </childnode>
+        <childnode refid="13228" relation="include">
+        </childnode>
+        <childnode refid="13229" relation="include">
+        </childnode>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13231" relation="include">
+        </childnode>
+        <childnode refid="13232" relation="include">
+        </childnode>
+        <childnode refid="13233" relation="include">
+        </childnode>
+        <childnode refid="13234" relation="include">
+        </childnode>
+        <childnode refid="13235" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13237" relation="include">
+        </childnode>
+        <childnode refid="13238" relation="include">
+        </childnode>
+        <childnode refid="13240" relation="include">
+        </childnode>
+        <childnode refid="13252" relation="include">
+        </childnode>
+        <childnode refid="13241" relation="include">
+        </childnode>
+        <childnode refid="13242" relation="include">
+        </childnode>
+      </node>
+      <node id="13259">
+        <label>cassert</label>
+      </node>
+      <node id="13251">
+        <label>ngraph/log.hpp</label>
+        <link refid="log_8hpp_source"/>
+        <childnode refid="13228" relation="include">
+        </childnode>
+        <childnode refid="13247" relation="include">
+        </childnode>
+        <childnode refid="13250" relation="include">
+        </childnode>
+      </node>
+      <node id="13250">
+        <label>stdexcept</label>
+      </node>
+      <node id="13232">
+        <label>string</label>
+      </node>
+      <node id="13246">
+        <label>map</label>
+      </node>
+      <node id="13235">
+        <label>unordered_set</label>
+      </node>
+      <node id="13260">
+        <label>ngraph/descriptor/buffer.hpp</label>
+        <link refid="buffer_8hpp_source"/>
+      </node>
+      <node id="13225">
+        <label>mkldnn.hpp</label>
+      </node>
+      <node id="13245">
+        <label>ngraph/types/element_type.hpp</label>
+        <link refid="element__type_8hpp_source"/>
+        <childnode refid="13246" relation="include">
+        </childnode>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13247" relation="include">
+        </childnode>
+        <childnode refid="13232" relation="include">
+        </childnode>
+        <childnode refid="13248" relation="include">
+        </childnode>
+        <childnode refid="13238" relation="include">
+        </childnode>
+        <childnode refid="13249" relation="include">
+        </childnode>
+        <childnode refid="13251" relation="include">
+        </childnode>
+      </node>
+      <node id="13238">
+        <label>ngraph/common.hpp</label>
+        <link refid="common_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13231" relation="include">
+        </childnode>
+        <childnode refid="13239" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+      </node>
+      <node id="13240">
+        <label>ngraph/descriptor/input.hpp</label>
+        <link refid="input_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13241" relation="include">
+        </childnode>
+        <childnode refid="13242" relation="include">
+        </childnode>
+      </node>
+      <node id="13243">
+        <label>ngraph/shape.hpp</label>
+        <link refid="shape_8hpp_source"/>
+        <childnode refid="13244" relation="include">
+        </childnode>
+        <childnode refid="13229" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13238" relation="include">
+        </childnode>
+      </node>
+      <node id="13237">
+        <label>ngraph/autodiff/adjoints.hpp</label>
+        <link refid="adjoints_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13234" relation="include">
+        </childnode>
+        <childnode refid="13238" relation="include">
+        </childnode>
+      </node>
+      <node id="13244">
+        <label>cstdio</label>
+      </node>
+      <node id="13257">
+        <label>tuple</label>
+      </node>
+      <node id="13236">
+        <label>vector</label>
+      </node>
+      <node id="13239">
+        <label>utility</label>
+      </node>
+      <node id="13247">
+        <label>sstream</label>
+      </node>
+      <node id="13256">
+        <label>ngraph/descriptor/layout/tensor_view_layout.hpp</label>
+        <link refid="tensor__view__layout_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13257" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13258" relation="include">
+        </childnode>
+        <childnode refid="13253" relation="include">
+        </childnode>
+      </node>
+      <node id="13229">
+        <label>iostream</label>
+      </node>
+      <node id="13228">
+        <label>deque</label>
+      </node>
+      <node id="13234">
+        <label>unordered_map</label>
+      </node>
+      <node id="13224">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.hpp</label>
+        <link refid="mkldnn__utils_8hpp"/>
+        <childnode refid="13225" relation="include">
+        </childnode>
+        <childnode refid="13226" relation="include">
+        </childnode>
+        <childnode refid="13254" relation="include">
+        </childnode>
+        <childnode refid="13245" relation="include">
+        </childnode>
+      </node>
+      <node id="13249">
+        <label>ngraph/except.hpp</label>
+        <link refid="except_8hpp_source"/>
+        <childnode refid="13250" relation="include">
+        </childnode>
+      </node>
+      <node id="13248">
+        <label>type_traits</label>
+      </node>
+      <node id="13231">
+        <label>set</label>
+      </node>
+      <node id="13253">
+        <label>ngraph/descriptor/tensor_view.hpp</label>
+        <link refid="descriptor_2tensor__view_8hpp_source"/>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13243" relation="include">
+        </childnode>
+      </node>
+      <node id="13254">
+        <label>ngraph/runtime/cpu/cpu_layout_descriptor.hpp</label>
+        <link refid="cpu__layout__descriptor_8hpp_source"/>
+        <childnode refid="13255" relation="include">
+        </childnode>
+        <childnode refid="13230" relation="include">
+        </childnode>
+        <childnode refid="13232" relation="include">
+        </childnode>
+        <childnode refid="13236" relation="include">
+        </childnode>
+        <childnode refid="13225" relation="include">
+        </childnode>
+        <childnode refid="13238" relation="include">
+        </childnode>
+        <childnode refid="13256" relation="include">
+        </childnode>
+        <childnode refid="13243" relation="include">
+        </childnode>
+        <childnode refid="13242" relation="include">
+        </childnode>
+      </node>
+      <node id="13230">
+        <label>memory</label>
+      </node>
+      <node id="13233">
+        <label>typeindex</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="13269">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_layout.cpp</label>
+        <link refid="cpu__layout_8cpp_source"/>
+      </node>
+      <node id="13265">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_emitter.cpp</label>
+        <link refid="mkldnn__emitter_8cpp_source"/>
+      </node>
+      <node id="13267">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.cpp</label>
+        <link refid="mkldnn__utils_8cpp_source"/>
+      </node>
+      <node id="13266">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_invoke.cpp</label>
+        <link refid="mkldnn__invoke_8cpp_source"/>
+      </node>
+      <node id="13262">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_emitter.cpp</label>
+        <link refid="cpu__emitter_8cpp_source"/>
+      </node>
+      <node id="13263">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp</label>
+        <link refid="cpu__external__function_8cpp_source"/>
+      </node>
+      <node id="13261">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.hpp</label>
+        <link refid="mkldnn__utils_8hpp"/>
+        <childnode refid="13262" relation="include">
+        </childnode>
+        <childnode refid="13263" relation="include">
+        </childnode>
+        <childnode refid="13264" relation="include">
+        </childnode>
+        <childnode refid="13265" relation="include">
+        </childnode>
+        <childnode refid="13266" relation="include">
+        </childnode>
+        <childnode refid="13267" relation="include">
+        </childnode>
+        <childnode refid="13268" relation="include">
+        </childnode>
+        <childnode refid="13269" relation="include">
+        </childnode>
+      </node>
+      <node id="13268">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/pass/cpu_assignment.cpp</label>
+        <link refid="cpu__assignment_8cpp_source"/>
+      </node>
+      <node id="13264">
+        <label>/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view.cpp</label>
+        <link refid="cpu__tensor__view_8cpp_source"/>
+      </node>
+    </invincdepgraph>
+    <innernamespace refid="namespacengraph">ngraph</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime">ngraph::runtime</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu">ngraph::runtime::cpu</innernamespace>
+    <innernamespace refid="namespacengraph_1_1runtime_1_1cpu_1_1mkldnn__utils">ngraph::runtime::cpu::mkldnn_utils</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*******************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment">*<sp/>Copyright<sp/>2017-2018<sp/>Intel<sp/>Corporation</highlight></codeline>
+<codeline lineno="3"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment">*<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0<sp/>(the<sp/>&quot;License&quot;);</highlight></codeline>
+<codeline lineno="5"><highlight class="comment">*<sp/>you<sp/>may<sp/>not<sp/>use<sp/>this<sp/>file<sp/>except<sp/>in<sp/>compliance<sp/>with<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="6"><highlight class="comment">*<sp/>You<sp/>may<sp/>obtain<sp/>a<sp/>copy<sp/>of<sp/>the<sp/>License<sp/>at</highlight></codeline>
+<codeline lineno="7"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment">*<sp/><sp/><sp/><sp/><sp/>http://www.apache.org/licenses/LICENSE-2.0</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment">*<sp/>Unless<sp/>required<sp/>by<sp/>applicable<sp/>law<sp/>or<sp/>agreed<sp/>to<sp/>in<sp/>writing,<sp/>software</highlight></codeline>
+<codeline lineno="11"><highlight class="comment">*<sp/>distributed<sp/>under<sp/>the<sp/>License<sp/>is<sp/>distributed<sp/>on<sp/>an<sp/>&quot;AS<sp/>IS&quot;<sp/>BASIS,</highlight></codeline>
+<codeline lineno="12"><highlight class="comment">*<sp/>WITHOUT<sp/>WARRANTIES<sp/>OR<sp/>CONDITIONS<sp/>OF<sp/>ANY<sp/>KIND,<sp/>either<sp/>express<sp/>or<sp/>implied.</highlight></codeline>
+<codeline lineno="13"><highlight class="comment">*<sp/>See<sp/>the<sp/>License<sp/>for<sp/>the<sp/>specific<sp/>language<sp/>governing<sp/>permissions<sp/>and</highlight></codeline>
+<codeline lineno="14"><highlight class="comment">*<sp/>limitations<sp/>under<sp/>the<sp/>License.</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">*******************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#pragma<sp/>once</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;mkldnn.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/node.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/runtime/cpu/cpu_layout_descriptor.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ngraph/types/element_type.hpp&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespacengraph" kindref="compound">ngraph</ref></highlight></codeline>
+<codeline lineno="26"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">runtime</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">cpu</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">mkldnn_utils</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">extern</highlight><highlight class="normal"><sp/>mkldnn::engine<sp/>global_cpu_engine;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>IsMKLDNNOp(<ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref>&amp;<sp/>op);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mkldnn::memory::format</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CreateNativeDataFormat(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1runtime_1_1cpu_1_1LayoutDescriptor" kindref="compound">ngraph::runtime::cpu::LayoutDescriptor</ref>&amp;<sp/>layout);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>get_mkldnn_data_type_string(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1element_1_1Type" kindref="compound">ngraph::element::Type</ref>&amp;<sp/>type);</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mkldnn::memory::data_type<sp/>get_mkldnn_data_type(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/><ref refid="classngraph_1_1element_1_1Type" kindref="compound">ngraph::element::Type</ref>&amp;<sp/>type);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>std::string&amp;<sp/>get_mkldnn_format_string(mkldnn::memory::format<sp/>fmt);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="44"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/mkldnn_utils.hpp"/>
+  </compounddef>
+</doxygen>

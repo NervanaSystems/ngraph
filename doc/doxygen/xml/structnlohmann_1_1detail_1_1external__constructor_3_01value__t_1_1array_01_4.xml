@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::external_constructor&lt; value_t::array &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1abfb2a6eec0bc21e8a7438546aebc55d8" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::array &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, const typename BasicJsonType::array_t &amp;arr)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>const typename BasicJsonType::array_t &amp;</type>
+          <declname>arr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="719" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="719" bodyend="724"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a50474d6624957a630a1d398cac1e7bfa" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::array &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, typename BasicJsonType::array_t &amp;&amp;arr)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>typename BasicJsonType::array_t &amp;&amp;</type>
+          <declname>arr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="727" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="727" bodyend="732"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a110f50fd5378da876d9a6d6a8d945e37" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+          <param>
+            <type>typename CompatibleArrayType</type>
+          </param>
+          <param>
+            <type>enable_if_t&lt; not std::is_same&lt; CompatibleArrayType, typename BasicJsonType::array_t &gt;::value, int &gt;</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::array &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, const CompatibleArrayType &amp;arr)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>const CompatibleArrayType &amp;</type>
+          <declname>arr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="738" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="738" bodyend="745"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a4ebb19b1cb84b4cb224a4c5322e16f14" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::array &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, const std::vector&lt; bool &gt; &amp;arr)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; bool &gt; &amp;</type>
+          <declname>arr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="748" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="748" bodyend="758"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a1b9226304e6492141080b4ebf228ddac" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename BasicJsonType</type>
+          </param>
+          <param>
+            <type>typename T</type>
+          </param>
+          <param>
+            <type>enable_if_t&lt; std::is_convertible&lt; T, BasicJsonType &gt;::value, int &gt;</type>
+            <defval>0</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>static void nlohmann::detail::external_constructor&lt; value_t::array &gt;::construct</definition>
+        <argsstring>(BasicJsonType &amp;j, const std::valarray&lt; T &gt; &amp;arr)</argsstring>
+        <name>construct</name>
+        <param>
+          <type>BasicJsonType &amp;</type>
+          <declname>j</declname>
+        </param>
+        <param>
+          <type>const std::valarray&lt; T &gt; &amp;</type>
+          <declname>arr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="762" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="762" bodyend="769"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="717" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="716" bodyend="770"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1abfb2a6eec0bc21e8a7438546aebc55d8" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::array &gt;</scope><name>construct</name></member>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a50474d6624957a630a1d398cac1e7bfa" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::array &gt;</scope><name>construct</name></member>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a110f50fd5378da876d9a6d6a8d945e37" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::array &gt;</scope><name>construct</name></member>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a4ebb19b1cb84b4cb224a4c5322e16f14" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::array &gt;</scope><name>construct</name></member>
+      <member refid="structnlohmann_1_1detail_1_1external__constructor_3_01value__t_1_1array_01_4_1a1b9226304e6492141080b4ebf228ddac" prot="public" virt="non-virtual"><scope>nlohmann::detail::external_constructor&lt; value_t::array &gt;</scope><name>construct</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

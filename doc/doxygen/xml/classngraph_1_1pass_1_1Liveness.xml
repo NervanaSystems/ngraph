@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1Liveness" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::Liveness</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1CallGraphPass" prot="public" virt="non-virtual">ngraph::pass::CallGraphPass</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Liveness_1a779f6e82595f5999fe4f3821c74a7c48" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool pass::Liveness::run_on_call_graph</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;) override</argsstring>
+        <name>run_on_call_graph</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.cpp" bodystart="32" bodyend="125"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Liveness_1aa91bce9d0a4fefd0296357ddba823820" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool pass::Liveness::is_temporary</definition>
+        <argsstring>(const descriptor::Tensor &amp;)</argsstring>
+        <name>is_temporary</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1descriptor_1_1Tensor" kindref="compound">descriptor::Tensor</ref> &amp;</type>
+          <defname>tensor</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.cpp" bodystart="127" bodyend="132"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Liveness_1aeae6d12fa7453b85fbb43eb157703bf9" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void pass::Liveness::validate_liveness</definition>
+        <argsstring>(const std::list&lt; Node *&gt; &amp;ops)</argsstring>
+        <name>validate_liveness</name>
+        <param>
+          <type>const std::list&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *&gt; &amp;</type>
+          <declname>ops</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.cpp" bodystart="134" bodyend="151"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3139">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3138">
+        <label>ngraph::pass::CallGraphPass</label>
+        <link refid="classngraph_1_1pass_1_1CallGraphPass"/>
+        <childnode refid="3139" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3137">
+        <label>ngraph::pass::Liveness</label>
+        <link refid="classngraph_1_1pass_1_1Liveness"/>
+        <childnode refid="3138" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3142">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3141">
+        <label>ngraph::pass::CallGraphPass</label>
+        <link refid="classngraph_1_1pass_1_1CallGraphPass"/>
+        <childnode refid="3142" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3140">
+        <label>ngraph::pass::Liveness</label>
+        <link refid="classngraph_1_1pass_1_1Liveness"/>
+        <childnode refid="3141" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.hpp" line="31" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/liveness.hpp" bodystart="30" bodyend="38"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::Liveness</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1Liveness_1aa91bce9d0a4fefd0296357ddba823820" prot="private" virt="non-virtual"><scope>ngraph::pass::Liveness</scope><name>is_temporary</name></member>
+      <member refid="classngraph_1_1pass_1_1Liveness_1a779f6e82595f5999fe4f3821c74a7c48" prot="public" virt="virtual"><scope>ngraph::pass::Liveness</scope><name>run_on_call_graph</name></member>
+      <member refid="classngraph_1_1pass_1_1CallGraphPass_1a71bb0dfdd9c36758022784eebc18b444" prot="public" virt="pure-virtual" ambiguityscope="ngraph::pass::CallGraphPass::"><scope>ngraph::pass::Liveness</scope><name>run_on_call_graph</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::Liveness</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1Liveness_1aeae6d12fa7453b85fbb43eb157703bf9" prot="private" virt="non-virtual"><scope>ngraph::pass::Liveness</scope><name>validate_liveness</name></member>
+      <member refid="classngraph_1_1pass_1_1CallGraphPass_1a9cb000d9487128bbadb832f366c79a4f" prot="public" virt="virtual"><scope>ngraph::pass::Liveness</scope><name>~CallGraphPass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::Liveness</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

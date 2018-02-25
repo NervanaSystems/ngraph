@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1GraphRewrite" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::GraphRewrite</compoundname>
+    <basecompoundref refid="classngraph_1_1pass_1_1FunctionPass" prot="public" virt="non-virtual">ngraph::pass::FunctionPass</basecompoundref>
+    <derivedcompoundref refid="classngraph_1_1pass_1_1CoreFusion" prot="public" virt="non-virtual">ngraph::pass::CoreFusion</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1pass_1_1ReshapeElimination" prot="public" virt="non-virtual">ngraph::pass::ReshapeElimination</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1cpu_1_1pass_1_1CPUFusion" prot="public" virt="non-virtual">ngraph::runtime::cpu::pass::CPUFusion</derivedcompoundref>
+    <includes refid="graph__rewrite_8hpp" local="no">graph_rewrite.hpp</includes>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1GraphRewrite_1a290cc47428d5409164cf1c079c86eb22" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1pattern_1_1Matcher" kindref="compound">pattern::Matcher</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;pattern::Matcher&gt; &gt; ngraph::pass::GraphRewrite::m_matchers</definition>
+        <argsstring></argsstring>
+        <name>m_matchers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="63" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1GraphRewrite_1a30b5d50eb96f95dffd2ed666433b50eb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::pass::GraphRewrite::GraphRewrite</definition>
+        <argsstring>()</argsstring>
+        <name>GraphRewrite</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" bodystart="48" bodyend="51"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1GraphRewrite_1a7042a707416d6a419923eb78a79a009b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::pass::GraphRewrite::add_matcher</definition>
+        <argsstring>(std::shared_ptr&lt; pattern::Matcher &gt; m)</argsstring>
+        <name>add_matcher</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1pattern_1_1Matcher" kindref="compound">pattern::Matcher</ref> &gt;</type>
+          <declname>m</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" bodystart="53" bodyend="53"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1GraphRewrite_1a5da7dbf12f58f509da8dc1cdddf21522" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>bool</type>
+        <definition>bool ngraph::pass::GraphRewrite::run_on_function</definition>
+        <argsstring>(std::shared_ptr&lt; ngraph::Function &gt; f)</argsstring>
+        <name>run_on_function</name>
+        <reimplements refid="classngraph_1_1pass_1_1FunctionPass_1ae7512a5ebc91aef44e8539004c0d6f85">run_on_function</reimplements>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="59" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.cpp" bodystart="55" bodyend="58"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1GraphRewrite_1a7544c086df6febdaaff801d518231862" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list</definition>
+        <argsstring>(const std::list&lt; std::shared_ptr&lt; ngraph::Node &gt;&gt; &amp;nodes, const std::vector&lt; std::shared_ptr&lt; pattern::Matcher &gt;&gt; &amp;matchers, std::shared_ptr&lt; ngraph::Function &gt; f)</argsstring>
+        <name>run_matchers_on_nodes_list</name>
+        <param>
+          <type>const std::list&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">ngraph::Node</ref> &gt;&gt; &amp;</type>
+          <declname>nodes</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1pattern_1_1Matcher" kindref="compound">pattern::Matcher</ref> &gt;&gt; &amp;</type>
+          <declname>matchers</declname>
+        </param>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.cpp" bodystart="25" bodyend="53"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para><ref refid="classngraph_1_1pass_1_1GraphRewrite" kindref="compound">GraphRewrite</ref> (in tandem with. </para>    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="see"><para>Matcher) performs transformations on specified patterns</para></simplesect>
+Graph rewrite pass essentially allows pass users to rewrite parts of the input graph in any way they want. Fusion is one example of graph rewrite that fuses multiple ops together. At a high-level users of the pass need to specify 2 things: 1) which ops to fuse (via <simplesect kind="see"><para>Matcher, and 2) how to create new op(s) from the existing ops by providing a callback to <computeroutput>Matcher</computeroutput> object Patterns can be added by using </para></simplesect>
+<simplesect kind="see"><para>add_matcher Callbacks should use </para></simplesect>
+<simplesect kind="see"><para>replace_node to transform matched sub graphs </para></simplesect>
+</para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3119">
+        <label>ngraph::pass::ReshapeElimination</label>
+        <link refid="classngraph_1_1pass_1_1ReshapeElimination"/>
+        <childnode refid="3115" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3117">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3115">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3116" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3116">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3117" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3120">
+        <label>ngraph::runtime::cpu::pass::CPUFusion</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1pass_1_1CPUFusion"/>
+        <childnode refid="3115" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3118">
+        <label>ngraph::pass::CoreFusion</label>
+        <link refid="classngraph_1_1pass_1_1CoreFusion"/>
+        <childnode refid="3115" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3123">
+        <label>ngraph::pass::PassBase</label>
+        <link refid="classngraph_1_1pass_1_1PassBase"/>
+      </node>
+      <node id="3121">
+        <label>ngraph::pass::GraphRewrite</label>
+        <link refid="classngraph_1_1pass_1_1GraphRewrite"/>
+        <childnode refid="3122" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3122">
+        <label>ngraph::pass::FunctionPass</label>
+        <link refid="classngraph_1_1pass_1_1FunctionPass"/>
+        <childnode refid="3123" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/graph_rewrite.hpp" bodystart="45" bodyend="64"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7042a707416d6a419923eb78a79a009b" prot="public" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>add_matcher</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a6a9dcb9d4bce48982a2b617aa0bda044" prot="protected" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a30b5d50eb96f95dffd2ed666433b50eb" prot="public" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>GraphRewrite</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a290cc47428d5409164cf1c079c86eb22" prot="private" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>m_matchers</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a7544c086df6febdaaff801d518231862" prot="public" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>run_matchers_on_nodes_list</name></member>
+      <member refid="classngraph_1_1pass_1_1GraphRewrite_1a5da7dbf12f58f509da8dc1cdddf21522" prot="public" virt="virtual"><scope>ngraph::pass::GraphRewrite</scope><name>run_on_function</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1ad8ce3a63e3dbc2ff63e6c6f51a8505b8" prot="protected" virt="non-virtual"><scope>ngraph::pass::GraphRewrite</scope><name>set_state</name></member>
+      <member refid="classngraph_1_1pass_1_1FunctionPass_1a9382faaeebeadf8abc778f5ae638ad30" prot="public" virt="virtual"><scope>ngraph::pass::GraphRewrite</scope><name>~FunctionPass</name></member>
+      <member refid="classngraph_1_1pass_1_1PassBase_1a1c9216df0fd4e6740ad7db6b3d632c81" prot="public" virt="virtual"><scope>ngraph::pass::GraphRewrite</scope><name>~PassBase</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

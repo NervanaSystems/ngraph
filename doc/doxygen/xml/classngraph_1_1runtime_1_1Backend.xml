@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1Backend" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>ngraph::runtime::Backend</compoundname>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Backend" prot="public" virt="non-virtual">ngraph::runtime::cpu::CPU_Backend</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Backend" prot="public" virt="non-virtual">ngraph::runtime::gpu::GPU_Backend</derivedcompoundref>
+    <derivedcompoundref refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Backend" prot="public" virt="non-virtual">ngraph::runtime::interpreter::INT_Backend</derivedcompoundref>
+    <includes refid="backend_8hpp" local="no">backend.hpp</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Backend_1abfd5432f59520cf7fe22434fe7c71730" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual ngraph::runtime::Backend::~Backend</definition>
+        <argsstring>()</argsstring>
+        <name>~Backend</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" bodystart="44" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Backend_a8312b7ceb1d21857a41fda3b7f1af0dc_1a8312b7ceb1d21857a41fda3b7f1af0dc" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1CallFrame" kindref="compound">ngraph::runtime::CallFrame</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;ngraph::runtime::CallFrame&gt; ngraph::runtime::Backend::make_call_frame</definition>
+        <argsstring>(const std::shared_ptr&lt; ExternalFunction &gt; &amp;external_function)=0</argsstring>
+        <name>make_call_frame</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1ExternalFunction" kindref="compound">ExternalFunction</ref> &gt; &amp;</type>
+          <declname>external_function</declname>
+        </param>
+        <briefdescription>
+<para>Make a call frame that can support one concurrent call of an external function. </para>        </briefdescription>
+        <detaileddescription>
+<para>If more than one concurrent execution is needed, each execution will require its own call frame. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" line="49" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Backend_1a228f24dfac61234d66b13ba61e7a97bd" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">ngraph::runtime::TensorView</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;ngraph::runtime::TensorView&gt; ngraph::runtime::Backend::make_primary_tensor_view</definition>
+        <argsstring>(const ngraph::element::Type &amp;element_type, const Shape &amp;shape)=0</argsstring>
+        <name>make_primary_tensor_view</name>
+        <reimplementedby refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Backend_1af1fdae64f305834a51b96cfb0165aea5">make_primary_tensor_view</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Backend_1a0e1774caa686650869cd12d4bb051af3">make_primary_tensor_view</reimplementedby>
+        <reimplementedby refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Backend_1a10bb66712a8e1c3eba3632b8732afce8">make_primary_tensor_view</reimplementedby>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">ngraph::element::Type</ref> &amp;</type>
+          <declname>element_type</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+<para>Return a handle for a tensor on the backend device. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" line="53" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1Backend_1aa984f006ab650e3006c1f49b6e7452fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1TensorView" kindref="compound">ngraph::runtime::TensorView</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::runtime::TensorView&gt; ngraph::runtime::Backend::make_primary_tensor_view</definition>
+        <argsstring>(const Shape &amp;shape)</argsstring>
+        <name>make_primary_tensor_view</name>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" bodystart="58" bodyend="61"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Interface to a generic backend. </para>    </briefdescription>
+    <detaileddescription>
+<para>Backends are responsible for function execution and value allocation. </para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3312">
+        <label>ngraph::runtime::interpreter::INT_Backend</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Backend"/>
+        <childnode refid="3309" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3309">
+        <label>ngraph::runtime::Backend</label>
+        <link refid="classngraph_1_1runtime_1_1Backend"/>
+      </node>
+      <node id="3310">
+        <label>ngraph::runtime::cpu::CPU_Backend</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__Backend"/>
+        <childnode refid="3309" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3311">
+        <label>ngraph::runtime::gpu::GPU_Backend</label>
+        <link refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Backend"/>
+        <childnode refid="3309" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/backend.hpp" bodystart="41" bodyend="62"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1Backend_a8312b7ceb1d21857a41fda3b7f1af0dc_1a8312b7ceb1d21857a41fda3b7f1af0dc" prot="public" virt="pure-virtual"><scope>ngraph::runtime::Backend</scope><name>make_call_frame</name></member>
+      <member refid="classngraph_1_1runtime_1_1Backend_1a228f24dfac61234d66b13ba61e7a97bd" prot="public" virt="pure-virtual"><scope>ngraph::runtime::Backend</scope><name>make_primary_tensor_view</name></member>
+      <member refid="classngraph_1_1runtime_1_1Backend_1aa984f006ab650e3006c1f49b6e7452fb" prot="public" virt="non-virtual"><scope>ngraph::runtime::Backend</scope><name>make_primary_tensor_view</name></member>
+      <member refid="classngraph_1_1runtime_1_1Backend_1abfd5432f59520cf7fe22434fe7c71730" prot="public" virt="virtual"><scope>ngraph::runtime::Backend</scope><name>~Backend</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1codegen_1_1ExecutionEngine" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::codegen::ExecutionEngine</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1ExecutionEngine_1a7161739b5c72fef2631d584c1bd4071d" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; llvm::ExecutionEngine &gt;</type>
+        <definition>std::unique_ptr&lt;llvm::ExecutionEngine&gt; ngraph::codegen::ExecutionEngine::m_execution_engine</definition>
+        <argsstring></argsstring>
+        <name>m_execution_engine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="53" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1codegen_1_1ExecutionEngine_1a76b7dde0d4a42204e0d41811020baef6" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ngraph::codegen::ExecutionEngine::m_jit_error</definition>
+        <argsstring></argsstring>
+        <name>m_jit_error</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1a987b195e98619649eccd719c11a01365" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>codegen::ExecutionEngine::ExecutionEngine</definition>
+        <argsstring>()</argsstring>
+        <name>ExecutionEngine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.cpp" bodystart="23" bodyend="26"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1aebd3496e4221b824e25c4a7ae59c4c48" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>codegen::ExecutionEngine::~ExecutionEngine</definition>
+        <argsstring>()</argsstring>
+        <name>~ExecutionEngine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.cpp" bodystart="28" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1ac4a3fe047b177249ae40dbff4b26d621" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool codegen::ExecutionEngine::add_module</definition>
+        <argsstring>(std::unique_ptr&lt; ngraph::codegen::Module &gt; &amp;module)</argsstring>
+        <name>add_module</name>
+        <param>
+          <type>std::unique_ptr&lt; <ref refid="classngraph_1_1codegen_1_1Module" kindref="compound">ngraph::codegen::Module</ref> &gt; &amp;</type>
+          <declname>module</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="43" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.cpp" bodystart="36" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1ad3aa0f9ab9a8eba41ecb71835524bf74" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void codegen::ExecutionEngine::finalize</definition>
+        <argsstring>()</argsstring>
+        <name>finalize</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.cpp" bodystart="64" bodyend="77"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1a78556072ca1954c38b8982137ab996ad" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename ftype</type>
+          </param>
+        </templateparamlist>
+        <type>std::function&lt; ftype &gt;</type>
+        <definition>std::function&lt;ftype&gt; ngraph::codegen::ExecutionEngine::find_function</definition>
+        <argsstring>(const std::string &amp;func_name)</argsstring>
+        <name>find_function</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>func_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" bodystart="47" bodyend="50"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1acaabbf7b6481abea90f5f02361b37e75" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void *</type>
+        <definition>void * codegen::ExecutionEngine::get_pointer_to_named_function</definition>
+        <argsstring>(const std::string &amp;func_name)</argsstring>
+        <name>get_pointer_to_named_function</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>func_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="56" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.cpp" bodystart="79" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1codegen_1_1ExecutionEngine_1afa0bdf70c243c94ddd28314fa484c3d6" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename signature</type>
+          </param>
+        </templateparamlist>
+        <type>std::function&lt; signature &gt;</type>
+        <definition>std::function&lt;signature&gt; ngraph::codegen::ExecutionEngine::f_cast</definition>
+        <argsstring>(void *f)</argsstring>
+        <name>f_cast</name>
+        <param>
+          <type>void *</type>
+          <declname>f</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" bodystart="58" bodyend="61"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/codegen/execution_engine.hpp" bodystart="37" bodyend="62"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1ac4a3fe047b177249ae40dbff4b26d621" prot="public" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>add_module</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1a987b195e98619649eccd719c11a01365" prot="public" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>ExecutionEngine</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1afa0bdf70c243c94ddd28314fa484c3d6" prot="private" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>f_cast</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1ad3aa0f9ab9a8eba41ecb71835524bf74" prot="public" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>finalize</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1a78556072ca1954c38b8982137ab996ad" prot="public" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>find_function</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1acaabbf7b6481abea90f5f02361b37e75" prot="private" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>get_pointer_to_named_function</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1a7161739b5c72fef2631d584c1bd4071d" prot="private" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>m_execution_engine</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1a76b7dde0d4a42204e0d41811020baef6" prot="private" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>m_jit_error</name></member>
+      <member refid="classngraph_1_1codegen_1_1ExecutionEngine_1aebd3496e4221b824e25c4a7ae59c4c48" prot="public" virt="non-virtual"><scope>ngraph::codegen::ExecutionEngine</scope><name>~ExecutionEngine</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

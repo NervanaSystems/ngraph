@@ -1,0 +1,199 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1op_1_1XLAGetTupleElement" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::op::XLAGetTupleElement</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">XLANode</basecompoundref>
+    <includes refid="xla__get__tuple__element_8hpp" local="no">xla_get_tuple_element.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1op_1_1XLAGetTupleElement_1a21ebe434bc0f35ad63b2b4a15f656d52" prot="protected" static="no" mutable="no">
+        <type>std::shared_ptr&lt; XLANode &gt;</type>
+        <definition>std::shared_ptr&lt;XLANode&gt; ngraph::op::XLAGetTupleElement::m_arg</definition>
+        <argsstring></argsstring>
+        <name>m_arg</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1op_1_1XLAGetTupleElement_1ab2a9dcc06440942b3f3245d700291afc" prot="protected" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ngraph::op::XLAGetTupleElement::m_n</definition>
+        <argsstring></argsstring>
+        <name>m_n</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_a4fad552750646d3f38986925414eccf3_1a4fad552750646d3f38986925414eccf3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>op::XLAGetTupleElement::XLAGetTupleElement</definition>
+        <argsstring>(const std::shared_ptr&lt; Node &gt; &amp;arg, size_t n)</argsstring>
+        <name>XLAGetTupleElement</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt; &amp;</type>
+          <declname>arg</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a get-tuple-element operation. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>arg</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The input tuple. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>n</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The index of the tuple element to get. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp" bodystart="26" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_1a3bb421f6c4f54076264d2a528a67be57" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;Node&gt; ngraph::op::XLAGetTupleElement::copy_with_new_args</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;new_args) const override</argsstring>
+        <name>copy_with_new_args</name>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>new_args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" bodystart="54" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_1a997df0b7fc2506219a301df1e41e75b9" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type><ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref></type>
+        <definition>Nodes op::XLAGetTupleElement::get_input_ops</definition>
+        <argsstring>() override</argsstring>
+        <name>get_input_ops</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="64" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp" bodystart="44" bodyend="47"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_1a93703fd7cbbae0ce86f3fe17ba0a4f3d" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>std::shared_ptr&lt; const XLATuple &gt;</type>
+        <definition>shared_ptr&lt; const op::XLATuple &gt; op::XLAGetTupleElement::get_tuple_value</definition>
+        <argsstring>() const override</argsstring>
+        <name>get_tuple_value</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="66" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp" bodystart="49" bodyend="52"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_1aeba8285a4107b4e930903e6af0b26952" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>const <ref refid="namespacengraph_1a193a29e9e6878bb1690debde6f87bdee" kindref="member">Nodes</ref> &amp;</type>
+        <definition>const Nodes &amp; op::XLAGetTupleElement::get_tuple_elements</definition>
+        <argsstring>() const override</argsstring>
+        <name>get_tuple_elements</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="67" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.cpp" bodystart="54" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1XLAGetTupleElement_a695b42eb28c4487c9988c5aea5306cee_1a695b42eb28c4487c9988c5aea5306cee" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t ngraph::op::XLAGetTupleElement::get_n</definition>
+        <argsstring>() const</argsstring>
+        <name>get_n</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The index of the tuple element to get. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" bodystart="70" bodyend="70"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation to get an element from a tuple. </para>    </briefdescription>
+    <detaileddescription>
+<para><heading level="2">Parameters</heading>
+</para><para><table rows="2" cols="2"><row>
+<entry thead="yes"><para></para></entry><entry thead="yes"><para>Description   </para></entry></row>
+<row>
+<entry thead="no"><para><computeroutput>n</computeroutput>  </para></entry><entry thead="no"><para>The position of the element (0-based) to get from the input tuple.   </para></entry></row>
+</table>
+</para><para><heading level="2">Inputs</heading>
+</para><para><table rows="2" cols="3"><row>
+<entry thead="yes"><para></para></entry><entry thead="yes"><para>Type  </para></entry><entry thead="yes"><para>Description   </para></entry></row>
+<row>
+<entry thead="no"><para><computeroutput>arg</computeroutput>  </para></entry><entry thead="no"><para><formula id="16">$(T_1,\dots,T_{n-1},T_n,T_{n+1},\dots,T_m)~(m \geq 1)$</formula>  </para></entry><entry thead="no"><para>An input tuple with at least <computeroutput>n</computeroutput> elements.   </para></entry></row>
+</table>
+</para><para><heading level="2">Output</heading>
+</para><para><table rows="2" cols="2"><row>
+<entry thead="yes"><para>Type  </para></entry><entry thead="yes"><para>Description   </para></entry></row>
+<row>
+<entry thead="no"><para><formula id="17">$T_n$</formula>  </para></entry><entry thead="no"><para>The <computeroutput>n</computeroutput>th element of the input tuple.   </para></entry></row>
+</table>
+</para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3074">
+        <label>ngraph::op::XLAGetTupleElement</label>
+        <link refid="classngraph_1_1op_1_1XLAGetTupleElement"/>
+        <childnode refid="3075" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3075">
+        <label>XLANode</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3076">
+        <label>ngraph::op::XLAGetTupleElement</label>
+        <link refid="classngraph_1_1op_1_1XLAGetTupleElement"/>
+        <childnode refid="3077" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3077">
+        <label>XLANode</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/xla_get_tuple_element.hpp" bodystart="45" bodyend="74"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1a3bb421f6c4f54076264d2a528a67be57" prot="public" virt="virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>copy_with_new_args</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1a997df0b7fc2506219a301df1e41e75b9" prot="public" virt="virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>get_input_ops</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_a695b42eb28c4487c9988c5aea5306cee_1a695b42eb28c4487c9988c5aea5306cee" prot="public" virt="non-virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>get_n</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1aeba8285a4107b4e930903e6af0b26952" prot="public" virt="virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>get_tuple_elements</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1a93703fd7cbbae0ce86f3fe17ba0a4f3d" prot="public" virt="virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>get_tuple_value</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1a21ebe434bc0f35ad63b2b4a15f656d52" prot="protected" virt="non-virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>m_arg</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_1ab2a9dcc06440942b3f3245d700291afc" prot="protected" virt="non-virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>m_n</name></member>
+      <member refid="classngraph_1_1op_1_1XLAGetTupleElement_a4fad552750646d3f38986925414eccf3_1a4fad552750646d3f38986925414eccf3" prot="public" virt="non-virtual"><scope>ngraph::op::XLAGetTupleElement</scope><name>XLAGetTupleElement</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

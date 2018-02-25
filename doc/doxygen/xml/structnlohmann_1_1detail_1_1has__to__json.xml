@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="structnlohmann_1_1detail_1_1has__to__json" kind="struct" language="C++" prot="public">
+    <compoundname>nlohmann::detail::has_to_json</compoundname>
+    <templateparamlist>
+      <param>
+        <type>typename BasicJsonType</type>
+      </param>
+      <param>
+        <type>typename T</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="structnlohmann_1_1detail_1_1has__to__json_1a18e260c3c6f10328637c4427d3cb3a31" prot="public" static="yes" mutable="no">
+        <type>constexpr bool</type>
+        <definition>constexpr bool nlohmann::detail::has_to_json&lt; BasicJsonType, T &gt;::value</definition>
+        <argsstring></argsstring>
+        <name>value</name>
+        <initializer>= std::is_integral&lt;decltype(detect(
+                                      std::declval&lt;typename BasicJsonType::template json_serializer&lt;T, void&gt;&gt;()))&gt;::value</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="955" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="955" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-func">
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1has__to__json_1af087d9dfdab8443f2b95e8b6c8612742" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename U</type>
+          </param>
+          <param>
+            <type>typename</type>
+            <defval>decltype(uncvref_t&lt;U&gt;::to_json(                 std::declval&lt;BasicJsonType&amp;&gt;(), std::declval&lt;T&gt;()))</defval>
+          </param>
+        </templateparamlist>
+        <type>int</type>
+        <definition>static int nlohmann::detail::has_to_json&lt; BasicJsonType, T &gt;::detect</definition>
+        <argsstring>(U &amp;&amp;)</argsstring>
+        <name>detect</name>
+        <param>
+          <type>U &amp;&amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="951" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="structnlohmann_1_1detail_1_1has__to__json_1a133e6ab785874a224508769d960b1ab0" prot="private" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void nlohmann::detail::has_to_json&lt; BasicJsonType, T &gt;::detect</definition>
+        <argsstring>(...)</argsstring>
+        <name>detect</name>
+        <param>
+          <type>...</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="952" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="947" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="946" bodyend="957"/>
+    <listofallmembers>
+      <member refid="structnlohmann_1_1detail_1_1has__to__json_1af087d9dfdab8443f2b95e8b6c8612742" prot="private" virt="non-virtual"><scope>nlohmann::detail::has_to_json</scope><name>detect</name></member>
+      <member refid="structnlohmann_1_1detail_1_1has__to__json_1a133e6ab785874a224508769d960b1ab0" prot="private" virt="non-virtual"><scope>nlohmann::detail::has_to_json</scope><name>detect</name></member>
+      <member refid="structnlohmann_1_1detail_1_1has__to__json_1a18e260c3c6f10328637c4427d3cb3a31" prot="public" virt="non-virtual"><scope>nlohmann::detail::has_to_json</scope><name>value</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

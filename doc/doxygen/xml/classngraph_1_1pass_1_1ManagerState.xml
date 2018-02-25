@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1ManagerState" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::ManagerState</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1ManagerState_1a988b31438e81ef6933b087141e70a9ee" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;Function&gt; &gt; ngraph::pass::ManagerState::m_function_list</definition>
+        <argsstring></argsstring>
+        <name>m_function_list</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1ManagerState_1a7bcafb3d596d6446a647a4e6599e86a8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt; &gt; &amp;</type>
+        <definition>const vector&lt; shared_ptr&lt; Function &gt; &gt; &amp; ngraph::pass::ManagerState::get_functions</definition>
+        <argsstring>()</argsstring>
+        <name>get_functions</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.cpp" bodystart="28" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1ManagerState_1ab2c88e1a69fea3368e39acf99673c8e5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::pass::ManagerState::set_functions</definition>
+        <argsstring>(const T &amp;collection)</argsstring>
+        <name>set_functions</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>collection</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" bodystart="38" bodyend="42"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager_state.hpp" bodystart="32" bodyend="46"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1ManagerState_1a7bcafb3d596d6446a647a4e6599e86a8" prot="public" virt="non-virtual"><scope>ngraph::pass::ManagerState</scope><name>get_functions</name></member>
+      <member refid="classngraph_1_1pass_1_1ManagerState_1a988b31438e81ef6933b087141e70a9ee" prot="private" virt="non-virtual"><scope>ngraph::pass::ManagerState</scope><name>m_function_list</name></member>
+      <member refid="classngraph_1_1pass_1_1ManagerState_1ab2c88e1a69fea3368e39acf99673c8e5" prot="public" virt="non-virtual"><scope>ngraph::pass::ManagerState</scope><name>set_functions</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

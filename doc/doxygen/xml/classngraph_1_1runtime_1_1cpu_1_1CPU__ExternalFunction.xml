@@ -1,0 +1,482 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::CPU_ExternalFunction</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1ExternalFunction" prot="public" virt="non-virtual">ngraph::runtime::ExternalFunction</basecompoundref>
+    <basecompoundref prot="public" virt="non-virtual">std::enable_shared_from_this&lt; CPU_ExternalFunction &gt;</basecompoundref>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9547bb5890f567c4d3820a304a159856" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>friend class</type>
+        <definition>friend class CPU_CallFrame</definition>
+        <argsstring></argsstring>
+        <name>CPU_CallFrame</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="73" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a2fc4da3098e23d9d90f97a4c3a761616" prot="protected" static="no" mutable="no">
+        <type>EntryPoint</type>
+        <definition>EntryPoint ngraph::runtime::cpu::CPU_ExternalFunction::m_compiled_function</definition>
+        <argsstring></argsstring>
+        <name>m_compiled_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="92" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="92" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a97a4620755e64e6f9bcfb00ca6d865e4" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; <ref refid="classngraph_1_1codegen_1_1Compiler" kindref="compound">codegen::Compiler</ref> &gt;</type>
+        <definition>std::unique_ptr&lt;codegen::Compiler&gt; ngraph::runtime::cpu::CPU_ExternalFunction::m_compiler</definition>
+        <argsstring></argsstring>
+        <name>m_compiler</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="115" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="115" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a14d34bdb4b429fd42440eda488a1307e" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; <ref refid="classngraph_1_1codegen_1_1ExecutionEngine" kindref="compound">codegen::ExecutionEngine</ref> &gt;</type>
+        <definition>std::unique_ptr&lt;codegen::ExecutionEngine&gt; ngraph::runtime::cpu::CPU_ExternalFunction::m_execution_engine</definition>
+        <argsstring></argsstring>
+        <name>m_execution_engine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="116" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a1f6079967babfb5f298004bffcc79cb4" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::runtime::cpu::CPU_ExternalFunction::m_emit_timing</definition>
+        <argsstring></argsstring>
+        <name>m_emit_timing</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="117" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="117" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ad7343ae18fb2aed1d8195b12ec405176" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ngraph::runtime::cpu::CPU_ExternalFunction::m_use_tbb</definition>
+        <argsstring></argsstring>
+        <name>m_use_tbb</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="118" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="118" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a5f3b6dbf8eb18658e011a41bed12bb8a" prot="private" static="no" mutable="no">
+        <type>std::unordered_map&lt; std::string, std::string &gt;</type>
+        <definition>std::unordered_map&lt;std::string, std::string&gt; ngraph::runtime::cpu::CPU_ExternalFunction::m_variable_name_map</definition>
+        <argsstring></argsstring>
+        <name>m_variable_name_map</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="119" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="119" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a66c0419469172d0e33997a3b2a306dff" prot="private" static="no" mutable="no">
+        <type>LayoutDescriptorPtrs</type>
+        <definition>LayoutDescriptorPtrs ngraph::runtime::cpu::CPU_ExternalFunction::parameter_layout_descriptors</definition>
+        <argsstring></argsstring>
+        <name>parameter_layout_descriptors</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="121" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9db7ed4b094ac882fa4270dc8173010a" prot="private" static="no" mutable="no">
+        <type>LayoutDescriptorPtrs</type>
+        <definition>LayoutDescriptorPtrs ngraph::runtime::cpu::CPU_ExternalFunction::result_layout_descriptors</definition>
+        <argsstring></argsstring>
+        <name>result_layout_descriptors</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="122" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ad97f0b1aa6c81b0cdc0e3c3d2d88bf95" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="structngraph_1_1runtime_1_1cpu_1_1OpAttributes" kindref="compound">OpAttributes</ref> &gt;</type>
+        <definition>std::vector&lt;OpAttributes&gt; ngraph::runtime::cpu::CPU_ExternalFunction::m_op_attrs</definition>
+        <argsstring></argsstring>
+        <name>m_op_attrs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="123" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9a66922d87b1ff0376f4a80660d724b7" prot="private" static="no" mutable="no">
+        <type>std::unique_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter" kindref="compound">MKLDNNEmitter</ref> &gt;</type>
+        <definition>std::unique_ptr&lt;MKLDNNEmitter&gt; ngraph::runtime::cpu::CPU_ExternalFunction::m_mkldnn_emitter</definition>
+        <argsstring></argsstring>
+        <name>m_mkldnn_emitter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="125" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="125" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a6f7e62154d8ee36e4215a0c797b3ccaa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Function &gt; &amp;function, bool release_function=true)</argsstring>
+        <name>CPU_ExternalFunction</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt; &amp;</type>
+          <declname>function</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>release_function</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="76" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="242" bodyend="249"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aab3157d8d5389c2a1fbf5db11f75c35d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1CallFrame" kindref="compound">ngraph::runtime::CallFrame</ref> &gt;</type>
+        <definition>shared_ptr&lt; ngraph::runtime::CallFrame &gt; runtime::cpu::CPU_ExternalFunction::make_call_frame</definition>
+        <argsstring>()</argsstring>
+        <name>make_call_frame</name>
+        <reimplements refid="classngraph_1_1runtime_1_1ExternalFunction_1af65bc47ef8a8d5678181296c4be2644d">make_call_frame</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="78" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="911" bodyend="920"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aa1b4be0c15f3eb03d100776966661b78" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const LayoutDescriptorPtrs &amp;</type>
+        <definition>const runtime::cpu::LayoutDescriptorPtrs &amp; runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors</definition>
+        <argsstring>()</argsstring>
+        <name>get_parameter_layout_descriptors</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="80" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="923" bodyend="926"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ac8d29a89e7b6a780890ec3eca0a8380f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>const LayoutDescriptorPtrs &amp;</type>
+        <definition>const runtime::cpu::LayoutDescriptorPtrs &amp; runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors</definition>
+        <argsstring>()</argsstring>
+        <name>get_result_layout_descriptors</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="81" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="929" bodyend="932"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a3e9c1eee82e4b6bbaa276d97ad51195a" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::vector&lt; <ref refid="structngraph_1_1runtime_1_1cpu_1_1OpAttributes" kindref="compound">OpAttributes</ref> &gt; &amp;</type>
+        <definition>const std::vector&lt;OpAttributes&gt;&amp; ngraph::runtime::cpu::CPU_ExternalFunction::get_op_attrs</definition>
+        <argsstring>() const</argsstring>
+        <name>get_op_attrs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="83" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="83" bodyend="83"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a7c88f1f6df92f4f3e4a5d4e26c7fbf5a" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::unique_ptr&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1MKLDNNEmitter" kindref="compound">MKLDNNEmitter</ref> &gt; &amp;</type>
+        <definition>const std::unique_ptr&lt;MKLDNNEmitter&gt;&amp; ngraph::runtime::cpu::CPU_ExternalFunction::get_mkldnn_emitter</definition>
+        <argsstring>() const</argsstring>
+        <name>get_mkldnn_emitter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="84" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="84" bodyend="87"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a5504360cb3968cd6ad83d97d7cef8e06" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_ExternalFunction::compile</definition>
+        <argsstring>()</argsstring>
+        <name>compile</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="90" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="251" bodyend="880"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a4312e41713d2e3c6450832114b4eef75" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, Node *node, const std::vector&lt; TensorViewWrapper &gt; &amp;in, const std::vector&lt; TensorViewWrapper &gt; &amp;out)</argsstring>
+        <name>emit_debug_function_entry</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>in</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="95" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="934" bodyend="941"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1af6ced0a33e21dffec20db55567a5edf3" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, Node *node, const std::vector&lt; TensorViewWrapper &gt; &amp;in, const std::vector&lt; TensorViewWrapper &gt; &amp;out)</argsstring>
+        <name>emit_debug_function_exit</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type><ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *</type>
+          <declname>node</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>in</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; <ref refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kindref="compound">TensorViewWrapper</ref> &gt; &amp;</type>
+          <declname>out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="99" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="943" bodyend="950"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a3cad3dbf710d1c778614dec935065a7c" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::cpu::CPU_ExternalFunction::handle_output_alias</definition>
+        <argsstring>(codegen::CodeWriter &amp;writer, const Node &amp;, const std::unordered_map&lt; descriptor::TensorView *, std::vector&lt; size_t &gt;&gt; &amp;)</argsstring>
+        <name>handle_output_alias</name>
+        <param>
+          <type><ref refid="classngraph_1_1codegen_1_1CodeWriter" kindref="compound">codegen::CodeWriter</ref> &amp;</type>
+          <declname>writer</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &amp;</type>
+          <defname>node</defname>
+        </param>
+        <param>
+          <type>const std::unordered_map&lt; <ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">descriptor::TensorView</ref> *, std::vector&lt; size_t &gt;&gt; &amp;</type>
+          <defname>output_alias_map</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="103" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="882" bodyend="909"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ac50fafdaa0fb559628c4a776b73df446" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical</definition>
+        <argsstring>(const Node &amp;, const Node &amp;, const std::unordered_map&lt; const Node *, std::string &gt; &amp;node_cache)</argsstring>
+        <name>is_functionally_identical</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &amp;</type>
+          <defname>n1</defname>
+        </param>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &amp;</type>
+          <defname>n2</defname>
+        </param>
+        <param>
+          <type>const std::unordered_map&lt; const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> *, std::string &gt; &amp;</type>
+          <declname>node_cache</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="108" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="952" bodyend="956"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a262b8f63be07dbdfb8f9b6fdb2acfc86" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string runtime::cpu::CPU_ExternalFunction::emit_op_as_function</definition>
+        <argsstring>(const Node &amp;, const std::string &amp;function_name)</argsstring>
+        <name>emit_op_as_function</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &amp;</type>
+          <defname>node</defname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>function_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="112" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="958" bodyend="1015"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aa69fc34f885867ef9730d81344b73db4" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>string runtime::cpu::CPU_ExternalFunction::strip_comments</definition>
+        <argsstring>(const std::string &amp;)</argsstring>
+        <name>strip_comments</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <defname>s</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="113" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.cpp" bodystart="1017" bodyend="1055"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3330">
+        <label>ngraph::runtime::cpu::CPU_ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction"/>
+        <childnode refid="3331" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3332" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3332">
+        <label>std::enable_shared_from_this&lt; CPU_ExternalFunction &gt;</label>
+      </node>
+      <node id="3331">
+        <label>ngraph::runtime::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1ExternalFunction"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3333">
+        <label>ngraph::runtime::cpu::CPU_ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction"/>
+        <childnode refid="3334" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3335" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3335">
+        <label>std::enable_shared_from_this&lt; CPU_ExternalFunction &gt;</label>
+      </node>
+      <node id="3334">
+        <label>ngraph::runtime::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1ExternalFunction"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" line="72" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_external_function.hpp" bodystart="70" bodyend="126"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a5504360cb3968cd6ad83d97d7cef8e06" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>compile</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9547bb5890f567c4d3820a304a159856" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>CPU_CallFrame</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a6f7e62154d8ee36e4215a0c797b3ccaa" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>CPU_ExternalFunction</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a4312e41713d2e3c6450832114b4eef75" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>emit_debug_function_entry</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1af6ced0a33e21dffec20db55567a5edf3" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>emit_debug_function_exit</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a262b8f63be07dbdfb8f9b6fdb2acfc86" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>emit_op_as_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a408d9d41a9ae20de531b11697420e68a" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>ExternalFunction</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1aaaa12ea9e91a4ac845a43e3c95b45591" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>get_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a7c88f1f6df92f4f3e4a5d4e26c7fbf5a" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>get_mkldnn_emitter</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a3e9c1eee82e4b6bbaa276d97ad51195a" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>get_op_attrs</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aa1b4be0c15f3eb03d100776966661b78" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>get_parameter_layout_descriptors</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ac8d29a89e7b6a780890ec3eca0a8380f" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>get_result_layout_descriptors</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a3cad3dbf710d1c778614dec935065a7c" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>handle_output_alias</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ac50fafdaa0fb559628c4a776b73df446" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>is_functionally_identical</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a2fc4da3098e23d9d90f97a4c3a761616" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_compiled_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a97a4620755e64e6f9bcfb00ca6d865e4" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_compiler</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a1f6079967babfb5f298004bffcc79cb4" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_emit_timing</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a14d34bdb4b429fd42440eda488a1307e" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_execution_engine</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a9af036417820cb023a3dc83078fa3aad" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a4bfb268c6cbc931897347246ff3b8f90" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_is_compiled</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9a66922d87b1ff0376f4a80660d724b7" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_mkldnn_emitter</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ad97f0b1aa6c81b0cdc0e3c3d2d88bf95" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_op_attrs</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a547e8e22adf4d46c3c071739544a3511" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_release_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1ad7343ae18fb2aed1d8195b12ec405176" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_use_tbb</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a5f3b6dbf8eb18658e011a41bed12bb8a" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>m_variable_name_map</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aab3157d8d5389c2a1fbf5db11f75c35d" prot="public" virt="virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>make_call_frame</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a66c0419469172d0e33997a3b2a306dff" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>parameter_layout_descriptors</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a5c7859b120de56e5c77ec62a1efc297d" prot="protected" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>release_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1a9db7ed4b094ac882fa4270dc8173010a" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>result_layout_descriptors</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1CPU__ExternalFunction_1aa69fc34f885867ef9730d81344b73db4" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>strip_comments</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a2070441962c931b6447199e672717336" prot="public" virt="virtual"><scope>ngraph::runtime::cpu::CPU_ExternalFunction</scope><name>~ExternalFunction</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

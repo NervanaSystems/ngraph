@@ -1,0 +1,916 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::gpu::GPU_Emitter</compoundname>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab3ab5969e3ab008dfba45f49335320e5" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitNop)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitNop</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="42" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a69b5658500a737ab1e6c0fdd749a3bf4" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitAdd)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitAdd</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="43" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a359fe094ebe8e84914e3c4e15f04bdf3" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitDot)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitDot</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="44" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a679551dce46e0d7f91f06eafafc44eda" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitMultiply)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitMultiply</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="45" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a6409714b6ad0b8513dde6e280d2873bd" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitGetOutputElement)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitGetOutputElement</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="46" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a0b229a5bd38165a1ba9c3390e703c8cb" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitXLAGetTupleElement)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitXLAGetTupleElement</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="47" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a3f4b73f8fa8a90a763698414ccd5369e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitTuple)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitTuple</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="48" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a203880104eb7cb81de1fc9554b3c7076" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitAbs)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitAbs</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="49" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a15ba74911b41aa8bf6d84111694667fa" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitConcat)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitConcat</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="50" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a30dca1c0aae6c9abc7d0360cac30173c" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitDivide)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitDivide</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="51" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a84d95e6803ee4e51b2f8ad03038f3c11" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitEqual)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitEqual</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="52" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ac9e862633c92cccfb971b02169fc0aa7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitGreater)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitGreater</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="53" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a699ca34ec9f5f749ae9d23d02d74af19" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitGreaterEq)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitGreaterEq</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="54" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa8d0b2dabd11bf1010769f74aebfdd86" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitLess)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitLess</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="55" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae3adce0182ef957c42d2340baac4ba21" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitLessEq)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitLessEq</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="56" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1adc5b3fd77edb7fcd5432cd010bf51562" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitLog)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitLog</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="57" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1abc1af7438f6582041699783a84a08c55" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitMaximum)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitMaximum</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="58" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab0bae26e49351c83fbd2a36a3cd27569" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitMinimum)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitMinimum</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="59" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a40731ccbb26fa05bb316248741da3be9" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitNegative)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitNegative</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="60" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5ec5aa12ad7a05be3b37bfbfeab49e4e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitNotEqual)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitNotEqual</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="61" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5d2f05d770b483a46481b025376cb008" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSelect)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSelect</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="62" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5f351cf1c9d0333db27d87f6b08057c8" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSubtract)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSubtract</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="63" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a244311064135f8014935da0c5fef922f" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitBroadcast)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitBroadcast</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="64" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1adc7c9fa51c293c13d3019871100a6cad" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitConvert)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitConvert</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="65" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a1b97967ff97bd68adcf58582449de5cc" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitConstant)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitConstant</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="66" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a2ded70017b0f68b8b1d929a3c5ada3d5" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitReshape)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitReshape</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="67" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aca9ba0b78a05358e6b98479013650178" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitFunctionCall)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitFunctionCall</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="68" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1acd8172f1798ce881cc1ed047dadbb1cf" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitReduce)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitReduce</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="69" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a4ce692941e2ac38e34f2d190b50f7a79" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSign)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSign</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="70" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a41e46063b55db77acdc3ae43ce97d73b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSlice)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSlice</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="71" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa90fd7ec630b213b46ea80a76604529a" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSum)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSum</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="72" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a207eb071d4f9340393b38f2ee3848709" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitExp)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitExp</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="73" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ad5cb9b799384bb9bc3dca354b52d54b3" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSin)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSin</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="74" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a15744d711de50511f50c5f97239d5058" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSinh)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSinh</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="75" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a7bb65c3a88a28a1cfc54753911d71549" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitCos)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitCos</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="76" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab37b304278f2145641340c659485987e" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitCosh)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitCosh</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="77" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a6ad641e5472ccc031ac0246a50ae1bfc" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitTan)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitTan</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="78" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aff37104d562b87d15881addca2b32ddb" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitTanh)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitTanh</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="79" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a2965d6c98a18d11bef68489b2dd2c06d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitAsin)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitAsin</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="80" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a27cc13f2170308d080728667e421a59a" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitAcos)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitAcos</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="81" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a09ea2abed15d38618c56c9b07e4c1b3b" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitAtan)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitAtan</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="82" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a1b9b344eaa67a41b83b2a83e23b4f460" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitPower)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitPower</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="83" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a82554519b15a8adae9115e10da1431f2" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitReplaceSlice)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitReplaceSlice</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="84" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1abe74ae0905fe2ff44f3f4009b56fa490" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitOneHot)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitOneHot</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="85" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aec00c32aabc28f5caa29a6f365b40d9f" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitFloor)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitFloor</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="86" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae58577a09431da57a8f5df260fba58bb" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitCeiling)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitCeiling</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="87" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aedd83e43f231adb5e9965b151e4c0bc2" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSqrt)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSqrt</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="88" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae4d16bc7527c5996ede7b60e04c77fa2" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitConvolution)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitConvolution</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="89" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a32a5975155f8bc6b164c5c18a2d5bbf3" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitNot)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitNot</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="90" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a9f69fe6e87cfa863f096f683fb22f7a7" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitMaxPool)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitMaxPool</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="91" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a95f8b74aaf5f9424dda5ffd6133ddc2d" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitReverse)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitReverse</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="92" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aaadd9db3645042c94158a7725c8bef25" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitReduceWindow)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitReduceWindow</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="93" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa1e54b1f9e4cf8165dfeba3d69d58bd6" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>static void ngraph::runtime::gpu::GPU_Emitter::EMITTER_DECL</definition>
+        <argsstring>(EmitSelectAndScatter)</argsstring>
+        <name>EMITTER_DECL</name>
+        <param>
+          <type>EmitSelectAndScatter</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="94" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/gpu/gpu_emitter.hpp" bodystart="39" bodyend="95"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab3ab5969e3ab008dfba45f49335320e5" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a69b5658500a737ab1e6c0fdd749a3bf4" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a359fe094ebe8e84914e3c4e15f04bdf3" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a679551dce46e0d7f91f06eafafc44eda" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a6409714b6ad0b8513dde6e280d2873bd" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a0b229a5bd38165a1ba9c3390e703c8cb" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a3f4b73f8fa8a90a763698414ccd5369e" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a203880104eb7cb81de1fc9554b3c7076" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a15ba74911b41aa8bf6d84111694667fa" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a30dca1c0aae6c9abc7d0360cac30173c" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a84d95e6803ee4e51b2f8ad03038f3c11" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ac9e862633c92cccfb971b02169fc0aa7" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a699ca34ec9f5f749ae9d23d02d74af19" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa8d0b2dabd11bf1010769f74aebfdd86" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae3adce0182ef957c42d2340baac4ba21" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1adc5b3fd77edb7fcd5432cd010bf51562" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1abc1af7438f6582041699783a84a08c55" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab0bae26e49351c83fbd2a36a3cd27569" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a40731ccbb26fa05bb316248741da3be9" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5ec5aa12ad7a05be3b37bfbfeab49e4e" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5d2f05d770b483a46481b025376cb008" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a5f351cf1c9d0333db27d87f6b08057c8" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a244311064135f8014935da0c5fef922f" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1adc7c9fa51c293c13d3019871100a6cad" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a1b97967ff97bd68adcf58582449de5cc" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a2ded70017b0f68b8b1d929a3c5ada3d5" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aca9ba0b78a05358e6b98479013650178" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1acd8172f1798ce881cc1ed047dadbb1cf" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a4ce692941e2ac38e34f2d190b50f7a79" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a41e46063b55db77acdc3ae43ce97d73b" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa90fd7ec630b213b46ea80a76604529a" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a207eb071d4f9340393b38f2ee3848709" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ad5cb9b799384bb9bc3dca354b52d54b3" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a15744d711de50511f50c5f97239d5058" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a7bb65c3a88a28a1cfc54753911d71549" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ab37b304278f2145641340c659485987e" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a6ad641e5472ccc031ac0246a50ae1bfc" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aff37104d562b87d15881addca2b32ddb" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a2965d6c98a18d11bef68489b2dd2c06d" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a27cc13f2170308d080728667e421a59a" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a09ea2abed15d38618c56c9b07e4c1b3b" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a1b9b344eaa67a41b83b2a83e23b4f460" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a82554519b15a8adae9115e10da1431f2" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1abe74ae0905fe2ff44f3f4009b56fa490" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aec00c32aabc28f5caa29a6f365b40d9f" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae58577a09431da57a8f5df260fba58bb" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aedd83e43f231adb5e9965b151e4c0bc2" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1ae4d16bc7527c5996ede7b60e04c77fa2" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a32a5975155f8bc6b164c5c18a2d5bbf3" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a9f69fe6e87cfa863f096f683fb22f7a7" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1a95f8b74aaf5f9424dda5ffd6133ddc2d" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aaadd9db3645042c94158a7725c8bef25" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+      <member refid="classngraph_1_1runtime_1_1gpu_1_1GPU__Emitter_1aa1e54b1f9e4cf8165dfeba3d69d58bd6" prot="public" virt="non-virtual"><scope>ngraph::runtime::gpu::GPU_Emitter</scope><name>EMITTER_DECL</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

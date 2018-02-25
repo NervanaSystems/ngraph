@@ -78,8 +78,11 @@ venv/
 VisualGDB/
 toolchain.cmake
 
-# do not add build artifacts to github
-
-/doc/build
+# do not add docbuild artifacts to github
+/doc/doxygen/xml
 /doc/sphinx/build
-
+/doc/doxygen/*.html
+/doc/doxygen/*.xml
+/doc/doxygen/latex
+/doc/doxygen/man
+/doc/doxygen/html

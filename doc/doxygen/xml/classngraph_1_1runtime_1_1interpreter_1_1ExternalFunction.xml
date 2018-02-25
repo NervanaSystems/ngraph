@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::interpreter::ExternalFunction</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1ExternalFunction" prot="public" virt="non-virtual">ngraph::runtime::ExternalFunction</basecompoundref>
+    <basecompoundref prot="public" virt="non-virtual">std::enable_shared_from_this&lt; ExternalFunction &gt;</basecompoundref>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a551b7545f453b9aaf386dc9bf96cf2e0" prot="protected" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;ngraph::Function&gt; ngraph::runtime::interpreter::ExternalFunction::m_function</definition>
+        <argsstring></argsstring>
+        <name>m_function</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a1fe06b22c278f13bfbcdafda4d40ef35" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::interpreter::ExternalFunction::ExternalFunction</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Function &gt; &amp;function, bool release_function=true)</argsstring>
+        <name>ExternalFunction</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt; &amp;</type>
+          <declname>function</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>release_function</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp" bodystart="95" bodyend="100"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a5ff7fa2046f15cac4b881555db6964fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1CallFrame" kindref="compound">ngraph::runtime::CallFrame</ref> &gt;</type>
+        <definition>shared_ptr&lt; runtime::CallFrame &gt; runtime::interpreter::ExternalFunction::make_call_frame</definition>
+        <argsstring>()</argsstring>
+        <name>make_call_frame</name>
+        <reimplements refid="classngraph_1_1runtime_1_1ExternalFunction_1af65bc47ef8a8d5678181296c4be2644d">make_call_frame</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp" bodystart="125" bodyend="133"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a3b965b2e2d959dd0cb8cb225fb7390ee" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void runtime::interpreter::ExternalFunction::compile</definition>
+        <argsstring>()</argsstring>
+        <name>compile</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.cpp" bodystart="102" bodyend="123"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3474">
+        <label>std::enable_shared_from_this&lt; ExternalFunction &gt;</label>
+      </node>
+      <node id="3472">
+        <label>ngraph::runtime::interpreter::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction"/>
+        <childnode refid="3473" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3474" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3473">
+        <label>ngraph::runtime::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1ExternalFunction"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3477">
+        <label>std::enable_shared_from_this&lt; ExternalFunction &gt;</label>
+      </node>
+      <node id="3475">
+        <label>ngraph::runtime::interpreter::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction"/>
+        <childnode refid="3476" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3477" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3476">
+        <label>ngraph::runtime::ExternalFunction</label>
+        <link refid="classngraph_1_1runtime_1_1ExternalFunction"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_external_function.hpp" bodystart="36" bodyend="47"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a3b965b2e2d959dd0cb8cb225fb7390ee" prot="protected" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>compile</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a1fe06b22c278f13bfbcdafda4d40ef35" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>ExternalFunction</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1aaaa12ea9e91a4ac845a43e3c95b45591" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>get_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a551b7545f453b9aaf386dc9bf96cf2e0" prot="protected" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>m_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a4bfb268c6cbc931897347246ff3b8f90" prot="protected" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>m_is_compiled</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a547e8e22adf4d46c3c071739544a3511" prot="protected" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>m_release_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1ExternalFunction_1a5ff7fa2046f15cac4b881555db6964fe" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>make_call_frame</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a5c7859b120de56e5c77ec62a1efc297d" prot="protected" virt="non-virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>release_function</name></member>
+      <member refid="classngraph_1_1runtime_1_1ExternalFunction_1a2070441962c931b6447199e672717336" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::ExternalFunction</scope><name>~ExternalFunction</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1descriptor_1_1PrimaryTensorView" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::descriptor::PrimaryTensorView</compoundname>
+    <basecompoundref refid="classngraph_1_1descriptor_1_1TensorView" prot="public" virt="non-virtual">ngraph::descriptor::TensorView</basecompoundref>
+    <includes refid="primary__tensor__view_8hpp" local="no">primary_tensor_view.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1descriptor_1_1PrimaryTensorView_1a9c3178e15228181c8410f521b841873f" prot="protected" static="no" mutable="no">
+        <type><ref refid="classngraph_1_1descriptor_1_1Tensor" kindref="compound">Tensor</ref></type>
+        <definition>Tensor ngraph::descriptor::PrimaryTensorView::m_tensor</definition>
+        <argsstring></argsstring>
+        <name>m_tensor</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" line="55" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1PrimaryTensorView_a490bfc890463f6d044d90994c36f51e8_1a490bfc890463f6d044d90994c36f51e8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PrimaryTensorView::PrimaryTensorView</definition>
+        <argsstring>(const std::shared_ptr&lt; const TensorViewType &gt; &amp;tensor_view_type, const std::string &amp;name, bool is_output, bool is_input, bool is_constant)</argsstring>
+        <name>PrimaryTensorView</name>
+        <param>
+          <type>const std::shared_ptr&lt; const <ref refid="classngraph_1_1TensorViewType" kindref="compound">TensorViewType</ref> &gt; &amp;</type>
+          <declname>tensor_view_type</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>is_output</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>is_input</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>is_constant</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>tensor_view_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The type for this view. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Description of the tensor, for debugging. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>is_output</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The view can be read from the host at the end of a computation. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>is_input</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The view can be written from the host at the beginning of a computation. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.cpp" bodystart="22" bodyend="33"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1PrimaryTensorView_1a234febf5b724aefb6eb25f18e953d7fd" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>const <ref refid="classngraph_1_1descriptor_1_1Tensor" kindref="compound">Tensor</ref> &amp;</type>
+        <definition>const Tensor &amp; PrimaryTensorView::get_tensor</definition>
+        <argsstring>() const override</argsstring>
+        <name>get_tensor</name>
+        <reimplements refid="classngraph_1_1descriptor_1_1TensorView_1a20a49f00433e2de4f68e41d495e1bbd8">get_tensor</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" line="51" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.cpp" bodystart="35" bodyend="38"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1descriptor_1_1PrimaryTensorView_1a057a353f7e9b5a5141a7c10bee0752b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type><ref refid="classngraph_1_1descriptor_1_1Tensor" kindref="compound">Tensor</ref> &amp;</type>
+        <definition>Tensor &amp; PrimaryTensorView::get_tensor</definition>
+        <argsstring>() override</argsstring>
+        <name>get_tensor</name>
+        <reimplements refid="classngraph_1_1descriptor_1_1TensorView_1a9f9052ab0c746c4a60c6bf1ac7db1843">get_tensor</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.cpp" bodystart="40" bodyend="43"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>A <ref refid="classngraph_1_1descriptor_1_1PrimaryTensorView" kindref="compound">PrimaryTensorView</ref> owns the tensor. All other views are the result of some index operation on the primary view. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="127">
+        <label>ngraph::descriptor::PrimaryTensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1PrimaryTensorView"/>
+        <childnode refid="128" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="128">
+        <label>ngraph::descriptor::TensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1TensorView"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="134">
+        <label>ngraph::element::Type</label>
+        <link refid="classngraph_1_1element_1_1Type"/>
+      </node>
+      <node id="133">
+        <label>ngraph::descriptor::Tensor</label>
+        <link refid="classngraph_1_1descriptor_1_1Tensor"/>
+        <childnode refid="134" relation="usage">
+          <edgelabel>m_element_type</edgelabel>
+        </childnode>
+        <childnode refid="131" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+        <childnode refid="129" relation="usage">
+          <edgelabel>m_primary_tensor_view</edgelabel>
+        </childnode>
+      </node>
+      <node id="129">
+        <label>ngraph::descriptor::PrimaryTensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1PrimaryTensorView"/>
+        <childnode refid="130" relation="public-inheritance">
+        </childnode>
+        <childnode refid="133" relation="usage">
+          <edgelabel>m_tensor</edgelabel>
+        </childnode>
+      </node>
+      <node id="130">
+        <label>ngraph::descriptor::TensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1TensorView"/>
+        <childnode refid="131" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="132">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="131">
+        <label>std::string</label>
+        <childnode refid="132" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/descriptor/primary_tensor_view.hpp" bodystart="38" bodyend="56"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a22d95d29706e985ca7fb21696a2ef583" prot="public" virt="virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>collect_tensor_views</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a65123a285462401d67b6cf2693a421a5" prot="public" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_name</name></member>
+      <member refid="classngraph_1_1descriptor_1_1PrimaryTensorView_1a234febf5b724aefb6eb25f18e953d7fd" prot="public" virt="virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_tensor</name></member>
+      <member refid="classngraph_1_1descriptor_1_1PrimaryTensorView_1a057a353f7e9b5a5141a7c10bee0752b2" prot="public" virt="virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_tensor</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1ae58206730e46d446ef455d454d86314f" prot="public" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_tensor_view_layout</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a91da3e455f35fc561ecafbd9d1860dd8" prot="public" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_tensor_view_type</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a9e3731b367c97e4b4f82695bf3cb2b61" prot="public" virt="virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>get_value_type</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a87f275d047cfa707d85756fb981c8071" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>m_name</name></member>
+      <member refid="classngraph_1_1descriptor_1_1PrimaryTensorView_1a9c3178e15228181c8410f521b841873f" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>m_tensor</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a5e9d7fe0eaf6d43ad14346a3f07753c0" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>m_tensor_view_layout</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a7ac4f366fbad7914e31b7075ffc73418" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>m_tensor_view_type</name></member>
+      <member refid="classngraph_1_1descriptor_1_1PrimaryTensorView_a490bfc890463f6d044d90994c36f51e8_1a490bfc890463f6d044d90994c36f51e8" prot="public" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>PrimaryTensorView</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1a65d84c47bf0be64820d2f7d73e260cca" prot="public" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>set_tensor_view_layout</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1affb379a101c1b6b5ff455f8f8b8d710e" prot="protected" virt="non-virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>TensorView</name></member>
+      <member refid="classngraph_1_1descriptor_1_1TensorView_1ada3053745761380beca7a1e32c498834" prot="public" virt="virtual"><scope>ngraph::descriptor::PrimaryTensorView</scope><name>~TensorView</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

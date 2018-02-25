@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::interpreter::INT_Manager</compoundname>
+    <basecompoundref refid="classngraph_1_1runtime_1_1Manager" prot="public" virt="non-virtual">ngraph::runtime::Manager</basecompoundref>
+    <includes refid="int__manager_8hpp" local="no">int_manager.hpp</includes>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_1a7eeb726b2d68f69921b90aeacdf45153" prot="public" static="yes" mutable="no">
+        <type>Factory</type>
+        <definition>runtime::Manager::Factory runtime::interpreter::INT_Manager::factory</definition>
+        <argsstring></argsstring>
+        <name>factory</name>
+        <initializer>=
+    runtime::Manager::register_factory(&quot;INTERPRETER&quot;,
+                                       [](const string&amp; name) -&gt; shared_ptr&lt;<ref refid="classngraph_1_1runtime_1_1Manager" kindref="compound">runtime::Manager</ref>&gt; {
+                                           return make_shared&lt;<ref refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager" kindref="compound">INT_Manager</ref>&gt;();
+                                       })</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_a14521213dee56502e144f961b2e187b7_1a14521213dee56502e144f961b2e187b7" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1Backend" kindref="compound">Backend</ref> &gt;</type>
+        <definition>shared_ptr&lt; runtime::Backend &gt; runtime::interpreter::INT_Manager::allocate_backend</definition>
+        <argsstring>() override</argsstring>
+        <name>allocate_backend</name>
+        <reimplements refid="classngraph_1_1runtime_1_1Manager_a2f9cbafb77478482bb8d9f8fdc2971d7_1a2f9cbafb77478482bb8d9f8fdc2971d7">allocate_backend</reimplements>
+        <briefdescription>
+<para>Allocate a backend for this transformer. </para>        </briefdescription>
+        <detaileddescription>
+<para>Specific transformers may provide addtional methods for allocating customized backends. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" line="37" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.cpp" bodystart="26" bodyend="29"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_1a91581d4dbe86f49ed2656726aa7fff66" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1runtime_1_1ExternalFunction" kindref="compound">ngraph::runtime::ExternalFunction</ref> &gt;</type>
+        <definition>shared_ptr&lt; runtime::ExternalFunction &gt; runtime::interpreter::INT_Manager::compile</definition>
+        <argsstring>(const std::shared_ptr&lt; ngraph::Function &gt; &amp;fun) override</argsstring>
+        <name>compile</name>
+        <reimplements refid="classngraph_1_1runtime_1_1Manager_1a523ec9dba1d6a0ecccf7935c161ef45e">compile</reimplements>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">ngraph::Function</ref> &gt; &amp;</type>
+          <declname>fun</declname>
+        </param>
+        <briefdescription>
+<para>Convert a function to a form that can be run on a backend. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" line="40" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.cpp" bodystart="32" bodyend="35"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Transformer for the interpreted backend. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="3486">
+        <label>ngraph::runtime::interpreter::INT_Manager</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager"/>
+        <childnode refid="3487" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3487">
+        <label>ngraph::runtime::Manager</label>
+        <link refid="classngraph_1_1runtime_1_1Manager"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3488">
+        <label>ngraph::runtime::interpreter::INT_Manager</label>
+        <link refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager"/>
+        <childnode refid="3489" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3489">
+        <label>ngraph::runtime::Manager</label>
+        <link refid="classngraph_1_1runtime_1_1Manager"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" line="35" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/interpreter/int_manager.hpp" bodystart="34" bodyend="43"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_a14521213dee56502e144f961b2e187b7_1a14521213dee56502e144f961b2e187b7" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>allocate_backend</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_1a91581d4dbe86f49ed2656726aa7fff66" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>compile</name></member>
+      <member refid="classngraph_1_1runtime_1_1interpreter_1_1INT__Manager_1a7eeb726b2d68f69921b90aeacdf45153" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>factory</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1ae0a72c6e0faedd7020f34c0c5d1997c4" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>Factory</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1af0941afa18edb4141ae9a14f7fba79e7" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>get</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1af29b39fa63884584bff4f123e092cf3d" prot="public" virt="non-virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>register_factory</name></member>
+      <member refid="classngraph_1_1runtime_1_1Manager_1a512f1ab87ecb6122703dd1a2e8e185ed" prot="public" virt="virtual"><scope>ngraph::runtime::interpreter::INT_Manager</scope><name>~Manager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

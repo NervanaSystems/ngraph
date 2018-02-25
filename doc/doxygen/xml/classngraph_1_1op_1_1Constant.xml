@@ -1,0 +1,814 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1op_1_1Constant" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::op::Constant</compoundname>
+    <basecompoundref refid="classngraph_1_1Node" prot="public" virt="non-virtual">ngraph::Node</basecompoundref>
+    <includes refid="ops_2constant_8hpp" local="no">constant.hpp</includes>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classngraph_1_1op_1_1Constant_1a367d418213f5e17289ee8fc8ce845603" prot="protected" static="no" mutable="no">
+        <type><ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref></type>
+        <definition>element::Type ngraph::op::Constant::m_element_type</definition>
+        <argsstring></argsstring>
+        <name>m_element_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="242" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="242" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1op_1_1Constant_1a4f4aa0f203e901c67ee2652a99bfe21c" prot="protected" static="no" mutable="no">
+        <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+        <definition>Shape ngraph::op::Constant::m_shape</definition>
+        <argsstring></argsstring>
+        <name>m_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="243" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="243" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1op_1_1Constant_1a0de31b19d0684d908e79ffdccbb8f6cd" prot="protected" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* ngraph::op::Constant::m_data</definition>
+        <argsstring></argsstring>
+        <name>m_data</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="244" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="244" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a7b9d501afe1dd57344f87002614fe23c_1a7b9d501afe1dd57344f87002614fe23c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type></type>
+        <definition>ngraph::op::Constant::Constant</definition>
+        <argsstring>(const element::Type &amp;type, Shape shape, const std::vector&lt; T &gt; &amp;values)</argsstring>
+        <name>Constant</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; T &gt; &amp;</type>
+          <declname>values</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a tensor constant. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The element type of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shape</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The shape of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>values</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of literals for initializing the tensor constant. The size of values must match the size of the shape. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="41" bodyend="62"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a1f3fab5eebea82152a2888404036bbbd_1a1f3fab5eebea82152a2888404036bbbd" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::op::Constant::Constant</definition>
+        <argsstring>(const element::Type &amp;type, Shape shape, const std::vector&lt; std::string &gt; &amp;values)</argsstring>
+        <name>Constant</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; std::string &gt; &amp;</type>
+          <declname>values</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a tensor constant This constructor is mainly to support deserialization of constants. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The element type of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shape</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The shape of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>values</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A list of string values to use as the constant data. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="70" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="70" bodyend="85"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a141f05e333f5914c0ff393073b0b7de7_1a141f05e333f5914c0ff393073b0b7de7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::op::Constant::Constant</definition>
+        <argsstring>(const element::Type &amp;type, const Shape &amp;shape, const void *data)</argsstring>
+        <name>Constant</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>const void *</type>
+          <declname>data</declname>
+        </param>
+        <briefdescription>
+<para>Constructs a tensor constant with the same initialization value copied across the tensor. This constructor is mainly to support deserialization of constants. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The element type of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shape</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The shape of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>data</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A void* to constant data. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="93" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="93" bodyend="104"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1aa36c2dd73b837bd37f5f5845eba47139" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>op::Constant::~Constant</definition>
+        <argsstring>()</argsstring>
+        <name>~Constant</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="106" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.cpp" bodystart="55" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1ae0423164d6e64a12ee347c3666f89712" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;</type>
+        <definition>virtual std::shared_ptr&lt;Node&gt; ngraph::op::Constant::copy_with_new_args</definition>
+        <argsstring>(const std::vector&lt; std::shared_ptr&lt; Node &gt;&gt; &amp;new_args) const override</argsstring>
+        <name>copy_with_new_args</name>
+        <reimplements refid="classngraph_1_1Node_1a0c3c1afcdb7effe100c653b86a2eb56e">copy_with_new_args</reimplements>
+        <param>
+          <type>const std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1Node" kindref="compound">Node</ref> &gt;&gt; &amp;</type>
+          <declname>new_args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="132" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="132" bodyend="140"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a1878da238e474f02555be8aa6244f310_1a1878da238e474f02555be8aa6244f310" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; std::string &gt;</type>
+        <definition>std::vector&lt; std::string &gt; op::Constant::get_value_strings</definition>
+        <argsstring>() const</argsstring>
+        <name>get_value_strings</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>The initialization literals for the tensor constant. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="143" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.cpp" bodystart="63" bodyend="150"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1af77d84b3097e4a2781a6f972d3776b92" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::vector&lt; T &gt;</type>
+        <definition>std::vector&lt;T&gt; ngraph::op::Constant::get_vector</definition>
+        <argsstring>() const</argsstring>
+        <name>get_vector</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="146" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="146" bodyend="160"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1a60e7a3ec8770dbce05a030649efd328b" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const void *</type>
+        <definition>const void* ngraph::op::Constant::get_data_ptr</definition>
+        <argsstring>() const</argsstring>
+        <name>get_data_ptr</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="162" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="162" bodyend="162"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1a421d22b5f559556fd7e1ec0e0b60cd0b" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>bool</type>
+        <definition>bool ngraph::op::Constant::is_constant</definition>
+        <argsstring>() const override</argsstring>
+        <name>is_constant</name>
+        <reimplements refid="classngraph_1_1Node_1aa560b6ff7736831265cf1ce1346e6376">is_constant</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="163" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="163" bodyend="163"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a803a76dee878974952facf39055183b1_1a803a76dee878974952facf39055183b1" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1op_1_1Constant" kindref="compound">op::Constant</ref> &gt;</type>
+        <definition>static std::shared_ptr&lt;op::Constant&gt; ngraph::op::Constant::create</definition>
+        <argsstring>(const element::Type &amp;type, Shape shape, const std::vector&lt; T &gt; values)</argsstring>
+        <name>create</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; T &gt;</type>
+          <declname>values</declname>
+        </param>
+        <briefdescription>
+<para>Wrapper around constructing a shared_ptr of a <ref refid="classngraph_1_1op_1_1Constant" kindref="compound">Constant</ref>. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The element type of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shape</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The shape of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>values</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of values to use as the constant data. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="115" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="115" bodyend="118"/>
+        <referencedby refid="namespacengraph_1_1builder_ae1f7d64ba30c461078416ff3fb65f7a4_1ae1f7d64ba30c461078416ff3fb65f7a4" compoundref="reduce__ops_8cpp" startline="43" endline="53">ngraph::builder::l2_norm</referencedby>
+        <referencedby refid="namespacengraph_1_1builder_ae85b2d61001376771c4268d37f6a816a_1ae85b2d61001376771c4268d37f6a816a" compoundref="reduce__ops_8cpp" startline="55" endline="65">ngraph::builder::mean</referencedby>
+        <referencedby refid="namespacengraph_1_1builder_a2263cf8686e32b3c18fe9be59ad21984_1a2263cf8686e32b3c18fe9be59ad21984" compoundref="reduce__ops_8cpp" startline="67" endline="77">ngraph::builder::std_dev</referencedby>
+        <referencedby refid="namespacengraph_1_1builder_a7d0d9c205e6343ce056feb896a630c55_1a7d0d9c205e6343ce056feb896a630c55" compoundref="reduce__ops_8cpp" startline="83" endline="117">ngraph::builder::variance</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_a26e08192a1a966f1f1ff6a3d5cb4c325_1a26e08192a1a966f1f1ff6a3d5cb4c325" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1op_1_1Constant" kindref="compound">op::Constant</ref> &gt;</type>
+        <definition>static std::shared_ptr&lt;op::Constant&gt; ngraph::op::Constant::create</definition>
+        <argsstring>(const element::Type &amp;type, Shape shape, std::initializer_list&lt; T &gt; values)</argsstring>
+        <name>create</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>type</declname>
+        </param>
+        <param>
+          <type><ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref></type>
+          <declname>shape</declname>
+        </param>
+        <param>
+          <type>std::initializer_list&lt; T &gt;</type>
+          <declname>values</declname>
+        </param>
+        <briefdescription>
+<para>Wrapper around constructing a shared_ptr of a <ref refid="classngraph_1_1op_1_1Constant" kindref="compound">Constant</ref>. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The element type of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>shape</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The shape of the tensor constant. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>values</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>An initializer_list of values to use as the constant data. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="127" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="127" bodyend="130"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1a416ffd43eb2969a456df0f23e940d72c" prot="protected" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::op::Constant::write_values</definition>
+        <argsstring>(const std::vector&lt; T &gt; &amp;values)</argsstring>
+        <name>write_values</name>
+        <param>
+          <type>const std::vector&lt; T &gt; &amp;</type>
+          <declname>values</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="166" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="166" bodyend="169"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1a2eca770300d8aad4a30fc429133822c5" prot="protected" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+          <param>
+            <type>typename U</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::op::Constant::write_buffer</definition>
+        <argsstring>(void *target, const std::vector&lt; U &gt; &amp;source, size_t count)</argsstring>
+        <name>write_buffer</name>
+        <param>
+          <type>void *</type>
+          <declname>target</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; U &gt; &amp;</type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>count</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="172" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="172" bodyend="179"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1op_1_1Constant_1abbd7e7a9780d4cd621ef29ed197ac4e5" prot="protected" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::op::Constant::write_to_buffer</definition>
+        <argsstring>(const element::Type &amp;target_type, const Shape &amp;target_shape, const std::vector&lt; T &gt; &amp;source, void *target, size_t target_element_count)</argsstring>
+        <name>write_to_buffer</name>
+        <param>
+          <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+          <declname>target_type</declname>
+        </param>
+        <param>
+          <type>const <ref refid="namespacengraph_1a4389a36f258ceab3d6622e166a24e3bb" kindref="member">Shape</ref> &amp;</type>
+          <declname>target_shape</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; T &gt; &amp;</type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type>void *</type>
+          <declname>target</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>target_element_count</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="182" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="182" bodyend="240"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Class for constants. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="678">
+        <label>ngraph::Node</label>
+        <link refid="classngraph_1_1Node"/>
+        <childnode refid="679" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="677">
+        <label>ngraph::op::Constant</label>
+        <link refid="classngraph_1_1op_1_1Constant"/>
+        <childnode refid="678" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="679">
+        <label>std::enable_shared_from_this&lt; Node &gt;</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="681">
+        <label>ngraph::Node</label>
+        <link refid="classngraph_1_1Node"/>
+        <childnode refid="682" relation="public-inheritance">
+        </childnode>
+        <childnode refid="683" relation="usage">
+          <edgelabel>m_outputs</edgelabel>
+        </childnode>
+        <childnode refid="691" relation="usage">
+          <edgelabel>liveness_live_list</edgelabel>
+          <edgelabel>liveness_free_list</edgelabel>
+          <edgelabel>liveness_new_list</edgelabel>
+        </childnode>
+        <childnode refid="699" relation="usage">
+          <edgelabel>m_users</edgelabel>
+        </childnode>
+        <childnode refid="701" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="702" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+        <childnode refid="694" relation="usage">
+          <edgelabel>m_node_type</edgelabel>
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="688">
+        <label>K</label>
+      </node>
+      <node id="690">
+        <label>T</label>
+      </node>
+      <node id="699">
+        <label>std::multiset&lt; ngraph::Node *&gt;</label>
+        <childnode refid="681" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="700" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="707">
+        <label>std::vector&lt; T &gt;</label>
+        <childnode refid="690" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="705">
+        <label>std::unordered_map&lt; K, T &gt;</label>
+        <childnode refid="688" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="690" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="702">
+        <label>std::unordered_map&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</label>
+        <childnode refid="703" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="681" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="705" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, ngraph::autodiff::Adjoints &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="693">
+        <label>ngraph::element::Type</label>
+        <link refid="classngraph_1_1element_1_1Type"/>
+      </node>
+      <node id="680">
+        <label>ngraph::op::Constant</label>
+        <link refid="classngraph_1_1op_1_1Constant"/>
+        <childnode refid="681" relation="public-inheritance">
+        </childnode>
+        <childnode refid="693" relation="usage">
+          <edgelabel>m_element_type</edgelabel>
+        </childnode>
+        <childnode refid="706" relation="usage">
+          <edgelabel>m_shape</edgelabel>
+        </childnode>
+      </node>
+      <node id="684">
+        <label>ngraph::descriptor::Output</label>
+        <link refid="classngraph_1_1descriptor_1_1Output"/>
+        <childnode refid="685" relation="usage">
+          <edgelabel>m_inputs</edgelabel>
+        </childnode>
+        <childnode refid="681" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="692">
+        <label>ngraph::descriptor::Tensor</label>
+        <link refid="classngraph_1_1descriptor_1_1Tensor"/>
+        <childnode refid="693" relation="usage">
+          <edgelabel>m_element_type</edgelabel>
+        </childnode>
+        <childnode refid="694" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+        <childnode refid="696" relation="usage">
+          <edgelabel>m_primary_tensor_view</edgelabel>
+        </childnode>
+      </node>
+      <node id="696">
+        <label>ngraph::descriptor::PrimaryTensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1PrimaryTensorView"/>
+        <childnode refid="697" relation="public-inheritance">
+        </childnode>
+        <childnode refid="692" relation="usage">
+          <edgelabel>m_tensor</edgelabel>
+        </childnode>
+      </node>
+      <node id="697">
+        <label>ngraph::descriptor::TensorView</label>
+        <link refid="classngraph_1_1descriptor_1_1TensorView"/>
+        <childnode refid="694" relation="usage">
+          <edgelabel>m_name</edgelabel>
+        </childnode>
+      </node>
+      <node id="683">
+        <label>std::deque&lt; ngraph::descriptor::Output &gt;</label>
+        <childnode refid="684" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="689" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Output &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="695">
+        <label>std::basic_string&lt; char &gt;</label>
+      </node>
+      <node id="682">
+        <label>std::enable_shared_from_this&lt; Node &gt;</label>
+      </node>
+      <node id="685">
+        <label>std::set&lt; ngraph::descriptor::Input *&gt;</label>
+        <childnode refid="686" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="687" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="687">
+        <label>std::set&lt; K &gt;</label>
+        <childnode refid="688" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="686">
+        <label>ngraph::descriptor::Input</label>
+        <link refid="classngraph_1_1descriptor_1_1Input"/>
+        <childnode refid="684" relation="usage">
+          <edgelabel>m_output</edgelabel>
+        </childnode>
+        <childnode refid="681" relation="usage">
+          <edgelabel>m_node</edgelabel>
+        </childnode>
+      </node>
+      <node id="700">
+        <label>std::multiset&lt; K &gt;</label>
+        <childnode refid="688" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="701">
+        <label>std::deque&lt; ngraph::descriptor::Input &gt;</label>
+        <childnode refid="686" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+        <childnode refid="689" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Input &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="698">
+        <label>std::unordered_set&lt; K &gt;</label>
+        <childnode refid="688" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+      </node>
+      <node id="706">
+        <label>std::vector&lt; size_t &gt;</label>
+        <childnode refid="707" relation="template-instance">
+          <edgelabel>&lt; size_t &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="704">
+        <label>std::unordered_map&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</label>
+        <childnode refid="681" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="705" relation="template-instance">
+          <edgelabel>&lt; ngraph::Node *, std::shared_ptr&lt; ngraph::Node &gt; &gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="691">
+        <label>std::unordered_set&lt; ngraph::descriptor::Tensor *&gt;</label>
+        <childnode refid="692" relation="usage">
+          <edgelabel>keys</edgelabel>
+        </childnode>
+        <childnode refid="698" relation="template-instance">
+          <edgelabel>&lt; ngraph::descriptor::Tensor *&gt;</edgelabel>
+        </childnode>
+      </node>
+      <node id="703">
+        <label>ngraph::autodiff::Adjoints</label>
+        <link refid="classngraph_1_1autodiff_1_1Adjoints"/>
+        <childnode refid="704" relation="usage">
+          <edgelabel>m_adjoint_map</edgelabel>
+        </childnode>
+      </node>
+      <node id="689">
+        <label>std::deque&lt; T &gt;</label>
+        <childnode refid="690" relation="usage">
+          <edgelabel>elements</edgelabel>
+        </childnode>
+      </node>
+      <node id="694">
+        <label>std::string</label>
+        <childnode refid="695" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" line="33" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/ops/constant.hpp" bodystart="32" bodyend="245"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1Node_1a1bac19895a096bb5772f6a6c120b3813" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>add_output</name></member>
+      <member refid="classngraph_1_1Node_1a5f3de445063d95cb31842e3a44e487c8" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>backprop_node</name></member>
+      <member refid="classngraph_1_1Node_1a99c230728fde81ca9e64ed393d0728c4" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>clear_arguments</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a7b9d501afe1dd57344f87002614fe23c_1a7b9d501afe1dd57344f87002614fe23c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>Constant</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a1f3fab5eebea82152a2888404036bbbd_1a1f3fab5eebea82152a2888404036bbbd" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>Constant</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a141f05e333f5914c0ff393073b0b7de7_1a141f05e333f5914c0ff393073b0b7de7" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>Constant</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1ae0423164d6e64a12ee347c3666f89712" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>copy_with_new_args</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a803a76dee878974952facf39055183b1_1a803a76dee878974952facf39055183b1" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>create</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a26e08192a1a966f1f1ff6a3d5cb4c325_1a26e08192a1a966f1f1ff6a3d5cb4c325" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>create</name></member>
+      <member refid="classngraph_1_1Node_1a92598fdffd86cf6fd3adf0081e041d2f" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>description</name></member>
+      <member refid="classngraph_1_1Node_1a423c05a93bb628e8c311b631fb6a582c" prot="protected" virt="virtual"><scope>ngraph::op::Constant</scope><name>generate_adjoints</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a60e7a3ec8770dbce05a030649efd328b" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_data_ptr</name></member>
+      <member refid="classngraph_1_1Node_1a08ce613a6a22b1083c05321f0dced2a6" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_element_type</name></member>
+      <member refid="classngraph_1_1Node_1abb77c47e270bdf0622587ee86919b492" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>get_functions</name></member>
+      <member refid="classngraph_1_1Node_1a98841a99a32bdcf64a371ff2aed2abc1" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_input_element_type</name></member>
+      <member refid="classngraph_1_1Node_1aa7aaefcd4db958482315af48cb221a6c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_input_op</name></member>
+      <member refid="classngraph_1_1Node_1ac9b5aed803ef1f50a02a87dc81034ffe" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>get_input_ops</name></member>
+      <member refid="classngraph_1_1Node_1a9ff5f656d6b183cc00af753ec6b6144a" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_input_shape</name></member>
+      <member refid="classngraph_1_1Node_1a69c6620b65b11187bf367a2d0e440699" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_input_size</name></member>
+      <member refid="classngraph_1_1Node_1a3e88cf704f45f337a48d79a16a54e2c7" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a3d47e40f640c1469db01a33611a993e0" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a7a189270f6c1d02aa62c11b82d837bfb" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1ab0228a9136af1c06e6c32503871aa037" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_name</name></member>
+      <member refid="classngraph_1_1Node_1a49900b3c7bc6ee44c466a622ccf52f71" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_node_id</name></member>
+      <member refid="classngraph_1_1Node_1a91ccdcd6a30ca5a265c74f0f2734210b" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_element_type</name></member>
+      <member refid="classngraph_1_1Node_1a68967e741c4045d22b712c5f644f5fa7" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_inputs</name></member>
+      <member refid="classngraph_1_1Node_1a29bad373294c6939549d3302c6c5b45c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_shape</name></member>
+      <member refid="classngraph_1_1Node_1a9257d1be4e21fd9b4e834ee763c9ab03" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_size</name></member>
+      <member refid="classngraph_1_1Node_1a0cb34ea18330939c53fbf7fe15603c32" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_tensor</name></member>
+      <member refid="classngraph_1_1Node_1a1d7465ea8dda0f2f22c13929656d4291" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_tensor</name></member>
+      <member refid="classngraph_1_1Node_1a45ae2b4b094d1d91d1c867dc30143d7a" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_tensor_view</name></member>
+      <member refid="classngraph_1_1Node_1a75b38938bbc73474c8ea083b36da876c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_output_tensor_view</name></member>
+      <member refid="classngraph_1_1Node_1ac9aae122c66b9d82c240fd35c1e45250" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_outputs</name></member>
+      <member refid="classngraph_1_1Node_1aed735e2ef3cda31846ec7f0a85ebd5d8" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_outputs</name></member>
+      <member refid="classngraph_1_1Node_1a7a690a13f82f2420e221be4ef0987f56" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_shape</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_a1878da238e474f02555be8aa6244f310_1a1878da238e474f02555be8aa6244f310" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_value_strings</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1af77d84b3097e4a2781a6f972d3776b92" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>get_vector</name></member>
+      <member refid="classngraph_1_1Node_1a17548877a029631148b2fa00c2f11fcb" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>has_same_type</name></member>
+      <member refid="classngraph_1_1Node_1ad0a48043e7858c06a2c91b25c2e88030" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>is_commutative</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a421d22b5f559556fd7e1ec0e0b60cd0b" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>is_constant</name></member>
+      <member refid="classngraph_1_1Node_1ad3ae6e9bcbf2462a074847fdf47ab986" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>is_output</name></member>
+      <member refid="classngraph_1_1Node_1ab700ac2bc2dec9138e3e1575b49075c6" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>is_parameter</name></member>
+      <member refid="classngraph_1_1Node_ad69bb7920f3c6898754e0e938461fa8c_1ad69bb7920f3c6898754e0e938461fa8c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>is_same_op_type</name></member>
+      <member refid="classngraph_1_1Node_1a4f36c2c5ae51d1073d5bc23ab44cd72f" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>liveness_free_list</name></member>
+      <member refid="classngraph_1_1Node_1aa58e8eb953c65c957dbdc56d7aa1dca5" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>liveness_live_list</name></member>
+      <member refid="classngraph_1_1Node_1a572f0f0ef5cb7d309a86b1ffddda7da1" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>liveness_new_list</name></member>
+      <member refid="classngraph_1_1Node_1a881dacc03050bbe8dc679455c99bfaa8" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_adjoint_map</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a0de31b19d0684d908e79ffdccbb8f6cd" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_data</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a367d418213f5e17289ee8fc8ce845603" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_element_type</name></member>
+      <member refid="classngraph_1_1Node_1a4f55bb2b70a88ddcc407a2930da034e7" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_inputs</name></member>
+      <member refid="classngraph_1_1Node_1ae927d96858146fd4aad4f7a9d6c03e8e" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1a034da5cfe5401a01045f2fd8a9374ca7" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_is_output</name></member>
+      <member refid="classngraph_1_1Node_1af72ec96a91723b94174886a947835f93" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_name</name></member>
+      <member refid="classngraph_1_1Node_1afc2e9023e2895f9d7465062ce7bbd49e" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_next_instance_id</name></member>
+      <member refid="classngraph_1_1Node_1a9d06e17d8a569f809d6d322edb405b24" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_node_type</name></member>
+      <member refid="classngraph_1_1Node_1a177ab91b7609c16e8d57e1a7182f2bd0" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_outputs</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a4f4aa0f203e901c67ee2652a99bfe21c" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_shape</name></member>
+      <member refid="classngraph_1_1Node_1ad0f9c97f26a1ad8a42b7308f0e4773f5" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>m_users</name></member>
+      <member refid="classngraph_1_1Node_1a0259d67ef3d6d82e38dbafa62d1463e2" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>Node</name></member>
+      <member refid="classngraph_1_1Node_1a7bcdb7230a14c3c76a38392bfeacea1a" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>set_is_output</name></member>
+      <member refid="classngraph_1_1Node_1a21c1e9e47d5447ba37982d1bbc57e79c" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>set_name</name></member>
+      <member refid="classngraph_1_1Node_1a0a2d35a1430bc4671184eec8e1425640" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>set_value_type_checked</name></member>
+      <member refid="classngraph_1_1Node_1a7500930e175b8f522d26988796727ce1" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>set_value_type_checked</name></member>
+      <member refid="classngraph_1_1Node_1a1ca1186be7560ca6fd3a4bc1819526a1" prot="public" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>users</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a2eca770300d8aad4a30fc429133822c5" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>write_buffer</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1abbd7e7a9780d4cd621ef29ed197ac4e5" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>write_to_buffer</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1a416ffd43eb2969a456df0f23e940d72c" prot="protected" virt="non-virtual"><scope>ngraph::op::Constant</scope><name>write_values</name></member>
+      <member refid="classngraph_1_1op_1_1Constant_1aa36c2dd73b837bd37f5f5845eba47139" prot="public" virt="virtual"><scope>ngraph::op::Constant</scope><name>~Constant</name></member>
+      <member refid="classngraph_1_1Node_1a2a6579e8a1f70539b8e47d100eb06ae6" prot="protected" virt="virtual"><scope>ngraph::op::Constant</scope><name>~Node</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

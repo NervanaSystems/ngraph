@@ -1,0 +1,738 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classnlohmann_1_1detail_1_1iter__impl" kind="class" language="C++" prot="public">
+    <compoundname>nlohmann::detail::iter_impl</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">std::iterator&lt; std::bidirectional_iterator_tag, BasicJsonType &gt;</basecompoundref>
+    <includes refid="json_8hpp" local="no">json.hpp</includes>
+    <templateparamlist>
+      <param>
+        <type>typename</type>
+        <declname>BasicJsonType</declname>
+        <defname>BasicJsonType</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1ab9a9598052e83fa14a2288e56d5dda7c" prot="private" static="no">
+        <type>typename BasicJsonType::object_t</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::object_t =  typename BasicJsonType::object_t</definition>
+        <argsstring></argsstring>
+        <name>object_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3637" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3637" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1aef02cf75b1cb199286fd2f666c60e38e" prot="private" static="no">
+        <type>typename BasicJsonType::array_t</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::array_t =  typename BasicJsonType::array_t</definition>
+        <argsstring></argsstring>
+        <name>array_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3638" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3638" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1ab35586a44f2222272c5346baa3013f67" prot="public" static="no">
+        <type>typename BasicJsonType::value_type</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::value_type =  typename BasicJsonType::value_type</definition>
+        <argsstring></argsstring>
+        <name>value_type</name>
+        <briefdescription>
+<para>the type of the values when the iterator is dereferenced </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3645" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3645" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" prot="public" static="no">
+        <type>typename BasicJsonType::difference_type</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::difference_type =  typename BasicJsonType::difference_type</definition>
+        <argsstring></argsstring>
+        <name>difference_type</name>
+        <briefdescription>
+<para>a type to represent differences between iterators </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3647" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3647" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1a69e52f890ce8c556fd68ce109e24b360" prot="public" static="no">
+        <type>typename std::conditional&lt; std::is_const&lt; BasicJsonType &gt;::<ref refid="classnlohmann_1_1detail_1_1iter__impl_ab447c50354c6611fa2ae0100ac17845c_1ab447c50354c6611fa2ae0100ac17845c" kindref="member">value</ref>, typename BasicJsonType::const_pointer, typename BasicJsonType::pointer &gt;::type</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::pointer =  typename std::conditional&lt;std::is_const&lt;BasicJsonType&gt;::value, typename BasicJsonType::const_pointer, typename BasicJsonType::pointer&gt;::type</definition>
+        <argsstring></argsstring>
+        <name>pointer</name>
+        <briefdescription>
+<para>defines a pointer to the type iterated over (value_type) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3649" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3651" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classnlohmann_1_1detail_1_1iter__impl_1a5be8001be099c6b82310f4d387b953ce" prot="public" static="no">
+        <type>typename std::conditional&lt; std::is_const&lt; BasicJsonType &gt;::<ref refid="classnlohmann_1_1detail_1_1iter__impl_ab447c50354c6611fa2ae0100ac17845c_1ab447c50354c6611fa2ae0100ac17845c" kindref="member">value</ref>, typename BasicJsonType::const_reference, typename BasicJsonType::reference &gt;::type</type>
+        <definition>using nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::reference =  typename std::conditional&lt;std::is_const&lt;BasicJsonType&gt;::value, typename BasicJsonType::const_reference, typename BasicJsonType::reference&gt;::type</definition>
+        <argsstring></argsstring>
+        <name>reference</name>
+        <briefdescription>
+<para>defines a reference to the type iterated over (value_type) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3653" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3656" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1iter__impl_1abf18f18793f84b0222aebb5a2a87da7a" prot="private" static="no" mutable="no">
+        <type>friend</type>
+        <definition>friend nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::BasicJsonType</definition>
+        <argsstring></argsstring>
+        <name>BasicJsonType</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3634" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3634" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1iter__impl_1a28328d17a18d9754c89c5c8159677a6f" prot="private" static="no" mutable="no">
+        <type>friend</type>
+        <definition>friend nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::iteration_proxy&lt; iter_impl &gt;</definition>
+        <argsstring></argsstring>
+        <name>iteration_proxy&lt; iter_impl &gt;</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3635" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3635" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1iter__impl_1aca84f84be598bdfaaddd23d928c42bbb" prot="private" static="no" mutable="no">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a69e52f890ce8c556fd68ce109e24b360" kindref="member">pointer</ref></type>
+        <definition>pointer nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::m_object</definition>
+        <argsstring></argsstring>
+        <name>m_object</name>
+        <initializer>= nullptr</initializer>
+        <briefdescription>
+<para>associated JSON instance </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4189" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4189" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classnlohmann_1_1detail_1_1iter__impl_1a8a86a7c0d4af0cc4ab345b6f0e13cdfa" prot="private" static="no" mutable="no">
+        <type><ref refid="structnlohmann_1_1detail_1_1internal__iterator" kindref="compound">internal_iterator</ref>&lt; typename std::remove_const&lt; BasicJsonType &gt;::type &gt;</type>
+        <definition>internal_iterator&lt;typename std::remove_const&lt;BasicJsonType&gt;::type&gt; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::m_it</definition>
+        <argsstring></argsstring>
+        <name>m_it</name>
+        <initializer>= {}</initializer>
+        <briefdescription>
+<para>the actual iterator of the associated instance </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4191" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4191" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a19aa457f9c4af1b7e3af59839132cc5c_1a19aa457f9c4af1b7e3af59839132cc5c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>iter_impl&lt; typename std::conditional&lt; std::is_const&lt; BasicJsonType &gt;::value, typename std::remove_const&lt; BasicJsonType &gt;::type, const BasicJsonType &gt;::type &gt;</definition>
+        <argsstring>()=default</argsstring>
+        <name>iter_impl</name>
+        <briefdescription>
+<para>default constructor </para>        </briefdescription>
+        <detaileddescription>
+<para>allow <ref refid="classnlohmann_1_1basic__json" kindref="compound">basic_json</ref> to access private members </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3659" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3633" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a88a00484ac201c52fc5f613d88a2918b_1a88a00484ac201c52fc5f613d88a2918b" prot="public" static="no" const="no" explicit="yes" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::iter_impl</definition>
+        <argsstring>(pointer object) noexcept</argsstring>
+        <name>iter_impl</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a69e52f890ce8c556fd68ce109e24b360" kindref="member">pointer</ref></type>
+          <declname>object</declname>
+        </param>
+        <briefdescription>
+<para>constructor for a given JSON instance </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">object</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>pointer to a JSON object for this iterator </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="pre"><para>object != nullptr </para></simplesect>
+<simplesect kind="post"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3667" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3667" bodyend="3691"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a867f7eb55091be31b013adb3e46816d3_1a867f7eb55091be31b013adb3e46816d3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::iter_impl</definition>
+        <argsstring>(const iter_impl&lt; typename std::remove_const&lt; BasicJsonType &gt;::type &gt; &amp;other) noexcept</argsstring>
+        <name>iter_impl</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref>&lt; typename std::remove_const&lt; BasicJsonType &gt;::type &gt; &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>converting constructor </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="note"><para>The conventional copy constructor and copy assignment are implicitly defined. Combined with the following converting constructor and assignment, they support: (1) copy from iterator to iterator, (2) copy from const iterator to const iterator, and (3) conversion from iterator to const iterator. However conversion from const iterator to iterator is not defined.</para></simplesect>
+<linebreak/>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">other</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>non-const iterator to copy from </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="note"><para>It is not checked whether <emphasis>other</emphasis> is initialized. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3707" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3707" bodyend="3708"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a7159ed1cfe7c423a2baef8bea0c94509_1a7159ed1cfe7c423a2baef8bea0c94509" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+        <definition>iter_impl&amp; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator=</definition>
+        <argsstring>(const iter_impl&lt; typename std::remove_const&lt; BasicJsonType &gt;::type &gt; &amp;other) noexcept</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref>&lt; typename std::remove_const&lt; BasicJsonType &gt;::type &gt; &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>converting assignment </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="inout">other</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>non-const iterator to copy from </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>const/non-const iterator </para></simplesect>
+<simplesect kind="note"><para>It is not checked whether <emphasis>other</emphasis> is initialized. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3716" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3716" bodyend="3721"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a5ca57856d9bba54a5fc51cee891de827_1a5ca57856d9bba54a5fc51cee891de827" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a5be8001be099c6b82310f4d387b953ce" kindref="member">reference</ref></type>
+        <definition>reference nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator*</definition>
+        <argsstring>() const</argsstring>
+        <name>operator*</name>
+        <briefdescription>
+<para>return a reference to the value pointed to by the iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3796" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3796" bodyend="3827"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fa37a6259cc0c1dae299a7866489dff0bd">nlohmann::detail::null</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a6da3d2b34528aff328f3dcb513076dec_1a6da3d2b34528aff328f3dcb513076dec" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a69e52f890ce8c556fd68ce109e24b360" kindref="member">pointer</ref></type>
+        <definition>pointer nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator-&gt;</definition>
+        <argsstring>() const</argsstring>
+        <name>operator-&gt;</name>
+        <briefdescription>
+<para>dereference the iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3833" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3833" bodyend="3861"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_ae64452217b17567717039a158f8bc029_1ae64452217b17567717039a158f8bc029" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref></type>
+        <definition>iter_impl nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator++</definition>
+        <argsstring>(int)</argsstring>
+        <name>operator++</name>
+        <param>
+          <type>int</type>
+        </param>
+        <briefdescription>
+<para>post-increment (it++) </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3867" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3867" bodyend="3872"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_abdfe2a7f464400a7ab572782d14b922f_1abdfe2a7f464400a7ab572782d14b922f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+        <definition>iter_impl&amp; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator++</definition>
+        <argsstring>()</argsstring>
+        <name>operator++</name>
+        <briefdescription>
+<para>pre-increment (++it) </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3878" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3878" bodyend="3904"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_ab8479a4395bb0ab3661d842a9ee47767_1ab8479a4395bb0ab3661d842a9ee47767" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref></type>
+        <definition>iter_impl nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator--</definition>
+        <argsstring>(int)</argsstring>
+        <name>operator--</name>
+        <param>
+          <type>int</type>
+        </param>
+        <briefdescription>
+<para>post-decrement (it<ndash/>) </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3910" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3910" bodyend="3915"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a84e689fb581d651d130039f7cb81494a_1a84e689fb581d651d130039f7cb81494a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+        <definition>iter_impl&amp; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator--</definition>
+        <argsstring>()</argsstring>
+        <name>operator--</name>
+        <briefdescription>
+<para>pre-decrement (<ndash/>it) </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3921" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3921" bodyend="3947"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a2b592605b63ae7f5401996ffa3b14393_1a2b592605b63ae7f5401996ffa3b14393" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator==</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator==</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: equal </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3953" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3953" bodyend="3974"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a8cb0af3498061426c1d0a65ad6220408" compoundref="json_8hpp" startline="3600">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::object_iterator</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a8294a6e6f01b58e1cce8fbae66a50b5d" compoundref="json_8hpp" startline="3602">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::array_iterator</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a2b3bb45f968210e42c282017eeeb63a8" compoundref="json_8hpp" startline="3604">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::primitive_iterator</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_aeab0e2b5da70b3bdebecd5b1a6ee66a6_1aeab0e2b5da70b3bdebecd5b1a6ee66a6" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator!=</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator!=</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: not equal </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3980" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3980" bodyend="3983"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a0d14cd76203e00bdcef6a64a5d055cc7_1a0d14cd76203e00bdcef6a64a5d055cc7" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator&lt;</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator&lt;</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: smaller </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3989" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3989" bodyend="4010"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a8294a6e6f01b58e1cce8fbae66a50b5d" compoundref="json_8hpp" startline="3602">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::array_iterator</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a2b3bb45f968210e42c282017eeeb63a8" compoundref="json_8hpp" startline="3604">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::primitive_iterator</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_ac6f71b36d7c87e427d1fee83f2600fad_1ac6f71b36d7c87e427d1fee83f2600fad" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator&lt;=</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator&lt;=</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: less than or equal </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4016" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4016" bodyend="4019"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_aaf3620b8dfa4bed8a9ac2b51dd55dbd7_1aaf3620b8dfa4bed8a9ac2b51dd55dbd7" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator&gt;</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator&gt;</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: greater than </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4025" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4025" bodyend="4028"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a634f85da575cb60b012a687efa26e11a_1a634f85da575cb60b012a687efa26e11a" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator&gt;=</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator&gt;=</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>comparison: greater than or equal </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4034" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4034" bodyend="4037"/>
+        <references refid="namespacenlohmann_1_1detail_a09169efff3bd1771fff29bd92cea19e0_1a09169efff3bd1771fff29bd92cea19e0" compoundref="json_8hpp" startline="547" endline="564">nlohmann::detail::operator&lt;</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a3eef94f9d167046e7f773aeb6b78090c_1a3eef94f9d167046e7f773aeb6b78090c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+        <definition>iter_impl&amp; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator+=</definition>
+        <argsstring>(difference_type i)</argsstring>
+        <name>operator+=</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>add to iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4043" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4043" bodyend="4066"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_abcc9d51bc52f2e8483bbe4018f05e978_1abcc9d51bc52f2e8483bbe4018f05e978" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+        <definition>iter_impl&amp; nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator-=</definition>
+        <argsstring>(difference_type i)</argsstring>
+        <name>operator-=</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>subtract from iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4072" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4072" bodyend="4075"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a8ef76aeb5a5032768f0f61f48ac189c0_1a8ef76aeb5a5032768f0f61f48ac189c0" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref></type>
+        <definition>iter_impl nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator+</definition>
+        <argsstring>(difference_type i) const</argsstring>
+        <name>operator+</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>add to iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4081" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4081" bodyend="4086"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a0dd9c415b94a02ff2aa25da75e52da30_1a0dd9c415b94a02ff2aa25da75e52da30" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref></type>
+        <definition>iter_impl nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator-</definition>
+        <argsstring>(difference_type i) const</argsstring>
+        <name>operator-</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>i</declname>
+        </param>
+        <briefdescription>
+<para>subtract from iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4103" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4103" bodyend="4108"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a49bf3e708a9c1c88c415011735962d06_1a49bf3e708a9c1c88c415011735962d06" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+        <definition>difference_type nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator-</definition>
+        <argsstring>(const iter_impl &amp;other) const</argsstring>
+        <name>operator-</name>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>other</declname>
+        </param>
+        <briefdescription>
+<para>return difference </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4114" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4114" bodyend="4129"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a8294a6e6f01b58e1cce8fbae66a50b5d" compoundref="json_8hpp" startline="3602">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::array_iterator</references>
+        <references refid="structnlohmann_1_1detail_1_1internal__iterator_1a2b3bb45f968210e42c282017eeeb63a8" compoundref="json_8hpp" startline="3604">nlohmann::detail::internal_iterator&lt; BasicJsonType &gt;::primitive_iterator</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_ac0b9276f1102ed4b9cd3f5f56287e3ce_1ac0b9276f1102ed4b9cd3f5f56287e3ce" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a5be8001be099c6b82310f4d387b953ce" kindref="member">reference</ref></type>
+        <definition>reference nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::operator[]</definition>
+        <argsstring>(difference_type n) const</argsstring>
+        <name>operator[]</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>n</declname>
+        </param>
+        <briefdescription>
+<para>access to successor </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4135" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4135" bodyend="4160"/>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faa8cfde6331bd59eb2ac96f8911c4b666">nlohmann::detail::object</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980faf1f713c9e000f5d3f280adbd124df4f5">nlohmann::detail::array</references>
+        <references refid="namespacenlohmann_1_1detail_a90aa5ef615aa8305e9ea20d8a947980f_1a90aa5ef615aa8305e9ea20d8a947980fa37a6259cc0c1dae299a7866489dff0bd">nlohmann::detail::null</references>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_a3a541a223320f6635f2f188ba54f8818_1a3a541a223320f6635f2f188ba54f8818" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>object_t::key_type</type>
+        <definition>object_t::key_type nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::key</definition>
+        <argsstring>() const</argsstring>
+        <name>key</name>
+        <briefdescription>
+<para>return the key of an object iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4166" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4166" bodyend="4176"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_ab447c50354c6611fa2ae0100ac17845c_1ab447c50354c6611fa2ae0100ac17845c" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a5be8001be099c6b82310f4d387b953ce" kindref="member">reference</ref></type>
+        <definition>reference nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::value</definition>
+        <argsstring>() const</argsstring>
+        <name>value</name>
+        <briefdescription>
+<para>return the value of an iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4182" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4182" bodyend="4185"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_1a5d5f92c7f6848814bc82cf7e4e541820" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::set_begin</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>set_begin</name>
+        <briefdescription>
+<para>set the iterator to the first value </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3728" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3728" bodyend="3759"/>
+      </memberdef>
+      <memberdef kind="function" id="classnlohmann_1_1detail_1_1iter__impl_1a23e50ad4c13aa62d9ac7f60a123823ee" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void nlohmann::detail::iter_impl&lt; BasicJsonType &gt;::set_end</definition>
+        <argsstring>() noexcept</argsstring>
+        <name>set_end</name>
+        <briefdescription>
+<para>set the iterator past the last value </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3765" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3765" bodyend="3789"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="classnlohmann_1_1detail_1_1iter__impl_a94108d1a7563e103534f23eb5c1ee175_1a94108d1a7563e103534f23eb5c1ee175" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>friend <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref></type>
+        <definition>iter_impl operator+</definition>
+        <argsstring>(difference_type i, const iter_impl &amp;it)</argsstring>
+        <name>operator+</name>
+        <param>
+          <type><ref refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" kindref="member">difference_type</ref></type>
+          <declname>i</declname>
+        </param>
+        <param>
+          <type>const <ref refid="classnlohmann_1_1detail_1_1iter__impl" kindref="compound">iter_impl</ref> &amp;</type>
+          <declname>it</declname>
+        </param>
+        <briefdescription>
+<para>addition of distance and iterator </para>        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="pre"><para>The iterator is initialized; i.e. <computeroutput>m_object != nullptr</computeroutput>. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="4092" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="4092" bodyend="4097"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>a template for a bidirectional iterator for the <ref refid="classnlohmann_1_1basic__json" kindref="compound">basic_json</ref> class </para>    </briefdescription>
+    <detaileddescription>
+<para>This class implements a both iterators (iterator and const_iterator) for the <ref refid="classnlohmann_1_1basic__json" kindref="compound">basic_json</ref> class.</para><para><simplesect kind="note"><para>An iterator is called <emphasis>initialized</emphasis> when a pointer to a JSON value has been set (e.g., by a constructor or a copy assignment). If the iterator is default-constructed, it is <emphasis>uninitialized</emphasis> and most methods are undefined. The library uses assertions to detect calls on uninitialized iterators.**</para></simplesect>
+The class satisfies the following concept requirements:<itemizedlist>
+<listitem><para><ulink url="http://en.cppreference.com/w/cpp/concept/BidirectionalIterator">BidirectionalIterator</ulink>: The iterator that can be moved can be moved in both directions (i.e. incremented and decremented).</para></listitem></itemizedlist>
+</para><para><simplesect kind="since"><para>version 1.0.0, simplified in version 2.0.9, change to bidirectional iterators in version 3.0.0 (see <ulink url="https://github.com/nlohmann/json/issues/593">https://github.com/nlohmann/json/issues/593</ulink>) </para></simplesect>
+</para>    </detaileddescription>
+    <inheritancegraph>
+      <node id="3680">
+        <label>nlohmann::detail::iter_impl&lt; BasicJsonType &gt;</label>
+        <link refid="classnlohmann_1_1detail_1_1iter__impl"/>
+        <childnode refid="3681" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3681">
+        <label>std::iterator&lt; std::bidirectional_iterator_tag, BasicJsonType &gt;</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="3682">
+        <label>nlohmann::detail::iter_impl&lt; BasicJsonType &gt;</label>
+        <link refid="classnlohmann_1_1detail_1_1iter__impl"/>
+        <childnode refid="3683" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3683">
+        <label>std::iterator&lt; std::bidirectional_iterator_tag, BasicJsonType &gt;</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" line="3631" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/json.hpp" bodystart="3630" bodyend="4192"/>
+    <listofallmembers>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1aef02cf75b1cb199286fd2f666c60e38e" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>array_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1abf18f18793f84b0222aebb5a2a87da7a" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>BasicJsonType</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a2f7ea9f7022850809c60fc3263775840" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>difference_type</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a19aa457f9c4af1b7e3af59839132cc5c_1a19aa457f9c4af1b7e3af59839132cc5c" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>iter_impl</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a88a00484ac201c52fc5f613d88a2918b_1a88a00484ac201c52fc5f613d88a2918b" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>iter_impl</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a867f7eb55091be31b013adb3e46816d3_1a867f7eb55091be31b013adb3e46816d3" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>iter_impl</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a28328d17a18d9754c89c5c8159677a6f" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>iteration_proxy&lt; iter_impl &gt;</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a3a541a223320f6635f2f188ba54f8818_1a3a541a223320f6635f2f188ba54f8818" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>key</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a8a86a7c0d4af0cc4ab345b6f0e13cdfa" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>m_it</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1aca84f84be598bdfaaddd23d928c42bbb" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>m_object</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1ab9a9598052e83fa14a2288e56d5dda7c" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>object_t</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_aeab0e2b5da70b3bdebecd5b1a6ee66a6_1aeab0e2b5da70b3bdebecd5b1a6ee66a6" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator!=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a5ca57856d9bba54a5fc51cee891de827_1a5ca57856d9bba54a5fc51cee891de827" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator*</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a8ef76aeb5a5032768f0f61f48ac189c0_1a8ef76aeb5a5032768f0f61f48ac189c0" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator+</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a94108d1a7563e103534f23eb5c1ee175_1a94108d1a7563e103534f23eb5c1ee175" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator+</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_ae64452217b17567717039a158f8bc029_1ae64452217b17567717039a158f8bc029" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator++</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_abdfe2a7f464400a7ab572782d14b922f_1abdfe2a7f464400a7ab572782d14b922f" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator++</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a3eef94f9d167046e7f773aeb6b78090c_1a3eef94f9d167046e7f773aeb6b78090c" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator+=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a0dd9c415b94a02ff2aa25da75e52da30_1a0dd9c415b94a02ff2aa25da75e52da30" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator-</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a49bf3e708a9c1c88c415011735962d06_1a49bf3e708a9c1c88c415011735962d06" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator-</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_ab8479a4395bb0ab3661d842a9ee47767_1ab8479a4395bb0ab3661d842a9ee47767" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator--</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a84e689fb581d651d130039f7cb81494a_1a84e689fb581d651d130039f7cb81494a" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator--</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_abcc9d51bc52f2e8483bbe4018f05e978_1abcc9d51bc52f2e8483bbe4018f05e978" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator-=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a6da3d2b34528aff328f3dcb513076dec_1a6da3d2b34528aff328f3dcb513076dec" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator-&gt;</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a0d14cd76203e00bdcef6a64a5d055cc7_1a0d14cd76203e00bdcef6a64a5d055cc7" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator&lt;</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_ac6f71b36d7c87e427d1fee83f2600fad_1ac6f71b36d7c87e427d1fee83f2600fad" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator&lt;=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a7159ed1cfe7c423a2baef8bea0c94509_1a7159ed1cfe7c423a2baef8bea0c94509" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a2b592605b63ae7f5401996ffa3b14393_1a2b592605b63ae7f5401996ffa3b14393" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator==</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_aaf3620b8dfa4bed8a9ac2b51dd55dbd7_1aaf3620b8dfa4bed8a9ac2b51dd55dbd7" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator&gt;</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_a634f85da575cb60b012a687efa26e11a_1a634f85da575cb60b012a687efa26e11a" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator&gt;=</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_ac0b9276f1102ed4b9cd3f5f56287e3ce_1ac0b9276f1102ed4b9cd3f5f56287e3ce" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>operator[]</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a69e52f890ce8c556fd68ce109e24b360" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>pointer</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a5be8001be099c6b82310f4d387b953ce" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>reference</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a5d5f92c7f6848814bc82cf7e4e541820" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>set_begin</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1a23e50ad4c13aa62d9ac7f60a123823ee" prot="private" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>set_end</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_ab447c50354c6611fa2ae0100ac17845c_1ab447c50354c6611fa2ae0100ac17845c" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>value</name></member>
+      <member refid="classnlohmann_1_1detail_1_1iter__impl_1ab35586a44f2222272c5346baa3013f67" prot="public" virt="non-virtual"><scope>nlohmann::detail::iter_impl</scope><name>value_type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

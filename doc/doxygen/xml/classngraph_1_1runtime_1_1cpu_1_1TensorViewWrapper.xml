@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::runtime::cpu::TensorViewWrapper</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a0f3d3059d4fd62436d39881d2e966ced" prot="private" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">descriptor::TensorView</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;descriptor::TensorView&gt; ngraph::runtime::cpu::TensorViewWrapper::m_tensor_view</definition>
+        <argsstring></argsstring>
+        <name>m_tensor_view</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="51" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a923d64ba785929501cf21657b125c1d2" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ngraph::runtime::cpu::TensorViewWrapper::m_alias</definition>
+        <argsstring></argsstring>
+        <name>m_alias</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1abf1358daee7a4ba92bd02c727bbce3c2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>runtime::cpu::TensorViewWrapper::TensorViewWrapper</definition>
+        <argsstring>(const std::shared_ptr&lt; descriptor::TensorView &gt; &amp;, const std::string &amp;alias=&quot;&quot;)</argsstring>
+        <name>TensorViewWrapper</name>
+        <param>
+          <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">descriptor::TensorView</ref> &gt; &amp;</type>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>alias</declname>
+          <defval>&quot;&quot;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="24" bodyend="29"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1afdf86106e249dcda192c31d63b57f0e2" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t runtime::cpu::TensorViewWrapper::get_size</definition>
+        <argsstring>() const</argsstring>
+        <name>get_size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="31" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a5c9988ade83c4625b1824fd6cc8220d1" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::vector&lt; size_t &gt; &amp;</type>
+        <definition>const vector&lt; size_t &gt; &amp; runtime::cpu::TensorViewWrapper::get_shape</definition>
+        <argsstring>() const</argsstring>
+        <name>get_shape</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="42" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="36" bodyend="39"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1af83819f6c17649d51088b313bbcd79f0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::vector&lt; size_t &gt; &amp;</type>
+        <definition>const vector&lt; size_t &gt; &amp; runtime::cpu::TensorViewWrapper::get_strides</definition>
+        <argsstring>() const</argsstring>
+        <name>get_strides</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="43" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="41" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a7161fa298305aff437909316a047d8d0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const <ref refid="classngraph_1_1element_1_1Type" kindref="compound">element::Type</ref> &amp;</type>
+        <definition>const element::Type &amp; runtime::cpu::TensorViewWrapper::get_element_type</definition>
+        <argsstring>() const</argsstring>
+        <name>get_element_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="46" bodyend="49"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a0e534772be4f133be3a8ffa7ddf2b835" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::string &amp;</type>
+        <definition>const std::string &amp; runtime::cpu::TensorViewWrapper::get_name</definition>
+        <argsstring>() const</argsstring>
+        <name>get_name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="45" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="51" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1abad02c085a585360811c114f408e7052" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::string &amp;</type>
+        <definition>const std::string &amp; runtime::cpu::TensorViewWrapper::get_type</definition>
+        <argsstring>() const</argsstring>
+        <name>get_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="46" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="63" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a6db697547459b219ac021fa717ffa4bb" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool runtime::cpu::TensorViewWrapper::is_output</definition>
+        <argsstring>() const</argsstring>
+        <name>is_output</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="47" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="68" bodyend="71"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a899df4f8ce6d00e9a7731582827e48e5" prot="public" static="no" const="yes" explicit="no" inline="no" virt="non-virtual">
+        <type>const std::shared_ptr&lt; <ref refid="classngraph_1_1descriptor_1_1TensorView" kindref="compound">descriptor::TensorView</ref> &gt;</type>
+        <definition>const std::shared_ptr&lt; descriptor::TensorView &gt; runtime::cpu::TensorViewWrapper::get_tensor_view</definition>
+        <argsstring>() const</argsstring>
+        <name>get_tensor_view</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="48" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.cpp" bodystart="74" bodyend="77"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp" bodystart="35" bodyend="53"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a7161fa298305aff437909316a047d8d0" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_element_type</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a0e534772be4f133be3a8ffa7ddf2b835" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_name</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a5c9988ade83c4625b1824fd6cc8220d1" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_shape</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1afdf86106e249dcda192c31d63b57f0e2" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_size</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1af83819f6c17649d51088b313bbcd79f0" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_strides</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a899df4f8ce6d00e9a7731582827e48e5" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_tensor_view</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1abad02c085a585360811c114f408e7052" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>get_type</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a6db697547459b219ac021fa717ffa4bb" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>is_output</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a923d64ba785929501cf21657b125c1d2" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>m_alias</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1a0f3d3059d4fd62436d39881d2e966ced" prot="private" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>m_tensor_view</name></member>
+      <member refid="classngraph_1_1runtime_1_1cpu_1_1TensorViewWrapper_1abf1358daee7a4ba92bd02c727bbce3c2" prot="public" virt="non-virtual"><scope>ngraph::runtime::cpu::TensorViewWrapper</scope><name>TensorViewWrapper</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.14">
+  <compounddef id="classngraph_1_1pass_1_1Manager" kind="class" language="C++" prot="public">
+    <compoundname>ngraph::pass::Manager</compoundname>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1Manager_1ae090abdac693992e7679e2791197f390" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; std::shared_ptr&lt; <ref refid="classngraph_1_1pass_1_1PassBase" kindref="compound">PassBase</ref> &gt; &gt;</type>
+        <definition>std::vector&lt;std::shared_ptr&lt;PassBase&gt; &gt; ngraph::pass::Manager::m_pass_list</definition>
+        <argsstring></argsstring>
+        <name>m_pass_list</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="57" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classngraph_1_1pass_1_1Manager_1ac146599b9d1866900c6066bacb0e1773" prot="private" static="no" mutable="no">
+        <type><ref refid="classngraph_1_1pass_1_1ManagerState" kindref="compound">ManagerState</ref></type>
+        <definition>ManagerState ngraph::pass::Manager::m_state</definition>
+        <argsstring></argsstring>
+        <name>m_state</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="58" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1ab763f28232b8c438d389bcf1153cab7c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::pass::Manager::Manager</definition>
+        <argsstring>()</argsstring>
+        <name>Manager</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="38" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp" bodystart="32" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1ace83a2a4a11b0199ec6b90e78d4ad1f4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ngraph::pass::Manager::~Manager</definition>
+        <argsstring>()</argsstring>
+        <name>~Manager</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="39" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp" bodystart="36" bodyend="38"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1a00597fd8db5e3e28e2a121e9e78e4342" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::pass::Manager::initialize_default_passes</definition>
+        <argsstring>()</argsstring>
+        <name>initialize_default_passes</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="41" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp" bodystart="40" bodyend="42"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1a7e8998fa70e2d52818ef69451ffdaa64" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+          <param>
+            <type>class...</type>
+            <declname>Args</declname>
+            <defname>Args</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void ngraph::pass::Manager::register_pass</definition>
+        <argsstring>(Args... args)</argsstring>
+        <name>register_pass</name>
+        <param>
+          <type>Args...</type>
+          <declname>args</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="44" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" bodystart="44" bodyend="50"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1aec92775eac7d10f8699785ed3c5eeea4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ngraph::pass::Manager::run_passes</definition>
+        <argsstring>(std::shared_ptr&lt; Function &gt;)</argsstring>
+        <name>run_passes</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classngraph_1_1Function" kindref="compound">Function</ref> &gt;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="52" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp" bodystart="44" bodyend="97"/>
+      </memberdef>
+      <memberdef kind="function" id="classngraph_1_1pass_1_1Manager_1a46f5a5bf0ee8f4f0167365574c427cc6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classngraph_1_1pass_1_1ManagerState" kindref="compound">ManagerState</ref> &amp;</type>
+        <definition>ngraph::pass::ManagerState &amp; ngraph::pass::Manager::get_state</definition>
+        <argsstring>()</argsstring>
+        <name>get_state</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="54" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.cpp" bodystart="99" bodyend="102"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" line="36" column="1" bodyfile="/home/indie/libraries/private-ngraph-cpp/src/ngraph/pass/manager.hpp" bodystart="35" bodyend="59"/>
+    <listofallmembers>
+      <member refid="classngraph_1_1pass_1_1Manager_1a46f5a5bf0ee8f4f0167365574c427cc6" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>get_state</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1a00597fd8db5e3e28e2a121e9e78e4342" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>initialize_default_passes</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1ae090abdac693992e7679e2791197f390" prot="private" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>m_pass_list</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1ac146599b9d1866900c6066bacb0e1773" prot="private" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>m_state</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1ab763f28232b8c438d389bcf1153cab7c" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>Manager</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1a7e8998fa70e2d52818ef69451ffdaa64" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>register_pass</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1aec92775eac7d10f8699785ed3c5eeea4" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>run_passes</name></member>
+      <member refid="classngraph_1_1pass_1_1Manager_1ace83a2a4a11b0199ec6b90e78d4ad1f4" prot="public" virt="non-virtual"><scope>ngraph::pass::Manager</scope><name>~Manager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
