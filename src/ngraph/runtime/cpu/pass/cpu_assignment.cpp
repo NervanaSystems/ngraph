@@ -25,6 +25,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -120,6 +121,44 @@ namespace ngraph
                         convolution->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::AvgPool)
+                {
+                    auto avg_pool = static_cast<op::AvgPool*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg0_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        avg_pool->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::AvgPoolBackprop)
+                {
+                    auto avg_pool = static_cast<op::AvgPoolBackprop*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg0_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        avg_pool->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -134,6 +173,9 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
+    {TI(ngraph::op::AvgPoolBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
