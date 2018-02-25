@@ -28,6 +28,7 @@
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -625,6 +626,46 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::ReluBackprop)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        prim_input_formats.push_back(input_layout);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(input_layout);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
             }
         }
     }
@@ -641,6 +682,9 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
+    {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
+    {TI(ngraph::op::ReluBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

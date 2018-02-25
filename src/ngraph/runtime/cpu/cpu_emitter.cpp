@@ -2540,9 +2540,8 @@ namespace ngraph
                            << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
                            << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
                            << ");\n";
-
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
                     writer << "memory result = memory({result_desc, cpu_engine}, "
@@ -3059,12 +3058,27 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
                 const auto& arg_shape = args[0].get_shape();
-                const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
-                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto delta_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    if (!runtime::cpu::mkldnn_utils::compare_mkldnn_formats(input_format,
+                                                                            delta_format))
+                    {
+                        throw ngraph_error(
+                            "mkldnn emitter: Relu backprop fprop input and delta layouts should be "
+                            "the same");
+                    }
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     writer << "{\n";
                     writer.indent++;
 
@@ -3072,12 +3086,17 @@ namespace ngraph
                     writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc delta_data_desc = memory::desc({"
-                           << join(args[1].get_shape()) << "}, " << et
-                           << ", memory::format::nchw);\n";
+                           << join(args[1].get_shape()) << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
 
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
@@ -3125,12 +3144,18 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
             {
                 const auto& arg_shape = args[0].get_shape();
-                const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
-                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     writer << "{\n";
                     writer.indent++;
 
@@ -3138,9 +3163,13 @@ namespace ngraph
                     writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
 
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
