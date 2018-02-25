@@ -23,18 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                                          | Description                                       |
-        /// | ----- | --------------------------------------------- | ------------------------------------------------- |
-        /// | `arg` | \f$\texttt{bool}[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape, with boolean element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                               | Description                                                                                                    |
-        /// | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-        /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg}[i_1,\dots,i_n] = 0\text{, else } 0\f$ |
         class Not : public util::UnaryElementwise
         {
         public:

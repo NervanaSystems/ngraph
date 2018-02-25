@@ -4596,6 +4596,50 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{1, 1, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{2, 0};
+    Shape padding_above{1, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{1, 1, 7, 5};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1},
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    auto min = std::numeric_limits<float>::lowest();
+    EXPECT_EQ((test::NDArray<float, 4>({{{{min, min, min, min, min},
+                                          {1, 2, 2, 2, 1},
+                                          {3, 3, 2, 2, 1},
+                                          {3, 3, 2, 1, 1},
+                                          {2, 1, 2, 2, 2},
+                                          {2, 2, 2, 2, 2},
+                                          {2, 2, 1, 0, 0}}}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
