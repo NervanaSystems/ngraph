@@ -36,13 +36,13 @@ namespace ngraph
                     {
                         std::string name = "abs";
                         // Create an instance of nvrtcProgram with the code string.
-                        if (CudaFunctionPool::Instance().get(name) == nullptr)
+                        if (CudaFunctionPool::instance().get(name) == nullptr)
                         {
                             const char* opts[] = {"--gpu-architecture=compute_35",
                                                   "--relocatable-device-code=true"};
                             std::string kernel;
                             CudaKernelBuilder::get_1_element_op(name, "float", "fabsf", kernel);
-                            CudaFunctionPool::Instance().set(
+                            CudaFunctionPool::instance().set(
                                 name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
                         }
 
@@ -53,7 +53,7 @@ namespace ngraph
 
                         void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
                         CUDA_SAFE_CALL(
-                            cuLaunchKernel(*CudaFunctionPool::Instance().get(name).get(),
+                            cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
                                            count,
                                            1,
                                            1, // grid dim
