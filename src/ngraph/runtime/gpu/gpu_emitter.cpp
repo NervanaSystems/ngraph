@@ -29,7 +29,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"

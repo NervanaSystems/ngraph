@@ -213,11 +213,11 @@ def emit_test(t,f):
 TEST (${BACKEND_NAME}, %s)
 {
     Shape shape_a{%s};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{%s};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{%s};
-    auto make_graph = [A, B] {
+    auto make_graph = [shape_a, shape_b] {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
         return make_shared<Function>(make_shared<op::Convolution>(A, B,
                                                                   Strides{%s},        // move_strides
                                                                   Strides{%s},        // filter_dilation

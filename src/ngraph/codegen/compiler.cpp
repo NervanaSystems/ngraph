@@ -411,24 +411,21 @@ void codegen::StaticCompiler::configure_search_path()
 
 void codegen::StaticCompiler::load_headers_from_resource()
 {
+    const string builtin_root = "/$builtin";
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    std::set<std::string> header_search_paths;
-    for (const HeaderInfo& hi : header_info)
+    for (const string& search_path : builtin_search_paths)
     {
-        string search_path = hi.search_path;
-        string absolute_path = file_util::path_join(search_path, hi.header_path);
-        string builtin = "/$builtin" + absolute_path;
+        string builtin = builtin_root + search_path;
+        hso.AddPath(builtin, clang::frontend::System, false, false);
+    }
+    for (const pair<string, string>& header_info : builtin_headers)
+    {
+        string absolute_path = header_info.first;
+        string builtin = builtin_root + absolute_path;
         std::unique_ptr<llvm::MemoryBuffer> mb(
-            llvm::MemoryBuffer::getMemBuffer(hi.header_data, builtin));
+            llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
         preprocessor_options.addRemappedFile(builtin, mb.release());
-
-        if (!contains(header_search_paths, search_path))
-        {
-            string builtin = "/$builtin" + search_path;
-            hso.AddPath(builtin, clang::frontend::System, false, false);
-            header_search_paths.insert(search_path);
-        }
     }
 }
 

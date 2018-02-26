@@ -25,12 +25,15 @@
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/relu.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/types/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
 
 using namespace mkldnn;
 using namespace ngraph;
+using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
@@ -94,6 +97,7 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::oIhw16i, "memory::format::oIhw16i"},
     {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
     {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
+    {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
     {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
     {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
     {memory::format::Oihw8o, "memory::format::Oihw8o"},
@@ -147,4 +151,39 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
     return it->second;
+}
+
+mkldnn::memory::format runtime::cpu::mkldnn_utils::get_input_mkldnn_format(const Node* node,
+                                                                           int index)
+{
+    auto tvl = node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
+}
+
+mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(const Node* node,
+                                                                            int index)
+{
+    auto tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
+}
+
+bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+{
+    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+    return (op_annotations &&
+            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                ->is_mkldnn_op());
+}
+
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format fmt1,
+                                                        mkldnn::memory::format fmt2)
+{
+    set<mkldnn::memory::format> similar_4d_formats{mkldnn::memory::format::nchw,
+                                                   mkldnn::memory::format::oihw};
+    if ((fmt1 == fmt2) || (similar_4d_formats.find(fmt1) != similar_4d_formats.end() &&
+                           similar_4d_formats.find(fmt2) != similar_4d_formats.end()))
+    {
+        return true;
+    }
+    return false;
 }
