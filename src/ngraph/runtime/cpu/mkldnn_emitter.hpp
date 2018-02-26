@@ -68,6 +68,12 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
 
+                size_t build_elementwise_add(const mkldnn::memory::desc& input0_data_desc,
+                                            const mkldnn::memory::desc& input1_data_desc,
+                                            const mkldnn::memory::desc& result_desc,
+                                            const std::vector<float>& scale_vector,
+                                            const std::vector<mkldnn::memory::primitive_desc>& input_pd);
+
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;

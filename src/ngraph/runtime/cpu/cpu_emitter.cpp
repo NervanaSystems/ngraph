@@ -150,65 +150,44 @@ namespace ngraph
                        << args[1].get_name() << ");\n";
                 writer << "out = arg0 + arg1;\n";
 #else
-                auto op_annotations =
-                    static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-                if (op_annotations &&
-                    static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                        ->is_mkldnn_op())
+               
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto input0_size_1d = 1;
-                    auto input1_size_1d = 1;
-                    auto result_size_1d = 1;
-                    auto src_size = args[0].get_shape().size();
-
-                    for (size_t i = 0; i < src_size; i++)
-                    {
-                        input0_size_1d *= args[0].get_shape()[i];
-                        input1_size_1d *= args[1].get_shape()[i];
-                        result_size_1d *= out[0].get_shape()[i];
-                    }
                     // get input element type
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                         args[1].get_element_type());
 
-                    // Bind to CPU engine
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+                    std::vector<float>scale_vector(2, 1);
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
 
-                    writer << "std::vector<float>scale_vector(2, 1);\n";
-                    writer << "std::vector<memory::primitive_desc> inputs_pd;\n";
-                    writer << "std::vector<memory::primitive::at> inputs_primitive;\n";
+                    auto input0_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto input1_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input0_data_desc = mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
+                    auto input1_data_desc = mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(input0_data_desc,
+                              runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(input1_data_desc,
+                               runtime::cpu::mkldnn_utils::global_cpu_engine));                  
 
-                    // memory desc for inputs
-                    writer << "memory::desc input0_data_desc = memory::desc({" << input0_size_1d
-                           << "}, " << et << ", memory::format::x);\n";
-                    writer << "memory::desc input1_data_desc = memory::desc({" << input1_size_1d
-                           << "}, " << et << ", memory::format::x);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << result_size_1d << "}, "
-                           << et << ", memory::format::x);\n";
-                    // memory for the user data
-                    writer << "memory input0_data = memory({input0_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory input1_data = memory({input1_data_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
+                    size_t add_index=0;
+                    add_index = mkldnn_emitter->build_elementwise_add(input0_data_desc,
+                                                                    input1_data_desc,
+                                                                    result_desc,
+                                                                    scale_vector,
+                                                                    inputs_pd);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "inputs_pd.push_back(memory::primitive_desc(input0_data_desc, "
-                              "cpu_engine));\n";
-                    writer << "inputs_pd.push_back(memory::primitive_desc(input1_data_desc, "
-                              "cpu_engine));\n";
-
-                    writer << "inputs_primitive.push_back(primitive::at(input0_data));\n";
-                    writer << "inputs_primitive.push_back(primitive::at(input1_data));\n";
-
-                    // elementwise sum primtive descriptor
-                    writer << "sum::primitive_desc sum_pd = sum::primitive_desc(result_desc, "
-                              "scale_vector, inputs_pd);\n";
-                    // sum primitive
-                    writer << "sum sum_primitive = sum(sum_pd, inputs_primitive, result);\n";
-                    // create stream and execute
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({sum_primitive}).wait();\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(add_index) << ");\n";
                 }
                 else
                 {

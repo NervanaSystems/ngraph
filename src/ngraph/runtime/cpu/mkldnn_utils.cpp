@@ -26,11 +26,8 @@
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/relu.hpp"
-<<<<<<< HEAD
-=======
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
->>>>>>> jbobba/batchnorm-layout
 #include "ngraph/types/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
