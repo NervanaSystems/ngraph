@@ -62,12 +62,12 @@ public:
     HybridCallFrame(
         const vector<shared_ptr<Function>>& funcs,
         const vector<shared_ptr<runtime::CallFrame>>& call_frames,
-        const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_node_to_source_node,
+        const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node,
         const unordered_map<shared_ptr<op::Parameter>, size_t>& map_parameter_to_index,
         const unordered_map<shared_ptr<Node>, size_t>& map_result_to_index)
         : m_funcs(funcs)
         , m_call_frames(call_frames)
-        , m_map_node_to_source_node(map_node_to_source_node)
+        , m_map_parameter_to_source_node(map_parameter_to_source_node)
         , m_map_parameter_to_index(map_parameter_to_index)
         , m_map_result_to_index(map_result_to_index)
     {
@@ -109,7 +109,7 @@ public:
             vector<shared_ptr<runtime::TensorView>> parameter_tensor_views;
             for (auto parameter : func->get_parameters())
             {
-                if (m_map_node_to_source_node.at(parameter) == parameter)
+                if (m_map_parameter_to_source_node.at(parameter) == parameter)
                 {
                     // This parameter node must be placed on INT to use HybridCallFrame's TensorView
                     if (placement != Placement::INTERPRETER)
@@ -128,7 +128,7 @@ public:
                     // output TensorView, or parameter placed on a different device.
                     auto tv = backend->make_primary_tensor_view(parameter->get_element_type(),
                                                                 parameter->get_shape());
-                    auto source_node = m_map_node_to_source_node.at(parameter);
+                    auto source_node = m_map_parameter_to_source_node.at(parameter);
                     auto source_tv = map_node_to_tensor_view.at(source_node);
                     copy_data(tv, read_vector<float>(source_tv));
 
@@ -187,7 +187,7 @@ public:
 protected:
     vector<shared_ptr<Function>> m_funcs;
     vector<shared_ptr<runtime::CallFrame>> m_call_frames;
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>> m_map_node_to_source_node;
+    unordered_map<shared_ptr<Node>, shared_ptr<Node>> m_map_parameter_to_source_node;
     unordered_map<shared_ptr<op::Parameter>, size_t> m_map_parameter_to_index;
     unordered_map<shared_ptr<Node>, size_t> m_map_result_to_index;
 };
@@ -225,11 +225,11 @@ public:
         }
 
         // Parameter's source is either itself, or the output node of the upstream function
-        unordered_map<shared_ptr<Node>, shared_ptr<Node>> map_node_to_source_node;
+        unordered_map<shared_ptr<Node>, shared_ptr<Node>> map_parameter_to_source_node;
 
         // Split to functions
         vector<shared_ptr<Function>> funcs =
-            split_function_by_placement(f, map_node_to_source_node);
+            split_function_by_placement(f, map_parameter_to_source_node);
 
         // Make call frames
         vector<shared_ptr<runtime::CallFrame>> call_frames;
@@ -245,7 +245,7 @@ public:
 
         return make_shared<HybridCallFrame>(funcs,
                                             call_frames,
-                                            map_node_to_source_node,
+                                            map_parameter_to_source_node,
                                             map_parameter_to_index,
                                             map_result_to_index);
     }

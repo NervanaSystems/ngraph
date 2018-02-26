@@ -357,7 +357,7 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
 // Returns a function over that subgraph.
 static shared_ptr<Function> build_largest_colocated_function(
     vector<shared_ptr<Node>> outputs,
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_node_to_source_node)
+    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node)
 {
     // The outputs have the same placement, guaranteed by get_colocated_outputs_with_highest_orders
     if (outputs.size() == 0)
@@ -392,11 +392,11 @@ static shared_ptr<Function> build_largest_colocated_function(
             if (n->description() == "Parameter")
             {
                 collected_parameters.push_back(static_pointer_cast<op::Parameter>(n));
-                if (map_node_to_source_node.find(n) == map_node_to_source_node.end())
+                if (map_parameter_to_source_node.find(n) == map_parameter_to_source_node.end())
                 {
                     throw ngraph_error(
                         "Node " + n->get_name() +
-                        " does not exist in map_node_to_source_node, while it must be a global"
+                        " does not exist in map_parameter_to_source_node, while it must be a global"
                         "parameter and its own source node");
                 }
             }
@@ -422,7 +422,7 @@ static shared_ptr<Function> build_largest_colocated_function(
                         p->set_placement(function_placement);
                         insert_parameter_split_between(input_op, n, p);
                         map_source_node_to_parameter[input_op] = p;
-                        map_node_to_source_node[p] = input_op;
+                        map_parameter_to_source_node[p] = input_op;
                         collected_parameters.push_back(p);
                     }
                     else
@@ -502,7 +502,7 @@ static unordered_set<shared_ptr<Node>> get_colocated_outputs_with_highest_orders
 //       edge-contraction + cycle detection algorithm to avoid this issue.
 vector<shared_ptr<Function>> ngraph::split_function_by_placement(
     shared_ptr<Function> f,
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_node_to_source_node)
+    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node)
 {
     // Store topological sorted orders for selecting output groups. If a node is used multiple
     // times, any order of the node will be valid since f is a DAG.
@@ -513,11 +513,11 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         map_node_to_order[node] = node_idx++;
     }
 
-    // Initialize map_node_to_source_node map
+    // Initialize map_parameter_to_source_node map
     unordered_set<shared_ptr<Node>> f_parameters;
     for (auto parameter : f->get_parameters())
     {
-        map_node_to_source_node[parameter] = parameter;
+        map_parameter_to_source_node[parameter] = parameter;
         f_parameters.insert(parameter);
     }
 
@@ -541,8 +541,8 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
 
         vector<shared_ptr<Node>> colocated_outputs_vector(colocated_outputs.begin(),
                                                           colocated_outputs.end());
-        shared_ptr<Function> colocated_function =
-            build_largest_colocated_function(colocated_outputs_vector, map_node_to_source_node);
+        shared_ptr<Function> colocated_function = build_largest_colocated_function(
+            colocated_outputs_vector, map_parameter_to_source_node);
         colocated_functions.push_back(colocated_function);
 
         // Construct new outputs for the next function
@@ -550,7 +550,7 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         {
             // If `parameter` is not a top-level parameter, and the source of `parameter` is
             // not a top-level parameter, it then `source_node` is the output of a upstream function
-            auto source_node = map_node_to_source_node.at(parameter);
+            auto source_node = map_parameter_to_source_node.at(parameter);
             if (f_parameters.find(parameter) == f_parameters.end() &&
                 f_parameters.find(source_node) == f_parameters.end() &&
                 source_node->description() != "Constant")
