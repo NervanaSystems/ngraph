@@ -77,12 +77,13 @@ set (SRC
     ops/tan.cpp
     ops/tanh.cpp
     ops/util/arithmetic_reduction.cpp
-    ops/util/binary_elementwise_arithmetic.cpp 
-    ops/util/binary_elementwise_comparison.cpp 
-    ops/util/binary_elementwise.cpp 
-    ops/util/requires_tensor_view_args.cpp 
-    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/binary_elementwise_arithmetic.cpp
+    ops/util/binary_elementwise_comparison.cpp
+    ops/util/binary_elementwise.cpp
+    ops/util/requires_tensor_view_args.cpp
+    ops/util/unary_elementwise_arithmetic.cpp
     ops/util/unary_elementwise.cpp
+    pass/assign_placement.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
@@ -111,6 +112,7 @@ set (SRC
     types/type.cpp
     util.cpp
     graph_util.cpp
+    placement.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

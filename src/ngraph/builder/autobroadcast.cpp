@@ -22,6 +22,7 @@
 #include "ngraph/util.hpp"
 
 #include <cassert>
+#include <memory>
 #include <numeric>
 #include <sstream>
 

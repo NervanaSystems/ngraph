@@ -19,7 +19,6 @@
 #include <string>
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/util/op_annotations.hpp"
 
 namespace ngraph
