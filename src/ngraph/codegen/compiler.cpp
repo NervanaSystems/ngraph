@@ -274,6 +274,9 @@ std::unique_ptr<codegen::Module>
         preprocessor_options.DisablePCHValidation = 0;
     }
 
+    // Clear warnings and errors
+    m_compiler->getDiagnosticClient().clear();
+
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
