@@ -164,7 +164,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         return;
     }
 
-    //return if out size is 0;
+    //return if output size is 0;
     if (out[0].get_size() == 0)
     {
         writer << "{   // " << n->get_name() << "\n";
