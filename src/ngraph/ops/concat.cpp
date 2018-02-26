@@ -17,7 +17,7 @@
 #include <cassert>
 #include <memory>
 
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/slice.hpp"
 
 using namespace std;
