@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Abs(py::module m){
-    py::class_<ngraph::op::Abs, std::shared_ptr<ngraph::op::Abs>, ngraph::op::UnaryElementwiseArithmetic> abs(m, "Abs");
+    py::class_<ngraph::op::Abs, std::shared_ptr<ngraph::op::Abs>, ngraph::op::util::UnaryElementwiseArithmetic> abs(m, "Abs");
     abs.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

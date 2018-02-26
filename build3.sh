@@ -20,5 +20,5 @@ fi
 
 mkdir build
 
-cd build && cmake .. && make -j && python3 setup.py bdist_wheel
+cd build && cmake .. && make -j8 && python3 setup.py bdist_wheel
 

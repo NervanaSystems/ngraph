@@ -83,7 +83,7 @@ Download the required version of private-ngraph-cpp and install it.
 ```
 git clone https://github.com/NervanaSystems/private-ngraph-cpp.git
 cd private-ngraph-cpp
-git checkout 15babf5ea40f5f9ed1efd05ee8e85b5fc3368aa0 -b "local branch name"
+git checkout d2d0196bf669f4679618f63d37404439b88d2d25 -b "local branch name"
 Build and Install it : https://github.com/NervanaSystems/private-ngraph-cpp#steps
 ```
 

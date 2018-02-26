@@ -32,7 +32,5 @@ from _pyngraph import Node
 from _pyngraph import Type
 from _pyngraph import TensorViewType
 
-from _pyngraph import op
-from _pyngraph import runtime
 from _pyngraph import serialize
 from _pyngraph import util

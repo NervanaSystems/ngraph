@@ -25,7 +25,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Power(py::module m) {
 
 
-    py::class_<ngraph::op::Power, std::shared_ptr<ngraph::op::Power>, ngraph::op::BinaryElementwiseArithmetic> power(m, "Power");
+    py::class_<ngraph::op::Power, std::shared_ptr<ngraph::op::Power>, ngraph::op::util::BinaryElementwiseArithmetic> power(m, "Power");
     power.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 }

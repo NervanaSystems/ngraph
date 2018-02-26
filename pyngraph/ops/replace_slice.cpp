@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_ReplaceSlice(py::module m) {
 
-    py::class_<ngraph::op::ReplaceSlice, std::shared_ptr<ngraph::op::ReplaceSlice>, ngraph::op::RequiresTensorViewArgs> replace_slice(m, "ReplaceSlice");
+    py::class_<ngraph::op::ReplaceSlice, std::shared_ptr<ngraph::op::ReplaceSlice>, ngraph::op::util::RequiresTensorViewArgs> replace_slice(m, "ReplaceSlice");
     replace_slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
 			       const std::shared_ptr<ngraph::Node>&,
 		               const ngraph::Coordinate&,

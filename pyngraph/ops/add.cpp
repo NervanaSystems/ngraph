@@ -26,7 +26,7 @@ void regclass_pyngraph_op_Add(py::module m) {
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph::op::Add, std::shared_ptr<ngraph::op::Add>, ngraph::op::BinaryElementwiseArithmetic> add(m, "Add");
+    py::class_<ngraph::op::Add, std::shared_ptr<ngraph::op::Add>, ngraph::op::util::BinaryElementwiseArithmetic> add(m, "Add");
     add.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 }

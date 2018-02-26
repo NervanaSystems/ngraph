@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Atan(py::module m){
-    py::class_<ngraph::op::Atan, std::shared_ptr<ngraph::op::Atan>, ngraph::op::UnaryElementwiseArithmetic> atan(m, "Atan");
+    py::class_<ngraph::op::Atan, std::shared_ptr<ngraph::op::Atan>, ngraph::op::util::UnaryElementwiseArithmetic> atan(m, "Atan");
     atan.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

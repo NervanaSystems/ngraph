@@ -19,14 +19,7 @@
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op(py::module m){
-    py::module m_op = m.def_submodule("op", "module pyngraph.op");
-    regclass_pyngraph_op_RequiresTensorViewArgs(m_op);
-    regclass_pyngraph_op_UnaryElementwise(m_op);
-    regclass_pyngraph_op_UnaryElementwiseArithmetic(m_op);
-    regclass_pyngraph_op_BinaryElementwise(m_op);
-    regclass_pyngraph_op_BinaryElementwiseComparison(m_op);
-    regclass_pyngraph_op_BinaryElementwiseArithmetic(m_op);
+void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_Abs(m_op);
     regclass_pyngraph_op_Acos(m_op);
     regclass_pyngraph_op_Asin(m_op);
@@ -65,6 +58,7 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_OneHot(m_op);
+    // regclass_pyngraph_op_Op(m_op);
     regclass_pyngraph_op_Reduce(m_op);
     regclass_pyngraph_op_ReplaceSlice(m_op);
     regclass_pyngraph_op_Reshape(m_op);
