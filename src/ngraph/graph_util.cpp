@@ -357,7 +357,7 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
 // Returns a function over that subgraph.
 static shared_ptr<Function> build_largest_colocated_function(
     vector<shared_ptr<Node>> outputs,
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node)
+    unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>>& map_parameter_to_source_node)
 {
     // The outputs have the same placement, guaranteed by get_colocated_outputs_with_highest_orders
     if (outputs.size() == 0)
@@ -391,8 +391,10 @@ static shared_ptr<Function> build_largest_colocated_function(
 
             if (n->description() == "Parameter")
             {
-                collected_parameters.push_back(static_pointer_cast<op::Parameter>(n));
-                if (map_parameter_to_source_node.find(n) == map_parameter_to_source_node.end())
+                auto n_prameter = static_pointer_cast<op::Parameter>(n);
+                collected_parameters.push_back(n_prameter);
+                if (map_parameter_to_source_node.find(n_prameter) ==
+                    map_parameter_to_source_node.end())
                 {
                     throw ngraph_error(
                         "Node " + n->get_name() +
@@ -502,7 +504,7 @@ static unordered_set<shared_ptr<Node>> get_colocated_outputs_with_highest_orders
 //       edge-contraction + cycle detection algorithm to avoid this issue.
 vector<shared_ptr<Function>> ngraph::split_function_by_placement(
     shared_ptr<Function> f,
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node)
+    unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>>& map_parameter_to_source_node)
 {
     // Store topological sorted orders for selecting output groups. If a node is used multiple
     // times, any order of the node will be valid since f is a DAG.

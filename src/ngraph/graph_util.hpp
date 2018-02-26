@@ -120,7 +120,8 @@ namespace ngraph
     // Split function to function(s) with unique placement
     std::vector<std::shared_ptr<Function>> split_function_by_placement(
         std::shared_ptr<Function> f,
-        std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& map_node_to_source_node);
+        std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<Node>>&
+            map_parameter_to_source_node);
 
     // Insert parameter node between src_node and dst_node by splitting the graph
     void insert_parameter_split_between(std::shared_ptr<Node> src_node,

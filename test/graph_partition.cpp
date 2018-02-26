@@ -59,12 +59,12 @@ static shared_ptr<runtime::Backend> get_cached_backend(const string& name)
 class HybridCallFrame
 {
 public:
-    HybridCallFrame(
-        const vector<shared_ptr<Function>>& funcs,
-        const vector<shared_ptr<runtime::CallFrame>>& call_frames,
-        const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& map_parameter_to_source_node,
-        const unordered_map<shared_ptr<op::Parameter>, size_t>& map_parameter_to_index,
-        const unordered_map<shared_ptr<Node>, size_t>& map_result_to_index)
+    HybridCallFrame(const vector<shared_ptr<Function>>& funcs,
+                    const vector<shared_ptr<runtime::CallFrame>>& call_frames,
+                    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>>&
+                        map_parameter_to_source_node,
+                    const unordered_map<shared_ptr<op::Parameter>, size_t>& map_parameter_to_index,
+                    const unordered_map<shared_ptr<Node>, size_t>& map_result_to_index)
         : m_funcs(funcs)
         , m_call_frames(call_frames)
         , m_map_parameter_to_source_node(map_parameter_to_source_node)
@@ -187,7 +187,7 @@ public:
 protected:
     vector<shared_ptr<Function>> m_funcs;
     vector<shared_ptr<runtime::CallFrame>> m_call_frames;
-    unordered_map<shared_ptr<Node>, shared_ptr<Node>> m_map_parameter_to_source_node;
+    unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> m_map_parameter_to_source_node;
     unordered_map<shared_ptr<op::Parameter>, size_t> m_map_parameter_to_index;
     unordered_map<shared_ptr<Node>, size_t> m_map_result_to_index;
 };
@@ -225,7 +225,7 @@ public:
         }
 
         // Parameter's source is either itself, or the output node of the upstream function
-        unordered_map<shared_ptr<Node>, shared_ptr<Node>> map_parameter_to_source_node;
+        unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> map_parameter_to_source_node;
 
         // Split to functions
         vector<shared_ptr<Function>> funcs =
