@@ -97,6 +97,7 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::oIhw16i, "memory::format::oIhw16i"},
     {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
     {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
+    {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
     {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
     {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
     {memory::format::Oihw8o, "memory::format::Oihw8o"},
