@@ -27,29 +27,29 @@ namespace ngraph
     {
         namespace gpu
         {
-            class Cuda_function_pool
+            class CudaFunctionPool
             {
             public:
-                static Cuda_function_pool& Instance()
+                static CudaFunctionPool& Instance()
                 {
-                    static Cuda_function_pool pool;
+                    static CudaFunctionPool pool;
                     return pool;
                 }
 
-                Cuda_function_pool(Cuda_function_pool const&) = delete;
-                Cuda_function_pool(Cuda_function_pool&&) = delete;
-                Cuda_function_pool& operator=(Cuda_function_pool const&) = delete;
-                Cuda_function_pool& operator=(Cuda_function_pool&&) = delete;
+                CudaFunctionPool(CudaFunctionPool const&) = delete;
+                CudaFunctionPool(CudaFunctionPool&&) = delete;
+                CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
+                CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
 
                 void Set(std::string& name, std::shared_ptr<CUfunction> function)
                 {
-                    CUfunction_map.insert({name, function});
+                    m_function_map.insert({name, function});
                 }
 
                 std::shared_ptr<CUfunction> Get(std::string& name)
                 {
-                    auto it = CUfunction_map.find(name);
-                    if (it != CUfunction_map.end())
+                    auto it = m_function_map.find(name);
+                    if (it != m_function_map.end())
                     {
                         return (*it).second;
                     }
@@ -57,9 +57,9 @@ namespace ngraph
                 }
 
             protected:
-                Cuda_function_pool() {}
-                ~Cuda_function_pool() {}
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> CUfunction_map;
+                CudaFunctionPool() {}
+                ~CudaFunctionPool() {}
+                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
             };
         }
     }

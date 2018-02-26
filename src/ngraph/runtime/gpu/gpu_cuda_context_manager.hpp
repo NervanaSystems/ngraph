@@ -27,33 +27,33 @@ namespace ngraph
     {
         namespace gpu
         {
-            class Cuda_context_manager
+            class CudaContextManager
             {
             public:
-                static Cuda_context_manager& Instance()
+                static CudaContextManager& Instance()
                 {
-                    static Cuda_context_manager manager;
+                    static CudaContextManager manager;
                     return manager;
                 }
 
-                Cuda_context_manager(Cuda_context_manager const&) = delete;
-                Cuda_context_manager(Cuda_context_manager&&) = delete;
-                Cuda_context_manager& operator=(Cuda_context_manager const&) = delete;
-                Cuda_context_manager& operator=(Cuda_context_manager&&) = delete;
+                CudaContextManager(CudaContextManager const&) = delete;
+                CudaContextManager(CudaContextManager&&) = delete;
+                CudaContextManager& operator=(CudaContextManager const&) = delete;
+                CudaContextManager& operator=(CudaContextManager&&) = delete;
 
                 std::shared_ptr<CUcontext> GetContext() { return context_ptr; }
             protected:
-                Cuda_context_manager()
+                CudaContextManager()
                 {
                     CUDA_SAFE_CALL(cuInit(0));
-                    CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
-                    CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
-                    context_ptr = std::make_shared<CUcontext>(context);
+                    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
+                    CUDA_SAFE_CALL(cuCtxCreate(&m_context, 0, m_device));
+                    m_context_ptr = std::make_shared<CUcontext>(m_context);
                 }
-                ~Cuda_context_manager() {}
-                CUdevice cuDevice;
-                CUcontext context;
-                std::shared_ptr<CUcontext> context_ptr;
+                ~CudaContextManager() {}
+                CUdevice m_device;
+                CUcontext m_context;
+                std::shared_ptr<CUcontext> m_context_ptr;
             };
         }
     }

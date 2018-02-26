@@ -22,6 +22,8 @@
 #include <cudnn_v7.h>
 #include <nvrtc.h>
 
+//why use "do...while.."
+//https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
 #define NVRTC_SAFE_CALL(x)                                                                         \
     do                                                                                             \
     {                                                                                              \

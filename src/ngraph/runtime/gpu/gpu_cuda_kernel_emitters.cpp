@@ -43,7 +43,7 @@ namespace ngraph
                             std::string kernel;
                             Cuda_kernel_builder::Get_1_element_op(name, "float", "fabsf", kernel);
                             Cuda_function_pool::Instance().Set(
-                                name, Cuda_function_builder::Get("cuda_" + name, kernel, 2, opts));
+                                name, CudaFunctionBuilder::Get("cuda_" + name, kernel, 2, opts));
                         }
 
                         //convert runtime ptr to driver api ptr
@@ -65,74 +65,6 @@ namespace ngraph
                                            argsList,
                                            0));             // arguments
                         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-                    }
-
-                    void emit_broadcast(codegen::CodeWriter& writer,
-                                        const std::string& element_type,
-                                        const std::string& arg0, // replacement context
-                                        const std::string& out,
-                                        const Shape& arg0_shape,
-                                        const Shape& out_shape,
-                                        const AxisSet& broadcast_axes)
-                    {
-                    }
-
-                    //
-                    // For the reference kernel this is gpud on, see ngraph/runtime/kernel/concat.hpp.
-                    //
-                    void emit_concat(codegen::CodeWriter& writer,
-                                     const std::string& element_type,
-                                     const std::vector<std::string>& args,
-                                     const std::string& out,
-                                     const std::vector<Shape>& in_shapes,
-                                     const Shape& out_shape,
-                                     size_t concatenation_axis)
-                    {
-                    }
-
-                    void emit_replace_slice(codegen::CodeWriter& writer,
-                                            const std::string& element_type,
-                                            const std::string& arg0, // replacement context
-                                            const std::string& arg1, // replacement value
-                                            const std::string& out,
-                                            const Shape& arg1_shape,
-                                            const Shape& out_shape,
-                                            const Coordinate& lower_bounds,
-                                            const Coordinate& upper_bounds,
-                                            const Strides& strides)
-                    {
-                    }
-
-                    void emit_slice(codegen::CodeWriter& writer,
-                                    const std::string& element_type,
-                                    const std::string& arg0, // replacement context
-                                    const std::string& out,
-                                    const Shape& arg0_shape,
-                                    const Shape& out_shape,
-                                    const Coordinate& lower_bounds,
-                                    const Coordinate& upper_bounds,
-                                    const Strides& strides)
-                    {
-                    }
-
-                    void emit_reshape(codegen::CodeWriter& writer,
-                                      const std::string& element_type,
-                                      const std::string& arg0, // replacement context
-                                      const std::string& out,
-                                      const Shape& arg0_shape,
-                                      const Shape& out_shape,
-                                      const AxisVector& arg0_axis_order)
-                    {
-                    }
-
-                    void emit_sum(codegen::CodeWriter& writer,
-                                  const std::string& element_type,
-                                  const std::string& arg0, // replacement context
-                                  const std::string& out,
-                                  const Shape& arg0_shape,
-                                  const Shape& out_shape,
-                                  const AxisSet& reduction_axes)
-                    {
                     }
                 }
             }

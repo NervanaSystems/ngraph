@@ -27,7 +27,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class Cuda_function_builder
+            class CudaFunctionBuilder
             {
             public:
                 static std::shared_ptr<CUfunction> Get(const std::string& name,
@@ -43,23 +43,17 @@ namespace ngraph
                                                        NULL,   // headers
                                                        NULL)); // includeNames
 
-                    nvrtcResult compileResult =
+                    nvrtcResult compile_result =
                         nvrtcCompileProgram(prog, number_of_options, options);
 
-                    if (compileResult != NVRTC_SUCCESS)
+                    if (compile_result != NVRTC_SUCCESS)
                     {
-                        // size_t logSize;
-                        // NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize));
-                        // char *log = new char[logSize];
-                        // NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log));
-                        // std::cout << log << '\n';
-                        // delete[] log;
                         throw std::runtime_error("compile error: \n" + kernel + "\n options");
                     }
 
-                    size_t ptxSize;
-                    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize));
-                    char* ptx = new char[ptxSize];
+                    size_t ptx_size;
+                    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
+                    char* ptx = new char[ptx_size];
                     NVRTC_SAFE_CALL(nvrtcGetPTX(
                         prog,
                         ptx)); // Load the generated PTX and get a handle to the parent kernel.

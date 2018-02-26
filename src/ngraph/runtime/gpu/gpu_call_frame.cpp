@@ -34,7 +34,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
 {
     //Create context use driver API and make it current, the runtime call will pickup the context
     //http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#interoperability-between-runtime-and-driver-apis
-    ngraph::runtime::gpu::Cuda_context_manager::Instance();
+    ngraph::runtime::gpu::CudaContextManager::Instance();
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
@@ -46,7 +46,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
         throw runtime_error("cuDnn create handle failed");
     }
 
-    // Pass scalars as reference on the Host
+    // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);
 }
 
@@ -60,7 +60,7 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
-    // Host tensors
+    //Device tensors
     vector<void*> inputs;
     vector<void*> outputs;
 
