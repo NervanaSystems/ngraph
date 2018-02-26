@@ -372,7 +372,7 @@ static shared_ptr<ngraph::Function>
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
             auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
+                get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
             node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
                                                     args[0],
                                                     window_shape,
