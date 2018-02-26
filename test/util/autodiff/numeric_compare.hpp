@@ -14,9 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/log.hpp"
+#include "ngraph/runtime/manager.hpp"
+#include "ngraph/types/element_type.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_derivative.hpp"
 #include "util/autodiff/numeric_derivative.hpp"
+#include "util/test_tools.hpp"
 
 template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& manager,
@@ -27,15 +31,48 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& m
                               T atol)
 {
     T delta = static_cast<T>(0.001);
-    auto f = make_graph();
-    auto results_num = ngraph::autodiff::numeric_derivative<T>(
-        manager, backend, f, args, delta, f->get_parameters());
 
+    // Use INTERPRETER to compute numerical derivatives
+    auto interpreter_manager = ngraph::runtime::Manager::get("INTERPRETER");
+    auto interpreter_backend = interpreter_manager->allocate_backend();
+    auto f = make_graph();
+
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
+    for (auto arg : args)
+    {
+        auto interpreter_arg = interpreter_backend->make_primary_tensor_view(
+            arg->get_tensor().get_element_type(), arg->get_shape());
+
+        // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
+        if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
+        {
+            copy_data(interpreter_arg, read_vector<char>(arg));
+        }
+        else
+        {
+            copy_data(interpreter_arg, read_vector<T>(arg));
+        }
+        interpreter_args.push_back(interpreter_arg);
+    }
+    auto results_num = ngraph::autodiff::numeric_derivative<T>(
+        interpreter_manager, interpreter_backend, f, interpreter_args, delta, f->get_parameters());
+
+    // Use the backend being tested to compute symbolic derivatives
     auto g = make_graph();
     auto results_sym =
         ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
 
-    return ngraph::test::all_close(results_num, results_sym, rtol, atol);
+    // Cast to HostTensorView for comparision
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
+    for (auto result : results_sym)
+    {
+        auto interpreter_result = interpreter_backend->make_primary_tensor_view(
+            ngraph::element::from<T>(), result->get_shape());
+        copy_data(interpreter_result, read_vector<T>(result));
+        interpreter_results_sym.push_back(interpreter_result);
+    }
+
+    return ngraph::test::all_close(results_num, interpreter_results_sym, rtol, atol);
 }
 
 template <typename T>
@@ -48,6 +85,7 @@ bool autodiff_numeric_compare_selective(
     T atol,
     const std::vector<bool>& indep_param_mask)
 {
+    // Use INTERPRETER to compute numerical derivatives
     std::vector<std::shared_ptr<ngraph::op::Parameter>> f_indep_params;
     auto f = make_graph();
 
@@ -62,9 +100,30 @@ bool autodiff_numeric_compare_selective(
         i++;
     }
 
-    auto results_num =
-        ngraph::autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
+    auto interpreter_manager = ngraph::runtime::Manager::get("INTERPRETER");
+    auto interpreter_backend = interpreter_manager->allocate_backend();
 
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
+    for (auto arg : args)
+    {
+        auto interpreter_arg = interpreter_backend->make_primary_tensor_view(
+            arg->get_tensor().get_element_type(), arg->get_shape());
+
+        // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
+        if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
+        {
+            copy_data(interpreter_arg, read_vector<char>(arg));
+        }
+        else
+        {
+            copy_data(interpreter_arg, read_vector<T>(arg));
+        }
+        interpreter_args.push_back(interpreter_arg);
+    }
+    auto results_num = ngraph::autodiff::numeric_derivative<T>(
+        interpreter_manager, interpreter_backend, f, interpreter_args, .001f, f_indep_params);
+
+    // Use the backend being tested to compute symbolic derivatives
     std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
     auto g = make_graph();
 
@@ -82,5 +141,15 @@ bool autodiff_numeric_compare_selective(
     auto results_sym =
         ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
 
-    return ngraph::test::all_close(results_num, results_sym, rtol, atol);
+    // Cast to HostTensorView for comparision
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
+    for (auto result : results_sym)
+    {
+        auto interpreter_result = interpreter_backend->make_primary_tensor_view(
+            ngraph::element::from<T>(), result->get_shape());
+        copy_data(interpreter_result, read_vector<T>(result));
+        interpreter_results_sym.push_back(interpreter_result);
+    }
+
+    return ngraph::test::all_close(results_num, interpreter_results_sym, rtol, atol);
 }
