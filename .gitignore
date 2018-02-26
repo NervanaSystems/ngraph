@@ -51,6 +51,8 @@ output/
 doc/source/generated
 .cache/
 nervana_aeon.egg-info/
+*.xsd
+*.xslt
 
 # emacs
 *~
@@ -78,11 +80,11 @@ venv/
 VisualGDB/
 toolchain.cmake
 
-# do not add docbuild artifacts to github
-/doc/doxygen/xml
-/doc/sphinx/build
-/doc/doxygen/*.html
-/doc/doxygen/*.xml
-/doc/doxygen/latex
-/doc/doxygen/man
-/doc/doxygen/html
+# docbuild artifacts
+doc/sphinx/build/*
+doc/doxygen/*.xml
+doc/doxygen/*.html
+doc/doxygen/man/*
+doc/doxygen/latex/*
+doc/doxygen/xml/*
+doc/doxygen/html/*

@@ -2545,6 +2545,7 @@ div[class^='highlight'] pre {
     border-top: solid 0.31em #e2e8d0;
 }
 
+
 .rst-content dl:not(.docutils) dt .headerlink {
   color: #404040;
   font-size: 100% !important;
@@ -2564,6 +2565,15 @@ div[class^='highlight'] pre {
   margin-top: 0;
 }
 
+.rst-content dl:not(.docutils) em {
+  font-size: 17px;
+  font-weight: bolder;
+}
+
+.rst-content dl:not(.docutils) dt {
+  font-size: 17px;
+}
+
 .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descclassname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname, .rst-content dl:not(.docutils) tt.descclassname, .rst-content dl:not(.docutils) code.descclassname {
   background-color: transparent;
   border: none;
@@ -2575,21 +2585,20 @@ div[class^='highlight'] pre {
   display: inline-block;
   padding: 0 4px;
   color: #000;
-  font-weight: bold;
+  font-weight: lighter;
 }
 .rst-content dl:not(.docutils) .property {
   display: inline-block;
   padding-right: 8px;
-    font-size: 123%;
+    font-size: 17px;
 }
 
 .sig-paren {
-    line-height: 1.245em;
     font-weight: bold;
-    font-size: 110%;
-    color: #9d9d9c;
-    padding-left: 0.015em;
-    padding-right: 0.015em;
+    font-size: 19px;
+    color: #727270;
+    padding-left: 0.09em;
+    padding-right: 0.09em;
  }
     
 .rst-content dl:not(.docutils) .em { 
