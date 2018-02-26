@@ -6230,8 +6230,9 @@ TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, convolution_layout)
+TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
+    SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
@@ -6244,7 +6245,9 @@ TEST(${BACKEND_NAME}, convolution_layout)
                                               CoordinateDiff{0, 0},
                                               CoordinateDiff{0, 0},
                                               Strides{1, 1});
-    auto f = make_shared<Function>(conv1, op::Parameters{A, B});
+    Shape pool_shape{1, 1};
+    auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
+    auto f = make_shared<Function>(pool1, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
