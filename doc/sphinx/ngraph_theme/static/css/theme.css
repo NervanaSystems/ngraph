@@ -2528,7 +2528,7 @@ div[class^='highlight'] pre {
 
 .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname {
   font-weight: normal;
-    line-height: 1.21em; /* 1.21 gigawatts in nano */
+  line-height: 1.21em; /* 1.21 gigawatts in nano */
 }
 
 .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) code {
@@ -2543,7 +2543,6 @@ div[class^='highlight'] pre {
     border-right: dashed 0.19em #f4f2f0;
     border-bottom: solid 0.23em #f4f2f0;
     border-top: solid 0.31em #e2e8d0;
-
 }
 
 .rst-content dl:not(.docutils) dt .headerlink {
