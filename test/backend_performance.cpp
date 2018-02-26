@@ -24,7 +24,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -42,6 +42,13 @@ TEST(benchmark, mxnet_mnist_mlp_forward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
     run_benchmark(json_path, "CPU", 1000);
+}
+
+TEST(benchmark, gpu_mxnet_mnist_mlp_forward)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    run_benchmark(json_path, "GPU", 1000);
 }
 
 TEST(benchmark, mxnet_10_bucket_lstm)

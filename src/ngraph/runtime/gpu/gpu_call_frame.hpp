@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <cublas_v2.h>
+#include <cuda_runtime.h>
+#include <cudnn.h>
 #include <functional>
 #include <memory>
 #include <vector>
-
-#include "cublas_v2.h"
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -37,9 +38,10 @@ namespace ngraph
             class GPU_CallFrame;
             class GPU_ExternalFunction;
 
-            using EntryPoint_t = void(void*** inputs,
-                                      void*** outputs,
-                                      cublasHandle_t& cublas_handle);
+            using EntryPoint_t = void(void** inputs,
+                                      void** outputs,
+                                      cublasHandle_t& cublas_handle,
+                                      cudnnHandle_t& cudnn_handle);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -50,7 +52,7 @@ namespace ngraph
                 GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
                               EntryPoint compiled_function);
 
-                ~GPU_CallFrame() override = default;
+                ~GPU_CallFrame() override;
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -68,6 +70,7 @@ namespace ngraph
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
                 cublasHandle_t m_cublas_handle;
+                cudnnHandle_t m_cudnn_handle;
             };
         }
     }
