@@ -48,6 +48,9 @@ namespace ngraph
                 {
                     auto add = static_cast<op::Add*>(node);
                     auto arg0_shape = node->get_input_shape(0);
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg0_rank = arg0_shape.size();
+                    auto arg1_rank = arg1_shape.size();
 
                     auto src_size = 1;
                     for (size_t i = 0; i < node->get_input_shape(0).size(); i++)
@@ -57,7 +60,8 @@ namespace ngraph
                     // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN overhead
                     // for smaller tensor sizes
                     if (node->get_input_element_type(0) == element::f32 &&
-                        node->get_input_element_type(1) == element::f32 && src_size > 64000)
+                        node->get_input_element_type(1) == element::f32 && arg0_rank >= 1 &&
+                        arg1_rank >= 1 && src_size > 64000)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
