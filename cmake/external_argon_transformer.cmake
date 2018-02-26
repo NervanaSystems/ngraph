@@ -30,20 +30,24 @@ if (NGRAPH_ARGON_ENABLE)
     endif()
 
     # Repository
-    set(ARGON_TRANSFORMER_CMAKE_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
+    if (DEFINED CUSTOM_ARGON_TRANSFORMER_GIT_REPOSITORY)
+        set(ARGON_TRANSFORMER_GIT_REPOSITORY ${CUSTOM_ARGON_TRANSFORMER_GIT_REPOSITORY})
+    else()
+        set(ARGON_TRANSFORMER_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
+    endif()
 
     # Set argon_transformer tag
     # Notes:
     # - Before we have ngraph CI job for argon transformer, ngraph master might not be
     #   compatible with argon transformer. To ensure compatibility, checkout the ngraph commit point
-    #   where the following `ARGON_TRANSFORMER_CMAKE_GIT_TAG` is set and build ngraph with argon using this
+    #   where the following `ARGON_TRANSFORMER_GIT_TAG` is set and build ngraph with argon using this
     #   commit.
     # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
     #   argon transformer guaranteed by CI.
-    set(ARGON_TRANSFORMER_CMAKE_GIT_TAG cpp-master)
+    set(ARGON_TRANSFORMER_GIT_TAG cpp-master)
 
     # Determines where argon-transformer will be located
-    set(ARGON_TRANSFORMER_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
+    set(ARGON_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
 
     # Print
     message(STATUS "NGRAPH_INCLUDE_PATH: ${NGRAPH_INCLUDE_PATH}")
@@ -56,27 +60,35 @@ if (NGRAPH_ARGON_ENABLE)
             ExternalProject_Add(
                 ext_argon_transformer
                 SOURCE_DIR ${CUSTOM_ARGON_TRANSFORMER_DIR}
-                PREFIX ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                PREFIX ${ARGON_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                CMAKE_ARGS
+                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_PREFIX}
                         -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
+                        -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
                 BUILD_ALWAYS 1
             )
         else()
             ExternalProject_Add(
                 ext_argon_transformer
-                GIT_REPOSITORY ${ARGON_TRANSFORMER_CMAKE_GIT_REPOSITORY}
-                GIT_TAG ${ARGON_TRANSFORMER_CMAKE_GIT_TAG}
-                PREFIX ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                GIT_REPOSITORY ${ARGON_TRANSFORMER_GIT_REPOSITORY}
+                GIT_TAG ${ARGON_TRANSFORMER_GIT_TAG}
+                PREFIX ${ARGON_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                CMAKE_ARGS
+                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_PREFIX}
                         -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
+                        -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
                 BUILD_ALWAYS 1
             )
         endif()
@@ -85,29 +97,37 @@ if (NGRAPH_ARGON_ENABLE)
             ExternalProject_Add(
                 ext_argon_transformer
                 SOURCE_DIR ${CUSTOM_ARGON_TRANSFORMER_DIR}
-                PREFIX ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                PREFIX ${ARGON_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                CMAKE_ARGS
+                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_PREFIX}
                         -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
-                BUILD_BYPRODUCTS ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                        -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                BUILD_BYPRODUCTS ${ARGON_TRANSFORMER_PREFIX}
                 BUILD_ALWAYS 1
             )
         else()
             ExternalProject_Add(
                 ext_argon_transformer
-                GIT_REPOSITORY ${ARGON_TRANSFORMER_CMAKE_GIT_REPOSITORY}
-                GIT_TAG ${ARGON_TRANSFORMER_CMAKE_GIT_TAG}
-                PREFIX ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                GIT_REPOSITORY ${ARGON_TRANSFORMER_GIT_REPOSITORY}
+                GIT_TAG ${ARGON_TRANSFORMER_GIT_TAG}
+                PREFIX ${ARGON_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                CMAKE_ARGS
+                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                        -DNGRAPH_INSTALL_PREFIX=${ARGON_TRANSFORMER_PREFIX}
                         -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
-                BUILD_BYPRODUCTS ${ARGON_TRANSFORMER_CMAKE_PREFIX}
+                        -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                BUILD_BYPRODUCTS ${ARGON_TRANSFORMER_PREFIX}
                 BUILD_ALWAYS 1
             )
         endif()
@@ -115,8 +135,8 @@ if (NGRAPH_ARGON_ENABLE)
 
     ExternalProject_Get_Property(ext_argon_transformer source_dir)
     set(ARGON_TRANSFORMER_SOURCE_DIR ${source_dir} PARENT_SCOPE)
-    set(ARGON_TRANSFORMER_INCLUDE_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/include PARENT_SCOPE)
-    set(ARGON_TRANSFORMER_LIB_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/lib PARENT_SCOPE)
+    set(ARGON_TRANSFORMER_INCLUDE_DIR ${ARGON_TRANSFORMER_PREFIX}/include PARENT_SCOPE)
+    set(ARGON_TRANSFORMER_LIB_DIR ${ARGON_TRANSFORMER_PREFIX}/lib PARENT_SCOPE)
     set(ARGON_API_INCLUDE_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/include PARENT_SCOPE)
     set(ARGON_API_LIB_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/lib) # Used by find_library below
     set(ARGON_API_LIB_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/lib PARENT_SCOPE)

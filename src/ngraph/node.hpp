@@ -32,12 +32,17 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/placement.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
+
+    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                        std::shared_ptr<Node> dst_node,
+                                        std::shared_ptr<op::Parameter> p_node);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -49,6 +54,9 @@ namespace ngraph
         friend class descriptor::Input;
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
+        friend void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                                   std::shared_ptr<Node> dst_node,
+                                                   std::shared_ptr<op::Parameter> p_node);
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
@@ -165,8 +173,20 @@ namespace ngraph
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
-        // True if this and node have one output with same element type and shape
+        /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
+
+        /// Get device placement
+        Placement get_placement() const;
+
+        /// Set device placement
+        void set_placement(Placement placement);
+
+        /// Get input descriptor that is connected to src
+        descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
+
+        /// Get ouput descriptor that outputs to dst
+        descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
 
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
@@ -180,9 +200,11 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
+        Placement m_placement = Placement::DEFAULT;
 
     private:
         Nodes m_arguments;
+
         //m_arguments still needs to be kept in sync with i/o since get_input_ops
         //is pretty ubiquitous and might be called after the original graph was modified.
         //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
