@@ -37,7 +37,7 @@ set (SRC
     ops/avg_pool.cpp
     ops/batch_norm.cpp
     ops/broadcast.cpp
-    ops/concatenate.cpp
+    ops/concat.cpp
     ops/constant.cpp
     ops/convert.cpp
     ops/convolution.cpp
