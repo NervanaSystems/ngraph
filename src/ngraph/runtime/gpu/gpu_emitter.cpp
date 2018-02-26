@@ -90,8 +90,8 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
     writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) " << args[0].get_name()
-           << ", (void*) " << out[0].get_name() << ", count);\n";
+    writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name() << ", (void*) "
+           << out[0].get_name() << ", count);\n";
     writer.indent--;
     writer << "}\n";
 }

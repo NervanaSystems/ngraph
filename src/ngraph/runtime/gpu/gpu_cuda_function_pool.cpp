@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include <string>
 #include <unordered_map>
 
@@ -27,7 +25,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            static CudaFunctionPool::CudaFunctionPool& instance()
+            CudaFunctionPool& CudaFunctionPool::instance()
             {
                 static CudaFunctionPool pool;
                 return pool;

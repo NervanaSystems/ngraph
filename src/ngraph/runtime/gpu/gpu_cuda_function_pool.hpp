@@ -38,6 +38,7 @@ namespace ngraph
 
                 void set(std::string& name, std::shared_ptr<CUfunction> function);
                 std::shared_ptr<CUfunction> get(std::string& name);
+
             protected:
                 CudaFunctionPool() {}
                 ~CudaFunctionPool() {}

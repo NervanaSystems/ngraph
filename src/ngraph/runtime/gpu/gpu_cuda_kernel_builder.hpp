@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace ngraph
 {
@@ -41,6 +42,7 @@ namespace ngraph
                                              const std::string& data_type,
                                              const std::vector<std::string>& ops,
                                              std::string& kernel);
+            };
         }
     }
 }

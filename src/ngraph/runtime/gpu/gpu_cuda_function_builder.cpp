@@ -14,11 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include <string>
 
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
@@ -27,21 +26,20 @@ namespace ngraph
     {
         namespace gpu
         {
-            static std::shared_ptr<CUfunction> CudaFunctionBuilder::get(const std::string& name,
-                                                    const std::string& kernel,
-                                                    int number_of_options,
-                                                    const char** options)
+            std::shared_ptr<CUfunction> CudaFunctionBuilder::get(const std::string& name,
+                                                                 const std::string& kernel,
+                                                                 int number_of_options,
+                                                                 const char** options)
             {
                 nvrtcProgram prog;
                 NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
-                                                    kernel.c_str(),
-                                                    "op.cu",
-                                                    0,      // numHeaders
-                                                    NULL,   // headers
-                                                    NULL)); // includeNames
+                                                   kernel.c_str(),
+                                                   "op.cu",
+                                                   0,      // numHeaders
+                                                   NULL,   // headers
+                                                   NULL)); // includeNames
 
-                nvrtcResult compile_result =
-                    nvrtcCompileProgram(prog, number_of_options, options);
+                nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
 
                 if (compile_result != NVRTC_SUCCESS)
                 {

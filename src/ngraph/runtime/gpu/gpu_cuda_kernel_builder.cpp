@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 
 namespace ngraph
@@ -24,47 +22,48 @@ namespace ngraph
     {
         namespace gpu
         {
-            static void CudaKernelBuilder::get_1_element_op(const std::string& name,
-                                            const std::string& data_type,
-                                            const std::string& op,
-                                            std::string& kernel)
+            void CudaKernelBuilder::get_1_element_op(const std::string& name,
+                                                     const std::string& data_type,
+                                                     const std::string& op,
+                                                     std::string& kernel)
             {
                 kernel = R"(  
 extern "C" __global__
-void cuda_)" + name + "(" + data_type +
-                            "* in, " + data_type + "* out, size_t n)\n" + R"({  
+void cuda_)" + name + "(" +
+                         data_type + "* in, " + data_type + "* out, size_t n)\n" + R"({  
 size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
 if(tid < n) 
 {
 out[tid] =)" + op + "(in[tid]);\n" +
-                            R"(}
+                         R"(}
 })";
                 return;
             }
 
-            static void CudaKernelBuilder::get_2_element_op(const std::string& name,
-                                            const std::string& data_type,
-                                            const std::string& op,
-                                            std::string& kernel)
+            void CudaKernelBuilder::get_2_element_op(const std::string& name,
+                                                     const std::string& data_type,
+                                                     const std::string& op,
+                                                     std::string& kernel)
             {
                 kernel = R"(  
 extern "C" __global__
 void )" + name + "(" + data_type +
-                            "* in1, " + data_type + "* in2, " + data_type + "* out, size_t n)\n" +
-                            R"({  
+                         "* in1, " + data_type + "* in2, " + data_type + "* out, size_t n)\n" +
+                         R"({  
 size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
 if(tid < n) 
 {
-out[tid] = in1[tid] )" + op + "in2[tid]\n" +
-                            R"(}
+out[tid] = in1[tid] )" + op +
+                         "in2[tid]\n" +
+                         R"(}
 })";
                 return;
             }
 
-            static void CudaKernelBuilder::get_n_element_op(const std::string& name,
-                                            const std::string& data_type,
-                                            const std::vector<std::string>& ops,
-                                            std::string& kernel)
+            void CudaKernelBuilder::get_n_element_op(const std::string& name,
+                                                     const std::string& data_type,
+                                                     const std::vector<std::string>& ops,
+                                                     std::string& kernel)
             {
                 kernel = "";
                 return;

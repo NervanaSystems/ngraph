@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>

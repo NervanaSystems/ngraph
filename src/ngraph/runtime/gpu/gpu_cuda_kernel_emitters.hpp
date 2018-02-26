@@ -25,13 +25,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            namespace cuda
-            {
-                namespace kernel
-                {
-                    void emit_abs(void* in, void* out, size_t count);
-                }
-            }
+            void emit_abs(void* in, void* out, size_t count);
         }
     }
 }

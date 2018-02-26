@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include <memory>
 #include <string>
 
@@ -27,7 +25,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            static CudaContextManager::CudaContextManager& instance()
+            CudaContextManager& CudaContextManager::instance()
             {
                 static CudaContextManager manager;
                 return manager;
