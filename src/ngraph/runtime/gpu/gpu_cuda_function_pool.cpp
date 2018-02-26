@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 
 namespace ngraph
 {
@@ -27,22 +27,26 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CudaFunctionPool
+            static CudaFunctionPool::CudaFunctionPool& instance()
             {
-            public:
-                static CudaFunctionPool& instance();
-                CudaFunctionPool(CudaFunctionPool const&) = delete;
-                CudaFunctionPool(CudaFunctionPool&&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
+                static CudaFunctionPool pool;
+                return pool;
+            }
 
-                void set(std::string& name, std::shared_ptr<CUfunction> function);
-                std::shared_ptr<CUfunction> get(std::string& name);
-            protected:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
-            };
+            void CudaFunctionPool::set(std::string& name, std::shared_ptr<CUfunction> function)
+            {
+                m_function_map.insert({name, function});
+            }
+
+            std::shared_ptr<CUfunction> CudaFunctionPool::get(std::string& name)
+            {
+                auto it = m_function_map.find(name);
+                if (it != m_function_map.end())
+                {
+                    return (*it).second;
+                }
+                return nullptr;
+            }
         }
     }
 }

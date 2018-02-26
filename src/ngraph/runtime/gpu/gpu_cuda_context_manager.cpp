@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
-#include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 
 namespace ngraph
 {
@@ -27,22 +27,19 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CudaFunctionPool
+            static CudaContextManager::CudaContextManager& instance()
             {
-            public:
-                static CudaFunctionPool& instance();
-                CudaFunctionPool(CudaFunctionPool const&) = delete;
-                CudaFunctionPool(CudaFunctionPool&&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
+                static CudaContextManager manager;
+                return manager;
+            }
 
-                void set(std::string& name, std::shared_ptr<CUfunction> function);
-                std::shared_ptr<CUfunction> get(std::string& name);
-            protected:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
-            };
+            CudaContextManager::CudaContextManager()
+            {
+                CUDA_SAFE_CALL(cuInit(0));
+                CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
+                CUDA_SAFE_CALL(cuCtxCreate(&m_context, 0, m_device));
+                m_context_ptr = std::make_shared<CUcontext>(m_context);
+            }
         }
     }
 }

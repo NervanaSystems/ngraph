@@ -30,12 +30,7 @@ namespace ngraph
             class CudaContextManager
             {
             public:
-                static CudaContextManager& instance()
-                {
-                    static CudaContextManager manager;
-                    return manager;
-                }
-
+                static CudaContextManager& instance();
                 CudaContextManager(CudaContextManager const&) = delete;
                 CudaContextManager(CudaContextManager&&) = delete;
                 CudaContextManager& operator=(CudaContextManager const&) = delete;
@@ -43,13 +38,7 @@ namespace ngraph
 
                 std::shared_ptr<CUcontext> get_context() { return m_context_ptr; }
             protected:
-                CudaContextManager()
-                {
-                    CUDA_SAFE_CALL(cuInit(0));
-                    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-                    CUDA_SAFE_CALL(cuCtxCreate(&m_context, 0, m_device));
-                    m_context_ptr = std::make_shared<CUcontext>(m_context);
-                }
+                CudaContextManager();
                 ~CudaContextManager() {}
                 CUdevice m_device;
                 CUcontext m_context;
