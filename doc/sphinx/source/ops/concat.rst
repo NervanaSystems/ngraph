@@ -1,13 +1,16 @@
-.. concatenate.rst:
+.. concat.rst:
 
-###########
-Concatenate
-###########
+######
+Concat
+######
+
+.. code-block:: cpp
+
+   Concat  // Concatenation operation 
+
 
 Description
 ===========
-
-
 
 Produces a single output tensor of the same element type and shape as ``arg``,
 where the value at each coordinate of ``output`` is the absoloute value of the
@@ -29,18 +32,18 @@ Attributes
 +-------------------------+----------------------------------+
 | Name                    | Notes                            |
 +=========================+==================================+
-| ``concatenation_axis``  | Less than the rank of the shape. |
+| ``concatenation_axis``  | Less than the rank of the shape  |
 +-------------------------+----------------------------------+
 
 Outputs
 -------
 
-+-----------------+-------------------------+---------------------------------------------------+
-| Name            | Element Type            | Shape                                             |
-+=================+=========================+===================================================+
-| ``output``      | Same as ``args`         | Same as ``arg`` on non-``concatenation_axis``     |
-|                 |                         | Sum of ``concatenation_axis`` lengths of ``args`` |
-+-----------------+-------------------------+---------------------------------------------------+
++-----------------+-------------------------+----------------------------------------------------+
+| Name            | Element Type            | Shape                                              |
++=================+=========================+====================================================+
+| ``output``      | Same as ``args``         | Same as ``arg`` on non-``concatenation_axis``     |
+|                 |                          | Sum of ``concatenation_axis`` lengths of ``args`` |
++-----------------+-------------------------+----------------------------------------------------+
 
 
 Mathematical Definition
@@ -72,5 +75,6 @@ We slice the backprop value into the backprops associated with the inputs.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Concatenate
+.. doxygenclass:: ngraph::op::Concat
+   :project: ngraph
    :members:

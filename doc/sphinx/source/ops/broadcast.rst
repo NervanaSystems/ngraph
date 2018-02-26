@@ -4,6 +4,11 @@
 Broadcast
 #########
 
+.. code-block:: cpp
+
+   Broadcast  // Operation that produces a tensor based on arg's axes
+
+
 Description
 ===========
 
@@ -38,7 +43,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``shape``.             |
+| ``output``      | Same as ``arg``         | Same as ``shape``              |
 +-----------------+-------------------------+--------------------------------+
 
 The shape of ``arg`` must match ``shape`` with elements in ``broadcast_axes`` removed.
@@ -87,4 +92,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Broadcast
+   :project: ngraph
    :members:

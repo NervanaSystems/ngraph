@@ -106,6 +106,18 @@ TEST(serialize, existing_models)
     }
 }
 
+TEST(serialize, default_value)
+{
+    json j = {{"test1", 1}, {"test2", 2}};
+
+    int x1 = j.at("test1").get<int>();
+    EXPECT_EQ(x1, 1);
+    int x2 = get_or_default<int>(j, "test2", 0);
+    EXPECT_EQ(x2, 2);
+    int x3 = get_or_default<int>(j, "test3", 3);
+    EXPECT_EQ(x3, 3);
+}
+
 TEST(benchmark, serialize)
 {
     stopwatch timer;
