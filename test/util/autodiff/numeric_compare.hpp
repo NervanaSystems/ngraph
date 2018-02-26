@@ -32,30 +32,30 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& m
 {
     T delta = static_cast<T>(0.001);
 
-    // Use CPU to compute numerical derivatives
-    auto cpu_manager = ngraph::runtime::Manager::get("CPU");
-    auto cpu_backend = cpu_manager->allocate_backend();
+    // Use INTERPRETER to compute numerical derivatives
+    auto interpreter_manager = ngraph::runtime::Manager::get("INTERPRETER");
+    auto interpreter_backend = interpreter_manager->allocate_backend();
     auto f = make_graph();
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_cpu;
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
     for (auto arg : args)
     {
-        auto arg_cpu = cpu_backend->make_primary_tensor_view(arg->get_tensor().get_element_type(),
-                                                             arg->get_shape());
+        auto interpreter_arg = interpreter_backend->make_primary_tensor_view(
+            arg->get_tensor().get_element_type(), arg->get_shape());
 
         // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
         if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
         {
-            copy_data(arg_cpu, read_vector<char>(arg));
+            copy_data(interpreter_arg, read_vector<char>(arg));
         }
         else
         {
-            copy_data(arg_cpu, read_vector<T>(arg));
+            copy_data(interpreter_arg, read_vector<T>(arg));
         }
-        args_cpu.push_back(arg_cpu);
+        interpreter_args.push_back(interpreter_arg);
     }
     auto results_num = ngraph::autodiff::numeric_derivative<T>(
-        cpu_manager, cpu_backend, f, args_cpu, delta, f->get_parameters());
+        interpreter_manager, interpreter_backend, f, interpreter_args, delta, f->get_parameters());
 
     // Use the backend being tested to compute symbolic derivatives
     auto g = make_graph();
@@ -63,16 +63,16 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& m
         ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
 
     // Cast to HostTensorView for comparision
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> results_sym_cpu;
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
     for (auto result : results_sym)
     {
-        auto result_cpu =
-            cpu_backend->make_primary_tensor_view(ngraph::element::from<T>(), result->get_shape());
-        copy_data(result_cpu, read_vector<T>(result));
-        results_sym_cpu.push_back(result_cpu);
+        auto interpreter_result = interpreter_backend->make_primary_tensor_view(
+            ngraph::element::from<T>(), result->get_shape());
+        copy_data(interpreter_result, read_vector<T>(result));
+        interpreter_results_sym.push_back(interpreter_result);
     }
 
-    return ngraph::test::all_close(results_num, results_sym_cpu, rtol, atol);
+    return ngraph::test::all_close(results_num, interpreter_results_sym, rtol, atol);
 }
 
 template <typename T>
@@ -85,7 +85,7 @@ bool autodiff_numeric_compare_selective(
     T atol,
     const std::vector<bool>& indep_param_mask)
 {
-    // Use CPU to compute numerical derivatives
+    // Use INTERPRETER to compute numerical derivatives
     std::vector<std::shared_ptr<ngraph::op::Parameter>> f_indep_params;
     auto f = make_graph();
 
@@ -100,28 +100,28 @@ bool autodiff_numeric_compare_selective(
         i++;
     }
 
-    auto cpu_manager = ngraph::runtime::Manager::get("CPU");
-    auto cpu_backend = cpu_manager->allocate_backend();
+    auto interpreter_manager = ngraph::runtime::Manager::get("INTERPRETER");
+    auto interpreter_backend = interpreter_manager->allocate_backend();
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_cpu;
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
     for (auto arg : args)
     {
-        auto arg_cpu = cpu_backend->make_primary_tensor_view(arg->get_tensor().get_element_type(),
-                                                             arg->get_shape());
+        auto interpreter_arg = interpreter_backend->make_primary_tensor_view(
+            arg->get_tensor().get_element_type(), arg->get_shape());
 
         // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
         if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
         {
-            copy_data(arg_cpu, read_vector<char>(arg));
+            copy_data(interpreter_arg, read_vector<char>(arg));
         }
         else
         {
-            copy_data(arg_cpu, read_vector<T>(arg));
+            copy_data(interpreter_arg, read_vector<T>(arg));
         }
-        args_cpu.push_back(arg_cpu);
+        interpreter_args.push_back(interpreter_arg);
     }
     auto results_num = ngraph::autodiff::numeric_derivative<T>(
-        cpu_manager, cpu_backend, f, args_cpu, .001f, f_indep_params);
+        interpreter_manager, interpreter_backend, f, interpreter_args, .001f, f_indep_params);
 
     // Use the backend being tested to compute symbolic derivatives
     std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
@@ -142,14 +142,14 @@ bool autodiff_numeric_compare_selective(
         ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
 
     // Cast to HostTensorView for comparision
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> results_sym_cpu;
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
     for (auto result : results_sym)
     {
-        auto result_cpu =
-            cpu_backend->make_primary_tensor_view(ngraph::element::from<T>(), result->get_shape());
-        copy_data(result_cpu, read_vector<T>(result));
-        results_sym_cpu.push_back(result_cpu);
+        auto interpreter_result = interpreter_backend->make_primary_tensor_view(
+            ngraph::element::from<T>(), result->get_shape());
+        copy_data(interpreter_result, read_vector<T>(result));
+        interpreter_results_sym.push_back(interpreter_result);
     }
 
-    return ngraph::test::all_close(results_num, results_sym_cpu, rtol, atol);
+    return ngraph::test::all_close(results_num, interpreter_results_sym, rtol, atol);
 }
