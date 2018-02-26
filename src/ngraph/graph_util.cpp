@@ -294,6 +294,8 @@ bool ngraph::is_equal_to_const_value(std::string const_value, std::shared_ptr<No
 }
 
 // Insert parameter node between src_node and dst_node by splitting the graph
+// This function is not meant to be used by backends directly. Typically, a hybrid backend should
+// only need to call ngraph::split_function_by_placement.
 void ngraph::insert_parameter_split_between(shared_ptr<Node> src_node,
                                             shared_ptr<Node> dst_node,
                                             shared_ptr<op::Parameter> p_node)
