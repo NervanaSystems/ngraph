@@ -137,11 +137,12 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     return conv_index;
 }
 
-size_t MKLDNNEmitter::build_elementwise_add(const mkldnn::memory::desc& input0_data_desc,
-                                            const mkldnn::memory::desc& input1_data_desc,
-                                            const mkldnn::memory::desc& result_desc,
-                                            const std::vector<float>& scale_vector,
-                                            const std::vector<mkldnn::memory::primitive_desc>& inputs_pd)
+size_t MKLDNNEmitter::build_elementwise_add(
+    const mkldnn::memory::desc& input0_data_desc,
+    const mkldnn::memory::desc& input1_data_desc,
+    const mkldnn::memory::desc& result_desc,
+    const std::vector<float>& scale_vector,
+    const std::vector<mkldnn::memory::primitive_desc>& inputs_pd)
 
 {
     std::vector<mkldnn::memory::primitive::at> inputs_primitive;
@@ -154,9 +155,11 @@ size_t MKLDNNEmitter::build_elementwise_add(const mkldnn::memory::desc& input0_d
     inputs_primitive.push_back(*mkldnn_primitives[input1_data_index]);
 
     // elementwise sum primtive descriptor
-    mkldnn::sum::primitive_desc sum_pd = mkldnn::sum::primitive_desc(result_desc, scale_vector, inputs_pd);
+    mkldnn::sum::primitive_desc sum_pd =
+        mkldnn::sum::primitive_desc(result_desc, scale_vector, inputs_pd);
     // sum primitive
-    size_t add_index = insert_primitive(new mkldnn::sum(sum_pd, inputs_primitive, *mkldnn_primitives[result_index]));
+    size_t add_index = insert_primitive(
+        new mkldnn::sum(sum_pd, inputs_primitive, *mkldnn_primitives[result_index]));
 
     primitive_deps[add_index] = {input1_data_index, input0_data_index, result_index};
     return add_index;

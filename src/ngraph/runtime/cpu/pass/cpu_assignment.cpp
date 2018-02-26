@@ -43,7 +43,6 @@ namespace ngraph
         {
             namespace pass
             {
-
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
                 {
