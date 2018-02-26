@@ -525,9 +525,9 @@ namespace ngraph
                         {
                             // TODO (jbobba): Check with MKLDNN folks if this is necessary
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_layout));
-                            prim_input_formats.push_back(memory::format::nchw);
-                            prim_output_formats.push_back(memory::format::nchw);
+                                               to_string(input_layout) + e.message);
+                            // prim_input_formats.push_back(memory::format::nchw);
+                            // prim_output_formats.push_back(memory::format::nchw);
                         }
 
                         node =
@@ -612,9 +612,9 @@ namespace ngraph
                         {
                             // TODO (jbobba): Check with MKLDNN folks if this is necessary
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_layout));
-                            prim_input_formats.push_back(memory::format::nchw);
-                            prim_output_formats.push_back(memory::format::nchw);
+                                               to_string(input_layout) + e.message);
+                            // prim_input_formats.push_back(memory::format::nchw);
+                            // prim_output_formats.push_back(memory::format::nchw);
                         }
 
                         node =
@@ -651,7 +651,7 @@ namespace ngraph
                     {
                         auto input_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        
+
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         prim_input_formats.push_back(input_layout);
