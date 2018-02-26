@@ -52,18 +52,17 @@ namespace ngraph
                         d_ptr_out = (CUdeviceptr)out;
 
                         void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
-                        CUDA_SAFE_CALL(
-                            cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
-                                           count,
-                                           1,
-                                           1, // grid dim
-                                           1,
-                                           1,
-                                           1, // block dim
-                                           0,
-                                           NULL, // shared mem and stream
-                                           args_list,
-                                           0));             // arguments
+                        CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+                                                      count,
+                                                      1,
+                                                      1, // grid dim
+                                                      1,
+                                                      1,
+                                                      1, // block dim
+                                                      0,
+                                                      NULL, // shared mem and stream
+                                                      args_list,
+                                                      0));  // arguments
                         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
                     }
                 }
