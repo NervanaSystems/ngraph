@@ -30,7 +30,7 @@ namespace ngraph
             class CudaFunctionPool
             {
             public:
-                static CudaFunctionPool& Instance()
+                static CudaFunctionPool& instance()
                 {
                     static CudaFunctionPool pool;
                     return pool;
@@ -41,12 +41,12 @@ namespace ngraph
                 CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
                 CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
 
-                void Set(std::string& name, std::shared_ptr<CUfunction> function)
+                void set(std::string& name, std::shared_ptr<CUfunction> function)
                 {
                     m_function_map.insert({name, function});
                 }
 
-                std::shared_ptr<CUfunction> Get(std::string& name)
+                std::shared_ptr<CUfunction> get(std::string& name)
                 {
                     auto it = m_function_map.find(name);
                     if (it != m_function_map.end())

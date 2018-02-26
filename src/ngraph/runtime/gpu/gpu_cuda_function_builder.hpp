@@ -30,7 +30,7 @@ namespace ngraph
             class CudaFunctionBuilder
             {
             public:
-                static std::shared_ptr<CUfunction> Get(const std::string& name,
+                static std::shared_ptr<CUfunction> get(const std::string& name,
                                                        const std::string& kernel,
                                                        int number_of_options,
                                                        const char** options)

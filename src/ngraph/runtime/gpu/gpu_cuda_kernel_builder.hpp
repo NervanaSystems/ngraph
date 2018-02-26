@@ -27,7 +27,7 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-                static void Get_1_element_op(const std::string& name,
+                static void get_1_element_op(const std::string& name,
                                              const std::string& data_type,
                                              const std::string& op,
                                              std::string& kernel)
@@ -45,7 +45,7 @@ out[tid] =)" + op + "(in[tid]);\n" +
                     return;
                 }
 
-                static void Get_2_element_op(const std::string& name,
+                static void get_2_element_op(const std::string& name,
                                              const std::string& data_type,
                                              const std::string& op,
                                              std::string& kernel)
@@ -64,7 +64,7 @@ out[tid] = in1[tid] )" + op + "in2[tid]\n" +
                     return;
                 }
 
-                static void Get_n_element_op(const std::string& name,
+                static void get_n_element_op(const std::string& name,
                                              const std::string& data_type,
                                              const std::vector<std::string>& ops,
                                              std::string& kernel)
