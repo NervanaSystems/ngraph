@@ -554,6 +554,53 @@ TEST(${BACKEND_NAME}, divide)
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, divide_adjoint_stability)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+
+        auto Y_out = f->get_output_op(0);
+        auto Xs = f->get_parameters();
+        auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
+        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
+            return Y_out->backprop_node(X, C);
+        });
+        std::vector<std::shared_ptr<op::Parameter>> params(Xs);
+        params.push_back(C);
+
+        auto bf = std::make_shared<Function>(dYdXs, params);
+        auto external = manager->compile(bf);
+
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{0, 0, 1, 1});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{2, 2, 2, 2});
+    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(c, vector<float>{1, 1, 1, 1});
+
+    auto resulta = backend->make_primary_tensor_view(element::f32, shape);
+    auto resultb = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a, b, c}, {resulta, resultb});
+    EXPECT_EQ((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta));
+    EXPECT_EQ((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb));
+}
+
 TEST(${BACKEND_NAME}, divide_by_zero_float32)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
@@ -4548,6 +4595,50 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{1, 1, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{2, 0};
+    Shape padding_above{1, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{1, 1, 7, 5};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1},
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    auto min = std::numeric_limits<float>::lowest();
+    EXPECT_EQ((test::NDArray<float, 4>({{{{min, min, min, min, min},
+                                          {1, 2, 2, 2, 1},
+                                          {3, 3, 2, 2, 1},
+                                          {3, 3, 2, 1, 1},
+                                          {2, 1, 2, 2, 2},
+                                          {2, 2, 2, 2, 2},
+                                          {2, 2, 1, 0, 0}}}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
@@ -6008,6 +6099,42 @@ TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, convolution_layout)
+{
+    Shape shape_a{1, 16, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{32, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 32, 2, 2};
+    auto conv1 = make_shared<op::Convolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+    auto f = make_shared<Function>(conv1, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    vector<float> input(64, 1.0f);
+    copy_data(a, input);
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    vector<float> weights(512, 1.0f);
+    copy_data(b, weights);
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    vector<float> expected_result(128, 16.0f);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
@@ -6302,7 +6429,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     Shape shape_r{1, 1, 4, 4};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6336,7 +6463,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     Shape shape_r{2, 1, 4, 4};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6377,7 +6504,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6416,7 +6543,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6455,7 +6582,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     Shape shape_r{2, 1, 5, 5};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6498,7 +6625,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6537,7 +6664,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     Shape shape_r{2, 1, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
-            A, window_shape, window_movement_strides, padding_below, padding_above),
+            A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
