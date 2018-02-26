@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class Cuda_kernel_builder
+            class CudaKernelBuilder
             {
             public:
                 static void Get_1_element_op(const std::string& name,
