@@ -387,6 +387,8 @@ namespace ngraph
                 writer << "{\n";
                 writer.indent++;
 
+                writer << "memset(&(" << out[0].get_name() << ")[0], 0xff, " << shape_size(out[0].get_shape()) << " * 4);\n";
+
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(" << args[0].get_shape().at(0) * 2 << ");\n";
                 writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">vdiff_weights(" << args[0].get_shape().at(0) * 2 << ", 0.0f);\n";
@@ -401,9 +403,12 @@ namespace ngraph
                 writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
                     << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
+                
+                writer << "std::cout << \"bn_weights = \"  << ngraph::vector_to_string(bn_weights) << std::endl;\n";
+
                 // get the eps value from the bn node
                 writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
-
+                std::cout << " eps = " << batchnorm->get_eps_value() << std::endl;
                 // Bind to CPU engine
                 writer << "using namespace mkldnn; \n";
                 writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
@@ -439,6 +444,10 @@ namespace ngraph
                     << ");\n";
                 writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
                 
+                writer << " std::cout << \"input[1] = \" << " << args[2].get_name() << "[1] << '\\n';";
+                writer << " std::cout << \"mean[1] = \" << " << args[3].get_name() << "[1] << '\\n';";
+                writer << " std::cout << \"variance[1] = \" << " << args[4].get_name() << "[1] << '\\n';";
+                writer << " std::cout << \"delta[1] = \" << " << args[5].get_name() << "[1] << '\\n';";
                 
                 //create fprop batchnorm descriptor
                 writer << "batch_normalization_forward::desc bn_fprop_desc = "
@@ -466,6 +475,8 @@ namespace ngraph
                 //create stream and execute
                 writer << "stream s = stream(stream::kind::eager);\n"
                     << "s.submit({bn_bprop}).wait();\n";
+
+                writer << "std::cout << \"vdiff_weights = \"  << ngraph::vector_to_string(vdiff_weights) << std::endl;\n";
 
                 writer << "memcpy(" << out[1].get_name() << ",&vdiff_weights[0],"
                     << args[1].get_size() * args[0].get_element_type().size() << ");\n";

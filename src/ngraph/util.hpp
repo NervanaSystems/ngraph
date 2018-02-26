@@ -30,6 +30,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <iostream>
+
 namespace ngraph
 {
     class Node;
@@ -257,6 +259,22 @@ namespace ngraph
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+
+
+    template <typename T>
+    void print_vector(const char* name, T* array, size_t n)
+    {
+        std::cout << "node = " << name << std::endl;
+        std::cout << "[ " ;
+        for (size_t i = 0; i < n; i++)
+        {
+            std::cout << array[i] << ", ";
+        }
+        std::cout << "]\n ";
+    }
+
+    template void print_vector<float>(const char* name, float* array, size_t n);
+    template void print_vector<double>(const char* name, double* array, size_t n);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
