@@ -161,6 +161,6 @@ size_t MKLDNNEmitter::build_elementwise_add(
     size_t add_index = insert_primitive(
         new mkldnn::sum(sum_pd, inputs_primitive, *mkldnn_primitives[result_index]));
 
-    primitive_deps[add_index] = {input1_data_index, input0_data_index, result_index};
+    primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
     return add_index;
 }
