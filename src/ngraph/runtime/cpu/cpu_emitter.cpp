@@ -2933,31 +2933,21 @@ namespace ngraph
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
 
-                writer << "{\n";
-                writer.indent++;
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                writer << "memory::desc input_desc = memory::desc({" << join(args[0].get_shape())
-                       << "}, " << et << ", "
-                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                       << ");\n";
-                writer << "memory::desc output_desc = memory::desc({" << join(out[0].get_shape())
-                       << "}, " << et << ", "
-                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(output_format)
-                       << ");\n";
-                writer << "memory input = memory({input_desc, cpu_engine}, " << args[0].get_name()
-                       << ");\n";
-                writer << "memory output = memory({output_desc, cpu_engine}, " << out[0].get_name()
-                       << ");\n";
-                writer << "reorder prim = reorder(input, output);\n";
+                size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
 
-                writer << "stream s = stream(stream::kind::eager);\n"
-                       << "s.submit({prim}).wait();\n";
-                writer.indent--;
-                writer << "}\n";
+                auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(reorder_index) << ");\n";
             }
 
             template <>

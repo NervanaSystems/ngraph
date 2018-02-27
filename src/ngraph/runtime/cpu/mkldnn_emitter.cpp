@@ -251,6 +251,19 @@ size_t MKLDNNEmitter::build_pooling_forward(mkldnn::algorithm pooling_algorithm,
     return primitive_index;
 }
 
+size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
+                                    const mkldnn::memory::desc& result_desc)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    size_t primitive_index = insert_primitive(
+        new mkldnn::reorder(*mkldnn_primitives[input_index], *mkldnn_primitives[result_index]));
+
+    primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}
+
 size_t MKLDNNEmitter::build_elementwise_add(
     const mkldnn::memory::desc& input0_data_desc,
     const mkldnn::memory::desc& input1_data_desc,
