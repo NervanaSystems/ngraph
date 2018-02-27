@@ -6244,7 +6244,7 @@ TEST(${BACKEND_NAME}, convolution_outlining)
 
 TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
-    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME");
+    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
