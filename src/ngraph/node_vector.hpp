@@ -23,8 +23,6 @@ namespace ngraph
 {
     class Node;
 
-#ifdef NO_GLOBAL_TYPE_ALIASES
-
     /// \brief Zero or more nodes.
     class NodeVector : public std::vector<std::shared_ptr<Node>>
     {
@@ -46,10 +44,4 @@ namespace ngraph
 
         NodeVector() {}
     };
-
-#else
-    // Deprecated definitions
-    using NodeVector = std::vector<std::shared_ptr<Node>>;
-    using Nodes = NodeVector;
-#endif
 }
