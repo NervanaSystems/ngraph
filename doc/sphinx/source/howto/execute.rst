@@ -4,33 +4,29 @@
 Executing a Computation
 #######################
 
-In this section, we manually perform the steps that would normally be
-performed by a framework bridge to execute a computation:
+This section explains how to manually perform the steps that would normally be 
+performed by a framework :term:`bridge` to execute a computation. In order to 
+successfully run a computation, the entity (framework or user) must be able to 
+do all of these things:
 
-- Define the computation
-- Specify the backend that will execute the computation
-- Compile the computation
-- Allocate backend storage for the inputs and outputs
-- Initialize the inputs
-- Invoke the computation
-- Access the outputs
+.. contents:: 
+
+.. _define_cmp:
 
 Defining a Computation
 ======================
 
-A computation is described as a function whose body is a dataflow
-graph.  In normal operation, a *framework bridge* would
-programmatically construct the graph from the framework's
-representation of the computation. Here we will do all the bridge
-steps manually. Unfortunately, things that make by hand graph
-construction simpler tend to make automatic construction more
-difficult, and vice versa.  Since nGraph is targeted towards automatic
-construction, manual construction is a little tedious.
+To a framework, a computation is simply a transformation of inputs to outputs.
+To a user, a computation is a function whose body is a dataflow graph. A 
+*framework bridge* would normally programmatically construct the graph from 
+the framework's representation of the computation. Since nGraph is targeted 
+toward automatic construction, manual construction can be somewhat tedious. 
+Here we deconstruct how this happens. 
 
-Since most of the public portion of the nGraph API is in the ``ngraph``
-namespace; we will omit the namespace. Use of namespaces other than
-``std`` will be namespaces in ``ngraph``. For example, the ``op::Add``
-refers to ``ngraph::op::Add``.
+Most of the public portion of the nGraph API is in the ``ngraph`` namespace,
+so we will omit the namespace. Use of namespaces other than ``std`` will be 
+namespaces in ``ngraph``. For example, the ``op::Add`` refers to 
+``ngraph::op::Add``.
 
 A computation's graph is constructed from ops; each a member of a
 subclass of ``op::Op``, which, in turn, is a subclass of ``Node``. Not
@@ -82,3 +78,64 @@ case, they match, and the shape of the unique output of ``t0`` will be
 a 32-bit float with shape ``(2, 3)``. Similarly, ``op::Multiply``
 checks that its inputs match and sets the element type and shape of
 its unique output.
+
+
+.. _specify_bkd:
+
+Specify the backend upon which to run the computation
+=====================================================
+
+.. TODO
+ 
+Describe how to specify nGraph++ backends.
+
+
+.. _compile_cmp:
+
+Compile the computation 
+=======================
+
+.. TODO
+
+Describe how to compile a computation with nGraph++ ops/libs/etc. How to avoid
+unnecessary compiler actions that might otherwise happen by default. 
+
+
+.. _allocate_bkd_storage:
+
+Allocate backend storage for the inputs and outputs
+===================================================
+
+.. TODO
+
+Explain how transformer(s) do(es) neat things.
+
+
+.. _initialize_inputs:
+
+Initialize the inputs
+=====================
+
+.. TODO
+
+Action that initializes inputs? 
+
+
+.. _invoke_cmp:
+
+Invoke the computation
+======================
+
+.. TODO
+
+.. _access_output
+
+
+
+Access the outputs
+==================
+
+.. TODO
+
+
+
