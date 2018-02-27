@@ -255,24 +255,22 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
-    //TODO if this doesn't work just make it float instead of a template
-    template <typename T>
-    void check_for_nans(const char* name, T* array, size_t n)
+    template <typename T, bool (*func)(T)>
+    void check_fp_values(const char* name, T* array, const size_t n)
     {
         for (size_t i = 0; i < n; i++)
         {
-            if (std::isnan(array[i]))
+            if (func(array[i]))
             {
                 throw std::runtime_error(std::string("NaN discovered '") + name + "'");
-            }
-            else if (std::isinf(array[i]))
-            {
-                throw std::runtime_error(std::string("INF discovered '") + name + "'");
             }
         }
     }
 
-    template void check_for_nans<float>(const char* name, float* array, size_t n);
+    template void check_fp_values<float, std::isinf>(const char* name, float* array, size_t n);
+    template void check_fp_values<float, std::isnan>(const char* name, float* array, size_t n);
+    template void check_fp_values<double, std::isinf>(const char* name, double* array, size_t n);
+    template void check_fp_values<double, std::isnan>(const char* name, double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
