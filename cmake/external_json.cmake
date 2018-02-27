@@ -54,4 +54,3 @@ get_filename_component(
     "${EXTERNAL_PROJECTS_ROOT}/ext_json-prefix/src/ext_json/include"
     ABSOLUTE)
 set(JSON_INCLUDE_DIR "${JSON_INCLUDE_DIR}" PARENT_SCOPE)
-message("**** JSON AT ${JSON_INCLUDE_DIR}")
