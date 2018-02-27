@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 

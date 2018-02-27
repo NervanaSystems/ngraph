@@ -20,7 +20,6 @@ set (SRC
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
     builder/xla_tuple.cpp
-    common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp

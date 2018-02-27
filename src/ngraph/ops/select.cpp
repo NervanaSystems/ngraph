@@ -29,7 +29,7 @@ using namespace ngraph;
 op::Select::Select(const std::shared_ptr<Node>& arg0,
                    const std::shared_ptr<Node>& arg1,
                    const std::shared_ptr<Node>& arg2)
-    : RequiresTensorViewArgs("Select", Nodes{arg0, arg1, arg2})
+    : RequiresTensorViewArgs("Select", NodeVector{arg0, arg1, arg2})
 {
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);

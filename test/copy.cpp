@@ -31,7 +31,7 @@ bool check_unary()
 {
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0);
     auto new_node = node->copy_with_new_args(new_args);
@@ -45,8 +45,8 @@ bool check_binary()
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0, arg1);
     auto new_node = node->copy_with_new_args(new_args);
@@ -83,7 +83,7 @@ TEST(copy, broadcast)
 {
     Shape shape1{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape1);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape1)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape1)};
 
     Shape shape{4, 1, 3};
     AxisSet axes{0, 2};
@@ -109,10 +109,10 @@ TEST(copy, concat)
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, shape)};
     size_t axis = 0;
-    auto node = make_shared<op::Concat>(Nodes{arg0, arg1}, axis);
+    auto node = make_shared<op::Concat>(NodeVector{arg0, arg1}, axis);
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::Concat>(new_node);
     ASSERT_NE(node_cast, nullptr);
@@ -128,11 +128,11 @@ TEST(copy, constant)
     vector<float> c{2.4f};
     auto& et = element::f32;
     auto node = op::Constant::create(et, shape, c);
-    auto new_node = node->copy_with_new_args(Nodes{});
+    auto new_node = node->copy_with_new_args(NodeVector{});
     auto node_cast = dynamic_pointer_cast<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(Nodes{} == new_node->get_input_ops());
+    ASSERT_TRUE(NodeVector{} == new_node->get_input_ops());
     ASSERT_TRUE(node_cast->get_vector<float>() == c);
     ASSERT_TRUE(node_cast->get_shape() == shape);
     ASSERT_TRUE(node_cast->get_element_type() == et);
@@ -143,7 +143,7 @@ TEST(copy, convert)
     Shape shape;
     auto& et = element::f64;
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Convert>(arg0, et);
     auto new_node = node->copy_with_new_args(new_args);
@@ -196,16 +196,16 @@ TEST(copy, FunctionCall)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
     auto arg2 = make_shared<op::Parameter>(element::f32, shape);
-    auto node = make_shared<op::FunctionCall>(f, Nodes{arg0, arg1, arg2});
+    auto node = make_shared<op::FunctionCall>(f, NodeVector{arg0, arg1, arg2});
 
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, shape)};
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::FunctionCall>(new_node);
     ASSERT_NE(node_cast, nullptr);
@@ -288,15 +288,14 @@ TEST(copy, reduce)
     Shape scalar_shape{};
     auto A = make_shared<op::Parameter>(element::f32, scalar_shape);
     auto B = make_shared<op::Parameter>(element::f32, scalar_shape);
-    auto f = make_shared<Function>(A + B, op::Parameters{A, B});
+    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
 
     Shape shape{4, 3};
     AxisSet axes{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg_init = make_shared<op::Parameter>(element::f32, scalar_shape);
-    std::vector<std::shared_ptr<Node>> new_args{
-        make_shared<op::Parameter>(element::f32, shape),
-        make_shared<op::Parameter>(element::f32, scalar_shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, scalar_shape)};
 
     auto node = make_shared<op::Reduce>(arg0, arg_init, f, axes);
     auto new_node = node->copy_with_new_args(new_args);
@@ -321,7 +320,7 @@ TEST(copy, reshape)
     Shape shape_out{6, 4};
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape_in);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape_in)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Reshape>(arg0, axes, shape_out);
     auto new_node = node->copy_with_new_args(new_args);
@@ -340,9 +339,9 @@ TEST(copy, select)
     auto arg0 = make_shared<op::Parameter>(element::boolean, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
     auto arg2 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::boolean, shape),
-                                                make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::boolean, shape),
+                        make_shared<op::Parameter>(element::f32, shape),
+                        make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Select>(arg0, arg1, arg2);
     auto new_node = node->copy_with_new_args(new_args);
@@ -376,7 +375,7 @@ TEST(copy, slice)
     Strides strides{1, 1, 1};
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape_in);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape_in)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Slice>(arg0, lower, upper, strides);
     auto new_node = node->copy_with_new_args(new_args);
@@ -400,7 +399,7 @@ TEST(copy, sum)
     Shape shape{4, 3};
     AxisSet axes{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Sum>(arg0, axes);
     auto new_node = node->copy_with_new_args(new_args);
