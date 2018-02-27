@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/json.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "nlohmann/json.hpp"
 
 namespace ngraph
 {

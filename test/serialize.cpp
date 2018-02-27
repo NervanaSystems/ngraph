@@ -20,10 +20,10 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;

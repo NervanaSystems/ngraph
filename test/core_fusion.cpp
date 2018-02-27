@@ -24,7 +24,6 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/relu.hpp"
@@ -36,6 +35,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
