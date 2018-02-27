@@ -21,7 +21,7 @@
 #include <numeric>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape.hpp"
 

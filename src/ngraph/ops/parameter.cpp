@@ -27,7 +27,7 @@ op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape&
     add_output(element_type, shape);
 }
 
-shared_ptr<Node> op::Parameter::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
+shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 0)
     {

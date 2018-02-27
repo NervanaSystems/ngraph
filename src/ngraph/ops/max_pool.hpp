@@ -72,8 +72,8 @@ namespace ngraph
             /// \param window_shape The window shape.
             MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {
@@ -115,8 +115,8 @@ namespace ngraph
                             const Shape& padding_above,
                             const std::shared_ptr<op::MaxPool>& forward_op = nullptr);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 2)
                 {

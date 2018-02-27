@@ -19,7 +19,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/common.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
