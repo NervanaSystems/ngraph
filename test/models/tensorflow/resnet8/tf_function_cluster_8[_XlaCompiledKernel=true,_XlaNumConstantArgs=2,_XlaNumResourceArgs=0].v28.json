@@ -1,315 +1,299 @@
 [{
-   "name" : "Function_27",
-   "ops" : [
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1485",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1485_0"],
-         "shape" : [ 2, 32, 32, 16 ]
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1484",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1484_0"],
-         "shape" : [ 2, 32, 32, 16 ]
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1483",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1483_0"],
-         "shape" : [ 2, 32, 32, 16 ]
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1482",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1482_0"],
-         "shape" : [ 1, 1, 16, 16 ]
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1481",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1481_0"],
-         "shape" : [ 3, 3, 16, 16 ]
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Parameter_1480",
-         "op" : "Parameter",
-         "outputs" : ["Parameter_1480_0"],
-         "shape" : []
-       },
-       {
-         "element_type" : "float",
-         "inputs" : [],
-         "name" : "Constant_1486",
-         "op" : "Constant",
-         "outputs" : ["Constant_1486_0"],
-         "shape" : [],
-         "value" : ["0"]
-       },
-       {
-         "input_order" : [ 0, 3, 1, 2 ],
-         "inputs" : ["Parameter_1485"],
-         "name" : "Reshape_1495",
-         "op" : "Reshape",
-         "output_shape" : [ 2, 16, 32, 32 ],
-         "outputs" : ["Reshape_1495_0"]
-       },
-       {
-         "input_order" : [ 3, 0, 1, 2 ],
-         "inputs" : ["Parameter_1485"],
-         "name" : "Reshape_1504",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 2, 32, 32 ],
-         "outputs" : ["Reshape_1504_0"]
-       },
-       {
-         "input_order" : [ 3, 0, 1, 2 ],
-         "inputs" : ["Parameter_1484"],
-         "name" : "Reshape_1503",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 2, 32, 32 ],
-         "outputs" : ["Reshape_1503_0"]
-       },
-       {
-         "input_order" : [ 3, 0, 1, 2 ],
-         "inputs" : ["Parameter_1484"],
-         "name" : "Reshape_1512",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 2, 32, 32 ],
-         "outputs" : ["Reshape_1512_0"]
-       },
-       {
-         "input_order" : [ 3, 0, 1, 2 ],
-         "inputs" : ["Parameter_1483"],
-         "name" : "Reshape_1513",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 2, 32, 32 ],
-         "outputs" : ["Reshape_1513_0"]
-       },
-       {
-         "input_order" : [ 0, 3, 1, 2 ],
-         "inputs" : ["Parameter_1483"],
-         "name" : "Reshape_1490",
-         "op" : "Reshape",
-         "output_shape" : [ 2, 16, 32, 32 ],
-         "outputs" : ["Reshape_1490_0"]
-       },
-       {
-         "inputs" : ["Parameter_1482"],
-         "name" : "Reverse_1489",
-         "op" : "Reverse",
-         "outputs" : ["Reverse_1489_0"],
-         "reversed_axes" : [ 0, 1 ]
-       },
-       {
-         "inputs" : ["Parameter_1481"],
-         "name" : "Reverse_1494",
-         "op" : "Reverse",
-         "outputs" : ["Reverse_1494_0"],
-         "reversed_axes" : [ 0, 1 ]
-       },
-       {
-         "input_order" : [],
-         "inputs" : ["Parameter_1480"],
-         "name" : "Reshape_1509",
-         "op" : "Reshape",
-         "output_shape" : [ 1, 1 ],
-         "outputs" : ["Reshape_1509_0"]
-       },
-       {
-         "axes" : [ 0, 1, 2, 3 ],
-         "inputs" : ["Parameter_1480"],
-         "name" : "Broadcast_1501",
-         "op" : "Broadcast",
-         "outputs" : ["Broadcast_1501_0"],
-         "shape" : [ 3, 3, 16, 16 ]
-       },
-       {
-         "axes" : [ 0, 1, 2, 3 ],
-         "inputs" : ["Constant_1486"],
-         "name" : "Broadcast_1487",
-         "op" : "Broadcast",
-         "outputs" : ["Broadcast_1487_0"],
-         "shape" : [ 2, 32, 32, 16 ]
-       },
-       {
-         "data_dilation_strides" : [ 1, 1 ],
-         "inputs" : [ "Reshape_1503", "Reshape_1504" ],
-         "name" : "Convolution_1505",
-         "op" : "Convolution",
-         "outputs" : ["Convolution_1505_0"],
-         "padding_above" : [ 1, 1 ],
-         "padding_below" : [ 1, 1 ],
-         "window_dilation_strides" : [ 1, 1 ],
-         "window_movement_strides" : [ 1, 1 ]
-       },
-       {
-         "data_dilation_strides" : [ 1, 1 ],
-         "inputs" : [ "Reshape_1512", "Reshape_1513" ],
-         "name" : "Convolution_1514",
-         "op" : "Convolution",
-         "outputs" : ["Convolution_1514_0"],
-         "padding_above" : [ 0, 0 ],
-         "padding_below" : [ 0, 0 ],
-         "window_dilation_strides" : [ 1, 1 ],
-         "window_movement_strides" : [ 1, 1 ]
-       },
-       {
-         "input_order" : [ 2, 3, 0, 1 ],
-         "inputs" : ["Reverse_1489"],
-         "name" : "Reshape_1491",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 16, 1, 1 ],
-         "outputs" : ["Reshape_1491_0"]
-       },
-       {
-         "input_order" : [ 2, 3, 0, 1 ],
-         "inputs" : ["Reverse_1494"],
-         "name" : "Reshape_1496",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 16, 3, 3 ],
-         "outputs" : ["Reshape_1496_0"]
-       },
-       {
-         "axes" : [ 2, 3 ],
-         "inputs" : ["Reshape_1509"],
-         "name" : "Broadcast_1510",
-         "op" : "Broadcast",
-         "outputs" : ["Broadcast_1510_0"],
-         "shape" : [ 1, 1, 16, 16 ]
-       },
-       {
-         "inputs" : [ "Parameter_1481", "Broadcast_1501" ],
-         "name" : "Multiply_1502",
-         "op" : "Multiply",
-         "outputs" : ["Multiply_1502_0"]
-       },
-       {
-         "inputs" : [ "Parameter_1484", "Broadcast_1487" ],
-         "name" : "Greater_1488",
-         "op" : "Greater",
-         "outputs" : ["Greater_1488_0"]
-       },
-       {
-         "input_order" : [ 1, 2, 3, 0 ],
-         "inputs" : ["Convolution_1505"],
-         "name" : "Reshape_1506",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 3, 3, 16 ],
-         "outputs" : ["Reshape_1506_0"]
-       },
-       {
-         "input_order" : [ 1, 2, 3, 0 ],
-         "inputs" : ["Convolution_1514"],
-         "name" : "Reshape_1515",
-         "op" : "Reshape",
-         "output_shape" : [ 16, 1, 1, 16 ],
-         "outputs" : ["Reshape_1515_0"]
-       },
-       {
-         "data_dilation_strides" : [ 1, 1 ],
-         "inputs" : [ "Reshape_1490", "Reshape_1491" ],
-         "name" : "Convolution_1492",
-         "op" : "Convolution",
-         "outputs" : ["Convolution_1492_0"],
-         "padding_above" : [ 0, 0 ],
-         "padding_below" : [ 0, 0 ],
-         "window_dilation_strides" : [ 1, 1 ],
-         "window_movement_strides" : [ 1, 1 ]
-       },
-       {
-         "data_dilation_strides" : [ 1, 1 ],
-         "inputs" : [ "Reshape_1495", "Reshape_1496" ],
-         "name" : "Convolution_1497",
-         "op" : "Convolution",
-         "outputs" : ["Convolution_1497_0"],
-         "padding_above" : [ 1, 1 ],
-         "padding_below" : [ 1, 1 ],
-         "window_dilation_strides" : [ 1, 1 ],
-         "window_movement_strides" : [ 1, 1 ]
-       },
-       {
-         "inputs" : [ "Parameter_1482", "Broadcast_1510" ],
-         "name" : "Multiply_1511",
-         "op" : "Multiply",
-         "outputs" : ["Multiply_1511_0"]
-       },
-       {
-         "input_order" : [ 1, 2, 3, 0 ],
-         "inputs" : ["Reshape_1506"],
-         "name" : "Reshape_1507",
-         "op" : "Reshape",
-         "output_shape" : [ 3, 3, 16, 16 ],
-         "outputs" : ["Reshape_1507_0"]
-       },
-       {
-         "input_order" : [ 1, 2, 3, 0 ],
-         "inputs" : ["Reshape_1515"],
-         "name" : "Reshape_1516",
-         "op" : "Reshape",
-         "output_shape" : [ 1, 1, 16, 16 ],
-         "outputs" : ["Reshape_1516_0"]
-       },
-       {
-         "input_order" : [ 0, 2, 3, 1 ],
-         "inputs" : ["Convolution_1492"],
-         "name" : "Reshape_1493",
-         "op" : "Reshape",
-         "output_shape" : [ 2, 32, 32, 16 ],
-         "outputs" : ["Reshape_1493_0"]
-       },
-       {
-         "input_order" : [ 0, 2, 3, 1 ],
-         "inputs" : ["Convolution_1497"],
-         "name" : "Reshape_1498",
-         "op" : "Reshape",
-         "output_shape" : [ 2, 32, 32, 16 ],
-         "outputs" : ["Reshape_1498_0"]
-       },
-       {
-         "inputs" : [ "Multiply_1502", "Reshape_1507" ],
-         "name" : "Add_1508",
-         "op" : "Add",
-         "outputs" : ["Add_1508_0"]
-       },
-       {
-         "inputs" : [ "Multiply_1511", "Reshape_1516" ],
-         "name" : "Add_1517",
-         "op" : "Add",
-         "outputs" : ["Add_1517_0"]
-       },
-       {
-         "inputs" : [ "Reshape_1493", "Reshape_1498" ],
-         "name" : "Add_1499",
-         "op" : "Add",
-         "outputs" : ["Add_1499_0"]
-       },
-       {
-         "inputs" : [ "Greater_1488", "Add_1499", "Broadcast_1487" ],
-         "name" : "Select_1500",
-         "op" : "Select",
-         "outputs" : ["Select_1500_0"]
-       }
-   ],
-   "parameters" : [
-       "Parameter_1480",
-       "Parameter_1481",
-       "Parameter_1482",
-       "Parameter_1483",
-       "Parameter_1484",
-       "Parameter_1485"
-   ],
-   "result" : [ "Select_1500", "Add_1508", "Add_1517" ]
+  "name" : "Function_22",
+  "ops" : [
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1540",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1540_0"],
+      "shape" : [ 50, 32, 32, 16 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1539",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1539_0"],
+      "shape" : [ 50, 32, 32, 16 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1538",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1538_0"],
+      "shape" : [ 50, 32, 32, 16 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1537",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1537_0"],
+      "shape" : [ 1, 1, 16, 16 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1536",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1536_0"],
+      "shape" : [ 3, 3, 16, 16 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1535",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1535_0"],
+      "shape" : []
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Constant_1541",
+      "op" : "Constant",
+      "outputs" : ["Constant_1541_0"],
+      "shape" : [],
+      "value" : ["0"]
+    },
+    {
+      "input_order" : [ 0, 3, 1, 2 ],
+      "inputs" : ["Parameter_1540"],
+      "name" : "Reshape_1548",
+      "op" : "Reshape",
+      "output_shape" : [ 50, 16, 32, 32 ],
+      "outputs" : ["Reshape_1548_0"]
+    },
+    {
+      "input_order" : [ 3, 0, 1, 2 ],
+      "inputs" : ["Parameter_1540"],
+      "name" : "Reshape_1557",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 50, 32, 32 ],
+      "outputs" : ["Reshape_1557_0"]
+    },
+    {
+      "input_order" : [ 3, 0, 1, 2 ],
+      "inputs" : ["Parameter_1539"],
+      "name" : "Reshape_1565",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 50, 32, 32 ],
+      "outputs" : ["Reshape_1565_0"]
+    },
+    {
+      "input_order" : [ 3, 0, 1, 2 ],
+      "inputs" : ["Parameter_1539"],
+      "name" : "Reshape_1556",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 50, 32, 32 ],
+      "outputs" : ["Reshape_1556_0"]
+    },
+    {
+      "input_order" : [ 3, 0, 1, 2 ],
+      "inputs" : ["Parameter_1538"],
+      "name" : "Reshape_1566",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 50, 32, 32 ],
+      "outputs" : ["Reshape_1566_0"]
+    },
+    {
+      "input_order" : [ 0, 3, 1, 2 ],
+      "inputs" : ["Parameter_1538"],
+      "name" : "Reshape_1544",
+      "op" : "Reshape",
+      "output_shape" : [ 50, 16, 32, 32 ],
+      "outputs" : ["Reshape_1544_0"]
+    },
+    {
+      "input_order" : [ 3, 2, 0, 1 ],
+      "inputs" : ["Parameter_1537"],
+      "name" : "Reshape_1545",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 16, 1, 1 ],
+      "outputs" : ["Reshape_1545_0"]
+    },
+    {
+      "input_order" : [ 3, 2, 0, 1 ],
+      "inputs" : ["Parameter_1536"],
+      "name" : "Reshape_1549",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 16, 3, 3 ],
+      "outputs" : ["Reshape_1549_0"]
+    },
+    {
+      "input_order" : [],
+      "inputs" : ["Parameter_1535"],
+      "name" : "Reshape_1562",
+      "op" : "Reshape",
+      "output_shape" : [ 1, 1 ],
+      "outputs" : ["Reshape_1562_0"]
+    },
+    {
+      "axes" : [ 0, 1, 2, 3 ],
+      "inputs" : ["Parameter_1535"],
+      "name" : "Broadcast_1554",
+      "op" : "Broadcast",
+      "outputs" : ["Broadcast_1554_0"],
+      "shape" : [ 3, 3, 16, 16 ]
+    },
+    {
+      "axes" : [ 0, 1, 2, 3 ],
+      "inputs" : ["Constant_1541"],
+      "name" : "Broadcast_1542",
+      "op" : "Broadcast",
+      "outputs" : ["Broadcast_1542_0"],
+      "shape" : [ 50, 32, 32, 16 ]
+    },
+    {
+      "data_dilation_strides" : [ 1, 1 ],
+      "inputs" : [ "Reshape_1556", "Reshape_1557" ],
+      "name" : "Convolution_1558",
+      "op" : "Convolution",
+      "outputs" : ["Convolution_1558_0"],
+      "padding_above" : [ 1, 1 ],
+      "padding_below" : [ 1, 1 ],
+      "window_dilation_strides" : [ 1, 1 ],
+      "window_movement_strides" : [ 1, 1 ]
+    },
+    {
+      "data_dilation_strides" : [ 1, 1 ],
+      "inputs" : [ "Reshape_1565", "Reshape_1566" ],
+      "name" : "Convolution_1567",
+      "op" : "Convolution",
+      "outputs" : ["Convolution_1567_0"],
+      "padding_above" : [ 0, 0 ],
+      "padding_below" : [ 0, 0 ],
+      "window_dilation_strides" : [ 1, 1 ],
+      "window_movement_strides" : [ 1, 1 ]
+    },
+    {
+      "data_batch_shape" : [ 50, 16, 32, 32 ],
+      "data_dilation_strides_forward" : [ 1, 1 ],
+      "inputs" : [ "Reshape_1545", "Reshape_1544" ],
+      "name" : "ConvolutionBackpropData_1546",
+      "op" : "ConvolutionBackpropData",
+      "outputs" : ["ConvolutionBackpropData_1546_0"],
+      "padding_above_forward" : [ 0, 0 ],
+      "padding_below_forward" : [ 0, 0 ],
+      "window_dilation_strides_forward" : [ 1, 1 ],
+      "window_movement_strides_forward" : [ 1, 1 ]
+    },
+    {
+      "data_batch_shape" : [ 50, 16, 32, 32 ],
+      "data_dilation_strides_forward" : [ 1, 1 ],
+      "inputs" : [ "Reshape_1549", "Reshape_1548" ],
+      "name" : "ConvolutionBackpropData_1550",
+      "op" : "ConvolutionBackpropData",
+      "outputs" : ["ConvolutionBackpropData_1550_0"],
+      "padding_above_forward" : [ 1, 1 ],
+      "padding_below_forward" : [ 1, 1 ],
+      "window_dilation_strides_forward" : [ 1, 1 ],
+      "window_movement_strides_forward" : [ 1, 1 ]
+    },
+    {
+      "axes" : [ 2, 3 ],
+      "inputs" : ["Reshape_1562"],
+      "name" : "Broadcast_1563",
+      "op" : "Broadcast",
+      "outputs" : ["Broadcast_1563_0"],
+      "shape" : [ 1, 1, 16, 16 ]
+    },
+    {
+      "inputs" : [ "Parameter_1536", "Broadcast_1554" ],
+      "name" : "Multiply_1555",
+      "op" : "Multiply",
+      "outputs" : ["Multiply_1555_0"]
+    },
+    {
+      "inputs" : [ "Parameter_1539", "Broadcast_1542" ],
+      "name" : "Greater_1543",
+      "op" : "Greater",
+      "outputs" : ["Greater_1543_0"]
+    },
+    {
+      "input_order" : [ 1, 2, 3, 0 ],
+      "inputs" : ["Convolution_1558"],
+      "name" : "Reshape_1559",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 3, 3, 16 ],
+      "outputs" : ["Reshape_1559_0"]
+    },
+    {
+      "input_order" : [ 1, 2, 3, 0 ],
+      "inputs" : ["Convolution_1567"],
+      "name" : "Reshape_1568",
+      "op" : "Reshape",
+      "output_shape" : [ 16, 1, 1, 16 ],
+      "outputs" : ["Reshape_1568_0"]
+    },
+    {
+      "input_order" : [ 0, 2, 3, 1 ],
+      "inputs" : ["ConvolutionBackpropData_1546"],
+      "name" : "Reshape_1547",
+      "op" : "Reshape",
+      "output_shape" : [ 50, 32, 32, 16 ],
+      "outputs" : ["Reshape_1547_0"]
+    },
+    {
+      "input_order" : [ 0, 2, 3, 1 ],
+      "inputs" : ["ConvolutionBackpropData_1550"],
+      "name" : "Reshape_1551",
+      "op" : "Reshape",
+      "output_shape" : [ 50, 32, 32, 16 ],
+      "outputs" : ["Reshape_1551_0"]
+    },
+    {
+      "inputs" : [ "Parameter_1537", "Broadcast_1563" ],
+      "name" : "Multiply_1564",
+      "op" : "Multiply",
+      "outputs" : ["Multiply_1564_0"]
+    },
+    {
+      "input_order" : [ 1, 2, 3, 0 ],
+      "inputs" : ["Reshape_1559"],
+      "name" : "Reshape_1560",
+      "op" : "Reshape",
+      "output_shape" : [ 3, 3, 16, 16 ],
+      "outputs" : ["Reshape_1560_0"]
+    },
+    {
+      "input_order" : [ 1, 2, 3, 0 ],
+      "inputs" : ["Reshape_1568"],
+      "name" : "Reshape_1569",
+      "op" : "Reshape",
+      "output_shape" : [ 1, 1, 16, 16 ],
+      "outputs" : ["Reshape_1569_0"]
+    },
+    {
+      "inputs" : [ "Reshape_1547", "Reshape_1551" ],
+      "name" : "Add_1552",
+      "op" : "Add",
+      "outputs" : ["Add_1552_0"]
+    },
+    {
+      "inputs" : [ "Multiply_1555", "Reshape_1560" ],
+      "name" : "Add_1561",
+      "op" : "Add",
+      "outputs" : ["Add_1561_0"]
+    },
+    {
+      "inputs" : [ "Multiply_1564", "Reshape_1569" ],
+      "name" : "Add_1570",
+      "op" : "Add",
+      "outputs" : ["Add_1570_0"]
+    },
+    {
+      "inputs" : [ "Greater_1543", "Add_1552", "Broadcast_1542" ],
+      "name" : "Select_1553",
+      "op" : "Select",
+      "outputs" : ["Select_1553_0"]
+    }
+  ],
+  "parameters" : [
+    "Parameter_1535", "Parameter_1536", "Parameter_1537", "Parameter_1538",
+    "Parameter_1539", "Parameter_1540"
+  ],
+  "result" : [ "Select_1553", "Add_1561", "Add_1570" ]
 }]
