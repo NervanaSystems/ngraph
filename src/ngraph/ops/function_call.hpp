@@ -23,24 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief %Function call operation.
-        ///
-        /// ## Parameters
-        ///
-        /// |            | Description                |
-        /// | ---------- | -------------------------- |
-        /// | `function` | The function to be called. |
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                                                                                                                                                                       | Description                          |
-        /// | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-        /// | `args` | \f$T_1,\dots,T_n\f$ where \f$n\f$ matches the number of arguments expected by `function` and \f$T_i\f$ matches the type expected for the \f$i\f$th argument of `function`. | The arguments for the function call. |
-        ///
-        /// ## Output
-        ///
-        /// | Type      | Description                                              |
-        /// | --------- | -------------------------------------------------------- |
-        /// | \f$T_R\f$ | The tensor returned by `function` when called on `args`. |
         class FunctionCall : public Node
         {
         public:

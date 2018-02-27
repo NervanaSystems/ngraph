@@ -79,8 +79,11 @@ namespace ngraph
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<MaxPool>(
-                    new_args.at(0), m_window_shape, m_window_movement_strides);
+                return std::make_shared<MaxPool>(new_args.at(0),
+                                                 m_window_shape,
+                                                 m_window_movement_strides,
+                                                 m_padding_below,
+                                                 m_padding_above);
             }
 
             /// \return The window shape.

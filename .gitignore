@@ -48,6 +48,7 @@ output/
 *.mpg
 *.cpio
 *.wav
+*.backup
 doc/source/generated
 .cache/
 nervana_aeon.egg-info/
@@ -61,6 +62,7 @@ nervana_aeon.egg-info/
 tags
 
 build/
+scripts/
 
 # makeenv and test intermediate files
 tmp/

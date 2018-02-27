@@ -38,7 +38,7 @@ set (SRC
     ops/avg_pool.cpp
     ops/batch_norm.cpp
     ops/broadcast.cpp
-    ops/concatenate.cpp
+    ops/concat.cpp
     ops/constant.cpp
     ops/convert.cpp
     ops/convolution.cpp
@@ -183,6 +183,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/ops/convert_layout.cpp
         runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
     )
@@ -206,7 +207,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             "NGRAPH_TBB_ENABLE"
         )
     endif()
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
