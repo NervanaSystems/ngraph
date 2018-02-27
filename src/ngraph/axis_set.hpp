@@ -21,7 +21,7 @@
 
 namespace ngraph
 {
-#ifdef USING_CLASSES
+#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief A set of axes.
     class AxisSet : public std::set<size_t>
     {
@@ -55,6 +55,7 @@ namespace ngraph
         }
     };
 #else
+    // Deprecated definition
     using AxisSet = std::set<size_t>;
 #endif
 }

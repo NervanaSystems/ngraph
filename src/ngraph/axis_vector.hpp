@@ -21,7 +21,7 @@
 
 namespace ngraph
 {
-#ifdef USING_CLASSES
+#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief A vector of axes.
     class AxisVector : public std::vector<size_t>
     {
@@ -65,6 +65,7 @@ namespace ngraph
         }
     };
 #else
+    // Deprecated definition
     using AxisVector = std::vector<size_t>;
 #endif
 }

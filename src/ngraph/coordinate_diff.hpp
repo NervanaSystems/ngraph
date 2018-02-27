@@ -21,7 +21,7 @@
 
 namespace ngraph
 {
-#ifdef USING_CLASSES
+#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief A difference (signed) of tensor element coordinates.
     class CoordinateDiff : public std::vector<std::ptrdiff_t>
     {
@@ -65,6 +65,7 @@ namespace ngraph
         }
     };
 #else
+    // Deprecated definition
     using CoordinateDiff = std::vector<std::ptrdiff_t>;
 #endif
 }

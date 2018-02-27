@@ -24,7 +24,7 @@ namespace ngraph
     {
         class Parameter;
 
-#ifdef USING_CLASSES
+#ifdef NO_GLOBAL_TYPE_ALIASES
 
         /// \brief Zero or more nodes.
         class ParameterVector : public std::vector<std::shared_ptr<op::Parameter>>
@@ -49,7 +49,9 @@ namespace ngraph
         };
 
 #else
+        // Deprecated definitions
         using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
+        using Parameters = ParameterVector;
 #endif
     }
 }

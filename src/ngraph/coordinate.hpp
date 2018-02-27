@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-#ifdef USING_CLASSES
+#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief Coordinates for a tensor element
     class Coordinate : public std::vector<size_t>
     {
@@ -74,6 +74,7 @@ namespace ngraph
         }
     };
 #else
+    // Deprecated definition
     using Coordinate = std::vector<size_t>;
 #endif
 
