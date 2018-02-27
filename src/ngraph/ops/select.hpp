@@ -49,8 +49,8 @@ namespace ngraph
                    const std::shared_ptr<Node>& arg1,
                    const std::shared_ptr<Node>& arg2);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 3)
                 {

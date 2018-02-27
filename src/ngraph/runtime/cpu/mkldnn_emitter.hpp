@@ -22,7 +22,8 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/common.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
