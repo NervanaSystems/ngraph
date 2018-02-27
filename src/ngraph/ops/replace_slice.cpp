@@ -41,7 +41,7 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
     : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_strides(Shape(lower_bounds.size(), 1))
+    , m_strides(Strides(lower_bounds.size(), 1))
 {
     check_args();
 }

@@ -274,7 +274,7 @@ TEST(graph_partition, placement_all_cpu_policy)
     std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -300,7 +300,7 @@ TEST(graph_partition, placement_int_with_cpu_mul_policy)
     std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -342,7 +342,7 @@ TEST(graph_partition, parameter_insert_and_call)
     std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -367,8 +367,8 @@ TEST(graph_partition, parameter_insert_and_call)
     EXPECT_EQ(AplusBtimesC->get_input_ops().at(1), P1);
 
     // Create f0, f1
-    std::shared_ptr<Function> f0 = make_shared<Function>(AplusB, op::Parameters{A, B});
-    std::shared_ptr<Function> f1 = make_shared<Function>(AplusBtimesC, op::Parameters{P0, P1});
+    std::shared_ptr<Function> f0 = make_shared<Function>(AplusB, op::ParameterVector{A, B});
+    std::shared_ptr<Function> f1 = make_shared<Function>(AplusBtimesC, op::ParameterVector{P0, P1});
 
     // Allocate input, output and intermediate results TensorViews on INTERPRETER
     shared_ptr<runtime::TensorView> a = int_backend->make_primary_tensor_view(element::f32, shape);
@@ -425,7 +425,7 @@ TEST(graph_partition, hybrid_backend_abc)
     std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -468,7 +468,7 @@ TEST(graph_partition, hybrid_backend_abcd)
     std::shared_ptr<Node> F = C + E;
     std::shared_ptr<Node> G = E + D;
     std::shared_ptr<Node> H = F + G;
-    std::shared_ptr<Function> f = make_shared<Function>(H, op::Parameters{A, B, C, D});
+    std::shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -508,7 +508,7 @@ TEST(graph_partition, hybrid_backend_back_and_forth)
     std::shared_ptr<Node> D = A * B;
     std::shared_ptr<Node> E = D + B;
     std::shared_ptr<Node> F = E * C;
-    std::shared_ptr<Function> f = make_shared<Function>(F, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -549,7 +549,7 @@ TEST(graph_partition, hybrid_backend_multi_middle_nodes)
     std::shared_ptr<Node> F = D * E;
     std::shared_ptr<Node> G = E * C;
     std::shared_ptr<Node> H = F + G;
-    std::shared_ptr<Function> f = make_shared<Function>(H, op::Parameters{A, B, C});
+    std::shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -581,7 +581,7 @@ TEST(graph_partition, hybrid_backend_no_split)
     std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> C = A + B;
-    std::shared_ptr<Function> func = make_shared<Function>(C, op::Parameters{A, B});
+    std::shared_ptr<Function> func = make_shared<Function>(C, op::ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);

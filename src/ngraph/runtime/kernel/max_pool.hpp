@@ -20,7 +20,6 @@
 #include <cmath>
 #include <numeric>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph

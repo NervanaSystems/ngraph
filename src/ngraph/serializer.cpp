@@ -192,8 +192,8 @@ static std::shared_ptr<const TensorViewType>
 {
     const element::Type& et = read_element_type(j.at(type));
     Shape shape =
-        j.count(sshape)
-            ? j.at(sshape).get<vector<size_t>>()
+        j.count(sshape) > 0
+            ? Shape(j.at(sshape).get<vector<size_t>>())
             : Shape{} /*HACK, so we could call read_tensor_type uniformly @ each callsite*/;
     return make_shared<TensorViewType>(et, shape);
 }

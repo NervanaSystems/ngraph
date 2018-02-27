@@ -50,7 +50,7 @@ void pass::CoreFusion::construct_relu_pattern()
 {
     auto iconst0 = construct_constant_node(0);
     auto val = make_shared<pattern::op::Label>(iconst0);
-    auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, Nodes{iconst0});
+    auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
 
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
