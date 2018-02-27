@@ -2438,59 +2438,36 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                // TODO(jmenon): Refactor into an MKLDNN Pooling emitter that handles
-                // all pooling variants
-
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    const char* algorithm_enumerator =
-                        avg_pool->get_include_padding_in_avg_computation()
-                            ? "algorithm::pooling_avg_include_padding"
-                            : "algorithm::pooling_avg_exclude_padding";
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_forward(
+                        (avg_pool->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        input_desc,
+                        result_desc,
+                        avg_pool->get_window_movement_strides(),
+                        avg_pool->get_window_shape(),
+                        avg_pool->get_padding_below(),
+                        avg_pool->get_padding_above());
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "{\n";
-                    writer.indent++;
-
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward avg_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, " << algorithm_enumerator << ", "
-                           << "input_data_desc, result_desc, {"
-                           << join(avg_pool->get_window_movement_strides()) << "}, {"
-                           << join(avg_pool->get_window_shape()) << "}, "
-                           << "{" << join(avg_pool->get_padding_below()) << "}, "
-                           << "{" << join(avg_pool->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({avg_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(avg_pool_index) << ");\n";
                 }
                 else
                 {
