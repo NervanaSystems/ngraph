@@ -224,7 +224,7 @@ TEST (${BACKEND_NAME}, %s)
                                                                   CoordinateDiff{%s}, // below_pads
                                                                   CoordinateDiff{%s}, // above_pads
                                                                   Strides{%s}),       // data_dilation
-                                     op::Parameters{A, B});
+                                     op::ParameterVector{A, B});
     };
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");

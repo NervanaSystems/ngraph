@@ -111,7 +111,7 @@ TEST(cpu_fusion, gemm_cpu)
     auto cg =
         make_shared<op::MatmulBias>(A, B, broadcast, A->get_shape(), B->get_shape(), true, true);
 
-    auto f = make_shared<Function>(cg, op::Parameters{A, B});
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
@@ -149,7 +149,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    auto func = make_shared<Function>(graph, op::Parameters{A, B, C});
+    auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
 }
@@ -185,7 +185,7 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto shape_r = Shape{1, 2, 2, 2};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -241,7 +241,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto shape_r = Shape{2, 2, 2, 1};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -302,7 +302,7 @@ TEST(cpu_fusion, unhandled_op)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
     auto unhandled = make_shared<UnhandledOp>(A);
-    auto f = make_shared<Function>(unhandled, op::Parameters{A});
+    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
     auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
     auto external = manager->compile(f);

@@ -26,7 +26,7 @@ op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
                                                const element::Type& result_element_type,
                                                const std::shared_ptr<Node>& arg0,
                                                const std::shared_ptr<Node>& arg1)
-    : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
+    : RequiresTensorViewArgs(node_type, NodeVector{arg0, arg1})
 {
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);

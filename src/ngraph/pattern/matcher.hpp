@@ -86,8 +86,8 @@ namespace ngraph
 
         private:
             static std::string pad(size_t num) { return std::string(num, ' '); }
-            bool match_permutation(const Nodes& pattern_args,
-                                   const Nodes& args,
+            bool match_permutation(const NodeVector& pattern_args,
+                                   const NodeVector& args,
                                    PatternMap& pattern_map);
             bool match_pattern(const std::shared_ptr<op::Label>& pattern_node,
                                const std::shared_ptr<Node>& graph_node,

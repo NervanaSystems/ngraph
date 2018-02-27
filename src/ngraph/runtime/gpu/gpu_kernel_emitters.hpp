@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/common.hpp"
 
 namespace ngraph
 {
