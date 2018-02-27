@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -38,6 +39,7 @@ using namespace std;
 #define TI(x) std::type_index(typeid(x))
 
 static const std::unordered_set<std::type_index> s_op_registry{
+    TI(ngraph::op::Add),
     TI(ngraph::op::AvgPool),
     TI(ngraph::op::AvgPoolBackprop),
     TI(ngraph::op::BatchNorm),
