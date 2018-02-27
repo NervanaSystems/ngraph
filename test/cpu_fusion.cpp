@@ -201,26 +201,26 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
-                            0.89177299});
+                            0.4375872f,
+                            0.89177299f});
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    copy_data(_mean, vector<float>{0.60291237f, 0.59972727f});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    copy_data(_var, vector<float>{0.00472505f, 0.03617825f});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
     copy_data(_beta, vector<float>{0.0f, 0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    vector<float> expected_result{-0.71498716,
-                                  1.48388731,
-                                  -0.00196938,
-                                  -0.76693159,
-                                  -0.91316032,
-                                  0.23943391,
-                                  -0.84090298,
-                                  1.51462936};
+    vector<float> expected_result{-0.71498716f,
+                                  1.48388731f,
+                                  -0.00196938f,
+                                  -0.76693159f,
+                                  -0.91316032f,
+                                  0.23943391f,
+                                  -0.84090298f,
+                                  1.51462936f};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 }
@@ -255,12 +255,12 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
-                            0.89177299});
+                            0.4375872f,
+                            0.89177299f});
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    copy_data(_mean, vector<float>{0.60291237f, 0.59972727f});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    copy_data(_var, vector<float>{0.00472505f, 0.03617825f});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
@@ -268,7 +268,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     vector<float> expected_result{
-        -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};
+        -0.714987f, 1.48389f, 0.015746f, -0.284436f, -2.36912f, 0.56806f, -0.840903f, 1.51463f};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 }

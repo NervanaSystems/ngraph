@@ -60,8 +60,8 @@ TEST(serialize, main)
     string js = serialize(h, 4);
 
     {
-        ofstream f("serialize_function.js");
-        f << js;
+        ofstream out("serialize_function.js");
+        out << js;
     }
 
     istringstream in(js);
