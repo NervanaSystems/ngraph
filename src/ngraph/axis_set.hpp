@@ -21,6 +21,7 @@
 
 namespace ngraph
 {
+#ifdef USING_CLASSES
     /// \brief A set of axes.
     class AxisSet : public std::set<size_t>
     {
@@ -53,4 +54,7 @@ namespace ngraph
             return *this;
         }
     };
+#else
+    using AxisSet = std::set<size_t>;
+#endif
 }

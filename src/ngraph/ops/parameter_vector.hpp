@@ -24,6 +24,8 @@ namespace ngraph
     {
         class Parameter;
 
+#ifdef USING_CLASSES
+
         /// \brief Zero or more nodes.
         class ParameterVector : public std::vector<std::shared_ptr<op::Parameter>>
         {
@@ -45,5 +47,9 @@ namespace ngraph
 
             ParameterVector() {}
         };
+
+#else
+        using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
+#endif
     }
 }

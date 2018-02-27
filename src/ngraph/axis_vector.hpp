@@ -21,6 +21,7 @@
 
 namespace ngraph
 {
+#ifdef USING_CLASSES
     /// \brief A vector of axes.
     class AxisVector : public std::vector<size_t>
     {
@@ -63,4 +64,7 @@ namespace ngraph
             return *this;
         }
     };
+#else
+    using AxisVector = std::vector<size_t>;
+#endif
 }

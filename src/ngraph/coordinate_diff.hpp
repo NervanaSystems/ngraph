@@ -21,6 +21,7 @@
 
 namespace ngraph
 {
+#ifdef USING_CLASSES
     /// \brief A difference (signed) of tensor element coordinates.
     class CoordinateDiff : public std::vector<std::ptrdiff_t>
     {
@@ -63,4 +64,7 @@ namespace ngraph
             return *this;
         }
     };
+#else
+    using CoordinateDiff = std::vector<std::ptrdiff_t>;
+#endif
 }

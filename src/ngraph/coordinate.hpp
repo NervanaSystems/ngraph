@@ -24,6 +24,7 @@
 
 namespace ngraph
 {
+#ifdef USING_CLASSES
     /// \brief Coordinates for a tensor element
     class Coordinate : public std::vector<size_t>
     {
@@ -72,6 +73,9 @@ namespace ngraph
             return *this;
         }
     };
+#else
+    using Coordinate = std::vector<size_t>;
+#endif
 
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>

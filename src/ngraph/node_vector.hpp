@@ -23,6 +23,8 @@ namespace ngraph
 {
     class Node;
 
+#ifdef USING_CLASSES
+
     /// \brief Zero or more nodes.
     class NodeVector : public std::vector<std::shared_ptr<Node>>
     {
@@ -44,4 +46,8 @@ namespace ngraph
 
         NodeVector() {}
     };
+
+#else
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
+#endif
 }
