@@ -222,19 +222,20 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
     return primitive_index;
 }
 
-size_t MKLDNNEmitter::build_max_pool_forward(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             const ngraph::Strides& window_strides,
-                                             const ngraph::Shape& window_shape,
-                                             const ngraph::Shape& padding_below,
-                                             const ngraph::Shape& padding_above)
+size_t MKLDNNEmitter::build_pooling_forward(mkldnn::algorithm pooling_algorithm,
+                                            const mkldnn::memory::desc& input_desc,
+                                            const mkldnn::memory::desc& result_desc,
+                                            const ngraph::Strides& window_strides,
+                                            const ngraph::Shape& window_shape,
+                                            const ngraph::Shape& padding_below,
+                                            const ngraph::Shape& padding_above)
 {
     size_t input_index = build_memory_primitive(input_desc);
     size_t result_index = build_memory_primitive(result_desc);
 
     size_t primitive_index = insert_primitive(new mkldnn::pooling_forward(
         {{mkldnn::prop_kind::forward_inference,
-          mkldnn::algorithm::pooling_max,
+          pooling_algorithm,
           input_desc,
           result_desc,
           mkldnn::memory::dims(window_strides.begin(), window_strides.end()),

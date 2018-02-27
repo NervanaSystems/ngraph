@@ -87,12 +87,13 @@ namespace ngraph
                                                        const ngraph::CoordinateDiff& padding_below,
                                                        const ngraph::CoordinateDiff& padding_above);
 
-                size_t build_max_pool_forward(const mkldnn::memory::desc& input_desc,
-                                              const mkldnn::memory::desc& result_desc,
-                                              const ngraph::Strides& window_strides,
-                                              const ngraph::Shape& window_shape,
-                                              const ngraph::Shape& padding_below,
-                                              const ngraph::Shape& padding_above);
+                size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
+                                             const mkldnn::memory::desc& input_desc,
+                                             const mkldnn::memory::desc& result_desc,
+                                             const ngraph::Strides& window_strides,
+                                             const ngraph::Shape& window_shape,
+                                             const ngraph::Shape& padding_below,
+                                             const ngraph::Shape& padding_above);
 
                 size_t build_elementwise_add(
                     const mkldnn::memory::desc& input0_data_desc,

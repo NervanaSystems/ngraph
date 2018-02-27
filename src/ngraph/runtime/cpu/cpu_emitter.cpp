@@ -2281,7 +2281,8 @@ namespace ngraph
                     auto result_desc = mkldnn_emitter->build_memory_descriptor(
                         out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    size_t max_pool_index = mkldnn_emitter->build_max_pool_forward(
+                    size_t max_pool_index = mkldnn_emitter->build_pooling_forward(
+                        mkldnn::algorithm::pooling_max,
                         input_desc,
                         result_desc,
                         max_pool->get_window_movement_strides(),
