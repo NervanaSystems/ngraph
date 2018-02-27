@@ -98,6 +98,9 @@ namespace ngraph
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
 
+                size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
+                                          const mkldnn::memory::desc& result_desc);
+
                 size_t build_elementwise_add(
                     const mkldnn::memory::desc& input0_data_desc,
                     const mkldnn::memory::desc& input1_data_desc,
