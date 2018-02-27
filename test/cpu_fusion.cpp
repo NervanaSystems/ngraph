@@ -174,18 +174,22 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto input_shape = Shape{1, 2, 2, 2};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    // auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
     auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    // auto var = make_shared<op::Parameter>(element::f32, var_shape);
     auto gamma_shape = Shape{2};
     auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1)
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt}, op::Parameters{input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -203,15 +207,17 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
                             0.64589411f,
                             0.4375872,
                             0.89177299});
-    auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
-    auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    // auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    // copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    // auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
+    // copy_data(_var, vector<float>{0.00472505, 0.03617825});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
     copy_data(_beta, vector<float>{0.0f, 0.0f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_input = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
 
     vector<float> expected_result{-0.71498716,
                                   1.48388731,
@@ -221,8 +227,8 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
                                   0.23943391,
                                   -0.84090298,
                                   1.51462936};
-    cf->call({_mean, _var, _input, _gamma, _beta}, {result});
-    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+    cf->call({ _input, _gamma, _beta}, {result_input, result_mean, result_variance});
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result_input)));
 }
 
 TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
@@ -230,18 +236,22 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    // auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
     auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    // auto var = make_shared<op::Parameter>(element::f32, var_shape);
     auto gamma_shape = Shape{2};
     auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);//, mean, var);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1)
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt}, op::Parameters{input, gamma, beta});//, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -257,20 +267,22 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
                             0.64589411f,
                             0.4375872,
                             0.89177299});
-    auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
-    auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    // auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    // copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    // auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
+    // copy_data(_var, vector<float>{0.00472505, 0.03617825});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
     copy_data(_beta, vector<float>{0.0f, 0.0f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_input = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
 
     vector<float> expected_result{
         -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};
-    cf->call({_mean, _var, _input, _gamma, _beta}, {result});
-    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+    cf->call({_input, _gamma, _beta}, {result_input, result_mean, result_variance});
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result_input)));
 }
 
 TEST(cpu_fusion, fuse_fprop_bn)

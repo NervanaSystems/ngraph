@@ -260,9 +260,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             auto bn_node = std::shared_ptr<Node>(new op::BatchNorm(epsilon,
                                                                    pattern_map[gamma_label],
                                                                    pattern_map[beta_label],
-                                                                   pattern_map[input],
-                                                                   pattern_map[mean_label],
-                                                                   pattern_map[variance_label]));
+                                                                   pattern_map[input]));
 
             return bn_node;
         };
