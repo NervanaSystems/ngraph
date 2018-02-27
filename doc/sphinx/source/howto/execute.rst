@@ -13,8 +13,8 @@ do all of these things:
 
 .. _define_cmp:
 
-Defining a Computation
-======================
+Define a Computation
+====================
 
 To a framework, a computation is simply a transformation of inputs to outputs.
 To a user, a computation is a function whose body is a dataflow graph. A 
