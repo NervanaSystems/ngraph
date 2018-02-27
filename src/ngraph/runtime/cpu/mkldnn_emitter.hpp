@@ -77,6 +77,14 @@ namespace ngraph
                                                        const ngraph::CoordinateDiff& padding_below,
                                                        const ngraph::CoordinateDiff& padding_above);
 
+                size_t build_convolution_backward_data(const mkldnn::memory::desc& weights_desc,
+                                                       const mkldnn::memory::desc& delta_desc,
+                                                       const mkldnn::memory::desc& result_desc,
+                                                       const ngraph::Strides& strides,
+                                                       const ngraph::Strides& dilation_strides,
+                                                       const ngraph::CoordinateDiff& padding_below,
+                                                       const ngraph::CoordinateDiff& padding_above);
+
                 size_t build_elementwise_add(
                     const mkldnn::memory::desc& input0_data_desc,
                     const mkldnn::memory::desc& input1_data_desc,

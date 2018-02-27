@@ -79,7 +79,6 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
                                                 const ngraph::Strides& strides,
                                                 const ngraph::CoordinateDiff& padding_below,
                                                 const ngraph::CoordinateDiff& padding_above)
-
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -111,7 +110,6 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
                                                 const ngraph::Strides& dilation_strides,
                                                 const ngraph::CoordinateDiff& padding_below,
                                                 const ngraph::CoordinateDiff& padding_above)
-
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -145,7 +143,6 @@ size_t
                                                       const ngraph::Strides& dilation_strides,
                                                       const ngraph::CoordinateDiff& padding_below,
                                                       const ngraph::CoordinateDiff& padding_above)
-
 {
     size_t input_index = build_memory_primitive(input_desc);
     size_t delta_index = build_memory_primitive(delta_desc);
@@ -179,6 +176,49 @@ size_t
         *mkldnn_primitives[result_index]));
 
     primitive_deps[primitive_index] = {input_index, delta_index, result_index};
+    return primitive_index;
+}
+
+size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc& weights_desc,
+                                                      const mkldnn::memory::desc& delta_desc,
+                                                      const mkldnn::memory::desc& result_desc,
+                                                      const ngraph::Strides& strides,
+                                                      const ngraph::Strides& dilation_strides,
+                                                      const ngraph::CoordinateDiff& padding_below,
+                                                      const ngraph::CoordinateDiff& padding_above)
+{
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t delta_index = build_memory_primitive(delta_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    size_t primitive_index = insert_primitive(new mkldnn::convolution_backward_data(
+        {{mkldnn::algorithm::convolution_direct,
+          result_desc,
+          weights_desc,
+          delta_desc,
+          mkldnn::memory::dims(strides.begin(), strides.end()),
+          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         mkldnn_utils::global_cpu_engine,
+         // Forward primitive descriptor corresponding to this backward data descriptor
+         {{mkldnn::prop_kind::forward,
+           mkldnn::algorithm::convolution_direct,
+           result_desc,
+           weights_desc,
+           delta_desc,
+           mkldnn::memory::dims(strides.begin(), strides.end()),
+           mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+           mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+           mkldnn::padding_kind::zero},
+          mkldnn_utils::global_cpu_engine}},
+        *mkldnn_primitives[delta_index],
+        *mkldnn_primitives[weights_index],
+        *mkldnn_primitives[result_index]));
+
+    primitive_deps[primitive_index] = {weights_index, delta_index, result_index};
     return primitive_index;
 }
 
