@@ -17,7 +17,8 @@
 #pragma once
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/common.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
