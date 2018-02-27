@@ -50,7 +50,7 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
     auto D = A * B;
-    auto f = make_shared<Function>(Nodes{C, C, D, D, C}, op::Parameters{A, B});
+    auto f = make_shared<Function>(NodeVector{C, C, D, D, C}, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -85,7 +85,7 @@ TEST(${BACKEND_NAME}, parameter_as_output)
 
     Shape shape{3, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A, op::Parameters{A});
+    auto f = make_shared<Function>(A, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -109,7 +109,7 @@ TEST(${BACKEND_NAME}, ab)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A + B, op::Parameters{A, B});
+    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -135,7 +135,7 @@ TEST(${BACKEND_NAME}, abc)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -172,7 +172,7 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
     auto C = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -208,7 +208,8 @@ TEST(${BACKEND_NAME}, multiple_result)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto f = make_shared<Function>(Nodes{A_add_B, A_add_B_mul_C}, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -233,10 +234,9 @@ TEST(${BACKEND_NAME}, multiple_result)
 
 TEST(${BACKEND_NAME}, abs)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -245,11 +245,11 @@ TEST(${BACKEND_NAME}, abs)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.8f});
+    copy_data(a, vector<float>{1, -2, 0, -4.75f});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 0, 4.8f}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, ceiling)
@@ -257,7 +257,7 @@ TEST(${BACKEND_NAME}, ceiling)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -283,8 +283,8 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
     Shape shape_c{2, 3};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{2, 8};
-    auto f =
-        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 1), op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 1),
+                                   op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -315,8 +315,8 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     Shape shape_c{3, 2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{8, 2};
-    auto f =
-        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -347,8 +347,8 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
     Shape shape_c{3, 2};
     auto C = make_shared<op::Parameter>(element::i64, shape_c);
     Shape shape_r{8, 2};
-    auto f =
-        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -379,8 +379,8 @@ TEST(${BACKEND_NAME}, concat_vector)
     Shape shape_c{2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{12};
-    auto f =
-        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -474,8 +474,8 @@ TEST(${BACKEND_NAME}, concat_5d)
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{2, 3, 9, 3, 2};
 
-    auto r = make_shared<op::Concat>(Nodes{A, B, C}, 2);
-    auto f = make_shared<Function>(r, op::Parameters{A, B, C});
+    auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -536,7 +536,7 @@ TEST(${BACKEND_NAME}, divide)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -566,7 +566,7 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
         auto Y_out = f->get_output_op(0);
         auto Xs = f->get_parameters();
@@ -605,6 +605,8 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
 TEST(${BACKEND_NAME}, divide_by_zero_float32)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -613,7 +615,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -639,6 +641,8 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
 TEST(${BACKEND_NAME}, divide_by_zero_int32)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -647,7 +651,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::i32, shape);
         auto B = make_shared<op::Parameter>(element::i32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -671,7 +675,7 @@ TEST(${BACKEND_NAME}, equal)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -694,7 +698,7 @@ TEST(${BACKEND_NAME}, floor)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -712,11 +716,13 @@ TEST(${BACKEND_NAME}, floor)
 
 TEST(${BACKEND_NAME}, dot_0_0)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -739,6 +745,8 @@ TEST(${BACKEND_NAME}, dot_0_0)
 
 TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{2, 0};
     Shape shape_b{0, 2};
     Shape shape_r{2, 2};
@@ -749,7 +757,7 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -773,12 +781,15 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 
 TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 2};
+
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -798,12 +809,15 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 2};
+
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{3, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -823,12 +837,14 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_scalar_0x2)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{0, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -848,12 +864,14 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
 
 TEST(${BACKEND_NAME}, dot_2x0_0)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{2, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -880,7 +898,7 @@ TEST(${BACKEND_NAME}, dot1d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -904,7 +922,7 @@ TEST(${BACKEND_NAME}, dot2d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -952,7 +970,7 @@ TEST(${BACKEND_NAME}, dot3d_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1002,7 +1020,7 @@ TEST(${BACKEND_NAME}, dot3d_2d)
     Shape shape_b{3, 4};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 2, 4};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1030,7 +1048,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     Shape shape_b{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1054,7 +1072,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     Shape shape_b{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1077,7 +1095,7 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1101,7 +1119,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
     Shape shape_r{4};
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1127,7 +1145,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     auto B = make_shared<op::Parameter>(element::i64, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
     Shape shape_r{4};
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1152,7 +1170,7 @@ TEST(${BACKEND_NAME}, greater)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1176,7 +1194,7 @@ TEST(${BACKEND_NAME}, greatereq)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1200,7 +1218,7 @@ TEST(${BACKEND_NAME}, less)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Less>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Less>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1224,7 +1242,7 @@ TEST(${BACKEND_NAME}, lesseq)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1248,7 +1266,7 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1274,7 +1292,7 @@ TEST(${BACKEND_NAME}, log)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Log>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Log>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1301,7 +1319,7 @@ TEST(${BACKEND_NAME}, maximum)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1324,7 +1342,7 @@ TEST(${BACKEND_NAME}, minimum)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1347,7 +1365,7 @@ TEST(${BACKEND_NAME}, negative)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Negative>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Negative>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1356,11 +1374,11 @@ TEST(${BACKEND_NAME}, negative)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f});
+    copy_data(a, vector<float>{1, -2, 0, -4.75f, 8.75f, -8.75f});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, notequal)
@@ -1369,7 +1387,7 @@ TEST(${BACKEND_NAME}, notequal)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1394,7 +1412,7 @@ TEST(${BACKEND_NAME}, select)
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1420,7 +1438,7 @@ TEST(${BACKEND_NAME}, subtract)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1443,7 +1461,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(A, op::Parameters{});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1462,7 +1480,7 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1565,15 +1583,16 @@ TEST(${BACKEND_NAME}, function_call)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   op::Parameters{X, Y, Z});
+    auto g =
+        make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X + Y, Y + Z, Z + X}) +
+                                  make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
+                              op::ParameterVector{X, Y, Z});
 
     // Now call g on some test vectors.
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1590,13 +1609,13 @@ TEST(${BACKEND_NAME}, function_call)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{108, 160, 220, 288}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{254, 368, 502, 656}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{108, 160, 220, 288}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{278, 400, 542, 704}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{100, 144, 196, 256}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{194, 296, 418, 560}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_vector)
@@ -1606,7 +1625,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{4};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1629,7 +1648,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1652,7 +1671,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1673,8 +1692,8 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1697,7 +1716,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1720,7 +1739,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1736,6 +1755,32 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
+// Test hybrid mechanism after broadcast
+TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{3, 4};
+    auto broadcast = make_shared<op::Broadcast>(A, shape_r, AxisSet{0});
+    auto reverse = make_shared<op::Reverse>(broadcast, AxisSet{1});
+    auto f = make_shared<Function>(reverse, op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
@@ -1743,7 +1788,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     Shape shape_r{3, 4};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1766,7 +1811,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1789,7 +1834,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1812,7 +1857,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{2}),
-                                   op::Parameters{A});
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1833,7 +1878,8 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1854,8 +1900,8 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1876,8 +1922,8 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1897,17 +1943,19 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
 TEST(${BACKEND_NAME}, reduce_trivial)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -1931,14 +1979,14 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -1968,7 +2016,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 2};
@@ -1977,7 +2025,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     Shape shape_rt{2};
 
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2007,7 +2055,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 2};
@@ -2015,7 +2063,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2041,10 +2089,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
 TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 0};
@@ -2052,7 +2102,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2078,10 +2128,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
 TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
@@ -2089,7 +2141,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{2};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2115,10 +2167,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
 TEST(${BACKEND_NAME}, reduce_vector_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0};
@@ -2126,7 +2180,7 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2152,10 +2206,12 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
 TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 0};
@@ -2163,7 +2219,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
-                                   op::Parameters{g_A, g_B});
+                                   op::ParameterVector{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2192,7 +2248,8 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f =
+        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2200,7 +2257,7 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}),
-                                   op::Parameters{A, B});
+                                   op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2229,7 +2286,7 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2252,7 +2309,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2275,7 +2332,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2298,7 +2355,7 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 1, 1, 1, 1};
     auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2321,7 +2378,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2344,7 +2401,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2367,7 +2424,7 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3, 1};
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2390,7 +2447,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2413,7 +2470,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2436,7 +2493,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2507,7 +2564,7 @@ TEST(${BACKEND_NAME}, reshape_6d)
     Shape shape_r{3, 2, 2, 4, 3, 2};
 
     auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2552,7 +2609,7 @@ TEST(${BACKEND_NAME}, sin)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sin>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2578,7 +2635,7 @@ TEST(${BACKEND_NAME}, cos)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cos>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2604,7 +2661,7 @@ TEST(${BACKEND_NAME}, tan)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tan>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2630,7 +2687,7 @@ TEST(${BACKEND_NAME}, asin)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Asin>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Asin>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2655,7 +2712,7 @@ TEST(${BACKEND_NAME}, acos)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Acos>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2680,7 +2737,7 @@ TEST(${BACKEND_NAME}, atan)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Atan>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Atan>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2705,7 +2762,7 @@ TEST(${BACKEND_NAME}, sinh)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2730,7 +2787,7 @@ TEST(${BACKEND_NAME}, cosh)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2755,7 +2812,7 @@ TEST(${BACKEND_NAME}, tanh)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2780,7 +2837,7 @@ TEST(${BACKEND_NAME}, exp)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Exp>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Exp>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2805,7 +2862,7 @@ TEST(${BACKEND_NAME}, slice_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2828,7 +2885,7 @@ TEST(${BACKEND_NAME}, slice_matrix)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2851,7 +2908,7 @@ TEST(${BACKEND_NAME}, slice_vector)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
     auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2870,11 +2927,13 @@ TEST(${BACKEND_NAME}, slice_vector)
 TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2897,7 +2956,7 @@ TEST(${BACKEND_NAME}, slice_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2922,11 +2981,13 @@ TEST(${BACKEND_NAME}, slice_3d)
 TEST(${BACKEND_NAME}, slice_3d_strided)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2951,11 +3012,13 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2981,7 +3044,7 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto r = op::Constant::create(element::f32, Shape{}, {4.8});
-    auto f = make_shared<Function>(r, op::Parameters{});
+    auto f = make_shared<Function>(r, op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2999,7 +3062,7 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
-    auto f = make_shared<Function>(r, op::Parameters{});
+    auto f = make_shared<Function>(r, op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3018,7 +3081,7 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto r = op::Constant::create(element::f32, shape, {4.8, 4.7, -5.3, 0.0});
-    auto f = make_shared<Function>(r, op::Parameters{});
+    auto f = make_shared<Function>(r, op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3037,7 +3100,7 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
-    auto f = make_shared<Function>(r, op::Parameters{});
+    auto f = make_shared<Function>(r, op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3057,7 +3120,7 @@ TEST(${BACKEND_NAME}, sum_trivial)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3079,7 +3142,7 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3103,7 +3166,7 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3129,7 +3192,7 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3155,7 +3218,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3178,10 +3241,12 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
 TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3205,11 +3270,13 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
 TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3233,10 +3300,12 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
 TEST(${BACKEND_NAME}, sum_vector_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3260,10 +3329,12 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
 TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3290,7 +3361,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3322,7 +3393,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3354,7 +3425,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3380,7 +3451,8 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3402,10 +3474,12 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3427,9 +3501,11 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3449,10 +3525,12 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3475,7 +3553,7 @@ TEST(${BACKEND_NAME}, sign)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sign>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sign>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3497,7 +3575,7 @@ TEST(${BACKEND_NAME}, power)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Power>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Power>(A, B), op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3521,11 +3599,11 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     Shape shape{4};
     // auto A = make_shared<op::Parameter>(element::boolean, shape);
     // auto B = make_shared<op::Parameter>(element::boolean, shape);
-    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{A, B});
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{A, B});
 
     auto A = op::Constant::create(element::boolean, shape, {true, false, true, false});
     auto B = op::Constant::create(element::boolean, shape, {true, true, true, true});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3543,7 +3621,7 @@ TEST(${BACKEND_NAME}, sqrt)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3568,7 +3646,7 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3595,7 +3673,7 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 4};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3623,7 +3701,7 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{16};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3650,7 +3728,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3673,7 +3751,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3696,7 +3774,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3719,7 +3797,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3752,7 +3830,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3785,7 +3863,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 8};
     auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3810,7 +3888,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3835,7 +3913,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3868,7 +3946,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3901,7 +3979,7 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 3, 3};
     auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3932,7 +4010,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3957,7 +4035,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3992,7 +4070,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4033,7 +4111,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4074,7 +4152,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4143,7 +4221,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
     Shape shape_r{2, 5};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4198,7 +4276,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
     Shape shape_r{2, 4, 4, 2};
 
     auto r = make_shared<op::Dot>(A, B);
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4270,7 +4348,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
     Shape shape_r{2, 3, 2, 3, 2};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4335,7 +4413,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     Shape shape_r{2};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4401,7 +4479,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     Shape shape_r{20};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4436,7 +4514,8 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4461,7 +4540,8 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4490,7 +4570,8 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4524,7 +4605,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 4, 3};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4597,7 +4679,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4631,6 +4713,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{1, 1, 5, 5};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -4641,7 +4725,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4676,6 +4760,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     auto shape_a = Shape{
         1,
         1,
@@ -4690,7 +4776,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4720,7 +4806,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(A, window_shape, window_movement_strides), op::Parameters{A});
+        make_shared<op::MaxPool>(A, window_shape, window_movement_strides), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4751,7 +4837,7 @@ TEST(${BACKEND_NAME}, not)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4772,7 +4858,7 @@ TEST(${BACKEND_NAME}, reverse_0d)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4793,7 +4879,7 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4814,7 +4900,7 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4835,7 +4921,7 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4859,7 +4945,7 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4883,7 +4969,7 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4907,7 +4993,8 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4931,7 +5018,7 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4958,7 +5045,7 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4985,7 +5072,7 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5012,7 +5099,7 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5039,7 +5126,8 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5066,7 +5154,8 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5093,7 +5182,8 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5120,8 +5210,8 @@ TEST(${BACKEND_NAME}, reverse_3d_012)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5146,10 +5236,12 @@ TEST(${BACKEND_NAME}, reverse_3d_012)
 TEST(${BACKEND_NAME}, numeric_float_nan)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5165,10 +5257,12 @@ TEST(${BACKEND_NAME}, numeric_float_nan)
 TEST(${BACKEND_NAME}, numeric_double_nan)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5184,10 +5278,12 @@ TEST(${BACKEND_NAME}, numeric_double_nan)
 TEST(${BACKEND_NAME}, numeric_float_inf)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5203,10 +5299,12 @@ TEST(${BACKEND_NAME}, numeric_float_inf)
 TEST(${BACKEND_NAME}, numeric_double_inf)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5222,6 +5320,8 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
 TEST(${BACKEND_NAME}, abc_tbb)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
+
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
     bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
@@ -5234,7 +5334,7 @@ TEST(${BACKEND_NAME}, abc_tbb)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5275,11 +5375,13 @@ TEST(${BACKEND_NAME}, abc_tbb)
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
 
     Shape shape_a{1, 1, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5290,7 +5392,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5316,11 +5418,13 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
 
     Shape shape_a{2, 1, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5331,7 +5435,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5361,11 +5465,13 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
 
     Shape shape_a{2, 2, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5376,7 +5482,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5411,11 +5517,13 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
 
     Shape shape_a{2, 2, 5, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5426,7 +5534,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
     auto window_movement_strides = Strides{1, 1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5494,11 +5602,13 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_strided)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
 
     Shape shape_a{1, 1, 8, 8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5509,7 +5619,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
     auto window_movement_strides = Strides{1, 1, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5550,15 +5660,15 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f =
-        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
+                                       op::ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{4, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5571,7 +5681,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
     auto window_strides = Strides{2, 2};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::Parameters{A, B, C});
+        op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5607,15 +5717,15 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f =
-        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
+                                       op::ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{4, 6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5628,7 +5738,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
     auto window_strides = Strides{2, 3};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::Parameters{A, B, C});
+        op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5664,15 +5774,15 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f =
-        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
+                                       op::ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{2, 4, 6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5685,7 +5795,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
     auto window_strides = Strides{2, 2, 3};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::Parameters{A, B, C});
+        op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5720,8 +5830,8 @@ void make_unary_empty_test(const string& backend_name)
 {
     Shape shape{0};
 
-    op::Parameters params;
-    Nodes result_list;
+    op::ParameterVector params;
+    NodeVector result_list;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
         shared_ptr<op::Parameter> p = make_shared<op::Parameter>(s_known_element_types[i], shape);
@@ -5773,13 +5883,13 @@ template <typename OP>
 void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
 {
     Shape shape{0};
-    op::Parameters A;
+    op::ParameterVector A;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
         A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
     }
 
-    Nodes result_list;
+    NodeVector result_list;
     for (shared_ptr<op::Parameter> p : A)
     {
         result_list.push_back(make_shared<OP>(p, p));
@@ -5851,44 +5961,52 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
 TEST(${BACKEND_NAME}, zero_sized_abs)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Abs>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_ceiling)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Ceiling>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_exp)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Exp>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_floor)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Floor>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_log)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Log>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_negative)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Negative>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_not)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::from<char>(), shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -5910,139 +6028,163 @@ TEST(${BACKEND_NAME}, zero_sized_not)
 TEST(${BACKEND_NAME}, zero_sized_sign)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sign>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_sqrt)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sqrt>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_sin)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sin>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_sinh)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sinh>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_cos)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Cos>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_cosh)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Cosh>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_tan)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Tan>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_tanh)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Tanh>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_asin)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Asin>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_acos)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Acos>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_atan)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_unary_empty_test<op::Atan>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_add)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Add>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_divide)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Divide>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_eq)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Equal>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greater)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Greater>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_less)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Less>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::LessEq>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_maximum)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Maximum>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_minimum)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Minimum>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_multiply)
 {
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Multiply>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_power)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Power>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_subtract)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
     make_binary_empty_test<op::Subtract>("${BACKEND_NAME}");
 }
 
@@ -6068,7 +6210,7 @@ TEST(${BACKEND_NAME}, convolution_outlining)
                                               CoordinateDiff{0, 0},
                                               CoordinateDiff{0, 0},
                                               Strides{1, 1});
-    auto f = make_shared<Function>(conv2, op::Parameters{A, B});
+    auto f = make_shared<Function>(conv2, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6088,9 +6230,10 @@ TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, convolution_layout)
+TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
+   
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
@@ -6103,7 +6246,9 @@ TEST(${BACKEND_NAME}, convolution_layout)
                                               CoordinateDiff{0, 0},
                                               CoordinateDiff{0, 0},
                                               Strides{1, 1});
-    auto f = make_shared<Function>(conv1, op::Parameters{A, B});
+    Shape pool_shape{1, 1};
+    auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
+    auto f = make_shared<Function>(pool1, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6132,7 +6277,8 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6171,7 +6317,8 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6224,7 +6371,8 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6305,7 +6453,8 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 4, 3};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6376,7 +6525,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(A, window_shape, window_movement_strides), op::Parameters{A});
+        make_shared<op::AvgPool>(A, window_shape, window_movement_strides), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6420,7 +6569,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6454,7 +6603,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6495,7 +6644,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6534,7 +6683,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6573,7 +6722,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6616,7 +6765,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6655,7 +6804,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
-        op::Parameters{A});
+        op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6691,7 +6840,7 @@ TEST(${BACKEND_NAME}, pad_interior_1d)
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6725,7 +6874,7 @@ TEST(${BACKEND_NAME}, pad_exterior_1d)
     Shape padding_interior{0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6759,7 +6908,7 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6794,7 +6943,7 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
     Shape padding_interior{2, 1};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6823,6 +6972,8 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
 TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6833,7 +6984,7 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6860,6 +7011,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6870,7 +7023,7 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6897,6 +7050,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6907,7 +7062,7 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6939,6 +7094,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{2, 0, 3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6949,7 +7106,7 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     Shape shape_r{5, 2, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::Parameters{A, B});
+        op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6975,7 +7132,7 @@ TEST(${BACKEND_NAME}, product_trivial)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -6997,7 +7154,7 @@ TEST(${BACKEND_NAME}, product_trivial_5d)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7021,7 +7178,8 @@ TEST(${BACKEND_NAME}, product_to_scalar)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7047,7 +7205,7 @@ TEST(${BACKEND_NAME}, product_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7073,7 +7231,7 @@ TEST(${BACKEND_NAME}, product_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7096,10 +7254,12 @@ TEST(${BACKEND_NAME}, product_matrix_rows)
 TEST(${BACKEND_NAME}, product_matrix_rows_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7123,11 +7283,13 @@ TEST(${BACKEND_NAME}, product_matrix_rows_zero)
 TEST(${BACKEND_NAME}, product_matrix_cols_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7151,10 +7313,12 @@ TEST(${BACKEND_NAME}, product_matrix_cols_zero)
 TEST(${BACKEND_NAME}, product_vector_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7178,10 +7342,13 @@ TEST(${BACKEND_NAME}, product_vector_zero)
 TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7208,7 +7375,7 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7240,7 +7407,7 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7272,7 +7439,8 @@ TEST(${BACKEND_NAME}, product_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7298,8 +7466,8 @@ TEST(${BACKEND_NAME}, product_3d_to_scalar)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f =
-        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1, 2}),
+                                   op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7322,10 +7490,12 @@ TEST(${BACKEND_NAME}, product_3d_to_scalar)
 TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7350,7 +7520,7 @@ TEST(${BACKEND_NAME}, max_trivial)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7372,7 +7542,7 @@ TEST(${BACKEND_NAME}, max_trivial_5d)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7396,7 +7566,7 @@ TEST(${BACKEND_NAME}, max_to_scalar)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7422,7 +7592,7 @@ TEST(${BACKEND_NAME}, max_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7448,7 +7618,7 @@ TEST(${BACKEND_NAME}, max_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7471,10 +7641,12 @@ TEST(${BACKEND_NAME}, max_matrix_rows)
 TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7501,11 +7673,13 @@ TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7531,10 +7705,12 @@ TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 TEST(${BACKEND_NAME}, max_vector_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7558,10 +7734,12 @@ TEST(${BACKEND_NAME}, max_vector_zero)
 TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7588,7 +7766,7 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7611,7 +7789,7 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7634,7 +7812,7 @@ TEST(${BACKEND_NAME}, max_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7657,7 +7835,8 @@ TEST(${BACKEND_NAME}, max_3d_to_scalar)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7677,10 +7856,12 @@ TEST(${BACKEND_NAME}, max_3d_to_scalar)
 TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7707,7 +7888,7 @@ TEST(${BACKEND_NAME}, min_trivial)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7729,7 +7910,7 @@ TEST(${BACKEND_NAME}, min_trivial_5d)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7753,7 +7934,7 @@ TEST(${BACKEND_NAME}, min_to_scalar)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7779,7 +7960,7 @@ TEST(${BACKEND_NAME}, min_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7805,7 +7986,7 @@ TEST(${BACKEND_NAME}, min_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7828,10 +8009,12 @@ TEST(${BACKEND_NAME}, min_matrix_rows)
 TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7858,11 +8041,13 @@ TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7888,10 +8073,12 @@ TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 TEST(${BACKEND_NAME}, min_vector_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7915,10 +8102,12 @@ TEST(${BACKEND_NAME}, min_vector_zero)
 TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7945,7 +8134,7 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7968,7 +8157,7 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -7991,7 +8180,7 @@ TEST(${BACKEND_NAME}, min_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8014,7 +8203,8 @@ TEST(${BACKEND_NAME}, min_3d_to_scalar)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8034,10 +8224,12 @@ TEST(${BACKEND_NAME}, min_3d_to_scalar)
 TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8065,7 +8257,7 @@ TEST(${BACKEND_NAME}, relu_2Dfprop)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(relu, op::Parameters{A});
+    auto f = make_shared<Function>(relu, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8088,7 +8280,7 @@ TEST(${BACKEND_NAME}, relu_4Dfprop)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
     auto shape_rt = Shape{2, 2, 2, 2};
-    auto f = make_shared<Function>(relu, op::Parameters{A});
+    auto f = make_shared<Function>(relu, op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8112,7 +8304,7 @@ TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto max = make_shared<op::Maximum>(A, B);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(max, op::Parameters{B});
+    auto f = make_shared<Function>(max, op::ParameterVector{B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8136,7 +8328,7 @@ TEST(${BACKEND_NAME}, relu_2Dbackprop)
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::ReluBackprop>(A, delta_val);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(relu, op::Parameters{A, delta_val});
+    auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8162,7 +8354,7 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::ReluBackprop>(A, delta_val);
     auto shape_rt = Shape{2, 2, 2, 2};
-    auto f = make_shared<Function>(relu, op::Parameters{A, delta_val});
+    auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);

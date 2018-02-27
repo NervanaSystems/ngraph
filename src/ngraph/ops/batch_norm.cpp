@@ -86,8 +86,8 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     }
 }
 
-std::shared_ptr<ngraph::Node> ngraph::op::BatchNorm::copy_with_new_args(
-    const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
+std::shared_ptr<ngraph::Node>
+    ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 5)
         throw ngraph_error("Incorrect number of new arguments");

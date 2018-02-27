@@ -69,8 +69,8 @@ namespace ngraph
             /// `[n]`
             AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {
@@ -120,8 +120,8 @@ namespace ngraph
                             const Shape& padding_above,
                             bool include_padding_in_avg_computation);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {

@@ -43,7 +43,7 @@
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -313,6 +313,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;

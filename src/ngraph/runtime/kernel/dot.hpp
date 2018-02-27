@@ -19,7 +19,6 @@
 #include <cmath>
 #include <utility>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph

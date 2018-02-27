@@ -45,7 +45,7 @@
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -94,6 +94,7 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
@@ -248,6 +249,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/pass/manager.hpp"
     #include "ngraph/pass/memory_layout.hpp"
     #include "ngraph/runtime/aligned_buffer.hpp"
+    #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
 )";
@@ -255,9 +257,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     string pch_header_source = writer.get_code();
 
     writer += R"(
-    using namespace ngraph;
-    using namespace std;
-)";
+using namespace ngraph;
+using namespace std;
+    )";
 
     if (m_emit_timing)
     {

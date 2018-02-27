@@ -70,8 +70,7 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
     set_value_type_checked(get_input_element_type(0), result_shape);
 }
 
-std::shared_ptr<Node>
-    op::Pad::copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {

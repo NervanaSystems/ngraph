@@ -140,8 +140,8 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::match_permutation(const Nodes& pattern_args,
-                                        const Nodes& args,
+        bool Matcher::match_permutation(const NodeVector& pattern_args,
+                                        const NodeVector& args,
                                         PatternMap& pattern_map)
         {
             m_depth++;
@@ -222,9 +222,9 @@ namespace ngraph
             return cb(*this);
         }
 
-        static Nodes get_users(std::shared_ptr<Node> node)
+        static NodeVector get_users(std::shared_ptr<Node> node)
         {
-            Nodes result;
+            NodeVector result;
 
             for (size_t i = 0; i < node->get_output_size(); ++i)
             {

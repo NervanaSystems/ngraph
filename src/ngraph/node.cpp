@@ -23,13 +23,14 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
+Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
@@ -144,6 +145,16 @@ void Node::set_name(const string& name)
     }
 }
 
+Placement Node::get_placement() const
+{
+    return m_placement;
+}
+
+void Node::set_placement(Placement placement)
+{
+    m_placement = placement;
+}
+
 std::shared_ptr<Node> Node::get_input_op(size_t index)
 {
     for (auto arg : m_arguments)
@@ -156,9 +167,9 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
     return m_inputs.at(index).get_output().get_node();
 }
 
-Nodes Node::get_input_ops() //const
+NodeVector Node::get_input_ops() //const
 {
-    Nodes result;
+    NodeVector result;
     for (auto& i : get_inputs())
     {
         {
@@ -303,4 +314,28 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
+}
+
+descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
+{
+    for (size_t i = 0; i < this->get_input_size(); ++i)
+    {
+        if (this->get_input_op(i) == src)
+        {
+            return &(this->get_inputs().at(i));
+        }
+    }
+    throw ngraph_error("Error: src is not one of self's input Node");
+}
+
+descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
+{
+    for (size_t i = 0; i < dst->get_input_size(); ++i)
+    {
+        if (dst->get_input_op(i).get() == this)
+        {
+            return &(dst->get_inputs().at(i).get_output());
+        }
+    }
+    throw ngraph_error("Error: dst is not one of self's output Node");
 }

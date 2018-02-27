@@ -38,6 +38,12 @@ namespace ngraph
                 const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
                 mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
                 const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
+
+                mkldnn::memory::format get_input_mkldnn_format(const Node* node, int index);
+                mkldnn::memory::format get_output_mkldnn_format(const Node* node, int index);
+                bool use_mkldnn_kernel(const ngraph::Node* node);
+                bool compare_mkldnn_formats(mkldnn::memory::format fmt1,
+                                            mkldnn::memory::format fmt2);
             }
         }
     }
