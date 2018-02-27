@@ -2275,38 +2275,28 @@ namespace ngraph
                 if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
+                    size_t max_pool_index = mkldnn_emitter->build_max_pool_forward(
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward max_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_max, "
-                           << "input_data_desc, result_desc, {"
-                           << join(max_pool->get_window_movement_strides()) << "}, {"
-                           << join(max_pool->get_window_shape()) << "}, {"
-                           << join(max_pool->get_padding_below()) << "}, "
-                           << "{" << join(max_pool->get_padding_above())
-                           << "}, padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({max_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
                 }
                 else
                 {
