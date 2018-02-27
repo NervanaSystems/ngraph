@@ -24,13 +24,13 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/common.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/placement.hpp"
@@ -153,7 +153,7 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
 {
     for (auto user : target->users())
     {
-        auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
+        auto& args = const_cast<ngraph::NodeVector&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
         it = args.erase(it);
@@ -230,7 +230,7 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (!node_map.exists(node))
         {
             // get (already) cloned arguments and clone the node
-            Nodes cloned_args;
+            NodeVector cloned_args;
             for (auto arg : node->get_input_ops())
             {
                 cloned_args.push_back(node_map.get(arg));
@@ -256,7 +256,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function results and parameters
-    Nodes cloned_results;
+    NodeVector cloned_results;
     for (shared_ptr<Node> node : func->get_results())
     {
         cloned_results.push_back(node_map.get(node));
@@ -321,7 +321,7 @@ void ngraph::insert_parameter_split_between(shared_ptr<Node> src_node,
     // Add dst_node to p_node's users
     const_cast<multiset<Node*>&>(p_node->users()).insert(dst_node.get());
     // Change dst_node's argument from src_node to p_node
-    auto& args = const_cast<Nodes&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
+    auto& args = const_cast<NodeVector&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
     auto it = find(begin(args), end(args), src_node);
     if (it == end(args))
     {

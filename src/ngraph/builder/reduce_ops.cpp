@@ -16,6 +16,7 @@
 
 #include <numeric>
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/ops/add.hpp"

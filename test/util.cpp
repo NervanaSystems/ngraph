@@ -210,24 +210,24 @@ TEST(util, traverse_functions)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   op::Parameters{X, Y, Z},
+    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
+                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
+                                   op::ParameterVector{X, Y, Z},
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
     auto X1 = make_shared<op::Parameter>(element::f32, shape);
     auto Y1 = make_shared<op::Parameter>(element::f32, shape);
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
-                                   op::Parameters{X1, Y1, Z1},
+    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
+                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
+                                   op::ParameterVector{X1, Y1, Z1},
                                    "h");
 
     vector<Function*> functions;
@@ -249,7 +249,7 @@ public:
     NodeMap node_map;
     std::list<std::shared_ptr<ngraph::Node>> nodes;
     std::shared_ptr<Function> func =
-        make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C}, "f");
+        make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C}, "f");
 
     void SetUp()
     {
@@ -260,9 +260,9 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodes(const std::list<std::shared_ptr<ngraph::Node>>& orig,
-                      const std::list<std::shared_ptr<ngraph::Node>>& clone,
-                      const NodeMap& nm)
+    bool CompareNodeVector(const std::list<std::shared_ptr<ngraph::Node>>& orig,
+                           const std::list<std::shared_ptr<ngraph::Node>>& clone,
+                           const NodeMap& nm)
     {
         if (orig.size() != clone.size())
         {
@@ -286,7 +286,7 @@ public:
 TEST_F(CloneTest, clone_nodes_full)
 {
     auto cloned_nodes = clone_nodes(nodes, node_map);
-    ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
+    ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
     ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
@@ -296,7 +296,7 @@ TEST_F(CloneTest, clone_nodes_full)
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
-    ASSERT_TRUE(CompareNodes(sorted_nodes, sorted_cloned_nodes, node_map));
+    ASSERT_TRUE(CompareNodeVector(sorted_nodes, sorted_cloned_nodes, node_map));
 }
 
 TEST_F(CloneTest, clone_nodes_partial)
@@ -306,7 +306,7 @@ TEST_F(CloneTest, clone_nodes_partial)
     node_map.add(A, Aprime);
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
-    ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
+    ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
     ASSERT_EQ(Aprime, node_map.get(A));
@@ -315,7 +315,7 @@ TEST_F(CloneTest, clone_nodes_partial)
 TEST_F(CloneTest, clone_function_full)
 {
     auto cloned_func = clone_function(func, node_map);
-    ASSERT_TRUE(CompareNodes(func->get_ops(), cloned_func->get_ops(), node_map));
+    ASSERT_TRUE(CompareNodeVector(func->get_ops(), cloned_func->get_ops(), node_map));
 }
 
 TEST(graph_util, clone_multiple_results)
@@ -327,7 +327,8 @@ TEST(graph_util, clone_multiple_results)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto f = make_shared<Function>(Nodes{A_add_B, A_add_B_mul_C}, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
 
     NodeMap node_map;
     auto copy = clone_function(f, node_map);

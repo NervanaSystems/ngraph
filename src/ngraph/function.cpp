@@ -27,8 +27,8 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-Function::Function(const Nodes& results,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+Function::Function(const NodeVector& results,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
     : m_results(results)
     , m_parameters(parameters)
@@ -52,9 +52,9 @@ Function::Function(const Nodes& results,
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
-    : Function(Nodes{result}, parameters, name)
+    : Function(NodeVector{result}, parameters, name)
 {
 }
 

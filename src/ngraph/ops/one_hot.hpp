@@ -52,8 +52,8 @@ namespace ngraph
             /// \param one_hot_axis The index within the output shape of the new one-hot axis.
             OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t one_hot_axis);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {
