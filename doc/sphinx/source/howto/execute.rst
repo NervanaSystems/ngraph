@@ -9,22 +9,29 @@ performed by a framework :term:`bridge` to execute a computation. In order to
 successfully run a computation, the entity (framework or user) must be able to 
 do all of these things:
 
-.. contents:: 
+* :ref:`define_cmp`
+* :ref:`specify_bkd`
+* :ref:`compile_cmp`
+* :ref:`allocate_bkd_storage`
+* :ref:`initialize_inputs`
+* :ref:`invoke_cmp`
+* :ref:`access_outputs`
+
 
 .. _define_cmp:
 
 Define a Computation
 ====================
 
-To a framework, a computation is simply a transformation of inputs to outputs.
-To a user, a computation is a function whose body is a dataflow graph. A 
-*framework bridge* would normally programmatically construct the graph from 
-the framework's representation of the computation. Since nGraph is targeted 
-toward automatic construction, manual construction can be somewhat tedious. 
-Here we deconstruct how this happens. 
+To a :term:`framework`, a computation is simply a transformation of inputs to 
+outputs. To a user, a computation is a function whose body is a dataflow graph. 
+While a *framework bridge* can programmatically construct the graph from a 
+framework's representation of the computation, graph construction can be somewhat 
+more tedious for users.  Since nGraph is targeted toward automatic construction, 
+we deconstruct here how this happens. 
 
-Most of the public portion of the nGraph API is in the ``ngraph`` namespace,
-so we will omit the namespace. Use of namespaces other than ``std`` will be 
+Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
+we will omit the namespace. Use of namespaces other than ``std`` will be 
 namespaces in ``ngraph``. For example, the ``op::Add`` refers to 
 ``ngraph::op::Add``.
 
@@ -128,9 +135,8 @@ Invoke the computation
 
 .. TODO
 
-.. _access_output
 
-
+.. _access_outputs:
 
 Access the outputs
 ==================
