@@ -17,7 +17,7 @@
 include(ExternalProject)
 
 if (NGRAPH_CPU_ENABLE AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR (${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
-    message(FATAL_ERROR "The NGRAPH_USE_PREBUILT_LLVM option is not supported on non-Linux platforms.")
+    message(FATAL_ERROR "The NGRAPH_USE_PREBUILT_LLVM option is not supported on this platform.")
 endif()
 
 if (NGRAPH_CPU_ENABLE)
