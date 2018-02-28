@@ -64,3 +64,8 @@ void runtime::gpu::cuda_memcpyHtD(void* d, void* s, size_t buffer_size)
 {
     cudaMemcpy(d, s, buffer_size, cudaMemcpyHostToDevice);
 }
+
+void runtime::gpu::cuda_memset(void* d, int value, size_t buffer_size)
+{
+    cudaMemset(d, value, buffer_size);
+}

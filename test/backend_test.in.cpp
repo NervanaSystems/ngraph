@@ -716,7 +716,6 @@ TEST(${BACKEND_NAME}, floor)
 
 TEST(${BACKEND_NAME}, dot_0_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape{0};
@@ -746,7 +745,6 @@ TEST(${BACKEND_NAME}, dot_0_0)
 
 TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{2, 0};
@@ -783,7 +781,6 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 
 TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{0, 2};
@@ -812,7 +809,6 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{3, 2};
@@ -841,7 +837,6 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_scalar_0x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{};
@@ -869,7 +864,6 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
 
 TEST(${BACKEND_NAME}, dot_2x0_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{2, 0};
@@ -900,7 +894,6 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
 
 TEST(${BACKEND_NAME}, dot1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -925,7 +918,6 @@ TEST(${BACKEND_NAME}, dot1d)
 
 TEST(${BACKEND_NAME}, dot2d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1052,7 +1044,6 @@ TEST(${BACKEND_NAME}, dot3d_2d)
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     Shape shape_b{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1077,7 +1068,6 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 2};
     Shape shape_b{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1102,7 +1092,6 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 
 TEST(${BACKEND_NAME}, dot_scalar_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1126,7 +1115,6 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, dot_matrix_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6245,6 +6233,7 @@ TEST(${BACKEND_NAME}, convolution_outlining)
 TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
     ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
+
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
