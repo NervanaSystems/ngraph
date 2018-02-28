@@ -5,9 +5,17 @@ Executing a Computation
 #######################
 
 This section explains how to manually perform the steps that would normally be 
-performed by a framework :term:`bridge` to execute a computation. In order to 
-successfully run a computation, the entity (framework or user) must be able to 
-do all of these things:
+performed by a framework :term:`bridge` to execute a computation. Intel® nGraph 
+library is targeted toward automatic construction; it is far easier for a 
+processing unit (GPU, CPU, or custom silicon) to run a computation than it is 
+for a user to map out how that computation happens.  
+
+Here we will do all the bridge steps manually. Unfortunately, things that make 
+by-hand graph construction simpler tend to make automatic construction more 
+difficult, and vice versa. 
+
+In order to successfully run a computation, the entity (framework or user) must 
+be able to do all of these things:
 
 * :ref:`define_cmp`
 * :ref:`specify_bkd`
@@ -24,39 +32,51 @@ Define a Computation
 ====================
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
-outputs. To a user, a computation is a function whose body is a dataflow graph. 
-While a *framework bridge* can programmatically construct the graph from a 
-framework's representation of the computation, graph construction can be somewhat 
-more tedious for users.  Since nGraph is targeted toward automatic construction, 
-we deconstruct here how this happens. 
+outputs. While a *framework bridge* can programmatically construct the graph 
+from a framework's representation of the computation, graph construction can be 
+somewhat more tedious for users. To a user, who is usually interested in 
+specific nodes (vertices) or edges of a computation that reveal "what is 
+happening where", it can be helpful to think of a computation as a zoomed-out 
+and *stateless* dataflow graph where all of the nodes are well-defined and all
+of the edges are possible routes for executing a computation.  
+
+.. TODO
+
+.. image for representing nodes and edges 
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
-namespaces in ``ngraph``. For example, the ``op::Add`` refers to 
+namespaces in ``ngraph``. For example, the ``op::Add`` is assumed to refer to 
 ``ngraph::op::Add``.
 
-A computation's graph is constructed from ops; each a member of a
-subclass of ``op::Op``, which, in turn, is a subclass of ``Node``. Not
-all graphs are computation, but all graphs are composed entirely of
-instances of ``Node``.  Computation graphs are only contain ``op::Op``
-nodes.
+A computation's graph is constructed from ops; each is a member of a subclass of 
+``op::Op``, which, in turn, is a subclass of ``Node``. Not all graphs are 
+computation, but all graphs are composed entirely of instances of ``Node``.  
+Computation graphs contain only ``op::Op`` nodes.
 
-We mostly use shared pointers for nodes,
-i.e. ``std::shared_ptr<Node>``. This allows nodes to be deallocated
-when the are no longer referenced. The one exception to this rule is
-that there can not be a circular path through shared pointers, as this
-would prevent the reference counts from every going to 0.
+We mostly use shared pointers for nodes. In the nGraph APIs for :doc:`ops/index`, 
+this is presented as ``std::shared_ptr<Node>``, which allows for the 
+de-allocation of unreferenced nodes when they are no longer referenced. The one 
+exception to this rule is that there can not be a circular path through shared 
+pointers, as this would prevent the reference counts from ever getting to 0. In 
+other words, it would be impossible to entirely deallocate or unreference a node.
 
-Every node has zero or more inputs, zero or more outputs, and zero or
-more attributes. For our purposes, nodes should be thought of as
-essentially immutable, so when we construct a node, we need to supply
-all of its inputs. Thus, to get this process started, we need some
-nodes that have no inputs.
+Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
+*attributes*. For our purpose to :ref:`define_cmp`, nodes should be thought of 
+as essentially immutable; that is, when constructing a node, we need to supply 
+all of its inputs. To get this process started, we need some nodes that have no 
+inputs. 
 
-We use ``op::Parameter`` to specify the tensors that will be passed to
-the computation. They receive their values from outside of the graph,
-so they have no inputs. They have attributes for the element type
-and the shape of the tensor that will be passed to them.
+For a more concrete example, we can use the analogy of a baton relay. It can be 
+drawn ahead of time that the runner must hand off the baton to the next runner 
+at the specific place (node). The runner waiting for the baton is essentially at
+an empty node until he receives the baton. The runner who surrenders the baton 
+to the next runner (node) is de-allocated of the baton.
+
+``op::Parameter`` specifes the tensors that will be passed to the computation. 
+They receive their values from outside of the graph, so they have no inputs. 
+They have attributes for the element type and the shape of the tensor that will 
+be passed to them.
 
 .. code-block:: cpp
 	
@@ -92,33 +112,34 @@ Once the graph is built, we need to package it in a ``Function``:
 
    auto f = make_shared<Function>(NodeVector{t1}, ParameterVector{a, b, c});
 
-The first argument to the constuctor specifies the nodes that the
-function will return; in this case, the product. A ``NodeVector`` is a
-vector of shared pointers of ``op::Node``.  The second argument
-specifies the parameters of the function, in the order they are to be
-passed to the compiled function. A ``ParameterVector`` is a vector of
-shared pointers to ``op::Parameter``. *The parameter vector must
-include* **every** *parameter used in the computation of the results.*
+The first argument to the constuctor specifies the nodes that the function will 
+return; in this case, the product. A ``NodeVector`` is a vector of shared 
+pointers of ``op::Node``.  The second argument specifies the parameters of the 
+function, in the order they are to be passed to the compiled function. A 
+``ParameterVector`` is a vector of shared pointers to ``op::Parameter``. 
+
+.. important:: The parameter vector must include* **every** *parameter used in 
+   the computation of the results.
+
 
 .. _specify_bkd:
 
 Specify the backend upon which to run the computation
 =====================================================
 
-A *backend* is an environment that can execute computations, such as
-the CPU or an NNP. A *transformer* can compile computations for a
-backend, allocate and deallocate tensors, and invoke computations.
+For a framework bridge, a *backend* is the environment that can perform the 
+computations; it can be done with a CPU, GPU, or an NNP. A *transformer* can 
+compile computations for a backend, allocate and deallocate tensors, and invoke 
+computations.
 
-The current selection process is showing signs of age, and will be
-changed. The general idea is that there are factory-like managers for
-classes of backend, Managers can compile a ``Function`` and allocate
-backends. A backend is somewhat analogous to a multi-threaded
+Factory-like managers for classes of backend managers can compile a ``Function`` 
+and allocate backends. A backend is somewhat analogous to a multi-threaded
 process.
 
 There are two backends for the CPU, the optimized "CPU" backend, which
-makes use of mkl-dnn, and the "INTERPRETER" backend which runs
-reference versions of kernels where implementation clarity is favored
-over speed. The "INTERPRETER" backend is mainly used for testing.
+makes use of mkl-dnn, and the "INTERPRETER" backend which runs reference 
+versions of kernels where implementation clarity is favored over speed. The 
+"INTERPRETER" backend is mainly used for testing. 
 
 To select the "CPU" backend,
 
@@ -150,21 +171,19 @@ the ``ExternalFunction``.
 Allocate backend storage for the inputs and outputs
 ===================================================
 
-At the graph level, functions are stateless. They do
-have internal state related to execution, but there is no user-visible
-state. Variables must be passed as arguments. If the function updates
-variables, it must return the updated variables.
+At the graph level, functions are stateless. They do have internal state related 
+to execution, but there is no user-visible state. Variables must be passed as 
+arguments. If the function updates variables, it must return the updated 
+variables.
 
-To invoke a function, tensors must be provided for every input and
-every output. At this time, a tensor used as an input cannot also be
-used as an output. If variables are being updated, you should use a
-double-buffering approach where you switch between odd/even
-generations of variables on each update.
+To invoke a function, tensors must be provided for every input and every output. 
+At this time, a tensor used as an input cannot also be used as an output. If 
+variables are being updated, you should use a double-buffering approach where 
+you switch between odd/even generations of variables on each update.
 
-Backends are responsible for managing storage. If the storage is
-off-CPU, caches are used to minimize copying between device and
-CPU. We can allocate storage for the three parameters and return value
-as follows:
+Backends are responsible for managing storage. If the storage is off-CPU, caches 
+are used to minimize copying between device and CPU. We can allocate storage for 
+the three parameters and return value as follows:
 
 .. code-block:: cpp
 
@@ -173,20 +192,18 @@ as follows:
    auto t_c = backend->make_primary_tensor_view(element::f32, shape);
    auto t_result = backend->make_primary_tensor_view(element::f32, shape);
 
-Each tensor is a shared pointer to a ``runtime::TensorView``, the
-interface backends implement for tensor use. When there are no more
-references to the tensor view, it will be freed when convenient for
-the backend.
+Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
+backends implement for tensor use. When there are no more references to the 
+tensor view, it will be freed when convenient for the backend.
 
 .. _initialize_inputs:
 
 Initialize the inputs
 =====================
 
-Normally the framework bridge reads/writes bytes to the tensor,
-assuming a row-major element layout. To simplify writing unit tests,
-we have developed a class for making tensor literals. We can use these
-to initialize our tensors:
+Normally the framework bridge reads/writes bytes to the tensor, assuming a 
+row-major element layout. To simplify writing unit tests, we have developed a 
+class for making tensor literals. We can use these to initialize our tensors:
 
 .. code-block:: cpp
 
@@ -194,12 +211,11 @@ to initialize our tensors:
    copy_data(t_b, test::NDArray<float, 2>({{7, 8, 9}, {10, 11, 12}}).get_vector());
    copy_data(t_c, test::NDArray<float, 2>({{1, 0, -1}, {-1, 1, 2}}).get_vector());
 
-The ``test::NDArray`` needs to know the element type (``float``) and
-rank (``2``) of the tensors, and figures out the shape during template
-expansion.
+The ``test::NDArray`` needs to know the element type (``float``) and rank (``2``) 
+of the tensors, and figures out the shape during template expansion.
 
-The ``runtime::TensorView`` interface has ``write`` and ``read``
-methods for copying data to/from the tensor.
+The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
+copying data to/from the tensor.
 
 .. _invoke_cmp:
 
