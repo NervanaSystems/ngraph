@@ -351,13 +351,19 @@ install(DIRECTORY
 )
 
 if (NGRAPH_TBB_ENABLE)
+    if(APPLE)
+      set (SUFFIX_PATTERN ".dylib")
+    else()
+      set (SUFFIX_PATTERN ".so.*")
+    endif()
+
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING PATTERN "libtbb${SUFFIX_PATTERN}"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING PATTERN "libtbb_debug${SUFFIX_PATTERN}"
     )
 endif()
 
