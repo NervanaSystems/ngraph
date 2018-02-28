@@ -16,8 +16,11 @@
 
 include(ExternalProject)
 
-if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
-                         (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
+if (NGRAPH_CPU_ENABLE AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR (${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
+    message(FATAL_ERROR "The NGRAPH_USE_PREBUILT_LLVM option is not supported on non-Linux platforms.")
+endif()
+
+if (NGRAPH_CPU_ENABLE)
     message(STATUS "Fetching LLVM from llvm.org")
 
     # Override default LLVM binaries
