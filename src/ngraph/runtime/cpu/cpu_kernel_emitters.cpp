@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 #include <algorithm>
 #include <map>
 
@@ -24,12 +26,9 @@ using namespace std;
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
 template <typename T>
-string emit_bracketed_string(vector<T> data)
+string emit_bracketed_string(T data)
 {
     stringstream ss;
-
-    if (data.size() == 0)
-        return "";
 
     for (auto s : data)
     {
@@ -73,7 +72,7 @@ vector<string>
     vector<string> index_vars;
     for (size_t i = 0; i < top.size(); i++)
     {
-        string index_var = writer.generate_temporary_name("i");
+        string index_var = writer.generate_temporary_name("_i");
 
         writer << runtime::cpu::kernel::start_index_loop(index_var, new_bottom[i], top[i], i == 0);
         writer.indent++;

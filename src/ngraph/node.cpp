@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/node.hpp"
 #include <memory>
@@ -21,13 +23,14 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
+Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
@@ -142,40 +145,14 @@ void Node::set_name(const string& name)
     }
 }
 
-void Node::assert_argument_list_equivalency(const Nodes& b)
+Placement Node::get_placement() const
 {
-    bool arguments_equal = true;
-    if (this->m_arguments.size() == b.size())
-    {
-        for (size_t i = 0; i < this->m_arguments.size(); i++)
-        {
-            arguments_equal = arguments_equal && this->m_arguments.at(i) == b.at(i);
-        }
-    }
-    else
-    {
-        arguments_equal = false;
-    }
+    return m_placement;
+}
 
-    if (!arguments_equal)
-    {
-        std::cout << "node = " << this->get_name() << std::endl;
-        std::cout << "m_arguments" << std::endl;
-        for (auto arg : this->m_arguments)
-        {
-            std::cout << "arg = " << arg->get_name() << std::endl;
-        }
-        std::cout << "results" << std::endl;
-        for (auto arg : b)
-        {
-            std::cout << "arg = " << arg->get_name() << std::endl;
-        }
-    }
-
-    if (!arguments_equal)
-    {
-        throw "Arguments aren't equal";
-    }
+void Node::set_placement(Placement placement)
+{
+    m_placement = placement;
 }
 
 std::shared_ptr<Node> Node::get_input_op(size_t index)
@@ -190,16 +167,19 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
     return m_inputs.at(index).get_output().get_node();
 }
 
-Nodes Node::get_input_ops() //const
+NodeVector Node::get_input_ops() //const
 {
-    Nodes result;
+    NodeVector result;
     for (auto& i : get_inputs())
     {
         {
             result.push_back(i.get_output().get_node());
         }
     }
-    assert_argument_list_equivalency(result);
+    if (m_arguments != result)
+    {
+        throw ngraph_error("Arguments aren't equal: different values");
+    }
     return result;
 }
 
@@ -334,4 +314,28 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
+}
+
+descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
+{
+    for (size_t i = 0; i < this->get_input_size(); ++i)
+    {
+        if (this->get_input_op(i) == src)
+        {
+            return &(this->get_inputs().at(i));
+        }
+    }
+    throw ngraph_error("Error: src is not one of self's input Node");
+}
+
+descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
+{
+    for (size_t i = 0; i < dst->get_input_size(); ++i)
+    {
+        if (dst->get_input_op(i).get() == this)
+        {
+            return &(dst->get_inputs().at(i).get_output());
+        }
+    }
+    throw ngraph_error("Error: dst is not one of self's output Node");
 }

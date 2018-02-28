@@ -4,68 +4,67 @@
 Convolution
 ###########
 
-A batched convolution operation.
+.. code-block:: cpp
 
-Basic Operation
-===============
+   Convolution  // A batched convolution operation
 
-In the simplest case, (TODO: explain what convolution is in human words.)
+
+Description
+===========
+
+.. TODO 
+
+Long description
+
+
+
+Inputs
+------
 
 +-----------------+-------------------------+--------------------------------+
-| Input Name      | Element Type            | Shape                          |
+| Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
 | ``image_batch`` | Any                     | ``(N, C_in, d_1, ..., d_n)``   |
 +-----------------+-------------------------+--------------------------------+
 | ``filters``     | Same as ``image_batch`` | ``(N, C_in, df_1, ..., df_n)`` |
 +-----------------+-------------------------+--------------------------------+
 
+Attributes
+----------
+
++-----------------------------+-----------------------------+----------------------------------------+
+| Name                        | Type                        | Notes                                  |
++=============================+=============================+========================================+
+| ``window_movement_strides`` | ``Strides[n]``              | How far to slide the                   |
+|                             |                             | window along each axis at each step    |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``window_dilation_strides`` | ``Strides[n]``              | Per-axis dilation to apply to the      |
+|                             |                             | filters                                |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``padding_below``           | ``Shape[n]``                | How many padding elements to add       |
+|                             |                             | below the 0-coordinate on each axis    |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``padding_above``           | ``Shape[n]``                | How many padding elements to add above |
+|                             |                             | the max-coordinate on each axis        |
++-----------------------------+-----------------------------+----------------------------------------+
+| ``image_dilation_strides``  | ``Strides[n]``              | Per-axis dilation to apply to the      |
+|                             |                             | image batch                            |
++-----------------------------+-----------------------------+----------------------------------------+
+
+
+Outputs
+-------
+
 +------------------+-------------------------+----------------------------------------------------+
-| Output Name      | Element Type            | Shape                                              |
+| Name             | Element Type            | Shape                                              |
 +==================+=========================+====================================================+
 | ``features_out`` | Same as ``image_batch`` | ``(N, C_in, d_1 - df_1 + 1, ..., d_n - df_n + 1)`` |
 +------------------+-------------------------+----------------------------------------------------+
 
 It must be the case that after dilation and padding are applied, the filter fits within the image.
 
-(TODO: pictorial example of basic convolution.)
+.. TODO image add
 
-Window Parameters
-=================
-
-Two optional parameters affect the... stuff.
-
-+-----------------------------+-----------------------------+------------------------------------+
-| Parameter Name              | Type                        | Meaning                            |
-+=============================+=============================+====================================+
-| ``window_movement_strides`` | ``Strides`` of length ``n`` | How far to slide the window along  |
-|                             |                             | each axis at each step.            |
-+-----------------------------+                             +------------------------------------+
-| ``window_dilation_strides`` |                             | Per-axis dilation to apply to the  |
-|                             |                             | filters.                           |
-+-----------------------------+-----------------------------+------------------------------------+
-
-(TODO: pictorial example of the effect of window movement stride.)
-(TODO: pictorial example of window before and after dilation.)
-
-Image Batch Parameters
-======================
-
-Three optional parameters affect the... stuff.
-
-+----------------------------+-----------------------------+---------------------------------------+
-| Parameter Name             | Type                        | Meaning                               |
-+============================+=============================+=======================================+
-| ``padding_below``          | ``Padding`` of length ``n`` | How many padding elements to add      |
-|                            |                             | below the 0-coordinate on each axis.  |
-+----------------------------+                             +---------------------------------------+
-| ``padding_above``          |                             | How manny padding elements to add     |
-|                            |                             | above the max-coordinate on each axis.|
-+----------------------------+-----------------------------+---------------------------------------+
-| ``image_dilation_strides`` | ``Strides`` of length ``n`` | Per-axis dilation to apply to the     |
-|                            |                             | image batch.                          |
-+----------------------------+-----------------------------+---------------------------------------+
-
-(TODO: pictorial examples of the above)
 
 Mathematical Definition
 =======================
@@ -111,10 +110,18 @@ such that
 
    \mathit{Stride}[s](T)_{i_1,\dots,i_n} \triangleq T_{s_1i_1,\dots,s_ni_n}
 
+
+:math:`s` is the how far, not the unit of farness.
+
 Convolution
 -----------
 
-TODO.
+.. image possibly imported soon; they are not big files but they are svg 
+
+.. 
+ figure:: ../graphics/classngraph_1_1op_1_1Convolution__coll__graph_org.svg
+ :height: 500px
+
 
 Padded, Dilated, Strided Convolution
 ------------------------------------
@@ -126,15 +133,13 @@ Padded, Dilated, Strided Convolution
 Batched, Padded, Dilated, Strided Convolution
 ---------------------------------------------
 
-TODO.
+.. TODO
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Convolution
-   :members:
+  .. doxygenclass:: ngraph::op::Convolution
+     :project: ngraph
+     :members:
 
-Python Interface
-================
-
-is not merged yet, but could go here!
+     

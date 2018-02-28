@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <cassert>
 #include <deque>
@@ -27,6 +29,11 @@
 #include "ngraph/util.hpp"
 
 using namespace std;
+
+std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
+{
+    return val ? "true" : "false";
+}
 
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
@@ -232,7 +239,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // create the new outputs for fprop and the new fprop function
-    Nodes fprop_outputs{fprop->get_results()};
+    NodeVector fprop_outputs{fprop->get_results()};
     fprop_outputs.insert(fprop_outputs.end(),
                          fprop_cache.fprop_output_nodes.begin(),
                          fprop_cache.fprop_output_nodes.end());
@@ -244,14 +251,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
     // get cloned bprop results
-    Nodes cloned_results;
+    NodeVector cloned_results;
     for (auto node : bprop->get_results())
     {
         cloned_results.push_back(node_param_map.get(node));
     }
 
     // get clone bprop parameters
-    op::Parameters bprop_input_params;
+    op::ParameterVector bprop_input_params;
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(

@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <iostream>
 
@@ -121,7 +123,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
-    , m_debuginfo_enabled(false)
+    , m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
     , diagnostics_output(make_unique<llvm::raw_fd_ostream>(
@@ -133,9 +135,6 @@ codegen::StaticCompiler::StaticCompiler()
 void codegen::StaticCompiler::initialize()
 {
     m_extra_search_path_list.clear();
-#if NGCPU_DEBUGINFO
-    m_debuginfo_enabled = true;
-#endif
 
     InitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
@@ -154,6 +153,8 @@ void codegen::StaticCompiler::initialize()
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
+    diag_options->ShowCarets = false;
+    diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     DiagnosticsEngine diag_engine(diag_id, &*diag_options);
 
@@ -206,19 +207,8 @@ void codegen::StaticCompiler::initialize()
     }
 
     // Enable various target features
-    // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
-
     TO.CPU = sys::getHostCPUName();
-    TO.FeaturesAsWritten.emplace_back("+sse");
-    TO.FeaturesAsWritten.emplace_back("+sse2");
-    TO.FeaturesAsWritten.emplace_back("+sse3");
-    TO.FeaturesAsWritten.emplace_back("+ssse3");
-    TO.FeaturesAsWritten.emplace_back("+sse4.1");
-    TO.FeaturesAsWritten.emplace_back("+sse4.2");
-    TO.FeaturesAsWritten.emplace_back("+avx");
-    TO.FeaturesAsWritten.emplace_back("+avx2");
-    TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
 codegen::StaticCompiler::~StaticCompiler()
@@ -282,6 +272,9 @@ std::unique_ptr<codegen::Module>
         preprocessor_options.ImplicitPCHInclude = m_pch_path;
         preprocessor_options.DisablePCHValidation = 0;
     }
+
+    // Clear warnings and errors
+    m_compiler->getDiagnosticClient().clear();
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -351,6 +344,15 @@ void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
     load_headers_from_resource();
+#elif defined(__APPLE__)
+    add_header_search_path(EIGEN_HEADERS_PATH);
+    add_header_search_path(MKLDNN_HEADERS_PATH);
+    add_header_search_path(TBB_HEADERS_PATH);
+    add_header_search_path(NGRAPH_HEADERS_PATH);
+    add_header_search_path(INSTALLED_HEADERS_PATH);
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+    add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
@@ -400,28 +402,29 @@ void codegen::StaticCompiler::configure_search_path()
     // Only needed for GPU backend
     add_header_search_path(CUDA_HEADER_PATHS);
 #endif
+
+#ifdef NGRAPH_DISTRIBUTED
+    add_header_search_path(MPI_HEADER_PATH);
+#endif
 }
 
 void codegen::StaticCompiler::load_headers_from_resource()
 {
+    const string builtin_root = "/$builtin";
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    std::set<std::string> header_search_paths;
-    for (const HeaderInfo& hi : header_info)
+    for (const string& search_path : builtin_search_paths)
     {
-        string search_path = hi.search_path;
-        string absolute_path = file_util::path_join(search_path, hi.header_path);
-        string builtin = "/$builtin" + absolute_path;
+        string builtin = builtin_root + search_path;
+        hso.AddPath(builtin, clang::frontend::System, false, false);
+    }
+    for (const pair<string, string>& header_info : builtin_headers)
+    {
+        string absolute_path = header_info.first;
+        string builtin = builtin_root + absolute_path;
         std::unique_ptr<llvm::MemoryBuffer> mb(
-            llvm::MemoryBuffer::getMemBuffer(hi.header_data, builtin));
+            llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
         preprocessor_options.addRemappedFile(builtin, mb.release());
-
-        if (!contains(header_search_paths, search_path))
-        {
-            string builtin = "/$builtin" + search_path;
-            hso.AddPath(builtin, clang::frontend::System, false, false);
-            header_search_paths.insert(search_path);
-        }
     }
 }
 

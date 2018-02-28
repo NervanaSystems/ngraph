@@ -1,20 +1,22 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -54,7 +56,7 @@ namespace ngraph
         /// (Note that `below` and `above` here refer respectively to lower- or higher-numbered coordinate indices, and numbering starts at the upper-left corner;
         /// thus inserting a row "below" actually inserts it at the "top" of the matrix.)
         ///
-        class Pad : public RequiresTensorViewArgs
+        class Pad : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a generic padding operation.
@@ -70,8 +72,8 @@ namespace ngraph
                 const Shape& padding_above,
                 const Shape& padding_interior);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
             /// \return The padding-below sizes.
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.

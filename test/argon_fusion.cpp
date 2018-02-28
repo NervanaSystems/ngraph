@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2018 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <cstdio>
@@ -25,13 +27,13 @@
 #include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/argon/ops/relu.hpp"
 #include "ngraph/runtime/argon/pass/argon_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -43,12 +45,12 @@ using namespace std;
 
 TEST(Argon_fusion, fuse_max_with_constant_zero_input_as_relu)
 {
-    auto shape_a = Shape{1, 5};
+    Shape shape_a{1, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto max = make_shared<op::Maximum>(A, B);
-    auto shape_rt = Shape{1, 5};
-    auto f = make_shared<Function>(max, op::Parameters{B});
+    Shape shape_rt{1, 5};
+    auto f = make_shared<Function>(max, op::ParameterVector{B});
 
     auto manager = runtime::Manager::get("ARGON");
     auto external = manager->compile(f);

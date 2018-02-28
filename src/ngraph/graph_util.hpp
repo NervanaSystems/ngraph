@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
@@ -28,10 +30,23 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/placement.hpp"
+
 namespace ngraph
 {
     class Node;
     class Function;
+
+    namespace descriptor
+    {
+        class Input;
+        class Output;
+    }
+
+    namespace op
+    {
+        class Parameter;
+    }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f);
@@ -51,12 +66,14 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+
     // maps original to replacement nodes e.g. for clone utilities
     // performs index checking on access
     class NodeMap
     {
     public:
-        // map original node to replcacement node
+        // map original node to replacement node
         // throws ngraph_error if key already exists
         void add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
 
@@ -96,4 +113,18 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    // Assert that nodes in the function is colocated and return that placement
+    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+
+    // Split function to function(s) with unique placement
+    std::vector<std::shared_ptr<Function>> split_function_by_placement(
+        std::shared_ptr<Function> f,
+        std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<Node>>&
+            map_parameter_to_source_node);
+
+    // Insert parameter node between src_node and dst_node by splitting the graph
+    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                        std::shared_ptr<Node> dst_node,
+                                        std::shared_ptr<op::Parameter> p_node);
 }

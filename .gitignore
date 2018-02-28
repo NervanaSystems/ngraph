@@ -48,15 +48,21 @@ output/
 *.mpg
 *.cpio
 *.wav
+*.backup
 doc/source/generated
 .cache/
 nervana_aeon.egg-info/
 
+# emacs
+*~
+
 # vim
 *.swp
 *.swo
+tags
 
 build/
+scripts/
 
 # makeenv and test intermediate files
 tmp/

@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
@@ -23,13 +25,16 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -65,8 +70,10 @@
 #include "ngraph/runtime/kernel/less.hpp"
 #include "ngraph/runtime/kernel/less_eq.hpp"
 #include "ngraph/runtime/kernel/log.hpp"
+#include "ngraph/runtime/kernel/max.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/maximum.hpp"
+#include "ngraph/runtime/kernel/min.hpp"
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/kernel/negate.hpp"
@@ -75,8 +82,10 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
+#include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
+#include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
@@ -93,6 +102,10 @@
 #include "ngraph/runtime/kernel/tanh.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/runtime/kernel/allreduce.hpp"
+#endif
 
 namespace ngraph
 {
@@ -233,6 +246,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+#ifdef NGRAPH_DISTRIBUTED
+        else if (node_op == "AllReduce")
+        {
+            kernel::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 args[0]->get_element_type(),
+                                 static_cast<int>(args[0]->get_element_count()));
+        }
+#endif
         else if (node_op == "Asin")
         {
             kernel::asin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -256,7 +278,8 @@ private:
                                 avg_pool->get_window_shape(),
                                 avg_pool->get_window_movement_strides(),
                                 avg_pool->get_padding_below(),
-                                avg_pool->get_padding_above());
+                                avg_pool->get_padding_above(),
+                                avg_pool->get_include_padding_in_avg_computation());
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -268,7 +291,8 @@ private:
                                          apb->get_window_shape(),
                                          apb->get_window_movement_strides(),
                                          apb->get_padding_below(),
-                                         apb->get_padding_above());
+                                         apb->get_padding_above(),
+                                         apb->get_include_padding_in_avg_computation());
         }
         else if (node_op == "Broadcast")
         {
@@ -474,6 +498,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+        else if (node_op == "Max")
+        {
+            const op::Max* max = static_cast<const op::Max*>(&node);
+            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           max->get_reduction_axes());
+        }
         else if (node_op == "Maximum")
         {
             kernel::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -508,6 +541,15 @@ private:
                                          max_pool_backprop->get_window_movement_strides(),
                                          max_pool_backprop->get_padding_below(),
                                          max_pool_backprop->get_padding_above());
+        }
+        else if (node_op == "Min")
+        {
+            const op::Min* min = static_cast<const op::Min*>(&node);
+            kernel::min<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           min->get_reduction_axes());
         }
         else if (node_op == "Minimum")
         {
@@ -574,6 +616,15 @@ private:
                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
                              out[0]->get_element_count());
         }
+        else if (node_op == "Product")
+        {
+            const op::Product* product = static_cast<const op::Product*>(&node);
+            kernel::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               product->get_reduction_axes());
+        }
         else if (node_op == "Reduce")
         {
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
@@ -628,6 +679,19 @@ private:
                                   f,
                                   reduce_window->get_window_shape(),
                                   reduce_window->get_window_movement_strides());
+        }
+        else if (node_op == "Relu")
+        {
+            kernel::relu<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            out[0]->get_element_count());
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     out[0]->get_element_count());
         }
         // else if (node_op == "Remainder")
         // {

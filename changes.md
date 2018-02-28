@@ -1,5 +1,26 @@
 # API Changes
 
+## Nodes, Parameters
+
+* `Nodes` is now `NodeVector`
+* `Parameters` is now `ParameterVector`
+* `NodeVector`, `ParameterVector`, `AxisVector`, `AxisSet`, `Shape`, `Stride`, `Coordinate`, and `CoordinateDiff` are now classes, not type aliases.
+
+## Changes to ops
+
+* The namespace `ngraph::op` is only for actual ops. Helpers have been moved into
+  `ngraph::op::util`:
+  + `BinaryElementwiseArithmetic`
+  + `BinaryElementwiseComparison`
+  + `BinaryElementwise`
+  + `RequiresTensorViewArgs`
+  + `UnaryElementwiseArithmetic`
+  + `UnaryElementwise`
+  Ops defined outside of nGraph core will need to get the base class from `ngraph::op::util` and
+  change the include file to `#include "ngraph/ops/util/requires_tensor_view_args.hpp"`, etc.
+
+  See any of the core ops for an example.
+
 ## Changes to convolution and pooling ops
 
 * Backprop ops have been added for convolution ops.
@@ -12,6 +33,11 @@
   + `Convolution`: `get_input_channel_count get_output_channel_count get_input_image_physical_shape get_input_image_virtual_shape get_output_image_shape get_window_physical_shape get_window_virtual_shape get_batch_size get_image_dimension_count`
 
   All of the above information can be inferred from the shapes and parameters of the op.
+
+* The `AvgPool` operator has a new attribute governing whether or not padding-region values
+  are considered when computing a given window's average: `include_padding_in_avg_computation`.
+  One of the class constructors adds this to the parameter list, and the others use a default
+  value of `false` which matches the old behavior.
 
 ## Negative convolution padding
 

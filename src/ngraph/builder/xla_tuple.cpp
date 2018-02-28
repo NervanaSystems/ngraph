@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <memory>
 
@@ -26,19 +28,18 @@
 using namespace std;
 using namespace ngraph;
 
-xla::op::Tuple::Tuple(const Nodes& nodes)
-    : Node("Tuple", Nodes{})
+xla::op::Tuple::Tuple(const NodeVector& nodes)
+    : Node("Tuple", NodeVector{})
     , m_elements(nodes)
 {
 }
 
-std::shared_ptr<Node>
-    xla::op::Tuple::copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> xla::op::Tuple::copy_with_new_args(const NodeVector& new_args) const
 {
     return make_shared<Tuple>(new_args);
 }
 
-const vector<shared_ptr<Node>>& xla::op::Tuple::get_elements() const
+const NodeVector& xla::op::Tuple::get_elements() const
 {
     return m_elements;
 }
@@ -90,7 +91,7 @@ namespace
 
     // Collect a vector of the non-Tuple nodes that underly nodes
     template <typename T>
-    vector<shared_ptr<T>> flatten(const Nodes& nodes)
+    vector<shared_ptr<T>> flatten(const NodeVector& nodes)
     {
         vector<shared_ptr<T>> result;
         for (auto node : nodes)
@@ -101,8 +102,8 @@ namespace
     }
 }
 
-xla::XLAFunction::XLAFunction(const vector<shared_ptr<Node>>& results,
-                              const vector<shared_ptr<Node>>& parameters,
+xla::XLAFunction::XLAFunction(const NodeVector& results,
+                              const NodeVector& parameters,
                               const string& name)
     : Function(flatten<Node>(results), flatten<ngraph::op::Parameter>(parameters), name)
 {

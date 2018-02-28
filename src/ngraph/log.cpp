@@ -1,17 +1,18 @@
-/*
- Copyright 2016 Nervana Systems Inc.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <chrono>
 #include <condition_variable>
@@ -25,45 +26,45 @@
 
 using namespace std;
 
-namespace nervana
+namespace ngraph
 {
     class thread_starter;
 }
 
-string nervana::logger::log_path;
-deque<string> nervana::logger::queue;
+string ngraph::logger::log_path;
+deque<string> ngraph::logger::queue;
 static mutex queue_mutex;
 static condition_variable queue_condition;
 static unique_ptr<thread> queue_thread;
 static bool active = false;
 
-std::ostream& nervana::get_nil_stream()
+std::ostream& ngraph::get_nil_stream()
 {
     static std::stringstream nil;
     return nil;
 }
 
-class nervana::thread_starter
+class ngraph::thread_starter
 {
 public:
-    thread_starter() { nervana::logger::start(); }
-    virtual ~thread_starter() { nervana::logger::stop(); }
+    thread_starter() { ngraph::logger::start(); }
+    virtual ~thread_starter() { ngraph::logger::stop(); }
 };
 
-static nervana::thread_starter _starter;
+static ngraph::thread_starter _starter;
 
-void nervana::logger::set_log_path(const string& path)
+void ngraph::logger::set_log_path(const string& path)
 {
     log_path = path;
 }
 
-void nervana::logger::start()
+void ngraph::logger::start()
 {
     active = true;
     queue_thread = unique_ptr<thread>(new thread(&thread_entry, nullptr));
 }
 
-void nervana::logger::stop()
+void ngraph::logger::stop()
 {
     {
         unique_lock<std::mutex> lk(queue_mutex);
@@ -73,12 +74,12 @@ void nervana::logger::stop()
     queue_thread->join();
 }
 
-void nervana::logger::process_event(const string& s)
+void ngraph::logger::process_event(const string& s)
 {
     cout << s << "\n";
 }
 
-void nervana::logger::thread_entry(void* param)
+void ngraph::logger::thread_entry(void* param)
 {
     unique_lock<std::mutex> lk(queue_mutex);
     while (active)
@@ -92,14 +93,14 @@ void nervana::logger::thread_entry(void* param)
     }
 }
 
-void nervana::logger::log_item(const string& s)
+void ngraph::logger::log_item(const string& s)
 {
     unique_lock<std::mutex> lk(queue_mutex);
     queue.push_back(s);
     queue_condition.notify_one();
 }
 
-nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+ngraph::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
 {
     switch (type)
     {
@@ -123,7 +124,7 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
     _stream << "\t";
 }
 
-nervana::log_helper::~log_helper()
+ngraph::log_helper::~log_helper()
 {
     cout << _stream.str() << endl;
     // logger::log_item(_stream.str());

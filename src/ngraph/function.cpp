@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <list>
 #include <memory>
@@ -25,8 +27,8 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-Function::Function(const Nodes& results,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+Function::Function(const NodeVector& results,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
     : m_results(results)
     , m_parameters(parameters)
@@ -50,9 +52,9 @@ Function::Function(const Nodes& results,
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
-    : Function(Nodes{result}, parameters, name)
+    : Function(NodeVector{result}, parameters, name)
 {
 }
 

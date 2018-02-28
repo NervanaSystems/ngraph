@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "matcher.hpp"
 #include <algorithm>
@@ -138,8 +140,8 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::match_permutation(const Nodes& pattern_args,
-                                        const Nodes& args,
+        bool Matcher::match_permutation(const NodeVector& pattern_args,
+                                        const NodeVector& args,
                                         PatternMap& pattern_map)
         {
             m_depth++;
@@ -220,9 +222,9 @@ namespace ngraph
             return cb(*this);
         }
 
-        static Nodes get_users(std::shared_ptr<Node> node)
+        static NodeVector get_users(std::shared_ptr<Node> node)
         {
-            Nodes result;
+            NodeVector result;
 
             for (size_t i = 0; i < node->get_output_size(); ++i)
             {

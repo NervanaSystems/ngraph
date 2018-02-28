@@ -1,20 +1,24 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "gtest/gtest.h"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
 
 #include <memory>
@@ -34,7 +38,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
+    auto cluster_0 = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_output_op(0), dot);
 }
@@ -114,7 +118,7 @@ TEST(build_graph, function_undeclared_parameters)
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
     try
     {
-        auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg3});
+        auto f = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg3});
         f->get_ops();
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";

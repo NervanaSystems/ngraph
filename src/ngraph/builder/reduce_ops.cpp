@@ -1,23 +1,29 @@
-/*
- Copyright 2017 Nervana Systems Inc.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
-      http://www.apache.org/licenses/LICENSE-2.0
+#include <numeric>
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-
+#include "ngraph/axis_set.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 
@@ -79,27 +85,34 @@ namespace ngraph
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction)
         {
-            auto xsum = std::make_shared<op::Sum>(node, reduction_axes);
+            std::shared_ptr<Node> mu = mean(node, reduction_axes);
 
-            auto x2 = node * node;
+            auto reshape = node->get_shape();
+            for (auto i : reduction_axes)
+            {
+                reshape[i] = 1;
+            }
 
-            auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
+            ngraph::AxisVector order(mu->get_shape().size());
+            std::iota(order.begin(), order.end(), 0);
+
+            mu = std::make_shared<op::Reshape>(mu, order, reshape);
+
+            std::shared_ptr<Node> diff = make_with_numpy_broadcast<op::Subtract>(node, mu);
+
+            diff = std::make_shared<op::Sum>(diff * diff, reduction_axes);
 
             const auto& et = node->get_element_type();
             auto N = get_num_elements(node->get_shape(), reduction_axes);
 
-            auto Nconst = op::Constant::create(et, xsum->get_shape(), {N});
-            auto xbar2 = (xsum * xsum) / Nconst;
-
-            auto diff = x2sum - xbar2;
-
             if (bessel_correction)
             {
-                auto N1const = op::Constant::create(et, xsum->get_shape(), {N - 1});
+                auto N1const = op::Constant::create(et, diff->get_shape(), {N - 1});
                 return diff / N1const;
             }
             else
             {
+                auto Nconst = op::Constant::create(et, diff->get_shape(), {N});
                 return diff / Nconst;
             }
         }

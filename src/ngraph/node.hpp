@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
@@ -26,16 +28,26 @@
 #include <vector>
 
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/common.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/placement.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
+    namespace op
+    {
+        class Parameter;
+    }
+
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
+
+    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                        std::shared_ptr<Node> dst_node,
+                                        std::shared_ptr<op::Parameter> p_node);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -47,9 +59,12 @@ namespace ngraph
         friend class descriptor::Input;
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
+        friend void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                                   std::shared_ptr<Node> dst_node,
+                                                   std::shared_ptr<op::Parameter> p_node);
 
     protected:
-        Node(const std::string& node_type, const Nodes& arguments);
+        Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node()
         {
             for (auto arg : m_arguments)
@@ -154,22 +169,31 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
-        virtual Nodes get_input_ops(); //const;
+        virtual NodeVector get_input_ops(); //const;
 
         std::shared_ptr<Node> get_input_op(size_t index);
 
-        virtual std::shared_ptr<Node>
-            copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
+        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
-        // True if this and node have one output with same element type and shape
+        /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
+
+        /// Get device placement
+        Placement get_placement() const;
+
+        /// Set device placement
+        void set_placement(Placement placement);
+
+        /// Get input descriptor that is connected to src
+        descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
+
+        /// Get ouput descriptor that outputs to dst
+        descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
 
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
-        void assert_argument_list_equivalency(const Nodes& b);
-        bool test_identical(const Node&) const;
 
         std::string m_node_type;
         std::multiset<Node*> m_users;
@@ -180,13 +204,14 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
+        Placement m_placement = Placement::DEFAULT;
 
     private:
-        Nodes m_arguments;
+        NodeVector m_arguments;
         //m_arguments still needs to be kept in sync with i/o since get_input_ops
         //is pretty ubiquitous and might be called after the original graph was modified.
         //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
         //is correct.
-        Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
+        NodeVector& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }

@@ -1,20 +1,24 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -46,7 +50,7 @@ namespace ngraph
         /// | Type                                                                           | Description                       |
         /// | ------------------------------------------------------------------------------ | --------------------------------- |
         /// | \f$E[d'_1,\dots,d'_n]\f$ where \f$d'_i = \lceil(u_i - l_i)\, /\, s_i\rceil\f$. | The tensor sliced from the input. |
-        class Slice : public RequiresTensorViewArgs
+        class Slice : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a tensor slice operation.
@@ -70,11 +74,13 @@ namespace ngraph
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Slice>(
                     new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
             }

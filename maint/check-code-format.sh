@@ -2,18 +2,21 @@
 set -e
 set -u
 
-# Copyright 2017 Nervana Systems Inc.
+# ******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ******************************************************************************
 
 # NOTE: The results of `clang-format` depend _both_ of the following factors:
 # - The `.clang-format` file, and
@@ -42,23 +45,26 @@ declare NUM_FILES_CHECKED=0
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare ROOT_SUBDIR
-for ROOT_SUBDIR in src test; do
-    if ! [[ -d "${ROOT_SUBDIR}" ]]; then
-        bash_lib_die "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
-    fi
+declare ARGON_SRC_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/src"
+declare ARGON_TEST_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/test"
 
-    bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
-    declare SRC_FILE
-    # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
-    # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
-    # mechanism, and this confuses clang-format.
-    for SRC_FILE in $(find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) ); do
-        if "${CLANG_FORMAT_PROG}" -style=file -output-replacements-xml "${SRC_FILE}" | grep -c "<replacement " >/dev/null; then
-            FAILED_FILES+=( "${SRC_FILE}" )
-        fi
-        NUM_FILES_CHECKED=$((NUM_FILES_CHECKED+1))
-    done
+declare ROOT_SUBDIR
+for ROOT_SUBDIR in src test ${ARGON_SRC_DIR} ${ARGON_TEST_DIR}; do
+    if ! [[ -d "${ROOT_SUBDIR}" ]]; then
+        bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+    else
+        bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        declare SRC_FILE
+        # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
+        # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
+        # mechanism, and this confuses clang-format.
+        for SRC_FILE in $(find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) ); do
+            if "${CLANG_FORMAT_PROG}" -style=file -output-replacements-xml "${SRC_FILE}" | grep -c "<replacement " >/dev/null; then
+                FAILED_FILES+=( "${SRC_FILE}" )
+            fi
+            NUM_FILES_CHECKED=$((NUM_FILES_CHECKED+1))
+        done
+    fi
 done
 
 popd
@@ -73,4 +79,3 @@ else
     done
     exit 1
 fi
-

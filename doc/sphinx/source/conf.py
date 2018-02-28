@@ -34,7 +34,6 @@ needs_sphinx = '1.6.5'
 extensions = ['sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.autodoc',
     'breathe'
     ]
 
@@ -191,7 +190,7 @@ texinfo_documents = [
 html_add_permalinks = ""
 
 breathe_projects = {
-    "nGraph": "../../../doxygen/xml",
+    "ngraph": "../../doxygen/xml",
 }
 
 rst_epilog = u"""
