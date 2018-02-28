@@ -238,7 +238,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
-    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
+    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
