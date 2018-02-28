@@ -26,14 +26,15 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                 //  std::shared_ptr<ngraph::Node> variance)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
-    , m_bn_variance_shape(input->get_shape()[1])
-    , m_bn_mean_shape(input->get_shape()[1])
+    , m_bn_variance_shape({input->get_shape()[1]})
+    , m_bn_mean_shape({input->get_shape()[1]})
     , m_epsilon(eps)
 {
     add_output(input->get_element_type(), m_bn_input_shape);
     add_output(input->get_element_type(), m_bn_mean_shape);
     add_output(input->get_element_type(), m_bn_variance_shape);
-
+    std::cout << "m_bn_input_shape " << join(m_bn_input_shape) << std::endl; 
+    std::cout << "m_bn_variance_shape: " << join(m_bn_variance_shape) << std::endl; 
     if (m_bn_input_shape.size() < 2)
     {
         throw ngraph_error("input tensor to batchnorm much have tensor of atleast rank 2");

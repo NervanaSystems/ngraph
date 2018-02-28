@@ -192,7 +192,7 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
 
     std::cout << "output_rt " << output_rt << " mean_rt: " << mean_rt << " bn: " << bn << std::endl;
 
-    auto f = make_shared<Function>(output_rt, op::Parameters{input, gamma, beta});
+    auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt}, op::Parameters{input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
