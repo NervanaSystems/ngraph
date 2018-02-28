@@ -97,14 +97,15 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+if(DEFINED ENV{NGRAPH_WARNINGS_AS_ERRORS})
+    if($ENV{NGRAPH_WARNINGS_AS_ERRORS})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+        message(STATUS "Warnings as errors")
+    endif()
+endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-
-if ("${NGRAPH_WARNINGS_AS_ERRORS}" MATCHES "^ON$")
-    message(STATUS "Enabling warnings as errors")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-endif()
 
 # Set true if CPU backend is built by default
 if (NOT DEFINED NGRAPH_CPU_ENABLE)

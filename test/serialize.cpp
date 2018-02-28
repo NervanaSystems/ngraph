@@ -20,10 +20,10 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -60,8 +60,8 @@ TEST(serialize, main)
     string js = serialize(h, 4);
 
     {
-        ofstream f("serialize_function.js");
-        f << js;
+        ofstream out("serialize_function.js");
+        out << js;
     }
 
     istringstream in(js);
