@@ -3553,7 +3553,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4f, 1e-5f, 1e-6f, 1,  1,  1,  1, 1,
-                               1, -1, -1, -1, -1, -1, -1,   -1,   -1,   -1, -1, -1, -1});
+                               1, -1, -1, -1, -1, -1, -1,    -1,    -1,    -1, -1, -1, -1});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
