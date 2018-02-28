@@ -48,6 +48,7 @@ output/
 *.mpg
 *.cpio
 *.wav
+*.backup
 doc/source/generated
 .cache/
 nervana_aeon.egg-info/

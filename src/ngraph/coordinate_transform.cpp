@@ -20,9 +20,12 @@
 #include <sstream>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -367,7 +370,7 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
     return true;
 }
 
-Coordinate CoordinateTransform::get_target_shape() const
+const Shape& CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }

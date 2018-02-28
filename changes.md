@@ -1,5 +1,11 @@
 # API Changes
 
+## Nodes, Parameters
+
+* `Nodes` is now `NodeVector`
+* `Parameters` is now `ParameterVector`
+* `NodeVector`, `ParameterVector`, `AxisVector`, `AxisSet`, `Shape`, `Stride`, `Coordinate`, and `CoordinateDiff` are now classes, not type aliases.
+
 ## Changes to ops
 
 * The namespace `ngraph::op` is only for actual ops. Helpers have been moved into

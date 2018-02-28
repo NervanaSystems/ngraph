@@ -24,7 +24,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"

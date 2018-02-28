@@ -43,17 +43,17 @@ namespace ngraph
             class Tuple : public Node
             {
             public:
-                Tuple(const std::vector<std::shared_ptr<Node>>& nodes);
+                Tuple(const NodeVector& nodes);
 
                 std::shared_ptr<Node> get_tuple_element(size_t i);
                 size_t get_tuple_size() const;
-                const Nodes& get_elements() const;
+                const NodeVector& get_elements() const;
 
-                virtual std::shared_ptr<Node> copy_with_new_args(
-                    const std::vector<std::shared_ptr<Node>>& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:
-                Nodes m_elements;
+                NodeVector m_elements;
             };
 
             std::shared_ptr<Node> get_tuple_element(std::shared_ptr<Node> tuple, size_t i);
@@ -64,8 +64,8 @@ namespace ngraph
         class XLAFunction : public Function
         {
         public:
-            XLAFunction(const std::vector<std::shared_ptr<Node>>& results,
-                        const std::vector<std::shared_ptr<Node>>& parameters,
+            XLAFunction(const NodeVector& results,
+                        const NodeVector& parameters,
                         const std::string& name = "");
         };
 
