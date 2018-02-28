@@ -18,6 +18,7 @@
 from ngraph_api.ops import absolute
 from ngraph_api.ops import absolute as abs
 from ngraph_api.ops import add
+from ngraph_api.ops import avg_pool
 from ngraph_api.ops import broadcast
 from ngraph_api.ops import ceiling
 from ngraph_api.ops import ceiling as ceil
@@ -36,6 +37,7 @@ from ngraph_api.ops import less
 from ngraph_api.ops import less_eq
 from ngraph_api.ops import logical_not
 from ngraph_api.ops import maximum
+from ngraph_api.ops import max_pool
 from ngraph_api.ops import minimum
 from ngraph_api.ops import multiply
 from ngraph_api.ops import negative
