@@ -108,7 +108,6 @@ endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-return()
 
 # Set true if CPU backend is built by default
 if (NOT DEFINED NGRAPH_CPU_ENABLE)
