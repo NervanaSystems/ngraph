@@ -148,8 +148,6 @@ in a single thread at a time. A ``CallFrame`` may be reused, but any particular
 thread needs to execute the function at the same time, create multiple 
 ``CallFrame`` objects from the ``ExternalFunction``.
 
-.. code-block:: cpp
-
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
    :lines: 24-28
