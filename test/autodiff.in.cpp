@@ -1337,27 +1337,84 @@ TEST(${BACKEND_NAME}, backwards_softmax_axis)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_sqrt)
+TEST(${BACKEND_NAME}, backwards_softmax_underflow)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    // Deriv has an asymptote at 0 so we'll stay away from there.
-    test::Uniform<float> rng(0.1f, 10.0f);
+    auto low = std::numeric_limits<float>::lowest();
+
     Shape shape{2, 3};
+    auto x0 = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(x0, vector<float>{low, 1, 2, 3, 4, 5});
+
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sqrt>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
 
-    for (auto i = 0; i < ${TEST_LOOPS}; i++)
-    {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+TEST(${BACKEND_NAME}, backwards_softmax_3d)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
-    }
+    auto low = std::numeric_limits<float>::lowest();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    Shape shape{2, 3, 4};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph0 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph0, {x0}, .01f, .01f));
+
+    auto make_graph1 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph1, {x0}, .01f, .01f));
+
+    auto make_graph2 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph2, {x0}, .01f, .01f));
+
+    auto make_graph01 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph01, {x0}, .01f, .01f));
+
+    auto make_graph02 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph02, {x0}, .01f, .01f));
+
+    auto make_graph12 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph12, {x0}, .01f, .01f));
+
+    auto make_graph012 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph012, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_subtract)

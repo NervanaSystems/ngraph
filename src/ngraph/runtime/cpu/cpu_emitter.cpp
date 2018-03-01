@@ -3301,7 +3301,7 @@ namespace ngraph
                 }
 
                 // max inner loop(s)
-                writer << type << " m = 0;\n";
+                writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
 
                 for (size_t d = 0; d < dims; ++d)
                 {

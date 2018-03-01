@@ -29,7 +29,21 @@ namespace ngraph
                 : UnaryElementwiseArithmetic("Softmax", arg0)
                 , m_axes(axes)
             {
-                // TODO: handle empty axes
+                for (auto axis : m_axes)
+                {
+                    if (axis >= get_shape().size())
+                    {
+                        throw ngraph_error("Axis for softmax reduction operator is out of bounds");
+                    }
+                }
+
+                if (m_axes.size() == 0)
+                {
+                    for (size_t i = 0; i < get_shape().size(); ++i)
+                    {
+                        m_axes.insert(i);
+                    }
+                }
             }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
