@@ -37,8 +37,7 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() { return get_input_op(2); }
             std::shared_ptr<Node> get_filters() { return get_input_op(1); }
             std::shared_ptr<Node> get_data_batch() { return get_input_op(0); }
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const std::shared_ptr<Node>& delta) override;
@@ -84,8 +83,7 @@ namespace ngraph
                                         const CoordinateDiff& padding_above_forward,
                                         const Strides& data_dilation_strides_forward);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                    const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The data batch shape.
             const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
@@ -180,8 +178,7 @@ namespace ngraph
                                            const CoordinateDiff& padding_above_forward,
                                            const Strides& data_dilation_strides_forward);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                    const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The filters tensor shape.
             const Shape& get_filters_shape() const { return m_filters_shape; }

@@ -134,12 +134,12 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
               mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
               mkldnn::padding_kind::zero},
              mkldnn_utils::global_cpu_engine},
-            *mkldnn_primitives[input_data_index],
-            *mkldnn_primitives[weights_index],
-            *mkldnn_primitives[bias_index],
-            *mkldnn_primitives[result_index]));
+            *m_mkldnn_primitives[input_data_index],
+            *m_mkldnn_primitives[weights_index],
+            *m_mkldnn_primitives[bias_index],
+            *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
     return conv_index;
 }
 
@@ -186,11 +186,11 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
                                                                 fwd_pd};
 
     const size_t conv_index = insert_primitive(new mkldnn::convolution_backward_data(bwd_pd,
-                                                                                     *mkldnn_primitives[in_delta_index],
-                                                                                     *mkldnn_primitives[in_weights_index],
-                                                                                     *mkldnn_primitives[out_data_delta_index]));
+                                                                                     *m_mkldnn_primitives[in_delta_index],
+                                                                                     *m_mkldnn_primitives[in_weights_index],
+                                                                                     *m_mkldnn_primitives[out_data_delta_index]));
 
-    primitive_deps[conv_index] = {in_weights_index, in_delta_index, out_data_delta_index};
+    m_primitive_deps[conv_index] = {in_weights_index, in_delta_index, out_data_delta_index};
     return conv_index;
 }
 
@@ -239,12 +239,12 @@ size_t MKLDNNEmitter::build_convolution_backward_filters_bias(const mkldnn::memo
                                                                 fwd_pd};
 
     const size_t conv_index = insert_primitive(new mkldnn::convolution_backward_weights(bwd_pd,
-            *mkldnn_primitives[in_data_index],
-            *mkldnn_primitives[in_delta_index],
-            *mkldnn_primitives[out_weights_delta_index],
-            *mkldnn_primitives[out_bias_delta_index]));
+            *m_mkldnn_primitives[in_data_index],
+            *m_mkldnn_primitives[in_delta_index],
+            *m_mkldnn_primitives[out_weights_delta_index],
+            *m_mkldnn_primitives[out_bias_delta_index]));
 
-    primitive_deps[conv_index] = {in_data_index, in_delta_index, out_weights_delta_index, out_bias_delta_index};
+    m_primitive_deps[conv_index] = {in_data_index, in_delta_index, out_weights_delta_index, out_bias_delta_index};
     return conv_index;
 }
 

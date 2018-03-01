@@ -58,8 +58,7 @@ op::ConvolutionBias::ConvolutionBias(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-std::shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(
-    const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -199,7 +198,7 @@ op::ConvolutionBiasBackpropData::ConvolutionBiasBackpropData(const Shape& data_b
 }
 
 std::shared_ptr<Node> op::ConvolutionBiasBackpropData::copy_with_new_args(
-        const std::vector<std::shared_ptr<Node>>& new_args) const
+        const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -299,7 +298,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
 }
 
 std::shared_ptr<Node> op::ConvolutionBiasBackpropFiltersBias::copy_with_new_args(
-        const std::vector<std::shared_ptr<Node>>& new_args) const
+        const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
