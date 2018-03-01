@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/json.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "nlohmann/json.hpp"
 
 namespace ngraph
 {
@@ -69,7 +69,9 @@ namespace ngraph
 
             void to_json(nlohmann::json& json, const TraceEvent& event);
 
-            void GenerateTimeline(const std::vector<OpAttributes>& op_attrs, int64_t* op_durations);
+            void GenerateTimeline(const std::vector<OpAttributes>& op_attrs,
+                                  int64_t* op_durations,
+                                  const std::string& file_name);
             bool IsTracingEnabled();
         }
     }

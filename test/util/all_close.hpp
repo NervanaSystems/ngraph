@@ -36,8 +36,8 @@ namespace ngraph
         template <typename T>
         bool all_close(const std::vector<T>& a,
                        const std::vector<T>& b,
-                       T rtol = 1e-5f,
-                       T atol = 1e-8f)
+                       T rtol = static_cast<T>(1e-5),
+                       T atol = static_cast<T>(1e-8))
         {
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)

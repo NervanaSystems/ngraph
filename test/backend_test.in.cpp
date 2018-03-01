@@ -2373,7 +2373,6 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
@@ -2396,7 +2395,6 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
@@ -2442,7 +2440,6 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2465,7 +2462,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2488,7 +2484,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};
@@ -3055,7 +3050,7 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<float>{4.8}, read_vector<float>(result));
+    EXPECT_EQ(vector<float>{4.8f}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -3073,7 +3068,7 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto result = backend->make_primary_tensor_view(element::i64, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<int64_t>{{2112}}, read_vector<int64_t>(result));
+    EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -3092,7 +3087,7 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{4.8f, 4.7f, -5.3f, 0.0f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_int64)
@@ -3514,11 +3509,11 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1e-6, -1, 0, 1});
+    copy_data(a, vector<float>{1e-6f, -1, 0, 1});
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6}, 5e-2f));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6f}, 5e-2f));
     // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
 }
 
@@ -3539,13 +3534,13 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4, 1e-5, 1e-6, 1,  1,  1,  1, 1,
-                               1, -1, -1, -1, -1, -1, -1,   -1,   -1,   -1, -1, -1, -1});
+    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4f, 1e-5f, 1e-6f, 1,  1,  1,  1, 1,
+                               1, -1, -1, -1, -1, -1, -1,    -1,    -1,    -1, -1, -1, -1});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
     EXPECT_TRUE(
-        test::all_close(read_vector<float>(result), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
+        test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
 }
 
 TEST(${BACKEND_NAME}, sign)
@@ -3562,7 +3557,7 @@ TEST(${BACKEND_NAME}, sign)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0});
+    copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
