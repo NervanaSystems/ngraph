@@ -46,7 +46,7 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 
 string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
 {
-    return node->get_node_id() + "_" + to_string(value_index);
+    return node->get_unique_name() + "_" + to_string(value_index);
 }
 
 string descriptor::Tensor::get_next_view_name()
