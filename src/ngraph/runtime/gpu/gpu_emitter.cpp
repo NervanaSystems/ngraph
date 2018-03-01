@@ -51,29 +51,6 @@
 using namespace std;
 using namespace ngraph;
 
-#define NVRTC_SAFE_CALL(x)                                                                         \
-    do                                                                                             \
-    {                                                                                              \
-        nvrtcResult result = x;                                                                    \
-        if (result != NVRTC_SUCCESS)                                                               \
-        {                                                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
-                                     nvrtcGetErrorString(result));                                 \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_SAFE_CALL(x)                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        CUresult result = x;                                                                       \
-        if (result != CUDA_SUCCESS)                                                                \
-        {                                                                                          \
-            const char* msg;                                                                       \
-            cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg);      \
-        }                                                                                          \
-    } while (0)
-
 void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
@@ -530,7 +507,7 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         writer << "{   // " << n->get_name() << " 1\n";
         writer.indent++;
         writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
-               << ", " << out[0].get_size() << "," << out[0].get_element_type().size() << ");\n";
+               << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
         writer.indent--;
         writer << "}\n";
     }
