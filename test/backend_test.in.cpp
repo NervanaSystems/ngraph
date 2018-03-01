@@ -2373,7 +2373,6 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
@@ -2396,7 +2395,6 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
@@ -2442,7 +2440,6 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2465,7 +2462,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2488,7 +2484,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};
