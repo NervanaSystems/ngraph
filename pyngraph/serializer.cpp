@@ -24,6 +24,6 @@ namespace py = pybind11;
 void regclass_pyngraph_Serializer(py::module m) {
 
 
-    m.def("serialize", &ngraph::serialize);
+    m.def("serialize", &ngraph::serialize, py::arg(), py::arg("indent") = 0);
 
 }
