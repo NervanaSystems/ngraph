@@ -260,12 +260,11 @@ namespace ngraph
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
 
-
     template <typename T>
     void print_vector(const char* name, T* array, size_t n)
     {
         std::cout << "node = " << name << std::endl;
-        std::cout << "[ " ;
+        std::cout << "[ ";
         for (size_t i = 0; i < n; i++)
         {
             std::cout << array[i] << ", ";

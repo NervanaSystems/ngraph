@@ -309,10 +309,10 @@ TEST(cpu_fusion, unhandled_op)
     ASSERT_THROW(backend->make_call_frame(external), ngraph_error);
 }
 
-TEST (cpu_fusion, bn_bprop_n4c3h2w2)
+TEST(cpu_fusion, bn_bprop_n4c3h2w2)
 {
     auto input_shape = Shape{4, 3, 2, 2};
-    auto shape_mean = Shape {3};
+    auto shape_mean = Shape{3};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{3};
     auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
@@ -330,24 +330,21 @@ TEST (cpu_fusion, bn_bprop_n4c3h2w2)
     auto backend = manager->allocate_backend();
 
     auto _input = backend->make_primary_tensor_view(element::f32, input_shape);
-    vector<float> dataInput {		
-			10.76331902f, 11.51178265f, 10.31018162f, 12.2993021f,  14.17626667f,
-			14.63498497f, 13.63494492f, 13.84248161f, 11.34602547f, 13.22014618f,
-			10.46686649f, 10.39842987f, 12.94806862f, 11.71670246f, 14.94438076f,
-			13.13236618f, 13.40889645f, 12.76128387f, 11.34430027f, 11.86629677f,
-			11.11464024f, 10.93221283f, 11.95324039f, 10.96581173f, 13.05455494f,
-			14.41404247f, 13.11169434f, 11.26559448f, 10.89965153f, 14.08202171f,
-			11.12685776f, 12.58428574f, 12.59247875f, 13.00187492f, 12.66310215f,
-			10.06655025f, 12.62048626f, 14.47942352f, 13.84950638f, 10.61425877f,
-			11.47936344f, 13.06011772f, 13.63069057f, 12.31748772f, 13.84555244f,
-			10.95815468f, 12.78933334f, 12.75389099f
-    };
+    vector<float> dataInput{
+        10.76331902f, 11.51178265f, 10.31018162f, 12.2993021f,  14.17626667f, 14.63498497f,
+        13.63494492f, 13.84248161f, 11.34602547f, 13.22014618f, 10.46686649f, 10.39842987f,
+        12.94806862f, 11.71670246f, 14.94438076f, 13.13236618f, 13.40889645f, 12.76128387f,
+        11.34430027f, 11.86629677f, 11.11464024f, 10.93221283f, 11.95324039f, 10.96581173f,
+        13.05455494f, 14.41404247f, 13.11169434f, 11.26559448f, 10.89965153f, 14.08202171f,
+        11.12685776f, 12.58428574f, 12.59247875f, 13.00187492f, 12.66310215f, 10.06655025f,
+        12.62048626f, 14.47942352f, 13.84950638f, 10.61425877f, 11.47936344f, 13.06011772f,
+        13.63069057f, 12.31748772f, 13.84555244f, 10.95815468f, 12.78933334f, 12.75389099f};
     copy_data(_input, dataInput);
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
     copy_data(_mean, vector<float>{12.56472874f, 12.80312157f, 11.81676865f});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{1.94557643f,  1.32772446f,  1.28163588f});
-    
+    copy_data(_var, vector<float>{1.94557643f, 1.32772446f, 1.28163588f});
+
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{2.0f, 2.0f, 2.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
@@ -355,45 +352,42 @@ TEST (cpu_fusion, bn_bprop_n4c3h2w2)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     shared_ptr<runtime::TensorView> _delta =
-    backend->make_primary_tensor_view(element::f32, shape_r);
+        backend->make_primary_tensor_view(element::f32, shape_r);
     vector<float> deltaData(shape_size(shape_r), 20.0f);
     copy_data(_delta, deltaData);
-    
+
     auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
     auto dinput = bn->backprop_node(input, C);
     auto dgamma = bn->backprop_node(gamma, C);
     auto dbeta = bn->backprop_node(beta, C);
-    auto df = make_shared<Function>(Nodes{dinput, dgamma, dbeta}, op::Parameters{mean, var, input, gamma, beta, C});
+    auto df = make_shared<Function>(Nodes{dinput, dgamma, dbeta},
+                                    op::Parameters{mean, var, input, gamma, beta, C});
 
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
 
     shared_ptr<runtime::TensorView> _dinput =
-    backend->make_primary_tensor_view(element::f32, shape_r);
+        backend->make_primary_tensor_view(element::f32, shape_r);
     shared_ptr<runtime::TensorView> _dgamma =
-    backend->make_primary_tensor_view(element::f32, gamma_shape);
+        backend->make_primary_tensor_view(element::f32, gamma_shape);
     shared_ptr<runtime::TensorView> _dbeta =
-    backend->make_primary_tensor_view(element::f32, beta_shape);
+        backend->make_primary_tensor_view(element::f32, beta_shape);
 
     cf->call({_mean, _var, _input, _gamma, _beta, _delta}, {_dinput, _dgamma, _dbeta});
 
-     vector<float> expected {
-        8.17051607e-06f, 4.77576657e-06f, 1.02257760e-05f, 1.20387525e-06f, 
-        -1.73868522e-06f, 3.84632768e-06f, -1.07932050e-05f, -2.57458956e-06f, 
-        -2.22166714e-06f, -8.38779043e-06f, -2.48082982e-06f, 5.89238360e-06f, 
-        -2.52895109e-07f, -8.68433445e-06f, -5.82726737e-06f, 8.84659658e-06f, 
-        3.03944108e-05f, 4.05480879e-05f, 1.84123158e-05f, 2.30061178e-05f, 
-        1.34087590e-05f, -9.26072571e-07f, -3.22908454e-05f, -2.07365116e-05f, 
-        -4.21330941e-05f, 2.83083100e-05f, -3.71039101e-05f, -4.84390640e-06f, 
-        -2.93012376e-05f, 5.68858087e-06f, 1.83181458e-05f, -1.07494506e-05f, 
-        -2.32429103e-06f, 6.92914809e-06f, -6.66512321e-06f, -7.00302840e-06f, 
-        -3.46675184e-06f, -4.36748381e-06f, 6.73822226e-07f, -4.20158993e-06f, 
-        3.83005061e-06f, 5.85143729e-06f, 4.17875243e-06f, -8.64167783e-06f, 
-        1.00170803e-05f, -4.23939666e-06f, 4.80201680e-06f, 4.62702078e-06f
-    };
+    vector<float> expected{
+        8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
+        3.84632768e-06f,  -1.07932050e-05f, -2.57458956e-06f, -2.22166714e-06f, -8.38779043e-06f,
+        -2.48082982e-06f, 5.89238360e-06f,  -2.52895109e-07f, -8.68433445e-06f, -5.82726737e-06f,
+        8.84659658e-06f,  3.03944108e-05f,  4.05480879e-05f,  1.84123158e-05f,  2.30061178e-05f,
+        1.34087590e-05f,  -9.26072571e-07f, -3.22908454e-05f, -2.07365116e-05f, -4.21330941e-05f,
+        2.83083100e-05f,  -3.71039101e-05f, -4.84390640e-06f, -2.93012376e-05f, 5.68858087e-06f,
+        1.83181458e-05f,  -1.07494506e-05f, -2.32429103e-06f, 6.92914809e-06f,  -6.66512321e-06f,
+        -7.00302840e-06f, -3.46675184e-06f, -4.36748381e-06f, 6.73822226e-07f,  -4.20158993e-06f,
+        3.83005061e-06f,  5.85143729e-06f,  4.17875243e-06f,  -8.64167783e-06f, 1.00170803e-05f,
+        -4.23939666e-06f, 4.80201680e-06f,  4.62702078e-06f};
 
     ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dinput), expected, 1e-3f, 1e-4f));
-
 }
