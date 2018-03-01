@@ -523,7 +523,6 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     {
         result_shape_product *= i;
     }
-
     // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
     //  we can just copy.
     if (same_layout || result_shape_product < 2)
@@ -541,8 +540,9 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         // TODO Assert arg0_shape[0] == arg1_shape[0]?
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
-        writer << "static const float alpha = 1.0;\n";
-        writer << "static const float beta = 0.0;\n";
+        writer << "const float alpha = 1.0;\n";
+        writer << "const float beta = 0;\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
         writer << "cublasSgeam("
                << "cublas_handle,"
                << "CUBLAS_OP_T,"
@@ -551,7 +551,8 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
                << args[0].get_name() << "," << arg_shape[1] << ","
                << "&beta," // beta
                << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name() << ","
-               << out[0].get_shape()[1] << ");\n";
+               << result_shape[1] << ");\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
         writer << "}\n";
     }
