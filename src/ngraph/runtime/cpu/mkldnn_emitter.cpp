@@ -141,3 +141,108 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
     return conv_index;
 }
+
+
+size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc &in_weights_desc,
+                                                      const mkldnn::memory::desc &in_delta_desc,
+                                                      const mkldnn::memory::desc &out_data_delta_desc,
+                                                      const ngraph::Strides &ng_strides,
+                                                      const ngraph::Strides &ng_dilation_strides,
+                                                      const ngraph::CoordinateDiff &ng_padding_below,
+                                                      const ngraph::CoordinateDiff &ng_padding_above)
+
+{
+    const size_t in_weights_index = build_memory_primitive(in_weights_desc);
+    const size_t in_delta_index = build_memory_primitive(in_delta_desc);
+    const size_t out_data_delta_index = build_memory_primitive(out_data_delta_desc);
+
+    mkldnn::memory::dims strides(ng_strides.begin(), ng_strides.end());
+    mkldnn::memory::dims dilation(ng_dilation_strides.begin(), ng_dilation_strides.end());
+    mkldnn::memory::dims padding_l(ng_padding_below.begin(), ng_padding_below.end());
+    mkldnn::memory::dims padding_r(ng_padding_above.begin(), ng_padding_above.end());
+    mkldnn::convolution_forward::primitive_desc fwd_pd{{mkldnn::prop_kind::forward,
+                                                        mkldnn::algorithm::convolution_direct,
+                                                        out_data_delta_desc,
+                                                        in_weights_desc,
+                                                        in_delta_desc,
+                                                        strides,
+                                                        dilation,
+                                                        padding_l,
+                                                        padding_r,
+                                                        mkldnn::padding_kind::zero},
+                                                       mkldnn_utils::global_cpu_engine};
+
+    mkldnn::convolution_backward_data::primitive_desc bwd_pd{{mkldnn::algorithm::convolution_direct,
+                                                                 out_data_delta_desc,
+                                                                 in_weights_desc,
+                                                                 in_delta_desc,
+                                                                 strides,
+                                                                 dilation,
+                                                                 padding_l,
+                                                                 padding_r,
+                                                                 mkldnn::padding_kind::zero},
+                                                                mkldnn_utils::global_cpu_engine,
+                                                                fwd_pd};
+
+    const size_t conv_index = insert_primitive(new mkldnn::convolution_backward_data(bwd_pd,
+                                                                                     *mkldnn_primitives[in_delta_index],
+                                                                                     *mkldnn_primitives[in_weights_index],
+                                                                                     *mkldnn_primitives[out_data_delta_index]));
+
+    primitive_deps[conv_index] = {in_weights_index, in_delta_index, out_data_delta_index};
+    return conv_index;
+}
+
+size_t MKLDNNEmitter::build_convolution_backward_filters_bias(const mkldnn::memory::desc &in_data_desc,
+                                                              const mkldnn::memory::desc &in_delta_desc,
+                                                              const mkldnn::memory::desc &out_weights_delta_desc,
+                                                              const mkldnn::memory::desc &out_bias_delta_desc,
+                                                              const ngraph::Strides &ng_strides,
+                                                              const ngraph::Strides &ng_dilation_strides,
+                                                              const ngraph::CoordinateDiff &ng_padding_below,
+                                                              const ngraph::CoordinateDiff &ng_padding_above)
+{
+    const size_t in_data_index = build_memory_primitive(in_data_desc);
+    const size_t in_delta_index = build_memory_primitive(in_delta_desc);
+    const size_t out_weights_delta_index = build_memory_primitive(out_weights_delta_desc);
+    const size_t out_bias_delta_index = build_memory_primitive(out_bias_delta_desc);
+
+    mkldnn::memory::dims strides(ng_strides.begin(), ng_strides.end());
+    mkldnn::memory::dims dilation(ng_dilation_strides.begin(), ng_dilation_strides.end());
+    mkldnn::memory::dims padding_l(ng_padding_below.begin(), ng_padding_below.end());
+    mkldnn::memory::dims padding_r(ng_padding_above.begin(), ng_padding_above.end());
+    mkldnn::convolution_forward::primitive_desc fwd_pd{{mkldnn::prop_kind::forward,
+                                                        mkldnn::algorithm::convolution_direct,
+                                                        in_data_desc,
+                                                        out_weights_delta_desc,
+                                                        out_bias_delta_desc,
+                                                        in_delta_desc,
+                                                        strides,
+                                                        dilation,
+                                                        padding_l,
+                                                        padding_r,
+                                                        mkldnn::padding_kind::zero},
+                                                       mkldnn_utils::global_cpu_engine};
+
+    mkldnn::convolution_backward_weights::primitive_desc bwd_pd{{mkldnn::algorithm::convolution_direct,
+                                                                 in_data_desc,
+                                                                 out_weights_delta_desc,
+                                                                 out_bias_delta_desc,
+                                                                 in_delta_desc,
+                                                                 strides,
+                                                                 dilation,
+                                                                 padding_l,
+                                                                 padding_r,
+                                                                 mkldnn::padding_kind::zero},
+                                                                mkldnn_utils::global_cpu_engine,
+                                                                fwd_pd};
+
+    const size_t conv_index = insert_primitive(new mkldnn::convolution_backward_weights(bwd_pd,
+            *mkldnn_primitives[in_data_index],
+            *mkldnn_primitives[in_delta_index],
+            *mkldnn_primitives[out_weights_delta_index],
+            *mkldnn_primitives[out_bias_delta_index]);
+
+    primitive_deps[conv_index] = {in_data_index, in_delta_index, out_weights_delta_index, out_bias_delta_index};
+    return conv_index;
+}

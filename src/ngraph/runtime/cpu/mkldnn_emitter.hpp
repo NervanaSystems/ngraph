@@ -61,6 +61,9 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
 
+                /**
+                 * Convolution + bias forward
+                 */
                 size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                  const mkldnn::memory::desc& weights_desc,
                                                  const mkldnn::memory::desc& bias_desc,
@@ -69,6 +72,28 @@ namespace ngraph
                                                  const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
+
+                /**
+                 * Convolution backprop for data
+                 */
+                size_t build_convolution_backward_data(const mkldnn::memory::desc &in_weights_desc,
+                                                       const mkldnn::memory::desc &in_delta_desc,
+                                                       const mkldnn::memory::desc &out_data_delta_desc,
+                                                       const ngraph::Strides &ng_strides,
+                                                       const ngraph::Strides &ng_dilation_strides,
+                                                       const ngraph::CoordinateDiff &ng_padding_below,
+                                                       const ngraph::CoordinateDiff &ng_padding_above);
+                /**
+                 * Convolution + bias backprop for filters and bias
+                 */
+                size_t build_convolution_backward_filters_bias(const mkldnn::memory::desc& input_data_desc,
+                                                              const mkldnn::memory::desc& weights_desc,
+                                                              const mkldnn::memory::desc& out_weights_delta_desc,
+                                                              const mkldnn::memory::desc& result_desc,
+                                                              const ngraph::Strides& strides,
+                                                              const ngraph::Strides& dilation_strides,
+                                                              const ngraph::CoordinateDiff& padding_below,
+                                                              const ngraph::CoordinateDiff& padding_above);
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;

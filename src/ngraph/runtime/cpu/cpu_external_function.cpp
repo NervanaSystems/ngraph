@@ -104,6 +104,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -215,6 +216,12 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
+    {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
+     // conv+bias backprop for data share the same implementation as conv backprop data
+    {TI(ngraph::op::ConvolutionBiasBackpropData),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
