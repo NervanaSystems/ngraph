@@ -14,8 +14,6 @@
 
 #pragma once
 
-#ifdef NGRAPH_DISTRIBUTED
-
 #include <memory>
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
@@ -40,5 +38,3 @@ namespace ngraph
         };
     }
 }
-
-#endif
