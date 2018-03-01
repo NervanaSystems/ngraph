@@ -68,6 +68,33 @@ TEST(${BACKEND_NAME}, function_name)
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
+TEST(${BACKEND_NAME}, node_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = A + B;
+    C->set_name("a node name");
+    auto f = make_shared<Function>(C, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
 TEST(${BACKEND_NAME}, aliased_output)
 {
     Shape shape{2, 2};
