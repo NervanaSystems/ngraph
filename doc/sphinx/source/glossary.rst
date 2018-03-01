@@ -6,6 +6,7 @@ Glossary
 ========
 
 .. glossary::
+   :sorted:
 
    backend
 
@@ -50,6 +51,36 @@ Glossary
       The shape of a tensor is a tuple of non-negative integers that
       represents an exclusive upper bound for coordinate values.
 
+   shared pointer
+
+      The C++ standard template library has the template
+      ``std::shared_ptr<X>``. A shared pointer is used like an ``X*``
+      pointer, but maintains a reference count to the underlying
+      object. Each new shared pointer to the object increases the
+      count. When a shared pointer goes out of scope, the reference
+      count is decremented, and, when the count reaches 0, the
+      underlying object is deleted. The function template
+      ``std::make_shared<X>(...)`` can be used similarly to ``new
+      X(...)``, except it returns a ``std::shared_ptr<X>`` instead of
+      an ``X*``.
+
+      If there is a chain of shared pointers from an object back to
+      itself, every object in the chain is referenced, so the
+      reference counts will never reach 0 and the objects will never
+      be deleted.
+
+      If ``a`` referenced ``b`` and ``b`` wanted to track all
+      references to itself and shared pointers were used both
+      directions, there would be a chain of pointers form ``a`` to
+      itself. We avoid this by using shared pointers in only one
+      direction, and raw pointers for the inverse
+      direction. ``std::enabled_shared_from_this`` is a class template
+      that defines a method ``shared_from_this`` that provides a
+      shared pointer from a raw pointer.
+
+      nGraph makes use of shared pointers for objects whose lifetime
+      is hard to determine when they are allocated.
+   
    step
 
       An abstract "action" that produces zero or more tensor outputs

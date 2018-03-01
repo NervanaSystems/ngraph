@@ -24,7 +24,7 @@ be able to do all of these things:
 * :ref:`initialize_inputs`
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
-
+* :ref:`all_together`
 
 .. _define_cmp:
 
@@ -37,8 +37,9 @@ from a framework's representation of the computation, graph construction can be
 somewhat more tedious for users. To a user, who is usually interested in 
 specific nodes (vertices) or edges of a computation that reveal "what is 
 happening where", it can be helpful to think of a computation as a zoomed-out 
-and *stateless* dataflow graph where all of the nodes are well-defined and all
-of the edges are possible routes for executing a computation.  
+and *stateless* dataflow graph where all of the nodes are basic well-defined
+tensor operations and all of the edges denote use of an output from
+one operation as an input for another operation.
 
 .. TODO
 
@@ -54,24 +55,16 @@ A computation's graph is constructed from ops; each is a member of a subclass of
 computation, but all graphs are composed entirely of instances of ``Node``.  
 Computation graphs contain only ``op::Op`` nodes.
 
-We mostly use shared pointers for nodes. In the nGraph APIs for :doc:`ops/index`, 
-this is presented as ``std::shared_ptr<Node>``, which allows for the 
-de-allocation of unreferenced nodes when they are no longer referenced. The one 
-exception to this rule is that there can not be a circular path through shared 
-pointers, as this would prevent the reference counts from ever getting to 0. In 
-other words, it would be impossible to entirely deallocate or unreference a node.
+We mostly use :term:`shared pointers<shared pointer>` for nodes, i.e.
+``std::shared_ptr<Node>`` so that they will be automatically
+deallocated when they are no longer needed. A brief summary of shared
+pointers is given in the glossary.
 
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
 *attributes*. For our purpose to :ref:`define_cmp`, nodes should be thought of 
 as essentially immutable; that is, when constructing a node, we need to supply 
-all of its inputs. To get this process started, we need some nodes that have no 
-inputs. 
-
-For a more concrete example, we can use the analogy of a baton relay. It can be 
-drawn ahead of time that the runner must hand off the baton to the next runner 
-at the specific place (node). The runner waiting for the baton is essentially at
-an empty node until he receives the baton. The runner who surrenders the baton 
-to the next runner (node) is de-allocated of the baton.
+all of its inputs. We get this process started with ops that have no
+inputs, since any op with inputs is going to first need some inputs.
 
 ``op::Parameter`` specifes the tensors that will be passed to the computation. 
 They receive their values from outside of the graph, so they have no inputs. 
@@ -89,7 +82,7 @@ be passed to them.
 Here we have made three parameter nodes, each a 32-bit float of shape
 ``(2, 3)`` using a row-major element layout.
 
-We can create a graph for ``(a+b)*c)`` by creating an ``op::Add`` node
+We can create a graph for ``(a+b)*c`` by creating an ``op::Add`` node
 with inputs from ``a`` and ``b``, and an ``op::Multiply`` node from
 the add node and ``c``:
 
@@ -118,7 +111,7 @@ pointers of ``op::Node``.  The second argument specifies the parameters of the
 function, in the order they are to be passed to the compiled function. A 
 ``ParameterVector`` is a vector of shared pointers to ``op::Parameter``. 
 
-.. important:: The parameter vector must include* **every** *parameter used in 
+.. important:: The parameter vector must include* **every** parameter used in 
    the computation of the results.
 
 
@@ -137,9 +130,9 @@ and allocate backends. A backend is somewhat analogous to a multi-threaded
 process.
 
 There are two backends for the CPU, the optimized "CPU" backend, which
-makes use of mkl-dnn, and the "INTERPRETER" backend which runs reference 
-versions of kernels where implementation clarity is favored over speed. The 
-"INTERPRETER" backend is mainly used for testing. 
+makes use of mkl-dnn, and the "INTERPRETER" backend which runs
+reference versions of kernels where implementation clarity is favored
+over speed. The "INTERPRETER" backend is mainly used for testing.
 
 To select the "CPU" backend,
 
@@ -241,5 +234,56 @@ We can use the ``read`` method to access the result:
    float r[2,3];
    t_result->read(&r, 0, sizeof(r));
 
+.. _all_together:
 
+Putting it all together
+=======================
 
+.. code-block:: cpp
+
+   #include <iostream>
+
+   #include <ngraph.hpp>
+
+   using namespace ngraph;
+
+   void main()
+   {
+       // Build the graph
+       Shape s{2, 3};
+       auto a = std::make_shared<op::Parameter>(element::f32, s);
+       auto b = std::make_shared<op::Parameter>(element::f32, s);
+       auto c = std::make_shared<op::Parameter>(element::f32, s);
+
+       auto t0 = std::make_shared<op::Add>(a, b);
+       auto t1 = std::make_shared < op::Multiply(t0, c);
+
+       // Make the function
+       auto f = make_shared<Function>(NodeVector{t1}, ParameterVector{a, b, c});
+
+       // Get the backend
+       auto manager = runtime::Manager::get("CPU");
+       auto backend = manager->allocate_backend();
+       auto external = manager->compile(f);
+
+       // Compile the function
+       auto cf = backend->make_call_frame(external);
+
+       // Allocate tensors
+       auto t_a = backend->make_primary_tensor_view(element::f32, shape);
+       auto t_b = backend->make_primary_tensor_view(element::f32, shape);
+       auto t_c = backend->make_primary_tensor_view(element::f32, shape);
+       auto t_result = backend->make_primary_tensor_view(element::f32, shape);
+
+       // Initialize tensors
+       copy_data(t_a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
+       copy_data(t_b, test::NDArray<float, 2>({{7, 8, 9}, {10, 11, 12}}).get_vector());
+       copy_data(t_c, test::NDArray<float, 2>({{1, 0, -1}, {-1, 1, 2}}).get_vector());
+
+       // Invoke the function
+       cf->call({t_a, t_b, t_c}, {t_result});
+
+       // Get the result
+       float r[2, 3];
+       t_result->read(&r, 0, sizeof(r));
+   }
