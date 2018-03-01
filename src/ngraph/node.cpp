@@ -113,7 +113,7 @@ bool Node::is_constant() const
     return false;
 }
 
-const std::string& Node::get_name() const
+const std::string& Node::get_friendly_name() const
 {
     if (m_name.empty())
     {
@@ -122,7 +122,7 @@ const std::string& Node::get_name() const
     return m_name;
 }
 
-const std::string& Node::get_unique_name() const
+const std::string& Node::get_name() const
 {
     return m_unique_name;
 }
@@ -201,11 +201,11 @@ namespace ngraph
         auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
         if (parameter_tmp)
         {
-            out << "Parameter(" << parameter_tmp->get_unique_name() << ")";
+            out << "Parameter(" << parameter_tmp->get_name() << ")";
         }
         else
         {
-            out << "Node(" << node.get_unique_name() << ")";
+            out << "Node(" << node.get_name() << ")";
         }
         return out;
     }

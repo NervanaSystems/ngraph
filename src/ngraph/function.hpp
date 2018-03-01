@@ -67,8 +67,8 @@ namespace ngraph
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
+        const std::string& get_friendly_name() const;
         const std::string& get_name() const;
-        const std::string& get_unique_name() const;
         // so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with
         //  an XLA or regular function
         void set_name(const std::string& name);

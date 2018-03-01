@@ -64,7 +64,7 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops()
     return topological_sort(get_ops());
 }
 
-const std::string& Function::get_name() const
+const std::string& Function::get_friendly_name() const
 {
     if (m_name.empty())
     {
@@ -73,7 +73,7 @@ const std::string& Function::get_name() const
     return m_name;
 }
 
-const std::string& Function::get_unique_name() const
+const std::string& Function::get_name() const
 {
     return m_unique_name;
 }

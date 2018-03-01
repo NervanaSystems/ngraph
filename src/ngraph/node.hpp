@@ -80,8 +80,8 @@ namespace ngraph
     public:
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
+        const std::string& get_friendly_name() const;
         const std::string& get_name() const;
-        const std::string& get_unique_name() const;
         void set_name(const std::string& name);
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
