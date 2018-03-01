@@ -8191,11 +8191,12 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, softmax)
+TEST(${BACKEND_NAME}, softmax_all)
 {
-    Shape shape{8};
+    Shape shape{2, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}),
+                                   op::Parameters{A}); // TODO: handle empty axes
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8210,13 +8211,38 @@ TEST(${BACKEND_NAME}, softmax)
     auto d = expf(-4) + expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2) + expf(3);
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(vector<float>{expf(-4) / d,
-                                              expf(-3) / d,
-                                              expf(-2) / d,
-                                              expf(-1) / d,
-                                              expf(0) / d,
-                                              expf(1) / d,
-                                              expf(2) / d,
-                                              expf(3) / d},
-                                read_vector<float>(result)));
+    vector<float> expected{expf(-4) / d,
+                           expf(-3) / d,
+                           expf(-2) / d,
+                           expf(-1) / d,
+                           expf(0) / d,
+                           expf(1) / d,
+                           expf(2) / d,
+                           expf(3) / d};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+TEST(${BACKEND_NAME}, softmax_axis)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    auto d1 = expf(1) + expf(2) + expf(3);
+    auto d2 = expf(4) + expf(5) + expf(6);
+
+    cf->call({a}, {result});
+    vector<float> expected{
+        expf(1) / d1, expf(2) / d1, expf(3) / d1, expf(4) / d2, expf(5) / d2, expf(6) / d2};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }

@@ -17,6 +17,9 @@
 #pragma once
 
 #include <cmath>
+#include "ngraph/coordinate_transform.hpp"
+#include "ngraph/runtime/kernel/max.hpp"
+#include "ngraph/runtime/kernel/sum.hpp"
 
 namespace ngraph
 {
@@ -25,28 +28,33 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void softmax(T* arg, T* out, size_t count)
+            void softmax(T* arg, T* out, const Shape& shape, const AxisSet& axes)
             {
-                T m = arg[0];
-                for (size_t i = 1; i < count; i++)
+                auto temp_shape = project_shape(shape, axes);
+                auto temp_elements = std::accumulate(
+                    temp_shape.begin(), temp_shape.end(), 1, std::multiplies<size_t>());
+                auto temp_ptr = new T[temp_elements];
+
+                max(arg, temp_ptr, shape, temp_shape, axes);
+
+                CoordinateTransform transform(shape);
+                CoordinateTransform temp_transform(temp_shape);
+                for (const Coordinate& coord : transform)
                 {
-                    if (arg[i] > m)
-                    {
-                        m = arg[i];
-                    }
+                    Coordinate temp_coord = project_coordinate(coord, axes);
+                    out[transform.index(coord)] = std::exp(
+                        arg[transform.index(coord)] - temp_ptr[temp_transform.index(temp_coord)]);
                 }
-                T d = 0;
-                for (size_t i = 0; i < count; i++)
+
+                sum(out, temp_ptr, shape, temp_shape, axes);
+
+                for (const Coordinate& coord : transform)
                 {
-                    T e = std::exp(arg[i] - m);
-                    out[i] = e;
-                    d += e;
+                    Coordinate temp_coord = project_coordinate(coord, axes);
+                    out[transform.index(coord)] /= temp_ptr[temp_transform.index(temp_coord)];
                 }
-                d = 1 / d;
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] *= d;
-                }
+
+                delete[] temp_ptr;
             }
         }
     }

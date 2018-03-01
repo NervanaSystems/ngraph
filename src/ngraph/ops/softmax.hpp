@@ -25,9 +25,11 @@ namespace ngraph
         class Softmax : public util::UnaryElementwiseArithmetic
         {
         public:
-            Softmax(const std::shared_ptr<Node>& arg0)
+            Softmax(const std::shared_ptr<Node>& arg0, const AxisSet& axes)
                 : UnaryElementwiseArithmetic("Softmax", arg0)
+                , m_axes(axes)
             {
+                // TODO: handle empty axes
             }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
@@ -37,11 +39,15 @@ namespace ngraph
                 {
                     throw ngraph_error("Incorrect number of new arguments");
                 }
-                return std::make_shared<Softmax>(new_args.at(0));
+                return std::make_shared<Softmax>(new_args.at(0), m_axes);
             }
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
+
+            const AxisSet& get_axes() const { return m_axes; }
+        private:
+            AxisSet m_axes;
         };
     }
 }

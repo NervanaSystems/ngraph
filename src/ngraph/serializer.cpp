@@ -768,7 +768,8 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Softmax")
         {
-            node = make_shared<op::Softmax>(args[0]);
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Softmax>(args[0], reduction_axes);
         }
         else if (node_op == "Sqrt")
         {
