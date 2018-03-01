@@ -27,18 +27,18 @@ using namespace ngraph::runtime::cpu;
 
 const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
 {
-    return mkldnn_primitives;
+    return m_mkldnn_primitives;
 }
 
 size_t MKLDNNEmitter::insert_primitive(mkldnn::primitive* primitive)
 {
-    mkldnn_primitives.emplace_back(primitive);
-    return (mkldnn_primitives.size() - 1);
+    m_mkldnn_primitives.emplace_back(primitive);
+    return (m_mkldnn_primitives.size() - 1);
 }
 
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {
-    return primitive_deps.at(index);
+    return m_primitive_deps.at(index);
 }
 
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
@@ -96,11 +96,11 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
          mkldnn_utils::global_cpu_engine},
-        *mkldnn_primitives[input_data_index],
-        *mkldnn_primitives[weights_index],
-        *mkldnn_primitives[result_index]));
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
 }
 
@@ -129,11 +129,11 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
          mkldnn_utils::global_cpu_engine},
-        *mkldnn_primitives[input_data_index],
-        *mkldnn_primitives[weights_index],
-        *mkldnn_primitives[result_index]));
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
 }
 
@@ -151,16 +151,16 @@ size_t MKLDNNEmitter::build_elementwise_add(
     size_t input1_data_index = build_memory_primitive(input1_data_desc);
     size_t result_index = build_memory_primitive(result_desc);
 
-    inputs_primitive.push_back(*mkldnn_primitives[input0_data_index]);
-    inputs_primitive.push_back(*mkldnn_primitives[input1_data_index]);
+    inputs_primitive.push_back(*m_mkldnn_primitives[input0_data_index]);
+    inputs_primitive.push_back(*m_mkldnn_primitives[input1_data_index]);
 
     // elementwise sum primtive descriptor
     mkldnn::sum::primitive_desc sum_pd =
         mkldnn::sum::primitive_desc(result_desc, scale_vector, inputs_pd);
     // sum primitive
     size_t add_index = insert_primitive(
-        new mkldnn::sum(sum_pd, inputs_primitive, *mkldnn_primitives[result_index]));
+        new mkldnn::sum(sum_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));
 
-    primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
+    m_primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
     return add_index;
 }

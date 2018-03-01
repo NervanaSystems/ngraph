@@ -75,6 +75,7 @@ namespace ngraph
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
