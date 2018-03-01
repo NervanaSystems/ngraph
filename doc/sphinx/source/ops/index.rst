@@ -52,6 +52,7 @@ Not currently a comprehensive list.
    abs.rst
    acos.rst
    add.rst
+   allreduce.rst
    asin.rst
    atan.rst
    avg_pool.rst
