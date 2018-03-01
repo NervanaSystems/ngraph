@@ -101,6 +101,7 @@ namespace ngraph
                     const mkldnn::memory::desc& result_desc,
                     const std::vector<float>& scale_vector,
                     const std::vector<mkldnn::memory::primitive_desc>& input_pd);
+
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
