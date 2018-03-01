@@ -742,22 +742,6 @@ using namespace ngraph::runtime;
                 writer << func_name << "(" << join(names) << ", ctx);\n";
             }
 
-
-            if ((node->get_output_size() == 1) &&
-                (node->get_element_type() == element::f32 || 
-                node->get_element_type() == element::f64)
-            )
-            {
-                std::cout << "node22 = " << node->get_name() << std::endl;
-                writer << "{   // NaN/Inf checks" << node->get_name() << "\n";
-                writer.indent++;
-                writer << " ngraph::print_vector (\"" << node->get_name() << "\", (" 
-                        << out[0].get_element_type().c_type_string()<<"*)" << out[0].get_name() << ", "
-                        << out[0].get_size() << ");\n";
-                writer.indent--;
-                writer << "}\n";
-            }
-
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
