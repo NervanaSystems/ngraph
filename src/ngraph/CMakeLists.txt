@@ -266,8 +266,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource)
+    add_dependencies(ngraph header_resource ext_json)
     include_directories(${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
 if (NOT APPLE)
