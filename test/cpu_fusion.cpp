@@ -377,7 +377,7 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
 
     cf->call({_mean, _var, _input, _gamma, _beta, _delta}, {_dinput, _dgamma, _dbeta});
 
-    vector<float> expected{
+    vector<float> expected_input{
         8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
         3.84632768e-06f,  -1.07932050e-05f, -2.57458956e-06f, -2.22166714e-06f, -8.38779043e-06f,
         -2.48082982e-06f, 5.89238360e-06f,  -2.52895109e-07f, -8.68433445e-06f, -5.82726737e-06f,
@@ -389,5 +389,10 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
         3.83005061e-06f,  5.85143729e-06f,  4.17875243e-06f,  -8.64167783e-06f, 1.00170803e-05f,
         -4.23939666e-06f, 4.80201680e-06f,  4.62702078e-06f};
 
-    ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dinput), expected, 1e-3f, 1e-4f));
+    ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dinput), expected_input, 1e-3f, 1e-4f));
+    vector<float> expected_dgamma{7.06315041e-05f, -2.35289335e-04f, -5.06639481e-05f};
+    ASSERT_TRUE(
+        ngraph::test::all_close(read_vector<float>(_dgamma), expected_dgamma, 1e-2f, 1e-3f));
+    vector<float> expected_dbeta{320.f, 320.f, 320.f};
+    ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dbeta), expected_dbeta, 1e-4f, 1e-8f));
 }
