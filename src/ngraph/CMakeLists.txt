@@ -349,11 +349,11 @@ install(DIRECTORY
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
 endif()
 
