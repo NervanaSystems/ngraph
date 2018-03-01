@@ -16,6 +16,42 @@
 
 #pragma once
 
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cudnn_v7.h>
+#include <nvrtc.h>
+
+//why use "do...while.."
+//https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
+#define NVRTC_SAFE_CALL(x)                                                                         \
+    do                                                                                             \
+    {                                                                                              \
+        nvrtcResult result = x;                                                                    \
+        if (result != NVRTC_SUCCESS)                                                               \
+        {                                                                                          \
+            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
+                                     std::string(nvrtcGetErrorString(result)));                    \
+        }                                                                                          \
+    } while (0)
+
+#define CUDA_SAFE_CALL(x)                                                                          \
+    do                                                                                             \
+    {                                                                                              \
+        CUresult result = x;                                                                       \
+        if (result != CUDA_SUCCESS)                                                                \
+        {                                                                                          \
+            const char* msg;                                                                       \
+            cuGetErrorName(result, &msg);                                                          \
+            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg));     \
+        }                                                                                          \
+    } while (0)
+
 namespace ngraph
 {
     namespace runtime
@@ -24,9 +60,10 @@ namespace ngraph
         {
             void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
             void check_cuda_errors(CUresult err);
-            void** create_gpu_buffer(size_t buffer_size);
-            void cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size);
-            void cuda_memcpyHtD(void* d, void* s, size_t buffer_size);
+            void* create_gpu_buffer(size_t buffer_size);
+            void cuda_memcpyDtD(void* dst, void* src, size_t buffer_size);
+            void cuda_memcpyHtD(void* dst, void* src, size_t buffer_size);
+            void cuda_memset(void* dst, int value, size_t buffer_size);
         }
     }
 }

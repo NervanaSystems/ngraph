@@ -20,7 +20,6 @@
 #include <cmath>
 #include <numeric>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -207,9 +206,7 @@ namespace ngraph
                     //
                     //   output[O] = max(output[O],arg[I])
 
-                    T result = std::numeric_limits<T>::has_infinity
-                                   ? -std::numeric_limits<T>::infinity()
-                                   : std::numeric_limits<T>::min();
+                    T result = std::numeric_limits<T>::lowest();
 
                     for (const Coordinate& input_batch_coord : input_batch_transform)
                     {

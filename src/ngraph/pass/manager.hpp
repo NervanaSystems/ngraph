@@ -36,6 +36,7 @@ class ngraph::pass::Manager
 {
 public:
     Manager();
+    Manager(bool to_set_is_output);
     ~Manager();
 
     void initialize_default_passes();
@@ -56,4 +57,5 @@ public:
 private:
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
+    bool m_to_set_is_output;
 };

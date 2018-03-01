@@ -33,7 +33,6 @@
 #include "ngraph/pattern/op/label.hpp"
 //
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
@@ -41,6 +40,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
@@ -112,7 +112,7 @@ TEST(cpu_fusion, gemm_cpu)
     auto cg =
         make_shared<op::MatmulBias>(A, B, broadcast, A->get_shape(), B->get_shape(), true, true);
 
-    auto f = make_shared<Function>(cg, op::Parameters{A, B});
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
@@ -150,7 +150,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    auto func = make_shared<Function>(graph, op::Parameters{A, B, C});
+    auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
 }
@@ -186,7 +186,7 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto shape_r = Shape{1, 2, 2, 2};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -202,26 +202,26 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
-                            0.89177299});
+                            0.4375872f,
+                            0.89177299f});
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    copy_data(_mean, vector<float>{0.60291237f, 0.59972727f});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    copy_data(_var, vector<float>{0.00472505f, 0.03617825f});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
     copy_data(_beta, vector<float>{0.0f, 0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    vector<float> expected_result{-0.71498716,
-                                  1.48388731,
-                                  -0.00196938,
-                                  -0.76693159,
-                                  -0.91316032,
-                                  0.23943391,
-                                  -0.84090298,
-                                  1.51462936};
+    vector<float> expected_result{-0.71498716f,
+                                  1.48388731f,
+                                  -0.00196938f,
+                                  -0.76693159f,
+                                  -0.91316032f,
+                                  0.23943391f,
+                                  -0.84090298f,
+                                  1.51462936f};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 }
@@ -242,7 +242,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto shape_r = Shape{2, 2, 2, 1};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -256,12 +256,12 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
-                            0.89177299});
+                            0.4375872f,
+                            0.89177299f});
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.60291237, 0.59972727});
+    copy_data(_mean, vector<float>{0.60291237f, 0.59972727f});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    copy_data(_var, vector<float>{0.00472505f, 0.03617825f});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
@@ -269,7 +269,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     vector<float> expected_result{
-        -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};
+        -0.714987f, 1.48389f, 0.015746f, -0.284436f, -2.36912f, 0.56806f, -0.840903f, 1.51463f};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 }
@@ -290,6 +290,26 @@ TEST(cpu_fusion, fuse_fprop_bn)
     ASSERT_EQ(ccg, 1);
 }
 
+class UnhandledOp : public ngraph::op::Abs
+{
+public:
+    UnhandledOp(const std::shared_ptr<Node>& arg)
+        : Abs(arg)
+    {
+    }
+};
+
+TEST(cpu_fusion, unhandled_op)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{});
+    auto unhandled = make_shared<UnhandledOp>(A);
+    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
+    auto manager = runtime::Manager::get("CPU");
+    auto backend = manager->allocate_backend();
+    auto external = manager->compile(f);
+    ASSERT_THROW(backend->make_call_frame(external), ngraph_error);
+}
+
 TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
@@ -303,3 +323,4 @@ TEST(cpu_fusion, fuse_conv_bias)
     size_t cb = count_ops_of_type<op::ConvolutionBias>(func);
     ASSERT_GT(cb, 0);
 }
+

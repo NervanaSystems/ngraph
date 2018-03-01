@@ -4,6 +4,11 @@
 Add
 ###
 
+.. code-block:: cpp
+
+   Add  // Elementwise add operation
+
+
 Description
 ===========
 
@@ -11,7 +16,7 @@ Elementwise add operation.
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is the sum of the
-value at the corresponding input coordinates.
+values at the corresponding input coordinates.
 
 Inputs
 ------
@@ -54,4 +59,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Add
+   :project: ngraph
    :members:

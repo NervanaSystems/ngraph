@@ -26,12 +26,9 @@ using namespace std;
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
 template <typename T>
-string emit_bracketed_string(vector<T> data)
+string emit_bracketed_string(T data)
 {
     stringstream ss;
-
-    if (data.size() == 0)
-        return "";
 
     for (auto s : data)
     {
@@ -75,7 +72,7 @@ vector<string>
     vector<string> index_vars;
     for (size_t i = 0; i < top.size(); i++)
     {
-        string index_var = writer.generate_temporary_name("i");
+        string index_var = writer.generate_temporary_name("_i");
 
         writer << runtime::cpu::kernel::start_index_loop(index_var, new_bottom[i], top[i], i == 0);
         writer.indent++;

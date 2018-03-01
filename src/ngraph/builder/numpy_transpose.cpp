@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ops/reshape.hpp"

@@ -42,6 +42,8 @@ namespace ngraph
         class Value;
     }
 
+    std::string to_cplusplus_sourcecode_literal(bool val);
+
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
     {
@@ -58,7 +60,7 @@ namespace ngraph
     }
 
     template <typename T>
-    static std::string vector_to_string(const std::vector<T>& v)
+    static std::string vector_to_string(const T& v)
     {
         std::ostringstream os;
         os << "[ " << ngraph::join(v) << " ]";

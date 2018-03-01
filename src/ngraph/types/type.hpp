@@ -31,8 +31,6 @@ namespace ngraph
     /// Describes a tensor view; an element type and a shape.
     class TensorViewType : public std::enable_shared_from_this<TensorViewType>
     {
-        TensorViewType& operator=(const ValueType&) = delete;
-
     public:
         /// /param element_type The type of the tensor elements.
         /// /param shape The shape of the tensor.

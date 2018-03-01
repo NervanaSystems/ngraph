@@ -30,6 +30,11 @@
 
 using namespace std;
 
+std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
+{
+    return val ? "true" : "false";
+}
+
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto flags = out.flags();
@@ -234,7 +239,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // create the new outputs for fprop and the new fprop function
-    Nodes fprop_outputs{fprop->get_results()};
+    NodeVector fprop_outputs{fprop->get_results()};
     fprop_outputs.insert(fprop_outputs.end(),
                          fprop_cache.fprop_output_nodes.begin(),
                          fprop_cache.fprop_output_nodes.end());
@@ -246,14 +251,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
     // get cloned bprop results
-    Nodes cloned_results;
+    NodeVector cloned_results;
     for (auto node : bprop->get_results())
     {
         cloned_results.push_back(node_param_map.get(node));
     }
 
     // get clone bprop parameters
-    op::Parameters bprop_input_params;
+    op::ParameterVector bprop_input_params;
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(

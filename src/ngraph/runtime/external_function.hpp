@@ -46,6 +46,7 @@ namespace ngraph
             virtual ~ExternalFunction() {}
             virtual std::shared_ptr<CallFrame> make_call_frame() = 0;
 
+            const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
         protected:
             std::shared_ptr<ngraph::Function> m_function;
             bool m_release_function;
