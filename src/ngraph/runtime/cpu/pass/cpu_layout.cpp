@@ -719,11 +719,11 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         auto handler = s_dispatcher.find(TI(n));
         if (handler != s_dispatcher.end())
         {
-            handler->second(m_external_function.get(), node);
+            handler->second(m_external_function, node);
         }
         else
         {
-            set_default_layouts(m_external_function.get(), node);
+            set_default_layouts(m_external_function, node);
         }
     }
 
