@@ -93,6 +93,28 @@ TEST(${BACKEND_NAME}, node_name)
     cf->call({a, b}, {result});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+
+TEST(${BACKEND_NAME}, component_cleanup)
+{
+    shared_ptr<runtime::Backend> backend;
+    shared_ptr<runtime::ExternalFunction> external;
+    shared_ptr<runtime::CallFrame> cf;
+    {
+        Shape shape{2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
+
+        auto manager = runtime::Manager::get("${BACKEND_NAME}");
+        external = manager->compile(f);
+        backend = manager->allocate_backend();
+        cf = backend->make_call_frame(external);
+    }
+    EXPECT_EQ(cf.use_count(), 1);
+    cf = nullptr;
+    EXPECT_EQ(backend.use_count(), 1);
+    backend = nullptr;
+    EXPECT_EQ(external.use_count(), 1);
 }
 
 TEST(${BACKEND_NAME}, aliased_output)
@@ -190,7 +212,7 @@ TEST(${BACKEND_NAME}, abc)
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
+    shared_ptr<runtime::ExternalFunction> external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 

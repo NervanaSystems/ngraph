@@ -39,7 +39,7 @@ namespace ngraph
                 class CPUAssignment : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    CPUAssignment(std::shared_ptr<CPU_ExternalFunction> external_function)
+                    CPUAssignment(CPU_ExternalFunction* external_function)
                         : m_external_function(external_function)
                     {
                     }
@@ -56,7 +56,7 @@ namespace ngraph
                     }
 
                 private:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                    CPU_ExternalFunction* m_external_function;
                 };
             }
         }
