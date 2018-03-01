@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/op.hpp"
@@ -657,6 +658,29 @@ namespace ngraph
                         prim_input_formats.push_back(input_layout);
                         prim_input_formats.push_back(input_layout);
                         prim_output_formats.push_back(input_layout);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Add)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input0_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        prim_input_formats.push_back(input0_layout);
+                        prim_input_formats.push_back(input0_layout);
+                        prim_output_formats.push_back(input0_layout);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);

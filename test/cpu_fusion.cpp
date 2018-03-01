@@ -34,13 +34,13 @@
 #include "ngraph/pattern/op/label.hpp"
 //
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
@@ -112,7 +112,7 @@ TEST(cpu_fusion, gemm_cpu)
     auto cg =
         make_shared<op::MatmulBias>(A, B, broadcast, A->get_shape(), B->get_shape(), true, true);
 
-    auto f = make_shared<Function>(cg, op::Parameters{A, B});
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
@@ -150,7 +150,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    auto func = make_shared<Function>(graph, op::Parameters{A, B, C});
+    auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
 }
@@ -252,7 +252,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
     auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt},
-                                   op::Parameters{input, gamma, beta}); //, gamma, beta});
+                                   op::Parameters{input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -317,7 +317,7 @@ TEST(cpu_fusion, unhandled_op)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
     auto unhandled = make_shared<UnhandledOp>(A);
-    auto f = make_shared<Function>(unhandled, op::Parameters{A});
+    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
     auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
     auto external = manager->compile(f);

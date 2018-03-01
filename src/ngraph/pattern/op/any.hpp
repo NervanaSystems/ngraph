@@ -33,7 +33,7 @@ namespace ngraph
             {
             public:
                 Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Any", Nodes{arg}, predicate)
+                    : Pattern("Any", NodeVector{arg}, predicate)
                 {
                     add_output(arg->get_element_type(), arg->get_shape());
                     //m_arguments.push_back(arg);

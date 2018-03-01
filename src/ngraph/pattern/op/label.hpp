@@ -39,12 +39,12 @@ namespace ngraph
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; //a and b are op::Parameter in this example
-                /// auto label = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2} , nullptr, Nodes{add});
+                /// auto label = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2} , nullptr, NodeVector{add});
                 /// \endcode
                 Label(const element::Type& type,
                       const Shape s,
                       Predicate pred = nullptr,
-                      const Nodes& wrapped_nodes = Nodes{})
+                      const NodeVector& wrapped_nodes = NodeVector{})
                     : Pattern("Label", wrapped_nodes, pred)
                 {
                     add_output(type, s);
@@ -57,11 +57,11 @@ namespace ngraph
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; //a and b are op::Parameter in this example
-                /// auto label = std::make_shared<pattern::op::Label>(add, nullptr, Nodes{add});
+                /// auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
                 /// \endcode
                 Label(std::shared_ptr<Node> node,
                       Predicate pred = nullptr,
-                      const Nodes& wrapped_nodes = Nodes{})
+                      const NodeVector& wrapped_nodes = NodeVector{})
                     : Label(node->get_element_type(), node->get_shape(), pred, wrapped_nodes)
                 {
                 }

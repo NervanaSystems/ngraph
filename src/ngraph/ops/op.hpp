@@ -18,7 +18,6 @@
 
 #include <string>
 
-#include "ngraph/common.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/util/op_annotations.hpp"
 
@@ -40,7 +39,7 @@ namespace ngraph
             }
 
         protected:
-            Op(const std::string& node_type, const Nodes& arguments);
+            Op(const std::string& node_type, const NodeVector& arguments);
 
         private:
             std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;

@@ -150,12 +150,53 @@ namespace ngraph
                        << args[1].get_name() << ");\n";
                 writer << "out = arg0 + arg1;\n";
 #else
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
-                       << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    std::vector<float> scale_vector(2, 1);
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+
+                    auto input0_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto input1_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input0_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
+                    auto input1_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+
+                    size_t add_index = 0;
+                    add_index = mkldnn_emitter->build_elementwise_add(
+                        input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(add_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] + " << args[1].get_name() << "[i];\n";
+                    writer << "}\n";
+                }
 #endif
                 writer.indent--;
                 writer << "}\n";

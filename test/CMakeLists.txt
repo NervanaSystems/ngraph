@@ -82,7 +82,7 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})    
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
     link_directories(${CUDA_LIBRARIES})
     link_directories(${CUDA_CUBLAS_LIBRARIES})
@@ -171,13 +171,15 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-    target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    find_library(CUDA_NVRTC_LIBRARY nvrtc /usr/local/cuda/lib64)
+    target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest ext_eigen)
+add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

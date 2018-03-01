@@ -20,15 +20,30 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
 using json = nlohmann::json;
+
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
 
 TEST(serialize, main)
 {
@@ -37,31 +52,31 @@ TEST(serialize, main)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   op::Parameters{X, Y, Z},
+    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
+                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
+                                   op::ParameterVector{X, Y, Z},
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
     auto X1 = make_shared<op::Parameter>(element::f32, shape);
     auto Y1 = make_shared<op::Parameter>(element::f32, shape);
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
-                                   op::Parameters{X1, Y1, Z1},
+    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
+                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
+                                   op::ParameterVector{X1, Y1, Z1},
                                    "h");
 
     string js = serialize(h, 4);
 
     {
-        ofstream f("serialize_function.js");
-        f << js;
+        ofstream out("serialize_function.js");
+        out << js;
     }
 
     istringstream in(js);

@@ -33,13 +33,13 @@ TEST(builder_xla, simple)
     auto pB = make_shared<op::Parameter>(element::f32, shape);
     auto pC = make_shared<op::Parameter>(element::f32, shape);
 
-    auto ABC = make_shared<xla::op::Tuple>(Nodes{pA, pB, pC});
+    auto ABC = make_shared<xla::op::Tuple>(NodeVector{pA, pB, pC});
 
     auto A = xla::op::get_tuple_element(ABC, 0);
     auto B = xla::op::get_tuple_element(ABC, 1);
     auto C = xla::op::get_tuple_element(ABC, 2);
-    auto f = make_shared<xla::XLAFunction>(Nodes{make_shared<xla::op::Tuple>(Nodes{(A + B) * C})},
-                                           Nodes{ABC});
+    auto f = make_shared<xla::XLAFunction>(
+        NodeVector{make_shared<xla::op::Tuple>(NodeVector{(A + B) * C})}, NodeVector{ABC});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -71,8 +71,8 @@ TEST(builder_xla, simple)
 
 TEST(builder_xla, empty_tuple_interpreter)
 {
-    auto empty_tuple = make_shared<xla::op::Tuple>(Nodes{});
-    auto f = make_shared<xla::XLAFunction>(Nodes{empty_tuple}, Nodes{});
+    auto empty_tuple = make_shared<xla::op::Tuple>(NodeVector{});
+    auto f = make_shared<xla::XLAFunction>(NodeVector{empty_tuple}, NodeVector{});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -84,8 +84,8 @@ TEST(builder_xla, empty_tuple_interpreter)
 
 TEST(builder_xla, empty_tuple_cpu)
 {
-    auto empty_tuple = make_shared<xla::op::Tuple>(Nodes{});
-    auto f = make_shared<xla::XLAFunction>(Nodes{empty_tuple}, Nodes{});
+    auto empty_tuple = make_shared<xla::op::Tuple>(NodeVector{});
+    auto f = make_shared<xla::XLAFunction>(NodeVector{empty_tuple}, NodeVector{});
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);

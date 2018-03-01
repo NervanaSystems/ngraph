@@ -44,6 +44,7 @@ Alphabetical list of Core ``ops``
 
 Not currently a comprehensive list.  
 
+.. tabularcolumns:: column spec
 
 .. toctree::
    :maxdepth: 1

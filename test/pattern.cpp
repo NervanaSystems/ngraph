@@ -54,7 +54,8 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     const auto& et = node->get_element_type();
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f =
+        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
@@ -127,7 +128,8 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
     auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
     auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<op::Divide>(xmu, N);
-    auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+    auto variance_label =
+        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
 
     return variance_label;
 }
@@ -139,7 +141,7 @@ static std::shared_ptr<pattern::op::Label> construct_mean_graph()
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
     return mean_label;
 }
 
@@ -269,7 +271,7 @@ static void run_passes(pass::Manager& pass_manager,
                        shared_ptr<Node> graph,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
-    auto func = make_shared<Function>(graph, op::Parameters{parms});
+    auto func = make_shared<Function>(graph, op::ParameterVector{parms});
     pass_manager.run_passes(func);
 }
 
@@ -287,14 +289,14 @@ TEST(pattern, graph_rewrite)
         auto graph_a = a + iconst0;
         auto graph_b = b + iconst0;
 
-        auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
-                                            op::Parameters{a, b, c});
+        auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
+                                            op::ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
         ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
         ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
 
-        auto expected = ngraph::Nodes{a, b, a, c, b};
+        auto expected = ngraph::NodeVector{a, b, a, c, b};
         ASSERT_TRUE(f->get_results() == expected);
     }
 
@@ -445,7 +447,7 @@ TEST(pattern, matcher)
 
     //Subgraph labels
     auto add = a + b;
-    auto label = std::make_shared<pattern::op::Label>(add, nullptr, Nodes{add});
+    auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
     ASSERT_TRUE(n.match(label, add));
     ASSERT_EQ(n.get_pattern_map()[label], add);
 
@@ -457,7 +459,7 @@ TEST(pattern, matcher)
     //Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
-    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, Nodes{tmp});
+    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, NodeVector{tmp});
     auto sub_label1 = label1 - label2;
     ASSERT_TRUE(n.match(sub_label1, a - add));
     ASSERT_EQ(n.get_pattern_map()[label1], a);

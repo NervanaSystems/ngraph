@@ -41,8 +41,8 @@ namespace ngraph
             bool get_is_arg1_transposed() const { return m_transpose_x; }
             Shape get_arg0_shape() const { return m_shape_w; }
             Shape get_arg1_shape() const { return m_shape_x; }
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
             Shape m_shape_w;
