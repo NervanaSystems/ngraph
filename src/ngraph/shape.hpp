@@ -25,7 +25,6 @@
 
 namespace ngraph
 {
-#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief Shape for a tensor.
     class Shape : public std::vector<size_t>
     {
@@ -68,10 +67,6 @@ namespace ngraph
             return *this;
         }
     };
-#else
-    // Deprecated definition
-    using Shape = std::vector<size_t>;
-#endif
 
     /// Number of elements in spanned by a shape
     size_t shape_size(const Shape& shape);

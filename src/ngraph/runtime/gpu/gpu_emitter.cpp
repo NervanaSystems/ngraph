@@ -51,29 +51,6 @@
 using namespace std;
 using namespace ngraph;
 
-#define NVRTC_SAFE_CALL(x)                                                                         \
-    do                                                                                             \
-    {                                                                                              \
-        nvrtcResult result = x;                                                                    \
-        if (result != NVRTC_SUCCESS)                                                               \
-        {                                                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
-                                     nvrtcGetErrorString(result));                                 \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_SAFE_CALL(x)                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        CUresult result = x;                                                                       \
-        if (result != CUDA_SUCCESS)                                                                \
-        {                                                                                          \
-            const char* msg;                                                                       \
-            cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg);      \
-        }                                                                                          \
-    } while (0)
-
 void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
@@ -149,25 +126,54 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    throw std::runtime_error(n->get_name() + " is not implemented.");
-
+    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
     if (arg0_shape.empty() || arg1_shape.empty())
     {
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{  // " << n->get_name() << "\n";
         writer.indent++;
-        writer << "cublasSdot("
-               << "cublas_handle," << second.get_size() << "," << first.get_name() << ","
-               << "1," << second.get_name() << ","
-               << "1," << out[0].get_name() << ");\n";
+        writer << "int count = " << second.get_size() << ";\n";
+        writer << "if(count == 0) return;\n";
+        writer << "cublasScopy("
+               << "cublas_handle,"
+               << "count ," << second.get_name() << ","
+               << "1," << out[0].get_name() << ", 1);\n";
+        writer << "cublasSscal("
+               << "cublas_handle,"
+               << "count ," << first.get_name() << "," << out[0].get_name() << ", 1);\n";
         writer.indent--;
         writer << "}\n";
+        return;
     }
 
-    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+    //return if output size is 0;
+    if (out[0].get_size() == 0)
+    {
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "return;\n";
+        writer.indent--;
+        writer << "}\n";
+        return;
+    }
+
+    //set output to 0 if input size is 0
+    if (args[0].get_size() == 0 || args[1].get_size() == 0)
+    {
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, " << out[0].get_size()
+               << " * sizeof(float));\n";
+        writer << "return;\n";
+        writer.indent--;
+        writer << "}\n";
+        return;
+    }
+
+    if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
@@ -182,10 +188,9 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
-        writer << "static const float alpha = 1.0;\n";
-        writer << "static const float beta  = 1.0;\n";
+        writer << "const float alpha = 1.0;\n";
+        writer << "const float beta  = 0;\n";
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        ;
         writer << "cublasSgemv("
                << "cublas_handle,"
                << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
@@ -195,6 +200,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                << "&beta," // beta
                << out[0].get_name() << ","
                << "1);\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
         writer << "}\n";
     }
@@ -209,8 +215,8 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         }
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
-        writer << "static const float alpha = 1.0;\n";
-        writer << "static const float beta  = 0.0;\n";
+        writer << "const float alpha = 1.0;\n";
+        writer << "const float beta  = 0.0;\n";
         writer << "int m = " << arg0_shape[0] << ";\n";
         writer << "int n = " << arg1_shape[1] << ";\n";
         writer << "int k = " << arg0_shape[0] << ";\n";
@@ -229,12 +235,13 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                << "&beta," // beta
                << out[0].get_name() << ","
                << "n);\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
         writer << "}\n";
     }
     else
     {
-        // General ND Call?
+        throw std::runtime_error(n->get_name() + " with more then 2D is not implemented.");
     }
 }
 
@@ -493,7 +500,6 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     {
         result_shape_product *= i;
     }
-
     // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
     //  we can just copy.
     if (same_layout || result_shape_product < 2)
@@ -501,7 +507,7 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         writer << "{   // " << n->get_name() << " 1\n";
         writer.indent++;
         writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
-               << ", " << out[0].get_size() << "," << out[0].get_element_type().size() << ");\n";
+               << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
         writer.indent--;
         writer << "}\n";
     }
@@ -511,10 +517,9 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         // TODO Assert arg0_shape[0] == arg1_shape[0]?
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
-        writer << "static const float alpha = 1.0;\n";
-        writer << "static const float beta = 0.0;\n";
+        writer << "const float alpha = 1.0;\n";
+        writer << "const float beta = 0;\n";
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        ;
         writer << "cublasSgeam("
                << "cublas_handle,"
                << "CUBLAS_OP_T,"
@@ -523,7 +528,8 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
                << args[0].get_name() << "," << arg_shape[1] << ","
                << "&beta," // beta
                << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name() << ","
-               << out[0].get_shape()[1] << ");\n";
+               << result_shape[1] << ");\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
         writer << "}\n";
     }

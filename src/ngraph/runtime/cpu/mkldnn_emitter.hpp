@@ -38,11 +38,7 @@ namespace ngraph
             class MKLDNNEmitter
             {
             public:
-                MKLDNNEmitter(std::shared_ptr<CPU_ExternalFunction> ef)
-                    : external_function(ef)
-                {
-                }
-
+                MKLDNNEmitter() {}
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
 
                 size_t insert_primitive(mkldnn::primitive* primitive);
@@ -109,10 +105,9 @@ namespace ngraph
                     const std::vector<mkldnn::memory::primitive_desc>& input_pd);
 
             private:
-                std::shared_ptr<CPU_ExternalFunction> external_function;
-                std::vector<mkldnn::primitive*> mkldnn_primitives;
-                std::vector<mkldnn::stream> mkldnn_streams;
-                std::unordered_map<size_t, std::vector<size_t>> primitive_deps;
+                std::vector<mkldnn::primitive*> m_mkldnn_primitives;
+                std::vector<mkldnn::stream> m_mkldnn_streams;
+                std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
             };
         }
     }

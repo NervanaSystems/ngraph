@@ -1,20 +1,20 @@
-.. not.rst:
+.. allreduce.rst:
 
 ###
-Not
+AllReduce
 ###
 
 .. code-block:: cpp
 
-   Not // Elementwise negation operation
+   AllReduce // Collective operation
 
 
 Description
 ===========
 
-Produces a single output tensor of boolean type and the same shape as ``arg``,
-where the value at each coordinate of ``output`` is the negation of the
-value at each ``arg`` coordinate.
+Combines values from all processes or devices and distributes the result back
+to all processes or devices.
+
 
 Inputs
 ------
@@ -22,8 +22,10 @@ Inputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg``         | ``element::boolean``    | Any                            |
+| ``arg``         | ``element::f32``        | Any                            |
+|                 | ``element::f64``        |                                |
 +-----------------+-------------------------+--------------------------------+
+
 
 Outputs
 -------
@@ -31,21 +33,14 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | ``element::boolean``    | Same as ``arg``                |
+| ``output``      | ``element::f32``        | Same as ``arg``                |
+|                 | ``element::f64``        |                                |
 +-----------------+-------------------------+--------------------------------+
-
-
-Mathematical Definition
-=======================
-
-.. math::
-
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \neg\mathtt{arg}_{i_0, \ldots, i_{n-1}}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Not
+.. doxygenclass:: ngraph::op::AllReduce
    :project: ngraph
    :members:
