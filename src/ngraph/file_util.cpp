@@ -150,9 +150,12 @@ string ngraph::file_util::make_temp_directory(const string& path)
     string tmp_template = file_util::path_join(fname, "ngraph_XXXXXX");
     char* tmpname = strdup(tmp_template.c_str());
 
-    mkdtemp(tmpname);
+    string rc;
+    if (mkdtemp(tmpname))
+    {
+        rc = tmpname;
+    }
 
-    string rc = tmpname;
     free(tmpname);
     return rc;
 }
