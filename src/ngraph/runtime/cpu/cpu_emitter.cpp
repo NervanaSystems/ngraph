@@ -321,16 +321,20 @@ namespace ngraph
                 // get the eps value from the bn node
                 writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
 
+                const string& input_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2));
+                const string& result_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
                 // Bind to CPU engine
                 writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                 // create memory descriptors
                 writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
+                       << "}, " << et << ", " << input_format << ");\n";
                 // TODO define weights by stacking gamma and beta values
                 writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
                        << "}, " << et << ", memory::format::nc);\n";
                 writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
+                       << et << ", " << result_format << ");\n";
                 writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
                        << et << ", memory::format::x);\n";
                 writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)

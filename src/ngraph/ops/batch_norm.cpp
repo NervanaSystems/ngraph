@@ -51,17 +51,17 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
     // assuming input shape (N, C, H, W), check if the size of mean and
     // variance are equal to channel axis
-    if (mean->get_shape()[0] != m_bn_input_shape[1])
+    if (m_bn_mean_shape[0] != m_bn_input_shape[1])
     {
         throw ngraph_error("mean size is not equal to input channel size");
     }
 
-    if (variance->get_shape()[0] != m_bn_input_shape[1])
+    if (m_bn_variance_shape[0] != m_bn_input_shape[1])
     {
         throw ngraph_error("variance size is not equal to input channel size");
     }
 
-    if (variance->get_shape().size() != mean->get_shape().size())
+    if (m_bn_variance_shape.size() != m_bn_mean_shape.size())
     {
         throw ngraph_error("mean and variance rank does not match");
     }
@@ -69,16 +69,6 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     if (gamma->get_shape().size() != beta->get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
-    }
-
-    if (input->get_element_type() != mean->get_element_type())
-    {
-        throw ngraph_error("input tensor and mean element type does not match");
-    }
-
-    if (input->get_element_type() != variance->get_element_type())
-    {
-        throw ngraph_error("input tensor and variance element type does not match");
     }
 
     if (gamma->get_element_type() != beta->get_element_type())
