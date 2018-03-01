@@ -16,12 +16,13 @@
 
 #include "ngraph/builder/autobroadcast.hpp"
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/util.hpp"
 
 #include <cassert>
+#include <memory>
 #include <numeric>
 #include <sstream>
 

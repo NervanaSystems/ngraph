@@ -100,8 +100,8 @@ int main(int argc, char** argv)
 
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
     include_paths.push_back({"/usr/include/x86_64-linux-gnu", {"asm", "sys", "bits", "gnu"}});
-    include_paths.push_back({"/usr/include", {"asm", "sys", "bits", "gnu"}});
-    include_paths.push_back({"/usr/include", {"linux", "asm-generic"}});
+    include_paths.push_back(
+        {"/usr/include", {"asm", "sys", "bits", "gnu", "linux", "asm-generic"}});
     include_paths.push_back({cpp0, {"bits"}});
     include_paths.push_back({"/usr/include/c++/4.8.2/x86_64-redhat-linux", {"bits"}});
     include_paths.push_back({cpp1, {"bits", "ext", "debug", "backward"}});
@@ -168,61 +168,39 @@ int main(int argc, char** argv)
 
     if (update_needed)
     {
+        size_t total_size = 0;
+        size_t total_count = 0;
+        const string prefix = "pReFiX";
         ofstream out(output_path);
         out << "#pragma clang diagnostic ignored \"-Weverything\"\n";
         out << "#include <vector>\n";
         out << "namespace ngraph\n";
         out << "{\n";
-        out << "    static const uint8_t header_resources[] =\n";
+        out << "    const std::vector<std::string> builtin_search_paths =\n";
         out << "    {\n";
-        vector<pair<size_t, size_t>> offset_size_list;
-        size_t offset = 0;
-        size_t total_size = 0;
-        size_t total_count = 0;
         for (const ResourceInfo& path : include_paths)
         {
-            for (const string& header_file : path.files)
+            out << "        \"" << path.search_path << "\",\n";
+        }
+        out << "    };\n";
+
+        out << "    const std::vector<std::pair<std::string, std::string>> builtin_headers =\n";
+        out << "    {\n";
+        for (const ResourceInfo& path : include_paths)
+        {
+            for (const string& header_path : path.files)
             {
-                string header_data = read_file_to_string(header_file);
-                string base_path = header_file.substr(path.search_path.size() + 1);
-                header_data = rewrite_header(header_data, base_path);
+                string header_data = read_file_to_string(header_path);
+                string relative_path = header_path.substr(path.search_path.size() + 1);
+                header_data = rewrite_header(header_data, relative_path);
                 // header_data = uncomment(header_data);
                 total_size += header_data.size();
                 total_count++;
 
-                // data layout is triplet of strings containing:
-                // 1) search path
-                // 2) header path within search path
-                // 3) header data
-                // all strings are null terminated and the length includes the null
-                // The + 1 below is to account for the null terminator
-                dump(out, path.search_path.c_str(), path.search_path.size() + 1);
-                offset_size_list.push_back({offset, path.search_path.size() + 1});
-                offset += path.search_path.size() + 1;
-
-                dump(out, header_file.c_str(), header_file.size() + 1);
-                offset_size_list.push_back({offset, header_file.size() + 1});
-                offset += header_file.size() + 1;
-
-                dump(out, header_data.c_str(), header_data.size() + 1);
-                offset_size_list.push_back({offset, header_data.size() + 1});
-                offset += header_data.size() + 1;
+                out << "        {";
+                out << "\"" << header_path << "\",\nR\"" << prefix << "(" << header_data << ")"
+                    << prefix << "\"},\n";
             }
-        }
-        out << "    };\n";
-        out << "    struct HeaderInfo\n";
-        out << "    {\n";
-        out << "        const char* search_path;\n";
-        out << "        const char* header_path;\n";
-        out << "        const char* header_data;\n";
-        out << "    };\n";
-        out << "    std::vector<HeaderInfo> header_info\n";
-        out << "    {\n";
-        for (size_t i = 0; i < offset_size_list.size();)
-        {
-            out << "        {(char*)(&header_resources[" << offset_size_list[i++].first;
-            out << "]), (char*)(&header_resources[" << offset_size_list[i++].first;
-            out << "]), (char*)(&header_resources[" << offset_size_list[i++].first << "])},\n";
         }
         out << "    };\n";
         out << "}\n";

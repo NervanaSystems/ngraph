@@ -76,6 +76,7 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -85,62 +86,26 @@ using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
 
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
+
 static std::shared_ptr<ngraph::Function>
     read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
 
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
-
-// There should be a map from element type names to element types so deserialization can
-// find the singletons and serialization can serialize by name.
-static const element::Type& to_ref(const element::Type& t)
-{
-    if (t == element::boolean)
-    {
-        return element::boolean;
-    }
-    if (t == element::f32)
-    {
-        return element::f32;
-    }
-    if (t == element::f64)
-    {
-        return element::f64;
-    }
-    if (t == element::i8)
-    {
-        return element::i8;
-    }
-    if (t == element::i16)
-    {
-        return element::i16;
-    }
-    if (t == element::i32)
-    {
-        return element::i32;
-    }
-    if (t == element::i64)
-    {
-        return element::i64;
-    }
-    if (t == element::u8)
-    {
-        return element::u8;
-    }
-    if (t == element::u16)
-    {
-        return element::u16;
-    }
-    if (t == element::u32)
-    {
-        return element::u32;
-    }
-    if (t == element::u64)
-    {
-        return element::u64;
-    }
-    throw runtime_error("type not valid");
-}
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -149,12 +114,12 @@ static json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static const element::Type& read_element_type(const json& j)
+static element::Type read_element_type(const json& j)
 {
     size_t bitwidth = 0;
-    bool is_real;
-    bool is_signed;
-    string c_type_string;
+    bool is_real = false;
+    bool is_signed = false;
+    string c_type_string = "";
     if (j.is_object())
     {
         bitwidth = j.at("bitwidth").get<size_t>();
@@ -177,26 +142,7 @@ static const element::Type& read_element_type(const json& j)
             }
         }
     }
-    return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
-}
-
-static json write_tensor_type(const element::Type& element_type, const Shape& shape)
-{
-    json j;
-    j["element_type"] = write_element_type(element_type);
-    j["shape"] = shape;
-    return j;
-}
-
-static std::shared_ptr<const TensorViewType>
-    read_tensor_type(const json& j, const string& type, const string& sshape)
-{
-    const element::Type& et = read_element_type(j.at(type));
-    Shape shape =
-        j.count(sshape)
-            ? j.at(sshape).get<vector<size_t>>()
-            : Shape{} /*HACK, so we could call read_tensor_type uniformly @ each callsite*/;
-    return make_shared<TensorViewType>(et, shape);
+    return element::Type(bitwidth, is_real, is_signed, c_type_string);
 }
 
 string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
@@ -217,7 +163,7 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
     }
     else
     {
-        rc = j.dump(indent);
+        rc = j.dump(static_cast<int>(indent));
     }
     return rc;
 }
@@ -373,7 +319,7 @@ static shared_ptr<ngraph::Function>
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
             auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
+                get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
             node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
                                                     args[0],
                                                     window_shape,
@@ -406,14 +352,14 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
             auto value = node_js.at("value").get<vector<string>>();
             node = make_shared<op::Constant>(element_type, shape, value);
         }
         else if (node_op == "Convert")
         {
-            auto& target_type = read_element_type(node_js.at("target_type"));
+            auto target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
         }
         else if (node_op == "Convolution")
@@ -663,7 +609,7 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
             node = make_shared<op::Parameter>(element_type, shape);
         }
@@ -802,6 +748,11 @@ static shared_ptr<ngraph::Function>
             throw runtime_error(ss.str());
         }
         node_map[node_name] = node;
+
+        // Typically, it could be unsafe to change the name of a node since it may break nameing
+        // uniqueness. However, it could sometimes be helpful to use the original name from
+        // the serialization for debugging.
+        // node->set_name(node_name);
     }
 
     std::vector<std::shared_ptr<Node>> result;

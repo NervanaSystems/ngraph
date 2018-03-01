@@ -151,12 +151,53 @@ namespace ngraph
                        << args[1].get_name() << ");\n";
                 writer << "out = arg0 + arg1;\n";
 #else
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
-                       << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    std::vector<float> scale_vector(2, 1);
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+
+                    auto input0_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto input1_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input0_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
+                    auto input1_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+
+                    size_t add_index = 0;
+                    add_index = mkldnn_emitter->build_elementwise_add(
+                        input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(add_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] + " << args[1].get_name() << "[i];\n";
+                    writer << "}\n";
+                }
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -2002,11 +2043,7 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto op_annotations =
-                    static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-                if (op_annotations &&
-                    static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                        ->is_mkldnn_op())
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
@@ -2015,22 +2052,13 @@ namespace ngraph
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
-                    auto input_tvl = node->get_inputs()[0]
-                                         .get_output()
-                                         .get_tensor_view()
-                                         ->get_tensor_view_layout();
-                    auto weights_tvl = node->get_inputs()[1]
-                                           .get_output()
-                                           .get_tensor_view()
-                                           ->get_tensor_view_layout();
-                    auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                    auto input_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl)
-                                            .get_mkldnn_format();
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
                     auto weights_format =
-                        dynamic_cast<runtime::cpu::LayoutDescriptor&>(*weights_tvl)
-                            .get_mkldnn_format();
-                    auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl)
-                                             .get_mkldnn_format();
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_data_desc =
@@ -2092,17 +2120,8 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides_forward())
-                {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     const string& elem_type =
                         runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
@@ -2113,12 +2132,19 @@ namespace ngraph
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
+
+                    auto data_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto delta_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     auto emit_memory_desc = [&writer](const std::string& var,
                                                       const std::string& shape,
                                                       const std::string& type,
                                                       const std::string& layout) {
                         writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", memory::format::" << layout << ");\n";
+                               << type << ", " << layout << ");\n";
                     };
 
                     auto emit_memory = [&writer](
@@ -2136,9 +2162,21 @@ namespace ngraph
                     writer << "try\n";
                     writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc("data_desc", join(arg0_shape), elem_type, "nchw");
-                    emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
-                    emit_memory_desc("result_desc", join(result_shape), elem_type, "oihw");
+                    emit_memory_desc(
+                        "data_desc",
+                        join(arg0_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(data_format));
+                    emit_memory_desc(
+                        "delta_desc",
+                        join(arg1_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format));
+                    emit_memory_desc(
+                        "result_desc",
+                        join(result_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format));
                     emit_memory("data", "data_desc", args[0].get_name());
                     emit_memory("delta", "delta_desc", args[1].get_name());
                     emit_memory("result", "result_desc", out[0].get_name());
@@ -2203,17 +2241,8 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides_forward())
-                {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     const string& elem_type =
                         runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
@@ -2225,12 +2254,19 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
+                    auto weight_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto delta_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     auto emit_memory_desc = [&writer](const std::string& var,
                                                       const std::string& shape,
                                                       const std::string& type,
                                                       const std::string& layout) {
                         writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", memory::format::" << layout << ");\n";
+                               << type << ", " << layout << ");\n";
                     };
 
                     auto emit_memory = [&writer](
@@ -2248,9 +2284,21 @@ namespace ngraph
                     writer << "try\n";
                     writer.block_begin();
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc("weight_desc", join(arg0_shape), elem_type, "oihw");
-                    emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
-                    emit_memory_desc("result_desc", join(result_shape), elem_type, "nchw");
+                    emit_memory_desc(
+                        "weight_desc",
+                        join(arg0_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(weight_format));
+                    emit_memory_desc(
+                        "delta_desc",
+                        join(arg1_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format));
+                    emit_memory_desc(
+                        "result_desc",
+                        join(result_shape),
+                        elem_type,
+                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format));
                     emit_memory("weight", "weight_desc", args[0].get_name());
                     emit_memory("delta", "delta_desc", args[1].get_name());
                     emit_memory("result", "result_desc", out[0].get_name());
@@ -2501,8 +2549,6 @@ namespace ngraph
                 auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
 
                 auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
-
                 auto result_shape = out[0].get_shape();
 
                 // TODO(jmenon): Refactor into an MKLDNN Pooling emitter that handles
@@ -2511,8 +2557,7 @@ namespace ngraph
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
-                if (arg_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                         args[0].get_element_type());
@@ -2522,15 +2567,23 @@ namespace ngraph
                             ? "algorithm::pooling_avg_include_padding"
                             : "algorithm::pooling_avg_exclude_padding";
 
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     writer << "{\n";
                     writer.indent++;
 
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
                     writer << "memory result = memory({result_desc, cpu_engine}, "
@@ -2597,23 +2650,30 @@ namespace ngraph
                 auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
 
                 auto delta_shape = args[0].get_shape();
-                auto delta_rank = delta_shape.size();
                 auto out_shape = out[0].get_shape();
 
-                if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                         args[0].get_element_type());
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
 
                     writer << "{\n";
                     writer.indent++;
 
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(out_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
                     writer << "memory result = memory({result_desc, cpu_engine}, "
@@ -3040,12 +3100,27 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
                 const auto& arg_shape = args[0].get_shape();
-                const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
-                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto delta_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    if (!runtime::cpu::mkldnn_utils::compare_mkldnn_formats(input_format,
+                                                                            delta_format))
+                    {
+                        throw ngraph_error(
+                            "mkldnn emitter: Relu backprop fprop input and delta layouts should be "
+                            "the same");
+                    }
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     writer << "{\n";
                     writer.indent++;
 
@@ -3053,12 +3128,17 @@ namespace ngraph
                     writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc delta_data_desc = memory::desc({"
-                           << join(args[1].get_shape()) << "}, " << et
-                           << ", memory::format::nchw);\n";
+                           << join(args[1].get_shape()) << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
 
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";
@@ -3106,12 +3186,18 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
             {
                 const auto& arg_shape = args[0].get_shape();
-                const size_t arg_rank = arg_shape.size();
                 const auto& result_shape = out[0].get_shape();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
-                if (arg_rank == 4 && args[0].get_element_type() == element::f32)
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
+                        args[0].get_element_type());
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
                     writer << "{\n";
                     writer.indent++;
 
@@ -3119,9 +3205,13 @@ namespace ngraph
                     writer.indent++;
                     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
+                           << ");\n";
                     writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                           << "}, " << et << ", "
+                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
+                           << ");\n";
 
                     writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
                            << args[0].get_name() << ");\n";

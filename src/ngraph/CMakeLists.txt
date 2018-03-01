@@ -20,7 +20,6 @@ set (SRC
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
     builder/xla_tuple.cpp
-    common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -79,12 +78,13 @@ set (SRC
     ops/tan.cpp
     ops/tanh.cpp
     ops/util/arithmetic_reduction.cpp
-    ops/util/binary_elementwise_arithmetic.cpp 
-    ops/util/binary_elementwise_comparison.cpp 
-    ops/util/binary_elementwise.cpp 
-    ops/util/requires_tensor_view_args.cpp 
-    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/binary_elementwise_arithmetic.cpp
+    ops/util/binary_elementwise_comparison.cpp
+    ops/util/binary_elementwise.cpp
+    ops/util/requires_tensor_view_args.cpp
+    ops/util/unary_elementwise_arithmetic.cpp
     ops/util/unary_elementwise.cpp
+    pass/assign_placement.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
@@ -113,6 +113,7 @@ set (SRC
     types/type.cpp
     util.cpp
     graph_util.cpp
+    placement.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -241,6 +242,11 @@ endif()
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
+            runtime/gpu/gpu_cuda_kernel_emitters.cpp
+            runtime/gpu/gpu_cuda_kernel_builder.cpp
+            runtime/gpu/gpu_cuda_function_builder.cpp
+            runtime/gpu/gpu_cuda_function_pool.cpp
+            runtime/gpu/gpu_cuda_context_manager.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -261,8 +267,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource)
+    add_dependencies(ngraph header_resource ext_json)
     include_directories(${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
 if (NOT APPLE)
@@ -310,7 +317,9 @@ endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64)
+    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 if(MPI_CXX_INCLUDE_PATH)
@@ -345,11 +354,11 @@ install(DIRECTORY
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
 endif()
 

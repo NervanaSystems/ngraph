@@ -24,7 +24,6 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/relu.hpp"
@@ -37,6 +36,7 @@
 #include "ngraph/runtime/argon/pass/argon_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -50,7 +50,7 @@ TEST(Argon_fusion, fuse_max_with_constant_zero_input_as_relu)
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto max = make_shared<op::Maximum>(A, B);
     Shape shape_rt{1, 5};
-    auto f = make_shared<Function>(max, op::Parameters{B});
+    auto f = make_shared<Function>(max, op::ParameterVector{B});
 
     auto manager = runtime::Manager::get("ARGON");
     auto external = manager->compile(f);

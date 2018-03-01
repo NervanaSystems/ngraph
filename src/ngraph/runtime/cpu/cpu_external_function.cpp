@@ -247,6 +247,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_function_name(function->get_name())
 {
 }
 
@@ -256,8 +257,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         return;
     }
-
-    string function_name = m_function->get_name();
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
 
@@ -315,6 +314,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;
@@ -537,7 +538,7 @@ using namespace ngraph::runtime;
         }
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -688,7 +689,7 @@ using namespace ngraph::runtime;
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (current_function->get_name() == function_name)
+                if (current_function->get_name() == m_function_name)
                 {
                     m_op_attrs.emplace_back(
                         node->description(), node_output_names, node_input_names);
@@ -706,7 +707,7 @@ using namespace ngraph::runtime;
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
                 }
@@ -750,7 +751,7 @@ using namespace ngraph::runtime;
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "
                            << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
@@ -848,7 +849,7 @@ using namespace ngraph::runtime;
     // TODO: Cleanup and make this a utility function
 
     file_util::make_directory(s_output_dir);
-    string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
@@ -867,7 +868,7 @@ using namespace ngraph::runtime;
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
-    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
+    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
 
     if (m_compiled_function == nullptr)
     {
