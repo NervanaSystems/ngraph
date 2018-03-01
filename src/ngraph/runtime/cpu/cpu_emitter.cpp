@@ -3202,6 +3202,7 @@ namespace ngraph
                 {
                     if (axes.find(d) == axes.end())
                     {
+                        writer << "#pragma omp parallel for\n";
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
                         writer << "{\n";
@@ -3280,6 +3281,7 @@ namespace ngraph
                 {
                     if (axes.find(d) == axes.end())
                     {
+                        writer << "#pragma omp parallel for\n";
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
                         writer << "{\n";

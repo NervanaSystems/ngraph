@@ -16,24 +16,39 @@
 
 #include "ngraph/ops/softmax.hpp"
 
-#include "ngraph/ops/dot.hpp"
+#include <algorithm>
+
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 
 void ngraph::op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const std::shared_ptr<Node>& delta)
 {
-    auto x = get_input_op(0);
     auto z = delta * shared_from_this();
+    auto zsum = std::make_shared<op::Sum>(z, m_axes);
 
-    AxisSet axes;
-    for (size_t i = 0; i < z->get_shape().size(); i++)
+    Shape shape;
+    for (size_t i = 0; i < get_shape().size(); ++i)
     {
-        axes.insert(i);
+        if (m_axes.find(i) == m_axes.end())
+        {
+            shape.push_back(get_shape()[i]);
+        }
+        else
+        {
+            shape.push_back(1);
+        }
     }
-    auto zs = std::make_shared<op::Sum>(z, axes);
+    AxisVector order(zsum->get_shape().size());
+    std::iota(order.begin(), order.end(), 0);
+    auto zreshape = std::make_shared<op::Reshape>(zsum, order, shape);
 
-    auto dot = std::make_shared<op::Dot>(shared_from_this(), zs);
-    adjoints.add_delta(x, z - dot);
+    auto adjoint =
+        z - builder::make_with_numpy_broadcast<op::Multiply>(shared_from_this(), zreshape);
+
+    auto x = get_input_op(0);
+    adjoints.add_delta(x, adjoint);
 }
