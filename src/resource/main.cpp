@@ -121,7 +121,6 @@ int main(int argc, char** argv)
 
     time_t output_timestamp = get_timestamp(output_path);
 
-    cout << "Resource file check\n";
     for (ResourceInfo& path : include_paths)
     {
         // cout << "path " << path.source_path << " -> " << path.target_path << endl;
