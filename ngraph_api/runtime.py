@@ -19,7 +19,7 @@ from typing import List
 
 import numpy as np
 
-from pyngraph import Function, Node, TensorViewType, util
+from pyngraph import Function, Node, serialize, TensorViewType, util
 from pyngraph.runtime import Manager
 from pyngraph.op import Parameter
 
@@ -64,6 +64,7 @@ class Computation:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.make_primary_tensor_view(element_type, shape))
+        self.function = Function(self.node, self.parameters, 'ngraph_API_computation')
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -84,14 +85,17 @@ class Computation:
             result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        function = Function(self.node, self.parameters, 'ngraph_API_computation')
-        external = self.runtime.manager.compile(function)
+        external = self.runtime.manager.compile(self.function)
         call_frame = self.runtime.backend.make_call_frame(external)
         call_frame.call(self.tensor_views, [result_view])
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
         return result_arr
+
+    def serialize(self):  # type: () -> str
+        """Serialize function (compute graph) to a JSON string."""
+        return serialize(self.function)
 
     @staticmethod
     def _get_buffer_size(element_type, element_count):  # type: (TensorViewType, int) -> int
