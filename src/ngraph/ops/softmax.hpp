@@ -22,11 +22,21 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Softmax operation.
+        ///
         class Softmax : public util::UnaryElementwiseArithmetic
         {
         public:
-            Softmax(const std::shared_ptr<Node>& arg0, const AxisSet& axes)
-                : UnaryElementwiseArithmetic("Softmax", arg0)
+            /// \brief Constructs a softmax operation.
+            ///
+            /// \param arg0 Node that produces the first input tensor.<br>
+            /// `[d0, ...]`
+            /// \param axes The axis positions (0-based) on which to calculate the softmax.
+            ///
+            /// Output `[d0, ...]`
+            ///
+            Softmax(const std::shared_ptr<Node>& arg, const AxisSet& axes)
+                : UnaryElementwiseArithmetic("Softmax", arg)
                 , m_axes(axes)
             {
                 for (auto axis : m_axes)
@@ -37,6 +47,7 @@ namespace ngraph
                     }
                 }
 
+                // empty axes == all axes
                 if (m_axes.size() == 0)
                 {
                     for (size_t i = 0; i < get_shape().size(); ++i)
@@ -56,10 +67,11 @@ namespace ngraph
                 return std::make_shared<Softmax>(new_args.at(0), m_axes);
             }
 
+            const AxisSet& get_axes() const { return m_axes; }
+        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
 
-            const AxisSet& get_axes() const { return m_axes; }
         private:
             AxisSet m_axes;
         };
