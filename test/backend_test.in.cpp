@@ -8446,7 +8446,8 @@ TEST(${BACKEND_NAME}, softmax_all)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8465,7 +8466,7 @@ TEST(${BACKEND_NAME}, softmax_all)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 
     // empty AxisSet is the same as "full" AxisSet
-    f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::Parameters{A});
+    f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::ParameterVector{A});
     external = manager->compile(f);
     cf = backend->make_call_frame(external);
 
@@ -8477,7 +8478,7 @@ TEST(${BACKEND_NAME}, softmax_axis)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -8505,7 +8506,7 @@ TEST(${BACKEND_NAME}, softmax_underflow)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
