@@ -219,8 +219,8 @@ TEST (${BACKEND_NAME}, %s)
     }
     else
     {
-        rtol = 1e-4;
-        atol = 1e-7;
+        rtol = all_close_rtol;
+        atol = all_close_atol;
     }
 
     Shape shape_a{%s};
@@ -370,11 +370,14 @@ def main():
 using namespace std;
 using namespace ngraph;
 
+static const double all_close_rtol = 1e-4;
+static const double all_close_atol = 1e-7;
+
 template<typename T>
 static bool all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
-                      T rtol = T(1e-4),
-                      T atol = T(1e-7))
+                      T rtol = T(all_close_rtol),
+                      T atol = T(all_close_atol))
 {
     assert(a.size() == b.size());
 
