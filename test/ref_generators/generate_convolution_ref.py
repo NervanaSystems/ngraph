@@ -212,6 +212,17 @@ def emit_test(t,f):
     template = '''
 TEST (${BACKEND_NAME}, %s)
 {
+    float rtol, atol;
+    if ("${BACKEND_NAME}" == "ARGON" || "${BACKEND_NAME}" == "NNP")
+    {
+        rtol = atol = 0.01f;
+    }
+    else
+    {
+        rtol = 1e-4;
+        atol = 1e-7;
+    }
+
     Shape shape_a{%s};
     Shape shape_b{%s};
     Shape shape_r{%s};
@@ -242,7 +253,7 @@ TEST (${BACKEND_NAME}, %s)
     vector<float> expected_result{%s};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result)));
+    EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result), rtol, atol));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {a, b}, .01f, .01f));
