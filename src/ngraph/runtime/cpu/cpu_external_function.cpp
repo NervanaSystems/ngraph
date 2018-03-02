@@ -56,6 +56,7 @@
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -237,6 +238,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(

@@ -293,9 +293,9 @@ namespace ngraph
                 auto gamma_shape = args[0].get_shape();
                 auto beta_shape = args[1].get_shape();
                 auto input_shape = args[2].get_shape();
-                auto mean_shape = args[3].get_shape();
-                auto variance_shape = args[4].get_shape();
                 auto result_shape = out[0].get_shape();
+                auto mean_shape = out[1].get_shape();
+                auto variance_shape = out[2].get_shape();
 
                 // get input element type
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
@@ -321,16 +321,20 @@ namespace ngraph
                 // get the eps value from the bn node
                 writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
 
+                const string& input_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2));
+                const string& result_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
                 // Bind to CPU engine
                 writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                 // create memory descriptors
                 writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
+                       << "}, " << et << ", " << input_format << ");\n";
                 // TODO define weights by stacking gamma and beta values
                 writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
                        << "}, " << et << ", memory::format::nc);\n";
                 writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
+                       << et << ", " << result_format << ");\n";
                 writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
                        << et << ", memory::format::x);\n";
                 writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
@@ -341,17 +345,17 @@ namespace ngraph
                        << args[2].get_name() << ");\n";
                 writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
                        << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
-                       << args[4].get_name() << ");\n";
                 writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
                        << ");\n";
+                writer << "memory mean = memory({mean_desc, cpu_engine}, " << out[1].get_name()
+                       << ");\n";
+                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                       << out[2].get_name() << ");\n";
 
                 // create batchnorm descriptor
                 writer << "batch_normalization_forward::desc bn_fprop_desc = "
                           "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
+                       << "input_data_desc, epsilon, use_scale_shift);\n";
                 // bn fprop primitive descriptor
                 writer
                     << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
@@ -360,8 +364,8 @@ namespace ngraph
                 // create a batchnorm fprop primitive
                 writer << "batch_normalization_forward bn_fprop = "
                           "batch_normalization_forward(bn_fprop_prim_desc, "
-                          "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
-                       << "primitive::at(weights), result); \n";
+                          "primitive::at(input_data),"
+                       << "primitive::at(weights), result, mean, variance); \n";
 
                 // create stream and execute
                 writer << "stream s = stream(stream::kind::eager);\n"

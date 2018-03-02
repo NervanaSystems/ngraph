@@ -49,7 +49,6 @@ namespace ngraph
                 {
                     throw std::runtime_error("Unimplemented op in CPU emitter");
                 }
-
                 static void nop(CPU_ExternalFunction* external_function,
                                 codegen::CodeWriter& writer,
                                 const ngraph::Node* node,
