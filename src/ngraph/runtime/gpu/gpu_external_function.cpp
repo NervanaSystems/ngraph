@@ -571,7 +571,7 @@ using namespace std;
                         writer << "runtime::gpu::cuda_memcpyDtD(reinterpret_cast<"
                                << et.c_type_string() << "*>(outputs[" << output_index << "]), "
                                << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-                               << ptv->get_tensor().size() << ",1);\n";
+                               << ptv->get_tensor().size() << ");\n";
                         break;
                     }
                 }
@@ -721,7 +721,7 @@ void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
                 {
                     writer << "runtime::gpu::cuda_memcpyDtD(static_cast<void*>(outputs["
                            << outputs[i] << "]), static_cast<void*>(outputs[" << outputs[0]
-                           << "]), " << otv->get_tensor().size() << ",1);\n";
+                           << "]), " << otv->get_tensor().size() << ");\n";
                 }
                 writer.indent--;
                 writer << "}\n";
