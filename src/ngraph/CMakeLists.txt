@@ -263,7 +263,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         BYPRODUCTS
     )
     add_dependencies(ngraph header_resource ext_json)
-    include_directories(${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
     include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
