@@ -74,10 +74,10 @@ namespace ngraph
                     std::string kernel;
                     std::string data_type("float");
 
-                                    kernel = R"(
+                    kernel = R"(
 extern "C" __global__
-void cuda_)" + name + "(" +
-                         data_type + "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" + R"(
+void cuda_)" + name + "(" + data_type +
+                             "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" + R"(
 {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < n)
