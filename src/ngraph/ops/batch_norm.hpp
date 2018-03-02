@@ -44,11 +44,34 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
+
         private:
             Shape m_bn_input_shape;
             Shape m_bn_variance_shape;
             Shape m_bn_mean_shape;
             double m_epsilon;
+        };
+
+        class BatchNormBackprop : public util::RequiresTensorViewArgs
+        {
+        public:
+            BatchNormBackprop(double eps,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              std::shared_ptr<Node> input,
+                              std::shared_ptr<Node> mean,
+                              std::shared_ptr<Node> variance,
+                              std::shared_ptr<Node> delta);
+
+            double get_eps_value() const { return epsilon; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            double epsilon;
         };
     }
 }
