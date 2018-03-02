@@ -60,6 +60,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+include(var_functions)
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -97,11 +99,11 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-if(DEFINED ENV{NGRAPH_WARNINGS_AS_ERRORS})
-    if($ENV{NGRAPH_WARNINGS_AS_ERRORS})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-        message(STATUS "Warnings as errors")
-    endif()
+
+ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
+if ("${NGRAPH_WARNINGS_AS_ERRORS}" MATCHES "^(ON|TRUE)$")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    message(STATUS "Warnings as errors")
 endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3")

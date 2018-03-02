@@ -43,6 +43,81 @@ static const vector<element::Type> s_known_element_types = {element::from<float>
                                                             element::from<uint32_t>(),
                                                             element::from<uint64_t>()};
 
+TEST(${BACKEND_NAME}, function_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B}, "funky func name");
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, node_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = A + B;
+    C->set_name("a node name");
+    auto f = make_shared<Function>(C, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, component_cleanup)
+{
+    shared_ptr<runtime::Backend> backend;
+    shared_ptr<runtime::ExternalFunction> external;
+    shared_ptr<runtime::CallFrame> cf;
+    {
+        Shape shape{2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
+
+        auto manager = runtime::Manager::get("${BACKEND_NAME}");
+        external = manager->compile(f);
+        backend = manager->allocate_backend();
+        cf = backend->make_call_frame(external);
+    }
+    EXPECT_EQ(cf.use_count(), 1);
+    cf = nullptr;
+    EXPECT_EQ(backend.use_count(), 1);
+    backend = nullptr;
+    EXPECT_EQ(external.use_count(), 1);
+}
+
 TEST(${BACKEND_NAME}, aliased_output)
 {
     Shape shape{2, 2};
@@ -50,7 +125,8 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
     auto D = A * B;
-    auto f = make_shared<Function>(NodeVector{C, C, D, D, C}, op::ParameterVector{A, B});
+    auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
+    auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -65,18 +141,23 @@ TEST(${BACKEND_NAME}, aliased_output)
     shared_ptr<runtime::TensorView> out3 = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out4 = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out5 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out6 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out7 = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
     vector<float> expectedC{1, 3, 5, 7};
     vector<float> expectedD{0, 2, 6, 12};
+    vector<float> expectedE{1, 2, 3, 4};
 
-    cf->call({a, b}, {out1, out2, out3, out4, out5});
+    cf->call({a, b}, {out1, out2, out3, out4, out5, out6, out7});
     EXPECT_EQ(expectedC, read_vector<float>(out1));
     EXPECT_EQ(expectedC, read_vector<float>(out2));
     EXPECT_EQ(expectedD, read_vector<float>(out3));
     EXPECT_EQ(expectedD, read_vector<float>(out4));
     EXPECT_EQ(expectedC, read_vector<float>(out5));
+    EXPECT_EQ(expectedE, read_vector<float>(out6));
+    EXPECT_EQ(expectedE, read_vector<float>(out7));
 }
 
 TEST(${BACKEND_NAME}, parameter_as_output)
@@ -138,7 +219,7 @@ TEST(${BACKEND_NAME}, abc)
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
+    shared_ptr<runtime::ExternalFunction> external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
@@ -2373,7 +2454,6 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
@@ -2396,7 +2476,6 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
@@ -2442,7 +2521,6 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2465,7 +2543,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2488,7 +2565,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};

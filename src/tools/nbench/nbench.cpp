@@ -24,8 +24,8 @@
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
-#include "../../test/util/benchmark.hpp"
-#include "../../test/util/test_tools.hpp"
+#include "util/benchmark.hpp"
+#include "util/test_tools.hpp"
 using namespace std;
 
 int main(int argc, char** argv)
@@ -66,16 +66,16 @@ int main(int argc, char** argv)
     if (failed)
     {
         cout << R"###(
-DESCRIPTION                                                         
-    Benchmark ngraph json model with given backend.                 
-                                                                    
-SYNOPSIS                                                            
+DESCRIPTION
+    Benchmark ngraph json model with given backend.
+
+SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
-                                                                    
-OPTIONS                                                             
-        -f          model json file to use (default: model.json)    
-        -b          Backend to use (default: INTERPRETER)           
-        -i          Iterations (default: 10)                        
+
+OPTIONS
+        -f          model json file to use (default: model.json)
+        -b          Backend to use (default: INTERPRETER)
+        -i          Iterations (default: 10)
 )###";
         return 1;
     }

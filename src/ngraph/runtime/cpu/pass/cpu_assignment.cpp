@@ -256,7 +256,7 @@ bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
         auto handler = s_dispatcher.find(TI(n));
         if (handler != s_dispatcher.end())
         {
-            handler->second(m_external_function.get(), node.get());
+            handler->second(m_external_function, node.get());
         }
     }
 

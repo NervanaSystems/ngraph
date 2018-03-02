@@ -14,4 +14,26 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(nbench)
+if(MKLDNN_INCLUDE_DIR)
+    link_directories(${MKLDNN_LIB_DIR})
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    set (SRC
+        abc.cpp
+        ${PROJECT_SOURCE_DIR}/doc/examples/abc.cpp
+    )
+
+    add_executable(abc ${SRC})
+    add_dependencies(abc ngraph)
+
+    set(HEADER_SEARCH_DEFINES
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+    )
+
+    target_link_libraries(abc ngraph)
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+
+    set_source_files_properties(abc.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+
+endif()

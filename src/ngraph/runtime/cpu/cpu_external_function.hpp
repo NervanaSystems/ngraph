@@ -75,6 +75,7 @@ namespace ngraph
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
@@ -86,6 +87,7 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
+                const std::string& get_function_name() const { return m_function_name; }
             protected:
                 void compile();
 
@@ -123,6 +125,8 @@ namespace ngraph
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
+
+                std::string m_function_name;
             };
         }
     }

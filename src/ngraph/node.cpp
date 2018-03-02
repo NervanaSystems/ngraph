@@ -33,6 +33,7 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_unique_name(description() + "_" + to_string(m_instance_id))
     , m_is_output(false)
     , m_arguments(arguments)
 {
@@ -112,25 +113,18 @@ bool Node::is_constant() const
     return false;
 }
 
-std::string Node::get_node_id() const
+const std::string& Node::get_friendly_name() const
 {
-    stringstream ss;
-    ss << description() << "_" << m_instance_id;
-    return ss.str();
-}
-
-std::string Node::get_name() const
-{
-    string rc;
     if (m_name.empty())
     {
-        rc = description() + "_" + to_string(m_instance_id);
+        return m_unique_name;
     }
-    else
-    {
-        rc = m_name;
-    }
-    return rc;
+    return m_name;
+}
+
+const std::string& Node::get_name() const
+{
+    return m_unique_name;
 }
 
 void Node::set_name(const string& name)
@@ -207,11 +201,11 @@ namespace ngraph
         auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
         if (parameter_tmp)
         {
-            out << "Parameter(" << parameter_tmp->get_node_id() << ")";
+            out << "Parameter(" << parameter_tmp->get_name() << ")";
         }
         else
         {
-            out << "Node(" << node.get_node_id() << ")";
+            out << "Node(" << node.get_name() << ")";
         }
         return out;
     }
