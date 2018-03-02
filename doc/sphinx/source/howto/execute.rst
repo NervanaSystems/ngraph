@@ -7,12 +7,13 @@ Executing a Computation
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. Intel® nGraph 
 library is targeted toward automatic construction; it is far easier for a 
-processing unit (GPU, CPU, or custom silicon) to run a computation than it is 
-for a user to map out how that computation happens.  
+processing unit (GPU, CPU, or NNP) to run a computation than it is for a user 
+to map out how that computation happens. Unfortunately, things that make by-hand 
+graph construction simpler tend to make automatic construction more difficult, 
+and vice versa.
 
-Here we will do all the bridge steps manually. Unfortunately, things that make 
-by-hand graph construction simpler tend to make automatic construction more 
-difficult, and vice versa. 
+Here we will do all the bridge steps manually.  The model description we'll write
+is based on the :file:`abc.cpp` file in the ``/doc/examples/`` directory.
 
 In order to successfully run a computation, the entity (framework or user) must 
 be able to do all of these things:
@@ -37,13 +38,14 @@ from a framework's representation of the computation, graph construction can be
 somewhat more tedious for users. To a user, who is usually interested in 
 specific nodes (vertices) or edges of a computation that reveal "what is 
 happening where", it can be helpful to think of a computation as a zoomed-out 
-and *stateless* dataflow graph where all of the nodes are basic well-defined
-tensor operations and all of the edges denote use of an output from
-one operation as an input for another operation.
+and *stateless* dataflow graph where all of the nodes are well-defined tensor 
+operations and all of the edges denote use of an output from one operation as 
+an input for another operation.
 
 .. TODO
 
-.. image for representing nodes and edges 
+.. image for representing nodes and edges of (a+b)*c
+
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
@@ -63,47 +65,40 @@ pointers is given in the glossary.
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
 *attributes*. For our purpose to :ref:`define_cmp`, nodes should be thought of 
 as essentially immutable; that is, when constructing a node, we need to supply 
-all of its inputs. We get this process started with ops that have no
-inputs, since any op with inputs is going to first need some inputs.
+all of its inputs. We get this process started with ops that have no inputs, 
+since any op with no inputs is going to first need some inputs.
 
 ``op::Parameter`` specifes the tensors that will be passed to the computation. 
 They receive their values from outside of the graph, so they have no inputs. 
 They have attributes for the element type and the shape of the tensor that will 
 be passed to them.
 
-.. code-block:: cpp
-	
-   Shape s{2, 3};
-   auto a = std::make_shared<op::Parameter>(element::f32, s);
-   auto b = std::make_shared<op::Parameter>(element::f32, s);
-   auto c = std::make_shared<op::Parameter>(element::f32, s);
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 11-13
 
+Here we have made three parameter nodes, each a 32-bit float of shape ``(2, 3)`` 
+using a row-major element layout.
 
-Here we have made three parameter nodes, each a 32-bit float of shape
-``(2, 3)`` using a row-major element layout.
+We can create a graph for ``(a+b)*c`` by creating an ``op::Add`` node with inputs 
+from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
-We can create a graph for ``(a+b)*c`` by creating an ``op::Add`` node
-with inputs from ``a`` and ``b``, and an ``op::Multiply`` node from
-the add node and ``c``:
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 15-16
 
-.. code-block:: cpp
-
-   auto t0 = std::make_shared<op::Add>(a, b);
-   auto t1 = std::make_shared<op::Multiply(t0, c);
-
-When the ``op::Add`` op is constructed, it will check that the element
-types and shapes of its inputs match; to support multiple frameworks,
-ngraph does not do automatic type conversion or broadcasting. In this
-case, they match, and the shape of the unique output of ``t0`` will be
-a 32-bit float with shape ``(2, 3)``. Similarly, ``op::Multiply``
-checks that its inputs match and sets the element type and shape of
-its unique output.
+When the ``op::Add`` op is constructed, it will check that the element types and 
+shapes of its inputs match; to support multiple frameworks, ngraph does not do 
+automatic type conversion or broadcasting. In this case, they match, and the 
+shape of the unique output of ``t0`` will be a 32-bit float with shape ``(2, 3)``. 
+Similarly, ``op::Multiply``checks that its inputs match and sets the element 
+type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:
 
-.. code-block:: cpp
-
-   auto f = make_shared<Function>(NodeVector{t1}, ParameterVector{a, b, c});
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 19
 
 The first argument to the constuctor specifies the nodes that the function will 
 return; in this case, the product. A ``NodeVector`` is a vector of shared 
@@ -111,7 +106,7 @@ pointers of ``op::Node``.  The second argument specifies the parameters of the
 function, in the order they are to be passed to the compiled function. A 
 ``ParameterVector`` is a vector of shared pointers to ``op::Parameter``. 
 
-.. important:: The parameter vector must include* **every** parameter used in 
+.. important:: The parameter vector must include **every** parameter used in 
    the computation of the results.
 
 
@@ -121,43 +116,42 @@ Specify the backend upon which to run the computation
 =====================================================
 
 For a framework bridge, a *backend* is the environment that can perform the 
-computations; it can be done with a CPU, GPU, or an NNP. A *transformer* can 
-compile computations for a backend, allocate and deallocate tensors, and invoke 
-computations.
+computations; it can be done with a CPU, GPU, or an Intel Nervana NNP. A 
+*transformer* can compile computations for a backend, allocate and deallocate 
+tensors, and invoke computations.
 
 Factory-like managers for classes of backend managers can compile a ``Function`` 
 and allocate backends. A backend is somewhat analogous to a multi-threaded
 process.
 
-There are two backends for the CPU, the optimized "CPU" backend, which
-makes use of mkl-dnn, and the "INTERPRETER" backend which runs
-reference versions of kernels where implementation clarity is favored
-over speed. The "INTERPRETER" backend is mainly used for testing.
+There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
+the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
+versions of kernels that favor implementation clarity over speed. The 
+``"INTERPRETER"`` backend can be slow, and is primarily intended for testing.  
 
-To select the "CPU" backend,
+To select the ``"CPU"`` backend,
 
-.. code-block:: cpp
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 22-23
 
-   auto manager = runtime::Manager::get("CPU");
-   auto backend = manager->allocate_backend();
 
 .. _compile_cmp:
 
 Compile the computation 
 =======================
 
-Compilation produces something misnamed an ``ExternalFunction``, which
-is a factory for producing a ``CallFrame``, a function and associated
-state that can run in a single thread at a time. A ``CallFrame`` may
-be reused, but any particular ``CallFrame`` must only be running in
-one thread at any time. If more than one thread needs to execute the
-function at the same time, create multiple ``CallFrame`` objects from
-the ``ExternalFunction``.
+Compilation triggers something that can be used as a factory for producing a 
+``CallFrame`` which is a *function* and its associated *state* that can run 
+in a single thread at a time. A ``CallFrame`` may be reused, but any particular 
+``CallFrame`` must only be running in one thread at any time. If more than one 
+thread needs to execute the function at the same time, create multiple 
+``CallFrame`` objects from the ``ExternalFunction``.
 
-.. code-block:: cpp
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 24-28
 
-   auto external = manager->compile(f);
-   auto cf = backend->make_call_frame(external);
 
 .. _allocate_bkd_storage:
 
@@ -178,12 +172,9 @@ Backends are responsible for managing storage. If the storage is off-CPU, caches
 are used to minimize copying between device and CPU. We can allocate storage for 
 the three parameters and return value as follows:
 
-.. code-block:: cpp
-
-   auto t_a = backend->make_primary_tensor_view(element::f32, shape);
-   auto t_b = backend->make_primary_tensor_view(element::f32, shape);
-   auto t_c = backend->make_primary_tensor_view(element::f32, shape);
-   auto t_result = backend->make_primary_tensor_view(element::f32, shape);
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 30-33
 
 Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
 backends implement for tensor use. When there are no more references to the 
@@ -194,18 +185,17 @@ tensor view, it will be freed when convenient for the backend.
 Initialize the inputs
 =====================
 
-Normally the framework bridge reads/writes bytes to the tensor, assuming a 
+Normally the framework bridge reads and writes bytes to the tensor, assuming a 
 row-major element layout. To simplify writing unit tests, we have developed a 
 class for making tensor literals. We can use these to initialize our tensors:
 
-.. code-block:: cpp
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 36-38
 
-   copy_data(t_a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
-   copy_data(t_b, test::NDArray<float, 2>({{7, 8, 9}, {10, 11, 12}}).get_vector());
-   copy_data(t_c, test::NDArray<float, 2>({{1, 0, -1}, {-1, 1, 2}}).get_vector());
-
-The ``test::NDArray`` needs to know the element type (``float``) and rank (``2``) 
-of the tensors, and figures out the shape during template expansion.
+The ``test::NDArray`` needs to know the element type (``float`` for this 
+example) and rank (``2`` for this example) of the tensors; it will then 
+populate the shape during template expansion.
 
 The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
@@ -215,12 +205,13 @@ copying data to/from the tensor.
 Invoke the computation
 ======================
 
-To invoke the function, we simply pass argument and result tensors to
-the call frame:
+To invoke the function, we simply pass argument and resultant tensors to the 
+call frame:
 
-.. code-block:: cpp
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 41
 
-   cf->call({t_a, t_b, t_c}, {t_result});
 
 .. _access_outputs:
 
@@ -229,61 +220,17 @@ Access the outputs
 
 We can use the ``read`` method to access the result:
 
-.. code-block:: cpp
-
-   float r[2,3];
-   t_result->read(&r, 0, sizeof(r));
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 44-45
 
 .. _all_together:
 
 Putting it all together
 =======================
 
-.. code-block:: cpp
+.. literalinclude:: ../../../examples/abc.cpp
+   :language: cpp
+   :lines: 1-46
+   :caption: "The (a + b) * c example for executing a computation on nGraph"
 
-   #include <iostream>
-
-   #include <ngraph.hpp>
-
-   using namespace ngraph;
-
-   void main()
-   {
-       // Build the graph
-       Shape s{2, 3};
-       auto a = std::make_shared<op::Parameter>(element::f32, s);
-       auto b = std::make_shared<op::Parameter>(element::f32, s);
-       auto c = std::make_shared<op::Parameter>(element::f32, s);
-
-       auto t0 = std::make_shared<op::Add>(a, b);
-       auto t1 = std::make_shared < op::Multiply(t0, c);
-
-       // Make the function
-       auto f = make_shared<Function>(NodeVector{t1}, ParameterVector{a, b, c});
-
-       // Get the backend
-       auto manager = runtime::Manager::get("CPU");
-       auto backend = manager->allocate_backend();
-       auto external = manager->compile(f);
-
-       // Compile the function
-       auto cf = backend->make_call_frame(external);
-
-       // Allocate tensors
-       auto t_a = backend->make_primary_tensor_view(element::f32, shape);
-       auto t_b = backend->make_primary_tensor_view(element::f32, shape);
-       auto t_c = backend->make_primary_tensor_view(element::f32, shape);
-       auto t_result = backend->make_primary_tensor_view(element::f32, shape);
-
-       // Initialize tensors
-       copy_data(t_a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
-       copy_data(t_b, test::NDArray<float, 2>({{7, 8, 9}, {10, 11, 12}}).get_vector());
-       copy_data(t_c, test::NDArray<float, 2>({{1, 0, -1}, {-1, 1, 2}}).get_vector());
-
-       // Invoke the function
-       cf->call({t_a, t_b, t_c}, {t_result});
-
-       // Get the result
-       float r[2, 3];
-       t_result->read(&r, 0, sizeof(r));
-   }
