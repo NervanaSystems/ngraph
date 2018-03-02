@@ -474,7 +474,7 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
         return;
     }
 
-    //broadcast axes size is 1, or can be group to 1 (serveral continuous axes, like 01 or 12 or 123 etc)
+    //broadcast axes size is 1, or can be group to 1 (consecutive axes, like 01 or 12 or 123 etc)
     vector<int> axes_v;
     std::copy(axes.begin(), axes.end(), std::back_inserter(axes_v));
     std::sort(axes_v.begin(), axes_v.end());
