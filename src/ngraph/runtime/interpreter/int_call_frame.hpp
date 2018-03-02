@@ -42,6 +42,7 @@
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -95,6 +96,7 @@
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
+#include "ngraph/runtime/kernel/softmax.hpp"
 #include "ngraph/runtime/kernel/sqrt.hpp"
 #include "ngraph/runtime/kernel/subtract.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
@@ -811,6 +813,14 @@ private:
                              slice->get_upper_bounds(),
                              slice->get_strides(),
                              out[0]->get_shape());
+        }
+        else if (node_op == "Softmax")
+        {
+            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
+            kernel::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_shape(),
+                               softmax->get_axes());
         }
         else if (node_op == "Sqrt")
         {

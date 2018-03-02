@@ -70,6 +70,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -711,6 +712,11 @@ static shared_ptr<ngraph::Function>
             auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+        }
+        else if (node_op == "Softmax")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Softmax>(args[0], reduction_axes);
         }
         else if (node_op == "Sqrt")
         {
