@@ -95,6 +95,6 @@ namespace ngraph
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
         std::string m_name;
-        std::string m_unique_name;
+        const std::string m_unique_name;
     };
 }
