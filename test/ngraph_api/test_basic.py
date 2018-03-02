@@ -24,7 +24,7 @@ import ngraph_api as ng
                                    np.int8, np.int16, np.int32, np.int64,
                                    np.uint8, np.uint16, np.uint32, np.uint64])
 def test_simple_computation_on_ndarrays(dtype):
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
 
     shape = [2, 2]
     parameter_a = ng.parameter(shape, dtype=dtype, name='A')

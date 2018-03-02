@@ -28,7 +28,7 @@ from ngraph_api.utils.types import get_dtype, NumericData
 log = logging.getLogger(__file__)
 
 
-def runtime(manager_name='INTERPRETER'):  # type: (str) -> 'Runtime'
+def runtime(manager_name='CPU'):  # type: (str) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
     Use signature to parametrize runtime as needed.
@@ -84,7 +84,7 @@ class Computation:
             result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        function = Function(self.node, self.parameters, 'ngraph API computation')
+        function = Function(self.node, self.parameters, 'ngraph_API_computation')
         external = self.runtime.manager.compile(function)
         call_frame = self.runtime.backend.make_call_frame(external)
         call_frame.call(self.tensor_views, [result_view])

@@ -21,7 +21,7 @@ import ngraph_api as ng
 
 
 def test_default_arguments_convolution_2d():
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
     runtime = ng.runtime(manager_name=manager_name)
     # input_x should have shape N(batch) x C x H x W
     input_x = ng.constant(np.array([

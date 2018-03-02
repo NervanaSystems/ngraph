@@ -36,7 +36,7 @@ import ngraph_api as ng
     (ng.less_eq, np.less_equal),
 ])
 def test_binary_op(ng_api_helper, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
     runtime = ng.runtime(manager_name=manager_name)
 
     shape = [2, 2]
@@ -69,7 +69,7 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.less_eq, np.less_equal),
 ])
 def test_binary_op_with_scalar(ng_api_helper, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
     runtime = ng.runtime(manager_name=manager_name)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
@@ -99,7 +99,7 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     (operator.le, np.less_equal),
 ])
 def test_binary_operators(operator, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
     runtime = ng.runtime(manager_name=manager_name)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
@@ -129,7 +129,7 @@ def test_binary_operators(operator, numpy_function):
     (operator.le, np.less_equal),
 ])
 def test_binary_operators_with_scalar(operator, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    manager_name = pytest.config.getoption('backend', default='CPU')
     runtime = ng.runtime(manager_name=manager_name)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
