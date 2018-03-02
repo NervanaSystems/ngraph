@@ -62,6 +62,11 @@ namespace ngraph
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
+            virtual NodeVector get_input_ops() override
+            {
+                return NodeVector{get_inputs().at(0).get_output().get_node()};
+            }
+
         protected:
             size_t m_n;
         };
