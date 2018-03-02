@@ -213,7 +213,7 @@ def emit_test(t,f):
 TEST (${BACKEND_NAME}, %s)
 {
     float rtol, atol;
-    if ("${BACKEND_NAME}" == "ARGON" || "${BACKEND_NAME}" == "NNP")
+    if ("${BACKEND_NAME}" == "ARGON")
     {
         rtol = atol = 0.01f;
     }
