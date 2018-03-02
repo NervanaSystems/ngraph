@@ -260,8 +260,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
-    string function_name = m_function->get_name();
-
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;

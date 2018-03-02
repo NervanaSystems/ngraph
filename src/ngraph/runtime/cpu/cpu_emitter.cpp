@@ -2122,9 +2122,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& elem_type =
-                        runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2132,82 +2129,34 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto data_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto delta_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto emit_memory_desc = [&writer](const std::string& var,
-                                                      const std::string& shape,
-                                                      const std::string& type,
-                                                      const std::string& layout) {
-                        writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", " << layout << ");\n";
-                    };
+                    size_t conv_bwd_weights_index =
+                        mkldnn_emitter->build_convolution_backward_weights(
+                            input_desc,
+                            delta_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward());
 
-                    auto emit_memory = [&writer](
-                        const std::string& var, const std::string& desc, const std::string& data) {
-                        writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
-                               << data << ");\n";
-                    };
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_weights_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    auto emit_memory_dims = [&writer](const std::string& var,
-                                                      const std::string& dims) {
-                        writer << "memory::dims " << var << "{" << dims << "};\n";
-                    };
-
-                    writer.block_begin();
-                    writer << "try\n";
-                    writer.block_begin();
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc(
-                        "data_desc",
-                        join(arg0_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(data_format));
-                    emit_memory_desc(
-                        "delta_desc",
-                        join(arg1_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format));
-                    emit_memory_desc(
-                        "result_desc",
-                        join(result_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format));
-                    emit_memory("data", "data_desc", args[0].get_name());
-                    emit_memory("delta", "delta_desc", args[1].get_name());
-                    emit_memory("result", "result_desc", out[0].get_name());
-                    emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
-                    emit_memory_dims("strides",
-                                     join(convolution->get_window_movement_strides_forward()));
-                    emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
-                    emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
-
-                    writer
-                        << "convolution_backward_weights::desc bwd_weights_desc("
-                           "algorithm::convolution_direct, "
-                           "data_desc, result_desc, delta_desc, strides, dilates,"
-                           "padding_l, padding_r, padding_kind::zero);\n"
-                           "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
-                           "algorithm::convolution_direct, data_desc, "
-                           "result_desc, delta_desc, strides, dilates, padding_l, padding_r, "
-                           "padding_kind::zero}, cpu_engine);\n"
-                           "convolution_backward_weights::primitive_desc "
-                           "bwd_weights_pd(bwd_weights_desc, "
-                           "cpu_engine, fwd_pd);\n"
-                           "convolution_backward_weights bwd_weights(bwd_weights_pd, data, delta, "
-                           "result);\n"
-                           "stream s = stream(stream::kind::eager);\n"
-                           "s.submit({bwd_weights}).wait();\n";
-                    writer.block_end();
-                    writer << "catch (const mkldnn::error& e)\n";
-                    writer.block_begin();
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.block_end();
-                    writer.block_end();
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_bwd_weights_index) << ");\n";
                 }
                 else
                 {
@@ -2243,9 +2192,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& elem_type =
-                        runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                            args[0].get_element_type());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2253,82 +2199,33 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto weight_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto delta_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto emit_memory_desc = [&writer](const std::string& var,
-                                                      const std::string& shape,
-                                                      const std::string& type,
-                                                      const std::string& layout) {
-                        writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", " << layout << ");\n";
-                    };
+                    size_t conv_bwd_data_index = mkldnn_emitter->build_convolution_backward_data(
+                        weights_desc,
+                        delta_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides_forward(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below_forward(),
+                        convolution->get_padding_above_forward());
 
-                    auto emit_memory = [&writer](
-                        const std::string& var, const std::string& desc, const std::string& data) {
-                        writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
-                               << data << ");\n";
-                    };
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_data_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    auto emit_memory_dims = [&writer](const std::string& var,
-                                                      const std::string& dims) {
-                        writer << "memory::dims " << var << "{" << dims << "};\n";
-                    };
-
-                    writer.block_begin();
-                    writer << "try\n";
-                    writer.block_begin();
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc(
-                        "weight_desc",
-                        join(arg0_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(weight_format));
-                    emit_memory_desc(
-                        "delta_desc",
-                        join(arg1_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format));
-                    emit_memory_desc(
-                        "result_desc",
-                        join(result_shape),
-                        elem_type,
-                        runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format));
-                    emit_memory("weight", "weight_desc", args[0].get_name());
-                    emit_memory("delta", "delta_desc", args[1].get_name());
-                    emit_memory("result", "result_desc", out[0].get_name());
-                    emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
-                    emit_memory_dims("strides",
-                                     join(convolution->get_window_movement_strides_forward()));
-                    emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
-                    emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
-
-                    writer
-                        << "convolution_backward_data::desc "
-                           "bwd_data_desc(algorithm::convolution_direct, "
-                           "result_desc, weight_desc, delta_desc, strides, dilates, "
-                           "padding_l, padding_r, padding_kind::zero);\n"
-                           "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
-                           "algorithm::convolution_direct, result_desc, weight_desc, delta_desc, "
-                           "strides, dilates, padding_l, padding_r, padding_kind::zero}, "
-                           "cpu_engine);\n"
-                           "convolution_backward_data::primitive_desc bwd_data_pd(bwd_data_desc, "
-                           "cpu_engine, fwd_pd);\n"
-                           "convolution_backward_data bwd_data(bwd_data_pd, delta, weight, "
-                           "result);\n"
-                           "stream s = stream(stream::kind::eager);\n"
-                           "s.submit({bwd_data}).wait();\n";
-                    writer.block_end();
-                    writer << "catch (const mkldnn::error& e)\n";
-                    writer.block_begin();
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.block_end();
-                    writer.block_end();
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_bwd_data_index) << ");\n";
                 }
                 else
                 {
@@ -2378,38 +2275,29 @@ namespace ngraph
                 if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
+                    size_t max_pool_index = mkldnn_emitter->build_pooling_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward max_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_max, "
-                           << "input_data_desc, result_desc, {"
-                           << join(max_pool->get_window_movement_strides()) << "}, {"
-                           << join(max_pool->get_window_shape()) << "}, {"
-                           << join(max_pool->get_padding_below()) << "}, "
-                           << "{" << join(max_pool->get_padding_above())
-                           << "}, padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({max_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
                 }
                 else
                 {
@@ -2550,59 +2438,36 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                // TODO(jmenon): Refactor into an MKLDNN Pooling emitter that handles
-                // all pooling variants
-
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    const char* algorithm_enumerator =
-                        avg_pool->get_include_padding_in_avg_computation()
-                            ? "algorithm::pooling_avg_include_padding"
-                            : "algorithm::pooling_avg_exclude_padding";
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_forward(
+                        (avg_pool->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        input_desc,
+                        result_desc,
+                        avg_pool->get_window_movement_strides(),
+                        avg_pool->get_window_shape(),
+                        avg_pool->get_padding_below(),
+                        avg_pool->get_padding_above());
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "{\n";
-                    writer.indent++;
-
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward avg_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, " << algorithm_enumerator << ", "
-                           << "input_data_desc, result_desc, {"
-                           << join(avg_pool->get_window_movement_strides()) << "}, {"
-                           << join(avg_pool->get_window_shape()) << "}, "
-                           << "{" << join(avg_pool->get_padding_below()) << "}, "
-                           << "{" << join(avg_pool->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({avg_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(avg_pool_index) << ");\n";
                 }
                 else
                 {
@@ -3068,31 +2933,21 @@ namespace ngraph
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[0].get_element_type());
 
-                writer << "{\n";
-                writer.indent++;
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                writer << "memory::desc input_desc = memory::desc({" << join(args[0].get_shape())
-                       << "}, " << et << ", "
-                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                       << ");\n";
-                writer << "memory::desc output_desc = memory::desc({" << join(out[0].get_shape())
-                       << "}, " << et << ", "
-                       << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(output_format)
-                       << ");\n";
-                writer << "memory input = memory({input_desc, cpu_engine}, " << args[0].get_name()
-                       << ");\n";
-                writer << "memory output = memory({output_desc, cpu_engine}, " << out[0].get_name()
-                       << ");\n";
-                writer << "reorder prim = reorder(input, output);\n";
+                size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
 
-                writer << "stream s = stream(stream::kind::eager);\n"
-                       << "s.submit({prim}).wait();\n";
-                writer.indent--;
-                writer << "}\n";
+                auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(reorder_index) << ");\n";
             }
 
             template <>
@@ -3184,56 +3039,24 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
             {
-                const auto& arg_shape = args[0].get_shape();
-                const auto& result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    size_t relu_index = mkldnn_emitter->build_relu_forward(input_desc, result_desc);
 
-                    writer << "{\n";
-                    writer.indent++;
+                    auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "try {\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer << "relu_forward::desc relu_fwd_desc = "
-                              "relu_forward::desc(prop_kind::forward_training, "
-                              "algorithm::eltwise_relu, input_data_desc, 0, 0);\n";
-                    writer << "relu_forward::primitive_desc relu_prim_desc = "
-                              "relu_forward::primitive_desc(relu_fwd_desc, cpu_engine);\n";
-                    writer << "relu_forward relu_fwd= relu_forward(relu_prim_desc, input_data, "
-                              "result);\n";
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                              "s.submit({relu_fwd}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(relu_index) << ");\n";
                 }
                 else
                 {
