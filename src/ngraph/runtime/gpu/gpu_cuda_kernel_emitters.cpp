@@ -61,6 +61,12 @@ namespace ngraph
                                               0));  // arguments
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
+
+            void emit_broadcast(
+                void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count)
+            {
+                return;
+            }
         }
     }
 }
