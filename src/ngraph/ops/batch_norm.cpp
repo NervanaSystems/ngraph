@@ -21,16 +21,16 @@
 ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
-                                 std::shared_ptr<ngraph::Node> input,
-                                 std::shared_ptr<ngraph::Node> mean,
-                                 std::shared_ptr<ngraph::Node> variance)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
+                                 std::shared_ptr<ngraph::Node> input)
+    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
-    , m_bn_variance_shape(variance->get_shape())
-    , m_bn_mean_shape(mean->get_shape())
+    , m_bn_variance_shape({input->get_shape()[1]})
+    , m_bn_mean_shape({input->get_shape()[1]})
     , m_epsilon(eps)
 {
     add_output(input->get_element_type(), m_bn_input_shape);
+    add_output(input->get_element_type(), m_bn_mean_shape);
+    add_output(input->get_element_type(), m_bn_variance_shape);
 
     if (m_bn_input_shape.size() < 2)
     {
@@ -51,17 +51,17 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
     // assuming input shape (N, C, H, W), check if the size of mean and
     // variance are equal to channel axis
-    if (mean->get_shape()[0] != m_bn_input_shape[1])
+    if (m_bn_mean_shape[0] != m_bn_input_shape[1])
     {
         throw ngraph_error("mean size is not equal to input channel size");
     }
 
-    if (variance->get_shape()[0] != m_bn_input_shape[1])
+    if (m_bn_variance_shape[0] != m_bn_input_shape[1])
     {
         throw ngraph_error("variance size is not equal to input channel size");
     }
 
-    if (variance->get_shape().size() != mean->get_shape().size())
+    if (m_bn_variance_shape.size() != m_bn_mean_shape.size())
     {
         throw ngraph_error("mean and variance rank does not match");
     }
@@ -69,16 +69,6 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     if (gamma->get_shape().size() != beta->get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
-    }
-
-    if (input->get_element_type() != mean->get_element_type())
-    {
-        throw ngraph_error("input tensor and mean element type does not match");
-    }
-
-    if (input->get_element_type() != variance->get_element_type())
-    {
-        throw ngraph_error("input tensor and variance element type does not match");
     }
 
     if (gamma->get_element_type() != beta->get_element_type())
@@ -90,10 +80,9 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 5)
+    if (new_args.size() != 3)
         throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNorm>(
-        m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
+    return std::make_shared<BatchNorm>(m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
 ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
