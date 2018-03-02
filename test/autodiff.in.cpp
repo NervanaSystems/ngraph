@@ -1361,8 +1361,6 @@ TEST(${BACKEND_NAME}, backwards_softmax_3d)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto low = std::numeric_limits<float>::lowest();
-
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3, 4};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
