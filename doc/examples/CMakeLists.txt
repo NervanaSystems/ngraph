@@ -14,21 +14,26 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(examples)
+if(MKLDNN_INCLUDE_DIR)
+    link_directories(${MKLDNN_LIB_DIR})
+endif()
 
-if ("${NGRAPH_BUILD_DOCS}" MATCHES "^ON$")
-    add_custom_target( docs
-        COMMENT "Build all of the documentation types selected during CMake configuration."
-        )
+if (NGRAPH_CPU_ENABLE)
+    set (SRC
+        abc.cpp
+        ${PROJECT_SOURCE_DIR}/doc/examples/abc.cpp
+    )
 
-    add_subdirectory( doxygen )
-    add_subdirectory( sphinx )
-else()
-    add_custom_target( docs
-        COMMAND echo
-        COMMAND echo "The 'docs' target is disabled. To enable the building of documentation, re-run cmake with the option -DNGRAPH_BUILD_DOCS=ON."
-        COMMAND echo
-        COMMAND false
-        VERBATIM
-        )
+    add_executable(abc ${SRC})
+    add_dependencies(abc ngraph)
+
+    set(HEADER_SEARCH_DEFINES
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+    )
+
+    target_link_libraries(abc ngraph)
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+
+    set_source_files_properties(abc.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+
 endif()

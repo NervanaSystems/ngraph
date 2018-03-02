@@ -67,6 +67,7 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -131,7 +132,3 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/ops/allreduce.hpp"
-#endif
