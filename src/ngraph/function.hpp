@@ -67,25 +67,25 @@ namespace ngraph
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
-        std::string get_name() const;
-        void set_name(
-            const std::string&
-                name); //so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with an XLA or regular function
+        const std::string& get_friendly_name() const;
+        const std::string& get_name() const;
+        // so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with
+        //  an XLA or regular function
+        void set_name(const std::string& name);
         std::list<std::shared_ptr<Node>> get_ops() const;
         std::list<std::shared_ptr<Node>> get_ordered_ops();
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
         void set_temporary_pool_size(size_t);
-        //updates old w/ repl in m_results list
+        // updates old w/ repl in m_results list
         void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
-        //updates graph and m_results list
+        // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
         NodeVector m_results;
         op::ParameterVector m_parameters;
-        std::string m_name;
         size_t m_temporary_pool_size;
 
     private:
@@ -94,5 +94,7 @@ namespace ngraph
 
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
+        std::string m_name;
+        const std::string m_unique_name;
     };
 }
