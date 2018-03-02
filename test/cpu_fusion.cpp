@@ -205,8 +205,8 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
-                            0.89177299});
+                            0.4375872f,
+                            0.89177299f});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
@@ -215,16 +215,16 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
     auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
 
-    vector<float> expected_result{-0.71498716,
-                                  1.48388731,
-                                  -0.00196938,
-                                  -0.76693159,
-                                  -0.91316032,
-                                  0.23943391,
-                                  -0.84090298,
-                                  1.51462936};
-    vector<float> expected_mean{0.602912, 0.599727};
-    vector<float> expected_variance{0.00472505, 0.0361782};
+    vector<float> expected_result{-0.71498716f,
+                                  1.48388731f,
+                                  -0.00196938f,
+                                  -0.76693159f,
+                                  -0.91316032f,
+                                  0.23943391f,
+                                  -0.84090298f,
+                                  1.51462936f};
+    vector<float> expected_mean{0.602912f, 0.599727f};
+    vector<float> expected_variance{0.00472505f, 0.0361782f};
 
     cf->call({_input, _gamma, _beta}, {bn_output, result_mean, result_variance});
 
@@ -266,7 +266,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
                             0.54488319f,
                             0.42365479f,
                             0.64589411f,
-                            0.4375872,
+                            0.4375872f,
                             0.89177299});
 
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
@@ -278,9 +278,9 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
 
     vector<float> expected_result{
-        -0.30327, 1.1561, -0.0963782, -0.434702, -1.4011, 0.548275, -1.06187, 1.59295};
-    vector<float> expected_mean{0.583388, 0.619252};
-    vector<float> expected_variance{0.0119972, 0.0282681};
+        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
+    vector<float> expected_mean{0.583388f, 0.619252f};
+    vector<float> expected_variance{0.0119972f, 0.0282681f};
     cf->call({_input, _gamma, _beta}, {bn_output, result_mean, result_variance});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
