@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <string>
 
 static std::mt19937_64 random_generator;
 
