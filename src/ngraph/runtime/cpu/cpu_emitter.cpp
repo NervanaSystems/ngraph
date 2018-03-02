@@ -1146,6 +1146,18 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
             {
+                // If an output is a constant then copy it
+                size_t output_index = 0;
+                for (shared_ptr<Node> result : external_function->get_function()->get_results())
+                {
+                    if (result.get() == node)
+                    {
+                        const descriptor::Tensor& tensor = node->get_output_tensor(0);
+                        writer << "memcpy(outputs[" << output_index << "], " << tensor.get_name()
+                               << ", " << tensor.size() << ");\n";
+                    }
+                    output_index++;
+                }
             }
 
             template <>
