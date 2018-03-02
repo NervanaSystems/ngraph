@@ -188,8 +188,8 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
-    auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt},
-                                   op::Parameters{input, gamma, beta});
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -251,8 +251,8 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
-    auto f = make_shared<Function>(Nodes{output_rt, mean_rt, variance_rt},
-                                   op::Parameters{input, gamma, beta});
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -267,7 +267,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
                             0.42365479f,
                             0.64589411f,
                             0.4375872f,
-                            0.89177299});
+                            0.89177299f});
 
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});

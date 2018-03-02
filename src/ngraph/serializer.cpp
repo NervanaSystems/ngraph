@@ -327,6 +327,12 @@ static shared_ptr<ngraph::Function>
             auto epsilon = node_js.at("eps").get<double>();
             node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
         }
+        else if (node_op == "BatchNormBackprop")
+        {
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNormBackprop>(
+                epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
+        }
         else if (node_op == "Broadcast")
         {
             auto shape = node_js.at("shape").get<vector<size_t>>();
@@ -482,10 +488,10 @@ static shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetOutputElement")
-        // {
-        //     node = make_shared<op::GetOutputElement>(args[0]);
-        // }
+        else if (node_op == "GetOutputElement")
+        {
+            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+        }
         else if (node_op == "Greater")
         {
             node = make_shared<op::Greater>(args[0], args[1]);
@@ -835,6 +841,11 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
         node["eps"] = tmp->get_eps_value();
     }
+    else if (node_op == "BatchNormBackprop")
+    {
+        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        node["eps"] = tmp->get_eps_value();
+    }
     else if (node_op == "Broadcast")
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
@@ -919,6 +930,8 @@ static json write(const Node& n)
     }
     else if (node_op == "GetOutputElement")
     {
+        auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
+        node["n"] = tmp->get_n();
     }
     else if (node_op == "Greater")
     {
