@@ -249,6 +249,10 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 {
 }
 
+runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
+{
+}
+
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
@@ -256,14 +260,14 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
-    m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
+    m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
