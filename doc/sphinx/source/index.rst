@@ -54,7 +54,7 @@ Sections
    testing-libngraph.rst
    framework-integration-guides.rst
    graph-basics.rst
-   howto/execute.rst
+   howto/index.rst
    ops/index.rst
    project/index.rst
 

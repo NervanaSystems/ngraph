@@ -1,8 +1,8 @@
 .. execute.rst
 
-#######################
-Executing a Computation
-#######################
+######################
+Execute a Computation
+######################
 
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. Intel® nGraph 
@@ -12,11 +12,10 @@ to map out how that computation happens. Unfortunately, things that make by-hand
 graph construction simpler tend to make automatic construction more difficult, 
 and vice versa.
 
-Here we will do all the bridge steps manually.  The model description we'll write
-is based on the :file:`abc.cpp` file in the ``/doc/examples/`` directory.
-
-In order to successfully run a computation, the entity (framework or user) must 
-be able to do all of these things:
+Here we will do all the bridge steps manually. The :term:`model description` 
+we're explaining is based on the :file:`abc.cpp` file in the ``/doc/examples/`` 
+directory. We'll be deconstructing the steps that an entity (framework or 
+user) must be able to carry out in order to successfully execute a computation:
 
 * :ref:`define_cmp`
 * :ref:`specify_bkd`
@@ -25,12 +24,14 @@ be able to do all of these things:
 * :ref:`initialize_inputs`
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
-* :ref:`all_together`
+
+The final code is a the end of this page, on :ref:`all_together`.
+
 
 .. _define_cmp:
 
-Define a Computation
-====================
+Define the computation
+======================
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
 outputs. While a *framework bridge* can programmatically construct the graph 
@@ -63,7 +64,9 @@ deallocated when they are no longer needed. A brief summary of shared
 pointers is given in the glossary.
 
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
-*attributes*. For our purpose to :ref:`define_cmp`, nodes should be thought of 
+*attributes*.  The specifics for each :cpp::type:: permitted on a core 
+``Op``-specific basis can be discovered in :doc:`ops` docs. For our 
+purpose to :ref:`define a computation <define_cmp>`, nodes should be thought of 
 as essentially immutable; that is, when constructing a node, we need to supply 
 all of its inputs. We get this process started with ops that have no inputs, 
 since any op with no inputs is going to first need some inputs.
@@ -220,10 +223,14 @@ We can use the ``read`` method to access the result:
 
 .. _all_together:
 
-Putting it all together
-=======================
+Put it all together
+===================
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 
+
+
+
+.. _Intel MKL-DNN: https://01.org/mkl-dnn
