@@ -14,17 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/shape.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "pyngraph/ops/concatenate.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Concat(py::module m) {
-
-    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
-    concat.def(py::init<const ngraph::NodeVector&, size_t >());
-}
+void regclass_pyngraph_NodeVector(py::module m);

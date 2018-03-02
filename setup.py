@@ -88,6 +88,7 @@ else:
 sources = ['pyngraph/function.cpp',
            'pyngraph/serializer.cpp', 
            'pyngraph/node.cpp',
+           'pyngraph/node_vector.cpp', 
            'pyngraph/pyngraph.cpp',
            'pyngraph/util.cpp',
            'pyngraph/ops/util/arithmetic_reduction.cpp',
@@ -133,6 +134,7 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/op.cpp',
            'pyngraph/ops/one_hot.cpp',
            'pyngraph/ops/parameter.cpp',
+           'pyngraph/ops/parameter_vector.cpp',
            'pyngraph/ops/power.cpp',
            'pyngraph/ops/reduce.cpp',
            'pyngraph/ops/regmodule_pyngraph_op.cpp',
@@ -196,6 +198,7 @@ class BuildExt(build_ext):
     def build_extensions(self):
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
+            ext.extra_compile_args += ['-w']
             if has_flag(self.compiler, '-frtti'):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':

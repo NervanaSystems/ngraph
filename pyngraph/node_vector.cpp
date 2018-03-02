@@ -16,15 +16,21 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+//#include <string>
+#include "ngraph/node.hpp"          // ngraph::Node
+#include "ngraph/node_vector.hpp" 
+#include "pyngraph/node.hpp"
+#include "pyngraph/node_vector.hpp"
 
-#include "ngraph/shape.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "pyngraph/ops/concatenate.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Concat(py::module m) {
+void regclass_pyngraph_NodeVector(py::module m){
 
-    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
-    concat.def(py::init<const ngraph::NodeVector&, size_t >());
+    py::class_<ngraph::NodeVector, std::shared_ptr<ngraph::NodeVector>, std::vector<std::shared_ptr<ngraph::Node>>> node_vector(m, "NodeVector");
+    node_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::Node>>& >());
+    node_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>& >());
+    node_vector.def(py::init<const ngraph::NodeVector& >());
+
 }
+

@@ -16,15 +16,20 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "ngraph/shape.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "pyngraph/ops/concatenate.hpp"
+#include "ngraph/types/type.hpp"    //ngraph::TensorViewType
+#include "ngraph/ops/parameter.hpp" //ngraph::op::Parameter
+#include "ngraph/ops/parameter_vector.hpp"
+#include "pyngraph/ops/parameter.hpp" 
+#include "pyngraph/ops/parameter_vector.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Concat(py::module m) {
+void regclass_pyngraph_ParameterVector(py::module m) {
 
-    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
-    concat.def(py::init<const ngraph::NodeVector&, size_t >());
+    py::class_<ngraph::op::ParameterVector, std::shared_ptr<ngraph::op::ParameterVector>, std::vector<std::shared_ptr<ngraph::op::Parameter>>> parameter_vector(m, "ParameterVector");
+
+    parameter_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::op::Parameter>>& >());
+    parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>& > ());
+    parameter_vector.def(py::init<const ngraph::op::ParameterVector& >());
+
 }
