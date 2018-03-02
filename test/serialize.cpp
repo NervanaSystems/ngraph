@@ -30,6 +30,21 @@ using namespace std;
 using namespace ngraph;
 using json = nlohmann::json;
 
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
+
 TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".
