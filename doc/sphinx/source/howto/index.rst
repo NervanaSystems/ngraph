@@ -16,7 +16,7 @@ already decided that they want the performance optimizations available through
 the nGraph library's management of custom backends. 
 
 To get started, we've provided a basic example for how to execute a computation 
-that can runs on an nGraph backend; this is analogous to a framework bridge.  
+that can run on an nGraph backend; this is analogous to a framework bridge.  
 
 This section is under development; it will eventually contain articles targeted
 toward data scientists, algorithm designers, framework developers, and backend
