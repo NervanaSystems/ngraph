@@ -75,7 +75,7 @@ be passed to them.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 11-13
+   :lines: 26-29
 
 Here we have made three parameter nodes, each a 32-bit float of shape ``(2, 3)`` 
 using a row-major element layout.
@@ -85,20 +85,20 @@ from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 15-16
+   :lines: 31-32
 
 When the ``op::Add`` op is constructed, it will check that the element types and 
 shapes of its inputs match; to support multiple frameworks, ngraph does not do 
 automatic type conversion or broadcasting. In this case, they match, and the 
 shape of the unique output of ``t0`` will be a 32-bit float with shape ``(2, 3)``. 
-Similarly, ``op::Multiply``checks that its inputs match and sets the element 
+Similarly, ``op::Multiply`` checks that its inputs match and sets the element 
 type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 19
+   :lines: 35
 
 The first argument to the constuctor specifies the nodes that the function will 
 return; in this case, the product. A ``NodeVector`` is a vector of shared 
@@ -133,7 +133,7 @@ To select the ``"CPU"`` backend,
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 22-23
+   :lines: 38-39
 
 
 .. _compile_cmp:
@@ -150,7 +150,7 @@ thread needs to execute the function at the same time, create multiple
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 24-28
+   :lines: 42-43
 
 
 .. _allocate_bkd_storage:
@@ -185,17 +185,11 @@ tensor view, it will be freed when convenient for the backend.
 Initialize the inputs
 =====================
 
-Normally the framework bridge reads and writes bytes to the tensor, assuming a 
-row-major element layout. To simplify writing unit tests, we have developed a 
-class for making tensor literals. We can use these to initialize our tensors:
+Next we need to copy some data into the tensors.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 36-38
-
-The ``test::NDArray`` needs to know the element type (``float`` for this 
-example) and rank (``2`` for this example) of the tensors; it will then 
-populate the shape during template expansion.
+   :lines: 45-58
 
 The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
@@ -210,7 +204,7 @@ call frame:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 41
+   :lines: 61
 
 
 .. _access_outputs:
@@ -222,7 +216,7 @@ We can use the ``read`` method to access the result:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 44-45
+   :lines: 64-65
 
 .. _all_together:
 
@@ -231,6 +225,5 @@ Putting it all together
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 1-46
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 

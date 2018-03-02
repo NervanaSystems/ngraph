@@ -37,9 +37,9 @@ int main()
     // Get the backend
     auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
-    auto external = manager->compile(f);
 
     // Compile the function
+    auto external = manager->compile(f);
     auto cf = backend->make_call_frame(external);
 
     // Allocate tensors
