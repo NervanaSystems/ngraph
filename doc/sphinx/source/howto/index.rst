@@ -10,10 +10,10 @@ How to
 The "How to" articles in this section explain how to do specific tasks with 
 Intel nGraph. The recipes are all framework agnostic; in other words, any 
 frontend framework that wishes to access the optimizations inherent in nGraph 
-will either need to do these things programatically through the framework, or 
-to provide documentation for the user who has already has decided they want to 
-performance optimizations available through nGraph's management of custom 
-backends. 
+will either need to do these things programatically through the framework, or to
+provide documentation for the user. Our primary audience is users who have 
+already decided that they want the performance optimizations available through 
+the nGraph library's management of custom backends. 
 
 To get started, we've provided a basic example for how to execute a computation 
 that can runs on an nGraph backend; this is analogous to a framework bridge.  
