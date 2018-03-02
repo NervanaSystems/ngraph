@@ -93,6 +93,7 @@ TEST(${BACKEND_NAME}, node_name)
     cf->call({a, b}, {result});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
 
 TEST(${BACKEND_NAME}, component_cleanup)
 {
