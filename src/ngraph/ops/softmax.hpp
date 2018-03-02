@@ -29,7 +29,7 @@ namespace ngraph
         public:
             /// \brief Constructs a softmax operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.<br>
+            /// \param arg Node that produces the first input tensor.<br>
             /// `[d0, ...]`
             /// \param axes The axis positions (0-based) on which to calculate the softmax.
             ///
