@@ -356,15 +356,15 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     vector<float> deltaData(shape_size(shape_r), 20.0f);
     copy_data(_delta, deltaData);
 
-    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
     auto dinput = bn->backprop_node(input, C);
     auto dgamma = bn->backprop_node(gamma, C);
     auto dbeta = bn->backprop_node(beta, C);
 
-    auto df = make_shared<Function>(Nodes{dinput, dgamma, dbeta},
-                                    op::Parameters{mean, var, input, gamma, beta, C});
+    auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
+                                    op::ParameterVector{mean, var, input, gamma, beta, C});
 
     //roundtrip serialization
     string js = serialize(df, 4);

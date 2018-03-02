@@ -152,8 +152,8 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     add_output(beta->get_element_type(), beta->get_shape());
 }
 
-std::shared_ptr<ngraph::Node> ngraph::op::BatchNormBackprop::copy_with_new_args(
-    const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
+std::shared_ptr<ngraph::Node>
+    ngraph::op::BatchNormBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 6)
     {
