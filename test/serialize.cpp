@@ -20,15 +20,30 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
 using json = nlohmann::json;
+
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
 
 TEST(serialize, main)
 {
@@ -60,8 +75,8 @@ TEST(serialize, main)
     string js = serialize(h, 4);
 
     {
-        ofstream f("serialize_function.js");
-        f << js;
+        ofstream out("serialize_function.js");
+        out << js;
     }
 
     istringstream in(js);

@@ -34,6 +34,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/allreduce.cpp
     ops/avg_pool.cpp
     ops/batch_norm.cpp
     ops/broadcast.cpp
@@ -215,11 +216,6 @@ if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
-    # Add sources for distributed ngraph
-    # and all its dependencies
-    set(SRC ${SRC}
-        ops/allreduce.cpp
-    )
     set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
         "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
@@ -266,8 +262,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource)
-    include_directories(${CMAKE_BINARY_DIR})
+    add_dependencies(ngraph header_resource ext_json)
+    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
 if (NOT APPLE)
@@ -352,11 +349,11 @@ install(DIRECTORY
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
 endif()
 

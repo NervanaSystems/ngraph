@@ -65,7 +65,9 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
 
     if (runtime::cpu::IsTracingEnabled())
     {
-        GenerateTimeline(m_external_function->get_op_attrs(), ctx->op_durations);
+        GenerateTimeline(m_external_function->get_op_attrs(),
+                         ctx->op_durations,
+                         m_external_function->get_function_name() + ".timeline.json");
     }
 }
 
