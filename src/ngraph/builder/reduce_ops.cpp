@@ -19,7 +19,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
-#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/power.hpp"
