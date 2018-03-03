@@ -19,6 +19,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace runtime
