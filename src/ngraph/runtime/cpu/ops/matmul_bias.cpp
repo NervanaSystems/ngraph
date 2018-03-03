@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "matmul_bias.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 std::shared_ptr<ngraph::Node>

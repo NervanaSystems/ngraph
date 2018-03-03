@@ -16,6 +16,7 @@
 
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

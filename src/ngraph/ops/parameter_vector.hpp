@@ -19,12 +19,12 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/ops/parameter.hpp"
+
 namespace ngraph
 {
     namespace op
     {
-        class Parameter;
-
         /// \brief Zero or more nodes.
         class ParameterVector : public std::vector<std::shared_ptr<op::Parameter>>
         {

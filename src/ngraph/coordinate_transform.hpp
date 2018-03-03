@@ -16,10 +16,7 @@
 
 #pragma once
 
-#include <cassert>
-#include <cstdio>
-#include <iostream>
-#include <vector>
+#include <algorithm>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
