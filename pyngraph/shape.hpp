@@ -14,23 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/node.hpp"          // ngraph::Node
-#include "ngraph/node_vector.hpp" 
-#include "pyngraph/node.hpp"
-#include "pyngraph/node_vector.hpp"
+#pragma once
 
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_NodeVector(py::module m){
-
-    py::class_<ngraph::NodeVector, std::shared_ptr<ngraph::NodeVector>> node_vector(m, "NodeVector");
-    node_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::Node>>& >());
-    node_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>& >());
-    node_vector.def(py::init<const ngraph::NodeVector& >());
-
-}
-
+void regclass_pyngraph_Shape(py::module m);

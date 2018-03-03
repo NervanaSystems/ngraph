@@ -51,6 +51,7 @@
 // #include "pyngraph/ops/op.hpp"
 #include "pyngraph/ops/one_hot.hpp"
 #include "pyngraph/ops/parameter.hpp"
+#include "pyngraph/ops/parameter_vector.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/reduce.hpp"
 #include "pyngraph/ops/replace_slice.hpp"

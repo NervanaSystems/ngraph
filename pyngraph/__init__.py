@@ -32,6 +32,7 @@ from _pyngraph import Node
 from _pyngraph import NodeVector
 from _pyngraph import Type
 from _pyngraph import TensorViewType
+from _pyngraph import Shape
 
 from _pyngraph import serialize
 from _pyngraph import util
