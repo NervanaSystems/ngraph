@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "matmul_bias.hpp"
+#include "ngraph/util.hpp"
 
 std::shared_ptr<ngraph::Node>
     ngraph::op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const

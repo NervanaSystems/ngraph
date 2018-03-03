@@ -16,16 +16,11 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/interpreter/int_call_frame.hpp"
 
 namespace ngraph
 {
