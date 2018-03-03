@@ -89,6 +89,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -239,6 +240,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
