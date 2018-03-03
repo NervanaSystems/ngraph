@@ -16,15 +16,15 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/shape.hpp"      //ngraph::Shape
-#include "pyngraph/shape.hpp"
+#include "ngraph/axis_set.hpp"      //ngraph::AxisSet
+#include "pyngraph/axis_set.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Shape(py::module m) {
+void regclass_pyngraph_AxisSet(py::module m) {
 
-    py::class_<ngraph::Shape, std::shared_ptr<ngraph::Shape>> shape(m, "Shape");
-    shape.def(py::init<const std::initializer_list<size_t>& >());
-    shape.def(py::init<const std::vector<size_t>& >());
-    shape.def(py::init<const ngraph::Shape& >());
+    py::class_<ngraph::AxisSet, std::shared_ptr<ngraph::AxisSet>> axis_set(m, "AxisSet");
+    axis_set.def(py::init<const std::initializer_list<size_t>& >());
+    axis_set.def(py::init<const std::set<size_t>& >());
+    axis_set.def(py::init<const ngraph::AxisSet& >());
 }

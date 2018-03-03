@@ -16,15 +16,15 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/shape.hpp"      //ngraph::Shape
-#include "pyngraph/shape.hpp"
+#include "ngraph/strides.hpp"      //ngraph::Strides
+#include "pyngraph/strides.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Shape(py::module m) {
+void regclass_pyngraph_Strides(py::module m) {
 
-    py::class_<ngraph::Shape, std::shared_ptr<ngraph::Shape>> shape(m, "Shape");
-    shape.def(py::init<const std::initializer_list<size_t>& >());
-    shape.def(py::init<const std::vector<size_t>& >());
-    shape.def(py::init<const ngraph::Shape& >());
+    py::class_<ngraph::Strides, std::shared_ptr<ngraph::Strides>> strides(m, "Strides");
+    strides.def(py::init<const std::initializer_list<size_t>& >());
+    strides.def(py::init<const std::vector<size_t>& >());
+    strides.def(py::init<const ngraph::Strides& >());
 }

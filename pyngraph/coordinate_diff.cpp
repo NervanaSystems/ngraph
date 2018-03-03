@@ -16,15 +16,15 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/shape.hpp"      //ngraph::Shape
-#include "pyngraph/shape.hpp"
+#include "ngraph/coordinate_diff.hpp"      //ngraph::CoordinateDiff
+#include "pyngraph/coordinate_diff.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Shape(py::module m) {
+void regclass_pyngraph_CoordinateDiff(py::module m) {
 
-    py::class_<ngraph::Shape, std::shared_ptr<ngraph::Shape>> shape(m, "Shape");
-    shape.def(py::init<const std::initializer_list<size_t>& >());
-    shape.def(py::init<const std::vector<size_t>& >());
-    shape.def(py::init<const ngraph::Shape& >());
+    py::class_<ngraph::CoordinateDiff, std::shared_ptr<ngraph::CoordinateDiff>> coordinate_diff(m, "CoordinateDiff");
+    coordinate_diff.def(py::init<const std::initializer_list<ptrdiff_t>& >());
+    coordinate_diff.def(py::init<const std::vector<ptrdiff_t>& >());
+    coordinate_diff.def(py::init<const ngraph::CoordinateDiff& >());
 }

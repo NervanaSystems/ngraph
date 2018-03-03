@@ -33,6 +33,11 @@ from _pyngraph import NodeVector
 from _pyngraph import Type
 from _pyngraph import TensorViewType
 from _pyngraph import Shape
+from _pyngraph import Strides
+from _pyngraph import CoordinateDiff
+from _pyngraph import AxisSet
+from _pyngraph import AxisVector
+from _pyngraph import Coordinate
 
 from _pyngraph import serialize
 from _pyngraph import util
