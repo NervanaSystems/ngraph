@@ -76,7 +76,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }
@@ -164,7 +164,7 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }
