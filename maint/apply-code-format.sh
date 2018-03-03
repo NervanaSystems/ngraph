@@ -47,7 +47,7 @@ declare NNP_TEST_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/
 declare PYBIND_WRAPPER="python/pyngraph"
 
 declare ROOT_SUBDIR
-for ROOT_SUBDIR in src test ${NNP_SRC_DIR} ${NNP_TEST_DIR} ${PYBIND_WRAPPER}; do
+for ROOT_SUBDIR in src doc/examples test ${NNP_SRC_DIR} ${NNP_TEST_DIR} ${PYBIND_WRAPPER}; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
 	    bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
     else
