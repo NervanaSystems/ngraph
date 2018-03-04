@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-// #include "ngraph/descriptor/output.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/parameter_vector.hpp"
 #include "ngraph/types/type.hpp"
