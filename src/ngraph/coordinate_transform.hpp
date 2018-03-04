@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <algorithm>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/coordinate_diff.hpp"
