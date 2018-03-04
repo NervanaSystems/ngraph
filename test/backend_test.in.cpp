@@ -2641,7 +2641,6 @@ TEST(${BACKEND_NAME}, sin)
 
 TEST(${BACKEND_NAME}, cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});

@@ -711,7 +711,14 @@ void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    throw std::runtime_error(n->get_name() + " is not implemented.");
+    writer << "{  // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << "int count = " << out[0].get_size() << ";\n";
+    writer << "if(count == 0) return;\n";
+    writer << "ngraph::runtime::gpu::emit_cos((void*) " << args[0].get_name() << ", (void*) "
+           << out[0].get_name() << ", count);\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitCosh(codegen::CodeWriter& writer,

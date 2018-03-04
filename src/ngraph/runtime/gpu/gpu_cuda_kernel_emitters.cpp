@@ -110,6 +110,40 @@ void cuda_)" + name + "(" + data_type +
                                               0));  // arguments
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
+
+            void emit_cos(void* in, void* out, size_t count)
+            {
+                std::string name = "cos";
+                // Create an instance of nvrtcProgram with the code string.
+                if (CudaFunctionPool::instance().get(name) == nullptr)
+                {
+                    const char* opts[] = {"--gpu-architecture=compute_35",
+                                          "--relocatable-device-code=true"};
+                    std::string kernel;
+                    CudaKernelBuilder::get_1_element_op(name, "float", "cosf", kernel);
+                    CudaFunctionPool::instance().set(
+                        name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
+                }
+
+                //convert runtime ptr to driver api ptr
+                CUdeviceptr d_ptr_in, d_ptr_out;
+                d_ptr_in = (CUdeviceptr)in;
+                d_ptr_out = (CUdeviceptr)out;
+
+                void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
+                CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+                                              count,
+                                              1,
+                                              1, // grid dim
+                                              1,
+                                              1,
+                                              1, // block dim
+                                              0,
+                                              NULL, // shared mem and stream
+                                              args_list,
+                                              0));  // arguments
+                CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+            }
         }
     }
 }
