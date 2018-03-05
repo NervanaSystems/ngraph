@@ -14,10 +14,11 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/function.hpp"
-
 #include <algorithm>
+#include <sstream>
+
+#include "ngraph/function.hpp"
+#include "ngraph/ops/reverse.hpp"
 
 using namespace std;
 using namespace ngraph;

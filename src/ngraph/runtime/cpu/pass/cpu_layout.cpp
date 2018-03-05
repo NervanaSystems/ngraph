@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
