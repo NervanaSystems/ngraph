@@ -67,8 +67,9 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
     writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name() << ", (void*) "
-           << out[0].get_name() << ", count);\n";
+    writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::"
+           << n->description() << ">((void*) " << args[0].get_name() << ", (void*) "
+           << out[0].get_name() << ", count, \"" << n->description() << "\");\n";
     writer.indent--;
     writer << "}\n";
 }
@@ -715,8 +716,9 @@ void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
     writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::emit_cos((void*) " << args[0].get_name() << ", (void*) "
-           << out[0].get_name() << ", count);\n";
+    writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::"
+           << n->description() << ">((void*) " << args[0].get_name() << ", (void*) "
+           << out[0].get_name() << ", count, \"" << n->description() << "\");\n";
     writer.indent--;
     writer << "}\n";
 }

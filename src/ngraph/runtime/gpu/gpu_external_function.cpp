@@ -252,6 +252,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
+    #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 )";
 
     string pch_header_source = writer.get_code();
