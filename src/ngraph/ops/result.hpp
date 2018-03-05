@@ -30,34 +30,10 @@ namespace ngraph
             /// \brief Constructs an arcsin operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Result(const std::shared_ptr<Node>& arg)
-                : RequiresTensorViewArgs("Result", {arg})
-            {
-                if (arg->get_outputs().size() != 1)
-                {
-                    throw ngraph_error("Expected a single-output argument");
-                }
-
-                //always borrow the placement conf even the default one
-                set_placement(arg->get_placement());
-                set_value_type_checked(arg->get_element_type(), arg->get_shape());
-            }
+            Result(const std::shared_ptr<Node>& arg);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-
-                if (new_args.at(0)->get_outputs().size() != 1)
-                {
-                    throw ngraph_error("Expected a single-output argument");
-                }
-
-                return std::make_shared<Result>(new_args.at(0));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual bool is_output() const override { return true; }
         protected:

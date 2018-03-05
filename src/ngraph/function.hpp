@@ -65,7 +65,7 @@ namespace ngraph
         /// Return the function parameters
         const op::ParameterVector& get_parameters() const { return m_parameters; }
         /// Return the ops that generate the results
-        const ResultVector get_results() const { return m_results; }
+        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
