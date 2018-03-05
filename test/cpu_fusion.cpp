@@ -25,7 +25,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/get_output_element.cpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
