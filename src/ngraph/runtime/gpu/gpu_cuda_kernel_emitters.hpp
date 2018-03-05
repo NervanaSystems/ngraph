@@ -18,10 +18,10 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
-#include "ngraph/strides.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {

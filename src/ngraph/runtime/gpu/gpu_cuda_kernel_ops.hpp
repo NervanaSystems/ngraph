@@ -46,34 +46,64 @@ namespace ngraph
         namespace gpu
         {
             template <>
-            struct CudaOpMap<ngraph::op::Abs> { static constexpr const char* op = "fabsf"; };
+            struct CudaOpMap<ngraph::op::Abs>
+            {
+                static constexpr const char* op = "fabsf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Acos> { static constexpr const char* op = "acosf"; };
+            struct CudaOpMap<ngraph::op::Acos>
+            {
+                static constexpr const char* op = "acosf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Asin> { static constexpr const char* op = "asinf"; };
+            struct CudaOpMap<ngraph::op::Asin>
+            {
+                static constexpr const char* op = "asinf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Atan> { static constexpr const char* op = "atanf"; };
+            struct CudaOpMap<ngraph::op::Atan>
+            {
+                static constexpr const char* op = "atanf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Ceiling> { static constexpr const char* op = "ceilf"; };
+            struct CudaOpMap<ngraph::op::Ceiling>
+            {
+                static constexpr const char* op = "ceilf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Cos> { static constexpr const char* op = "cosf"; };
+            struct CudaOpMap<ngraph::op::Cos>
+            {
+                static constexpr const char* op = "cosf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Cosh> { static constexpr const char* op = "coshf"; };
+            struct CudaOpMap<ngraph::op::Cosh>
+            {
+                static constexpr const char* op = "coshf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Exp> { static constexpr const char* op = "expf"; };
+            struct CudaOpMap<ngraph::op::Exp>
+            {
+                static constexpr const char* op = "expf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Floor> { static constexpr const char* op = "floorf"; };
+            struct CudaOpMap<ngraph::op::Floor>
+            {
+                static constexpr const char* op = "floorf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Log> { static constexpr const char* op = "logf"; };
+            struct CudaOpMap<ngraph::op::Log>
+            {
+                static constexpr const char* op = "logf";
+            };
 
             // template <>
             // struct CudaOpMap<ngraph::op::Max> { static constexpr const char* op = "fmaxf"; };
@@ -91,19 +121,31 @@ namespace ngraph
             // struct CudaOpMap<ngraph::op::Sign> { static constexpr const char* op = ""; };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sin> { static constexpr const char* op = "sinf"; };
+            struct CudaOpMap<ngraph::op::Sin>
+            {
+                static constexpr const char* op = "sinf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sinh> { static constexpr const char* op = "sinhf"; };
+            struct CudaOpMap<ngraph::op::Sinh>
+            {
+                static constexpr const char* op = "sinhf";
+            };
 
             // template <>
             // struct CudaOpMap<ngraph::op::Sqrt> { static constexpr const char* op = "sqrtf"; };
 
             template <>
-            struct CudaOpMap<ngraph::op::Tan> { static constexpr const char* op = "tanf"; };
+            struct CudaOpMap<ngraph::op::Tan>
+            {
+                static constexpr const char* op = "tanf";
+            };
 
             template <>
-            struct CudaOpMap<ngraph::op::Tanh> { static constexpr const char* op = "tanhf"; };
+            struct CudaOpMap<ngraph::op::Tanh>
+            {
+                static constexpr const char* op = "tanhf";
+            };
         }
     }
 }

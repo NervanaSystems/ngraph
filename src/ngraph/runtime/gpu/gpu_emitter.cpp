@@ -58,18 +58,19 @@ void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
 {
 }
 
-void runtime::gpu::GPU_Emitter::EmitUnaryElementwise(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitUnaryElementwise(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
     writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::"
-           << n->description() << ">((void*) " << args[0].get_name() << ", (void*) "
-           << out[0].get_name() << ", count, \"" << n->description() << "\");\n";
+    writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::" << n->description()
+           << ">((void*) " << args[0].get_name() << ", (void*) " << out[0].get_name()
+           << ", count, \"" << n->description() << "\");\n";
     writer.indent--;
     writer << "}\n";
 }
