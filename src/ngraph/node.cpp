@@ -23,8 +23,8 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/ops/result.hpp"
+#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;

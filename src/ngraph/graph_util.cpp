@@ -29,10 +29,10 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/ops/result.hpp"
 #include "ngraph/ops/result_vector.hpp"
+#include "ngraph/placement.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -116,8 +116,7 @@ void ngraph::free_nodes(shared_ptr<Function> p)
     }
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target,
-                          std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
     {
@@ -432,7 +431,6 @@ static shared_ptr<Function> build_largest_colocated_function(
                     if (map_source_node_to_parameter.find(input_op) ==
                         map_source_node_to_parameter.end())
                     {
-                        
                         shared_ptr<op::Parameter> p = make_shared<op::Parameter>(
                             input_op->get_output_element_type(0), input_op->get_output_shape(0));
                         p->set_placement(function_placement);
@@ -602,7 +600,6 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         unvisited_outputs = updated_unvisited_outputs;
     }
 
-
     unordered_map<shared_ptr<Node>, shared_ptr<Node>> map_source_node_to_result;
     for (auto cf : colocated_functions)
     {
@@ -612,7 +609,8 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         }
     }
 
-    for (auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it)
+    for (auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end();
+         ++it)
     {
         if (map_source_node_to_result.count(it->second) != 0)
         {

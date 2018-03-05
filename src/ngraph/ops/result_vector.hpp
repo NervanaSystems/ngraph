@@ -27,11 +27,6 @@ namespace ngraph
     class ResultVector : public std::vector<std::shared_ptr<op::Result>>
     {
     public:
-        // ResultVector(std::vector<std::shared_ptr<op::Result>>::iterator begin, std::vector<std::shared_ptr<op::Result>>::iterator end)
-        //     : std::vector<std::shared_ptr<op::Result>>(begin, end)
-        // {
-        // }
-
         ResultVector(size_t size)
             : std::vector<std::shared_ptr<op::Result>>(size)
         {

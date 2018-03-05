@@ -841,7 +841,7 @@ using namespace ngraph::runtime;
     auto codegen_module = m_compiler->compile(code);
 
     if (codegen_module == nullptr)
-    {        
+    {
         throw runtime_error("function failed to compile");
     }
     m_execution_engine->add_module(codegen_module);

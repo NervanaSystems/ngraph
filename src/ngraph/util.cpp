@@ -25,9 +25,9 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/result_vector.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/ops/result_vector.hpp"
 
 #include <iostream>
 
@@ -244,7 +244,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs;
 
-    for (auto fpr :  fprop->get_results())
+    for (auto fpr : fprop->get_results())
     {
         fprop_outputs.push_back(fpr);
     }
