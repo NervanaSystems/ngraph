@@ -301,6 +301,18 @@ namespace ngraph
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                     args[2].get_element_type());
 
+                const string& gamma_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                const string& beta_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                if (gamma_format.compare("memory::format::x") != 0 &&
+                    beta_format.compare("memory::format::x") != 0)
+                {
+                    throw std::runtime_error(
+                        "gamma layout->" + gamma_format + ", beta layout->" + beta_format +
+                        " should match and both should have memory::format::x format");
+                }
+
                 writer << "{\n";
                 writer.indent++;
 

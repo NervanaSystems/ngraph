@@ -716,7 +716,10 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        // TODO: Remove exception and add "set_default_layouts(external_function, node)"
+                        // once we have the interpreter implementation
+                        throw ngraph_error(
+                            "BatchNorm Op doesn't have default INTERPRETER implementation");
                     }
                 }
             }
@@ -727,6 +730,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
+    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
