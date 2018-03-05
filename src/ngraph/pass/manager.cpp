@@ -30,12 +30,10 @@ using namespace std;
 using namespace ngraph;
 
 ngraph::pass::Manager::Manager()
-    : m_to_set_is_output(true)
 {
 }
 
 ngraph::pass::Manager::Manager(bool to_set_is_output)
-    : m_to_set_is_output(to_set_is_output)
 {
 }
 

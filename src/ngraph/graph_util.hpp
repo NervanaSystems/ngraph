@@ -49,8 +49,8 @@ namespace ngraph
     void free_nodes(std::shared_ptr<Function>);
 
     void replace_node(std::shared_ptr<Node> target,
-                      std::shared_ptr<Node> replacement,
-                      bool replace_output = false);
+                      std::shared_ptr<Node> replacement);
+
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 

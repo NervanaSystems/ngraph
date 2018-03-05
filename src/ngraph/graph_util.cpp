@@ -34,8 +34,6 @@
 #include "ngraph/ops/result.hpp"
 #include "ngraph/ops/result_vector.hpp"
 
-#include <iostream>
-
 using namespace std;
 using namespace ngraph;
 
@@ -119,8 +117,7 @@ void ngraph::free_nodes(shared_ptr<Function> p)
 }
 
 void ngraph::replace_node(std::shared_ptr<Node> target,
-                          std::shared_ptr<Node> replacement,
-                          bool replace_output)
+                          std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
     {
@@ -438,8 +435,6 @@ static shared_ptr<Function> build_largest_colocated_function(
                         
                         shared_ptr<op::Parameter> p = make_shared<op::Parameter>(
                             input_op->get_output_element_type(0), input_op->get_output_shape(0));
-                        std::cout << "created parm = " << p->get_name() << " for " << input_op->get_name() 
-                            << " in " << &map_parameter_to_source_node  << std::endl;
                         p->set_placement(function_placement);
                         insert_parameter_split_between(input_op, n, p);
                         map_source_node_to_parameter[input_op] = p;
@@ -617,20 +612,13 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         }
     }
 
-    for ( auto it = map_source_node_to_result.begin(); it != map_source_node_to_result.end(); ++it )
-        std::cout << " map_source_node_to_result = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
-
     for (auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it)
     {
         if (map_source_node_to_result.count(it->second) != 0)
         {
-            std::cout << "Replacing " << it->second << " with " << map_source_node_to_result[it->second] << std::endl;
             it->second = map_source_node_to_result[it->second];
         }
     }
-
-    for ( auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it )
-        std::cout << " after_replace = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
 
     // The colocated_functions should be called in reversed order
     reverse(colocated_functions.begin(), colocated_functions.end());

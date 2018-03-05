@@ -244,16 +244,9 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs;
 
-    //fprop->get_results().size() + fprop_cache.fprop_output_nodes.size()
-
     for (auto fpr :  fprop->get_results())
     {
-        auto fprr = std::dynamic_pointer_cast<op::Result>(fpr);
-        if (!fprr)
-        {
-            throw ngraph_error("Expected op::Result in fprop->get_results()");
-        }
-        fprop_outputs.push_back(fprr);
+        fprop_outputs.push_back(fpr);
     }
 
     for (auto fpir : fprop_cache.fprop_output_nodes)
