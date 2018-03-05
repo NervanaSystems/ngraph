@@ -27,7 +27,7 @@
 #include "pyngraph/ops/avg_pool.hpp"
 #include "pyngraph/ops/broadcast.hpp"
 #include "pyngraph/ops/ceiling.hpp"
-#include "pyngraph/ops/concatenate.hpp"
+#include "pyngraph/ops/concat.hpp"
 #include "pyngraph/ops/constant.hpp"
 #include "pyngraph/ops/convert.hpp"
 #include "pyngraph/ops/convolution.hpp"

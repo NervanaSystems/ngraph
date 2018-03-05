@@ -19,7 +19,7 @@
 
 #include "ngraph/shape.hpp"
 #include "ngraph/ops/concat.hpp"
-#include "pyngraph/ops/concatenate.hpp"
+#include "pyngraph/ops/concat.hpp"
 
 namespace py = pybind11;
 
