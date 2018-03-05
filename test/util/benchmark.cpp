@@ -22,6 +22,7 @@
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
 #include "random.hpp"
 
 std::multimap<size_t, std::string>
