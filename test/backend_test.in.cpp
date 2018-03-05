@@ -2884,7 +2884,7 @@ TEST(${BACKEND_NAME}, tanh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, exp)
