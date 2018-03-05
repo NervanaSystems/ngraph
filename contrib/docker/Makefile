@@ -2,13 +2,14 @@
 # are added.
 
 # Building LLVM from source has been observed to trigger the oom-killer
+#    on systems with a large number of cores
 #    running with make -j
 #
-# Default is to build with -j 16 for parallel cmake/make.
+# Default is to build with -j 22 for parallel cmake/make.
 # Override with make PARALLEL="-j <num_parallel_processes>" where
 #    <num_parallel_processes> = the number of make processes to run in parallel
 # Turn off with make PARALLEL=
-PARALLEL=-j 16
+PARALLEL=-j 22 
 
 # DIR is an internal variable that serves as an anchor to this cloned git
 # repository.  DIR is mounted into the docker container, so that builds
