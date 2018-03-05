@@ -17,10 +17,6 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-function(update_gcc_version_check)
-    message("##################################### patch here")
-endfunction(update_gcc_version_check)
-
 #------------------------------------------------------------------------------
 # Download json
 #------------------------------------------------------------------------------
@@ -28,7 +24,6 @@ endfunction(update_gcc_version_check)
 SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
 SET(JSON_GIT_LABEL v3.1.1)
 
-message(STATUS "++++++++++++++++++++++++++++++++++ json ExternalProject_Add")
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     message(STATUS "json < 3.2")
@@ -40,6 +35,8 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        # cmake does not allow calling cmake functions so we call a cmake script in the Module
+        # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
         )
 else()
@@ -53,6 +50,8 @@ else()
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
+        # cmake does not allow calling cmake functions so we call a cmake script in the Module
+        # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
     )
 endif()
