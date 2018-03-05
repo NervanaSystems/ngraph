@@ -143,42 +143,6 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
-TEST(util, remove_from)
-{
-}
-
-TEST(util, reduce)
-{
-    {
-        std::vector<size_t> x = {};
-        size_t actual =
-            ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
-        EXPECT_EQ(actual, 0);
-    }
-    {
-        std::vector<size_t> x = {10};
-        size_t actual =
-            ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
-        EXPECT_EQ(actual, 10);
-    }
-    {
-        std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
-        size_t actual =
-            ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
-        EXPECT_EQ(actual, 21);
-    }
-    {
-        std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
-        size_t actual = ngraph::reduce(x.begin(), x.end(), ngraph::plus<size_t>);
-        EXPECT_EQ(actual, 21);
-    }
-    {
-        std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
-        size_t actual = ngraph::reduce(x.begin(), x.end(), ngraph::mul<size_t>);
-        EXPECT_EQ(actual, 720);
-    }
-}
-
 TEST(util, all_close)
 {
     auto manager = runtime::Manager::get("INTERPRETER");
