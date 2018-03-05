@@ -23,12 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/parameter_vector.hpp"
 #include "ngraph/types/type.hpp"
 

@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+#include <stdexcept>
 #include <type_traits>
 
 namespace ngraph
