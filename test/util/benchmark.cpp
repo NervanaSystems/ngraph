@@ -19,54 +19,71 @@
 #include "benchmark.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "random.hpp"
 
-std::multimap<size_t, std::string>
-    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data)
+using namespace std;
+using namespace ngraph;
+
+multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCounter>& perf_data)
 {
-    std::unordered_map<std::string, size_t> timing;
-    for (const ngraph::runtime::PerformanceCounter& p : perf_data)
+    unordered_map<string, size_t> timing;
+    for (const runtime::PerformanceCounter& p : perf_data)
     {
-        std::string op = p.name().substr(0, p.name().find('_'));
+        string op = p.name().substr(0, p.name().find('_'));
         timing[op] += p.microseconds();
     }
 
-    std::multimap<size_t, std::string> rc;
-    for (const std::pair<std::string, size_t>& t : timing)
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
     {
         rc.insert({t.second, t.first});
     }
     return rc;
 }
 
-void run_benchmark(const std::string& json_path, const std::string& backend_name, size_t iterations)
+void run_benchmark(const string& json_path,
+                   const string& backend_name,
+                   size_t iterations,
+                   bool timing_detail)
 {
-    using namespace std;
-    using namespace ngraph;
+    stopwatch timer;
+    timer.start();
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> f = deserialize(ss);
+    timer.stop();
+    cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
+    run_benchmark(f, backend_name, iterations, timing_detail);
+}
+
+void run_benchmark(shared_ptr<Function> f,
+                   const string& backend_name,
+                   size_t iterations,
+                   bool timing_detail)
+{
+    test::Uniform<float> rng{-1, 1, 0};
+
+    stopwatch timer;
     string env_var_name = "NGRAPH_" + backend_name + "_EMIT_TIMING";
-    bool emit_timing = (std::getenv(env_var_name.c_str()) != nullptr);
+    bool emit_timing = (getenv(env_var_name.c_str()) != nullptr || timing_detail);
     if (!emit_timing)
     {
         cout << "To get per-op timing set the environment variable " << env_var_name << "\n";
     }
 
-    ngraph::test::Uniform<float> rng{-1, 1, 0};
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> f = deserialize(ss);
-
-    stopwatch build_time;
-    build_time.start();
+    timer.start();
     auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
+    external->set_emit_timing(emit_timing);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
-    build_time.stop();
-    cout << "build_time " << build_time.get_milliseconds() << "ms" << endl;
+    timer.stop();
+    cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::TensorView>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())

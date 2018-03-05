@@ -42,12 +42,14 @@ namespace ngraph
         public:
             virtual ~ExternalFunction() {}
             virtual std::shared_ptr<CallFrame> make_call_frame() = 0;
+            void set_emit_timing(bool enable) { m_timing = enable; }
 
             const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
         protected:
             std::shared_ptr<ngraph::Function> m_function;
             bool m_release_function;
             bool m_is_compiled;
+            bool m_timing;
         };
     }
 }

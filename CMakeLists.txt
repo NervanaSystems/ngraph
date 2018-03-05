@@ -118,6 +118,13 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
+# find_package(OpenMP)
+# if (OPENMP_FOUND)
+#     message("******************** openmp found")
+# else()
+#     message("******************** openmp not found")
+# endif()
+
 #-----------------------------------------------------------------------------------------------
 # GPU support
 #-----------------------------------------------------------------------------------------------

@@ -61,6 +61,8 @@ if (NGRAPH_CPU_ENABLE)
     set(LLVM_INCLUDE_DIR "${source_dir}/include")  # used by other external projects in current scope
     set(LLVM_LIB_DIR "${source_dir}/lib" PARENT_SCOPE)
 
+    ExternalProject_Get_Property(ext_llvm source_dir)
+
     set(LLVM_LINK_LIBS
         clangTooling
         clangFrontendTool
