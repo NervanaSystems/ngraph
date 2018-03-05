@@ -314,7 +314,7 @@ endif()
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
