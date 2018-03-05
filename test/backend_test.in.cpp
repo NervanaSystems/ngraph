@@ -120,6 +120,7 @@ TEST(${BACKEND_NAME}, component_cleanup)
 
 TEST(${BACKEND_NAME}, aliased_output)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -8428,6 +8429,7 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
 
 TEST(${BACKEND_NAME}, softmax_all)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -8460,6 +8462,7 @@ TEST(${BACKEND_NAME}, softmax_all)
 
 TEST(${BACKEND_NAME}, softmax_axis)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
@@ -8488,6 +8491,7 @@ TEST(${BACKEND_NAME}, softmax_axis)
 
 TEST(${BACKEND_NAME}, softmax_underflow)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
