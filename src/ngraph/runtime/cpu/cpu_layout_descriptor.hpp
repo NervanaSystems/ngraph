@@ -23,7 +23,7 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/type.hpp"

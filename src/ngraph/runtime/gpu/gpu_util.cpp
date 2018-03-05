@@ -54,13 +54,17 @@ void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
     return allocated_buffer_pool;
 }
 
-void runtime::gpu::cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size)
+void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
 {
-    size_t size_in_bytes = element_size * element_count;
-    cudaMemcpy(d, s, size_in_bytes, cudaMemcpyDeviceToDevice);
+    cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice);
 }
 
-void runtime::gpu::cuda_memcpyHtD(void* d, void* s, size_t buffer_size)
+void runtime::gpu::cuda_memcpyHtD(void* dst, void* src, size_t buffer_size)
 {
-    cudaMemcpy(d, s, buffer_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice);
+}
+
+void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
+{
+    cudaMemset(dst, value, buffer_size);
 }

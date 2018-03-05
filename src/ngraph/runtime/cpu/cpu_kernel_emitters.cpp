@@ -26,7 +26,7 @@ using namespace std;
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
 template <typename T>
-string emit_bracketed_string(vector<T> data)
+string emit_bracketed_string(T data)
 {
     stringstream ss;
 

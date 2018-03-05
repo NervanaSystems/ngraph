@@ -20,10 +20,54 @@
 #include <iostream>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_set.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
+    /// \brief Shape for a tensor.
+    class Shape : public std::vector<size_t>
+    {
+    public:
+        Shape(const std::initializer_list<size_t>& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
+        {
+        }
+
+        Shape(const std::vector<size_t>& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
+        {
+        }
+
+        Shape(const Shape& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
+        {
+        }
+
+        explicit Shape(size_t n, size_t initial_value = 0)
+            : std::vector<size_t>(n, initial_value)
+        {
+        }
+
+        template <class InputIterator>
+        Shape(InputIterator first, InputIterator last)
+            : std::vector<size_t>(first, last)
+        {
+        }
+
+        Shape() {}
+        Shape& operator=(const Shape& v)
+        {
+            static_cast<std::vector<size_t>*>(this)->operator=(v);
+            return *this;
+        }
+        Shape& operator=(Shape&& v)
+        {
+            static_cast<std::vector<size_t>*>(this)->operator=(v);
+            return *this;
+        }
+    };
+
     /// Number of elements in spanned by a shape
     size_t shape_size(const Shape& shape);
 

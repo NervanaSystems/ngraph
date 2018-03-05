@@ -21,7 +21,7 @@
 #include <numeric>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape.hpp"
 
@@ -39,7 +39,8 @@ namespace ngraph
                                    const Shape& window_shape,
                                    const Strides& window_movement_strides,
                                    const Shape& padding_below,
-                                   const Shape& padding_above)
+                                   const Shape& padding_above,
+                                   bool include_padding_in_avg_computation)
             {
                 CoordinateTransform out_transform(out_shape);
 
@@ -100,7 +101,8 @@ namespace ngraph
 
                     for (const Coordinate& source_window_coord : source_window_transform)
                     {
-                        if (source_window_transform.has_source_coordinate(source_window_coord))
+                        if (source_window_transform.has_source_coordinate(source_window_coord) ||
+                            include_padding_in_avg_computation)
                         {
                             num_elements_in_window++;
                         }

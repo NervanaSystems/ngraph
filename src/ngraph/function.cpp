@@ -27,14 +27,15 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-Function::Function(const Nodes& results,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+Function::Function(const NodeVector& results,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
     : m_results(results)
     , m_parameters(parameters)
-    , m_name(name)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_name(name)
+    , m_unique_name("Function_" + to_string(m_instance_id))
 {
     traverse_nodes(this, [&](shared_ptr<Node> node) {
         std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
@@ -52,9 +53,9 @@ Function::Function(const Nodes& results,
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const op::ParameterVector& parameters,
                    const std::string& name)
-    : Function(Nodes{result}, parameters, name)
+    : Function(NodeVector{result}, parameters, name)
 {
 }
 
@@ -63,18 +64,18 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops()
     return topological_sort(get_ops());
 }
 
-std::string Function::get_name() const
+const std::string& Function::get_friendly_name() const
 {
-    string rc;
     if (m_name.empty())
     {
-        rc = "Function_" + to_string(m_instance_id);
+        return m_unique_name;
     }
-    else
-    {
-        rc = m_name;
-    }
-    return rc;
+    return m_name;
+}
+
+const std::string& Function::get_name() const
+{
+    return m_unique_name;
 }
 
 void Function::set_name(const string& name)

@@ -23,19 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise greater-than-or-equal operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                              | Description                                            |
-        /// | ------ | --------------------------------- | ------------------------------------------------------ |
-        /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and element type.                |
-        /// | `arg1` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                               | Description                                                                                                                                   |
-        /// | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] \geq \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
         class GreaterEq : public util::BinaryElementwiseComparison
         {
         public:
@@ -48,8 +35,8 @@ namespace ngraph
             {
             }
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 2)
                 {

@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "ngraph/common.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 
 namespace ngraph

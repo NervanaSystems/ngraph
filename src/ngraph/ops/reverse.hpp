@@ -52,8 +52,8 @@ namespace ngraph
             /// \param reversed_axes The axes to reverse.
             Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {

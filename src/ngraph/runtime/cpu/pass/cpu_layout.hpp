@@ -39,7 +39,7 @@ namespace ngraph
                 class CPULayout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    CPULayout(std::shared_ptr<CPU_ExternalFunction> external_function)
+                    CPULayout(CPU_ExternalFunction* external_function)
                         : m_external_function(external_function)
                     {
                     }
@@ -52,7 +52,14 @@ namespace ngraph
                                std::shared_ptr<ngraph::Node> node);
 
                 private:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                    CPU_ExternalFunction* m_external_function;
+                    static std::shared_ptr<Node> insert_input_conversions(
+                        CPU_ExternalFunction* external_function,
+                        std::shared_ptr<Node>& node,
+                        const std::vector<mkldnn::memory::format>& required_formats);
+                    static void set_output_layouts(
+                        std::shared_ptr<Node>& node,
+                        const std::vector<mkldnn::memory::format>& output_formats);
                     static void set_default_layouts(CPU_ExternalFunction* external_function,
                                                     std::shared_ptr<Node> node);
                 };

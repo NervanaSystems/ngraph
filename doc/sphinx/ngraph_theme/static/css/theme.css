@@ -73,7 +73,7 @@ mark {
 }
 
 pre, code, .rst-content tt, .rst-content code, kbd, samp {
-  font-family: monospace, serif;
+  font-family: monospace, sans;
   _font-family: "courier new", monospace;
   font-size: 1em;
 }
@@ -711,7 +711,7 @@ button[disabled] {
   background-color: #27AE60;
   text-decoration: none;
   font-weight: normal;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
   box-shadow: 0px 1px 2px -1px rgba(255, 255, 255, 0.5) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.1) inset;
   outline-none: false;
   vertical-align: middle;
@@ -1149,7 +1149,7 @@ input {
 input[type="button"], input[type="reset"], input[type="submit"] {
   -webkit-appearance: button;
   cursor: pointer;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
   *overflow: visible;
 }
 input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"] {
@@ -1158,7 +1158,7 @@ input[type="text"], input[type="password"], input[type="email"], input[type="url
   display: inline-block;
   border: 1px solid #ccc;
   font-size: 80%;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
   box-shadow: inset 0 1px 3px #ddd;
   border-radius: 0;
   -webkit-transition: border 0.3s linear;
@@ -1227,7 +1227,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
   width: 100%;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
 }
 
 select, textarea {
@@ -1503,7 +1503,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 .wy-table caption, .rst-content table.docutils caption, .rst-content table.field-list caption {
   color: #000;
-  font: italic 85%/1 arial, sans-serif;
+  font: italic 85%/1 arial, sans;
   padding: 1em 0;
   text-align: center;
 }
@@ -1631,7 +1631,7 @@ html {
 }
 
 body {
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
   font-weight: normal;
   color: #404040;
   min-height: 100%;
@@ -1710,7 +1710,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0;
   font-weight: 700;
-  font-family: "NeoSansIntel", "RobotoSlab", "ff-tisa-web-pro", "Georgia", Arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", "ff-tisa-web-pro", Arial, sans;
 }
 
 p {
@@ -1732,7 +1732,6 @@ h2, .rst-content .toctree-wrapper p.caption {
 h3 {
   font-size: 127%;
   color: #5F5F5F;
-  text-decoration: underline 2px;
 }
 
 h4 {
@@ -1838,18 +1837,19 @@ div[class^='highlight'] td.code {
 }
 
 code, p.caption, caption-text { 
-  font-family: RobotoSlab, sans-serif, monospace;
+  font-family: Inconsolata, sans, monospace;
   color: #A79992;
-  font-size: 0.95em;
-  line-height: 1.11em;
+  font-size: 0.99em;
+  line-height: 1.39em;
   }
 
   .code-block-caption { 
     font-variant: small-caps;
     font-size: 0.88em;
-    background-color: #c3d5d5;
+    background-color: #d0dfdf;
     padding-right: 0.43em;
     padding-top: 0.23em;
+    padding-left: 0.11em;
     padding-bottom: 0.23em;
     text-align: right; 
     }
@@ -2205,7 +2205,7 @@ div[class^='highlight'] pre {
   color: #fcfcfc;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2220,7 +2220,7 @@ div[class^='highlight'] pre {
   background-color: #272525;
   display: block;
   text-align: right;
-  font-size: 95%;
+  font-size: 90%;
   cursor: pointer;
   color: #27AE60;
   *zoom: 1;
@@ -2394,7 +2394,7 @@ div[class^='highlight'] pre {
 .rst-content h1 .headerlink:after, .rst-content h2 .headerlink:after, .rst-content .toctree-wrapper p.caption .headerlink:after, .rst-content h3 .headerlink:after, .rst-content h4 .headerlink:after, .rst-content h5 .headerlink:after, .rst-content h6 .headerlink:after, .rst-content dl dt .headerlink:after, .rst-content p.caption .headerlink:after {
   visibility: visible;
   content: "";
-  font-family: NeoSansIntel;
+  font-family: "NeoSansIntel";
   display: inline-block;
 }
 .rst-content h1:hover .headerlink, .rst-content h2:hover .headerlink, .rst-content .toctree-wrapper p.caption:hover .headerlink, .rst-content h3:hover .headerlink, .rst-content h4:hover .headerlink, .rst-content h5:hover .headerlink, .rst-content h6:hover .headerlink, .rst-content dl dt:hover .headerlink, .rst-content p.caption:hover .headerlink {
@@ -2417,7 +2417,7 @@ div[class^='highlight'] pre {
 }
 .rst-content .sidebar .sidebar-title {
   display: block;
-  font-family: "NeoSansIntel", "Roboto Slab", "ff-tisa-web-pro", "Georgia", Arial, sans-serif;
+  font-family: "NeoSansIntel", "Roboto Slab", "ff-tisa-web-pro", Arial, sans;
   font-weight: bold;
   background: #e1e4e5;
   padding: 6px 12px;
@@ -2488,9 +2488,9 @@ div[class^='highlight'] pre {
   line-height: 1.0em;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 100% !important;
+  font-size: 103% !important;
   color: #528481;
-  line-height: 0.91em;
+  line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;
@@ -2517,17 +2517,36 @@ div[class^='highlight'] pre {
 .rst-content dl:not(.docutils) dt {
   display: inline-block;
   margin: 6px 0;
-  font-size: 90%;
+  font-size: 100%;
+    font-family: monospace;
   line-height: normal;
   background: white;
   color: #84aead;
-  border-top: solid 3px #d5dfb8;
+  border-top: solid 0.31em #cad8a5;
   padding: 6px;
   position: relative;
+}
+
+.rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname {
+  font-weight: normal;
+  line-height: 1.21em; /* 1.21 gigawatts in nano */
+}
+
+.rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) code {
+  font-weight: bold;
+    line-height: 1.21em; 
 }
 .rst-content dl:not(.docutils) dt:before {
   color: #d5dfb8;
 }
+
+.function {
+    border-right: dashed 0.19em #f4f2f0;
+    border-bottom: solid 0.23em #f4f2f0;
+    border-top: solid 0.31em #e2e8d0;
+}
+
+
 .rst-content dl:not(.docutils) dt .headerlink {
   color: #404040;
   font-size: 100% !important;
@@ -2535,8 +2554,8 @@ div[class^='highlight'] pre {
 .rst-content dl:not(.docutils) dl dt {
   margin-bottom: 6px;
   border: none;
-  border-left: solid 3px #cccccc;
-  background: #f0f0f0;
+  border-left: solid 3px #f4f2f0;
+  background: #f4f2f0; /* #eaeee0 */
   color: #555;
 }
 .rst-content dl:not(.docutils) dl dt .headerlink {
@@ -2546,28 +2565,47 @@ div[class^='highlight'] pre {
 .rst-content dl:not(.docutils) dt:first-child {
   margin-top: 0;
 }
-.rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) code {
-  font-weight: bold;
+
+.rst-content dl:not(.docutils) em {
+  font-size: 17px;
+  font-weight: bolder;
 }
+
+.rst-content dl:not(.docutils) dt {
+  font-size: 17px;
+}
+
 .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descclassname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname, .rst-content dl:not(.docutils) tt.descclassname, .rst-content dl:not(.docutils) code.descclassname {
   background-color: transparent;
   border: none;
   padding: 0;
   font-size: 100% !important;
 }
-.rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) tt.descname, .rst-content dl:not(.docutils) code.descname {
-  font-weight: bold;
-}
+
 .rst-content dl:not(.docutils) .optional {
   display: inline-block;
   padding: 0 4px;
   color: #000;
-  font-weight: bold;
+  font-weight: lighter;
 }
 .rst-content dl:not(.docutils) .property {
   display: inline-block;
   padding-right: 8px;
+    font-size: 17px;
 }
+
+.sig-paren {
+    font-weight: bold;
+    font-size: 19px;
+    color: #727270;
+    padding-left: 0.09em;
+    padding-right: 0.09em;
+ }
+    
+.rst-content dl:not(.docutils) .em { 
+    font-size: 123%; 
+}
+
 .rst-content .viewcode-link, .rst-content .viewcode-back {
   display: inline-block;
   color: #27AE60;
@@ -2581,6 +2619,9 @@ div[class^='highlight'] pre {
 .rst-content p.rubric {
   margin-bottom: 12px;
   font-weight: bold;
+    font-size: 110%;
+    line-height: 0.87em;
+    color: #9d9d9c;
 }
 .rst-content tt.download, .rst-content code.download {
   background: inherit;
@@ -2743,9 +2784,8 @@ span[id*='MathJax-Span'] {
   color: #4d4d4d;
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
-  color: #84aead;
+  color: #5a5a59;
   padding: 0.4045em 1.618em;
-  font-weight: bold;
   position: relative;
   background: #fcfcfc;
   border: none;
@@ -2821,7 +2861,7 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical li ul li a {
   margin-bottom: 0;
-  color: #dadada;
+  color: #e8e8e8;
   font-weight: normal;
 }
 .wy-menu-vertical a {
@@ -2831,14 +2871,14 @@ span[id*='MathJax-Span'] {
   display: block;
   position: relative;
   font-size: 90%;
-  color: #dadada;
+  color: #e8e8e8;
 }
 .wy-menu-vertical a:hover {
   background-color: #4e4a4a;
   cursor: pointer;
 }
 .wy-menu-vertical a:hover span.toctree-expand {
-  color: #dadada;
+  color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
   background-color: #84aead;
@@ -2864,6 +2904,7 @@ span[id*='MathJax-Span'] {
 }
 .wy-side-nav-search input[type=text] {
   width: 100%;
+    line-height: 1.3em;
   border-radius: 50px;
   padding: 6px 12px;
   border-color: #84aead;

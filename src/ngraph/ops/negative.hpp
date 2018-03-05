@@ -22,23 +22,11 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise negation operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                       |
-        /// | ---------------------- | --------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = -(\texttt{arg}[i_1,\dots,i_n])\f$ |
+        /// \brief Elementwise negative operation.
         class Negative : public util::UnaryElementwiseArithmetic
         {
         public:
-            /// \brief Constructs a negation operation.
+            /// \brief Constructs a negative operation.
             ///
             /// \param arg Node that produces the input tensor.
             Negative(const std::shared_ptr<Node>& arg)
@@ -46,8 +34,8 @@ namespace ngraph
             {
             }
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/constant.hpp"

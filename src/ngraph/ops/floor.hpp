@@ -23,18 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise floor operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                    |
-        /// | ---------------------- | ---------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lfloor \texttt{arg}[i_1,\dots,i_n] \rfloor\f$ |
         class Floor : public util::UnaryElementwiseArithmetic
         {
         public:
@@ -46,8 +34,8 @@ namespace ngraph
             {
             }
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
             {
                 if (new_args.size() != 1)
                 {

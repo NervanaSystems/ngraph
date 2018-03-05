@@ -52,7 +52,6 @@
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -68,12 +67,13 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -131,7 +131,3 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/ops/allreduce.hpp"
-#endif

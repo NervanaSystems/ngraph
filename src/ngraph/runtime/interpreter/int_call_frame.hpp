@@ -25,7 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
@@ -291,7 +291,8 @@ private:
                                          apb->get_window_shape(),
                                          apb->get_window_movement_strides(),
                                          apb->get_padding_below(),
-                                         apb->get_padding_above());
+                                         apb->get_padding_above(),
+                                         apb->get_include_padding_in_avg_computation());
         }
         else if (node_op == "Broadcast")
         {
