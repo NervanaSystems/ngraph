@@ -450,21 +450,6 @@ static shared_ptr<Function> build_largest_colocated_function(
         }
     }
     auto func = make_shared<Function>(outputs, collected_parameters);
-
-    /*
-    for (size_t i = 0; i < outputs.size(); i++)
-    {
-        auto result = func->get_results().at(i);
-        auto src_node = outputs.at(i);
-        if (result->get_input_op(0) != src_node)
-        {
-            throw ngraph_error("new_key's input should be equal to output");
-        }
-        
-        auto parm = map_source_node_to_parameter[src_node];
-        map_parameter_to_source_node[parm] = result;
-    }
-    */
     return func;
 }
 
