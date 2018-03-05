@@ -13,26 +13,29 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-#############################
-Intel nGraph library project
-#############################
+########################
+Intel nGraph++ library
+########################
 
-Welcome to Intel nGraph, an open source C++ library for developers of 
-:abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite 
-of components, APIs, and documentation that can be used to compile 
-and run :abbr:`Deep Neural Network (DNN)` (DNN) models defined in a 
-variety of frameworks.  
+Welcome to Intel® nGraph™, an open source C++ library for developers of 
+:abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
+components, APIs, and documentation that can be used to compile and run 
+:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of 
+frameworks.  
 
 .. figure:: graphics/ngraph-hub.png  
 
 
-For this early release, we provide :doc:`framework-integration-guides` to compile 
-and run MXNet and TensorFlow-based projects.
+For this early release, we've provided :doc:`framework-integration-guides` to 
+compile and run MXNet\* and TensorFlow\*-based projects.
 
-The nGraph library translates a framework’s representation of computations into 
-an :abbr:`Intermediate Representation (IR)` designed to promote computational 
+.. note:: The library code is under active development as we're continually 
+   adding support for more ops, more frameworks, and more backends. 
+
+The nGraph++ library translates a framework’s representation of computations 
+into an :abbr:`Intermediate Representation (IR)` that promotes computational 
 efficiency on target hardware. Initially-supported backends include Intel 
-Architecture CPUs (CPU), the Intel® Nervana Neural Network Processor™ (NNP), 
+Architecture CPUs (``CPU``), the Intel® Nervana Neural Network Processor™ (NNP), 
 and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
 memory management and data layout abstraction. 
 
