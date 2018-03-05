@@ -15,7 +15,7 @@
 *******************************************************************************/
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/runtime/regmodule_pyngraph_pass.hpp"
+#include "pyngraph/pass/regmodule_pyngraph_pass.hpp"
 
 namespace py = pybind11;
 
