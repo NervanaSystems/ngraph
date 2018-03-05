@@ -198,7 +198,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
