@@ -32,7 +32,7 @@ For this early |release| release, we're providing :doc:`framework-integration-gu
 for:
 
 * :doc:`MXNet<framework-integration-guides>` framework,  
-* :doc:`Tensorflow<framework-integration-guides>` framework, and
+* :doc:`TensorFlow<framework-integration-guides>` framework, and
 * neon™ `frontend framework`_.
 
 Integration guides for other frameworks are tentatively forthcoming.
