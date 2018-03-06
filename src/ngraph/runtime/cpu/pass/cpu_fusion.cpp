@@ -49,6 +49,12 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
 
     if (!r_w)
     {
+        if (arg->get_shape().size() != 2)
+        {
+            NGRAPH_DEBUG << arg->get_name() << " 's rank != 2 "
+                         << ngraph::vector_to_string(arg->get_shape());
+            return false;
+        }
         return true; //nth to do; reshape isn't a reshape
     }
 
@@ -174,6 +180,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
         if (dot->get_shape().size() != 2)
         {
             NGRAPH_DEBUG << "dot = " << dot->get_name() << " shape is not equal to 2!";
+            return nn;
+        }
+
+        if (shape_size(dot->get_shape()) == 0)
+        {
+            NGRAPH_DEBUG << "dot has a zero dimension";
             return nn;
         }
 
