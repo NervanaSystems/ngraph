@@ -27,4 +27,4 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph.pass import Manager
+from _pyngraph.passes import Manager

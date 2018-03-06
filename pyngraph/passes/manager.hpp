@@ -20,4 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_pass_Manager(py::module m);
+void regclass_pyngraph_passes_Manager(py::module m);

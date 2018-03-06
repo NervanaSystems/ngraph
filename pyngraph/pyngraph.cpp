@@ -13,7 +13,7 @@
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
-#include "pyngraph/pass/regmodule_pyngraph_pass.hpp"
+#include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
 #include "pyngraph/types/regmodule_pyngraph_types.hpp"
 #include "pyngraph/ops/op.hpp"
 
@@ -37,6 +37,6 @@ PYBIND11_MODULE(_pyngraph, m){
     regmodule_pyngraph_op_util(m);
     regmodule_pyngraph_op(m_op);
     regmodule_pyngraph_runtime(m);
-    regmodule_pyngraph_pass(m);
+    regmodule_pyngraph_passes(m);
     regmodule_pyngraph_util(m);
 }

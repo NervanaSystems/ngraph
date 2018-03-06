@@ -17,8 +17,8 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/pass/manager.hpp"
+#include "pyngraph/passes/manager.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_pass(py::module m);
+void regmodule_pyngraph_passes(py::module m);

@@ -18,11 +18,11 @@
 #include <pybind11/stl.h>
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
-#include "pyngraph/pass/manager.hpp"
+#include "pyngraph/passes/manager.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_pass_Manager(py::module m) {
+void regclass_pyngraph_passes_Manager(py::module m) {
     py::class_<ngraph::pass::Manager, std::shared_ptr<ngraph::pass::Manager>> manager(m, "Manager");
     manager.def("run_passes", &ngraph::pass::Manager::run_passes);
     manager.def("register_pass", &ngraph::pass::Manager::register_pass<ngraph::pass::ReshapeElimination>);

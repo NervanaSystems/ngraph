@@ -15,11 +15,11 @@
 *******************************************************************************/
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/pass/regmodule_pyngraph_pass.hpp"
+#include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_pass(py::module m){
-    py::module m_pass = m.def_submodule("pass", "module pyngraph.pass");
-    regclass_pyngraph_pass_Manager(m_pass);
+void regmodule_pyngraph_passes(py::module m){
+    py::module m_passes = m.def_submodule("passes", "module pyngraph.passes");
+    regclass_pyngraph_passes_Manager(m_passes);
 }
