@@ -14,13 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
 #include <cassert>
 #include <deque>
-#include <forward_list>
-#include <iomanip>
-#include <iterator>
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 

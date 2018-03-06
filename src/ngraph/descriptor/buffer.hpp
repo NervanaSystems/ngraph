@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace descriptor
