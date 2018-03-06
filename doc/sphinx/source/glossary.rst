@@ -92,3 +92,8 @@ Glossary
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
 
+   model description
+
+      A description of a program's fundamental operations that are 
+      used by a framework to generate inputs for computation.   
+

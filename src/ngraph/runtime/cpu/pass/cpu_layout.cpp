@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -75,7 +76,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }
@@ -163,7 +164,7 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }

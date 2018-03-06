@@ -46,7 +46,6 @@ TEST(benchmark, mxnet_mnist_mlp_forward)
 
 TEST(benchmark, gpu_mxnet_mnist_mlp_forward)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
     run_benchmark(json_path, "GPU", 1000);
 }

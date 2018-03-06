@@ -1,16 +1,16 @@
-.. execute.rst
+.. execute-cmp.rst
 
 ######################
 Execute a Computation
 ######################
 
 This section explains how to manually perform the steps that would normally be 
-performed by a framework :term:`bridge` to execute a computation. Intel® nGraph 
+performed by a framework :term:`bridge` to execute a computation. Intel® nGraph++ 
 library is targeted toward automatic construction; it is far easier for a 
-processing unit (GPU, CPU, or NNP) to run a computation than it is for a user 
-to map out how that computation happens. Unfortunately, things that make by-hand 
-graph construction simpler tend to make automatic construction more difficult, 
-and vice versa.
+processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
+it is for a user to map out how that computation happens. Unfortunately, things 
+that make by-hand graph construction simpler tend to make automatic construction 
+more difficult, and vice versa.
 
 Here we will do all the bridge steps manually. The :term:`model description` 
 we're explaining is based on the :file:`abc.cpp` file in the ``/doc/examples/`` 
@@ -25,7 +25,7 @@ user) must be able to carry out in order to successfully execute a computation:
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
 
-The final code is a the end of this page, on :ref:`all_together`.
+The final code is at the :ref:`end of this page <all_together>`.
 
 
 .. _define_cmp:
@@ -64,8 +64,8 @@ deallocated when they are no longer needed. A brief summary of shared
 pointers is given in the glossary.
 
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
-*attributes*.  The specifics for each :cpp::type:: permitted on a core 
-``Op``-specific basis can be discovered in :doc:`ops` docs. For our 
+*attributes*.  The specifics for each ``type`` permitted on a core ``Op``-specific 
+basis can be discovered in our :doc:`../ops/index` docs. For our 
 purpose to :ref:`define a computation <define_cmp>`, nodes should be thought of 
 as essentially immutable; that is, when constructing a node, we need to supply 
 all of its inputs. We get this process started with ops that have no inputs, 
@@ -234,3 +234,4 @@ Put it all together
 
 
 .. _Intel MKL-DNN: https://01.org/mkl-dnn
+.. _Intel Nervana NNP: https://ai.intel.com/intel-nervana-neural-network-processors-nnp-redefine-ai-silicon/

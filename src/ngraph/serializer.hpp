@@ -17,7 +17,6 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
