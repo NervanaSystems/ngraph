@@ -27,6 +27,8 @@ namespace ngraph
         namespace gpu
         {
             void emit_abs(void* in, void* out, size_t count);
+            void emit_broadcast(
+                void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
         }
     }
 }

@@ -14,6 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#pragma once
+
+#include <map>
+
 #include <ngraph/runtime/call_frame.hpp>
 #include "test_tools.hpp"
 

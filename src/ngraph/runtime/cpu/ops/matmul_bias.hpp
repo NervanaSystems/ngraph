@@ -16,11 +16,7 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
-#include "ngraph/util.hpp"
-
-#include <memory>
 
 namespace ngraph
 {

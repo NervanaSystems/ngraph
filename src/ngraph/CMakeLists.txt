@@ -72,6 +72,7 @@ set (SRC
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
+    ops/softmax.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
@@ -264,7 +265,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         BYPRODUCTS
     )
     add_dependencies(ngraph header_resource ext_json)
-    include_directories(${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
     include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
@@ -314,7 +315,7 @@ endif()
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 

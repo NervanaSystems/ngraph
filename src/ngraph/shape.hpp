@@ -17,7 +17,6 @@
 #pragma once
 
 #include <cstdio>
-#include <iostream>
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
@@ -76,5 +75,4 @@ namespace ngraph
 
     inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
     inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
-    Shape project_shape(const Shape& shape, const AxisSet& deleted_axes);
 }

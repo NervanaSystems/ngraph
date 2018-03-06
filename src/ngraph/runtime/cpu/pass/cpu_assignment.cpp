@@ -184,12 +184,10 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBiasBackpropFiltersBias*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto filters_shape = node->get_output_shape(0);
-                    auto bias_shape = node->get_output_shape(1);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
+                    auto data_shape = node->get_input_shape(0);
+                    auto delta_shape = node->get_input_shape(0);
+                    auto data_rank = data_shape.size();
+                    auto delta_rank = delta_shape.size();
 
                     bool data_dilated = false;
                     for (size_t s : convolution->get_data_dilation_strides_forward())
@@ -197,9 +195,10 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    std::cout << "testing ConvolutionBiasBackpropFiltersBias" << std::endl;
+                    if (!data_dilated && data_rank == 4 && node->get_input_element_type(0) == element::f32)
                     {
+                        std::cout << "assigned ConvolutionBiasBackpropFiltersBias" << std::endl;
                         auto op_annotations =
                                 std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -254,7 +253,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -297,6 +297,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},

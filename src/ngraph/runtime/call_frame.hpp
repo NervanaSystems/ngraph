@@ -19,7 +19,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/function.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph

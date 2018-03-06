@@ -40,6 +40,7 @@ set (SRC
     main.cpp
     op.cpp
     graph_partition.cpp
+    includes.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -150,6 +151,8 @@ include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_INCLUDES=\\\"${JSON_INCLUDE_DIR}\\\"")
+
 if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
