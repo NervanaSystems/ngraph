@@ -366,10 +366,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
         const auto& matched_reshape =
             std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
-        auto hoisted_reshape =
-            pattern_map[reshape_label]->copy_with_new_args({pattern_map[pad_input]});
-
         const auto& input_order = matched_reshape->get_input_order();
+        auto hoisted_reshape_output_shape =
+            apply_permutation<Shape::value_type>(pattern_map[pad_input]->get_shape(), input_order);
+
+        auto hoisted_reshape = std::make_shared<op::Reshape>(
+            pattern_map[pad_input],
+            input_order,
+            Shape(hoisted_reshape_output_shape.begin(), hoisted_reshape_output_shape.end()));
 
         if (!zero_padded_conv_consistency_check(m.match_root(),
                                                 pad_value_op,
