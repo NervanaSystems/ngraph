@@ -1305,6 +1305,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
 
 TEST(${BACKEND_NAME}, backwards_softmax_all)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1322,6 +1323,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_all)
 
 TEST(${BACKEND_NAME}, backwards_softmax_axis)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1339,6 +1341,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_axis)
 
 TEST(${BACKEND_NAME}, backwards_softmax_underflow)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1358,6 +1361,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_underflow)
 
 TEST(${BACKEND_NAME}, backwards_softmax_3d)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
