@@ -40,11 +40,13 @@ public:
     {
         construct_gemm_pattern();
         construct_fprop_bn();
+        construct_zero_padded_reshaped_conv();
         construct_zero_padded_conv();
     }
 
 private:
     void construct_gemm_pattern();
     void construct_fprop_bn();
+    void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
 };
