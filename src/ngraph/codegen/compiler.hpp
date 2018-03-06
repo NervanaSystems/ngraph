@@ -41,6 +41,7 @@ namespace clang
 namespace llvm
 {
     class Module;
+    class raw_fd_ostream;
 }
 
 class ngraph::codegen::Module
@@ -92,6 +93,8 @@ private:
     std::vector<std::string> m_extra_search_path_list;
     std::string m_pch_path;
     std::string m_precomiled_header_source;
+    std::unique_ptr<llvm::raw_fd_ostream> diagnostics_output;
+    std::error_code diagnostics_output_ec;
 
     bool is_version_number(const std::string& path);
     void configure_search_path();
