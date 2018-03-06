@@ -47,7 +47,6 @@ else()
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ""
         # cmake does not allow calling cmake functions so we call a cmake script in the Module
         # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
