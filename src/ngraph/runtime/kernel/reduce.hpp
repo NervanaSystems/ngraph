@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 
 #include "ngraph/coordinate_transform.hpp"
 

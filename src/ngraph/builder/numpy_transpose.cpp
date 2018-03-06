@@ -20,6 +20,7 @@
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {

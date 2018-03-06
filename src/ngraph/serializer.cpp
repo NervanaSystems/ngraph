@@ -55,6 +55,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
@@ -70,6 +71,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -327,6 +329,12 @@ static shared_ptr<ngraph::Function>
             auto epsilon = node_js.at("eps").get<double>();
             node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
         }
+        else if (node_op == "BatchNormBackprop")
+        {
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNormBackprop>(
+                epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
+        }
         else if (node_op == "Broadcast")
         {
             auto shape = node_js.at("shape").get<vector<size_t>>();
@@ -482,10 +490,10 @@ static shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetOutputElement")
-        // {
-        //     node = make_shared<op::GetOutputElement>(args[0]);
-        // }
+        else if (node_op == "GetOutputElement")
+        {
+            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+        }
         else if (node_op == "Greater")
         {
             node = make_shared<op::Greater>(args[0], args[1]);
@@ -706,6 +714,11 @@ static shared_ptr<ngraph::Function>
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
         }
+        else if (node_op == "Softmax")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Softmax>(args[0], reduction_axes);
+        }
         else if (node_op == "Sqrt")
         {
             node = make_shared<op::Sqrt>(args[0]);
@@ -835,6 +848,11 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
         node["eps"] = tmp->get_eps_value();
     }
+    else if (node_op == "BatchNormBackprop")
+    {
+        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        node["eps"] = tmp->get_eps_value();
+    }
     else if (node_op == "Broadcast")
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
@@ -919,6 +937,8 @@ static json write(const Node& n)
     }
     else if (node_op == "GetOutputElement")
     {
+        auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
+        node["n"] = tmp->get_n();
     }
     else if (node_op == "Greater")
     {
