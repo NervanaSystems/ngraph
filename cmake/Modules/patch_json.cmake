@@ -7,4 +7,4 @@ string(REPLACE
   "${FILE_CONTENTS}"
 )
 file(WRITE ${FILE_NAME} "${REWRITTEN_FILE}")
-message(STATUC "json library gcc minimum version number patched")
+message(STATUS "json library gcc minimum version number patched")
