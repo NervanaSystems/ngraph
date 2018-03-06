@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <iomanip>
 
+#include "ngraph/ops/result.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 
@@ -52,31 +53,16 @@ void runtime::interpreter::INT_CallFrame::call(
             tensor_map.insert({tv, input_tvs[arg_index++]});
         }
     }
-    std::vector<size_t> aliased_outputs;
-    for (size_t i = 0; i < output_tvs.size(); i++)
+
+    for (size_t i = 0; i < function->get_output_size(); i++)
     {
-        shared_ptr<Node> op = function->get_output_op(i);
-        descriptor::TensorView* tv = op->get_output_tensor_view(0).get();
-        string name = tv->get_tensor().get_name();
-        if (contains_key(tensor_map, tv))
+        auto output_op = function->get_output_op(i);
+        if (!std::dynamic_pointer_cast<op::Result>(output_op))
         {
-            if (op->description() == "Parameter")
-            {
-                // Here we handle the special case where an output is just a copy of an input
-                memcpy(output_tvs[i]->get_data_ptr(),
-                       tensor_map.at(tv)->get_data_ptr(),
-                       tv->get_tensor().size());
-            }
-            else
-            {
-                // This is a computed value returned more than once and will need to be copied at the end
-                aliased_outputs.push_back(i);
-            }
+            throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        else
-        {
-            tensor_map.insert({tv, output_tvs[i]});
-        }
+        descriptor::TensorView* tv = function->get_output_op(i)->get_output_tensor_view(0).get();
+        tensor_map.insert({tv, output_tvs[i]});
     }
 
     // Invoke computation
@@ -162,29 +148,6 @@ void runtime::interpreter::INT_CallFrame::call(
                 }
             }
         }
-    }
-
-    for (size_t i : aliased_outputs)
-    {
-        shared_ptr<Node> op = function->get_output_op(i);
-        size_t first_output;
-        for (first_output = 0; first_output <= i; ++first_output)
-        {
-            if (function->get_output_op(first_output) == op)
-            {
-                break;
-            }
-        }
-        if (first_output == i)
-        {
-            throw ngraph_error("Internal error: duplicate output missing");
-        }
-        descriptor::TensorView* tv = op->get_output_tensor_view(0).get();
-        string name = tv->get_tensor().get_name();
-        // Here we handle the special case where an output is just a copy of an input
-        memcpy(output_tvs[i]->get_data_ptr(),
-               output_tvs[first_output]->get_data_ptr(),
-               tv->get_tensor().size());
     }
 }
 

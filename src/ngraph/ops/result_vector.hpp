@@ -16,19 +16,37 @@
 
 #pragma once
 
-#include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/coordinate.hpp"
-#include "ngraph/strides.hpp"
+#include <memory>
+#include <vector>
+
+#include "ngraph/ops/result.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    /// \brief Zero or more nodes.
+    class ResultVector : public std::vector<std::shared_ptr<op::Result>>
     {
-        namespace gpu
+    public:
+        ResultVector(size_t size)
+            : std::vector<std::shared_ptr<op::Result>>(size)
         {
-            void emit_abs(void* in, void* out, size_t count);
-            void emit_broadcast(
-                void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
         }
-    }
+
+        ResultVector(const std::initializer_list<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector(const std::vector<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector(const ResultVector& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector() {}
+    };
 }
