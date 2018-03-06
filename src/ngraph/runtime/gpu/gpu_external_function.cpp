@@ -499,9 +499,11 @@ using namespace std;
                         node->get_outputs()[0].get_tensor_view();
                     writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
                     writer << "{\n";
+                    writer.indent++;
                     writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name() << ", "
                            << tv->get_tensor().get_name() << "_cpu, " << tv->get_tensor().size()
                            << ");\n";
+                    writer.indent--;
                     writer << "}\n";
                 }
             }
