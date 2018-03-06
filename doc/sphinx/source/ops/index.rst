@@ -82,3 +82,6 @@ Not currently a comprehensive list.
    negative.rst
    not_equal.rst
    not.rst
+   softmax.rst
+
+   
