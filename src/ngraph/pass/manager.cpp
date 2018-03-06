@@ -30,12 +30,10 @@ using namespace std;
 using namespace ngraph;
 
 ngraph::pass::Manager::Manager()
-    : m_to_set_is_output(true)
 {
 }
 
 ngraph::pass::Manager::Manager(bool to_set_is_output)
-    : m_to_set_is_output(to_set_is_output)
 {
 }
 
@@ -55,17 +53,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
     set<shared_ptr<Function>> tfs(begin(fs), end(fs));
     get_state().set_functions(tfs);
-
-    if (m_to_set_is_output)
-    {
-        for (shared_ptr<Function> f : get_state().get_functions())
-        {
-            for (size_t i = 0; i < f->get_output_size(); ++i)
-            {
-                f->get_output_op(i)->set_is_output();
-            }
-        }
-    }
 
     for (shared_ptr<PassBase> pass : m_pass_list)
     {
