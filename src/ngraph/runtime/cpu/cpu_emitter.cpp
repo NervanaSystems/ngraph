@@ -3151,11 +3151,12 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::relu_backprop<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                      " << args[1].get_name() << ",\n";
-                    writer << "                   " << out[0].get_name() << ",\n";
-                    writer << "                   " << out[0].get_size() << ");\n";
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[1].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
                 }
             }
 
@@ -3183,10 +3184,12 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::relu<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                   " << out[0].get_name() << ",\n";
-                    writer << "                   " << out[0].get_size() << ");\n";
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
                 }
             }
 

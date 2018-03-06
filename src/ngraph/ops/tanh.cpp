@@ -15,16 +15,13 @@
 *******************************************************************************/
 
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/cosh.hpp"
-#include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/subtract.hpp"
 
 void ngraph::op::Tanh::generate_adjoints(autodiff::Adjoints& adjoints,
                                          const std::shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 
-    auto c = std::make_shared<op::Cosh>(x);
-
-    adjoints.add_delta(x, delta / (c * c));
+    adjoints.add_delta(x, delta - (delta * (shared_from_this() * shared_from_this())));
 }
