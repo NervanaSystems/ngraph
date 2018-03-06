@@ -16,16 +16,15 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
+
+#include "ngraph/ops/parameter.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Parameter;
-
-#ifdef NO_GLOBAL_TYPE_ALIASES
-
         /// \brief Zero or more nodes.
         class ParameterVector : public std::vector<std::shared_ptr<op::Parameter>>
         {
@@ -47,11 +46,5 @@ namespace ngraph
 
             ParameterVector() {}
         };
-
-#else
-        // Deprecated definitions
-        using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
-        using Parameters = ParameterVector;
-#endif
     }
 }

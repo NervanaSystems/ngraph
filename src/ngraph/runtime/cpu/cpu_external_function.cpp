@@ -89,6 +89,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -179,6 +180,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
     {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
@@ -231,12 +233,14 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
+    {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::emit<op::BatchNormBackprop>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -245,6 +249,11 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_function_name(function->get_name())
+{
+}
+
+runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
@@ -255,16 +264,14 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
-    string function_name = m_function->get_name();
-
-    m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
+    m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
@@ -537,7 +544,7 @@ using namespace ngraph::runtime;
         }
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -688,7 +695,7 @@ using namespace ngraph::runtime;
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (current_function->get_name() == function_name)
+                if (current_function->get_name() == m_function_name)
                 {
                     m_op_attrs.emplace_back(
                         node->description(), node_output_names, node_input_names);
@@ -706,7 +713,7 @@ using namespace ngraph::runtime;
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
                 }
@@ -750,7 +757,7 @@ using namespace ngraph::runtime;
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "
                            << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
@@ -848,7 +855,7 @@ using namespace ngraph::runtime;
     // TODO: Cleanup and make this a utility function
 
     file_util::make_directory(s_output_dir);
-    string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
@@ -867,7 +874,7 @@ using namespace ngraph::runtime;
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
-    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
+    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
 
     if (m_compiled_function == nullptr)
     {

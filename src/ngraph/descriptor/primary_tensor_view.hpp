@@ -20,9 +20,6 @@
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
@@ -30,9 +27,6 @@ namespace ngraph
 
     namespace descriptor
     {
-        class Tensor;
-        class TensorViewLayout;
-
         /// @brief A PrimaryTensorView owns the tensor. All other views are the result
         /// of some index operation on the primary view.
         class PrimaryTensorView : public TensorView

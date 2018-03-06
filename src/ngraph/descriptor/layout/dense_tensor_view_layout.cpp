@@ -21,9 +21,6 @@
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
-using ngraph::Shape;
-using ngraph::descriptor::TensorView;
-using ngraph::TensorViewType;
 
 descriptor::layout::DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
     : TensorViewLayout(tensor_view)

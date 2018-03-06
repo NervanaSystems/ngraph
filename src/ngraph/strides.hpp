@@ -16,11 +16,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 namespace ngraph
 {
-#ifdef NO_GLOBAL_TYPE_ALIASES
     /// \brief Strides for a tensor.
     class Strides : public std::vector<size_t>
     {
@@ -63,8 +63,4 @@ namespace ngraph
             return *this;
         }
     };
-#else
-    // Deprecated definition
-    using Strides = std::vector<size_t>;
-#endif
 }

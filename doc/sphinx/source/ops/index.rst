@@ -44,6 +44,7 @@ Alphabetical list of Core ``ops``
 
 Not currently a comprehensive list.  
 
+.. tabularcolumns:: column spec
 
 .. toctree::
    :maxdepth: 1
@@ -51,6 +52,7 @@ Not currently a comprehensive list.
    abs.rst
    acos.rst
    add.rst
+   allreduce.rst
    asin.rst
    atan.rst
    avg_pool.rst
@@ -80,3 +82,6 @@ Not currently a comprehensive list.
    negative.rst
    not_equal.rst
    not.rst
+   softmax.rst
+
+   

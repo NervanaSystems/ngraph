@@ -16,6 +16,7 @@
 
 #include "inliner.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops/function_call.hpp"
 
 std::vector<std::shared_ptr<ngraph::op::FunctionCall>>

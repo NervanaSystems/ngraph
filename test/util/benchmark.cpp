@@ -13,12 +13,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+
+#include <iomanip>
+
 #include "benchmark.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
 #include "random.hpp"
 
 std::multimap<size_t, std::string>
