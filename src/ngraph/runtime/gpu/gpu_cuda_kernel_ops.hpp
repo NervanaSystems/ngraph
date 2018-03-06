@@ -30,16 +30,18 @@ namespace ngraph
         class Exp;
         class Floor;
         class Log;
-        // class Max;
-        // class Min;
-        // class Negative;
-        // class Not;
-        // class Sign;
         class Sin;
         class Sinh;
-        // class Sqrt;
         class Tan;
         class Tanh;
+
+        // Unimplemented or unused in favor of cuDNN impl.
+        class Max;
+        class Min;
+        class Negative;
+        class Not;
+        class Sign;
+        class Sqrt;
     }
     namespace runtime
     {
@@ -105,20 +107,17 @@ namespace ngraph
                 static constexpr const char* op = "logf";
             };
 
-            // template <>
-            // struct CudaOpMap<ngraph::op::Max> { static constexpr const char* op = "fmaxf"; };
+            template <>
+            struct CudaOpMap<ngraph::op::Max>
+            {
+                static constexpr const char* op = "fmaxf";
+            };
 
-            // template <>
-            // struct CudaOpMap<ngraph::op::Min> { static constexpr const char* op = "fminf"; };
-
-            // template <>
-            // struct CudaOpMap<ngraph::op::Negative> { static constexpr const char* op = ""; };
-
-            // template <>
-            // struct CudaOpMap<ngraph::op::Not> { static constexpr const char* op = "~"; };
-
-            // template <>
-            // struct CudaOpMap<ngraph::op::Sign> { static constexpr const char* op = ""; };
+            template <>
+            struct CudaOpMap<ngraph::op::Min>
+            {
+                static constexpr const char* op = "fminf";
+            };
 
             template <>
             struct CudaOpMap<ngraph::op::Sin>
@@ -132,8 +131,11 @@ namespace ngraph
                 static constexpr const char* op = "sinhf";
             };
 
-            // template <>
-            // struct CudaOpMap<ngraph::op::Sqrt> { static constexpr const char* op = "sqrtf"; };
+            template <>
+            struct CudaOpMap<ngraph::op::Sqrt>
+            {
+                static constexpr const char* op = "sqrtf";
+            };
 
             template <>
             struct CudaOpMap<ngraph::op::Tan>

@@ -21,10 +21,10 @@ namespace ngraph
     {
         namespace gpu
         {
-            void CudaKernelBuilder::get_1_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::string& op,
-                                                     std::string& kernel)
+            void CudaKernelBuilder::get_unary_elementwise_op(const std::string& name,
+                                                             const std::string& data_type,
+                                                             const std::string& op,
+                                                             std::string& kernel)
             {
                 kernel = R"(  
 extern "C" __global__
@@ -39,10 +39,10 @@ out[tid] =)" + op + "(in[tid]);\n" +
                 return;
             }
 
-            void CudaKernelBuilder::get_2_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::string& op,
-                                                     std::string& kernel)
+            void CudaKernelBuilder::get_binary_elementwise_op(const std::string& name,
+                                                              const std::string& data_type,
+                                                              const std::string& op,
+                                                              std::string& kernel)
             {
                 kernel = R"(  
 extern "C" __global__
@@ -59,10 +59,11 @@ out[tid] = in1[tid] )" + op +
                 return;
             }
 
-            void CudaKernelBuilder::get_n_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::vector<std::string>& ops,
-                                                     std::string& kernel)
+            void
+                CudaKernelBuilder::get_arbitrary_elementwise_op(const std::string& name,
+                                                                const std::string& data_type,
+                                                                const std::vector<std::string>& ops,
+                                                                std::string& kernel)
             {
                 kernel = "";
                 return;

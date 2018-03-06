@@ -44,8 +44,8 @@ namespace ngraph
                     const char* opts[] = {"--gpu-architecture=compute_35",
                                           "--relocatable-device-code=true"};
                     std::string kernel;
-                    CudaKernelBuilder::get_1_element_op(name, "float", CudaOpMap<T>::op, kernel);
-                    //CudaKernelBuilder::get_1_element_op(name, "float", "fabsf", kernel);
+                    CudaKernelBuilder::get_unary_elementwise_op(
+                        name, "float", CudaOpMap<T>::op, kernel);
                     CudaFunctionPool::instance().set(
                         name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
                 }
