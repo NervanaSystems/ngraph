@@ -27,11 +27,9 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/sqrt.hpp"
@@ -51,6 +49,12 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
 
     if (!r_w)
     {
+        if (arg->get_shape().size() != 2)
+        {
+            NGRAPH_DEBUG << arg->get_name() << " 's rank != 2 "
+                         << ngraph::vector_to_string(arg->get_shape());
+            return false;
+        }
         return true; //nth to do; reshape isn't a reshape
     }
 
@@ -108,7 +112,38 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
     return output;
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
+{
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto W = std::make_shared<pattern::op::Label>(element::f32, shape_w);
+    auto x = std::make_shared<pattern::op::Label>(element::f32, shape_x);
+    auto b = std::make_shared<pattern::op::Label>(element::f32, shape_b);
+
+    auto pmmb = std::make_shared<op::MatmulBias>(
+        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+    auto pbroadcast = std::make_shared<op::Broadcast>(b, pmmb->get_shape(), AxisSet{0});
+    auto padd = pmmb + pbroadcast;
+
+    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_matmulbias_pattern against node = "
+                     << m.match_root()->get_name();
+
+        auto mpattern = m.match_root(); //add
+        auto m_matmul = mpattern->get_input_op(0);
+        auto m_broadcast = mpattern->get_input_op(1);
+        auto pattern_map = m.get_pattern_map();
+
+        return m_matmul->copy_with_new_args(
+            NodeVector{pattern_map[W], pattern_map[x], m_broadcast});
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};
@@ -126,27 +161,31 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
     auto skip_x = std::make_shared<pattern::op::Any>(x, reshape_pred);
 
     auto pdot = std::make_shared<op::Dot>(skip_w, skip_x);
-    auto b = std::make_shared<pattern::op::Label>(element::f32, shape_b);
-    auto pbroadcast = std::make_shared<op::Broadcast>(b, shape_dot, AxisSet{0});
-    auto padd = pdot + pbroadcast;
 
-    ngraph::pattern::gr_callback_fn callback = [W, x, b](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for construct_gemm_pattern against node = "
+    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        std::shared_ptr<Node> nn = nullptr;
+        std::shared_ptr<Node> nn;
 
         auto mpattern = m.match_root();
+        auto dot = m.match_root();
+
         if (mpattern->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
             return nn;
         }
 
-        auto dot = mpattern->get_input_op(0);
         if (dot->get_shape().size() != 2)
         {
             NGRAPH_DEBUG << "dot = " << dot->get_name() << " shape is not equal to 2!";
+            return nn;
+        }
+
+        if (shape_size(dot->get_shape()) == 0)
+        {
+            NGRAPH_DEBUG << "dot has a zero dimension";
             return nn;
         }
 
@@ -166,7 +205,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
 
         auto cg = std::shared_ptr<Node>(new op::MatmulBias(pattern_map[W],
                                                            pattern_map[x],
-                                                           mpattern->get_input_op(1),
+                                                           nullptr,
                                                            shape_arg0,
                                                            shape_arg1,
                                                            transpose_w,
@@ -174,7 +213,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
         return cg;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, callback);
     this->add_matcher(m);
 }
 

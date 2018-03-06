@@ -23,6 +23,7 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/placement.hpp"
 
 using namespace std;
@@ -34,7 +35,6 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
-    , m_is_output(false)
     , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
@@ -68,7 +68,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
         tensor_view_type,
         ngraph::descriptor::Tensor::make_tensor_name(this, i),
-        is_output(),
+        false,
         is_parameter(),
         is_constant());
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
@@ -96,16 +96,7 @@ bool Node::is_parameter() const
 
 bool Node::is_output() const
 {
-    return m_is_output;
-}
-
-void Node::set_is_output()
-{
-    m_is_output = true;
-    for (descriptor::Output& output : get_outputs())
-    {
-        output.get_tensor().set_is_output();
-    }
+    return false;
 }
 
 bool Node::is_constant() const
