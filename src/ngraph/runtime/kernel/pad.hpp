@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstring>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
@@ -37,6 +38,12 @@ namespace ngraph
                      const Shape& padding_above,
                      const Shape& padding_interior)
             {
+                if (arg0_shape == out_shape)
+                {
+                    std::memcpy(out, arg0, sizeof(T) * ngraph::shape_size(arg0_shape));
+                    return;
+                }
+
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
                 Coordinate input_end =
                     out_shape; // end at (d'0,d'1,...,d'n), the outer corner of the post-padding shape
