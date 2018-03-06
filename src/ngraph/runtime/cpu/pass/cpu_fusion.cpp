@@ -27,9 +27,11 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/sqrt.hpp"
@@ -270,4 +272,128 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
     this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
+{
+    auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto pad = std::make_shared<op::Pad>(pad_input, pad_value, Shape{}, Shape{}, Shape{});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+
+    auto reshape = std::make_shared<op::Reshape>(pad_label, AxisVector{}, Shape{1, 1, 1, 1});
+    auto reshape_label =
+        std::make_shared<pattern::op::Label>(reshape, nullptr, NodeVector{reshape});
+
+    auto conv_filter = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+
+    auto reshaped_conv = std::make_shared<op::Convolution>(reshape_label,
+                                                           conv_filter,
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{1, 1},
+                                                           CoordinateDiff{1, 1},
+                                                           Strides{1, 1});
+    auto reshaped_conv_label =
+        std::make_shared<pattern::op::Label>(reshaped_conv, nullptr, NodeVector{reshaped_conv});
+
+    // auto conv = std::make_shared<op::Convolution>(pad_label, conv_filter,
+    //                                               Strides{1, 1}, Strides{1, 1},
+    //                                               CoordinateDiff{1, 1}, CoordinateDiff{1, 1},
+    //                                               Strides{1, 1});
+    // auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    ngraph::pattern::gr_callback_fn callback =
+        [pad_input, pad_value, pad_label, reshape_label, conv_filter, reshaped_conv_label](
+            pattern::Matcher& m) -> std::shared_ptr<Node> {
+        auto pattern_map = m.get_pattern_map();
+
+        NGRAPH_DEBUG << "In callback for construct_padded_conv against node = "
+                     << m.match_root()->get_name();
+
+        auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+
+        // Only match float32 convolutions
+        if (m.match_root()->get_element_type() != element::f32)
+        {
+            return nullptr;
+        }
+
+        // Only match zero padding
+        if (pad_value_op->get_vector<float>().at(0) != 0.0f)
+        {
+            return nullptr;
+        }
+
+        // Only match 4D tensors
+        if (pattern_map[pad_input]->get_shape().size() != 4)
+        {
+            return nullptr;
+        }
+
+        const auto& matched_conv =
+            std::dynamic_pointer_cast<op::Convolution>(pattern_map[reshaped_conv_label]);
+        const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+        const auto& matched_reshape =
+            std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
+
+        // Only match no interior padding
+        if (matched_pad->get_padding_interior() !=
+            Shape(pattern_map[pad_input]->get_shape().size()))
+        {
+            return nullptr;
+        }
+
+        // Only match convolutions with no padding specification
+        if (matched_conv->get_padding_below() != CoordinateDiff(2) ||
+            matched_conv->get_padding_above() != CoordinateDiff(2))
+        {
+            return nullptr;
+        }
+
+        auto hoisted_reshape =
+            pattern_map[reshape_label]->copy_with_new_args({pattern_map[pad_input]});
+
+        const auto& input_order = matched_reshape->get_input_order();
+
+        // Only match no padding in the batch dimension
+        if (matched_pad->get_padding_above().at(input_order[0]) != 0 ||
+            matched_pad->get_padding_below().at(input_order[0]) != 0)
+        {
+            return nullptr;
+        }
+
+        // Only match no padding in the channel dimension
+        if (matched_pad->get_padding_above().at(input_order[1]) != 0 ||
+            matched_pad->get_padding_below().at(input_order[1]) != 0)
+        {
+            return nullptr;
+        }
+
+        CoordinateDiff padding_below{static_cast<CoordinateDiff::value_type>(
+                                         matched_pad->get_padding_below().at(input_order[2])),
+                                     static_cast<CoordinateDiff::value_type>(
+                                         matched_pad->get_padding_below().at(input_order[3]))};
+        CoordinateDiff padding_above{static_cast<CoordinateDiff::value_type>(
+                                         matched_pad->get_padding_above().at(input_order[2])),
+                                     static_cast<CoordinateDiff::value_type>(
+                                         matched_pad->get_padding_above().at(input_order[3]))};
+
+        auto zero_padded_conv =
+            std::make_shared<op::Convolution>(hoisted_reshape,
+                                              pattern_map[conv_filter],
+                                              matched_conv->get_window_movement_strides(),
+                                              matched_conv->get_window_dilation_strides(),
+                                              padding_below,
+                                              padding_above,
+                                              matched_conv->get_data_dilation_strides());
+
+        NGRAPH_DEBUG << "In callback for construct_padded_conv against node = "
+                     << m.match_root()->get_name() << " : Made replacement";
+
+        return zero_padded_conv;
+    };
+
+    //this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(reshaped_conv_label, callback));
 }
