@@ -1701,7 +1701,6 @@ TEST(${BACKEND_NAME}, function_call)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{4};
@@ -1724,7 +1723,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
@@ -1747,7 +1745,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1770,7 +1767,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 
 TEST(${BACKEND_NAME}, broadcast_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
@@ -1792,7 +1788,6 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
 
 TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
@@ -1815,7 +1810,6 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
@@ -1887,7 +1881,6 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1910,7 +1903,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1933,7 +1925,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};

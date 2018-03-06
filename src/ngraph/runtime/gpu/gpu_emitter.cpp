@@ -457,7 +457,65 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    throw std::runtime_error(n->get_name() + " is not implemented.");
+    auto broadcast = static_cast<const ngraph::op::Broadcast*>(n);
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    auto& axes = broadcast->get_broadcast_axes();
+    //broadcast axes is empty, do a copy
+    if (axes.empty())
+    {
+        writer << "{   // " << n->get_name() << " \n";
+        writer.indent++;
+        writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
+               << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
+        return;
+    }
+
+    //broadcast axes size is 1, or can be group to 1 (consecutive axes, like 01 or 12 or 123 etc)
+    vector<int> axes_v;
+    std::copy(axes.begin(), axes.end(), std::back_inserter(axes_v));
+    std::sort(axes_v.begin(), axes_v.end());
+    bool is_one_axes = true;
+    if (axes.size() != 1)
+    {
+        for (int i = 1; i < axes_v.size(); i++)
+        {
+            if (axes_v[i] != axes_v[i - 1] + 1)
+            {
+                is_one_axes = false;
+                break;
+            }
+        }
+    }
+    if (is_one_axes)
+    {
+        int repeat_times = 1;
+        for (int i = 0; i < axes_v.size(); i++)
+        {
+            repeat_times *= result_shape[axes_v[i]];
+        }
+
+        int repeat_size = 1;
+        for (int i = *axes_v.rbegin() + 1; i < result_shape.size(); i++)
+        {
+            repeat_size *= result_shape[i];
+        }
+
+        writer << "{   // " << n->get_name() << " \n";
+        writer.indent++;
+        writer << "runtime::gpu::emit_broadcast(" << args[0].get_name() << ", " << out[0].get_name()
+               << ", " << repeat_size << ", " << repeat_times << ", " << out[0].get_size()
+               << ");\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        throw std::runtime_error(n->get_name() + " is not implemented.");
+    }
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
@@ -474,7 +532,6 @@ void runtime::gpu::GPU_Emitter::EmitConstant(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,

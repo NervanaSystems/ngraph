@@ -3,19 +3,26 @@
 How to 
 ======
 
-.. note:: This section is aimed at intermediate-level developers working with
-   the nGraph library. It assumes a developer has understanding of the concepts 
-   in the previous sections. It does not assume knowledge of any particular 
-   frontend framework. 
+.. toctree::
+   :maxdepth: 1
+   :caption: How to 
+
+   execute.rst
+    
 
 The "How to" articles in this section explain how to do specific tasks with the 
-Intel nGraph library. The recipes are all framework agnostic; in other words, 
+Intel nGraph++ library. The recipes are all framework agnostic; in other words, 
 if an entity (framework or user) wishes to make use of target-based computational 
 resources, it can either:
 
 * Do the tasks programatically through the framework, or 
 * Provide a clear model definition with documentation for the computational 
   resources needed. 
+
+.. note:: This section is aimed at intermediate-level developers working with
+   the nGraph++ library. It assumes a developer has understanding of the concepts 
+   in the previous sections. It does not assume knowledge of any particular 
+   frontend framework. 
   
 Since our primary audience is developers who are pushing the boundaries of deep 
 learning systems, we go beyond the use of deep learning primitives, and include 
@@ -41,9 +48,3 @@ backend engineers, and others.  We welcome contributions from the community and
 invite you to experiment with the variety of hybridization and performance 
 extractions available through the nGraph library.    
 
-.. toctree::
-   :maxdepth: 1
-   :caption: How-to 
-
-   execute.rst
-    
