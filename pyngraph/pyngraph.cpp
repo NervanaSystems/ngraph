@@ -1,5 +1,12 @@
 #include <pybind11/pybind11.h>
 #include "pyngraph/node.hpp"
+#include "pyngraph/node_vector.hpp"
+#include "pyngraph/shape.hpp"
+#include "pyngraph/strides.hpp"
+#include "pyngraph/coordinate_diff.hpp"
+#include "pyngraph/axis_set.hpp"
+#include "pyngraph/axis_vector.hpp"
+#include "pyngraph/coordinate.hpp"
 #include "pyngraph/util.hpp"
 #include "pyngraph/function.hpp"
 #include "pyngraph/serializer.hpp"
@@ -14,6 +21,13 @@ namespace py = pybind11;
 PYBIND11_MODULE(_pyngraph, m){
     m.doc() = "pyngraph plugin";
     regclass_pyngraph_Node(m);
+    regclass_pyngraph_NodeVector(m);
+    regclass_pyngraph_Shape(m);
+    regclass_pyngraph_Strides(m);
+    regclass_pyngraph_CoordinateDiff(m); 
+    regclass_pyngraph_AxisSet(m);
+    regclass_pyngraph_AxisVector(m);
+    regclass_pyngraph_Coordinate(m);
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);

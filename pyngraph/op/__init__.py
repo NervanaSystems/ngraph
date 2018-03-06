@@ -65,6 +65,7 @@ from _pyngraph.op import Not
 from _pyngraph.op import OneHot
 from _pyngraph.op import Op
 from _pyngraph.op import Parameter
+from _pyngraph.op import ParameterVector
 from _pyngraph.op import Power
 from _pyngraph.op import Reduce
 from _pyngraph.op import ReplaceSlice

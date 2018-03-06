@@ -55,6 +55,7 @@ void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_Negative(m_op);
     regclass_pyngraph_op_Not(m_op);
     regclass_pyngraph_op_NotEqual(m_op);
+    regclass_pyngraph_op_ParameterVector(m_op);
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_OneHot(m_op);

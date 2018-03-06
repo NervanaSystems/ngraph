@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/common.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "pyngraph/ops/sum.hpp"
 
