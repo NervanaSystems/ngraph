@@ -33,12 +33,13 @@ bool validate_list(const list<shared_ptr<Node>>& nodes)
         auto node_tmp = *it;
         auto dependencies_tmp = node_tmp->get_input_ops();
         vector<Node*> dependencies;
+
         for (shared_ptr<Node> n : dependencies_tmp)
         {
             dependencies.push_back(n.get());
         }
-        auto tmp = it++;
-        for (; tmp != nodes.rend(); tmp++)
+        auto tmp = it;
+        for (tmp++; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
             auto found = find(dependencies.begin(), dependencies.end(), dep_tmp.get());

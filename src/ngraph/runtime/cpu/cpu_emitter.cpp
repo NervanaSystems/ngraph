@@ -72,6 +72,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -3388,6 +3389,15 @@ namespace ngraph
                         writer << "}\n";
                     }
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
+            {
+                writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "               " << out[0].get_name() << ",\n";
+                writer << "               " << shape_size(node->get_shape()) << ");\n";
             }
         }
     }

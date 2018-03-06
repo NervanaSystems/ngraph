@@ -17,36 +17,31 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
-    class Node;
-
     namespace op
     {
-        class Result;
+        class Result : public util::RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs an arcsin operation.
+            ///
+            /// \param arg Node that produces the input tensor.
+            Result(const std::shared_ptr<Node>& arg);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual bool is_output() const override { return true; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override
+            {
+                adjoints.add_delta(get_input_op(0), delta);
+            }
+        };
     }
-
-    /// \brief Zero or more nodes.
-    class NodeVector : public std::vector<std::shared_ptr<Node>>
-    {
-    public:
-        NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const std::vector<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const NodeVector& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector() {}
-    };
 }
