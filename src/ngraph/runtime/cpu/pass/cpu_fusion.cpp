@@ -274,6 +274,63 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     this->add_matcher(m);
 }
 
+static bool
+    zero_padded_conv_consistency_check(const std::shared_ptr<ngraph::Node>& match_root,
+                                       const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
+                                       const std::shared_ptr<ngraph::Node>& pad_input,
+                                       const std::shared_ptr<ngraph::op::Pad>& matched_pad,
+                                       const std::shared_ptr<ngraph::op::Convolution>& matched_conv,
+                                       size_t batch_index,
+                                       size_t channel_index)
+{
+    // Only match float32 convolutions
+    if (match_root->get_element_type() != ngraph::element::f32)
+    {
+        return false;
+    }
+
+    // Only match zero padding
+    if (pad_value_op->get_vector<float>().at(0) != 0.0f)
+    {
+        return false;
+    }
+
+    // Only match 4D tensors
+    if (pad_input->get_shape().size() != 4)
+    {
+        return false;
+    }
+
+    // Only match no interior padding
+    if (matched_pad->get_padding_interior() != ngraph::Shape(pad_input->get_shape().size()))
+    {
+        return false;
+    }
+
+    // Only match convolutions with no padding specification
+    if (matched_conv->get_padding_below() != ngraph::CoordinateDiff(2) ||
+        matched_conv->get_padding_above() != ngraph::CoordinateDiff(2))
+    {
+        return false;
+    }
+
+    // Only match no padding in the batch dimension
+    if (matched_pad->get_padding_above().at(batch_index) != 0 ||
+        matched_pad->get_padding_below().at(batch_index) != 0)
+    {
+        return false;
+    }
+
+    // Only match no padding in the channel dimension
+    if (matched_pad->get_padding_above().at(channel_index) != 0 ||
+        matched_pad->get_padding_below().at(channel_index) != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv()
 {
     auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
@@ -301,28 +358,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
             pattern::Matcher& m) -> std::shared_ptr<Node> {
         auto pattern_map = m.get_pattern_map();
 
-        NGRAPH_DEBUG << "In callback for construct_padded_reshaped_conv against node = "
-                     << m.match_root()->get_name();
-
         auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
-
-        // Only match float32 convolutions
-        if (m.match_root()->get_element_type() != element::f32)
-        {
-            return nullptr;
-        }
-
-        // Only match zero padding
-        if (pad_value_op->get_vector<float>().at(0) != 0.0f)
-        {
-            return nullptr;
-        }
-
-        // Only match 4D tensors
-        if (pattern_map[pad_input]->get_shape().size() != 4)
-        {
-            return nullptr;
-        }
 
         const auto& matched_conv =
             std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
@@ -330,35 +366,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
         const auto& matched_reshape =
             std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
-        // Only match no interior padding
-        if (matched_pad->get_padding_interior() !=
-            Shape(pattern_map[pad_input]->get_shape().size()))
-        {
-            return nullptr;
-        }
-
-        // Only match convolutions with no padding specification
-        if (matched_conv->get_padding_below() != CoordinateDiff(2) ||
-            matched_conv->get_padding_above() != CoordinateDiff(2))
-        {
-            return nullptr;
-        }
-
         auto hoisted_reshape =
             pattern_map[reshape_label]->copy_with_new_args({pattern_map[pad_input]});
 
         const auto& input_order = matched_reshape->get_input_order();
 
-        // Only match no padding in the batch dimension
-        if (matched_pad->get_padding_above().at(input_order[0]) != 0 ||
-            matched_pad->get_padding_below().at(input_order[0]) != 0)
-        {
-            return nullptr;
-        }
-
-        // Only match no padding in the channel dimension
-        if (matched_pad->get_padding_above().at(input_order[1]) != 0 ||
-            matched_pad->get_padding_below().at(input_order[1]) != 0)
+        if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                pad_value_op,
+                                                pattern_map[pad_input],
+                                                matched_pad,
+                                                matched_conv,
+                                                input_order[0],
+                                                input_order[1]))
         {
             return nullptr;
         }
@@ -381,9 +400,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                               padding_above,
                                               matched_conv->get_data_dilation_strides());
 
-        NGRAPH_DEBUG << "In callback for construct_padded_reshaped_conv against node = "
-                     << m.match_root()->get_name() << " : Made replacement";
-
         return zero_padded_conv;
     };
 
@@ -394,7 +410,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
 {
     auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto pad = std::make_shared<op::Pad>(pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
+    auto pad = std::make_shared<op::Pad>(
+        pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
     auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
 
     auto conv_filter = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
@@ -413,69 +430,29 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
             pattern::Matcher& m) -> std::shared_ptr<Node> {
         auto pattern_map = m.get_pattern_map();
 
-        NGRAPH_DEBUG << "In callback for construct_padded_conv against node = "
-                     << m.match_root()->get_name();
-
         auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
-
-        // Only match float32 convolutions
-        if (m.match_root()->get_element_type() != element::f32)
-        {
-            return nullptr;
-        }
-
-        // Only match zero padding
-        if (pad_value_op->get_vector<float>().at(0) != 0.0f)
-        {
-            return nullptr;
-        }
-
-        // Only match 4D tensors
-        if (pattern_map[pad_input]->get_shape().size() != 4)
-        {
-            return nullptr;
-        }
 
         const auto& matched_conv =
             std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
         const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
 
-        // Only match no interior padding
-        if (matched_pad->get_padding_interior() !=
-            Shape(pattern_map[pad_input]->get_shape().size()))
+        if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                pad_value_op,
+                                                pattern_map[pad_input],
+                                                matched_pad,
+                                                matched_conv,
+                                                0,
+                                                1))
         {
             return nullptr;
         }
 
-        // Only match convolutions with no padding specification
-        if (matched_conv->get_padding_below() != CoordinateDiff(2) ||
-            matched_conv->get_padding_above() != CoordinateDiff(2))
-        {
-            return nullptr;
-        }
-
-        // Only match no padding in the batch dimension
-        if (matched_pad->get_padding_above().at(0) != 0 ||
-            matched_pad->get_padding_below().at(0) != 0)
-        {
-            return nullptr;
-        }
-
-        // Only match no padding in the channel dimension
-        if (matched_pad->get_padding_above().at(1) != 0 ||
-            matched_pad->get_padding_below().at(1) != 0)
-        {
-            return nullptr;
-        }
-
-        CoordinateDiff padding_below{static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_below().at(2)),
-                                     static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_below().at(3))};
-        CoordinateDiff padding_above{static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_above().at(2)),
-                                     static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_above().at(3))};
+        CoordinateDiff padding_below{
+            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(2)),
+            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(3))};
+        CoordinateDiff padding_above{
+            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(2)),
+            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
 
         auto zero_padded_conv =
             std::make_shared<op::Convolution>(pattern_map[pad_input],
@@ -485,9 +462,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                               padding_below,
                                               padding_above,
                                               matched_conv->get_data_dilation_strides());
-
-        NGRAPH_DEBUG << "In callback for construct_padded_conv against node = "
-                     << m.match_root()->get_name() << " : Made replacement";
 
         return zero_padded_conv;
     };
