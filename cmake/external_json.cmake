@@ -26,7 +26,6 @@ SET(JSON_GIT_LABEL v3.1.1)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    message(STATUS "json < 3.2")
     ExternalProject_Add(
         ext_json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
@@ -40,7 +39,6 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
         )
 else()
-    message(STATUS "json >= 3.2")
     ExternalProject_Add(
         ext_json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
