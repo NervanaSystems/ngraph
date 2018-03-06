@@ -38,11 +38,13 @@ public:
     CPUFusion()
         : GraphRewrite()
     {
-        construct_gemm_pattern();
+        construct_matmul_pattern();
+        construct_matmulbias_pattern();
         construct_fprop_bn();
     }
 
 private:
-    void construct_gemm_pattern();
+    void construct_matmul_pattern();
+    void construct_matmulbias_pattern();
     void construct_fprop_bn();
 };
