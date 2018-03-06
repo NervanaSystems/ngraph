@@ -324,3 +324,147 @@ TEST(cpu_fusion, fuse_conv_bias)
     ASSERT_GT(cb, 0);
 }
 
+TEST(cpu_fusion, conv_bias_fprop)
+{
+    const int n = 1;
+    const int c = 1;
+    const int filter = 1;
+    const int kernel_size = 3;
+    const int w = 3;
+    const int h = w;
+
+    auto data_shape = Shape{n, c, h, w};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto weights_shape = Shape{filter, c, kernel_size, kernel_size};
+    auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
+    auto bias_shape = Shape{filter};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+    auto convolution= make_shared<op::Convolution>(data, weights);
+    auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, bias);
+
+    auto f = make_shared<Function>(convolution_bias, op::ParameterVector{data, weights, bias});
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto _data = backend->make_primary_tensor_view(element::f32, data_shape);
+    copy_data(_data, vector<float>{-0.67765152, 0.10073948, 0.57595438,
+                                   -0.3469252, -0.22134334, -1.80471897,
+                                   -0.80642909, 1.22033095, 2.23235631});
+    auto _weights = backend->make_primary_tensor_view(element::f32, weights_shape);
+    copy_data(_weights, vector<float>{1,1,1,
+                                      1,1,1,
+                                      1,1,1});
+    auto _bias = backend->make_primary_tensor_view(element::f32, bias_shape);
+    copy_data(_bias, vector<float>{1});
+    auto result_shape = Shape{1};
+    auto result = backend->make_primary_tensor_view(element::f32, result_shape);
+
+//    vector<float> expected_result{-0.71498716f,
+//                                  1.48388731f,
+//                                  -0.00196938f,
+//                                  -0.76693159f,
+//                                  -0.91316032f,
+//                                  0.23943391f,
+//                                  -0.84090298f,
+//                                  1.51462936f};
+    cf->call({_data, _weights, _bias}, {result});
+    auto result_vec = read_vector<float>(result);
+    for (size_t i = 0; i < result_vec.size(); ++i) {
+        std::cout << result_vec[i] << " ";
+    }
+    std::cout << std::endl;
+    //EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+}
+
+TEST(cpu_fusion, conv_bias_bprop)
+{
+    const int n = 1;
+    const int c = 1;
+    const int filter = 1;
+    const int kernel_size = 3;
+    const int w = 3;
+    const int h = w;
+
+    auto data_shape = Shape{n, c, h, w};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto weights_shape = Shape{filter, c, kernel_size, kernel_size};
+    auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
+    auto bias_shape = Shape{filter};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+    auto convolution= make_shared<op::Convolution>(data, weights);
+    auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, bias);
+
+    auto result_shape = Shape{1};
+
+    auto f = make_shared<Function>(convolution_bias, op::ParameterVector{data, weights, bias});
+    auto manager = runtime::Manager::get("CPU");
+    auto backend = manager->allocate_backend();
+
+    auto delta = std::make_shared<op::Parameter>(element::f32, result_shape);
+
+    auto d_data = convolution_bias->backprop_node(data, delta);
+    auto d_weights = convolution_bias->backprop_node(weights, delta);
+    auto d_bias = convolution_bias->backprop_node(bias, delta);
+
+    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
+                                    op::ParameterVector{data, weights, bias, delta});
+
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto _data = backend->make_primary_tensor_view(element::f32, data_shape);
+    copy_data(_data, vector<float>{-0.67765152, 0.10073948, 0.57595438,
+                                   -0.3469252, -0.22134334, -1.80471897,
+                                   -0.80642909, 1.22033095, 2.23235631});
+    auto _weights = backend->make_primary_tensor_view(element::f32, weights_shape);
+    copy_data(_weights, vector<float>{1,1,1,
+                                      1,1,1,
+                                      1,1,1});
+    auto _bias = backend->make_primary_tensor_view(element::f32, bias_shape);
+    copy_data(_bias, vector<float>{1});
+
+    auto _delta = backend->make_primary_tensor_view(element::f32, data_shape);
+    copy_data(_delta, vector<float>{1.27231});
+
+    // results
+    auto _d_data = backend->make_primary_tensor_view(element::f32, data_shape);
+    copy_data(_d_data, vector<float>{0,0,0,
+                                     0,0,0,
+                                     0,0,0});
+
+    auto _d_weights = backend->make_primary_tensor_view(element::f32, weights_shape);
+    copy_data(_d_weights, vector<float>{0,0,0,
+                                        0,0,0,
+                                        0,0,0});
+
+    auto _d_bias = backend->make_primary_tensor_view(element::f32, bias_shape);
+    copy_data(_d_bias, vector<float>{0});
+
+//    vector<float> expected_result{-0.71498716f,
+//                                  1.48388731f,
+//                                  -0.00196938f,
+//                                  -0.76693159f,
+//                                  -0.91316032f,
+//                                  0.23943391f,
+//                                  -0.84090298f,
+//                                  1.51462936f};
+    cf->call({_data, _weights, _bias, _delta}, {_d_data, _d_weights, _d_bias});
+    auto result_vec = read_vector<float>(_d_data);
+    for (size_t i = 0; i < result_vec.size(); ++i) {
+        std::cout << result_vec[i] << " ";
+    }
+    result_vec = read_vector<float>(_d_weights);
+    for (size_t i = 0; i < result_vec.size(); ++i) {
+        std::cout << result_vec[i] << " ";
+    }
+    result_vec = read_vector<float>(_d_bias);
+    for (size_t i = 0; i < result_vec.size(); ++i) {
+        std::cout << result_vec[i] << " ";
+    }
+    std::cout << std::endl;
+    //EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+}
