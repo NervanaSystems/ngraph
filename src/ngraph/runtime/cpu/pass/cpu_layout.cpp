@@ -28,7 +28,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/relu.hpp"
