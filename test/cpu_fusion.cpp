@@ -454,7 +454,8 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     vector<float> deltaData(shape_size(shape_r), 20.0f);
     copy_data(_delta, deltaData);
 
-    auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta}, op::ParameterVector{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
+                                   op::ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
     auto dinput = bn->backprop_node(input, C);
