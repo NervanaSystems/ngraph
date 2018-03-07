@@ -692,36 +692,6 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNorm)
-                {
-                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto gamma_layout =
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto beta_layout =
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
-                        auto input_layout =
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
-
-                        vector<memory::format> prim_input_formats;
-                        vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(gamma_layout);
-                        prim_input_formats.push_back(beta_layout);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats);
-                        set_output_layouts(node, prim_output_formats);
-                    }
-                    else
-                    {
-                        // TODO: Remove exception and add "set_default_layouts(external_function, node)"
-                        // once we have the interpreter implementation
-                        throw ngraph_error(
-                            "BatchNorm Op doesn't have default INTERPRETER implementation");
-                    }
-                }
             }
         }
     }
@@ -730,7 +700,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
-    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},

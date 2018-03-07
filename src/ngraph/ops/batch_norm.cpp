@@ -24,17 +24,16 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> input)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
-    , m_bn_variance_shape({input->get_shape()[1]})
-    , m_bn_mean_shape({input->get_shape()[1]})
     , m_epsilon(eps)
 {
-    add_output(input->get_element_type(), m_bn_input_shape);
-    add_output(input->get_element_type(), m_bn_mean_shape);
-    add_output(input->get_element_type(), m_bn_variance_shape);
-
     if (m_bn_input_shape.size() < 2)
     {
         throw ngraph_error("input tensor to batchnorm much have tensor of atleast rank 2");
+    }
+    else
+    {
+        this->m_bn_variance_shape.push_back(input->get_shape()[1]);
+        this->m_bn_mean_shape.push_back(input->get_shape()[1]);
     }
 
     if (m_bn_input_shape[1] == 0)
@@ -49,23 +48,6 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
         throw ngraph_error("gamma, beta, mean, variance shoud have all rank 1");
     }
 
-    // assuming input shape (N, C, H, W), check if the size of mean and
-    // variance are equal to channel axis
-    if (m_bn_mean_shape[0] != m_bn_input_shape[1])
-    {
-        throw ngraph_error("mean size is not equal to input channel size");
-    }
-
-    if (m_bn_variance_shape[0] != m_bn_input_shape[1])
-    {
-        throw ngraph_error("variance size is not equal to input channel size");
-    }
-
-    if (m_bn_variance_shape.size() != m_bn_mean_shape.size())
-    {
-        throw ngraph_error("mean and variance rank does not match");
-    }
-
     if (gamma->get_shape().size() != beta->get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
@@ -75,6 +57,10 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     {
         throw ngraph_error("gamma and beta element type does not match");
     }
+
+    add_output(input->get_element_type(), m_bn_input_shape);
+    add_output(input->get_element_type(), m_bn_mean_shape);
+    add_output(input->get_element_type(), m_bn_variance_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -163,10 +149,10 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto gamma = get_input_op(0);
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
-    auto mean = get_input_op(3);
-    auto variance = get_input_op(4);
+    auto mean = std::make_shared<op::GetOutputElement>(shared_from_this(), 1);
+    auto var = std::make_shared<op::GetOutputElement>(shared_from_this(), 2);
     auto bbn = std::make_shared<op::BatchNormBackprop>(
-        get_eps_value(), gamma, beta, input, mean, variance, delta);
+        get_eps_value(), gamma, beta, input, mean, var, delta);
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
     auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
     auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
