@@ -32,6 +32,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/relu.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -788,6 +789,16 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Result)
+                {
+                    auto input_layout =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                    vector<memory::format> prim_output_formats;
+                    prim_output_formats.push_back(input_layout);
+                    set_output_layouts(node, prim_output_formats);
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -870,6 +881,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::MaxPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
+    {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
 };

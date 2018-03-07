@@ -150,3 +150,50 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
     auto m = std::make_shared<ngraph::pattern::Matcher>(reshape2, callback);
     this->add_matcher(m);
 }
+
+void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
+{
+    //dot(A,B).T = dot (B.T, A.T)
+    auto dot_pred = [](std::shared_ptr<Node> n) {
+        return static_cast<bool>(std::dynamic_pointer_cast<op::Dot>(n));
+    };
+
+    auto pdot = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
+    auto preshape = std::make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
+
+    ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
+                     << m.match_root()->get_name();
+
+        std::shared_ptr<Node> nn;
+        auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
+        //this also checks the rank
+        if (mtranspose->get_input_order() != AxisVector{1, 0})
+        {
+            NGRAPH_DEBUG << "Reshape isn't transpose. "
+                         << vector_to_string(mtranspose->get_input_order());
+            return nn;
+        }
+
+        auto mdot = mtranspose->get_input_op(0);
+        if (mdot->get_shape().size() != 2)
+        {
+            NGRAPH_DEBUG << "Dot has the wrong shape. " << vector_to_string(mdot->get_shape());
+            return nn;
+        }
+
+        auto arg0 = mdot->get_input_op(0);
+        auto reshape0_shape = Shape{arg0->get_shape().at(1), arg0->get_shape().at(0)};
+        auto reshape0 = std::make_shared<op::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
+
+        auto arg1 = mdot->get_input_op(1);
+        auto reshape1_shape = Shape{arg1->get_shape().at(1), arg1->get_shape().at(0)};
+        auto reshape1 = std::make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
+
+        auto tdot = std::shared_ptr<Node>(new op::Dot(reshape1, reshape0));
+        return tdot;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(preshape, callback);
+    this->add_matcher(m);
+}
