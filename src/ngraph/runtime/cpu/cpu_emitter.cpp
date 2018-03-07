@@ -272,6 +272,14 @@ namespace ngraph
 
                 const char* cbeta = "0.0f";
 
+                writer << "cblas::cblas_sgemm("
+                       << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
+                       << ", " << k << ",\n"
+                       << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
+                       << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
+                       << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
+                       << ");\n";
+
                 if (args.size() > 2)
                 {
                     auto axes = cg->get_broadcast_axes();
@@ -279,28 +287,54 @@ namespace ngraph
                     {
                         size_t broadcast_index = 1 - *(axes.begin());
 
-                        //cast a pointer to a 2d array
-                        auto ctype = out[0].get_element_type().c_type_string();
-                        std::stringstream ss_dims;
-                        ss_dims << "[" << arg2_shape.at(0) << "][" << arg2_shape.at(1) << "]";
-                        auto dims = ss_dims.str();
-                        writer << ctype << "(&out)" << dims << " = *reinterpret_cast<" << ctype
-                               << "(*)" << dims << ">(" << out[0].get_name() << ");\n";
+                        if (*(axes.begin()) == 0)
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_row[" << arg2_shape[0] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[0]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
 
-                        //loop over the broadcasted shape and assign each element its proper value
-                        writer << "for (size_t i0 = 0; i0 < " << arg2_shape.at(0) << "; i0++)\n";
-                        writer << "{\n";
-                        writer.indent++;
-                        writer << "for (size_t i1 = 0; i1 < " << arg2_shape.at(1) << "; i1++)\n";
-                        writer << "{\n";
-                        writer.indent++;
-                        //switch between i0,i1 depending on broadcast_index (i.e. col-wise, row-wise)
-                        writer << "out[i0][i1] = " << args[2].get_name() << " [i" << broadcast_index
-                               << "];\n";
-                        writer.indent--;
-                        writer << "}\n";
-                        writer.indent--;
-                        writer << "}\n";
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                                   << ",\n"
+                                   << "        1.0f, ones_row, "
+                                   << "1"
+                                   << ", " << args[2].get_name() << ", " << max(1UL, arg2_shape[1])
+                                   << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
+                        else
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_col[" << arg2_shape[1] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[1]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
+
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << ctranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                                   << ",\n"
+                                   << "        1.0f, ones_col," << max(1UL, arg2_shape[1]) << ", "
+                                   << args[2].get_name() << ", "
+                                   << "1"
+                                   << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
                     }
                     else
                     {
@@ -309,24 +343,39 @@ namespace ngraph
                             throw ngraph_error("unexpected broadcast rank");
                         }
 
-                        writer << "for (size_t i0 = 0; i0 < " << shape_size(arg2_shape)
-                               << "; i0++)\n";
-                        writer << "{\n";
-                        writer.indent++;
-                        writer << out[0].get_name() << "[i0] = " << args[2].get_name() << " [0];\n";
-                        writer.indent--;
-                        writer << "}\n";
-                    }
-                    cbeta = "1.0f";
-                }
+                        writer << out[0].get_element_type().c_type_string() << " bias["
+                               << arg2_shape[1] << "]"
+                               << " = { " << args[2].get_name() << "[0]";
+                        for (size_t i = 1; i < arg2_shape[1]; ++i)
+                        {
+                            writer << "," << args[2].get_name() << "[0]";
+                        }
+                        writer << "};\n";
 
-                writer << "cblas::cblas_sgemm("
-                       << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
-                       << ", " << k << ",\n"
-                       << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
-                       << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
-                       << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
-                       << ");\n";
+                        writer << "static " << out[0].get_element_type().c_type_string()
+                               << " ones_scalar[" << arg2_shape[0] << "]"
+                               << " = { 1.0f";
+                        for (size_t i = 1; i < arg2_shape[0]; ++i)
+                        {
+                            writer << ", 1.0f";
+                        }
+                        writer << "};\n";
+
+                        writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                               << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                               << ",\n"
+                               << "        1.0f, ones_scalar, "
+                               << "1"
+                               << ", "
+                               << "bias"
+                               << ", " << max(1UL, arg2_shape[1]) << ", "
+                               << "1.0f"
+                               << ",\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
+                               << ");\n";
+                    }
+                }
 
                 writer.indent--;
                 writer << "}\n";
