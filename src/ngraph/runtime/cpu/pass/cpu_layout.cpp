@@ -733,8 +733,7 @@ namespace ngraph
 
                         auto fprop_input_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto delta_layout =
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
+        
                         auto diff_dst_desc =
                             memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
                         auto diff_src_desc =
