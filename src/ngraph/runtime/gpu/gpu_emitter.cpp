@@ -776,3 +776,21 @@ void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
 {
     throw std::runtime_error(n->get_name() + " is not implemented.");
 }
+
+void runtime::gpu::GPU_Emitter::EmitResult(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+{
+    writer << "{   //" << n->get_name() << "\n";
+    writer.indent++;
+    writer << "runtime::gpu::cuda_memcpyDtD("
+           << out[0].get_name() << ", "
+           << args[0].get_name() << ", "
+           << out[0].get_size() << " * " << out[0].get_element_type().size()
+           << ");\n";
+    writer.indent--;
+    writer << "}\n";
+    return;
+}
