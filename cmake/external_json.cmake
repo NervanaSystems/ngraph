@@ -34,6 +34,9 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        # cmake does not allow calling cmake functions so we call a cmake script in the Module
+        # directory.
+        PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
         )
 else()
     ExternalProject_Add(
@@ -44,7 +47,10 @@ else()
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        )
+        # cmake does not allow calling cmake functions so we call a cmake script in the Module
+        # directory.
+        PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_MODULE_PATH}patch_json.cmake
+    )
 endif()
 
 #------------------------------------------------------------------------------

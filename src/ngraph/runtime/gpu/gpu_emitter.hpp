@@ -77,6 +77,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitReverse);
                 static void EMITTER_DECL(EmitReduceWindow);
                 static void EMITTER_DECL(EmitSelectAndScatter);
+                static void EMITTER_DECL(EmitResult);
             };
         }
     }
