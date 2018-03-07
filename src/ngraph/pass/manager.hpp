@@ -57,5 +57,4 @@ public:
 private:
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
-    bool m_to_set_is_output;
 };
