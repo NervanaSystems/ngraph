@@ -52,5 +52,5 @@ private:
     void construct_fprop_bn();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
-	  void construct_conv_bias();
+    void construct_conv_bias();
 };

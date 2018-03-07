@@ -695,10 +695,7 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
 
     cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val}, {conv_test.result_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
-    for (size_t i = 0; i < result_vec.size(); ++i) {
-        std::cout << result_vec[i] << " ";
-    }
-    std::cout << std::endl;
+
     EXPECT_TRUE(test::all_close(conv_test.expected_result_val, read_vector<float>(conv_test.result_val)));
 }
 
@@ -726,21 +723,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto cf = backend->make_call_frame(external);
 
     cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val}, {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val});
-    auto result_vec = read_vector<float>(conv_test.d_data_val);
-    for (size_t i = 0; i < result_vec.size(); ++i) {
-        std::cout << result_vec[i] << " ";
-    }
-    std::cout << std::endl;
-    result_vec = read_vector<float>(conv_test.d_weights_val);
-    for (size_t i = 0; i < result_vec.size(); ++i) {
-        std::cout << result_vec[i] << " ";
-    }
-    std::cout << std::endl;
-    result_vec = read_vector<float>(conv_test.d_bias_val);
-    for (size_t i = 0; i < result_vec.size(); ++i) {
-        std::cout << result_vec[i] << " ";
-    }
-    std::cout << std::endl;
+
     EXPECT_TRUE(test::all_close(conv_test.expected_d_data_val, read_vector<float>(conv_test.d_data_val)));
     EXPECT_TRUE(test::all_close(conv_test.expected_d_weights_val, read_vector<float>(conv_test.d_weights_val)));
     EXPECT_TRUE(test::all_close(conv_test.expected_d_bias_val, read_vector<float>(conv_test.d_bias_val)));

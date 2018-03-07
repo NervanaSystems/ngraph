@@ -23,6 +23,7 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Convolution + bias forward prop for batched convolution operation.
         class ConvolutionBias : public util::RequiresTensorViewArgs
         {
         public:
@@ -60,20 +61,11 @@ namespace ngraph
                             const Strides& data_dilation_strides);
         };
 
-        /// \brief Filters and bias backprop for batched convolution operation.
+        /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
+        /// the same as regular convolution backprop for data.
         class ConvolutionBiasBackpropFiltersBias : public util::RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs a batched-convolution filter-backprop operation.
-            ///
-            /// \param data_batch The tensor producing the data batch from forward-prop.
-            /// \param filters_shape The shape of the filters from forward-prop.
-            /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
-            /// \param padding_below_forward The padding-below sizes from forward-prop.
-            /// \param padding_above_forward The padding-above sizes from forward-prop.
-            /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
             ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
                                            const Shape& filters_shape,
                                            const Shape& bias_shape,
@@ -88,6 +80,8 @@ namespace ngraph
 
             /// \return The filters tensor shape.
             const Shape& get_filters_shape() const { return m_filters_shape; }
+            /// \return The bias tensor shape.
+            const Shape& get_bias_shape() const { return m_bias_shape; }
             /// \return The window movement strides from the forward prop.
             const Strides& get_window_movement_strides_forward() const
             {

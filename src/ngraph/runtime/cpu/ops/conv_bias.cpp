@@ -88,6 +88,7 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
     auto bias = get_input_op(2);
     const auto bias_shape = bias->get_shape();
 
+    // using regular convolution backprop for data
     adjoints.add_delta(data,
                        std::make_shared<op::ConvolutionBackpropData>(data_shape,
                                                                      filter,
@@ -124,8 +125,9 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
         const CoordinateDiff& padding_below_forward,
         const CoordinateDiff& padding_above_forward,
         const Strides& data_dilation_strides_forward)
-        : RequiresTensorViewArgs("ConvolutionBackpropFilters", {data_batch, output_delta})
+        : RequiresTensorViewArgs("ConvolutionBiasBackpropFiltersBias", {data_batch, output_delta})
         , m_filters_shape(filters_shape)
+        , m_bias_shape(bias_shape)
         , m_window_movement_strides_forward(window_movement_strides_forward)
         , m_window_dilation_strides_forward(window_dilation_strides_forward)
         , m_padding_below_forward(padding_below_forward)
@@ -134,7 +136,6 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
 {
     auto& data_batch_shape = get_input_shape(0);
     auto& data_batch_et = get_input_element_type(0);
-    auto& output_delta_shape = get_input_shape(1);
     auto& output_delta_et = get_input_element_type(1);
 
     //
@@ -143,7 +144,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     if (data_batch_et != output_delta_et)
     {
         throw ngraph_error(
-                "ConvolutionBias filter backprop data batch and output delta element types do not match");
+                "ConvolutionBiasBackpropFilterBias data batch and output delta element types do not match");
     }
 
     //                              Forward               Backward
@@ -167,31 +168,6 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
                 window_movement_strides_forward[i]);
         m_data_dilation_strides_backward.push_back(data_dilation_strides_forward[i]);
     }
-
-//    Shape inferred_convolution_filters_shape =
-//            infer_convolution_output_shape(data_batch_shape,
-//                                           filters_delta_shape,
-//                                           m_window_movement_strides_backward,
-//                                           m_window_dilation_strides_backward,
-//                                           m_padding_below_backward,
-//                                           m_padding_above_backward,
-//                                           m_data_dilation_strides_backward,
-//                                           1,
-//                                           0,
-//                                           0,
-//                                           1,
-//                                           1,
-//                                           0,
-//                                           "In ConvolutionBiasBackpropFiltersBias: ");
-//
-//    // Not sure if this can ever actually happen (i.e., I think it will trip on something else
-//    // inside infer_convolution_output_shape before we get here) but it seems worth checking.
-//    if (inferred_convolution_filters_shape != filters_shape)
-//    {
-//        throw ngraph_error(
-//                "ConvolutionBias filter bias backprop inferred output shape does not match "
-//                        "specified filter shape");
-//    }
 
     add_output(data_batch_et, filters_shape);
     add_output(data_batch_et, bias_shape);

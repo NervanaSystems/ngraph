@@ -2445,6 +2445,7 @@ namespace ngraph
                     throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
+			
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
             {
@@ -2475,15 +2476,15 @@ namespace ngraph
                     auto weights_delta_desc = mkldnn_emitter->build_memory_descriptor(weights_delta, weights_delta_format);
                     auto bias_delta_desc = mkldnn_emitter->build_memory_descriptor(bias_delta, bias_delta_format);
 
-                    size_t conv_index = mkldnn_emitter->build_convolution_backward_filters_bias(
-                            data_desc,
-                            delta_desc,
-                            weights_delta_desc,
-                            bias_delta_desc,
-                            convolution->get_window_movement_strides_forward(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward());
+                    size_t conv_index = mkldnn_emitter->build_convolution_backward_weights_bias(
+                        data_desc,
+                        delta_desc,
+                        weights_delta_desc,
+                        bias_delta_desc,
+                        convolution->get_window_movement_strides_forward(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below_forward(),
+                        convolution->get_padding_above_forward());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])

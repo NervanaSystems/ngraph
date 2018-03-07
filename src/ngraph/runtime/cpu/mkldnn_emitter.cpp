@@ -141,7 +141,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     return conv_index;
 }
 
-size_t MKLDNNEmitter::build_convolution_backward_filters_bias(const mkldnn::memory::desc &in_data_desc,
+size_t MKLDNNEmitter::build_convolution_backward_weights_bias(const mkldnn::memory::desc &in_data_desc,
                                                               const mkldnn::memory::desc &in_delta_desc,
                                                               const mkldnn::memory::desc &out_weights_delta_desc,
                                                               const mkldnn::memory::desc &out_bias_delta_desc,
