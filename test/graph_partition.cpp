@@ -218,11 +218,6 @@ public:
         {
             map_parameter_to_index[f->get_parameters().at(i)] = i;
         }
-        unordered_map<shared_ptr<Node>, size_t> map_result_to_index;
-        for (size_t i = 0; i < f->get_results().size(); ++i)
-        {
-            map_result_to_index[f->get_results().at(i)] = i;
-        }
 
         // Parameter's source is either itself, or the output node of the upstream function
         unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> map_parameter_to_source_node;
@@ -230,6 +225,13 @@ public:
         // Split to functions
         vector<shared_ptr<Function>> funcs =
             split_function_by_placement(f, map_parameter_to_source_node);
+
+        auto main_func = funcs.back();
+        unordered_map<shared_ptr<Node>, size_t> map_result_to_index;
+        for (size_t i = 0; i < main_func->get_results().size(); ++i)
+        {
+            map_result_to_index[main_func->get_results().at(i)] = i;
+        }
 
         // Make call frames
         vector<shared_ptr<runtime::CallFrame>> call_frames;

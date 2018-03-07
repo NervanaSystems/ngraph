@@ -48,9 +48,8 @@ namespace ngraph
 
     void free_nodes(std::shared_ptr<Function>);
 
-    void replace_node(std::shared_ptr<Node> target,
-                      std::shared_ptr<Node> replacement,
-                      bool replace_output = false);
+    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
@@ -77,6 +76,8 @@ namespace ngraph
         {
             return (m_node_map.count(orig) != 0);
         }
+
+        void update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val);
 
         const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
             get_node_map() const

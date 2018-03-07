@@ -64,6 +64,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -667,6 +668,10 @@ static shared_ptr<ngraph::Function>
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
         }
+        else if (node_op == "Result")
+        {
+            node = make_shared<op::Result>(args[0]);
+        }
         else if (node_op == "Reverse")
         {
             auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
@@ -1060,6 +1065,9 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
+    }
+    else if (node_op == "Result")
+    {
     }
     else if (node_op == "Reverse")
     {

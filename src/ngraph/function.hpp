@@ -25,6 +25,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/parameter_vector.hpp"
+#include "ngraph/ops/result_vector.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -40,6 +41,12 @@ namespace ngraph
         Function(const std::shared_ptr<Node>& result,
                  const op::ParameterVector& parameters,
                  const std::string& name = "");
+
+        Function(const ResultVector& results,
+                 const op::ParameterVector& parameters,
+                 const std::string& name = "");
+
+        void init();
 
         virtual ~Function() {}
     public:
@@ -57,8 +64,8 @@ namespace ngraph
 
         /// Return the function parameters
         const op::ParameterVector& get_parameters() const { return m_parameters; }
-        /// Return the ops that generate the results
-        const NodeVector get_results() const { return m_results; }
+        /// Return a list of function's outputs
+        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -73,13 +80,11 @@ namespace ngraph
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
         void set_temporary_pool_size(size_t);
-        // updates old w/ repl in m_results list
-        void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
         // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
-        NodeVector m_results;
+        ResultVector m_results;
         op::ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 

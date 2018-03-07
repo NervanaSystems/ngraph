@@ -79,8 +79,8 @@ information about how to change or customize this location.
 
       $ cd build && cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE]
 
-#. (Optional) Run ``$ make [-jN]`` where :option:`-jN` specifies the number of 
-   cores. The example here uses a configuration of :option:`j8`, which is 
+#. (Optional) Run ``$ make [-jN]`` where ``-jN`` specifies the number of 
+   cores. The example here uses a configuration of ``j8``, which is 
    good for a system install using an Intel® Xeon® (CPU processor). This step 
    is **not recommended** with Docker / VM installs. 
 
