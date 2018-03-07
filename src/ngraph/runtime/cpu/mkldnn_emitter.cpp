@@ -27,7 +27,8 @@ using namespace ngraph::runtime::cpu;
 
 MKLDNNEmitter::~MKLDNNEmitter()
 {
-    for (auto p : m_mkldnn_primitives) delete p;
+    for (auto p : m_mkldnn_primitives)
+        delete p;
 }
 
 const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
@@ -312,4 +313,3 @@ size_t MKLDNNEmitter::build_elementwise_add(
     m_primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
     return add_index;
 }
-
