@@ -107,7 +107,6 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {  
-                std::cout << "abs" << std::endl;
                 writer << "{  // " << node->get_name() << "\n";
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
