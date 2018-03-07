@@ -16,41 +16,32 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <memory>
+
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        class Result : public util::RequiresTensorViewArgs
         {
-            namespace pass
+        public:
+            /// \brief Constructs an arcsin operation.
+            ///
+            /// \param arg Node that produces the input tensor.
+            Result(const std::shared_ptr<Node>& arg);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual bool is_output() const override { return true; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override
             {
-                class CPUFusion;
+                adjoints.add_delta(get_input_op(0), delta);
             }
-        }
+        };
     }
 }
-
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUFusion()
-        : GraphRewrite()
-    {
-        construct_matmul_pattern();
-        construct_matmulbias_pattern();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-		construct_conv_bias();
-    }
-
-private:
-    void construct_matmul_pattern();
-    void construct_matmulbias_pattern();
-    void construct_fprop_bn();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-	construct_conv_bias();
-};

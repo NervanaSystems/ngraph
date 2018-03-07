@@ -67,6 +67,7 @@ set (SRC
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
+    ops/result.cpp
     ops/select.cpp
     ops/select_and_scatter.cpp
     ops/sin.cpp
@@ -184,8 +185,8 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_emitter.cpp
         runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
+	runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/convert_layout.cpp
-        runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp

@@ -72,6 +72,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -240,7 +241,7 @@ namespace ngraph
 
                 const Shape& arg0_shape = cg->get_arg0_shape(); //W
                 const Shape& arg1_shape = cg->get_arg1_shape(); //x
-                const Shape& arg2_shape = args[2].get_shape();  //bias (C)
+                const Shape& arg2_shape = node->get_shape();    //bias (C)
 
                 static const char* ctranspose = "cblas::Transpose::Transpose, ";
                 static const char* cnotranspose = "cblas::Transpose::None, ";
@@ -270,16 +271,23 @@ namespace ngraph
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
 
-                writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
-                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                const char* cbeta = "0.0f";
+
+                if (args.size() > 2)
+                {
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    cbeta = "1.0f";
+                }
 
                 writer << "cblas::cblas_sgemm("
                        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                        << ", " << k << ",\n"
                        << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
-                       << args[1].get_name() << ", " << max(1UL, ldb) << ", 1.0f,\n"
+                       << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
                        << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
                        << ");\n";
+
                 writer.indent--;
                 writer << "}\n";
             }
@@ -3525,6 +3533,15 @@ namespace ngraph
                         writer << "}\n";
                     }
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
+            {
+                writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "               " << out[0].get_name() << ",\n";
+                writer << "               " << shape_size(node->get_shape()) << ");\n";
             }
         }
     }

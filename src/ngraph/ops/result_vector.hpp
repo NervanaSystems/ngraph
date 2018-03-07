@@ -16,41 +16,37 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <memory>
+#include <vector>
+
+#include "ngraph/ops/result.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    /// \brief Zero or more nodes.
+    class ResultVector : public std::vector<std::shared_ptr<op::Result>>
     {
-        namespace cpu
+    public:
+        ResultVector(size_t size)
+            : std::vector<std::shared_ptr<op::Result>>(size)
         {
-            namespace pass
-            {
-                class CPUFusion;
-            }
         }
-    }
+
+        ResultVector(const std::initializer_list<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector(const std::vector<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector(const ResultVector& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector() {}
+    };
 }
-
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUFusion()
-        : GraphRewrite()
-    {
-        construct_matmul_pattern();
-        construct_matmulbias_pattern();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-		construct_conv_bias();
-    }
-
-private:
-    void construct_matmul_pattern();
-    void construct_matmulbias_pattern();
-    void construct_fprop_bn();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-	construct_conv_bias();
-};

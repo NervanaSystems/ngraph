@@ -134,6 +134,42 @@ TEST(cpu_fusion, gemm_cpu)
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
 
+TEST(cpu_fusion, gemm_cpu_no_bias)
+{
+    auto shapeA = Shape{3, 2};
+    auto shapeB = Shape{2, 3};
+    auto shapeC = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeB);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+
+    auto cg =
+        make_shared<op::MatmulBias>(A, B, nullptr, A->get_shape(), B->get_shape(), true, true);
+
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shapeB);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shapeC);
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{3.0f, 3.0f, 3.0f, 9.0f, 9.0f, 9.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+    vector<float> expected{9, 27, 36, 108};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
 TEST(cpu_fusion, cpu_fusion_pass_basic)
 {
     Shape shape{};
@@ -155,6 +191,50 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
 }
 
+TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
+{
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto W = make_shared<op::Parameter>(element::f32, shape_w);
+    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+    auto b = make_shared<op::Parameter>(element::f32, shape_b);
+
+    auto mmb = std::make_shared<op::MatmulBias>(
+        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+    auto broadcast = std::make_shared<op::Broadcast>(b, mmb->get_shape(), AxisSet{0});
+    auto add = mmb + broadcast;
+
+    auto graph = make_shared<op::Abs>(add);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_shared<Function>(graph, op::ParameterVector{W, x, b});
+    pass_manager.run_passes(func);
+    auto gmm = graph->get_input_op(0);
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::MatmulBias>(gmm));
+    ASSERT_EQ(gmm->get_input_op(2), broadcast);
+}
+
+TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
+{
+    Shape shape_w{4, 2};
+    Shape shape_x{1, 4};
+    auto W = make_shared<op::Parameter>(element::f32, shape_w);
+    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+
+    auto reshape_w = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{2, 4});
+    auto reshape_x = std::make_shared<op::Reshape>(x, AxisVector{1, 0}, Shape{4, 1});
+    auto re_dot = make_shared<op::Dot>(reshape_w, reshape_x);
+    auto graph = make_shared<op::Abs>(re_dot);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_shared<Function>(graph, op::ParameterVector{W, x});
+    pass_manager.run_passes(func);
+    size_t mmb = count_ops_of_type<op::MatmulBias>(func);
+    ASSERT_EQ(mmb, 1);
+}
+
 TEST(cpu_fusion, gemm_mlp)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
@@ -164,8 +244,8 @@ TEST(cpu_fusion, gemm_mlp)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::MatmulBias>(func);
-    ASSERT_EQ(ccg, 3);
+    size_t mmb = count_ops_of_type<op::MatmulBias>(func);
+    ASSERT_EQ(mmb, 3);
 }
 
 //TODO: Move this test to backend_test.in.cpp once we have the INTERPRETER
@@ -402,6 +482,98 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
         ngraph::test::all_close(read_vector<float>(_dgamma), expected_dgamma, 1e-2f, 1e-3f));
     vector<float> expected_dbeta{320.f, 320.f, 320.f};
     ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dbeta), expected_dbeta, 1e-4f, 1e-8f));
+}
+
+TEST(cpu_fusion, zero_padded_reshaped_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 1});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, Shape{0, 1, 0, 0}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+
+    auto reshape = make_shared<op::Reshape>(pad, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+
+    auto conv = make_shared<op::Convolution>(reshape,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, op::ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(cpu_fusion, zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, op::ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(cpu_fusion, non_zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, op::ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 }
 TEST(cpu_fusion, fuse_conv_bias)
 {

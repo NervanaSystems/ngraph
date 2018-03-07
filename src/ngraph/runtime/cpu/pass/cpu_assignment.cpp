@@ -119,7 +119,7 @@ namespace ngraph
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
-                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         convolution->set_op_annotations(op_annotations);
                     }
@@ -200,7 +200,7 @@ namespace ngraph
                     {
                         std::cout << "assigned ConvolutionBiasBackpropFiltersBias" << std::endl;
                         auto op_annotations =
-                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         convolution->set_op_annotations(op_annotations);
                     }
