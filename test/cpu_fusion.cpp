@@ -619,7 +619,7 @@ struct ConvolutionBiasTestData
     shared_ptr<op::Parameter> bias;
     shared_ptr<op::Parameter> delta;
 
-    void generate_fwd_n1c1h3w3(shared_ptr<runtime::Backend> backend) {
+    void n1c1h3w3(shared_ptr<runtime::Backend> backend) {
         n = 1;
         c = 1;
         filter = 1;
@@ -649,14 +649,8 @@ struct ConvolutionBiasTestData
         result_val = backend->make_primary_tensor_view(element::f32, result_shape);
         copy_data(result_val, vector<float>{0});
 
-        expected_result_val = vector<float>{-2.58936238f};
-    }
-
-    void generate_bwd_n1c1h3w3(shared_ptr<runtime::Backend> backend) {
-        generate_fwd_n1c1h3w3(backend);
 
         delta = make_shared<op::Parameter>(element::f32, result_shape);
-
         delta_val = backend->make_primary_tensor_view(element::f32, result_shape);
         copy_data(delta_val, vector<float>{-2.58936238f});
 
@@ -673,6 +667,7 @@ struct ConvolutionBiasTestData
         d_bias_val = backend->make_primary_tensor_view(element::f32, bias_shape);
         copy_data(d_bias_val, vector<float>{0});
 
+        expected_result_val = vector<float>{-2.58936238f};
         expected_d_data_val = vector<float>{-0.51969099f, 1.42333758f, 0.5131861f,
                                         0.99892044f, -3.5502491f,  0.61600888f,
                                         -0.3849853f, 1.29083121f, 2.19618773f};
@@ -689,7 +684,7 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto backend = manager->allocate_backend();
 
     ConvolutionBiasTestData conv_test;
-    conv_test.generate_fwd_n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend);
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
@@ -713,7 +708,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto backend = manager->allocate_backend();
 
     ConvolutionBiasTestData conv_test;
-    conv_test.generate_bwd_n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend);
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
