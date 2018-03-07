@@ -88,6 +88,13 @@ else:
 sources = ['pyngraph/function.cpp',
            'pyngraph/serializer.cpp', 
            'pyngraph/node.cpp',
+           'pyngraph/node_vector.cpp', 
+           'pyngraph/shape.cpp',
+           'pyngraph/strides.cpp',
+           'pyngraph/coordinate_diff.cpp',
+           'pyngraph/axis_set.cpp',
+           'pyngraph/axis_vector.cpp',
+           'pyngraph/coordinate.cpp',
            'pyngraph/pyngraph.cpp',
            'pyngraph/util.cpp',
            'pyngraph/ops/util/arithmetic_reduction.cpp',
@@ -106,7 +113,7 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/atan.cpp',
            'pyngraph/ops/avg_pool.cpp',
            'pyngraph/ops/broadcast.cpp',
-           'pyngraph/ops/concatenate.cpp',
+           'pyngraph/ops/concat.cpp',
            'pyngraph/ops/constant.cpp',
            'pyngraph/ops/convert.cpp',
            'pyngraph/ops/convolution.cpp',
@@ -133,6 +140,7 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/op.cpp',
            'pyngraph/ops/one_hot.cpp',
            'pyngraph/ops/parameter.cpp',
+           'pyngraph/ops/parameter_vector.cpp',
            'pyngraph/ops/power.cpp',
            'pyngraph/ops/reduce.cpp',
            'pyngraph/ops/regmodule_pyngraph_op.cpp',
@@ -155,6 +163,8 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/runtime/manager.cpp',
            'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
            'pyngraph/runtime/tensor_view.cpp',
+           'pyngraph/passes/manager.cpp',
+           'pyngraph/passes/regmodule_pyngraph_passes.cpp',
            'pyngraph/types/element_type.cpp',
            'pyngraph/types/regmodule_pyngraph_types.cpp',
            'pyngraph/types/type.cpp',
@@ -196,6 +206,7 @@ class BuildExt(build_ext):
     def build_extensions(self):
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
+            ext.extra_compile_args += ['-w']
             if has_flag(self.compiler, '-frtti'):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':

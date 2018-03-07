@@ -19,14 +19,14 @@ from typing import Optional, Set, List
 import ngraph_api as ng
 import numpy as np
 
-from pyngraph import Node
+from pyngraph import AxisSet, Node
 from ngraph_api.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
 
 log = logging.getLogger(__file__)
 
 
 def get_broadcast_axes(left_shape, right_shape, axis):
-    # type: (TensorShape, TensorShape, Optional[int]) -> Set[int]
+    # type: (TensorShape, TensorShape, Optional[int]) -> AxisSet
     """Generate a list of broadcast axes for ngraph++ broadcast.
 
     Informally, a broadcast "adds" axes to the input tensor,
@@ -43,7 +43,7 @@ def get_broadcast_axes(left_shape, right_shape, axis):
     right_axes_indexes = list(range(right_begin, right_begin + len(right_shape)))
     for index in reversed(right_axes_indexes):
         del axes_indexes[index]
-    return set(axes_indexes)
+    return AxisSet(set(axes_indexes))
 
 
 def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
@@ -75,7 +75,7 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
             input_value = ng.broadcast(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
-            input_ndarray = np.broadcast_to(input_value, broadcast_shape)
-            output_nodes.append(make_constant_node(input_ndarray, dtype=broadcast_dtype))
+            input_value = make_constant_node(input_value, dtype=broadcast_dtype)
+            output_nodes.append(ng.broadcast(input_value, broadcast_shape))
 
     return output_nodes

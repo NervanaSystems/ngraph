@@ -16,17 +16,15 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/shape.hpp"             // ngraph::Shape
-#include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
-#include "pyngraph/types/type.hpp"
+#include "ngraph/axis_set.hpp"      //ngraph::AxisSet
+#include "pyngraph/axis_set.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
+void regclass_pyngraph_AxisSet(py::module m) {
 
-    tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
-    tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);
+    py::class_<ngraph::AxisSet, std::shared_ptr<ngraph::AxisSet>> axis_set(m, "AxisSet");
+    axis_set.def(py::init<const std::initializer_list<size_t>& >());
+    axis_set.def(py::init<const std::set<size_t>& >());
+    axis_set.def(py::init<const ngraph::AxisSet& >());
 }

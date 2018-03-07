@@ -16,17 +16,15 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/shape.hpp"             // ngraph::Shape
-#include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
-#include "pyngraph/types/type.hpp"
+
+#include "ngraph/shape.hpp"
+#include "ngraph/ops/concat.hpp"
+#include "pyngraph/ops/concat.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
+void regclass_pyngraph_op_Concat(py::module m) {
 
-    tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
-    tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);
+    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
+    concat.def(py::init<const ngraph::NodeVector&, size_t >());
 }

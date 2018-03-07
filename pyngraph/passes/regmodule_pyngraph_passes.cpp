@@ -15,18 +15,11 @@
 *******************************************************************************/
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/shape.hpp"             // ngraph::Shape
-#include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
-#include "pyngraph/types/type.hpp"
+#include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
-
-    tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
-    tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);
+void regmodule_pyngraph_passes(py::module m){
+    py::module m_passes = m.def_submodule("passes", "module pyngraph.passes");
+    regclass_pyngraph_passes_Manager(m_passes);
 }

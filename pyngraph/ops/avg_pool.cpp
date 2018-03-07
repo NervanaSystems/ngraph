@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/common.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "pyngraph/ops/avg_pool.hpp"
 
@@ -47,7 +47,8 @@ void regclass_pyngraph_op_AvgPoolBackprop(py::module m) {
                             const ngraph::Shape&,
                             const ngraph::Strides&,
                             const ngraph::Shape&,
-                            const ngraph::Shape& >());
+                            const ngraph::Shape&,
+                            bool >());
 
 }
 

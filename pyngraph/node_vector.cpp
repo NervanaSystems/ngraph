@@ -17,16 +17,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/shape.hpp"             // ngraph::Shape
-#include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
-#include "pyngraph/types/type.hpp"
+#include "ngraph/node.hpp"          // ngraph::Node
+#include "ngraph/node_vector.hpp" 
+#include "pyngraph/node.hpp"
+#include "pyngraph/node_vector.hpp"
+
 
 namespace py = pybind11;
 
-void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
+void regclass_pyngraph_NodeVector(py::module m){
 
-    tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
-    tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);
+    py::class_<ngraph::NodeVector, std::shared_ptr<ngraph::NodeVector>> node_vector(m, "NodeVector");
+    node_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::Node>>& >());
+    node_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>& >());
+    node_vector.def(py::init<const ngraph::NodeVector& >());
+
 }
+

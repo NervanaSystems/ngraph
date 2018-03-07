@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/common.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "pyngraph/ops/slice.hpp"
 
