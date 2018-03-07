@@ -658,7 +658,6 @@ using namespace std;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                handle_output_alias(writer, *node, output_alias_map);
                 if (m_emit_timing)
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
