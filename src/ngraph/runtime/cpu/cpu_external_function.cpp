@@ -82,6 +82,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -112,6 +113,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -227,6 +229,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
+    {TI(ngraph::op::Result), &runtime::cpu::CPU_Emitter::emit<op::Result>},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow>},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool>},
@@ -268,6 +271,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
@@ -316,6 +320,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/result.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
@@ -604,6 +609,7 @@ using namespace ngraph::runtime;
         }
 
         // create output alias map
+        /*
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
@@ -619,48 +625,17 @@ using namespace ngraph::runtime;
             }
             output_index++;
         }
+        */
 
         // Add outputs to the variable name map
-        output_index = 0;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-            bool parameter_as_output = false;
-            for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
-            {
-                for (const descriptor::Output& pout : param->get_outputs())
-                {
-                    shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-                    if (tv == ptv)
-                    {
-                        parameter_as_output = true;
-                        writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-                               << output_index << "]), "
-                               << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-                               << ptv->get_tensor().size() << ");\n";
-                        break;
-                    }
-                }
-            }
-            if (!parameter_as_output && !contains(aliases, output_index))
-            {
-                if (contains(constants, tv.get()))
-                {
-                    writer << "memcpy(outputs[" << output_index << "], "
-                           << tv->get_tensor().get_name() << ", " << tv->get_tensor().size()
-                           << ");\n";
-                }
-                else
-                {
-                    string type = et.c_type_string();
-                    stringstream ss;
-                    ss << "((" << type << "*)(outputs[" << output_index << "]))";
-                    m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-                }
-            }
-            output_index++;
+            string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+            stringstream ss;
+            ss << "((" << type << "*)(outputs[" << i << "]))";
+            m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
         }
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -751,7 +726,6 @@ using namespace ngraph::runtime;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                handle_output_alias(writer, *node, output_alias_map);
                 if (m_emit_timing)
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
@@ -885,35 +859,6 @@ using namespace ngraph::runtime;
     if (m_release_function)
     {
         release_function();
-    }
-}
-
-void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
-    codegen::CodeWriter& writer,
-    const Node& node,
-    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
-{
-    for (const descriptor::Output& output : node.get_outputs())
-    {
-        shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
-        auto it = output_alias_map.find(otv.get());
-        if (it != output_alias_map.end())
-        {
-            const vector<size_t>& outputs = it->second;
-            if (outputs.size() > 1)
-            {
-                writer << "{    // handle output alias for previous op\n";
-                writer.indent++;
-                for (size_t i = 1; i < outputs.size(); i++)
-                {
-                    writer << "memcpy(static_cast<void*>(outputs[" << outputs[i]
-                           << "]), static_cast<void*>(outputs[" << outputs[0] << "]), "
-                           << otv->get_tensor().size() << ");\n";
-                }
-                writer.indent--;
-                writer << "}\n";
-            }
-        }
     }
 }
 

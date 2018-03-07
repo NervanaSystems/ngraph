@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -26,29 +26,12 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUFusion;
+                class CPUNopElimination : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
             }
         }
     }
 }
-
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUFusion()
-        : GraphRewrite()
-    {
-        construct_matmul_pattern();
-        construct_matmulbias_pattern();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-    }
-
-private:
-    void construct_matmul_pattern();
-    void construct_matmulbias_pattern();
-    void construct_fprop_bn();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-};
