@@ -35,13 +35,23 @@ namespace ngraph
             class CPU_ExternalFunction;
             class TensorViewWrapper;
 
+            class MKLDNNWorkspace
+            {
+            public:
+                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(malloc(size)); }
+                ~MKLDNNWorkspace() { free(buf); }
+                char* buf;
+            };
+
             class MKLDNNEmitter
             {
             public:
                 MKLDNNEmitter() {}
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
+                const std::vector<char*>& get_mkldnn_workspaces();
 
                 size_t insert_primitive(mkldnn::primitive* primitive);
+                size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
 
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
@@ -91,6 +101,23 @@ namespace ngraph
                                              const ngraph::Shape& padding_below,
                                              const ngraph::Shape& padding_above);
 
+                size_t build_pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                              const mkldnn::memory::desc& diff_dst_desc,
+                                              const mkldnn::memory::desc& diff_src_desc,
+                                              const ngraph::Strides& window_strides,
+                                              const ngraph::Shape& window_shape,
+                                              const ngraph::Shape& padding_below,
+                                              const ngraph::Shape& padding_above);
+
+                size_t build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                                  const mkldnn::memory::desc& fprop_src_desc,
+                                                  const mkldnn::memory::desc& diff_dst_desc,
+                                                  const mkldnn::memory::desc& diff_src_desc,
+                                                  const ngraph::Strides& window_strides,
+                                                  const ngraph::Shape& window_shape,
+                                                  const ngraph::Shape& padding_below,
+                                                  const ngraph::Shape& padding_above);
+
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
 
@@ -108,6 +135,8 @@ namespace ngraph
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
+                std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
+                std::vector<char*> m_workspace_bufs;
             };
         }
     }
