@@ -710,6 +710,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
+    {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
