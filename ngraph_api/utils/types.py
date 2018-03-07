@@ -21,7 +21,7 @@ from typing import Union, List
 import numpy as np
 
 from pyngraph import Type as NgraphType
-from pyngraph import Node
+from pyngraph import Node, Shape
 from pyngraph.op import Constant
 
 from ngraph_api.exceptions import NgraphTypeError
@@ -93,7 +93,7 @@ def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -
     else:
         element_type = get_element_type(ndarray.dtype)
 
-    return Constant(element_type, ndarray.shape, ndarray.flatten().tolist())
+    return Constant(element_type, Shape(ndarray.shape), ndarray.flatten().tolist())
 
 
 def as_node(input_value):  # type: (NodeInput) -> Node

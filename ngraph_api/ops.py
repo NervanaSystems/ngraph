@@ -18,7 +18,7 @@
 
 import numpy as np
 
-from pyngraph import Node
+from pyngraph import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
 
 from pyngraph.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
     Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, MaxPool, \
@@ -40,7 +40,7 @@ def parameter(shape, dtype=np.float32, name=None):
     """Return an ngraph Parameter object."""
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
-    return Parameter(element_type, shape)
+    return Parameter(element_type, Shape(shape))
 
 
 @nameable_op
@@ -102,7 +102,7 @@ def reshape(node, input_order, output_shape, name=None):
     :param input_order: The order in which to iterate over input axes of input tensor.
     :param output_shape: The new shape for input tensor.
     """
-    return Reshape(node, input_order, output_shape)
+    return Reshape(node, AxisVector(input_order), Shape(output_shape))
 
 
 # Binary ops
@@ -208,7 +208,7 @@ Node.__ge__ = greater_eq
 @nameable_op
 def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
     """Return node which broadcasts input node values to specified shape."""
-    return Broadcast(node, new_shape, get_broadcast_axes(new_shape, node.shape, axis))
+    return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
 @nameable_op
@@ -254,7 +254,8 @@ def convolution(x,                      # type: Node
     if padding_below is None:
         padding_below = [0] * (len(x.shape) - 2)
 
-    return Convolution(x, weights, strides, dilation, padding_above, padding_below)
+    return Convolution(x, weights, Strides(strides), Strides(dilation),
+                       CoordinateDiff(padding_above), CoordinateDiff(padding_below))
 
 
 @nameable_op
@@ -275,7 +276,8 @@ def avg_pool(x,                      # type: Node
     if padding_below is None:
         padding_below = [0] * len(window_shape)
 
-    return AvgPool(x, window_shape, strides, padding_above, padding_above, zero_pad)
+    return AvgPool(x, Shape(window_shape), Strides(strides),
+                   Shape(padding_above), Shape(padding_above), zero_pad)
 
 
 @nameable_op
@@ -295,7 +297,8 @@ def max_pool(x,                      # type: Node
     if padding_below is None:
         padding_below = [0] * len(window_shape)
 
-    return MaxPool(x, window_shape, strides, padding_above, padding_above)
+    return MaxPool(x, Shape(window_shape), Strides(strides),
+                   Shape(padding_above), Shape(padding_above))
 
 
 # reduction ops
@@ -309,4 +312,4 @@ def sum(node, reduction_axes=None, name=None):  # type: (Node, Iterable[int], st
         reduction_axes = set(range(len(node.shape)))
     if type(reduction_axes) is not set:
         reduction_axes = set(reduction_axes)
-    return Sum(node, reduction_axes)
+    return Sum(node, AxisSet(reduction_axes))

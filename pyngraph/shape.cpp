@@ -27,4 +27,9 @@ void regclass_pyngraph_Shape(py::module m) {
     shape.def(py::init<const std::initializer_list<size_t>& >());
     shape.def(py::init<const std::vector<size_t>& >());
     shape.def(py::init<const ngraph::Shape& >());
+    shape.def("__len__", [](const ngraph::Shape &v) { return v.size(); });
+    shape.def("__getitem__", [](const ngraph::Shape &v, int key) { return v[key]; });
+    shape.def("__iter__", [](ngraph::Shape &v) {
+       return py::make_iterator(v.begin(), v.end());
+    }, py::keep_alive<0, 1>()); /* Keep vector alive while iterator is used */
 }
