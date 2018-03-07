@@ -105,7 +105,7 @@ namespace ngraph
         namespace gpu
         {
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -118,7 +118,7 @@ template <>
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Add)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -157,9 +157,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Dot)
 {
-    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
+    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
     if (arg0_shape.empty() || arg1_shape.empty())
@@ -279,7 +279,7 @@ template <>
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -318,7 +318,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -357,7 +357,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -396,9 +396,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Broadcast)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Broadcast)
 {
-    auto broadcast = static_cast<const ngraph::op::Broadcast*>(n);
+    auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
@@ -460,14 +460,14 @@ template <>
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
 {
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
 {
-    auto reshape = static_cast<const op::Reshape*>(n);
+    auto reshape = static_cast<const op::Reshape*>(node);
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     auto arg_shape = args[0].get_shape();
@@ -529,12 +529,12 @@ template <>
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
 {
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
@@ -573,7 +573,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 }
 
 template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
 {
     writer << "{  // " << node->get_name() << "\n";
     writer.indent++;
