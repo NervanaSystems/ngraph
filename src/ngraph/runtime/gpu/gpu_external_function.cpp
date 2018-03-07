@@ -197,6 +197,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::gpu::GPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::EmitResult},
 };
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
