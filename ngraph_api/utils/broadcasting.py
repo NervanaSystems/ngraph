@@ -75,7 +75,7 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
             input_value = ng.broadcast(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
-            input_ndarray = np.broadcast_to(input_value, broadcast_shape)
-            output_nodes.append(make_constant_node(input_ndarray, dtype=broadcast_dtype))
+            input_value = make_constant_node(input_value, dtype=broadcast_dtype)
+            output_nodes.append(ng.broadcast(input_value, broadcast_shape))
 
     return output_nodes
