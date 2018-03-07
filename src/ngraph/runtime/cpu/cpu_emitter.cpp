@@ -278,21 +278,23 @@ namespace ngraph
                     if (axes.size() == 1)
                     {
                         size_t broadcast_index = 1 - *(axes.begin());
+
                         //cast a pointer to a 2d array
                         auto ctype = out[0].get_element_type().c_type_string();
-
                         std::stringstream ss_dims;
                         ss_dims << "[" << arg2_shape.at(0) << "][" << arg2_shape.at(1) << "]";
                         auto dims = ss_dims.str();
                         writer << ctype << "(&out)" << dims << " = *reinterpret_cast<" << ctype
                                << "(*)" << dims << ">(" << out[0].get_name() << ");\n";
+
+                        //loop over the broadcasted shape and assign each element its proper value
                         writer << "for (size_t i0 = 0; i0 < " << arg2_shape.at(0) << "; i0++)\n";
                         writer << "{\n";
                         writer.indent++;
                         writer << "for (size_t i1 = 0; i1 < " << arg2_shape.at(1) << "; i1++)\n";
                         writer << "{\n";
                         writer.indent++;
-                        //i0,i1 depends on a broadcast type (i.e. col-wise, row-wise)
+                        //switch between i0,i1 depending on broadcast_index (i.e. col-wise, row-wise)
                         writer << "out[i0][i1] = " << args[2].get_name() << " [i" << broadcast_index
                                << "];\n";
                         writer.indent--;
