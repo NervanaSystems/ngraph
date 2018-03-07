@@ -274,8 +274,47 @@ namespace ngraph
 
                 if (args.size() > 2)
                 {
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    auto axes = cg->get_broadcast_axes();
+                    if (axes.size() == 1)
+                    {
+                        size_t broadcast_index = 1 - *(axes.begin());
+                        //cast a pointer to a 2d array
+                        auto ctype = out[0].get_element_type().c_type_string();
+
+                        std::stringstream ss_dims;
+                        ss_dims << "[" << arg2_shape.at(0) << "][" << arg2_shape.at(1) << "]";
+                        auto dims = ss_dims.str();
+                        writer << ctype << "(&out)" << dims << " = *reinterpret_cast<" << ctype
+                               << "(*)" << dims << ">(" << out[0].get_name() << ");\n";
+                        writer << "for (size_t i0 = 0; i0 < " << arg2_shape.at(0) << "; i0++)\n";
+                        writer << "{\n";
+                        writer.indent++;
+                        writer << "for (size_t i1 = 0; i1 < " << arg2_shape.at(1) << "; i1++)\n";
+                        writer << "{\n";
+                        writer.indent++;
+                        //i0,i1 depends on a broadcast type (i.e. col-wise, row-wise)
+                        writer << "out[i0][i1] = " << args[2].get_name() << " [i" << broadcast_index
+                               << "];\n";
+                        writer.indent--;
+                        writer << "}\n";
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                    else
+                    {
+                        if (axes.size() != 2)
+                        {
+                            throw ngraph_error("unexpected broadcast rank");
+                        }
+
+                        writer << "for (size_t i0 = 0; i0 < " << shape_size(arg2_shape)
+                               << "; i0++)\n";
+                        writer << "{\n";
+                        writer.indent++;
+                        writer << out[0].get_name() << "[i0] = " << args[2].get_name() << " [0];\n";
+                        writer.indent--;
+                        writer << "}\n";
+                    }
                     cbeta = "1.0f";
                 }
 
