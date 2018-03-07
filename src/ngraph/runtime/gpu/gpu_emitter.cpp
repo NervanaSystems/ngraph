@@ -91,8 +91,8 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
@@ -106,7 +106,8 @@ namespace ngraph
         {
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
-            {
+            {  
+                std::cout << "abs" << std::endl;
                 writer << "{  // " << node->get_name() << "\n";
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
@@ -467,7 +468,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
             {
             }
-
+            
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
@@ -577,7 +578,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.indent--;
                 writer << "}\n";
             }
-
+            
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
+            {
+            }
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
             {
