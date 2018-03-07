@@ -5,8 +5,8 @@
 Checkout ngraph++ and python wrapper code and build bdist wheel.
 
 ```
-git clone --branch python_binding --recursive https://github.com/NervanaSystems/private-ngraph-cpp.git
-cd private-ngraph-cpp/python
+git clone --branch python_binding --recursive https://github.com/NervanaSystems/ngraph-cpp.git
+cd ngraph-cpp/python
 ```
 To build python2 bdist wheel type
 ```
@@ -17,7 +17,7 @@ To build python3 bdist wheel type
 ./build3.sh
 ```
 
-The bdist wheel will be placed in private-ngraph-cpp/python/build/dist
+The bdist wheel will be placed in ngraph-cpp/python/build/dist
 Activate your virtual environment and install the bdist wheel
 
 ```
@@ -77,20 +77,20 @@ tox
 Follow these steps to install the ngraph's python wrapper and its prerequisites.
 
 
-### private-ngraph-cpp
+### ngraph-cpp
 
-Download the required version of private-ngraph-cpp and install it.
+Download the required version of ngraph-cpp and install it.
 ```
-git clone https://github.com/NervanaSystems/private-ngraph-cpp.git
-cd private-ngraph-cpp
+git clone https://github.com/NervanaSystems/ngraph-cpp.git
+cd ngraph-cpp
 git checkout d991861da5cb953fdd55523215a3667d79b78ffd -b "local branch name"
-Build and Install it : https://github.com/NervanaSystems/private-ngraph-cpp#steps
+Build and Install it : https://github.com/NervanaSystems/ngraph-cpp#steps
 ```
 
 ### ngraph-neon
 
-After installing private-ngraph-cpp, follow the steps below to install ngraph-neon.
-The NGRAPH_CPP_BUILD_PATH is set to default installation location of private-ngraph-cpp.
+After installing ngraph-cpp, follow the steps below to install ngraph-neon.
+The NGRAPH_CPP_BUILD_PATH is set to default installation location of ngraph-cpp.
 ```
 git clone --recursive https://github.com/NervanaSystems/ngraph-neon.git
 cd ngraph-neon
