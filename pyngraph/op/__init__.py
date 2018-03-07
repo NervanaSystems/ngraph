@@ -81,3 +81,5 @@ from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
+from _pyngraph.op import Relu
+from _pyngraph.op import ReluBackprop

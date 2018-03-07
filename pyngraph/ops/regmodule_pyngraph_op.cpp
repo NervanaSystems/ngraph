@@ -74,4 +74,6 @@ void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_Sum(m_op);
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
+    regclass_pyngraph_op_Relu(m_op);
+    regclass_pyngraph_op_ReluBackprop(m_op);
 }
