@@ -39,6 +39,8 @@ namespace ngraph
             {
             public:
                 MKLDNNEmitter() {}
+                ~MKLDNNEmitter();
+
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
 
                 size_t insert_primitive(mkldnn::primitive* primitive);
