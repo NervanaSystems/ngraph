@@ -185,7 +185,7 @@ namespace ngraph
                     auto convolution = static_cast<op::ConvolutionBiasBackpropFiltersBias*>(node);
 
                     auto data_shape = node->get_input_shape(0);
-                    auto delta_shape = node->get_input_shape(0);
+                    auto delta_shape = node->get_input_shape(1);
                     auto data_rank = data_shape.size();
                     auto delta_rank = delta_shape.size();
 
@@ -195,10 +195,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    std::cout << "testing ConvolutionBiasBackpropFiltersBias" << std::endl;
-                    if (!data_dilated && data_rank == 4 && node->get_input_element_type(0) == element::f32)
+                    if (!data_dilated && data_rank == 4 && delta_rank == 4 && node->get_input_element_type(0) == element::f32)
                     {
-                        std::cout << "assigned ConvolutionBiasBackpropFiltersBias" << std::endl;
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
