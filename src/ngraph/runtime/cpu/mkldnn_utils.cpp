@@ -48,7 +48,7 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::Convolution),
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
-	TI(ngraph::op::ConvolutionBias),
+    TI(ngraph::op::ConvolutionBias),
     TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
