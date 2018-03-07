@@ -195,7 +195,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && data_rank == 4 && delta_rank == 4 && node->get_input_element_type(0) == element::f32)
+                    if (!data_dilated && data_rank == 4 && delta_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -293,7 +294,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropFilters>},
-	{TI(ngraph::op::ConvolutionBias),
+    {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasBackpropFiltersBias>},

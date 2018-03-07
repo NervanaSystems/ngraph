@@ -43,7 +43,7 @@ public:
         construct_fprop_bn();
         construct_zero_padded_reshaped_conv();
         construct_zero_padded_conv();
-		construct_conv_bias();
+        construct_conv_bias();
     }
 
 private:

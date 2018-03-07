@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -29,12 +30,11 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/file_util.hpp"
-#include "ngraph/pass/reshape_elimination.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -619,7 +619,8 @@ struct ConvolutionBiasTestData
     shared_ptr<op::Parameter> bias;
     shared_ptr<op::Parameter> delta;
 
-    void n1c1h3w3(shared_ptr<runtime::Backend> backend) {
+    void n1c1h3w3(shared_ptr<runtime::Backend> backend)
+    {
         n = 1;
         c = 1;
         filter = 1;
@@ -633,47 +634,68 @@ struct ConvolutionBiasTestData
         weights = make_shared<op::Parameter>(element::f32, weights_shape);
         bias_shape = Shape{filter};
         bias = make_shared<op::Parameter>(element::f32, bias_shape);
-        result_shape = Shape{n,filter,1,1};
+        result_shape = Shape{n, filter, 1, 1};
 
         data_val = backend->make_primary_tensor_view(element::f32, data_shape);
-        copy_data(data_val, vector<float>{-0.67765152f, 0.10073948f, 0.57595438f,
-                                       -0.3469252f, -0.22134334f, -1.80471897f,
-                                       -0.80642909f, 1.22033095f, 2.23235631f});
+        copy_data(data_val,
+                  vector<float>{-0.67765152f,
+                                0.10073948f,
+                                0.57595438f,
+                                -0.3469252f,
+                                -0.22134334f,
+                                -1.80471897f,
+                                -0.80642909f,
+                                1.22033095f,
+                                2.23235631f});
         weights_val = backend->make_primary_tensor_view(element::f32, weights_shape);
-        copy_data(weights_val, vector<float>{0.20070229f, -0.54968649f, -0.19819015f,
-                                          -0.38577855f, 1.37109005f, -0.23789984f,
-                                          0.14867957f, -0.49851316f, -0.84815776f});
+        copy_data(weights_val,
+                  vector<float>{0.20070229f,
+                                -0.54968649f,
+                                -0.19819015f,
+                                -0.38577855f,
+                                1.37109005f,
+                                -0.23789984f,
+                                0.14867957f,
+                                -0.49851316f,
+                                -0.84815776f});
         bias_val = backend->make_primary_tensor_view(element::f32, bias_shape);
         copy_data(bias_val, vector<float>{0.07811152f});
 
         result_val = backend->make_primary_tensor_view(element::f32, result_shape);
         copy_data(result_val, vector<float>{0});
 
-
         delta = make_shared<op::Parameter>(element::f32, result_shape);
         delta_val = backend->make_primary_tensor_view(element::f32, result_shape);
         copy_data(delta_val, vector<float>{-2.58936238f});
 
         d_data_val = backend->make_primary_tensor_view(element::f32, data_shape);
-        copy_data(d_data_val, vector<float>{0,0,0,
-                                         0,0,0,
-                                         0,0,0});
+        copy_data(d_data_val, vector<float>{0, 0, 0, 0, 0, 0, 0, 0, 0});
 
         d_weights_val = backend->make_primary_tensor_view(element::f32, weights_shape);
-        copy_data(d_weights_val, vector<float>{0,0,0,
-                                            0,0,0,
-                                            0,0,0});
+        copy_data(d_weights_val, vector<float>{0, 0, 0, 0, 0, 0, 0, 0, 0});
 
         d_bias_val = backend->make_primary_tensor_view(element::f32, bias_shape);
         copy_data(d_bias_val, vector<float>{0});
 
         expected_result_val = vector<float>{-2.58936238f};
-        expected_d_data_val = vector<float>{-0.51969099f, 1.42333758f, 0.5131861f,
-                                        0.99892044f, -3.5502491f,  0.61600888f,
-                                        -0.3849853f, 1.29083121f, 2.19618773f};
-        expected_d_weights_val = vector<float>{1.7546854f, -0.26085103f, -1.49135458f,
-                                           0.89831507f, 0.57313812f, 4.67307138f,
-                                           2.08813715f, -3.15987897f, -5.7803793f};
+        expected_d_data_val = vector<float>{-0.51969099f,
+                                            1.42333758f,
+                                            0.5131861f,
+                                            0.99892044f,
+                                            -3.5502491f,
+                                            0.61600888f,
+                                            -0.3849853f,
+                                            1.29083121f,
+                                            2.19618773f};
+        expected_d_weights_val = vector<float>{1.7546854f,
+                                               -0.26085103f,
+                                               -1.49135458f,
+                                               0.89831507f,
+                                               0.57313812f,
+                                               4.67307138f,
+                                               2.08813715f,
+                                               -3.15987897f,
+                                               -5.7803793f};
         expected_d_bias_val = vector<float>{-2.58936238f};
     }
 };
@@ -689,14 +711,17 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
 
-    auto f = make_shared<Function>(convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
+    auto f = make_shared<Function>(
+        convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
     auto external = manager->compile(f);
     auto cf = backend->make_call_frame(external);
 
-    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val}, {conv_test.result_val});
+    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val},
+             {conv_test.result_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
-    EXPECT_TRUE(test::all_close(conv_test.expected_result_val, read_vector<float>(conv_test.result_val)));
+    EXPECT_TRUE(
+        test::all_close(conv_test.expected_result_val, read_vector<float>(conv_test.result_val)));
 }
 
 TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
@@ -710,22 +735,27 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
 
-    auto f = make_shared<Function>(convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
+    auto f = make_shared<Function>(
+        convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
     auto d_data = convolution_bias->backprop_node(conv_test.data, conv_test.delta);
     auto d_weights = convolution_bias->backprop_node(conv_test.weights, conv_test.delta);
     auto d_bias = convolution_bias->backprop_node(conv_test.bias, conv_test.delta);
 
-    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
-                                    op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
+    auto df = make_shared<Function>(
+        NodeVector{d_data, d_weights, d_bias},
+        op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
 
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
 
-    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val}, {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val});
+    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val},
+             {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val});
 
-    EXPECT_TRUE(test::all_close(conv_test.expected_d_data_val, read_vector<float>(conv_test.d_data_val)));
-    EXPECT_TRUE(test::all_close(conv_test.expected_d_weights_val, read_vector<float>(conv_test.d_weights_val)));
-    EXPECT_TRUE(test::all_close(conv_test.expected_d_bias_val, read_vector<float>(conv_test.d_bias_val)));
+    EXPECT_TRUE(
+        test::all_close(conv_test.expected_d_data_val, read_vector<float>(conv_test.d_data_val)));
+    EXPECT_TRUE(test::all_close(conv_test.expected_d_weights_val,
+                                read_vector<float>(conv_test.d_weights_val)));
+    EXPECT_TRUE(
+        test::all_close(conv_test.expected_d_bias_val, read_vector<float>(conv_test.d_bias_val)));
 }
-

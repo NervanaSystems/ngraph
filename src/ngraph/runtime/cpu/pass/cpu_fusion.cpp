@@ -548,4 +548,3 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
     auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
     this->add_matcher(m);
 }
-

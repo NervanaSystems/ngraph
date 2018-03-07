@@ -2404,9 +2404,11 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto data_desc = mkldnn_emitter->build_memory_descriptor(data, data_format);
-                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(weights, weights_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(weights, weights_format);
                     auto bias_desc = mkldnn_emitter->build_memory_descriptor(bias, bias_format);
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(result, result_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(result, result_format);
 
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
@@ -2418,14 +2420,14 @@ namespace ngraph
                     }
 
                     size_t conv_index = mkldnn_emitter->build_convolution_forward(
-                            data_desc,
-                            weights_desc,
-                            bias_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above());
+                        data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2445,11 +2447,12 @@ namespace ngraph
                     throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
-			
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
+                auto convolution =
+                    static_cast<const ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
                 const TensorViewWrapper& data = args[0];
                 const TensorViewWrapper& delta = args[1];
                 const TensorViewWrapper& weights_delta = out[0];
@@ -2473,8 +2476,10 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto data_desc = mkldnn_emitter->build_memory_descriptor(data, data_format);
                     auto delta_desc = mkldnn_emitter->build_memory_descriptor(delta, delta_format);
-                    auto weights_delta_desc = mkldnn_emitter->build_memory_descriptor(weights_delta, weights_delta_format);
-                    auto bias_delta_desc = mkldnn_emitter->build_memory_descriptor(bias_delta, bias_delta_format);
+                    auto weights_delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_delta, weights_delta_format);
+                    auto bias_delta_desc =
+                        mkldnn_emitter->build_memory_descriptor(bias_delta, bias_delta_format);
 
                     size_t conv_index = mkldnn_emitter->build_convolution_backward_weights_bias(
                         data_desc,
@@ -2501,7 +2506,8 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
+                    throw ngraph_error(
+                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
                 }
             }
 
