@@ -420,6 +420,9 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     double eps = 0.001;
     auto shape_r = Shape{4, 3, 2, 2};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn_dx = make_shared<op::GetOutputElement>(bn, 0);
+    auto bn_dgamma = make_shared<op::GetOutputElement>(bn, 1);
+    auto bn_dbeta = make_shared<op::GetOutputElement>(bn, 2);
 
     auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
@@ -451,7 +454,7 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     vector<float> deltaData(shape_size(shape_r), 20.0f);
     copy_data(_delta, deltaData);
 
-    auto f = make_shared<Function>(bn, op::ParameterVector{mean, var, input, gamma, beta});
+    auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta}, op::ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
     auto dinput = bn->backprop_node(input, C);
