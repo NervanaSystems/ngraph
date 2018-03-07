@@ -114,6 +114,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -275,6 +276,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
