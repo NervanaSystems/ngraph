@@ -30,13 +30,18 @@ atomic<size_t> Function::m_next_instance_id(0);
 Function::Function(const ResultVector& results,
                    const op::ParameterVector& parameters,
                    const std::string& name)
-    : m_results(results)
+    : m_results()
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
+    //it's better than bringing ResultVector into NodeVector's scope
+    for (auto r : results)
+    {
+        m_results.push_back(r);
+    }
     init();
 }
 
@@ -188,4 +193,14 @@ std::list<shared_ptr<Node>> Function::get_ops() const
 void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
 {
     ngraph::replace_node(old, repl);
+}
+
+void Function::replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
+{
+    auto it = std::find(begin(m_results), end(m_results), old);
+    if (it != end(m_results))
+    {
+        NGRAPH_DEBUG << "Replacing output " << old->get_name() << " w/ " << repl->get_name();
+        *it = repl;
+    }
 }

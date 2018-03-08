@@ -100,6 +100,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/result_elimination.hpp"
 #include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -276,10 +277,18 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
     pass_manager.run_passes(m_function);
+    auto orig_results = m_function->get_results();
+    m_function->set_results(m_function->get_optimized_results());
+    // std::cout << "results:\n";
+    // for (auto o_r : m_function->get_results())
+    // {
+    //     std::cout << "r = " << o_r->get_name() << std::endl;
+    // }
     codegen::CodeWriter writer;
 
     bool include_mkldnn_headers = false;
@@ -827,7 +836,7 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-
+    m_function->set_results(orig_results);
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);
