@@ -78,4 +78,5 @@ void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_ReluBackprop(m_op);
     regclass_pyngraph_op_Max(m_op);
     regclass_pyngraph_op_Product(m_op);
+    regclass_pyngraph_op_AllReduce(m_op);
 }

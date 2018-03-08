@@ -70,6 +70,7 @@
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/max.hpp"
 #include "pyngraph/ops/product.hpp"
+#include "pyngraph/ops/allreduce.hpp"
 
 namespace py = pybind11;
 
