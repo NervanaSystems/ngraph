@@ -72,6 +72,7 @@
 #include "pyngraph/ops/product.hpp"
 #include "pyngraph/ops/allreduce.hpp"
 #include "pyngraph/ops/function_call.hpp"
+#include "pyngraph/ops/get_output_element.hpp"
 
 namespace py = pybind11;
 
