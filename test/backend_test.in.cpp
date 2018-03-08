@@ -3626,7 +3626,6 @@ TEST(${BACKEND_NAME}, sign)
 
 TEST(${BACKEND_NAME}, power)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -3645,7 +3644,7 @@ TEST(${BACKEND_NAME}, power)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 1, 729, 125}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, constant_equality_bool)

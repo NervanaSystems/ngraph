@@ -58,7 +58,7 @@ void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
 {
 }
 
-void runtime::gpu::GPU_Emitter::EmitUnaryElementwise(
+void runtime::gpu::GPU_Emitter::EmitElementwise(
     codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
@@ -75,8 +75,11 @@ void runtime::gpu::GPU_Emitter::EmitUnaryElementwise(
     writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::" << n->description() << ">(\""
            << n->description() << "\""
            << ", count"
-           << ", (CUdeviceptr) " << out[0].get_name() << ", (CUdeviceptr) " << args[0].get_name()
-           << ");\n";
+           << ", (CUdeviceptr) " << out[0].get_name();
+    for (size_t i=0; i < args.size(); i++) {
+        writer << ", (CUdeviceptr) " << args[i].get_name();
+    }
+    writer << ");\n";
     writer.indent--;
     writer << "}\n";
 }
@@ -687,14 +690,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
            << "descriptor," << out[0].get_name() << ");\n";
     writer.indent--;
     writer << "}\n";
-}
-
-void runtime::gpu::GPU_Emitter::EmitPower(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
-    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReplaceSlice(

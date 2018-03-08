@@ -34,6 +34,7 @@ namespace ngraph
         class Sinh;
         class Tan;
         class Tanh;
+        class Power;
 
         // Unimplemented or unused in favor of cuDNN impl.
         class Max;
@@ -163,6 +164,13 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Tanh>
             {
                 static constexpr const char* op = "tanhf";
+                static constexpr const char* type = "float";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Power>
+            {
+                static constexpr const char* op = "powf";
                 static constexpr const char* type = "float";
             };
         }

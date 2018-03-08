@@ -45,7 +45,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitMultiply);
                 static void EMITTER_DECL(EmitGetOutputElement);
                 static void EMITTER_DECL(EmitXLAGetTupleElement);
-                static void EMITTER_DECL(EmitUnaryElementwise);
+                static void EMITTER_DECL(EmitElementwise);
                 static void EMITTER_DECL(EmitTuple);
                 static void EMITTER_DECL(EmitConcat);
                 static void EMITTER_DECL(EmitDivide);
@@ -68,7 +68,6 @@ namespace ngraph
                 static void EMITTER_DECL(EmitReduce);
                 static void EMITTER_DECL(EmitSlice);
                 static void EMITTER_DECL(EmitSum);
-                static void EMITTER_DECL(EmitPower);
                 static void EMITTER_DECL(EmitReplaceSlice);
                 static void EMITTER_DECL(EmitOneHot);
                 static void EMITTER_DECL(EmitSqrt);
