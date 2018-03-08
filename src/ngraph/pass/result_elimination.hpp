@@ -30,7 +30,7 @@ public:
                 continue;
             }
 
-            //TODO: check if broadcast replace op::Result w/ of a broadcast node
+            //TODO: check if broadcast replace op::Result w/ a copy of broadcast node
 
             //TODO: consider other cases where it's easier to recompute than make a copy
 
