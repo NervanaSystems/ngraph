@@ -194,7 +194,7 @@ namespace ngraph
                 {TI(ngraph::op::Reshape), &GPU_Emitter::emit<ngraph::op::Reshape>},
                 {TI(ngraph::op::FunctionCall), &GPU_Emitter::emit<ngraph::op::FunctionCall>},
                 {TI(ngraph::op::Reduce), &GPU_Emitter::emit<ngraph::op::Reduce>},
-                {TI(ngraph::op::Sign), &GPU_Emitter::EmitUnaryElementwise},
+                {TI(ngraph::op::Sign), &GPU_Emitter::emit<ngraph::op::Sign>},
                 {TI(ngraph::op::Slice), &GPU_Emitter::emit<ngraph::op::Slice>},
                 {TI(ngraph::op::Sum), &GPU_Emitter::emit<ngraph::op::Sum>},
                 {TI(ngraph::op::Exp), &GPU_Emitter::EmitUnaryElementwise},
@@ -558,6 +558,10 @@ using namespace std;
                                 writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
                                 writer << "{\n";
                                 writer.indent++;
+                                writer << tv->get_tensor().get_name() << " = ("
+                                       << tv->get_tensor().get_element_type().c_type_string()
+                                       << " *) ngraph::runtime::gpu::create_gpu_buffer("
+                                       << tv->get_tensor().size() << ");\n";
                                 writer << "runtime::gpu::cuda_memcpyHtD("
                                        << tv->get_tensor().get_name() << ", "
                                        << tv->get_tensor().get_name() << "_cpu, "
