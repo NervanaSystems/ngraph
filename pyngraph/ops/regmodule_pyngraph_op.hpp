@@ -74,6 +74,7 @@
 #include "pyngraph/ops/function_call.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/min.hpp"
+#include "pyngraph/ops/batch_norm.hpp"
 
 namespace py = pybind11;
 

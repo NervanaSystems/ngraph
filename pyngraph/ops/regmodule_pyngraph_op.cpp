@@ -82,4 +82,6 @@ void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_FunctionCall(m_op);
     regclass_pyngraph_op_GetOutputElement(m_op);
     regclass_pyngraph_op_Min(m_op);
+    regclass_pyngraph_op_BatchNorm(m_op);
+    regclass_pyngraph_op_BatchNormBackprop(m_op);
 }
