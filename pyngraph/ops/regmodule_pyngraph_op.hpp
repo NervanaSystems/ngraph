@@ -68,6 +68,7 @@
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
 #include "pyngraph/ops/relu.hpp"
+#include "pyngraph/ops/max.hpp"
 
 namespace py = pybind11;
 

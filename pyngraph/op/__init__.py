@@ -83,3 +83,4 @@ from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
+from _pyngraph.op import Max
