@@ -65,14 +65,7 @@ namespace ngraph
         /// Return the function parameters
         const op::ParameterVector& get_parameters() const { return m_parameters; }
         /// Return a list of function's outputs
-        const NodeVector& get_results() const { return m_results; }
-        const NodeVector& get_optimized_results() const { return m_optimized_results; }
-        void set_results(const NodeVector& val) { m_results.assign(begin(val), end(val)); }
-        void set_optimized_results(const NodeVector& val)
-        {
-            m_optimized_results.assign(begin(val), end(val));
-        }
-
+        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -89,12 +82,9 @@ namespace ngraph
         void set_temporary_pool_size(size_t);
         // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
-        //
-        void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
-        NodeVector m_results;
-        NodeVector m_optimized_results;
+        ResultVector m_results;
         op::ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 

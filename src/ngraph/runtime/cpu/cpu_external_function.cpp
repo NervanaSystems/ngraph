@@ -280,10 +280,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
     pass_manager.run_passes(m_function);
-    auto orig_results = m_function->get_results();
-    m_function->set_results(m_function->get_optimized_results());
 
     codegen::CodeWriter writer;
 
@@ -641,6 +638,16 @@ using namespace ngraph::runtime;
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+
+            //it should be safe to assign both descriptors to one output*
+            //since needs_copy == false makes `op::Result` an nop
+            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+            if (!res->needs_copy())
+            {
+                shared_ptr<descriptor::TensorView> itv =
+                    res->get_input_op(0)->get_output_tensor_view();
+                m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
+            }
         }
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -832,7 +839,6 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-    m_function->set_results(orig_results);
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);

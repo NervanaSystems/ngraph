@@ -26,6 +26,8 @@ using namespace ngraph;
 
 op::Result::Result(const std::shared_ptr<Node>& arg)
     : RequiresTensorViewArgs("Result", {arg})
+    , m_needs_copy(true)
+
 {
     if (arg->get_outputs().size() != 1)
     {
@@ -49,5 +51,7 @@ std::shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args)
         throw ngraph_error("Expected a single-output argument");
     }
 
-    return std::make_shared<Result>(new_args.at(0));
+    auto res = std::make_shared<Result>(new_args.at(0));
+    res->set_needs_copy(res->needs_copy());
+    return res;
 }

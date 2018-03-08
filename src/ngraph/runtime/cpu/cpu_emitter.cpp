@@ -3417,6 +3417,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
+                const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
+
+                if (!result->needs_copy())
+                {
+                    return;
+                }
+
                 writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";

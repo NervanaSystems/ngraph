@@ -246,12 +246,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     for (auto fpr : fprop->get_results())
     {
-        auto rfpr = std::dynamic_pointer_cast<op::Result>(fpr);
-        if (!rfpr)
-        {
-            throw ngraph_error("expected op::Result");
-        }
-        fprop_outputs.push_back(rfpr);
+        fprop_outputs.push_back(fpr);
     }
 
     for (auto fpir : fprop_cache.fprop_output_nodes)
