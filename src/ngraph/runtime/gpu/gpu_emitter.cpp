@@ -64,6 +64,10 @@ void runtime::gpu::GPU_Emitter::EmitUnaryElementwise(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
@@ -80,10 +84,13 @@ void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -128,6 +135,11 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
@@ -138,7 +150,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer << "{  // " << n->get_name() << "\n";
         writer.indent++;
         writer << "int count = " << second.get_size() << ";\n";
-        writer << "if(count == 0) return;\n";
         writer << "cublasScopy("
                << "cublas_handle,"
                << "count ," << second.get_name() << ","
@@ -151,17 +162,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         return;
     }
 
-    //return if output size is 0;
-    if (out[0].get_size() == 0)
-    {
-        writer << "{   // " << n->get_name() << "\n";
-        writer.indent++;
-        writer << "return;\n";
-        writer.indent--;
-        writer << "}\n";
-        return;
-    }
-
     //set output to 0 if input size is 0
     if (args[0].get_size() == 0 || args[1].get_size() == 0)
     {
@@ -169,7 +169,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent++;
         writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, " << out[0].get_size()
                << " * sizeof(float));\n";
-        writer << "return;\n";
         writer.indent--;
         writer << "}\n";
         return;
@@ -301,10 +300,13 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -342,10 +344,13 @@ void runtime::gpu::GPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -384,10 +389,13 @@ void runtime::gpu::GPU_Emitter::EmitNegative(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -451,6 +459,10 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     auto broadcast = static_cast<const ngraph::op::Broadcast*>(n);
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -533,6 +545,10 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     auto reshape = static_cast<const op::Reshape*>(n);
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
@@ -632,10 +648,13 @@ void runtime::gpu::GPU_Emitter::EmitMultiply(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -698,10 +717,13 @@ void runtime::gpu::GPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
     writer << "{  // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
     writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
@@ -775,4 +797,18 @@ void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     throw std::runtime_error(n->get_name() + " is not implemented.");
+}
+
+void runtime::gpu::GPU_Emitter::EmitResult(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+{
+    writer << "{   //" << n->get_name() << "\n";
+    writer.indent++;
+    writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
+           << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
+    writer.indent--;
+    writer << "}\n";
+    return;
 }
