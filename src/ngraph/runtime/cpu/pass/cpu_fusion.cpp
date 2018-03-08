@@ -542,9 +542,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
     //Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::gr_callback_fn callback =
         [input](pattern::Matcher& m) -> std::shared_ptr<Node> {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
+        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
-        std::cout << m.match_root()->get_name() << std::endl;
         auto pattern_map = m.get_pattern_map();
 
         if (m.match_root()->get_element_type() != element::f32)
