@@ -3324,17 +3324,8 @@ namespace ngraph
             {
                 auto input_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto input_1d_size = 1;
-                auto result_1d_size = 1;
-
-                for (const auto& i : input_shape)
-                {
-                    input_1d_size *= i;
-                }
-                for (const auto& i : result_shape)
-                {
-                    result_1d_size *= i;
-                }
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn::memory::desc(
