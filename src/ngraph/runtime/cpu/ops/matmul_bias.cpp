@@ -32,7 +32,8 @@ std::shared_ptr<ngraph::Node>
                                         m_shape_w,
                                         m_shape_x,
                                         m_transpose_w,
-                                        m_transpose_x);
+                                        m_transpose_x,
+                                        m_broadcast_axes);
 }
 
 ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
@@ -41,7 +42,8 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
                                    Shape shape_w,
                                    Shape shape_x,
                                    bool transpose_w,
-                                   bool transpose_x)
+                                   bool transpose_x,
+                                   AxisSet axes)
     : RequiresTensorViewArgs("MatMulBias",
                              b == nullptr ? std::vector<std::shared_ptr<Node>>{W, x}
                                           : std::vector<std::shared_ptr<Node>>{W, x, b})
@@ -49,8 +51,24 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)
     , m_transpose_x(transpose_x)
+    , m_broadcast_axes(axes)
 
 {
+    if (axes.size() == 0 && b != nullptr)
+    {
+        throw ngraph_error("Bias but no broadcast axes");
+    }
+
+    if (b == nullptr && axes.size() != 0)
+    {
+        throw ngraph_error("Broadcast axes but no bias");
+    }
+
+    if (axes.size() > 2)
+    {
+        throw ngraph_error("Broadcasting to > 2D tensor");
+    }
+
     if (shape_w.size() != 2)
     {
         NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w);

@@ -348,12 +348,15 @@ using namespace std;
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
                 writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
-                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
+                       << tv->get_tensor().get_name() << "_cpu[" << c_value_strings.size()
+                       << "] =\n";
                 writer << "{\n";
                 writer.indent++;
                 writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
                 writer.indent--;
                 writer << "\n};\n\n";
+                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " *"
+                       << tv->get_tensor().get_name() << ";\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
@@ -487,6 +490,26 @@ using namespace std;
         writer << "{\n";
         writer.indent++;
 
+        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+        {
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            {
+                const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
+                if (c)
+                {
+                    shared_ptr<descriptor::TensorView> tv =
+                        node->get_outputs()[0].get_tensor_view();
+                    writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
+                    writer << "{\n";
+                    writer.indent++;
+                    writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name() << ", "
+                           << tv->get_tensor().get_name() << "_cpu, " << tv->get_tensor().size()
+                           << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+            }
+        }
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
