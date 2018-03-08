@@ -465,9 +465,7 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
 
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("bn_autodiff.png");
-    pass_manager.run_passes(df);
+
     //roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
@@ -597,31 +595,32 @@ TEST(cpu_fusion, non_zero_padded_conv)
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 }
 
-TEST(cpu_fusion, sigmoid_fprop)
+TEST(cpu_fusion, sigmoid_fprop_fusion)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_fprop.png");
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 1);
 }
 
 TEST(cpu_fusion, sigmoid)
 {
-   auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
-   auto sigmoid_node = make_shared<op::Sigmoid>(input);
-   auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid_node = make_shared<op::Sigmoid>(input);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(func);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
     shared_ptr<runtime::TensorView> result =
         backend->make_primary_tensor_view(element::f32, input->get_shape());
 
@@ -629,7 +628,6 @@ TEST(cpu_fusion, sigmoid)
     copy_data(a, dataA);
 
     cf->call({a}, {result});
-    vector<float> expected{0.73105858f,  0.98201379f,  0.73105858f,  0.98201379f};
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
-
 }

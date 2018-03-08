@@ -50,7 +50,7 @@ private:
     void construct_matmul_pattern();
     void construct_matmulbias_pattern();
     void construct_fprop_bn();
-    void  construct_sigmoid();
+    void construct_sigmoid();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
 };

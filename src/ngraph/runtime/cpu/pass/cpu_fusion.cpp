@@ -532,20 +532,28 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
 
     //Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::gr_callback_fn callback =
-        [input](
-            pattern::Matcher& m) {
-            std::cout << "++++++++++++ in sigmoid fusion +++++++++++" << std::endl;
-            NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
-                         << m.match_root()->get_name();
-            std::cout << m.match_root()->get_name() << std::endl;
-            auto pattern_map = m.get_pattern_map();
-            std::shared_ptr<Node> n = nullptr;
-            auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
+        [input](pattern::Matcher& m) -> std::shared_ptr<Node> {
+        NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
+                     << m.match_root()->get_name();
+        std::cout << m.match_root()->get_name() << std::endl;
+        auto pattern_map = m.get_pattern_map();
 
-            std::cout << "target_size: " << m.match_root()->get_outputs().size() << " sigmoid_node: " << sigmoid_node->get_outputs().size()<<std::endl;
-            return sigmoid_node;
-        };
+        if (m.match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
+            return nullptr;
+        }
 
+        if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
+                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
+            return nullptr;
+        }
+
+        auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
+        return sigmoid_node;
+    };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
     this->add_matcher(m);

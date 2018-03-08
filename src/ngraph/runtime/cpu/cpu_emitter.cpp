@@ -3221,34 +3221,23 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                    args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                    out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    size_t sigmoid_index = mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
 
-                    auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(sigmoid_index) << ");\n";
-                }
-                else
-                {
-                    // writer << "#pragma omp parallel for\n";
-                    // writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                    // writer << "{\n";
-                    // writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-                    //        << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
-                    // writer << "}\n";
-                }
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
             }
 
             template <>
