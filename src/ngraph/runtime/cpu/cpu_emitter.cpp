@@ -3309,11 +3309,29 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
             {
+                auto input_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+                auto input_1d_size = 1;
+                auto result_1d_size = 1;
+
+                for (const auto& i : input_shape)
+                {
+                    input_1d_size *= i;
+                }
+                for (const auto& i : result_shape)
+                {
+                    result_1d_size *= i;
+                }
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                    args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                    out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);

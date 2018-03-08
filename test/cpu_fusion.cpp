@@ -686,9 +686,33 @@ TEST(cpu_fusion, sigmoid_fprop_fusion)
     ASSERT_EQ(ccg, 1);
 }
 
-TEST(cpu_fusion, sigmoid)
+TEST(cpu_fusion, sigmoid_n1c1h2w2)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid_node = make_shared<op::Sigmoid>(input);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    copy_data(a, dataA);
+
+    cf->call({a}, {result});
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, sigmoid_n1c1h4)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto sigmoid_node = make_shared<op::Sigmoid>(input);
     auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
 
