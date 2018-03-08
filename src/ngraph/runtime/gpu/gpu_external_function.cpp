@@ -246,7 +246,6 @@ ngraph::runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
-    , m_function_name(function->get_name())
 {
 }
 
