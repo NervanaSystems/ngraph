@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "ngraph/pass/pass.hpp"
+
 namespace ngraph
 {
     namespace pass
@@ -32,30 +34,5 @@ public:
     {
     }
 
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override
-    {
-        std::set<std::shared_ptr<Node>> seen;
-        for (auto res : f->get_results())
-        {
-            auto arg = res->get_input_op(0);
-            //we need a copy
-            if (arg->is_parameter() || arg->is_constant())
-            {
-                continue;
-            }
-
-            //TODO: check if broadcast replace op::Result w/ a copy of broadcast node
-
-            //TODO: consider other cases where it's easier to recompute than make a copy
-
-            //we will compute the result directly into output[]
-            if (seen.count(arg) == 0)
-            {
-                res->set_needs_copy(false);
-                seen.insert(arg);
-            }
-        }
-
-        return 1;
-    }
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
 };

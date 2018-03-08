@@ -97,6 +97,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/result_copy_elimination
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     pattern/core_fusion.cpp
