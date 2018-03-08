@@ -64,6 +64,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -327,7 +328,7 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "BatchNorm")
         {
             auto epsilon = node_js.at("eps").get<double>();
-            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
+            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
         }
         else if (node_op == "BatchNormBackprop")
         {
@@ -666,6 +667,10 @@ static shared_ptr<ngraph::Function>
             auto input_order = node_js.at("input_order").get<vector<size_t>>();
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
+        }
+        else if (node_op == "Result")
+        {
+            node = make_shared<op::Result>(args[0]);
         }
         else if (node_op == "Reverse")
         {
@@ -1060,6 +1065,9 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
+    }
+    else if (node_op == "Result")
+    {
     }
     else if (node_op == "Reverse")
     {

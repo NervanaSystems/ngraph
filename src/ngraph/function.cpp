@@ -27,7 +27,7 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-Function::Function(const NodeVector& results,
+Function::Function(const ResultVector& results,
                    const op::ParameterVector& parameters,
                    const std::string& name)
     : m_results(results)
@@ -37,19 +37,23 @@ Function::Function(const NodeVector& results,
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
-        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
-        if (nullptr != p)
-        {
-            auto it = std::find_if(parameters.begin(),
-                                   parameters.end(),
-                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
-            if (it == parameters.end())
-            {
-                throw ngraph_error("Function references undeclared parameter");
-            }
-        }
+    init();
+}
+
+Function::Function(const NodeVector& results,
+                   const op::ParameterVector& parameters,
+                   const std::string& name)
+    : m_results(results.size())
+    , m_parameters(parameters)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_name(name)
+    , m_unique_name("Function_" + to_string(m_instance_id))
+{
+    std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
+        return std::make_shared<op::Result>(n);
     });
+    init();
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
@@ -57,6 +61,31 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
+}
+
+void Function::init()
+{
+    for (auto r : m_results)
+    {
+        for (descriptor::Output& output : r->get_outputs())
+        {
+            output.get_tensor().set_is_output();
+        }
+    }
+
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+        if (nullptr != p)
+        {
+            auto it = std::find_if(m_parameters.begin(),
+                                   m_parameters.end(),
+                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
 }
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops()
@@ -156,18 +185,7 @@ std::list<shared_ptr<Node>> Function::get_ops() const
     return ops;
 }
 
-void Function::replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
-{
-    auto it = std::find(begin(m_results), end(m_results), old);
-    if (it != end(m_results))
-    {
-        NGRAPH_DEBUG << "Replacing output " << old->get_name() << " w/ " << repl->get_name();
-        *it = repl;
-    }
-}
-
 void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
 {
-    replace_output_op(old, repl);
-    ngraph::replace_node(old, repl, true);
+    ngraph::replace_node(old, repl);
 }

@@ -36,7 +36,7 @@ General Instructions
 These instructions assume that your system has been prepared in accordance
 with the above prerequisites.
 
-$ cd private-ngraph-cpp
+$ cd ngraph-cpp
 $ mkdir build
 $ cd build
 $ cmake .. \

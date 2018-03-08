@@ -42,6 +42,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -89,9 +90,9 @@ bool sum_predicate(std::shared_ptr<Node> gn)
             return false;
         }
 
-        NGRAPH_DEBUG << "looking at function's result  "
-                     << r->get_functions()[0]->get_result()->get_name();
-        if (auto sum = std::dynamic_pointer_cast<op::Add>(r->get_functions()[0]->get_result()))
+        auto result = r->get_functions()[0]->get_result()->get_input_op(0);
+        NGRAPH_DEBUG << "looking at function's result  " << result->get_name();
+        if (auto sum = std::dynamic_pointer_cast<op::Add>(result))
         {
             auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(0));
             auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(1));
@@ -297,7 +298,7 @@ TEST(pattern, graph_rewrite)
         ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
-        ASSERT_TRUE(f->get_results() == expected);
+        ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
     }
 
     {
