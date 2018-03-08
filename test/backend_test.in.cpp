@@ -120,6 +120,7 @@ TEST(${BACKEND_NAME}, component_cleanup)
 
 TEST(${BACKEND_NAME}, aliased_output)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -335,7 +336,6 @@ TEST(${BACKEND_NAME}, abs)
 
 TEST(${BACKEND_NAME}, ceiling)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::ParameterVector{A});
@@ -776,7 +776,6 @@ TEST(${BACKEND_NAME}, equal)
 
 TEST(${BACKEND_NAME}, floor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Floor>(A), op::ParameterVector{A});
@@ -1370,7 +1369,6 @@ TEST(${BACKEND_NAME}, lesseq_bool)
 
 TEST(${BACKEND_NAME}, log)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Log>(A), op::ParameterVector{A});
@@ -2673,7 +2671,6 @@ TEST(${BACKEND_NAME}, reshape_6d)
 
 TEST(${BACKEND_NAME}, sin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
@@ -2699,7 +2696,6 @@ TEST(${BACKEND_NAME}, sin)
 
 TEST(${BACKEND_NAME}, cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
@@ -2725,7 +2721,6 @@ TEST(${BACKEND_NAME}, cos)
 
 TEST(${BACKEND_NAME}, tan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
@@ -2746,12 +2741,11 @@ TEST(${BACKEND_NAME}, tan)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, asin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Asin>(A), op::ParameterVector{A});
@@ -2776,7 +2770,6 @@ TEST(${BACKEND_NAME}, asin)
 
 TEST(${BACKEND_NAME}, acos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
@@ -2801,7 +2794,6 @@ TEST(${BACKEND_NAME}, acos)
 
 TEST(${BACKEND_NAME}, atan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Atan>(A), op::ParameterVector{A});
@@ -2826,7 +2818,6 @@ TEST(${BACKEND_NAME}, atan)
 
 TEST(${BACKEND_NAME}, sinh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::ParameterVector{A});
@@ -2851,7 +2842,6 @@ TEST(${BACKEND_NAME}, sinh)
 
 TEST(${BACKEND_NAME}, cosh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::ParameterVector{A});
@@ -2876,7 +2866,6 @@ TEST(${BACKEND_NAME}, cosh)
 
 TEST(${BACKEND_NAME}, tanh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::ParameterVector{A});
@@ -2896,12 +2885,11 @@ TEST(${BACKEND_NAME}, tanh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, exp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Exp>(A), op::ParameterVector{A});
@@ -8441,6 +8429,7 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
 
 TEST(${BACKEND_NAME}, softmax_all)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -8473,6 +8462,7 @@ TEST(${BACKEND_NAME}, softmax_all)
 
 TEST(${BACKEND_NAME}, softmax_axis)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
@@ -8501,6 +8491,7 @@ TEST(${BACKEND_NAME}, softmax_axis)
 
 TEST(${BACKEND_NAME}, softmax_underflow)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});

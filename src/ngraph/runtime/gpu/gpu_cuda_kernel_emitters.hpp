@@ -18,6 +18,9 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -26,9 +29,46 @@ namespace ngraph
     {
         namespace gpu
         {
-            void emit_abs(void* in, void* out, size_t count);
+            template <typename T>
+            struct CudaOpMap;
+
             void emit_broadcast(
                 void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
+
+            template <typename T>
+            void emit_unary_elementwise_op(void* in, void* out, size_t count, std::string name)
+            {
+                // Create an instance of nvrtcProgram with the code string.
+                if (CudaFunctionPool::instance().get(name) == nullptr)
+                {
+                    const char* opts[] = {"--gpu-architecture=compute_35",
+                                          "--relocatable-device-code=true"};
+                    std::string kernel;
+                    CudaKernelBuilder::get_unary_elementwise_op(
+                        name, "float", CudaOpMap<T>::op, kernel);
+                    CudaFunctionPool::instance().set(
+                        name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
+                }
+
+                //convert runtime ptr to driver api ptr
+                CUdeviceptr d_ptr_in, d_ptr_out;
+                d_ptr_in = (CUdeviceptr)in;
+                d_ptr_out = (CUdeviceptr)out;
+
+                void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
+                CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+                                              count,
+                                              1,
+                                              1, // grid dim
+                                              1,
+                                              1,
+                                              1, // block dim
+                                              0,
+                                              NULL, // shared mem and stream
+                                              args_list,
+                                              0));  // arguments
+                CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+            }
         }
     }
 }
