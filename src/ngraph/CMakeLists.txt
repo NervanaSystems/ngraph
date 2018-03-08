@@ -98,6 +98,8 @@ set (SRC
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/visualize_tree.cpp
+    pass/zero_dim_tensor_elimination.cpp
+    pass/dump_sorted.cpp
     pattern/matcher.cpp
     pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
