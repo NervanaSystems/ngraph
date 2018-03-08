@@ -166,7 +166,7 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::get_input_mkldnn_format(const
 mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(const Node* node,
                                                                             int index)
 {
-    auto tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+    auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
 }
 
