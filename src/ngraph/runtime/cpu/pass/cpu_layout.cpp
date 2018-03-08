@@ -685,7 +685,6 @@ namespace ngraph
                             throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
                                                to_string(input_layout) + e.message);
                         }
-                        cout << "created pooling forward " << input_layout << endl;
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
