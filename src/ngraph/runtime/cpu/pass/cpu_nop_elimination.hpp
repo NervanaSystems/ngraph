@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,18 +16,22 @@
 
 #pragma once
 
-#include <memory>
-#include <unordered_map>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    class Function;
-
-    namespace autodiff
+    namespace runtime
     {
-        /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
-        /// @param f is f(X_i...)
-        /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
-        std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUNopElimination : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
     }
 }

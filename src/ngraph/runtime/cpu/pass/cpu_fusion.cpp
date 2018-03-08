@@ -30,6 +30,7 @@
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
@@ -301,14 +302,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             // get epsilon value
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
             double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
-            auto bn_node = std::shared_ptr<Node>(new op::BatchNorm(epsilon,
-                                                                   pattern_map[gamma_label],
-                                                                   pattern_map[beta_label],
-                                                                   pattern_map[input],
-                                                                   pattern_map[mean_label],
-                                                                   pattern_map[variance_label]));
+            auto bn_node = std::make_shared<op::BatchNorm>(
+                epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
-            return bn_node;
+            auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
+
+            return normalized_output;
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
