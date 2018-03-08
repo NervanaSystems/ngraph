@@ -44,6 +44,7 @@ namespace ngraph
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 bool compare_mkldnn_formats(mkldnn::memory::format fmt1,
                                             mkldnn::memory::format fmt2);
+                bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
             }
         }
     }

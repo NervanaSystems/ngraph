@@ -3081,6 +3081,19 @@ namespace ngraph
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
+                // MKLDNN relies on format names for selecting optimized kernel implementations
+                // Hacky way to deal with this until they move to using canonicalized layouts
+                if (input_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
+                {
+                    input_format = mkldnn::memory::format::oihw;
+                }
+                if (output_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
+                {
+                    output_format = mkldnn::memory::format::oihw;
+                }
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
