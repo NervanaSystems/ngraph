@@ -35,8 +35,11 @@ namespace ngraph
             void emit_broadcast(
                 void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
 
-            template <typename T>
-            void emit_unary_elementwise_op(void* in, void* out, size_t count, std::string name)
+            template <typename T, typename... Inputs>
+            void emit_elementwise_op(std::string name,
+                                     size_t count,
+                                     CUdeviceptr out,
+                                     Inputs&&... inputs)
             {
                 // Create an instance of nvrtcProgram with the code string.
                 if (CudaFunctionPool::instance().get(name) == nullptr)
@@ -44,18 +47,14 @@ namespace ngraph
                     const char* opts[] = {"--gpu-architecture=compute_35",
                                           "--relocatable-device-code=true"};
                     std::string kernel;
-                    CudaKernelBuilder::get_unary_elementwise_op(
-                        name, "float", CudaOpMap<T>::op, kernel);
+                    CudaKernelBuilder::get_elementwise_op(
+                        name, CudaOpMap<T>::type, CudaOpMap<T>::op, sizeof...(inputs), kernel);
                     CudaFunctionPool::instance().set(
                         name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
                 }
 
                 //convert runtime ptr to driver api ptr
-                CUdeviceptr d_ptr_in, d_ptr_out;
-                d_ptr_in = (CUdeviceptr)in;
-                d_ptr_out = (CUdeviceptr)out;
-
-                void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
+                void* args_list[] = {&inputs..., &out, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
                                               count,
                                               1,
