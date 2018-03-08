@@ -160,6 +160,7 @@ static StaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
 
+<<<<<<< HEAD
 static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Add>},
     {TI(ngraph::op::Dot), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
@@ -239,6 +240,60 @@ static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
+=======
+static const runtime::gpu::OpMap dispatcher{
+    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::EmitAdd},
+    {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::EmitDot},
+    {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::EmitMultiply},
+    {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::EmitNop},
+    {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::EmitConcat},
+    {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::EmitDivide},
+    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::EmitEqual},
+    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::EmitGreater},
+    {TI(ngraph::op::GreaterEq), &runtime::gpu::GPU_Emitter::EmitGreaterEq},
+    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::EmitLess},
+    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::EmitLessEq},
+    {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::EmitMaximum},
+    {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::EmitMinimum},
+    {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::EmitNegative},
+    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::EmitNotEqual},
+    {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::EmitPower},
+    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::EmitSelect},
+    {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::EmitSubtract},
+    {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::EmitBroadcast},
+    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::EmitConvert},
+    {TI(ngraph::op::Constant), &runtime::gpu::GPU_Emitter::EmitConstant},
+    {TI(ngraph::op::Reshape), &runtime::gpu::GPU_Emitter::EmitReshape},
+    {TI(ngraph::op::FunctionCall), &runtime::gpu::GPU_Emitter::EmitFunctionCall},
+    {TI(ngraph::op::Reduce), &runtime::gpu::GPU_Emitter::EmitReduce},
+    {TI(ngraph::op::Sign), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Slice), &runtime::gpu::GPU_Emitter::EmitSlice},
+    {TI(ngraph::op::Sum), &runtime::gpu::GPU_Emitter::EmitSum},
+    {TI(ngraph::op::Exp), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Sin), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Sinh), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Cos), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Cosh), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Tan), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Tanh), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Asin), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Acos), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Atan), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::ReplaceSlice), &runtime::gpu::GPU_Emitter::EmitReplaceSlice},
+    {TI(ngraph::op::OneHot), &runtime::gpu::GPU_Emitter::EmitOneHot},
+    {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::EmitSqrt},
+    {TI(ngraph::op::Convolution), &runtime::gpu::GPU_Emitter::EmitConvolution},
+    {TI(ngraph::op::Not), &runtime::gpu::GPU_Emitter::EmitUnaryElementwise},
+    {TI(ngraph::op::MaxPool), &runtime::gpu::GPU_Emitter::EmitMaxPool},
+    {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::EmitReverse},
+    {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::EmitReduceWindow},
+    {TI(ngraph::op::SelectAndScatter), &runtime::gpu::GPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::EmitResult},
+>>>>>>> origin/master
 };
 
 ngraph::runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
@@ -292,6 +347,7 @@ void ngraph::runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/pass/memory_layout.hpp"
     #include "ngraph/runtime/aligned_buffer.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+    #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
 )";

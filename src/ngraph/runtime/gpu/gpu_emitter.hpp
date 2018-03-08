@@ -58,13 +58,13 @@ namespace ngraph
                 {
                 }
 
-            private:
-                static std::string emit_vector(const GPU_TensorViewWrapper&,
-                                               const std::string& name = "");
-                static std::string emit_array1d(const GPU_TensorViewWrapper&,
-                                                const std::string& name = "");
-                static std::string emit_matrix(const GPU_TensorViewWrapper&,
-                                               const std::string& name = "");
+                static void EmitUnaryElementwise(GPU_ExternalFunction* external_function,
+                                codegen::CodeWriter& writer,
+                                const ngraph::Node* node,
+                                const std::vector<GPU_TensorViewWrapper>& args,
+                                const std::vector<GPU_TensorViewWrapper>& out)
+                {
+                }
             };
         }
     }

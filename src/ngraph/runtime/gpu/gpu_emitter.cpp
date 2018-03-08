@@ -121,6 +121,27 @@ namespace ngraph
                 writer << "}\n";
             }
 
+void GPU_Emitter::EmitUnaryElementwise(GPU_ExternalFunction* external_function,
+                                codegen::CodeWriter& writer,
+                                const ngraph::Node* node,
+                                const std::vector<GPU_TensorViewWrapper>& args,
+                                const std::vector<GPU_TensorViewWrapper>& out)
+{
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+    writer << "{  // " << node->get_name() << "\n";
+    writer.indent++;
+    writer << "int count = " << out[0].get_size() << ";\n";
+    writer << "if(count == 0) return;\n";
+    writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::" << node->description()
+           << ">((void*) " << args[0].get_name() << ", (void*) " << out[0].get_name()
+           << ", count, \"" << node->description() << "\");\n";
+    writer.indent--;
+    writer << "}\n";
+}
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
