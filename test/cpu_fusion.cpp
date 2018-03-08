@@ -464,7 +464,9 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
 
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});
-
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bn_autodiff.png");
+    pass_manager.run_passes(df);
     //roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
@@ -592,4 +594,17 @@ TEST(cpu_fusion, non_zero_padded_conv)
     auto cf = backend->make_call_frame(external);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+}
+
+TEST(cpu_fusion, sigmoid_fprop)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_fprop.png");
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_fprop_after_fusion.png");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
 }
