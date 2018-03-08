@@ -174,14 +174,14 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::get_input_mkldnn_format(const Node* node,
-                                                                           int index)
+                                                                           size_t index)
 {
     auto tvl = node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(const Node* node,
-                                                                            int index)
+                                                                            size_t index)
 {
     auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
