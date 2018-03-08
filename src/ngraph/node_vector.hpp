@@ -32,11 +32,6 @@ namespace ngraph
     class NodeVector : public std::vector<std::shared_ptr<Node>>
     {
     public:
-        NodeVector(size_t size)
-            : std::vector<std::shared_ptr<Node>>(size)
-        {
-        }
-
         NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
             : std::vector<std::shared_ptr<Node>>(nodes)
         {
