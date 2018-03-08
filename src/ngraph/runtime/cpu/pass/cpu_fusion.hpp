@@ -43,14 +43,14 @@ public:
         construct_fprop_bn();
         construct_zero_padded_reshaped_conv();
         construct_zero_padded_conv();
-        construct_fprop_sigmoid();
+        construct_sigmoid();
     }
 
 private:
     void construct_matmul_pattern();
     void construct_matmulbias_pattern();
     void construct_fprop_bn();
-    void  construct_fprop_sigmoid();
+    void  construct_sigmoid();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
 };

@@ -516,7 +516,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
     this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_sigmoid()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
 {
     //construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
