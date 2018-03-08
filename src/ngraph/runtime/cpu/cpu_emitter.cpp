@@ -285,8 +285,6 @@ namespace ngraph
                     auto axes = cg->get_broadcast_axes();
                     if (axes.size() == 1)
                     {
-                        size_t broadcast_index = 1 - *(axes.begin());
-
                         if (*(axes.begin()) == 0)
                         {
                             writer << "static " << out[0].get_element_type().c_type_string()
