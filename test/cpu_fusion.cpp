@@ -91,11 +91,89 @@ TEST(cpu_fusion, gemm_pattern)
     ASSERT_EQ(n.get_pattern_map()[x], B);
     ASSERT_EQ(n.get_pattern_map()[b], C);
 
-    auto cg =
-        make_shared<op::MatmulBias>(W, x, broadcast, W->get_shape(), x->get_shape(), false, false);
+    auto cg = make_shared<op::MatmulBias>(
+        W, x, C, W->get_shape(), x->get_shape(), false, false, AxisSet{0});
 }
 
-TEST(cpu_fusion, gemm_cpu)
+TEST(cpu_fusion, gemm_cpu_broadcast_row)
+{
+    Shape shapeA{3, 2};
+    Shape shapeB{2, 3};
+    Shape shapeC{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeB);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+
+    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
+
+    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{0});
+    auto cg = make_shared<op::MatmulBias>(
+        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{0});
+
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shapeB);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shapeC);
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{3.0f, 3.0f, 3.0f, 9.0f, 9.0f, 9.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+    vector<float> expected{10, 28, 37, 109};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, gemm_cpu_broadcast_column)
+{
+    Shape shapeA{3, 2};
+    Shape shapeB{2, 3};
+    Shape shapeC{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeB);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+
+    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
+
+    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{1});
+    auto cg = make_shared<op::MatmulBias>(
+        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{1});
+
+    auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shapeB);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shapeC);
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{3.0f, 3.0f, 3.0f, 9.0f, 9.0f, 9.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+    vector<float> expected{10, 28, 37, 109};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
 {
     Shape shapeA{3, 2};
     Shape shapeB{2, 3};
@@ -109,8 +187,8 @@ TEST(cpu_fusion, gemm_cpu)
     auto one = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
 
     auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{0, 1});
-    auto cg =
-        make_shared<op::MatmulBias>(A, B, broadcast, A->get_shape(), B->get_shape(), true, true);
+    auto cg = make_shared<op::MatmulBias>(
+        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{0, 1});
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
@@ -212,7 +290,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     pass_manager.run_passes(func);
     auto gmm = graph->get_input_op(0);
     ASSERT_TRUE(std::dynamic_pointer_cast<op::MatmulBias>(gmm));
-    ASSERT_EQ(gmm->get_input_op(2), broadcast);
+    ASSERT_EQ(gmm->get_input_op(2), b);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
