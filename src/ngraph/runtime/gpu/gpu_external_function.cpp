@@ -197,6 +197,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::gpu::GPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::EmitResult},
 };
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
@@ -680,7 +681,6 @@ using namespace std;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                handle_output_alias(writer, *node, output_alias_map);
                 if (m_emit_timing)
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
