@@ -574,3 +574,14 @@ TEST(cpu_fusion, non_zero_padded_conv)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 }
+TEST(cpu_fusion, matrix_fusion)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/seq2seq_fwd.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass::Manager pass_manager;
+//    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("matrix_fusion.svg");
+    pass_manager.run_passes(func);
+}
