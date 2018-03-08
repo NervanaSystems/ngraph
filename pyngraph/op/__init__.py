@@ -86,3 +86,4 @@ from _pyngraph.op import ReluBackprop
 from _pyngraph.op import Max
 from _pyngraph.op import Product
 from _pyngraph.op import AllReduce
+from _pyngraph.op import FunctionCall
