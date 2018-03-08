@@ -19,6 +19,7 @@
 #include <pybind11/stl.h>
 //#include <pybind11/operators.h>
 //#include <string>
+#include <sstream>
 #include "ngraph/node.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter.hpp"
