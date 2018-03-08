@@ -284,11 +284,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.run_passes(m_function);
     auto orig_results = m_function->get_results();
     m_function->set_results(m_function->get_optimized_results());
-    // std::cout << "results:\n";
-    // for (auto o_r : m_function->get_results())
-    // {
-    //     std::cout << "r = " << o_r->get_name() << std::endl;
-    // }
+
     codegen::CodeWriter writer;
 
     bool include_mkldnn_headers = false;
