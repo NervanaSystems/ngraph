@@ -59,12 +59,10 @@ namespace ngraph
                 }
 
                 static void EmitUnaryElementwise(GPU_ExternalFunction* external_function,
-                                codegen::CodeWriter& writer,
-                                const ngraph::Node* node,
-                                const std::vector<GPU_TensorViewWrapper>& args,
-                                const std::vector<GPU_TensorViewWrapper>& out)
-                {
-                }
+                                                 codegen::CodeWriter& writer,
+                                                 const ngraph::Node* node,
+                                                 const std::vector<GPU_TensorViewWrapper>& args,
+                                                 const std::vector<GPU_TensorViewWrapper>& out);
             };
         }
     }
