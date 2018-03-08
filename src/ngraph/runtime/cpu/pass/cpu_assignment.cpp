@@ -230,7 +230,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
                 {
-                    auto batchnorm = static_cast<op::ReluBackprop*>(node);
+                    auto batchnorm = static_cast<op::BatchNorm*>(node);
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     op_annotations->set_mkldnn_op(true);
