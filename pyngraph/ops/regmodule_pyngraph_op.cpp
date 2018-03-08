@@ -84,4 +84,5 @@ void regmodule_pyngraph_op(py::module m_op){
     regclass_pyngraph_op_Min(m_op);
     regclass_pyngraph_op_BatchNorm(m_op);
     regclass_pyngraph_op_BatchNormBackprop(m_op);
+    regclass_pyngraph_op_Softmax(m_op);
 }

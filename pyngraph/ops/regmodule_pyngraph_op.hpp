@@ -75,6 +75,7 @@
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/min.hpp"
 #include "pyngraph/ops/batch_norm.hpp"
+#include "pyngraph/ops/softmax.hpp"
 
 namespace py = pybind11;
 

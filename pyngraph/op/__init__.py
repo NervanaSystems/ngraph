@@ -91,3 +91,4 @@ from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Min
 from _pyngraph.op import BatchNorm
 from _pyngraph.op import BatchNormBackprop
+from _pyngraph.op import Softmax
