@@ -88,3 +88,4 @@ from _pyngraph.op import Product
 from _pyngraph.op import AllReduce
 from _pyngraph.op import FunctionCall
 from _pyngraph.op import GetOutputElement
+from _pyngraph.op import Min
