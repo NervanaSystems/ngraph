@@ -134,12 +134,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
                      << m.match_root()->get_name();
 
         auto mpattern = m.match_root(); //add
-        auto m_matmul = mpattern->get_input_op(0);
-        auto m_broadcast = mpattern->get_input_op(1);
+        auto m_matmul = std::dynamic_pointer_cast<op::MatmulBias>(mpattern->get_input_op(0));
+        auto m_broadcast = std::dynamic_pointer_cast<op::Broadcast>(mpattern->get_input_op(1));
+        auto m_bias = m_broadcast->get_input_op(0);
         auto pattern_map = m.get_pattern_map();
 
-        return m_matmul->copy_with_new_args(
-            NodeVector{pattern_map[W], pattern_map[x], m_broadcast});
+        auto mmb = std::make_shared<op::MatmulBias>(pattern_map[W],
+                                                    pattern_map[x],
+                                                    m_bias,
+                                                    m_matmul->get_arg0_shape(),
+                                                    m_matmul->get_arg1_shape(),
+                                                    m_matmul->get_is_arg0_transposed(),
+                                                    m_matmul->get_is_arg1_transposed(),
+                                                    m_broadcast->get_broadcast_axes());
+
+        return mmb;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
