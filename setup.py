@@ -144,7 +144,7 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/power.cpp',
            'pyngraph/ops/reduce.cpp',
            'pyngraph/ops/regmodule_pyngraph_op.cpp',
-           'pyngraph/ops/relu.cpp'
+           'pyngraph/ops/relu.cpp',
            'pyngraph/ops/replace_slice.cpp',
            'pyngraph/ops/reshape.cpp',
            'pyngraph/ops/reverse.cpp',
