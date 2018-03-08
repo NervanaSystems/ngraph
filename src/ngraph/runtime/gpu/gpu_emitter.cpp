@@ -91,44 +91,47 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
 namespace ngraph
 {
-}
-
+    namespace runtime
+    {
+        namespace gpu
+        {
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name() << ", (void*) "
-           << out[0].get_name() << ", count);\n";
-    writer.indent--;
-    writer << "}\n";
-}
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name()
+                       << ", (void*) " << out[0].get_name() << ", count);\n";
+                writer.indent--;
+                writer << "}\n";
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -148,145 +151,146 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-    writer << "cudnnOpTensor(cudnn_handle,"
-           << "opTensorDesc,"
-           << "&alpha1,"
-           << "descriptor," << args[0].get_name() << ","
-           << "&alpha2,"
-           << "descriptor," << args[1].get_name() << ","
-           << "&beta,"
-           << "descriptor," << out[0].get_name() << ");\n";
-    writer.indent--;
-    writer << "}\n";
-}
+                writer << "cudnnOpTensor(cudnn_handle,"
+                       << "opTensorDesc,"
+                       << "&alpha1,"
+                       << "descriptor," << args[0].get_name() << ","
+                       << "&alpha2,"
+                       << "descriptor," << args[1].get_name() << ","
+                       << "&beta,"
+                       << "descriptor," << out[0].get_name() << ");\n";
+                writer.indent--;
+                writer << "}\n";
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Dot)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
 
-    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
-    const Shape& arg0_shape = args[0].get_shape();
-    const Shape& arg1_shape = args[1].get_shape();
-    if (arg0_shape.empty() || arg1_shape.empty())
-    {
-        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
-        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
-        writer << "{  // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "int count = " << second.get_size() << ";\n";
-        writer << "cublasScopy("
-               << "cublas_handle,"
-               << "count ," << second.get_name() << ","
-               << "1," << out[0].get_name() << ", 1);\n";
-        writer << "cublasSscal("
-               << "cublas_handle,"
-               << "count ," << first.get_name() << "," << out[0].get_name() << ", 1);\n";
-        writer.indent--;
-        writer << "}\n";
-        return;
-    }
+                const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
+                const Shape& arg0_shape = args[0].get_shape();
+                const Shape& arg1_shape = args[1].get_shape();
+                if (arg0_shape.empty() || arg1_shape.empty())
+                {
+                    auto& first = (arg0_shape.empty() ? args[0] : args[1]);
+                    auto& second = (arg0_shape.empty() ? args[1] : args[0]);
+                    writer << "{  // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "int count = " << second.get_size() << ";\n";
+                    writer << "cublasScopy("
+                           << "cublas_handle,"
+                           << "count ," << second.get_name() << ","
+                           << "1," << out[0].get_name() << ", 1);\n";
+                    writer << "cublasSscal("
+                           << "cublas_handle,"
+                           << "count ," << first.get_name() << "," << out[0].get_name()
+                           << ", 1);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                    return;
+                }
 
-    //set output to 0 if input size is 0
-    if (args[0].get_size() == 0 || args[1].get_size() == 0)
-    {
-        writer << "{   // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, " << out[0].get_size()
-               << " * sizeof(float));\n";
-        writer.indent--;
-        writer << "}\n";
-        return;
-    }
+                //set output to 0 if input size is 0
+                if (args[0].get_size() == 0 || args[1].get_size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
+                           << out[0].get_size() << " * sizeof(float));\n";
+                    writer.indent--;
+                    writer << "}\n";
+                    return;
+                }
 
-    if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
-    {
-        writer << "{   // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "cublasSdot("
-               << "cublas_handle," << arg0_shape[0] << "," << args[0].get_name() << ","
-               << "1," << args[1].get_name() << ","
-               << "1," << out[0].get_name() << ");\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
-    {
-        writer << "{   // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "const float alpha = 1.0;\n";
-        writer << "const float beta  = 0;\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        writer << "cublasSgemv("
-               << "cublas_handle,"
-               << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
-               << "&alpha," // Alpha
-               << args[0].get_name() << "," << arg0_shape[1] << "," << args[1].get_name() << ","
-               << "1,"
-               << "&beta," // beta
-               << out[0].get_name() << ","
-               << "1);\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
-    {
-        // GEMM Call
-        if (arg0_shape[0] != out[0].get_shape()[0] || // m
-            arg1_shape[1] != out[0].get_shape()[1] || // n
-            arg0_shape[1] != arg1_shape[0])           // k
-        {
-            throw std::runtime_error("input and output shape is not correct for dot;");
-        }
-        writer << "{   // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "const float alpha = 1.0;\n";
-        writer << "const float beta  = 0.0;\n";
-        writer << "int m = " << arg0_shape[0] << ";\n";
-        writer << "int n = " << arg1_shape[1] << ";\n";
-        writer << "int k = " << arg0_shape[0] << ";\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        writer << "cublasSgemm("
-               << "cublas_handle,"
-               << "CUBLAS_OP_N,"
-               << "CUBLAS_OP_N,"
-               << "n,"
-               << "m,"
-               << "k,"
-               << "&alpha," // Alpha
-               << args[1].get_name() << ","
-               << "n," << args[0].get_name() << ","
-               << "k,"
-               << "&beta," // beta
-               << out[0].get_name() << ","
-               << "n);\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    else
-    {
-        throw std::runtime_error(node->get_name() + " with more then 2D is not implemented.");
-    }
-}
-
-
+                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "cublasSdot("
+                           << "cublas_handle," << arg0_shape[0] << "," << args[0].get_name() << ","
+                           << "1," << args[1].get_name() << ","
+                           << "1," << out[0].get_name() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "const float alpha = 1.0;\n";
+                    writer << "const float beta  = 0;\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSgemv("
+                           << "cublas_handle,"
+                           << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
+                           << "&alpha," // Alpha
+                           << args[0].get_name() << "," << arg0_shape[1] << ","
+                           << args[1].get_name() << ","
+                           << "1,"
+                           << "&beta," // beta
+                           << out[0].get_name() << ","
+                           << "1);\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+                {
+                    // GEMM Call
+                    if (arg0_shape[0] != out[0].get_shape()[0] || // m
+                        arg1_shape[1] != out[0].get_shape()[1] || // n
+                        arg0_shape[1] != arg1_shape[0])           // k
+                    {
+                        throw std::runtime_error("input and output shape is not correct for dot;");
+                    }
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "const float alpha = 1.0;\n";
+                    writer << "const float beta  = 0.0;\n";
+                    writer << "int m = " << arg0_shape[0] << ";\n";
+                    writer << "int n = " << arg1_shape[1] << ";\n";
+                    writer << "int k = " << arg0_shape[0] << ";\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSgemm("
+                           << "cublas_handle,"
+                           << "CUBLAS_OP_N,"
+                           << "CUBLAS_OP_N,"
+                           << "n,"
+                           << "m,"
+                           << "k,"
+                           << "&alpha," // Alpha
+                           << args[1].get_name() << ","
+                           << "n," << args[0].get_name() << ","
+                           << "k,"
+                           << "&beta," // beta
+                           << out[0].get_name() << ","
+                           << "n);\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    throw std::runtime_error(node->get_name() +
+                                             " with more then 2D is not implemented.");
+                }
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -320,15 +324,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -362,15 +366,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -390,45 +394,25 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-    writer << "cudnnOpTensor(cudnn_handle,"
-           << "opTensorDesc,"
-           << "&alpha1,"
-           << "descriptor," << args[0].get_name() << ","
-           << "&alpha2,"
-           << "descriptor," << args[0].get_name() << ","
-           << "&beta,"
-           << "descriptor," << out[0].get_name() << ");\n";
-    writer.indent--;
-    writer << "}\n";
-}
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::Broadcast)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    auto broadcast = static_cast<const ngraph::op::Broadcast*>(n);
-    auto arg_shape = args[0].get_shape();
-    auto result_shape = out[0].get_shape();
-
-    auto& axes = broadcast->get_broadcast_axes();
-    //broadcast axes is empty, do a copy
-    if (axes.empty())
-    {
-        writer << "{   // " << node->get_name() << " \n";
-        writer.indent++;
-        writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
-               << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-        writer.indent--;
-        writer << "}\n";
-        return;
-    }
+                writer << "cudnnOpTensor(cudnn_handle,"
+                       << "opTensorDesc,"
+                       << "&alpha1,"
+                       << "descriptor," << args[0].get_name() << ","
+                       << "&alpha2,"
+                       << "descriptor," << args[0].get_name() << ","
+                       << "&beta,"
+                       << "descriptor," << out[0].get_name() << ");\n";
+                writer.indent--;
+                writer << "}\n";
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Broadcast)
             {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
@@ -490,109 +474,81 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     throw std::runtime_error(node->get_name() + " is not implemented.");
                 }
             }
-        }
-    }
-    if (is_one_axes)
-    {
-        int repeat_times = 1;
-        for (int i = 0; i < axes_v.size(); i++)
-        {
-            repeat_times *= result_shape[axes_v[i]];
-        }
-
-        int repeat_size = 1;
-        for (int i = *axes_v.rbegin() + 1; i < result_shape.size(); i++)
-        {
-            repeat_size *= result_shape[i];
-        }
-
-        writer << "{   // " << node->get_name() << " \n";
-        writer.indent++;
-        writer << "runtime::gpu::emit_broadcast(" << args[0].get_name() << ", " << out[0].get_name()
-               << ", " << repeat_size << ", " << repeat_times << ", " << out[0].get_size()
-               << ");\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    else
-    {
-        throw std::runtime_error(node->get_name() + " is not implemented.");
-    }
-}
-
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
-{
-}
+            {
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    auto reshape = static_cast<const op::Reshape*>(n);
-    writer << "{   // " << node->get_name() << "\n";
-    writer.indent++;
-    auto arg_shape = args[0].get_shape();
-    auto arg_rank = arg_shape.size();
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto reshape = static_cast<const op::Reshape*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
 
-    auto result_shape = out[0].get_shape();
-    auto& result_element_type = out[0].get_element_type();
+                auto result_shape = out[0].get_shape();
+                auto& result_element_type = out[0].get_element_type();
 
-    auto input_order = reshape->get_input_order();
+                auto input_order = reshape->get_input_order();
 
-    bool same_layout = is_sorted(input_order.begin(), input_order.end());
+                bool same_layout = is_sorted(input_order.begin(), input_order.end());
 
-    size_t result_shape_product = 1;
-    for (auto i : result_shape)
-    {
-        result_shape_product *= i;
-    }
-    // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
-    //  we can just copy.
-    if (same_layout || result_shape_product < 2)
-    {
-        writer << "{   // " << node->get_name() << " 1\n";
-        writer.indent++;
-        writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
-               << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    // If there *is* a layout change in the 2D case, we transpose the input.
-    else if (arg_rank == 2)
-    {
-        // TODO Assert arg0_shape[0] == arg1_shape[0]?
-        writer << "{   // " << node->get_name() << "\n";
-        writer.indent++;
-        writer << "const float alpha = 1.0;\n";
-        writer << "const float beta = 0;\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        writer << "cublasSgeam("
-               << "cublas_handle,"
-               << "CUBLAS_OP_T,"
-               << "CUBLAS_OP_T," << arg_shape[0] << "," << arg_shape[1] << ","
-               << "&alpha," // Alpha
-               << args[0].get_name() << "," << arg_shape[1] << ","
-               << "&beta," // beta
-               << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name() << ","
-               << result_shape[1] << ");\n";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
-        writer.indent--;
-        writer << "}\n";
-    }
-    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-    else
-    {
-        throw runtime_error(
-            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
-    }
-    writer.indent--;
-    writer << "}\n";
-}
+                size_t result_shape_product = 1;
+                for (auto i : result_shape)
+                {
+                    result_shape_product *= i;
+                }
+                // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
+                //  we can just copy.
+                if (same_layout || result_shape_product < 2)
+                {
+                    writer << "{   // " << node->get_name() << " 1\n";
+                    writer.indent++;
+                    writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
+                           << args[0].get_name() << ", " << out[0].get_size() << " * "
+                           << out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // If there *is* a layout change in the 2D case, we transpose the input.
+                else if (arg_rank == 2)
+                {
+                    // TODO Assert arg0_shape[0] == arg1_shape[0]?
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "const float alpha = 1.0;\n";
+                    writer << "const float beta = 0;\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSgeam("
+                           << "cublas_handle,"
+                           << "CUBLAS_OP_T,"
+                           << "CUBLAS_OP_T," << arg_shape[0] << "," << arg_shape[1] << ","
+                           << "&alpha," // Alpha
+                           << args[0].get_name() << "," << arg_shape[1] << ","
+                           << "&beta," // beta
+                           << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name()
+                           << "," << result_shape[1] << ");\n";
+                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+                else
+                {
+                    throw runtime_error(
+                        "Axis permutation in reshape is not implemented yet for tensors with "
+                        "rank>2");
+                }
+                writer.indent--;
+                writer << "}\n";
+            }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
@@ -601,15 +557,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -629,29 +585,29 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-    writer << "cudnnOpTensor(cudnn_handle,"
-           << "opTensorDesc,"
-           << "&alpha1,"
-           << "descriptor," << args[0].get_name() << ","
-           << "&alpha2,"
-           << "descriptor," << args[1].get_name() << ","
-           << "&beta,"
-           << "descriptor," << out[0].get_name() << ");\n";
-    writer.indent--;
-    writer << "}\n";
-}
+                writer << "cudnnOpTensor(cudnn_handle,"
+                       << "opTensorDesc,"
+                       << "&alpha1,"
+                       << "descriptor," << args[0].get_name() << ","
+                       << "&alpha2,"
+                       << "descriptor," << args[1].get_name() << ","
+                       << "&beta,"
+                       << "descriptor," << out[0].get_name() << ");\n";
+                writer.indent--;
+                writer << "}\n";
+            }
 
-v            template <>
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
-{
-    if (out[0].get_size() == 0)
-    {
-        return;
-    }
-    writer << "{  // " << node->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer += R"(
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                writer << "{  // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
@@ -682,18 +638,19 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.indent--;
                 writer << "}\n";
             }
-        }
-    }
-}
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
-{
-    writer << "{   //" << node->get_name() << "\n";
-    writer.indent++;
-    writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
-           << ", " << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-    writer.indent--;
-    writer << "}\n";
-    return;
+            {
+                writer << "{   //" << node->get_name() << "\n";
+                writer.indent++;
+                writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
+                       << args[0].get_name() << ", " << out[0].get_size() << " * "
+                       << out[0].get_element_type().size() << ");\n";
+                writer.indent--;
+                writer << "}\n";
+                return;
+            }
+        }
+    }
 }

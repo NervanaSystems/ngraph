@@ -187,7 +187,8 @@ static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Convert), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Convert>},
     {TI(ngraph::op::Constant), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Constant>},
     {TI(ngraph::op::Reshape), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Reshape>},
-    {TI(ngraph::op::FunctionCall), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
+    {TI(ngraph::op::FunctionCall),
+     &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
     {TI(ngraph::op::Reduce), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Reduce>},
     {TI(ngraph::op::Sign), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Sign>},
     {TI(ngraph::op::Slice), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Slice>},
@@ -202,12 +203,14 @@ static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Asin), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Asin>},
     {TI(ngraph::op::Acos), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Acos>},
     {TI(ngraph::op::Atan), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Atan>},
-    {TI(ngraph::op::ReplaceSlice), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::ReplaceSlice),
+     &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::OneHot), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::OneHot>},
     {TI(ngraph::op::Floor), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Floor>},
     {TI(ngraph::op::Ceiling), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Ceiling>},
     {TI(ngraph::op::Sqrt), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Sqrt>},
-    {TI(ngraph::op::Convolution), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
+    {TI(ngraph::op::Convolution),
+     &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
@@ -216,7 +219,8 @@ static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPool), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPool>},
     {TI(ngraph::op::Reverse), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Reverse>},
     {TI(ngraph::op::Result), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Result>},
-    {TI(ngraph::op::ReduceWindow), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReduceWindow>},
+    {TI(ngraph::op::ReduceWindow),
+     &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReduceWindow>},
     {TI(ngraph::op::SelectAndScatter),
      &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::SelectAndScatter>},
     {TI(ngraph::op::AvgPool), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::AvgPool>},
@@ -232,7 +236,8 @@ static const ngraph::runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Max), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
     {TI(ngraph::op::Min), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
     {TI(ngraph::op::Relu), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Relu>},
-    {TI(ngraph::op::ReluBackprop), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::ReluBackprop),
+     &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &ngraph::runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
 };
 
@@ -564,8 +569,8 @@ using namespace std;
             size_t temp_pool_size = current_function->get_temporary_pool_size();
             writer << "// Allocate the memory pool\n";
             // TODO memory pool malloc.
-            writer << "void* pool_base_ptr = ngraph::runtime::gpu::create_gpu_buffer(" << temp_pool_size
-                   << ");\n";
+            writer << "void* pool_base_ptr = ngraph::runtime::gpu::create_gpu_buffer("
+                   << temp_pool_size << ");\n";
 
             // Add temporaries to the variable name map
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -641,9 +646,9 @@ using namespace std;
             {
                 if (contains(constants, tv.get()))
                 {
-                    writer << "ngraph::runtime::gpu::cuda_memcpyHtD(outputs[" << output_index << "], "
-                           << tv->get_tensor().get_name() << ", " << tv->get_tensor().size()
-                           << ");\n";
+                    writer << "ngraph::runtime::gpu::cuda_memcpyHtD(outputs[" << output_index
+                           << "], " << tv->get_tensor().get_name() << ", "
+                           << tv->get_tensor().size() << ");\n";
                 }
                 else
                 {
