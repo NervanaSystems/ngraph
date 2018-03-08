@@ -28,20 +28,20 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-                static void get_1_element_op(const std::string& name,
-                                             const std::string& data_type,
-                                             const std::string& op,
-                                             std::string& kernel);
+                static void get_unary_elementwise_op(const std::string& name,
+                                                     const std::string& data_type,
+                                                     const std::string& op,
+                                                     std::string& kernel);
 
-                static void get_2_element_op(const std::string& name,
-                                             const std::string& data_type,
-                                             const std::string& op,
-                                             std::string& kernel);
+                static void get_binary_elementwise_op(const std::string& name,
+                                                      const std::string& data_type,
+                                                      const std::string& op,
+                                                      std::string& kernel);
 
-                static void get_n_element_op(const std::string& name,
-                                             const std::string& data_type,
-                                             const std::vector<std::string>& ops,
-                                             std::string& kernel);
+                static void get_arbitrary_elementwise_op(const std::string& name,
+                                                         const std::string& data_type,
+                                                         const std::vector<std::string>& ops,
+                                                         std::string& kernel);
             };
         }
     }
