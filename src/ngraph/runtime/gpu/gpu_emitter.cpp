@@ -226,18 +226,30 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
-                {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
-                    writer << "cublasSdot("
-                           << "cublas_handle," << arg0_shape[0] << "," << args[0].get_name() << ","
-                           << "1," << args[1].get_name() << ","
-                           << "1," << out[0].get_name() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
-                }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+                //case that can be treat as dot1d
+                if ((arg0_shape.size() == arg1_shape.size()) &&
+                     (arg0_shape.size() == dot->get_reduction_axes_count()))
+
+                    {
+                        for (int i = 0; i < arg0_shape.size(); i++)
+                        {
+                            if (arg0_shape[i] != arg1_shape[i])
+                            {
+                                throw std::runtime_error("two input shape is not correct for dot;");
+                            }
+                        }
+                        writer << "{   // " << node->get_name() << "\n";
+                        writer.indent++;
+                        writer << "cublasSdot("
+                               << "cublas_handle," << args[0].get_size() << ","
+                               << args[0].get_name() << ","
+                               << "1," << args[1].get_name() << ","
+                               << "1," << out[0].get_name() << ");\n";
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -258,7 +270,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     // GEMM Call
                     if (arg0_shape[0] != out[0].get_shape()[0] || // m
@@ -275,6 +288,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "int n = " << arg1_shape[1] << ";\n";
                     writer << "int k = " << arg0_shape[0] << ";\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+
                     writer << "cublasSgemm("
                            << "cublas_handle,"
                            << "CUBLAS_OP_N,"
@@ -289,6 +303,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "n);\n";
+
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.indent--;
                     writer << "}\n";

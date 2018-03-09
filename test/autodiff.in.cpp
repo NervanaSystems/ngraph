@@ -706,7 +706,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -728,7 +727,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -750,7 +748,6 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
