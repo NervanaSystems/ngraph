@@ -39,6 +39,8 @@ namespace ngraph
             {
             public:
                 MKLDNNEmitter() {}
+                ~MKLDNNEmitter();
+
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
 
                 size_t insert_primitive(mkldnn::primitive* primitive);
@@ -55,11 +57,16 @@ namespace ngraph
                                                  const mkldnn::memory::desc& weights_desc,
                                                  const mkldnn::memory::desc& result_desc,
                                                  const ngraph::Strides& strides,
+                                                 const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above);
 
+                /**
+                 * Convolution + bias forward
+                 */
                 size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                  const mkldnn::memory::desc& weights_desc,
+                                                 const mkldnn::memory::desc& bias_desc,
                                                  const mkldnn::memory::desc& result_desc,
                                                  const ngraph::Strides& strides,
                                                  const ngraph::Strides& dilation_strides,
@@ -82,7 +89,18 @@ namespace ngraph
                                                        const ngraph::Strides& dilation_strides,
                                                        const ngraph::CoordinateDiff& padding_below,
                                                        const ngraph::CoordinateDiff& padding_above);
-
+                /**
+                 * Convolution + bias backprop for weights and bias
+                 */
+                size_t build_convolution_backward_weights_bias(
+                    const mkldnn::memory::desc& in_data_desc,
+                    const mkldnn::memory::desc& in_delta_desc,
+                    const mkldnn::memory::desc& out_weights_delta_desc,
+                    const mkldnn::memory::desc& out_bias_delta_desc,
+                    const ngraph::Strides& ng_strides,
+                    const ngraph::Strides& ng_dilation_strides,
+                    const ngraph::CoordinateDiff& ng_padding_below,
+                    const ngraph::CoordinateDiff& ng_padding_above);
                 size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
                                              const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,
