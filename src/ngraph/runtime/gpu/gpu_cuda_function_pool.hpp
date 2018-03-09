@@ -36,8 +36,8 @@ namespace ngraph
                 CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
                 CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
 
-                void set(std::string& name, std::shared_ptr<CUfunction> function);
-                std::shared_ptr<CUfunction> get(std::string& name);
+                void set(const std::string& name, const std::string& kernel);
+                std::shared_ptr<CUfunction> get(const std::string& name);
 
             protected:
                 CudaFunctionPool() {}

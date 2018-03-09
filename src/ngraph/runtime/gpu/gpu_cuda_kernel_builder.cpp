@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/codegen/code_writer.hpp"
 
 namespace ngraph
 {
@@ -21,51 +22,66 @@ namespace ngraph
     {
         namespace gpu
         {
-            void CudaKernelBuilder::get_unary_elementwise_op(const std::string& name,
-                                                             const std::string& data_type,
-                                                             const std::string& op,
-                                                             std::string& kernel)
+            void CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
+                                                       const std::string& data_type,
+                                                       const std::string& op,
+                                                       const size_t& num_inputs)
             {
-                kernel = R"(  
-extern "C" __global__
-void cuda_)" + name + "(" +
-                         data_type + "* in, " + data_type + "* out, size_t n)\n" + R"({  
-size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
-if(tid < n) 
-{
-out[tid] =)" + op + "(in[tid]);\n" +
-                         R"(}
-})";
+                writer << "extern \"C\" __global__ void cuda_" << name << "(";
+                for (size_t i = 0; i < num_inputs; i++)
+                {
+                    writer << data_type << "* in" << i << ", ";
+                }
+                writer << data_type << "* out,"
+                       << "size_t n)\n";
+                writer << "{\n";
+                writer.indent++;
+                {
+                    writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+                    writer << "if (tid < n)\n";
+                    writer << "{\n";
+                    writer.indent++;
+                    {
+                        writer << "out[tid] = " << op << "(";
+                        for (size_t i = 0; i < num_inputs - 1; i++)
+                        {
+                            writer << "in" << i << "[tid], ";
+                        }
+                        writer << "in" << num_inputs - 1 << "[tid]);\n";
+                    }
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                writer.indent--;
+                writer << "}\n";
+
                 return;
             }
 
-            void CudaKernelBuilder::get_binary_elementwise_op(const std::string& name,
-                                                              const std::string& data_type,
-                                                              const std::string& op,
-                                                              std::string& kernel)
+            void CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      const std::string& data_type,
+                                                      const std::string& math_kernel,
+                                                      const size_t& num_inputs)
             {
-                kernel = R"(  
-extern "C" __global__
-void )" + name + "(" + data_type +
-                         "* in1, " + data_type + "* in2, " + data_type + "* out, size_t n)\n" +
-                         R"({  
-size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
-if(tid < n) 
-{
-out[tid] = in1[tid] )" + op +
-                         "in2[tid]\n" +
-                         R"(}
-})";
-                return;
-            }
-
-            void
-                CudaKernelBuilder::get_arbitrary_elementwise_op(const std::string& name,
-                                                                const std::string& data_type,
-                                                                const std::vector<std::string>& ops,
-                                                                std::string& kernel)
-            {
-                kernel = "";
+                if (math_kernel.size())
+                {
+                    writer << "__device__ " << data_type << " " << name << "(";
+                    for (size_t i = 0; i < num_inputs - 1; i++)
+                    {
+                        writer << data_type << " x" << i << ", ";
+                    }
+                    writer << data_type << " x" << num_inputs - 1;
+                    writer << ")\n";
+                    writer << "{\n";
+                    writer.indent++;
+                    {
+                        writer << "return " + math_kernel << ";\n";
+                    }
+                    writer.indent--;
+                    writer << "}\n";
+                }
                 return;
             }
         }

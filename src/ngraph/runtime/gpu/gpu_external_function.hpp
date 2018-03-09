@@ -41,7 +41,8 @@ namespace ngraph
             class GPU_CallFrame;
 
             using OpFunction =
-                std::function<void(codegen::CodeWriter&,
+                std::function<void(GPU_ExternalFunction* external_function,
+                                   codegen::CodeWriter&,
                                    const ngraph::Node*,
                                    const std::vector<GPU_TensorViewWrapper>& inputs,
                                    const std::vector<GPU_TensorViewWrapper>& outputs)>;
