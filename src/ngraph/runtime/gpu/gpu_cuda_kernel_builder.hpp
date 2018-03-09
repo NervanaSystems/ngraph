@@ -19,13 +19,12 @@
 #include <string>
 #include <vector>
 
-namespace codegen
-{
-    class CodeWriter;
-}
-
 namespace ngraph
 {
+    namespace codegen
+    {
+        class CodeWriter;
+    }
     namespace runtime
     {
         namespace gpu
@@ -42,7 +41,7 @@ namespace ngraph
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& data_type,
-                                              const std::string& op,
+                                              const std::string& math_kernel,
                                               const size_t& num_inputs);
             };
         }
