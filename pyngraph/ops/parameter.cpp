@@ -14,12 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iterator>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <pybind11/operators.h>
-//#include <string>
-#include <sstream>
+#include <string>
+
 #include "ngraph/node.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter.hpp"
@@ -34,13 +32,9 @@ void regclass_pyngraph_op_Parameter(py::module m){
 
     parameter.def("__repr__", [](const ngraph::Node &self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
-
-        std::stringstream shape_string_stream;
-        std::copy(self.get_shape().begin(), self.get_shape().end(), std::ostream_iterator<int>(shape_string_stream, ", "));
-        std::string shape = shape_string_stream.str();
+        std::string shape = py::cast(self.get_shape()).attr("__str__")().cast<std::string>();
         std::string type = self.get_element_type().c_type_string();
-
-        return "<" + class_name + ": '" + self.get_name() + "' (" + shape + type + ")>";
+        return "<" + class_name + ": '" + self.get_name() + "' (" + shape + ", " + type + ")>";
     });
 
     parameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
