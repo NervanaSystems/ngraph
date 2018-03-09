@@ -922,4 +922,3 @@ TEST(cpu_fusion, sigmoid_n1c1h4)
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
-
