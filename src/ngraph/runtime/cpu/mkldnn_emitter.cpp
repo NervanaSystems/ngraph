@@ -25,6 +25,12 @@
 
 using namespace ngraph::runtime::cpu;
 
+MKLDNNEmitter::~MKLDNNEmitter()
+{
+    for (auto p : m_mkldnn_primitives)
+        delete p;
+}
+
 const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
 {
     return m_mkldnn_primitives;
