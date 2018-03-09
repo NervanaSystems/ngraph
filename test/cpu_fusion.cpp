@@ -43,6 +43,8 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/autodiff/backprop_function.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -732,4 +734,24 @@ TEST(cpu_fusion, sigmoid_n1c1h4)
     cf->call({a}, {result});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, sigmoid_bprop_fusion)
+{
+    pass::Manager pass_manager;
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    //pass_manager.run_passes(func);
+    auto df = autodiff::backprop_function(func);
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(df);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("bn_autodiff.png");
+    pass_manager.run_passes(df);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(func);
+    ASSERT_EQ(ccg, 1);
 }

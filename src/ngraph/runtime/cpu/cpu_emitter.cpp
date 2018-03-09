@@ -3351,6 +3351,45 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidBackprop)
+            {
+                auto input_shape = args[0].get_shape();
+                auto delta_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int delta_1d_size = static_cast<int>(shape_size(delta_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto delta_desc = mkldnn::memory::desc(
+                    {delta_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
+
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
                 const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);

@@ -300,6 +300,35 @@ size_t MKLDNNEmitter::build_sigmoid_forward(const mkldnn::memory::desc& input_de
     return primitive_index;
 }
 
+size_t MKLDNNEmitter::build_sigmoid_backward(const mkldnn::memory::desc& input_desc,
+                                             const mkldnn::memory::desc& delta_desc,
+                                             const mkldnn::memory::desc& result_desc)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t delta_index = build_memory_primitive(delta_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    // sigmoid forward primitive desc
+    mkldnn::eltwise_forward::primitive_desc sigmoid_fwd_pd =
+        mkldnn::eltwise_forward::primitive_desc({mkldnn::prop_kind::forward_training,
+                                                 mkldnn::algorithm::eltwise_logistic,
+                                                 input_desc,
+                                                 0,
+                                                 0},
+                                                mkldnn_utils::global_cpu_engine);
+
+    size_t primitive_index = insert_primitive(new mkldnn::eltwise_backward(
+        {{mkldnn::algorithm::eltwise_logistic, delta_desc, input_desc, 0, 0},
+         mkldnn_utils::global_cpu_engine,
+         sigmoid_fwd_pd},
+        *m_mkldnn_primitives[input_index],
+        *m_mkldnn_primitives[delta_index],
+        *m_mkldnn_primitives[result_index]));
+
+    m_primitive_deps[primitive_index] = {input_index, delta_index, result_index};
+    return primitive_index;
+}
+
 size_t MKLDNNEmitter::build_elementwise_add(
     const mkldnn::memory::desc& input0_data_desc,
     const mkldnn::memory::desc& input1_data_desc,
