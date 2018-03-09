@@ -28,7 +28,9 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/result.hpp"
@@ -37,6 +39,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 
 using namespace std;
 using namespace mkldnn;
@@ -474,7 +477,7 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto bias_shape = node->get_output_shape(1);
-                        memory::dims mkldnn_bias_shape(bias_shape.begin(), filters_shape.end());
+                        memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
                         bwd_desc.reset(
                             new convolution_backward_weights::desc(algorithm::convolution_direct,
@@ -571,7 +574,7 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         ConvolutionBackpropFiltersLayout<
                             ngraph::op::ConvolutionBiasBackpropFiltersBias,
-                            false>(node, prim_input_formats, prim_output_formats);
+                            true>(node, prim_input_formats, prim_output_formats);
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -757,7 +760,35 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
+                {
+                    auto goe = static_cast<const ngraph::op::GetOutputElement*>(node.get());
+                    auto input_layout = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(
+                        node.get(), goe->get_n());
+                    vector<memory::format> prim_output_formats;
+                    prim_output_formats.push_back(input_layout);
+                    set_output_layouts(node, prim_output_formats);
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Sigmoid)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -797,6 +828,32 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNorm)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(input_layout);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Batchnorm only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Add)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -826,6 +883,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
+    {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
@@ -838,10 +896,14 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
+    {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::GetOutputElement),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Sigmoid>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

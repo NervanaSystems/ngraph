@@ -113,6 +113,23 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
 };
 
+static const std::set<memory::format> s_filter_formats{
+    memory::format::oihw,
+    memory::format::ihwo,
+    memory::format::hwio,
+    // memory::format::oIhw8i,             // These currently map to nChw8c and nChw16c
+    // memory::format::oIhw16i,
+    memory::format::OIhw8i8o,
+    memory::format::OIhw16i16o,
+    memory::format::IOhw16o16i,
+    memory::format::OIhw8o8i,
+    memory::format::OIhw16o16i,
+    memory::format::Oihw8o,
+    memory::format::Oihw16o,
+    memory::format::Ohwi8o,
+    memory::format::Ohwi16o,
+    memory::format::OhIw16o4i};
+
 bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 {
     return (s_op_registry.find(TI(op)) != s_op_registry.end());
@@ -160,14 +177,14 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::get_input_mkldnn_format(const Node* node,
-                                                                           int index)
+                                                                           size_t index)
 {
     auto tvl = node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(const Node* node,
-                                                                            int index)
+                                                                            size_t index)
 {
     auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
@@ -184,10 +201,19 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format fmt1,
                                                         mkldnn::memory::format fmt2)
 {
-    set<mkldnn::memory::format> similar_4d_formats{mkldnn::memory::format::nchw,
-                                                   mkldnn::memory::format::oihw};
+    std::set<mkldnn::memory::format> similar_4d_formats{mkldnn::memory::format::nchw,
+                                                        mkldnn::memory::format::oihw};
     if ((fmt1 == fmt2) || (similar_4d_formats.find(fmt1) != similar_4d_formats.end() &&
                            similar_4d_formats.find(fmt2) != similar_4d_formats.end()))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
+{
+    if (s_filter_formats.find(fmt) != s_filter_formats.end())
     {
         return true;
     }

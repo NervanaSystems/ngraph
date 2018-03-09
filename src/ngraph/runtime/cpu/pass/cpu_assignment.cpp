@@ -27,11 +27,13 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -263,6 +265,19 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Sigmoid)
+                {
+                    auto sigmoid = static_cast<op::Sigmoid*>(node);
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        sigmoid->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
                     auto avg_pool = static_cast<op::ReluBackprop*>(node);
@@ -279,6 +294,16 @@ namespace ngraph
                         avg_pool->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
+                {
+                    auto batchnorm = static_cast<op::BatchNorm*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    batchnorm->set_op_annotations(op_annotations);
+                }
             }
         }
     }
@@ -288,6 +313,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
+    {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNorm>},
     {TI(ngraph::op::Convolution),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
@@ -304,6 +330,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

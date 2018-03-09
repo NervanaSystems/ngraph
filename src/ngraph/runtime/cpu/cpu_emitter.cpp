@@ -93,6 +93,7 @@
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -273,13 +274,6 @@ namespace ngraph
 
                 const char* cbeta = "0.0f";
 
-                if (args.size() > 2)
-                {
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    cbeta = "1.0f";
-                }
-
                 writer << "cblas::cblas_sgemm("
                        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                        << ", " << k << ",\n"
@@ -287,6 +281,101 @@ namespace ngraph
                        << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
                        << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
                        << ");\n";
+
+                if (args.size() > 2)
+                {
+                    auto axes = cg->get_broadcast_axes();
+                    if (axes.size() == 1)
+                    {
+                        if (*(axes.begin()) == 0)
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_row[" << arg2_shape[0] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[0]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
+
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                                   << ",\n"
+                                   << "        1.0f, ones_row, "
+                                   << "1"
+                                   << ", " << args[2].get_name() << ", " << max(1UL, arg2_shape[1])
+                                   << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
+                        else
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_col[" << arg2_shape[1] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[1]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
+
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << ctranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                                   << ",\n"
+                                   << "        1.0f, ones_col," << max(1UL, arg2_shape[1]) << ", "
+                                   << args[2].get_name() << ", "
+                                   << "1"
+                                   << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
+                    }
+                    else
+                    {
+                        if (axes.size() != 2)
+                        {
+                            throw ngraph_error("unexpected broadcast rank");
+                        }
+
+                        writer << out[0].get_element_type().c_type_string() << " bias["
+                               << arg2_shape[1] << "]"
+                               << " = { " << args[2].get_name() << "[0]";
+                        for (size_t i = 1; i < arg2_shape[1]; ++i)
+                        {
+                            writer << "," << args[2].get_name() << "[0]";
+                        }
+                        writer << "};\n";
+
+                        writer << "static " << out[0].get_element_type().c_type_string()
+                               << " ones_scalar[" << arg2_shape[0] << "]"
+                               << " = { 1.0f";
+                        for (size_t i = 1; i < arg2_shape[0]; ++i)
+                        {
+                            writer << ", 1.0f";
+                        }
+                        writer << "};\n";
+
+                        writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                               << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                               << ",\n"
+                               << "        1.0f, ones_scalar, "
+                               << "1"
+                               << ", "
+                               << "bias"
+                               << ", " << max(1UL, arg2_shape[1]) << ", "
+                               << "1.0f"
+                               << ",\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
+                               << ");\n";
+                    }
+                }
 
                 writer.indent--;
                 writer << "}\n";
@@ -302,13 +391,25 @@ namespace ngraph
                 auto gamma_shape = args[0].get_shape();
                 auto beta_shape = args[1].get_shape();
                 auto input_shape = args[2].get_shape();
-                auto mean_shape = args[3].get_shape();
-                auto variance_shape = args[4].get_shape();
                 auto result_shape = out[0].get_shape();
+                auto mean_shape = out[1].get_shape();
+                auto variance_shape = out[2].get_shape();
 
                 // get input element type
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                     args[2].get_element_type());
+
+                const string& gamma_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                const string& beta_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                if (gamma_format.compare("memory::format::x") != 0 &&
+                    beta_format.compare("memory::format::x") != 0)
+                {
+                    throw std::runtime_error(
+                        "gamma layout->" + gamma_format + ", beta layout->" + beta_format +
+                        " should match and both should have memory::format::x format");
+                }
 
                 writer << "{\n";
                 writer.indent++;
@@ -330,16 +431,20 @@ namespace ngraph
                 // get the eps value from the bn node
                 writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
 
+                const string& input_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2));
+                const string& result_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
                 // Bind to CPU engine
                 writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                 // create memory descriptors
                 writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
+                       << "}, " << et << ", " << input_format << ");\n";
                 // TODO define weights by stacking gamma and beta values
                 writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
                        << "}, " << et << ", memory::format::nc);\n";
                 writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
+                       << et << ", " << result_format << ");\n";
                 writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
                        << et << ", memory::format::x);\n";
                 writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
@@ -350,17 +455,17 @@ namespace ngraph
                        << args[2].get_name() << ");\n";
                 writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
                        << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
-                       << args[4].get_name() << ");\n";
                 writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
                        << ");\n";
+                writer << "memory mean = memory({mean_desc, cpu_engine}, " << out[1].get_name()
+                       << ");\n";
+                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                       << out[2].get_name() << ");\n";
 
                 // create batchnorm descriptor
                 writer << "batch_normalization_forward::desc bn_fprop_desc = "
                           "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
+                       << "input_data_desc, epsilon, use_scale_shift);\n";
                 // bn fprop primitive descriptor
                 writer
                     << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
@@ -369,8 +474,8 @@ namespace ngraph
                 // create a batchnorm fprop primitive
                 writer << "batch_normalization_forward bn_fprop = "
                           "batch_normalization_forward(bn_fprop_prim_desc, "
-                          "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
-                       << "primitive::at(weights), result); \n";
+                          "primitive::at(input_data),"
+                       << "primitive::at(weights), result, mean, variance); \n";
 
                 // create stream and execute
                 writer << "stream s = stream(stream::kind::eager);\n"
@@ -3194,6 +3299,19 @@ namespace ngraph
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
+                // MKLDNN relies on format names for selecting optimized kernel implementations
+                // Hacky way to deal with this until they move to using canonicalized layouts
+                if (input_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
+                {
+                    input_format = mkldnn::memory::format::oihw;
+                }
+                if (output_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
+                {
+                    output_format = mkldnn::memory::format::oihw;
+                }
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
@@ -3328,6 +3446,37 @@ namespace ngraph
                            << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
                     writer << "}\n";
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
+            {
+                auto input_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
+
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
             }
 
             template <>
@@ -3530,6 +3679,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
+                const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
+
+                if (!result->needs_copy())
+                {
+                    return;
+                }
+
                 writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";

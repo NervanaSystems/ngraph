@@ -16,18 +16,23 @@
 
 #pragma once
 
-#include <memory>
-#include <unordered_map>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    class Function;
-
-    namespace autodiff
+    namespace pass
     {
-        /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
-        /// @param f is f(X_i...)
-        /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
-        std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
+        class ResultCopyElimination;
     }
 }
+
+class ngraph::pass::ResultCopyElimination : public ngraph::pass::FunctionPass
+{
+public:
+    ResultCopyElimination()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+};
