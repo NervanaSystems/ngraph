@@ -16,39 +16,22 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class MatmulBias : public util::RequiresTensorViewArgs
+        class Sigmoid : public util::RequiresTensorViewArgs
         {
         public:
-            MatmulBias(std::shared_ptr<Node> W,
-                       std::shared_ptr<Node> x,
-                       std::shared_ptr<Node> b,
-                       Shape shape_w,
-                       Shape shape_x,
-                       bool transpose_w,
-                       bool transpose_x,
-                       AxisSet axes = AxisSet{});
-
-            bool get_is_arg0_transposed() const { return m_transpose_w; }
-            bool get_is_arg1_transposed() const { return m_transpose_x; }
-            Shape get_arg0_shape() const { return m_shape_w; }
-            Shape get_arg1_shape() const { return m_shape_x; }
-            const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
+            Sigmoid(std::shared_ptr<Node> input);
+            Shape get_input_shape() const { return m_shape_input; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            Shape m_shape_w;
-            Shape m_shape_x;
-            bool m_transpose_w;
-            bool m_transpose_x;
-            AxisSet m_broadcast_axes;
+            Shape m_shape_input;
         };
     }
 }
