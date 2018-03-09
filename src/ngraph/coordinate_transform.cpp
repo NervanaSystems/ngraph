@@ -14,7 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -89,8 +88,10 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     }
 
     AxisVector all_axes(m_n_axes);
-    size_t n = 0;
-    std::generate(all_axes.begin(), all_axes.end(), [&n]() -> size_t { return n++; });
+    for (size_t i = 0; i < all_axes.size(); i++)
+    {
+        all_axes[i] = i;
+    }
 
     if (!std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()))
     {

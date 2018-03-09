@@ -25,11 +25,13 @@
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/relu.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -75,7 +77,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }
@@ -163,7 +165,7 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
         }
         else
         {
-            new_args.push_back(node->get_input_op(index));
+            new_args.push_back(output.get_node());
         }
         index++;
     }
@@ -629,6 +631,16 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Result)
+                {
+                    auto input_layout =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                    vector<memory::format> prim_output_formats;
+                    prim_output_formats.push_back(input_layout);
+                    set_output_layouts(node, prim_output_formats);
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -698,6 +710,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
+    {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
@@ -707,6 +720,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
+    {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
 };

@@ -119,10 +119,10 @@ namespace ngraph
                     }
 
                     AxisVector input_batch_transform_axis_order(2 + n_spatial_dimensions);
-                    size_t n = 0;
-                    std::generate(input_batch_transform_axis_order.begin(),
-                                  input_batch_transform_axis_order.end(),
-                                  [&n]() -> size_t { return n++; });
+                    for (size_t i = 0; i < input_batch_transform_axis_order.size(); i++)
+                    {
+                        input_batch_transform_axis_order[i] = i;
+                    }
 
                     CoordinateTransform input_batch_transform(
                         arg0_shape,

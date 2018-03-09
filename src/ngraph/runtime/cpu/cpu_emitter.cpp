@@ -17,7 +17,6 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <typeindex>
@@ -73,6 +72,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -80,6 +80,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -239,7 +240,7 @@ namespace ngraph
 
                 const Shape& arg0_shape = cg->get_arg0_shape(); //W
                 const Shape& arg1_shape = cg->get_arg1_shape(); //x
-                const Shape& arg2_shape = args[2].get_shape();  //bias (C)
+                const Shape& arg2_shape = node->get_shape();    //bias (C)
 
                 static const char* ctranspose = "cblas::Transpose::Transpose, ";
                 static const char* cnotranspose = "cblas::Transpose::None, ";
@@ -269,16 +270,23 @@ namespace ngraph
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
 
-                writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
-                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                const char* cbeta = "0.0f";
+
+                if (args.size() > 2)
+                {
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    cbeta = "1.0f";
+                }
 
                 writer << "cblas::cblas_sgemm("
                        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                        << ", " << k << ",\n"
                        << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
-                       << args[1].get_name() << ", " << max(1UL, ldb) << ", 1.0f,\n"
+                       << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
                        << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
                        << ");\n";
+
                 writer.indent--;
                 writer << "}\n";
             }
@@ -293,13 +301,25 @@ namespace ngraph
                 auto gamma_shape = args[0].get_shape();
                 auto beta_shape = args[1].get_shape();
                 auto input_shape = args[2].get_shape();
-                auto mean_shape = args[3].get_shape();
-                auto variance_shape = args[4].get_shape();
                 auto result_shape = out[0].get_shape();
+                auto mean_shape = out[1].get_shape();
+                auto variance_shape = out[2].get_shape();
 
                 // get input element type
                 const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
                     args[2].get_element_type());
+
+                const string& gamma_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                const string& beta_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                if (gamma_format.compare("memory::format::x") != 0 &&
+                    beta_format.compare("memory::format::x") != 0)
+                {
+                    throw std::runtime_error(
+                        "gamma layout->" + gamma_format + ", beta layout->" + beta_format +
+                        " should match and both should have memory::format::x format");
+                }
 
                 writer << "{\n";
                 writer.indent++;
@@ -321,16 +341,20 @@ namespace ngraph
                 // get the eps value from the bn node
                 writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
 
+                const string& input_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2));
+                const string& result_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
                 // Bind to CPU engine
                 writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                 // create memory descriptors
                 writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
+                       << "}, " << et << ", " << input_format << ");\n";
                 // TODO define weights by stacking gamma and beta values
                 writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
                        << "}, " << et << ", memory::format::nc);\n";
                 writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
+                       << et << ", " << result_format << ");\n";
                 writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
                        << et << ", memory::format::x);\n";
                 writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
@@ -341,17 +365,17 @@ namespace ngraph
                        << args[2].get_name() << ");\n";
                 writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
                        << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
-                       << args[4].get_name() << ");\n";
                 writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
                        << ");\n";
+                writer << "memory mean = memory({mean_desc, cpu_engine}, " << out[1].get_name()
+                       << ");\n";
+                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                       << out[2].get_name() << ");\n";
 
                 // create batchnorm descriptor
                 writer << "batch_normalization_forward::desc bn_fprop_desc = "
                           "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
+                       << "input_data_desc, epsilon, use_scale_shift);\n";
                 // bn fprop primitive descriptor
                 writer
                     << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
@@ -360,12 +384,123 @@ namespace ngraph
                 // create a batchnorm fprop primitive
                 writer << "batch_normalization_forward bn_fprop = "
                           "batch_normalization_forward(bn_fprop_prim_desc, "
-                          "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
-                       << "primitive::at(weights), result); \n";
+                          "primitive::at(input_data),"
+                       << "primitive::at(weights), result, mean, variance); \n";
 
                 // create stream and execute
                 writer << "stream s = stream(stream::kind::eager);\n"
                        << "s.submit({bn_fprop}).wait();\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            {
+                const ngraph::op::BatchNormBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+                auto gamma_shape = args[0].get_shape();
+                auto beta_shape = args[1].get_shape();
+                auto input_shape = args[2].get_shape();
+                auto mean_shape = args[3].get_shape();
+                auto variance_shape = args[4].get_shape();
+                auto delta_shape = args[5].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                // get input element type
+                const string& et =
+                    mkldnn_utils::get_mkldnn_data_type_string(args[2].get_element_type());
+                writer << "{\n";
+                writer.indent++;
+                // define weights
+                writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                       << ">bn_weights(" << input_shape[1] * 2 << ");\n";
+                writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                       << ">vdiff_weights(" << input_shape[1] * 2 << ");\n";
+                auto weights_shape = Shape{2, input_shape[1]};
+
+                // push gamma and beta
+                writer << "auto gamma = " << args[0].get_name() << ";\n";
+                writer << "auto beta = " << args[1].get_name() << ";\n";
+
+                writer << "memcpy(&bn_weights[0], gamma,"
+                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+                // get the eps value from the bn node
+                writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+                // Bind to CPU engine
+                writer << "using namespace mkldnn; \n";
+                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+                // create memory descriptors
+                writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
+                       << "}, " << et << ", memory::format::nchw);\n";
+                // TODO define weights by stacking gamma and beta values
+                writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
+                       << "}, " << et << ", memory::format::nc);\n";
+                writer << "memory::desc diff_weights_desc = memory::desc({" << join(weights_shape)
+                       << "}, " << et << ", memory::format::nc);\n";
+                writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
+                       << et << ", memory::format::nchw);\n";
+                writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
+                       << et << ", memory::format::x);\n";
+                writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
+                       << "}, " << et << ", memory::format::x);\n";
+                writer << "memory::desc delta_desc = memory::desc({" << join(input_shape) << "}, "
+                       << et << ", memory::format::nchw);\n";
+
+                // Define memory for the user data
+                writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                       << args[2].get_name() << ");\n";
+                writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
+                       << ");\n";
+                writer << "memory diff_weights = memory({diff_weights_desc, cpu_engine}, "
+                          "vdiff_weights.data()"
+                       << ");\n";
+                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
+                       << ");\n";
+                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                       << args[4].get_name() << ");\n";
+                writer << "memory delta = memory({delta_desc, cpu_engine}, " << args[5].get_name()
+                       << ");\n";
+                writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+                       << ");\n";
+
+                //create fprop batchnorm descriptor
+                writer << "batch_normalization_forward::desc bn_fprop_desc = "
+                          "batch_normalization_forward::desc(forward_training,"
+                       << "input_data_desc, epsilon, use_scale_shift);\n";
+                //bn fprop primitive descriptor
+                writer
+                    << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
+                       "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+
+                //create bprop batchnorm descriptor
+                writer << "batch_normalization_backward::desc bn_bprop_desc = "
+                          "batch_normalization_backward::desc(backward, delta_desc, "
+                          "input_data_desc, epsilon, use_scale_shift);\n";
+
+                //bn bprop primitive descriptor
+                writer << "batch_normalization_backward::primitive_desc bn_bprop_prim_desc = "
+                          "batch_normalization_backward::primitive_desc(bn_bprop_desc, cpu_engine, "
+                          "bn_fprop_prim_desc);\n";
+
+                //create a batchnorm fprop primitive
+                writer << " batch_normalization_backward bn_bprop = "
+                          "batch_normalization_backward(bn_bprop_prim_desc, input_data, mean, "
+                          "variance, delta, weights, result, diff_weights);\n ";
+
+                //create stream and execute
+                writer << "stream s = stream(stream::kind::eager);\n"
+                       << "s.submit({bn_bprop}).wait();\n";
+
+                writer << "memcpy(" << out[1].get_name() << ",&vdiff_weights[0],"
+                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(" << out[2].get_name() << ",&vdiff_weights[0] + "
+                       << args[1].get_size() << ","
+                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
                 writer.indent--;
                 writer << "}\n";
             }
@@ -1036,6 +1171,18 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
             {
+                // If an output is a constant then copy it
+                size_t output_index = 0;
+                for (shared_ptr<Node> result : external_function->get_function()->get_results())
+                {
+                    if (result.get() == node)
+                    {
+                        const descriptor::Tensor& tensor = node->get_output_tensor(0);
+                        writer << "memcpy(outputs[" << output_index << "], " << tensor.get_name()
+                               << ", " << tensor.size() << ");\n";
+                    }
+                    output_index++;
+                }
             }
 
             template <>
@@ -3028,11 +3175,12 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::relu_backprop<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                      " << args[1].get_name() << ",\n";
-                    writer << "                   " << out[0].get_name() << ",\n";
-                    writer << "                   " << out[0].get_size() << ");\n";
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[1].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
                 }
             }
 
@@ -3060,11 +3208,219 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::relu<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                   " << out[0].get_name() << ",\n";
-                    writer << "                   " << out[0].get_size() << ");\n";
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
+                auto type = out[0].get_type();
+                auto shape = out[0].get_shape();
+                auto dims = out[0].get_shape().size();
+                auto axes = softmax->get_axes();
+
+                // create arg/out if 1d
+                if (dims < 1)
+                {
+                    writer << type << "* arg = " << args[0].get_name() << "\n";
+                    writer << type << "* out = " << out[0].get_name() << "\n";
+                }
+                // else cast arg/out to an Nd array
+                else
+                {
+                    std::string shape1toN;
+                    for (size_t d = 1; d < dims; ++d)
+                    {
+                        shape1toN += "[";
+                        shape1toN += std::to_string(shape[d]);
+                        shape1toN += "]";
+                    }
+
+                    writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
+                           << shape1toN << ") " << args[0].get_name() << ";\n";
+                    writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
+                           << shape1toN << ") " << out[0].get_name() << ";\n";
+                }
+
+                // build arg/out index
+                std::string index;
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    index += "[i";
+                    index += std::to_string(d);
+                    index += "]";
+                }
+
+                // calculate e ^ (arg - max)
+                // outer loop(s) - for axis not in axes
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer << "#pragma omp parallel for\n";
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                // max inner loop(s)
+                writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
+
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "if (arg" << index << " > m)\n";
+                writer << "{\n";
+                writer.indent++;
+                writer << "m = arg" << index << ";\n";
+                writer.indent--;
+                writer << "}\n";
+
+                // end max inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // e ^ (arg - max) inner loop
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "out" << index << " = exp(arg" << index << " - m);\n";
+
+                // end e ^ (arg - max) inner loop
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // end e ^ (arg - max) outer loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
+                // outer loop(s) - for axis not in axes
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer << "#pragma omp parallel for\n";
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                // sum (e ^ (arg - max) inner loop(s)
+                writer << type << " d = 0;\n";
+
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "d += out" << index << ";\n";
+
+                // end sum (e ^ (arg - max) inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                writer << "d = 1 / d;\n";
+
+                // softmax inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "out" << index << " *= d;\n";
+
+                // end softmax inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // end softmax outer loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
+            {
+                writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "               " << out[0].get_name() << ",\n";
+                writer << "               " << shape_size(node->get_shape()) << ");\n";
             }
         }
     }

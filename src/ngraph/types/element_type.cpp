@@ -14,13 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <cassert>
 #include <cmath>
-#include <iostream>
-#include <vector>
 
-#include "ngraph/log.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/types/element_type.hpp"
 
 using namespace ngraph;

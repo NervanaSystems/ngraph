@@ -67,11 +67,13 @@ set (SRC
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
+    ops/result.cpp
     ops/select.cpp
     ops/select_and_scatter.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
+    ops/softmax.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
@@ -188,6 +190,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
+        runtime/cpu/pass/cpu_nop_elimination.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -313,7 +316,7 @@ endif()
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 

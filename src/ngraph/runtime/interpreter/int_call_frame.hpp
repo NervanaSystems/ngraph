@@ -39,9 +39,11 @@
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -88,6 +90,7 @@
 #include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/result.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
@@ -95,6 +98,7 @@
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
+#include "ngraph/runtime/kernel/softmax.hpp"
 #include "ngraph/runtime/kernel/sqrt.hpp"
 #include "ngraph/runtime/kernel/subtract.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
@@ -718,6 +722,13 @@ private:
                             reshape->get_input_order(),
                             out[0]->get_shape());
         }
+        else if (node_op == "Result")
+        {
+            ngraph::op::Result* res = dynamic_cast<ngraph::op::Result*>(&node);
+            kernel::result(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           shape_size(res->get_shape()));
+        }
         else if (node_op == "Reverse")
         {
             ngraph::op::Reverse* reverse = dynamic_cast<ngraph::op::Reverse*>(&node);
@@ -811,6 +822,14 @@ private:
                              slice->get_upper_bounds(),
                              slice->get_strides(),
                              out[0]->get_shape());
+        }
+        else if (node_op == "Softmax")
+        {
+            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
+            kernel::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_shape(),
+                               softmax->get_axes());
         }
         else if (node_op == "Sqrt")
         {

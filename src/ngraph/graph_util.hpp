@@ -16,27 +16,18 @@
 
 #pragma once
 
-#include <algorithm>
-#include <chrono>
-#include <deque>
-#include <functional>
-#include <iostream>
 #include <list>
-#include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
 
 namespace ngraph
 {
-    class Node;
-    class Function;
-
     namespace descriptor
     {
         class Input;
@@ -57,9 +48,8 @@ namespace ngraph
 
     void free_nodes(std::shared_ptr<Function>);
 
-    void replace_node(std::shared_ptr<Node> target,
-                      std::shared_ptr<Node> replacement,
-                      bool replace_output = false);
+    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
@@ -86,6 +76,8 @@ namespace ngraph
         {
             return (m_node_map.count(orig) != 0);
         }
+
+        void update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val);
 
         const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
             get_node_map() const

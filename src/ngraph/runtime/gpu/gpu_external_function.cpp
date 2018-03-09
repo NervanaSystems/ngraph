@@ -197,6 +197,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::gpu::GPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::EmitResult},
 };
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
@@ -346,12 +347,15 @@ using namespace std;
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
                 writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
-                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
+                       << tv->get_tensor().get_name() << "_cpu[" << c_value_strings.size()
+                       << "] =\n";
                 writer << "{\n";
                 writer.indent++;
                 writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
                 writer.indent--;
                 writer << "\n};\n\n";
+                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " *"
+                       << tv->get_tensor().get_name() << ";\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
@@ -485,6 +489,26 @@ using namespace std;
         writer << "{\n";
         writer.indent++;
 
+        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+        {
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            {
+                const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
+                if (c)
+                {
+                    shared_ptr<descriptor::TensorView> tv =
+                        node->get_outputs()[0].get_tensor_view();
+                    writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
+                    writer << "{\n";
+                    writer.indent++;
+                    writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name() << ", "
+                           << tv->get_tensor().get_name() << "_cpu, " << tv->get_tensor().size()
+                           << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+            }
+        }
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -571,7 +595,7 @@ using namespace std;
                         writer << "runtime::gpu::cuda_memcpyDtD(reinterpret_cast<"
                                << et.c_type_string() << "*>(outputs[" << output_index << "]), "
                                << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-                               << ptv->get_tensor().size() << ",1);\n";
+                               << ptv->get_tensor().size() << ");\n";
                         break;
                     }
                 }
@@ -657,7 +681,6 @@ using namespace std;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                handle_output_alias(writer, *node, output_alias_map);
                 if (m_emit_timing)
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
@@ -721,7 +744,7 @@ void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
                 {
                     writer << "runtime::gpu::cuda_memcpyDtD(static_cast<void*>(outputs["
                            << outputs[i] << "]), static_cast<void*>(outputs[" << outputs[0]
-                           << "]), " << otv->get_tensor().size() << ",1);\n";
+                           << "]), " << otv->get_tensor().size() << ");\n";
                 }
                 writer.indent--;
                 writer << "}\n";

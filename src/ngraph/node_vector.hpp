@@ -23,6 +23,11 @@ namespace ngraph
 {
     class Node;
 
+    namespace op
+    {
+        class Result;
+    }
+
     /// \brief Zero or more nodes.
     class NodeVector : public std::vector<std::shared_ptr<Node>>
     {
