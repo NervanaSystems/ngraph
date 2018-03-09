@@ -324,19 +324,4 @@ namespace ngraph
         }
         return result;
     }
-
-    template <>
-    std::vector<double> parse_string(const std::vector<std::string>& ss)
-    {
-        std::vector<double> result(ss.size());
-
-        NGRAPH_INFO;
-#pragma omp parallel for
-        for (size_t i = 0; i < ss.size(); i++)
-        {
-            result[i] = parse_string<double>(ss[i]);
-        }
-
-        return result;
-    }
 }

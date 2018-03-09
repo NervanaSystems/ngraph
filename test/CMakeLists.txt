@@ -32,6 +32,7 @@ set (SRC
     build_graph.cpp
     copy.cpp
     core_fusion.cpp
+    eigen.cpp
     element_type.cpp
     file_util.cpp
     inliner.cpp
@@ -155,7 +156,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_INCLUDES=\\\"${JSON_INCLUDE_DIR}\
 if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp=libiomp5")
 
 add_executable(unit-test ${SRC})
 
@@ -171,7 +171,6 @@ endif()
 if(LLVM_INCLUDE_DIR)
     target_link_libraries(unit-test ${LLVM_LINK_LIBS})
     add_dependencies(unit-test ext_llvm)
-    include_directories(${LLVM_INCLUDE_DIR})
 endif()
 
 if(CUDA_INCLUDE_DIRS)
@@ -179,7 +178,7 @@ if(CUDA_INCLUDE_DIRS)
     target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
-target_link_libraries(unit-test ngraph libgtest pthread mkldnn)
+target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)

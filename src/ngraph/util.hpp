@@ -192,11 +192,11 @@ namespace ngraph
     template <typename T>
     std::vector<T> parse_string(const std::vector<std::string>& ss)
     {
-        std::vector<T> result(ss.size());
+        std::vector<T> result;
 
-        for (size_t i = 0; i < ss.size(); i++)
+        for (auto s : ss)
         {
-            result[i] = parse_string<T>(ss[i]);
+            result.push_back(parse_string<T>(s));
         }
 
         return result;

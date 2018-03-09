@@ -176,12 +176,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 {
-    stopwatch timer;
-    timer.start();
     json js = json::parse(s);
-    timer.stop();
-    NGRAPH_INFO << "json parse time: " << timer.get_milliseconds();
-    timer.start();
     shared_ptr<Function> rc;
     unordered_map<string, shared_ptr<Function>> function_map;
     for (json func : js)
@@ -189,8 +184,6 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
         shared_ptr<Function> f = read_function(func, function_map);
         rc = f;
     }
-    timer.stop();
-    NGRAPH_INFO << "build graph time: " << timer.get_milliseconds();
 
     return rc;
 }

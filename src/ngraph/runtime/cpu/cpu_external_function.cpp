@@ -843,7 +843,6 @@ using namespace ngraph::runtime;
     // TODO: Cleanup and make this a utility function
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
-    NGRAPH_INFO << filename;
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
