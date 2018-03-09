@@ -13,22 +13,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
-#include "ngraph/codegen/code_writer.hpp"
 
-namespace ngraph
-{
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+
+namespace ngraph{
+
     namespace runtime
     {
         namespace gpu
         {
-            void CudaKernelBuilder::get_elementwise_op(const std::string& name,
+            void CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
                                                        const std::string& data_type,
                                                        const std::string& op,
-                                                       const size_t& num_inputs,
-                                                       std::string& kernel)
+                                                       const size_t& num_inputs)
             {
-                codegen::CodeWriter writer;
                 writer << "extern \"C\" __global__ void cuda_" << name << "(";
                 for (size_t i = 0; i < num_inputs; i++)
                 {
@@ -57,7 +57,6 @@ namespace ngraph
                 writer.indent--;
                 writer << "}\n";
 
-                kernel = writer.get_code();
                 return;
             }
         }

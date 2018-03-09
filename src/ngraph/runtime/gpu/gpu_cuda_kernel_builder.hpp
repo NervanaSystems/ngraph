@@ -19,6 +19,11 @@
 #include <string>
 #include <vector>
 
+namespace codegen
+{
+    class CodeWriter;
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -28,11 +33,11 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-                static void get_elementwise_op(const std::string& name,
+                static void get_elementwise_op(codegen::CodeWriter& writer,
+                                               const std::string& name,
                                                const std::string& data_type,
                                                const std::string& op,
-                                               const size_t& num_inputs,
-                                               std::string& kernel);
+                                               const size_t& num_inputs);
             };
         }
     }

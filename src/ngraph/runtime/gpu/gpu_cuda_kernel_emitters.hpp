@@ -18,7 +18,6 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/strides.hpp"
@@ -44,13 +43,12 @@ namespace ngraph
                 // Create an instance of nvrtcProgram with the code string.
                 if (CudaFunctionPool::instance().get(name) == nullptr)
                 {
-                    const char* opts[] = {"--gpu-architecture=compute_35",
-                                          "--relocatable-device-code=true"};
-                    std::string kernel;
-                    CudaKernelBuilder::get_elementwise_op(
-                        name, CudaOpMap<T>::type, CudaOpMap<T>::op, sizeof...(inputs), kernel);
-                    CudaFunctionPool::instance().set(
-                        name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
+                    codegen::CodeWriter writer;
+                    CudaKernelBuilder::get_elementwise_op(writer,
+                        name, CudaOpMap<T>::type, CudaOpMap<T>::op, sizeof...(inputs));
+
+                    std::string kernel = writer.get_code();
+                    CudaFunctionPool::instance().set(name, kernel);
                 }
 
                 //convert runtime ptr to driver api ptr

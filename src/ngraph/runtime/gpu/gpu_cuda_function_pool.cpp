@@ -15,9 +15,16 @@
 *******************************************************************************/
 
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <cctype>
 #include <unordered_map>
 
+#include "ngraph/file_util.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
+
+static const std::string s_output_dir = "gpu_codegen";
 
 namespace ngraph
 {
@@ -31,12 +38,19 @@ namespace ngraph
                 return pool;
             }
 
-            void CudaFunctionPool::set(std::string& name, std::shared_ptr<CUfunction> function)
+            void CudaFunctionPool::set(const std::string& name, const std::string& kernel)
             {
-                m_function_map.insert({name, function});
+                const char* opts[] = {"--gpu-architecture=compute_35",
+                                      "--relocatable-device-code=true"};
+                std::string filename = file_util::path_join(s_output_dir,
+                                                            "cuda_kernel_" + name +  "_codegen.cu");
+                std::ofstream out(filename);
+                out << kernel;
+                out.close();
+                m_function_map.insert({name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts)});
             }
 
-            std::shared_ptr<CUfunction> CudaFunctionPool::get(std::string& name)
+            std::shared_ptr<CUfunction> CudaFunctionPool::get(const std::string& name)
             {
                 auto it = m_function_map.find(name);
                 if (it != m_function_map.end())
