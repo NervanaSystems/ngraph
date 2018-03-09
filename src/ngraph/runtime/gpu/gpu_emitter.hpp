@@ -59,7 +59,6 @@ namespace ngraph
                 static void EMITTER_DECL(EmitNegative);
                 static void EMITTER_DECL(EmitNotEqual);
                 static void EMITTER_DECL(EmitSelect);
-                static void EMITTER_DECL(EmitSubtract);
                 static void EMITTER_DECL(EmitBroadcast);
                 static void EMITTER_DECL(EmitConvert);
                 static void EMITTER_DECL(EmitConstant);

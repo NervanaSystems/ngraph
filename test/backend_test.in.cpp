@@ -608,7 +608,6 @@ TEST(${BACKEND_NAME}, concat_5d)
 
 TEST(${BACKEND_NAME}, divide)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1513,7 +1512,6 @@ TEST(${BACKEND_NAME}, select)
 
 TEST(${BACKEND_NAME}, subtract)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -3605,7 +3603,6 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 
 TEST(${BACKEND_NAME}, sign)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sign>(A), op::ParameterVector{A});

@@ -44,8 +44,19 @@ namespace ngraph
                 if (CudaFunctionPool::instance().get(name) == nullptr)
                 {
                     codegen::CodeWriter writer;
+                    if (CudaOpMap<T>::math_kernel) {
+                        CudaKernelBuilder::get_device_helper(writer,
+                                                             CudaOpMap<T>::op,
+                                                             CudaOpMap<T>::type,
+                                                             CudaOpMap<T>::math_kernel,
+                                                             sizeof...(inputs));
+                    }
+
                     CudaKernelBuilder::get_elementwise_op(writer,
-                        name, CudaOpMap<T>::type, CudaOpMap<T>::op, sizeof...(inputs));
+                                                          name,
+                                                          CudaOpMap<T>::type,
+                                                          CudaOpMap<T>::op,
+                                                          sizeof...(inputs));
 
                     std::string kernel = writer.get_code();
                     CudaFunctionPool::instance().set(name, kernel);

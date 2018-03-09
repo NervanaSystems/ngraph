@@ -251,14 +251,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::gpu::GPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
-    throw std::runtime_error(n->get_name() + " is not implemented.");
-}
-
 void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
                                           const ngraph::Node* n,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
@@ -445,15 +437,6 @@ void runtime::gpu::GPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
                                            const ngraph::Node* n,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
-    throw std::runtime_error(n->get_name() + " is not implemented.");
-}
-
-void runtime::gpu::GPU_Emitter::EmitSubtract(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     throw std::runtime_error(n->get_name() + " is not implemented.");
 }

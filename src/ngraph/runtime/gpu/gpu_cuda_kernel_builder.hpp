@@ -38,6 +38,12 @@ namespace ngraph
                                                const std::string& data_type,
                                                const std::string& op,
                                                const size_t& num_inputs);
+
+                static void get_device_helper(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              const std::string& data_type,
+                                              const std::string& op,
+                                              const size_t& num_inputs);
             };
         }
     }

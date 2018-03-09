@@ -35,13 +35,24 @@ namespace ngraph
         class Tan;
         class Tanh;
         class Power;
+        class Subtract;
+        class Divide;
+        class Sign;
+        class Equal;
+
+        // requires different input and output types
+        class Convert;
+        class NotEqual;
+        class Greater;
+        class GreaterEq;
+        class Less;
+        class LessEq;
 
         // Unimplemented or unused in favor of cuDNN impl.
         class Max;
         class Min;
         class Negative;
         class Not;
-        class Sign;
         class Sqrt;
     }
     namespace runtime
@@ -53,6 +64,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "fabsf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -60,6 +72,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "acosf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -67,6 +80,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "asinf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -74,6 +88,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "atanf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -81,6 +96,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "ceilf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -88,6 +104,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "cosf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -95,6 +112,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "coshf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -102,6 +120,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "expf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -109,6 +128,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "floorf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -116,6 +136,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "logf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -123,6 +144,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "fmaxf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -130,6 +152,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "fminf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -137,6 +160,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "sinf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -144,6 +168,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "sinhf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -151,6 +176,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "sqrtf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -158,6 +184,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "tanf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -165,6 +192,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "tanhf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
@@ -172,6 +200,31 @@ namespace ngraph
             {
                 static constexpr const char* op = "powf";
                 static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Subtract>
+            {
+                static constexpr const char* op = "subtractf";
+                static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = "x0-x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Divide>
+            {
+                static constexpr const char* op = "fdividef";
+                static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = nullptr;
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Sign>
+            {
+                static constexpr const char* op = "sign";
+                static constexpr const char* type = "float";
+                static constexpr const char* math_kernel = "(x0 > 0) - (x0 < 0)";
             };
         }
     }

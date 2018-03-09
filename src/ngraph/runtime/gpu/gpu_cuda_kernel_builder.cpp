@@ -13,7 +13,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 
@@ -57,6 +56,33 @@ namespace ngraph{
                 writer.indent--;
                 writer << "}\n";
 
+                return;
+            }
+
+            void CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      const std::string& data_type,
+                                                      const std::string& math_kernel,
+                                                      const size_t& num_inputs)
+            {
+                if (math_kernel.size())
+                {
+                    writer << "__device__ " << data_type << " " << name << "(";
+                    for (size_t i = 0; i < num_inputs-1; i++)
+                    {
+                        writer << data_type << " x" << i << ", ";
+                    }
+                    writer << data_type << " x" << num_inputs-1;
+                    writer << ")\n";
+                    writer << "{\n";
+                    writer.indent++;
+                    {
+                        writer << "return " + math_kernel << ";\n";
+                    }
+                    writer.indent--;
+                    writer << "}\n";
+
+                }
                 return;
             }
         }
