@@ -81,3 +81,14 @@ from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
+from _pyngraph.op import Relu
+from _pyngraph.op import ReluBackprop
+from _pyngraph.op import Max
+from _pyngraph.op import Product
+from _pyngraph.op import AllReduce
+from _pyngraph.op import FunctionCall
+from _pyngraph.op import GetOutputElement
+from _pyngraph.op import Min
+from _pyngraph.op import BatchNorm
+from _pyngraph.op import BatchNormBackprop
+from _pyngraph.op import Softmax

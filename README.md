@@ -83,7 +83,7 @@ Download the required version of ngraph-cpp and install it.
 ```
 git clone https://github.com/NervanaSystems/ngraph-cpp.git
 cd ngraph-cpp
-git checkout d991861da5cb953fdd55523215a3667d79b78ffd -b "local branch name"
+git checkout a02aab014c92809b4a0b1bacf1b686d6318a16d4 -b "local branch name"
 Build and Install it : https://github.com/NervanaSystems/ngraph-cpp#steps
 ```
 

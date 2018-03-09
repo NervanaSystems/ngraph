@@ -67,6 +67,15 @@
 #include "pyngraph/ops/sum.hpp"
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
+#include "pyngraph/ops/relu.hpp"
+#include "pyngraph/ops/max.hpp"
+#include "pyngraph/ops/product.hpp"
+#include "pyngraph/ops/allreduce.hpp"
+#include "pyngraph/ops/function_call.hpp"
+#include "pyngraph/ops/get_output_element.hpp"
+#include "pyngraph/ops/min.hpp"
+#include "pyngraph/ops/batch_norm.hpp"
+#include "pyngraph/ops/softmax.hpp"
 
 namespace py = pybind11;
 
