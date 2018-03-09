@@ -758,7 +758,6 @@ using namespace std;
                             }
                         }
                     }
-
                     writer.indent--;
                     // End generated function
                     writer += "}\n\n";

@@ -288,7 +288,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "int n = " << arg1_shape[1] << ";\n";
                     writer << "int k = " << arg0_shape[0] << ";\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-
                     writer << "cublasSgemm("
                            << "cublas_handle,"
                            << "CUBLAS_OP_N,"
@@ -303,7 +302,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "n);\n";
-
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.indent--;
                     writer << "}\n";
