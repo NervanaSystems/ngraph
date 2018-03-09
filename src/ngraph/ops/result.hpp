@@ -46,7 +46,7 @@ namespace ngraph
             }
 
         private:
-            bool m_needs_copy;
+            bool m_needs_copy{true};
         };
     }
 }

@@ -44,5 +44,5 @@ bool ngraph::pass::ResultCopyElimination::run_on_function(std::shared_ptr<ngraph
         }
     }
 
-    return 1;
+    return true;
 }
