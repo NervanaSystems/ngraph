@@ -92,6 +92,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -3169,6 +3170,19 @@ namespace ngraph
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
+                // MKLDNN relies on format names for selecting optimized kernel implementations
+                // Hacky way to deal with this until they move to using canonicalized layouts
+                if (input_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
+                {
+                    input_format = mkldnn::memory::format::oihw;
+                }
+                if (output_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
+                {
+                    output_format = mkldnn::memory::format::oihw;
+                }
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
@@ -3303,6 +3317,37 @@ namespace ngraph
                            << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
                     writer << "}\n";
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
+            {
+                auto input_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
+
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
             }
 
             template <>
@@ -3505,6 +3550,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
+                const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
+
+                if (!result->needs_copy())
+                {
+                    return;
+                }
+
                 writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";

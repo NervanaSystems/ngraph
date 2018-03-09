@@ -16,41 +16,23 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUFusion;
-            }
-        }
+        class ResultCopyElimination;
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class ngraph::pass::ResultCopyElimination : public ngraph::pass::FunctionPass
 {
 public:
-    CPUFusion()
-        : GraphRewrite()
+    ResultCopyElimination()
+        : FunctionPass()
     {
-        construct_matmul_pattern();
-        construct_matmulbias_pattern();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-        construct_sigmoid();
     }
 
-private:
-    void construct_matmul_pattern();
-    void construct_matmulbias_pattern();
-    void construct_fprop_bn();
-    void construct_sigmoid();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
 };
