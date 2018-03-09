@@ -15,6 +15,8 @@
 *******************************************************************************/
 
 #include <string>
+#include <sstream>
+#include <iterator>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -31,16 +33,21 @@ void regclass_pyngraph_Shape(py::module m) {
     shape.def(py::init<const ngraph::Shape& >());
     shape.def("__len__", [](const ngraph::Shape &v) { return v.size(); });
     shape.def("__getitem__", [](const ngraph::Shape &v, int key) { return v[key]; });
+
     shape.def("__iter__", [](ngraph::Shape &v) {
        return py::make_iterator(v.begin(), v.end());
     }, py::keep_alive<0, 1>()); /* Keep vector alive while iterator is used */
-    shape.def("__repr__", [](const ngraph::Shape &shape) {
-        std::string str_repr = "<Shape: [";
-        for (auto v : shape)
-        {
-            str_repr += std::to_string(v) + ", ";
-        }
-        str_repr += "]>";
-        return str_repr;
+
+    shape.def("__str__", [](const ngraph::Shape &self) -> std::string {
+        std::stringstream shape_ss;
+        std::copy(self.begin(), self.end(), std::ostream_iterator<int>(shape_ss, ", "));
+        std::string shape_str = shape_ss.str();
+        return "[" + shape_str.substr(0, shape_str.size()-2) + "]";
+    });
+
+    shape.def("__repr__", [](const ngraph::Shape &self) -> std::string {
+        std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
+        std::string shape_str = py::cast(self).attr("__str__")().cast<std::string>();
+        return "<" + class_name + ": (" + shape_str + ")>";
     });
 }

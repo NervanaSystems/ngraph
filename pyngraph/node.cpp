@@ -48,7 +48,8 @@ void regclass_pyngraph_Node(py::module m){
 
     node.def("__repr__", [](const ngraph::Node &self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
-        return "<" + class_name + ": '" + self.get_name() + "'>";
+        std::string shape = py::cast(self.get_shape()).attr("__str__")().cast<std::string>();
+        return "<" + class_name + ": '" + self.get_name() + "' (" + shape + ")>";
     });
 
     node.def("get_output_size", &ngraph::Node::get_output_size);
