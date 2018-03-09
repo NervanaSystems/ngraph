@@ -38,10 +38,10 @@ namespace ngraph
         class Subtract;
         class Divide;
         class Sign;
-        class Equal;
 
         // requires different input and output types
         class Convert;
+        class Equal;
         class NotEqual;
         class Greater;
         class GreaterEq;
