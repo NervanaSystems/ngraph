@@ -35,6 +35,8 @@ namespace ngraph
             void emit_broadcast(
                 void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
 
+            void emit_sign(void* in, void* out, size_t count);
+
             template <typename T>
             void emit_unary_elementwise_op(void* in, void* out, size_t count, std::string name)
             {
