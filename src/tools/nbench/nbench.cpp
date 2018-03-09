@@ -25,6 +25,7 @@
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
+#include <ngraph/util.hpp>
 
 #include "util/benchmark.hpp"
 #include "util/test_tools.hpp"
@@ -34,9 +35,9 @@ using namespace ngraph;
 
 int main(int argc, char** argv)
 {
-    string model = "model.json";
+    string model;
     string backend = "CPU";
-    int iterations = 0;
+    int iterations = 10;
     bool failed = false;
     bool statistics = false;
     bool timing_detail = false;
@@ -93,9 +94,11 @@ SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
 
 OPTIONS
-        -f          model json file to use (default: model.json)
-        -b          Backend to use (default: INTERPRETER)
-        -i          Iterations (default: 10)
+        -f|--file          Serialized model file
+        -b|--backend       Backend to use (default: CPU)
+        -i|--iterations    Iterations (default: 10)
+        -s|--statistics    Display op stastics
+        --timing_detail    Gather detailed timing
 )###";
         return 1;
     }
@@ -116,16 +119,23 @@ OPTIONS
 
             if (op == "Constant")
             {
-                cout << "Constant size: " << join(node->get_outputs()[0].get_shape()) << endl;
+                const Shape& shape = node->get_outputs()[0].get_shape();
+                if (shape.size() == 0)
+                {
+                    cout << "Constant scalar" << endl;
+                }
+                else
+                {
+                    cout << "Constant size: " << join(node->get_outputs()[0].get_shape()) << endl;
+                }
             }
         }
         for (const pair<string, size_t>& op_info : op_list)
         {
-            cout << op_info.first << ": " << op_info.second << endl;
+            cout << op_info.first << ": " << op_info.second << " ops" << endl;
         }
     }
-
-    if (iterations > 0)
+    else if (iterations > 0)
     {
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";

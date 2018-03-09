@@ -253,7 +253,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
-    , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
+    , m_emit_timing(m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr))
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     , m_function_name(function->get_name())
 {
@@ -365,6 +365,7 @@ using namespace ngraph::runtime;
     {
         writer << "// Declare debug timers\n";
         vector<string> names;
+        size_t index = 0;
         for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
         {
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -372,59 +373,43 @@ using namespace ngraph::runtime;
                 if (!node->is_parameter() && !node->is_constant())
                 {
                     names.push_back(node->get_name());
+                    m_name_index_map.insert({node->get_name(), index++});
                 }
             }
         }
-        for (const string& s : names)
-        {
-            writer << "ngraph::stopwatch timer_" << s << ";\n";
-        }
+        writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
         writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                << "; }\n";
         writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "const char* rc;\n";
-        writer << "switch(index)\n";
+        writer << "static const char* timer_names[" << names.size() << "] =\n";
         writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
+        writer.indent++;
+        vector<string> quoted_names;
+        for (const string& name : names)
         {
-            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+            quoted_names.push_back("\"" + name + "\"");
         }
-        writer << "default: rc = \"\";\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
+        writer << "\n};\n";
+        writer.indent--;
+        writer << "return timer_names[index];\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i]
-                   << ".get_total_microseconds(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size()
+               << " ? timers[index].get_total_microseconds() : 0);\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size() << " ? timers[index].get_call_count() : 0);\n";
         writer.indent--;
         writer << "}\n";
         writer << "\n";
@@ -697,10 +682,6 @@ using namespace ngraph::runtime;
                            << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
-                if (m_emit_timing)
-                {
-                    emit_debug_function_entry(writer, node.get(), in, out);
-                }
                 if (runtime::cpu::IsTracingEnabled() &&
                     current_function->get_name() == m_function_name)
                 {
@@ -708,14 +689,21 @@ using namespace ngraph::runtime;
                 }
             }
 
-            writer << "\n// " << node->get_name() << "(";
-            vector<string> parameter_nodes = node_input_names;
-            parameter_nodes.insert(
-                parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
-            writer << join(parameter_nodes);
-            writer << ")\n";
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                writer << "\n// " << node->get_name() << "(";
+                vector<string> parameter_nodes = node_input_names;
+                parameter_nodes.insert(
+                    parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
+                writer << join(parameter_nodes);
+                writer << ")\n";
+            }
 
             // Emit operation body
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                emit_debug_function_entry(writer, node.get(), in, out);
+            }
             string func_name;
             auto it = match_functions.find(node.get());
             if (it == match_functions.end())
@@ -740,10 +728,7 @@ using namespace ngraph::runtime;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (m_emit_timing)
-                {
-                    emit_debug_function_exit(writer, node.get(), in, out);
-                }
+                emit_debug_function_exit(writer, node.get(), in, out);
                 if (runtime::cpu::IsTracingEnabled() &&
                     current_function->get_name() == m_function_name)
                 {
@@ -904,7 +889,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".start();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+    }
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
@@ -913,7 +901,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+    }
 }
 
 bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(
