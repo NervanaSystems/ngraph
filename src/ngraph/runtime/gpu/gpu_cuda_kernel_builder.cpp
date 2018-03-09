@@ -13,11 +13,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/codegen/code_writer.hpp"
 
-namespace ngraph{
-
+namespace ngraph
+{
     namespace runtime
     {
         namespace gpu
@@ -68,11 +68,11 @@ namespace ngraph{
                 if (math_kernel.size())
                 {
                     writer << "__device__ " << data_type << " " << name << "(";
-                    for (size_t i = 0; i < num_inputs-1; i++)
+                    for (size_t i = 0; i < num_inputs - 1; i++)
                     {
                         writer << data_type << " x" << i << ", ";
                     }
-                    writer << data_type << " x" << num_inputs-1;
+                    writer << data_type << " x" << num_inputs - 1;
                     writer << ")\n";
                     writer << "{\n";
                     writer.indent++;
@@ -81,7 +81,6 @@ namespace ngraph{
                     }
                     writer.indent--;
                     writer << "}\n";
-
                 }
                 return;
             }

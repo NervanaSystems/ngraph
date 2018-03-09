@@ -76,7 +76,8 @@ void runtime::gpu::GPU_Emitter::EmitElementwise(
            << n->description() << "\""
            << ", count"
            << ", (CUdeviceptr) " << out[0].get_name();
-    for (size_t i=0; i < args.size(); i++) {
+    for (size_t i = 0; i < args.size(); i++)
+    {
         writer << ", (CUdeviceptr) " << args[i].get_name();
     }
     writer << ");\n";
