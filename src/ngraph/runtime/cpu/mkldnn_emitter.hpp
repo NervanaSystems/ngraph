@@ -25,6 +25,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -48,6 +49,9 @@ namespace ngraph
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
                                                              mkldnn::memory::format fmt) const;
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw) const;
+                mkldnn::memory::desc build_memory_descriptor(const Shape& shape,
+                                                             const ngraph::element::Type& et,
+                                                             mkldnn::memory::format fmt) const;
                 mkldnn::memory build_memory_primitive(const TensorViewWrapper& tvw) const;
                 size_t build_memory_primitive(const mkldnn::memory::desc& desc);
 
@@ -106,6 +110,22 @@ namespace ngraph
                     const mkldnn::memory::desc& result_desc,
                     const std::vector<float>& scale_vector,
                     const std::vector<mkldnn::memory::primitive_desc>& input_pd);
+
+                size_t build_batchnorm_forward(const mkldnn::memory::desc& input_desc,
+                                               const mkldnn::memory::desc& weights_desc,
+                                               const mkldnn::memory::desc& result_desc,
+                                               const mkldnn::memory::desc& mean_desc,
+                                               const mkldnn::memory::desc& variance_desc,
+                                               const double eps);
+
+                size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
+                                                const mkldnn::memory::desc& input_desc,
+                                                const mkldnn::memory::desc& mean_desc,
+                                                const mkldnn::memory::desc& variance_desc,
+                                                const mkldnn::memory::desc& delta_desc,
+                                                const mkldnn::memory::desc& dinput_desc,
+                                                const mkldnn::memory::desc& dweights_desc,
+                                                const double eps);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
