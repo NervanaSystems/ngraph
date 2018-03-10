@@ -100,6 +100,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -108,8 +109,10 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -224,6 +227,10 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
+    {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
+    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::runtime::cpu::op::ConvertLayout),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
@@ -243,6 +250,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
 };
 
@@ -276,10 +284,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
     pass_manager.run_passes(m_function);
+
     codegen::CodeWriter writer;
 
     bool include_mkldnn_headers = false;
@@ -636,6 +645,16 @@ using namespace ngraph::runtime;
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+
+            //it should be safe to assign both descriptors to one output*
+            //since needs_copy == false makes `op::Result` an nop
+            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+            if (!res->needs_copy())
+            {
+                shared_ptr<descriptor::TensorView> itv =
+                    res->get_input_op(0)->get_output_tensor_view();
+                m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
+            }
         }
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -827,7 +846,6 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);

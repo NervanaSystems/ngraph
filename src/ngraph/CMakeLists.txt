@@ -97,6 +97,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     pattern/core_fusion.cpp
@@ -185,7 +186,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_emitter.cpp
         runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
+        runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/convert_layout.cpp
+        runtime/cpu/ops/sigmoid.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
