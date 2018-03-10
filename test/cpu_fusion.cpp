@@ -738,20 +738,44 @@ TEST(cpu_fusion, sigmoid_n1c1h4)
 
 TEST(cpu_fusion, sigmoid_bprop_fusion)
 {
-    pass::Manager pass_manager;
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
-    //pass_manager.run_passes(func);
     auto df = autodiff::backprop_function(func);
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(df);
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("bn_autodiff.png");
-    pass_manager.run_passes(df);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
-    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(func);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
     ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(element::f32, delta->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
 }

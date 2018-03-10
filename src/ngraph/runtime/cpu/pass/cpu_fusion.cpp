@@ -579,12 +579,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
     auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    // //auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    auto sigmoid_fwd = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
 
     auto delta = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_delta = std::make_shared<op::Negative>(delta);
 
-    auto multiply_sigmoid_delta = std::make_shared<op::Multiply>(divide_1_over_exp, neg_delta);
+    auto multiply_sigmoid_delta = std::make_shared<op::Multiply>(sigmoid_fwd, neg_delta);
     auto divide_2 = std::make_shared<op::Divide>(multiply_sigmoid_delta, add_exp);
 
     auto multiply_2 = std::make_shared<op::Multiply>(divide_2, exp_neg_input);
@@ -596,7 +597,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-
         if (m.match_root()->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
@@ -609,7 +609,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return nullptr;
         }
-
         auto dsigmoid =
             std::make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
         return dsigmoid;
