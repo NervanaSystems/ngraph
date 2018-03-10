@@ -220,26 +220,26 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 //case that can be treat as dot1d
                 if ((arg0_shape.size() == arg1_shape.size()) &&
-                     (arg0_shape.size() == dot->get_reduction_axes_count()))
+                    (arg0_shape.size() == dot->get_reduction_axes_count()))
 
+                {
+                    for (int i = 0; i < arg0_shape.size(); i++)
                     {
-                        for (int i = 0; i < arg0_shape.size(); i++)
+                        if (arg0_shape[i] != arg1_shape[i])
                         {
-                            if (arg0_shape[i] != arg1_shape[i])
-                            {
-                                throw std::runtime_error("two input shape is not correct for dot;");
-                            }
+                            throw std::runtime_error("two input shape is not correct for dot;");
                         }
-                        writer << "{   // " << node->get_name() << "\n";
-                        writer.indent++;
-                        writer << "cublasSdot("
-                               << "cublas_handle," << args[0].get_size() << ","
-                               << args[0].get_name() << ","
-                               << "1," << args[1].get_name() << ","
-                               << "1," << out[0].get_name() << ");\n";
-                        writer.indent--;
-                        writer << "}\n";
                     }
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "cublasSdot("
+                           << "cublas_handle," << args[0].get_size() << "," << args[0].get_name()
+                           << ","
+                           << "1," << args[1].get_name() << ","
+                           << "1," << out[0].get_name() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          (dot->get_reduction_axes_count() == 1))
                 {
