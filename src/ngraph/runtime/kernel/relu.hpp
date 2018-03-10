@@ -25,7 +25,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void relu(T* arg, T* out, size_t count)
+            void relu(const T* arg, T* out, size_t count)
             {
                 T zero = 0;
                 for (size_t i = 0; i < count; i++)
@@ -34,7 +34,7 @@ namespace ngraph
                 }
             }
             template <typename T>
-            void relu_backprop(T* arg, T* delta_arg, T* out, size_t count)
+            void relu_backprop(const T* arg, T* delta_arg, T* out, size_t count)
             {
                 T zero = 0;
                 for (size_t i = 0; i < count; i++)

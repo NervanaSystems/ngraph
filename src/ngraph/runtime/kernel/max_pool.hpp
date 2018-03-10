@@ -28,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void max_pool_backprop(T* arg_forward,
-                                   T* delta,
+            void max_pool_backprop(const T* arg_forward,
+                                   const T* delta,
                                    T* out,
                                    const Shape& delta_shape,
                                    const Shape& out_shape, // same as arg_forward_shape
@@ -122,7 +122,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void max_pool(T* arg,
+            void max_pool(const T* arg,
                           T* out,
                           const Shape& arg_shape,
                           const Shape& out_shape,

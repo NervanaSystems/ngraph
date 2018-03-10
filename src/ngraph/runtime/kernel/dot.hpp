@@ -28,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void dot(T* arg0,
-                     T* arg1,
+            void dot(const T* arg0,
+                     const T* arg1,
                      T* out,
                      const Shape& arg0_shape,
                      const Shape& arg1_shape,
