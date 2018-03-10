@@ -28,6 +28,7 @@
 #include "ngraph/ops/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/types/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
@@ -47,6 +48,8 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::Convolution),
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
+    TI(ngraph::op::ConvolutionBias),
+    TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
     TI(ngraph::op::Relu),

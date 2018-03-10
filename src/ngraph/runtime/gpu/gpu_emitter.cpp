@@ -105,38 +105,30 @@ namespace ngraph
     {
         namespace gpu
         {
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
+            void runtime::gpu::GPU_Emitter::EmitElementwise(
+                GPU_ExternalFunction* external_function,
+                codegen::CodeWriter& writer,
+                const ngraph::Node* n,
+                const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
             {
                 if (out[0].get_size() == 0)
                 {
                     return;
                 }
-                writer << "{  // " << node->get_name() << "\n";
+                writer << "{  // " << n->get_name() << "\n";
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name()
-                       << ", (void*) " << out[0].get_name() << ", count);\n";
-                writer.indent--;
-                writer << "}\n";
-            }
-
-            void GPU_Emitter::EmitUnaryElementwise(GPU_ExternalFunction* external_function,
-                                                   codegen::CodeWriter& writer,
-                                                   const ngraph::Node* node,
-                                                   const std::vector<GPU_TensorViewWrapper>& args,
-                                                   const std::vector<GPU_TensorViewWrapper>& out)
-            {
-                if (out[0].get_size() == 0)
+                writer << "if(count == 0) return;\n";
+                writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
+                       << n->description() << ">(\"" << n->description() << "\""
+                       << ", count"
+                       << ", (CUdeviceptr) " << out[0].get_name();
+                for (size_t i = 0; i < args.size(); i++)
                 {
-                    return;
+                    writer << ", (CUdeviceptr) " << args[i].get_name();
                 }
-                writer << "{  // " << node->get_name() << "\n";
-                writer.indent++;
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::"
-                       << node->description() << ">((void*) " << args[0].get_name() << ", (void*) "
-                       << out[0].get_name() << ", count, \"" << node->description() << "\");\n";
+                writer << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }

@@ -33,8 +33,6 @@ namespace ngraph
                 // Create an instance of nvrtcProgram with the code string.
                 if (CudaFunctionPool::instance().get(name) == nullptr)
                 {
-                    const char* opts[] = {"--gpu-architecture=compute_35",
-                                          "--relocatable-device-code=true"};
                     std::string kernel;
                     std::string data_type("float");
 
@@ -50,9 +48,7 @@ void cuda_)" + name + "(" + data_type +
         out[tid] = in[idx];
     }
 })";
-
-                    CudaFunctionPool::instance().set(
-                        name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
+                    CudaFunctionPool::instance().set(name, kernel);
                 }
 
                 //convert runtime ptr to driver api ptr
