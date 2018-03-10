@@ -3258,73 +3258,27 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto delta_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    if (!runtime::cpu::mkldnn_utils::compare_mkldnn_formats(input_format,
-                                                                            delta_format))
-                    {
-                        throw ngraph_error(
-                            "mkldnn emitter: Relu backprop fprop input and delta layouts should be "
-                            "the same");
-                    }
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    size_t relu_index =
+                        mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
 
-                    writer << "{\n";
-                    writer.indent++;
+                    auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "try {\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc delta_data_desc = memory::desc({"
-                           << join(args[1].get_shape()) << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory delta_data = memory({delta_data_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer << "relu_forward::desc relu_fwd_desc = "
-                              "relu_forward::desc(prop_kind::forward, "
-                              "algorithm::eltwise_relu, input_data_desc, 0, 0);\n";
-                    writer << "relu_forward::primitive_desc relu_fwd_prim_desc = "
-                              "relu_forward::primitive_desc(relu_fwd_desc, cpu_engine);\n";
-                    writer << "relu_backward::desc relu_bwd_desc = "
-                              "relu_backward::desc(algorithm::eltwise_relu, "
-                              "delta_data_desc, input_data_desc, 0, 0);\n";
-                    writer << "relu_backward::primitive_desc relu_bdw_prim_desc = "
-                              "relu_backward::primitive_desc(relu_bwd_desc, cpu_engine, "
-                              "relu_fwd_prim_desc);\n";
-                    writer
-                        << "relu_backward relu_bwd= relu_backward(relu_bdw_prim_desc, input_data, "
-                           "delta_data, result);\n";
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                              "s.submit({relu_bwd}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(relu_index) << ");\n";
                 }
                 else
                 {

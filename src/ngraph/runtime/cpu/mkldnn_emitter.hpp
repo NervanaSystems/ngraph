@@ -119,6 +119,10 @@ namespace ngraph
                 size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc);
 
+                size_t build_relu_backward(const mkldnn::memory::desc& input_desc,
+                                           const mkldnn::memory::desc& delta_desc,
+                                           const mkldnn::memory::desc& result_desc);
+
                 size_t build_sigmoid_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc);
 
