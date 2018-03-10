@@ -34,6 +34,7 @@ namespace ngraph
                 : m_function(function)
                 , m_release_function(release_function)
                 , m_is_compiled(false)
+                , m_timing(false)
             {
             }
 

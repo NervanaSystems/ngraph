@@ -69,17 +69,10 @@ void run_benchmark(shared_ptr<Function> f,
     test::Uniform<float> rng{-1, 1, 0};
 
     stopwatch timer;
-    string env_var_name = "NGRAPH_" + backend_name + "_EMIT_TIMING";
-    bool emit_timing = (getenv(env_var_name.c_str()) != nullptr || timing_detail);
-    if (!emit_timing)
-    {
-        cout << "To get per-op timing set the environment variable " << env_var_name << "\n";
-    }
-
     timer.start();
     auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
-    external->set_emit_timing(emit_timing);
+    external->set_emit_timing(timing_detail);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     timer.stop();
