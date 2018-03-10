@@ -36,12 +36,17 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual bool is_output() const override { return true; }
+            void set_needs_copy(bool val) { m_needs_copy = val; }
+            bool needs_copy() const { return m_needs_copy; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override
             {
                 adjoints.add_delta(get_input_op(0), delta);
             }
+
+        private:
+            bool m_needs_copy{true};
         };
     }
 }
