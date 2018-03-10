@@ -120,6 +120,11 @@ namespace ngraph
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
+                // Because we are directly accessing the constant data stored in the
+                // Constant ops we need to keep a list of shared_ptr to each Constant
+                // so they don't get freed before we are done with them
+                std::vector<std::shared_ptr<Node>> m_active_constants;
+
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
