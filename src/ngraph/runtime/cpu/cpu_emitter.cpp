@@ -2883,59 +2883,31 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_backward(
+                        (apb->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        diff_dst_desc,
+                        diff_src_desc,
+                        apb->get_window_movement_strides(),
+                        apb->get_window_shape(),
+                        apb->get_padding_below(),
+                        apb->get_padding_above());
 
-                    writer << "{\n";
-                    writer.indent++;
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(out_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    // Dummy forward primitive descriptor to keep MKLDNN happy
-                    const char* algorithm_enumerator =
-                        apb->get_include_padding_in_avg_computation()
-                            ? "algorithm::pooling_avg_include_padding"
-                            : "algorithm::pooling_avg_exclude_padding";
-
-                    writer << "pooling_forward::primitive_desc fwd_pd = "
-                              "pooling_forward::primitive_desc("
-                           << "{prop_kind::forward, " << algorithm_enumerator << ", "
-                           << "result_desc, input_data_desc, {"
-                           << join(apb->get_window_movement_strides()) << "}, {"
-                           << join(apb->get_window_shape()) << "}, "
-                           << "{" << join(apb->get_padding_below()) << "}, "
-                           << "{" << join(apb->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine);\n";
-                    writer
-                        << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
-                        << "pooling_backward::desc(" << algorithm_enumerator << ", "
-                        << "result_desc, input_data_desc, {"
-                        << join(apb->get_window_movement_strides()) << "}, {"
-                        << join(apb->get_window_shape()) << "}, "
-                        << "{" << join(apb->get_padding_below()) << "}, "
-                        << "{" << join(apb->get_padding_above()) << "}, "
-                        << "padding_kind::zero), cpu_engine, fwd_pd), "
-                        << "input_data, result);\n";
-                    writer << "auto s = stream(stream::kind::eager);\n"
-                           << "s.submit({avg_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(avg_pool_index) << ");\n";
                 }
                 else
                 {
@@ -2963,79 +2935,48 @@ namespace ngraph
                 auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
 
                 auto delta_shape = args[1].get_shape();
-                auto delta_rank = delta_shape.size();
                 auto out_shape = out[0].get_shape();
 
-                if (delta_rank == 4 && mpb->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[1].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto fprop_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(out_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_backward(
+                        mkldnn::algorithm::pooling_max,
+                        fprop_src_desc,
+                        diff_dst_desc,
+                        diff_src_desc,
+                        mpb->get_window_movement_strides(),
+                        mpb->get_window_shape(),
+                        mpb->get_padding_below(),
+                        mpb->get_padding_above());
 
-                    //----------------------------------------------------------------------------------------------
-                    // create a forward primitive_desc, use this to query the workspace
-                    // TODO: (pruthvi) this is a workaround, till we maintain a global context to refer to the corrosponding
-                    //        MKLDNN fprop kernel. this impacts performance
-                    writer << "memory::desc max_pool_input_desc = memory::desc({"
-                           << join(args[0].get_shape()) << "}, " << et
-                           << ", memory::format::nchw);\n";
-                    writer << "memory::desc max_pool_result_desc = memory::desc({"
-                           << join(args[1].get_shape()) << "}, " << et
-                           << ", memory::format::nchw);\n";
-                    writer
-                        << "memory maxpool_input_data = memory({max_pool_input_desc, cpu_engine}, "
-                        << args[0].get_name() << ");\n";
-                    writer << "memory maxpool_result = memory({max_pool_result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer << "pooling_forward::primitive_desc pool_fwd_pd = "
-                              "pooling_forward::primitive_desc("
-                           << "{prop_kind::forward, algorithm::pooling_max, "
-                           << "max_pool_input_desc, max_pool_result_desc, {"
-                           << join(mpb->get_window_movement_strides()) << "}, {"
-                           << join(mpb->get_window_shape()) << "}, "
-                           << "{" << join(mpb->get_padding_below()) << "}, "
-                           << "{" << join(mpb->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine);\n";
+                    auto& fdeps = mkldnn_emitter->get_primitive_deps(max_pool_index - 1);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[2])
+                           << ", ctx->mkldnn_workspaces[" << fdeps[3] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index - 1) << ");\n";
 
-                    // query the workspace from the forward primitive desc and allocates memory
-                    writer << "auto max_pool_workspace_memory = "
-                              "memory(pool_fwd_pd.workspace_primitive_desc());\n";
-                    //run fprop with this workspace attached
-                    writer << "pooling_forward max_pooling_fwd = pooling_forward("
-                           << "pool_fwd_pd, maxpool_input_data, maxpool_result, "
-                              "max_pool_workspace_memory);\n";
+                    auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[0])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[1])
+                           << ", ctx->mkldnn_workspaces[" << bdeps[3] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "stream s_fprop = stream(stream::kind::eager);\n"
-                           << "s_fprop.submit({max_pooling_fwd}).wait();\n";
-
-                    //---------------------------------------------------------------------------------------------
-                    writer << "auto max_pooling_bwd = "
-                              "pooling_backward(pooling_backward::primitive_desc("
-                           << "pooling_backward::desc(algorithm::pooling_max, "
-                           << "result_desc, input_data_desc, {"
-                           << join(mpb->get_window_movement_strides()) << "}, {"
-                           << join(mpb->get_window_shape()) << "}, "
-                           << "{" << join(mpb->get_padding_below()) << "}, "
-                           << "{" << join(mpb->get_padding_above()) << "}, "
-                           << "padding_kind::zero), cpu_engine, pool_fwd_pd), "
-                           << "input_data, max_pool_workspace_memory, result);\n";
-                    writer << "auto s_bwd = stream(stream::kind::eager);\n"
-                           << "s_bwd.submit({max_pooling_bwd}).wait();\n";
-
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
                 }
                 else
                 {
