@@ -5370,7 +5370,6 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
 
 TEST(${BACKEND_NAME}, abc_tbb)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
 
     // Force TBB flow graph generation in the CPU backend

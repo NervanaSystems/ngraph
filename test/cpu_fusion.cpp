@@ -109,14 +109,10 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
-    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
-    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+    auto bias = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{2.0f, 3.0f});
 
-    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
-
-    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{0});
     auto cg = make_shared<op::MatmulBias>(
-        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{0});
+        A, B, bias, A->get_shape(), B->get_shape(), true, true, AxisSet{0});
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
@@ -136,8 +132,8 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(b, dataB);
 
     cf->call({a, b}, {result});
-    vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    vector<float> expected{11, 30, 38, 111};
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_column)
@@ -148,14 +144,10 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
-    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
-    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+    auto bias = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{2.0f, 3.0f});
 
-    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
-
-    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{1});
     auto cg = make_shared<op::MatmulBias>(
-        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{1});
+        A, B, bias, A->get_shape(), B->get_shape(), true, true, AxisSet{1});
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
@@ -175,8 +167,8 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(b, dataB);
 
     cf->call({a, b}, {result});
-    vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    vector<float> expected{11, 29, 39, 111};
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_matrix)

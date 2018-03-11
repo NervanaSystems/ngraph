@@ -136,38 +136,6 @@ public:
     StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
 };
 
-static string emit_string_array(const vector<string>& s, size_t max_line_length)
-{
-    stringstream ss;
-    stringstream line;
-    for (size_t i = 0; i < s.size(); i++)
-    {
-        if (i != 0)
-        {
-            line << ",";
-        }
-        stringstream value;
-        value << s[i];
-        string value_string = value.str();
-        if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
-        {
-            if (i > 0)
-            {
-                line << " ";
-            }
-            line << value_string;
-        }
-        else
-        {
-            ss << line.str() << "\n";
-            line.str("");
-            line << value_string;
-        }
-    }
-    ss << line.str();
-    return ss.str();
-}
-
 static StaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
@@ -430,15 +398,11 @@ using namespace ngraph::runtime;
             const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
+                m_active_constants.push_back(node);
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                auto c_value_strings = c->get_value_strings();
-                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
-                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
-                writer << "{\n";
-                writer.indent++;
-                writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
-                writer.indent--;
-                writer << "\n};\n\n";
+                string type = tv->get_tensor().get_element_type().c_type_string();
+                writer << "static " << type << "* " << tv->get_tensor().get_name() << " = (("
+                       << type << "*)(" << c->get_data_ptr() << "));\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
