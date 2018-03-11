@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -119,6 +120,7 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::map<std::string, size_t> m_name_index_map;
 
                 // Because we are directly accessing the constant data stored in the
                 // Constant ops we need to keep a list of shared_ptr to each Constant
