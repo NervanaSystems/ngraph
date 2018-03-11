@@ -121,13 +121,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
-void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(codegen::CodeWriter& writer)
-{
-    writer << "// MKLDNN Preamble\n";
-    writer << "#include <mkldnn.hpp>\n";
-    writer << "using namespace mkldnn;\n\n";
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -3194,9 +3187,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
-                const auto& arg_shape = args[0].get_shape();
-                const auto& result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
