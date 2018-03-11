@@ -136,6 +136,38 @@ public:
     StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
 };
 
+static string emit_string_array(const vector<string>& s, size_t max_line_length)
+{
+    stringstream ss;
+    stringstream line;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (i != 0)
+        {
+            line << ",";
+        }
+        stringstream value;
+        value << s[i];
+        string value_string = value.str();
+        if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
+        {
+            if (i > 0)
+            {
+                line << " ";
+            }
+            line << value_string;
+        }
+        else
+        {
+            ss << line.str() << "\n";
+            line.str("");
+            line << value_string;
+        }
+    }
+    ss << line.str();
+    return ss.str();
+}
+
 static StaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
