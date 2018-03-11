@@ -110,26 +110,31 @@ OPTIONS
     {
         cout << "statistics:" << endl;
         cout << "total nodes: " << f->get_ops().size() << endl;
+        size_t total_constant_bytes = 0;
         unordered_map<string, size_t> op_list;
         for (shared_ptr<Node> node : f->get_ordered_ops())
         {
             string name = node->get_name();
-            string op = name.substr(0, name.find('_'));
-            op_list[op]++;
+            string op_name = name.substr(0, name.find('_'));
+            string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+            op_list[op_name + shape_name]++;
 
-            if (op == "Constant")
+            if (op_name == "Constant")
             {
                 const Shape& shape = node->get_outputs()[0].get_shape();
+                size_t const_size = node->get_outputs()[0].get_element_type().size();
                 if (shape.size() == 0)
                 {
-                    cout << "Constant scalar" << endl;
+                    total_constant_bytes += const_size;
                 }
                 else
                 {
-                    cout << "Constant size: " << join(node->get_outputs()[0].get_shape()) << endl;
+                    total_constant_bytes +=
+                        (const_size * shape_size(node->get_outputs()[0].get_shape()));
                 }
             }
         }
+        cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
         for (const pair<string, size_t>& op_info : op_list)
         {
             cout << op_info.first << ": " << op_info.second << " ops" << endl;

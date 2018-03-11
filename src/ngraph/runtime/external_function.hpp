@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {

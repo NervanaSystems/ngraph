@@ -17,6 +17,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
@@ -28,6 +29,45 @@
 
 using namespace std;
 using namespace ngraph;
+
+shared_ptr<Node> find_node(const string& name, shared_ptr<Function> func)
+{
+    static unordered_map<string, shared_ptr<Node>> node_map;
+    if (node_map.empty())
+    {
+        vector<shared_ptr<Function>> fs;
+        traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+        for (shared_ptr<Function> f : fs)
+        {
+            for (shared_ptr<Node> node : f->get_ops())
+            {
+                node_map.insert({node->get_name(), node});
+            }
+        }
+    }
+    return node_map[name];
+}
+
+multimap<size_t, string>
+    aggregate_timing_details(const vector<runtime::PerformanceCounter>& perf_data,
+                             shared_ptr<Function> f)
+{
+    unordered_map<string, size_t> timing;
+    for (const runtime::PerformanceCounter& p : perf_data)
+    {
+        shared_ptr<Node> node = find_node(p.name(), f);
+        string op = p.name().substr(0, p.name().find('_'));
+        string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+        timing[op + shape_name] += p.microseconds();
+    }
+
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
+    {
+        rc.insert({t.second, t.first});
+    }
+    return rc;
+}
 
 multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCounter>& perf_data)
 {
@@ -61,6 +101,26 @@ void run_benchmark(const string& json_path,
     run_benchmark(f, backend_name, iterations, timing_detail);
 }
 
+void print_times(const multimap<size_t, string>& timing)
+{
+    // set the column widths
+    int name_width = 0;
+    int time_width = 0;
+    for (const pair<size_t, string>& p : timing)
+    {
+        name_width = max(name_width, static_cast<int>(p.second.size()));
+        stringstream ss;
+        ss.imbue(locale(""));
+        ss << p.first;
+        time_width = max(time_width, static_cast<int>(ss.str().size()));
+    }
+    for (auto it = timing.rbegin(); it != timing.rend(); it++)
+    {
+        cout << setw(name_width + 2) << left << it->second << " " << setw(time_width + 2) << right
+             << it->first << "us\n";
+    }
+}
+
 void run_benchmark(shared_ptr<Function> f,
                    const string& backend_name,
                    size_t iterations,
@@ -76,6 +136,7 @@ void run_benchmark(shared_ptr<Function> f,
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     timer.stop();
+    cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::TensorView>> args;
@@ -110,9 +171,11 @@ void run_benchmark(shared_ptr<Function> f,
              return p1.total_microseconds() > p2.total_microseconds();
          });
     multimap<size_t, string> timing = aggregate_timing(perf_data);
-    for (auto it = timing.rbegin(); it != timing.rend(); it++)
-    {
-        cout.imbue(locale(""));
-        cout << setw(15) << left << it->second << " " << setw(10) << right << it->first << "us\n";
-    }
+    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
+
+    cout << "\n---- Aggregate times per op type ----\n";
+    print_times(timing);
+
+    cout << "\n---- Aggregate times per op type/shape ----\n";
+    print_times(timing_details);
 }

@@ -258,7 +258,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
-    , m_emit_timing(m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr))
+    , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     , m_function_name(function->get_name())
 {
@@ -274,6 +274,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         return;
     }
+
+    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
