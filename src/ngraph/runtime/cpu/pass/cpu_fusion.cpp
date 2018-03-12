@@ -43,6 +43,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 
@@ -615,5 +616,39 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto pbias = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+
+    auto pbroadcast = std::make_shared<op::Broadcast>(pbias, shape, AxisSet{0, 1, 2, 3});
+
+    auto pconv1 = std::make_shared<op::Convolution>(data_batch,
+                                                    filters,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{0, 0},
+                                                    CoordinateDiff{0, 0},
+                                                    Strides{1, 1});
+    auto p_conv_bias = pbroadcast + pconv1;
+
+    ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
+                     << m.match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        std::shared_ptr<Node> nn;
+
+        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
+        auto bias = m.match_root()->get_input_op(1)->get_input_op(0);
+        auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
+        return conv_bias;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
     this->add_matcher(m);
 }
