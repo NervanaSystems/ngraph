@@ -36,11 +36,8 @@
 #define ONLY_ENABLE_TEST_FOR(backend_to_enable, current_backend)                                   \
     if (backend_to_enable != current_backend)                                                      \
     {                                                                                              \
+        NGRAPH_INFO << "Skipped test for " << current_backend;                                     \
         return;                                                                                    \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        NGRAPH_INFO << "Enabled test for " << current_backend;                                     \
     }
 
 namespace ngraph
