@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <functional>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
