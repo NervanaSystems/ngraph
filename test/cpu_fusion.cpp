@@ -753,11 +753,10 @@ TEST(cpu_fusion, sigmoid_bprop_fusion)
 
 TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
 {
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
     auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
-    auto shape_rt = Shape{1, 1, 2, 2};
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(func);
     auto backend = manager->allocate_backend();
@@ -768,14 +767,15 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     shared_ptr<runtime::TensorView> b =
         backend->make_primary_tensor_view(element::f32, delta->get_shape());
     shared_ptr<runtime::TensorView> result =
-        backend->make_primary_tensor_view(element::f32, shape_rt);
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
 
     vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
     vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+
     copy_data(a, dataA);
     copy_data(b, dataB);
-
     cf->call({a, b}, {result});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+
+    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
+    EXPECT_TRUE(test::all_close(expected , read_vector<float>(result)));
 }
