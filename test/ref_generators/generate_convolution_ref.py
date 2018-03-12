@@ -212,6 +212,17 @@ def emit_test(t,f):
     template = '''
 TEST (${BACKEND_NAME}, %s)
 {
+    float rtol, atol;
+    if ("${BACKEND_NAME}" == "ARGON")
+    {
+        rtol = atol = 0.01f;
+    }
+    else
+    {
+        rtol = all_close_rtol;
+        atol = all_close_atol;
+    }
+
     Shape shape_a{%s};
     Shape shape_b{%s};
     Shape shape_r{%s};
@@ -242,7 +253,7 @@ TEST (${BACKEND_NAME}, %s)
     vector<float> expected_result{%s};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result)));
+    EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result), rtol, atol));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {a, b}, .01f, .01f));
@@ -359,11 +370,14 @@ def main():
 using namespace std;
 using namespace ngraph;
 
+static const double all_close_rtol = 1e-4;
+static const double all_close_atol = 1e-7;
+
 template<typename T>
 static bool all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
-                      T rtol = T(1e-4),
-                      T atol = T(1e-7))
+                      T rtol = T(all_close_rtol),
+                      T atol = T(all_close_atol))
 {
     assert(a.size() == b.size());
 
