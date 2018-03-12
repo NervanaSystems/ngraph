@@ -121,13 +121,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
-void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(codegen::CodeWriter& writer)
-{
-    writer << "// MKLDNN Preamble\n";
-    writer << "#include <mkldnn.hpp>\n";
-    writer << "using namespace mkldnn;\n\n";
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -380,99 +373,55 @@ namespace ngraph
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
-                // get the shape of all the inputs and output to batchnorm
-                auto gamma_shape = args[0].get_shape();
-                auto beta_shape = args[1].get_shape();
-                auto input_shape = args[2].get_shape();
-                auto result_shape = out[0].get_shape();
-                auto mean_shape = out[1].get_shape();
-                auto variance_shape = out[2].get_shape();
-
-                // get input element type
-                const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                    args[2].get_element_type());
-
-                const string& gamma_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                const string& beta_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
-                if (gamma_format.compare("memory::format::x") != 0 &&
-                    beta_format.compare("memory::format::x") != 0)
-                {
-                    throw std::runtime_error(
-                        "gamma layout->" + gamma_format + ", beta layout->" + beta_format +
-                        " should match and both should have memory::format::x format");
-                }
-
-                writer << "{\n";
                 writer.indent++;
-
+                writer << "{\n";
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_weights(2*" << input_shape[1] << ");\n";
-                auto weights_shape = Shape{2, input_shape[1]};
-
-                // push gamma and beta
-                writer << "auto gamma = " << args[0].get_name() << ";\n";
-                writer << "auto beta = " << args[1].get_name() << ";\n";
-
-                writer << "memcpy(&bn_weights[0], gamma,"
-                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
+                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                       << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                // get the eps value from the bn node
-                writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                auto result_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                auto mean_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
+                auto variance_format =
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
 
-                const string& input_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                    runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2));
-                const string& result_format = runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
-                // Bind to CPU engine
-                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                // create memory descriptors
-                writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", " << input_format << ");\n";
-                // TODO define weights by stacking gamma and beta values
-                writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
-                       << "}, " << et << ", memory::format::nc);\n";
-                writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", " << result_format << ");\n";
-                writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
-                       << et << ", memory::format::x);\n";
-                writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
-                       << "}, " << et << ", memory::format::x);\n";
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto weights_shape = Shape{2, args[0].get_size()};
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                auto results_desc = mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
+                auto variance_desc =
+                    mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
 
-                // Define memory for the user data
-                writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                auto batchnorm_index =
+                    mkldnn_emitter->build_batchnorm_forward(input_desc,
+                                                            weights_desc,
+                                                            results_desc,
+                                                            mean_desc,
+                                                            variance_desc,
+                                                            batchnorm->get_eps_value());
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
-                       << ");\n";
-                writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
-                       << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << out[1].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                       << ", bn_weights.data());\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
                        << out[2].get_name() << ");\n";
 
-                // create batchnorm descriptor
-                writer << "batch_normalization_forward::desc bn_fprop_desc = "
-                          "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_scale_shift);\n";
-                // bn fprop primitive descriptor
-                writer
-                    << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
-                       "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
-
-                // create a batchnorm fprop primitive
-                writer << "batch_normalization_forward bn_fprop = "
-                          "batch_normalization_forward(bn_fprop_prim_desc, "
-                          "primitive::at(input_data),"
-                       << "primitive::at(weights), result, mean, variance); \n";
-
-                // create stream and execute
-                writer << "stream s = stream(stream::kind::eager);\n"
-                       << "s.submit({bn_fprop}).wait();\n";
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(batchnorm_index) << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }
@@ -482,108 +431,74 @@ namespace ngraph
             {
                 const ngraph::op::BatchNormBackprop* batchnorm =
                     static_cast<const ngraph::op::BatchNormBackprop*>(node);
-                auto gamma_shape = args[0].get_shape();
-                auto beta_shape = args[1].get_shape();
-                auto input_shape = args[2].get_shape();
-                auto mean_shape = args[3].get_shape();
-                auto variance_shape = args[4].get_shape();
-                auto delta_shape = args[5].get_shape();
-                auto result_shape = out[0].get_shape();
 
-                // get input element type
-                const string& et =
-                    mkldnn_utils::get_mkldnn_data_type_string(args[2].get_element_type());
-                writer << "{\n";
                 writer.indent++;
+                writer << "{\n";
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_weights(" << input_shape[1] * 2 << ");\n";
+                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">vdiff_weights(" << input_shape[1] * 2 << ");\n";
-                auto weights_shape = Shape{2, input_shape[1]};
+                       << ">bn_dweights(2*" << args[0].get_size() << ");\n";
 
-                // push gamma and beta
-                writer << "auto gamma = " << args[0].get_name() << ";\n";
-                writer << "auto beta = " << args[1].get_name() << ";\n";
-
-                writer << "memcpy(&bn_weights[0], gamma,"
-                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                       << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                // get the eps value from the bn node
-                writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
-                // Bind to CPU engine
-                writer << "using namespace mkldnn; \n";
-                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                // create memory descriptors
-                writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
-                // TODO define weights by stacking gamma and beta values
-                writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
-                       << "}, " << et << ", memory::format::nc);\n";
-                writer << "memory::desc diff_weights_desc = memory::desc({" << join(weights_shape)
-                       << "}, " << et << ", memory::format::nc);\n";
-                writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
-                writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
-                       << et << ", memory::format::x);\n";
-                writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
-                       << "}, " << et << ", memory::format::x);\n";
-                writer << "memory::desc delta_desc = memory::desc({" << join(input_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
+                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
+                auto variance_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
+                auto delta_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 5);
+                auto dinput_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
 
-                // Define memory for the user data
-                writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto weights_shape = Shape{2, args[0].get_size()};
+                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                auto mean_desc = mkldnn_emitter->build_memory_descriptor(args[3], mean_format);
+                auto variance_desc =
+                    mkldnn_emitter->build_memory_descriptor(args[4], variance_format);
+                auto delta_desc = mkldnn_emitter->build_memory_descriptor(args[5], delta_format);
+                auto dinput_desc = mkldnn_emitter->build_memory_descriptor(out[0], dinput_format);
+                auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+
+                auto batchnorm_index =
+                    mkldnn_emitter->build_batchnorm_backward(weights_desc,
+                                                             input_desc,
+                                                             mean_desc,
+                                                             variance_desc,
+                                                             delta_desc,
+                                                             dinput_desc,
+                                                             dweights_desc,
+                                                             batchnorm->get_eps_value());
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                       << ", bn_weights.data());\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
-                       << ");\n";
-                writer << "memory diff_weights = memory({diff_weights_desc, cpu_engine}, "
-                          "vdiff_weights.data()"
-                       << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
                        << args[4].get_name() << ");\n";
-                writer << "memory delta = memory({delta_desc, cpu_engine}, " << args[5].get_name()
-                       << ");\n";
-                writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
-                       << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[5].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
+                       << ", bn_dweights.data());\n";
 
-                //create fprop batchnorm descriptor
-                writer << "batch_normalization_forward::desc bn_fprop_desc = "
-                          "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_scale_shift);\n";
-                //bn fprop primitive descriptor
-                writer
-                    << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
-                       "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(batchnorm_index) << ");\n";
 
-                //create bprop batchnorm descriptor
-                writer << "batch_normalization_backward::desc bn_bprop_desc = "
-                          "batch_normalization_backward::desc(backward, delta_desc, "
-                          "input_data_desc, epsilon, use_scale_shift);\n";
-
-                //bn bprop primitive descriptor
-                writer << "batch_normalization_backward::primitive_desc bn_bprop_prim_desc = "
-                          "batch_normalization_backward::primitive_desc(bn_bprop_desc, cpu_engine, "
-                          "bn_fprop_prim_desc);\n";
-
-                //create a batchnorm fprop primitive
-                writer << " batch_normalization_backward bn_bprop = "
-                          "batch_normalization_backward(bn_bprop_prim_desc, input_data, mean, "
-                          "variance, delta, weights, result, diff_weights);\n ";
-
-                //create stream and execute
-                writer << "stream s = stream(stream::kind::eager);\n"
-                       << "s.submit({bn_bprop}).wait();\n";
-
-                writer << "memcpy(" << out[1].get_name() << ",&vdiff_weights[0],"
-                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(" << out[2].get_name() << ",&vdiff_weights[0] + "
-                       << args[1].get_size() << ","
+                writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(" << out[2].get_name() << ", &bn_dweights[0]+"
+                       << args[0].get_size() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
-
                 writer.indent--;
                 writer << "}\n";
             }
@@ -3265,78 +3180,29 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
             {
-                const auto& arg_shape = args[0].get_shape();
-                const auto& result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(
-                        args[0].get_element_type());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto delta_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    if (!runtime::cpu::mkldnn_utils::compare_mkldnn_formats(input_format,
-                                                                            delta_format))
-                    {
-                        throw ngraph_error(
-                            "mkldnn emitter: Relu backprop fprop input and delta layouts should be "
-                            "the same");
-                    }
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    size_t relu_index =
+                        mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
 
-                    writer << "{\n";
-                    writer.indent++;
+                    auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "try {\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(input_format)
-                           << ");\n";
-                    writer << "memory::desc delta_data_desc = memory::desc({"
-                           << join(args[1].get_shape()) << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(delta_format)
-                           << ");\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", "
-                           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(result_format)
-                           << ");\n";
-
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory delta_data = memory({delta_data_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer << "relu_forward::desc relu_fwd_desc = "
-                              "relu_forward::desc(prop_kind::forward, "
-                              "algorithm::eltwise_relu, input_data_desc, 0, 0);\n";
-                    writer << "relu_forward::primitive_desc relu_fwd_prim_desc = "
-                              "relu_forward::primitive_desc(relu_fwd_desc, cpu_engine);\n";
-                    writer << "relu_backward::desc relu_bwd_desc = "
-                              "relu_backward::desc(algorithm::eltwise_relu, "
-                              "delta_data_desc, input_data_desc, 0, 0);\n";
-                    writer << "relu_backward::primitive_desc relu_bdw_prim_desc = "
-                              "relu_backward::primitive_desc(relu_bwd_desc, cpu_engine, "
-                              "relu_fwd_prim_desc);\n";
-                    writer
-                        << "relu_backward relu_bwd= relu_backward(relu_bdw_prim_desc, input_data, "
-                           "delta_data, result);\n";
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                              "s.submit({relu_bwd}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(relu_index) << ");\n";
                 }
                 else
                 {
