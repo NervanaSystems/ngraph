@@ -231,10 +231,6 @@ namespace ngraph
             }
 #endif
 
-            //TODO: This could be further optimized to reduce the impact of memcpy by either
-            //a) emitting customized code for initializing output/bias
-            //b) emitting two cblas calls (one for gemm on W and x and the second for gemm on Bias and E^T + the result of the first gemm)
-            //@jbobba suggests b) is more efficient but we should benchmark both
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MatmulBias)
             {
@@ -323,13 +319,10 @@ namespace ngraph
                             writer << "};\n";
 
                             writer << "cblas::cblas_sgemm("
-                                   << "cblas::Layout::RowMajor, " << cnotranspose << ctranspose
-                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
-                                   << ",\n"
-                                   << "        1.0f, ones_col," << max(1UL, arg2_shape[1]) << ", "
-                                   << args[2].get_name() << ", "
-                                   << "1"
-                                   << ", "
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1,\n"
+                                   << "1.0f, " << args[2].get_name() << ", 1, "
+                                   << "ones_col, " << max(1UL, arg2_shape[1]) << ", "
                                    << "1.0f"
                                    << ",\n"
                                    << "        " << out[0].get_name() << ", "
