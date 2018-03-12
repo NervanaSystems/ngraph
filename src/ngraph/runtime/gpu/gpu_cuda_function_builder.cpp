@@ -27,32 +27,32 @@ std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::st
                                                                    int number_of_options,
                                                                    const char** options)
 {
-        nvrtcProgram prog;
-        NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
-                                           kernel.c_str(),
-                                           "op.cu",
-                                           0,      // numHeaders
-                                           NULL,   // headers
-                                           NULL)); // includeNames
+    nvrtcProgram prog;
+    NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
+                                       kernel.c_str(),
+                                       "op.cu",
+                                       0,      // numHeaders
+                                       NULL,   // headers
+                                       NULL)); // includeNames
 
-        nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
+    nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
 
-        if (compile_result != NVRTC_SUCCESS)
-        {
-                throw std::runtime_error("compile error: \n" + kernel + "\n options");
-        }
+    if (compile_result != NVRTC_SUCCESS)
+    {
+        throw std::runtime_error("compile error: \n" + kernel + "\n options");
+    }
 
-        size_t ptx_size;
-        NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
-        char* ptx = new char[ptx_size];
-        NVRTC_SAFE_CALL(nvrtcGetPTX(
-                                prog,
-                                ptx)); // Load the generated PTX and get a handle to the parent kernel.
-        NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Destroy the program.
+    size_t ptx_size;
+    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
+    char* ptx = new char[ptx_size];
+    NVRTC_SAFE_CALL(
+        nvrtcGetPTX(prog,
+                    ptx)); // Load the generated PTX and get a handle to the parent kernel.
+    NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Destroy the program.
 
-        CUmodule module;
-        CUfunction function;
-        CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
-        CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
-        return std::make_shared<CUfunction>(function);
+    CUmodule module;
+    CUfunction function;
+    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
+    CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
+    return std::make_shared<CUfunction>(function);
 }

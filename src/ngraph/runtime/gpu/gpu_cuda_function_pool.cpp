@@ -36,15 +36,13 @@ runtime::gpu::CudaFunctionPool& runtime::gpu::CudaFunctionPool::instance()
 
 void runtime::gpu::CudaFunctionPool::set(const std::string& name, const std::string& kernel)
 {
-    const char* opts[] = {"--gpu-architecture=compute_35",
-                          "--relocatable-device-code=true"};
+    const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};
     std::string filename =
         file_util::path_join(s_output_dir, "cuda_kernel_" + name + "_codegen.cu");
     std::ofstream out(filename);
     out << kernel;
     out.close();
-    m_function_map.insert(
-        {name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts)});
+    m_function_map.insert({name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts)});
 }
 
 std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::get(const std::string& name)
