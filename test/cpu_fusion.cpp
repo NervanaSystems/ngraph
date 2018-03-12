@@ -777,5 +777,5 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     cf->call({a, b}, {result});
 
     vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
-    EXPECT_TRUE(test::all_close(expected , read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }

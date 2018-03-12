@@ -310,12 +310,9 @@ size_t MKLDNNEmitter::build_sigmoid_backward(const mkldnn::memory::desc& input_d
 
     // sigmoid forward primitive desc
     mkldnn::eltwise_forward::primitive_desc sigmoid_fwd_pd =
-        mkldnn::eltwise_forward::primitive_desc({mkldnn::prop_kind::forward,
-                                                 mkldnn::algorithm::eltwise_logistic,
-                                                 input_desc,
-                                                 0,
-                                                 0},
-                                                mkldnn_utils::global_cpu_engine);
+        mkldnn::eltwise_forward::primitive_desc(
+            {mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_logistic, input_desc, 0, 0},
+            mkldnn_utils::global_cpu_engine);
 
     size_t primitive_index = insert_primitive(new mkldnn::eltwise_backward(
         {{mkldnn::algorithm::eltwise_logistic, delta_desc, input_desc, 0, 0},
