@@ -56,6 +56,7 @@ set (SRC
     util/benchmark.cpp
     util.cpp
     uuid.cpp
+    zero_dim_tensor_elimination.cpp
 )
 
 add_subdirectory(models)
