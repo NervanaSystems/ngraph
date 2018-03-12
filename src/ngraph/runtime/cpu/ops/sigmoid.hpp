@@ -44,7 +44,7 @@ namespace ngraph
         public:
             /// \brief Constructs a SigmoidBackprop operation.
             ///
-            /// \param arg Node that produces the relu forward input tensor.
+            /// \param arg Node that produces the Sigmoid forward input tensor.
             SigmoidBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
 
             virtual std::shared_ptr<Node>
