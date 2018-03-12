@@ -183,7 +183,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
                 const Shape& arg0_shape = args[0].get_shape();
                 const Shape& arg1_shape = args[1].get_shape();
                 if (arg0_shape.empty() || arg1_shape.empty())
@@ -504,15 +503,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.indent++;
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
-
                 auto result_shape = out[0].get_shape();
-                auto& result_element_type = out[0].get_element_type();
-
                 auto input_order = reshape->get_input_order();
-
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-
                 size_t result_shape_product = 1;
+
                 for (auto i : result_shape)
                 {
                     result_shape_product *= i;
