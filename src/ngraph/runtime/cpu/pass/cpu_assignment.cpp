@@ -387,7 +387,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
-    {TI(ngraph::op::Sigmoid),
+    {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
 };
 
