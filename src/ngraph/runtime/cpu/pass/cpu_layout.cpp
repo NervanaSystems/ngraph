@@ -31,6 +31,7 @@
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/result.hpp"
@@ -645,11 +646,8 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            // TODO (jbobba): Check with MKLDNN folks if this is necessary
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                                to_string(input_layout) + e.message);
-                            // prim_input_formats.push_back(memory::format::nchw);
-                            // prim_output_formats.push_back(memory::format::nchw);
                         }
 
                         node =
@@ -732,11 +730,169 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            // TODO (jbobba): Check with MKLDNN folks if this is necessary
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                                to_string(input_layout) + e.message);
-                            // prim_input_formats.push_back(memory::format::nchw);
-                            // prim_output_formats.push_back(memory::format::nchw);
+                        }
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::MaxPool)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto max_pool = static_cast<const ngraph::op::MaxPool*>(node.get());
+
+                        auto arg0_shape = node->get_input_shape(0);
+                        auto result_shape = node->get_output_shape(0);
+                        auto filter_shape = max_pool->get_window_shape();
+                        auto filter_strides = max_pool->get_window_movement_strides();
+                        auto padding_below = max_pool->get_padding_below();
+                        auto padding_above = max_pool->get_padding_above();
+
+                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_input_element_type(0));
+
+                        algorithm algorithm_enumerator = algorithm::pooling_max;
+
+                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                        memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
+                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                           filter_strides.end());
+                        memory::dims mkldnn_padding_below(padding_below.begin(),
+                                                          padding_below.end());
+                        memory::dims mkldnn_padding_above(padding_above.begin(),
+                                                          padding_above.end());
+
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
+                        auto result_desc =
+                            memory::desc(mkldnn_result_shape, et, memory::format::any);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        try
+                        {
+                            auto prim_desc = pooling_forward::primitive_desc(
+                                {prop_kind::forward_inference,
+                                 algorithm_enumerator,
+                                 input_desc,
+                                 result_desc,
+                                 mkldnn_filter_strides,
+                                 mkldnn_filter_shape,
+                                 mkldnn_padding_below,
+                                 mkldnn_padding_above,
+                                 padding_kind::zero},
+                                runtime::cpu::mkldnn_utils::global_cpu_engine);
+                            prim_input_formats.push_back(input_layout);
+                            prim_output_formats.push_back(static_cast<memory::format>(
+                                prim_desc.dst_primitive_desc().desc().data.format));
+                            // TODO (jbobba): Add workspace layouts here
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
+                                               to_string(input_layout) + e.message);
+                        }
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::MaxPoolBackprop)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto max_pool = static_cast<const ngraph::op::MaxPoolBackprop*>(node.get());
+
+                        // arg 0 - fprop input
+                        // arg 1 - delta
+                        // Propagate fprop's input layout
+                        auto arg0_shape = node->get_input_shape(0);
+                        auto arg1_shape = node->get_input_shape(1);
+                        auto result_shape = node->get_output_shape(0);
+                        auto filter_shape = max_pool->get_window_shape();
+                        auto filter_strides = max_pool->get_window_movement_strides();
+                        auto padding_below = max_pool->get_padding_below();
+                        auto padding_above = max_pool->get_padding_above();
+
+                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_input_element_type(1));
+
+                        algorithm algorithm_enumerator = algorithm::pooling_max;
+
+                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+                        memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
+                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                        memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
+                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                           filter_strides.end());
+                        memory::dims mkldnn_padding_below(padding_below.begin(),
+                                                          padding_below.end());
+                        memory::dims mkldnn_padding_above(padding_above.begin(),
+                                                          padding_above.end());
+
+                        auto fprop_input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+
+                        auto diff_dst_desc =
+                            memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
+                        auto diff_src_desc =
+                            memory::desc(mkldnn_arg0_shape, et, memory::format::any);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        try
+                        {
+                            auto fwd_prim_desc = pooling_forward::primitive_desc(
+                                {prop_kind::forward_training,
+                                 algorithm_enumerator,
+                                 diff_src_desc,
+                                 diff_dst_desc,
+                                 mkldnn_filter_strides,
+                                 mkldnn_filter_shape,
+                                 mkldnn_padding_below,
+                                 mkldnn_padding_above,
+                                 padding_kind::zero},
+                                runtime::cpu::mkldnn_utils::global_cpu_engine);
+
+                            auto prim_desc = pooling_backward::primitive_desc(
+                                {algorithm_enumerator,
+                                 diff_src_desc,
+                                 diff_dst_desc,
+                                 mkldnn_filter_strides,
+                                 mkldnn_filter_shape,
+                                 mkldnn_padding_below,
+                                 mkldnn_padding_above,
+                                 padding_kind::zero},
+                                runtime::cpu::mkldnn_utils::global_cpu_engine,
+                                fwd_prim_desc);
+                            prim_input_formats.push_back(fprop_input_layout);
+                            prim_input_formats.push_back(fprop_input_layout);
+                            prim_output_formats.push_back(static_cast<memory::format>(
+                                prim_desc.diff_src_primitive_desc().desc().data.format));
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               to_string(fprop_input_layout) + e.message);
                         }
 
                         node =
@@ -884,18 +1040,21 @@ namespace ngraph
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
+    {TI(ngraph::op::AvgPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
+    {TI(ngraph::op::MaxPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
     {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
-    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},

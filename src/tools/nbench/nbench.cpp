@@ -21,40 +21,61 @@
 // sample models are under ../../test/models
 
 #include <fstream>
+#include <ngraph/file_util.hpp>
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
+#include <ngraph/util.hpp>
+
 #include "util/benchmark.hpp"
 #include "util/test_tools.hpp"
+
 using namespace std;
+using namespace ngraph;
 
 int main(int argc, char** argv)
 {
-    string model = "model.json";
-    string backend = "INTERPRETER";
-    int iter = 10;
+    string model;
+    string backend = "CPU";
+    int iterations = 10;
     bool failed = false;
+    bool statistics = false;
+    bool timing_detail = false;
     for (size_t i = 1; i < argc; i++)
     {
-        if (string(argv[i]) == "-f")
+        string arg = argv[i];
+        if (arg == "-f" || arg == "--file")
         {
             model = argv[++i];
         }
-        else if (string(argv[i]) == "-b")
+        else if (arg == "-b" || arg == "--backend")
         {
             backend = argv[++i];
         }
-        else if (string(argv[i]) == "-i")
+        else if (arg == "-i" || arg == "--iterations")
         {
             try
             {
-                iter = stoi(argv[++i]);
+                iterations = stoi(argv[++i]);
             }
             catch (...)
             {
                 cout << "Invalid Argument\n";
                 failed = true;
             }
+        }
+        else if (arg == "-s" || arg == "--statistics")
+        {
+            statistics = true;
+        }
+        else if (arg == "--timing_detail")
+        {
+            timing_detail = true;
+        }
+        else
+        {
+            cout << "Unknown option: " << arg << endl;
+            failed = true;
         }
     }
     if (!static_cast<bool>(ifstream(model)))
@@ -73,12 +94,58 @@ SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
 
 OPTIONS
-        -f          model json file to use (default: model.json)
-        -b          Backend to use (default: INTERPRETER)
-        -i          Iterations (default: 10)
+        -f|--file          Serialized model file
+        -b|--backend       Backend to use (default: CPU)
+        -i|--iterations    Iterations (default: 10)
+        -s|--statistics    Display op stastics
+        --timing_detail    Gather detailed timing
 )###";
         return 1;
     }
-    cout << "Benchmarking " << model << ", " << backend << " backend, " << iter << " iterations.\n";
-    run_benchmark(model, backend, iter);
+
+    const string json_string = file_util::read_file_to_string(model);
+    stringstream ss(json_string);
+    shared_ptr<Function> f = deserialize(ss);
+    if (statistics)
+    {
+        cout << "statistics:" << endl;
+        cout << "total nodes: " << f->get_ops().size() << endl;
+        size_t total_constant_bytes = 0;
+        unordered_map<string, size_t> op_list;
+        for (shared_ptr<Node> node : f->get_ordered_ops())
+        {
+            string name = node->get_name();
+            string op_name = name.substr(0, name.find('_'));
+            string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+            op_list[op_name + shape_name]++;
+
+            if (op_name == "Constant")
+            {
+                const Shape& shape = node->get_outputs()[0].get_shape();
+                size_t const_size = node->get_outputs()[0].get_element_type().size();
+                if (shape.size() == 0)
+                {
+                    total_constant_bytes += const_size;
+                }
+                else
+                {
+                    total_constant_bytes +=
+                        (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                }
+            }
+        }
+        cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+        for (const pair<string, size_t>& op_info : op_list)
+        {
+            cout << op_info.first << ": " << op_info.second << " ops" << endl;
+        }
+    }
+    else if (iterations > 0)
+    {
+        cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
+             << " iterations.\n";
+        run_benchmark(f, backend, iterations, timing_detail);
+    }
+
+    return 0;
 }
