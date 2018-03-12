@@ -3382,7 +3382,7 @@ namespace ngraph
                        << args[0].get_name() << ");\n";
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
                        << args[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
                        << out[0].get_name() << ");\n";
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "

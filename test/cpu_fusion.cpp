@@ -757,7 +757,7 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
     auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
-
+    auto shape_rt = Shape{1, 1, 2, 2};
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(func);
     auto backend = manager->allocate_backend();
@@ -768,7 +768,7 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     shared_ptr<runtime::TensorView> b =
         backend->make_primary_tensor_view(element::f32, delta->get_shape());
     shared_ptr<runtime::TensorView> result =
-        backend->make_primary_tensor_view(element::f32, input->get_shape());
+        backend->make_primary_tensor_view(element::f32, shape_rt);
 
     vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
     vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
