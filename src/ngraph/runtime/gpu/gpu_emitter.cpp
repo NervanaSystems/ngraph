@@ -623,22 +623,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::Sign)
-            {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-                writer << "{  // " << node->get_name() << "\n";
-                writer.indent++;
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "ngraph::runtime::gpu::emit_sign((void*) " << args[0].get_name()
-                       << ", (void*) " << out[0].get_name() << ", count);\n";
-                writer.indent--;
-                writer << "}\n";
-            }
-
-            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
             {
                 if (out[0].get_size() == 0)
