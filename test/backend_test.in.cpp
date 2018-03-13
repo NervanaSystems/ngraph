@@ -751,7 +751,6 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
 
 TEST(${BACKEND_NAME}, equal)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1245,7 +1244,6 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
 
 TEST(${BACKEND_NAME}, greater)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1269,7 +1267,6 @@ TEST(${BACKEND_NAME}, greater)
 
 TEST(${BACKEND_NAME}, greatereq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1293,7 +1290,6 @@ TEST(${BACKEND_NAME}, greatereq)
 
 TEST(${BACKEND_NAME}, less)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1317,7 +1313,6 @@ TEST(${BACKEND_NAME}, less)
 
 TEST(${BACKEND_NAME}, lesseq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1341,7 +1336,6 @@ TEST(${BACKEND_NAME}, lesseq)
 
 TEST(${BACKEND_NAME}, lesseq_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
@@ -1461,7 +1455,6 @@ TEST(${BACKEND_NAME}, negative)
 
 TEST(${BACKEND_NAME}, notequal)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1943,7 +1936,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
@@ -1965,7 +1957,6 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
@@ -1987,7 +1978,6 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
