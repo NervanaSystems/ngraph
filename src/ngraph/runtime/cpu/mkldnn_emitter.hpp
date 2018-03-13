@@ -153,6 +153,10 @@ namespace ngraph
                 size_t build_sigmoid_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc);
 
+                size_t build_sigmoid_backward(const mkldnn::memory::desc& input_desc,
+                                              const mkldnn::memory::desc& delta_desc,
+                                              const mkldnn::memory::desc& result_desc);
+
                 size_t build_elementwise_add(
                     const mkldnn::memory::desc& input0_data_desc,
                     const mkldnn::memory::desc& input1_data_desc,

@@ -35,3 +35,24 @@ ngraph::op::Sigmoid::Sigmoid(std::shared_ptr<ngraph::Node> input)
 {
     add_output(input->get_element_type(), m_shape_input);
 }
+
+ngraph::op::SigmoidBackprop::SigmoidBackprop(std::shared_ptr<Node> arg, std::shared_ptr<Node> delta)
+    : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
+{
+    if (arg->get_element_type() != delta->get_element_type())
+    {
+        throw ngraph_error("Argument and delta element types for Sigmoid backprop do not match");
+    }
+    if (arg->get_shape() != delta->get_shape())
+    {
+        throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
+    }
+    set_value_type_checked(delta->get_element_type(), delta->get_shape());
+}
+
+void ngraph::op::Sigmoid::generate_adjoints(ngraph::autodiff::Adjoints& adjoints,
+                                            const std::shared_ptr<Node>& delta)
+{
+    auto backprop = std::make_shared<op::SigmoidBackprop>(get_input_op(0), delta);
+    adjoints.add_delta(get_input_op(0), backprop);
+}
