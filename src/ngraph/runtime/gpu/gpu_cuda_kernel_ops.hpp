@@ -38,8 +38,6 @@ namespace ngraph
         class Subtract;
         class Divide;
         class Sign;
-
-        // requires different input and output types
         class Convert;
         class Equal;
         class NotEqual;
@@ -47,8 +45,6 @@ namespace ngraph
         class GreaterEq;
         class Less;
         class LessEq;
-
-        // Unimplemented or unused in favor of cuDNN impl.
         class Max;
         class Min;
         class Negative;
