@@ -54,9 +54,11 @@ from _pyngraph.op import GreaterEq
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
+from _pyngraph.op import Max
 from _pyngraph.op import MaxPool
 from _pyngraph.op import MaxPoolBackprop
 from _pyngraph.op import Maximum
+from _pyngraph.op import Min
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply
 from _pyngraph.op import Negative
@@ -83,12 +85,10 @@ from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
-from _pyngraph.op import Max
 from _pyngraph.op import Product
 from _pyngraph.op import AllReduce
 from _pyngraph.op import FunctionCall
 from _pyngraph.op import GetOutputElement
-from _pyngraph.op import Min
 from _pyngraph.op import BatchNorm
 from _pyngraph.op import BatchNormBackprop
 from _pyngraph.op import Softmax

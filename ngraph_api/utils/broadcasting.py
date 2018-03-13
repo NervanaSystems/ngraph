@@ -14,10 +14,9 @@
 # limitations under the License.
 # ******************************************************************************
 import logging
-from typing import Optional, Set, List
+from typing import Optional, List
 
 import ngraph_api as ng
-import numpy as np
 
 from pyngraph import AxisSet, Node
 from ngraph_api.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
