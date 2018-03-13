@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -34,15 +35,16 @@ namespace ngraph
             public:
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
-                                               const std::string& data_type,
                                                const std::string& op,
+                                               const std::array<std::string, 2>& data_types,
                                                const size_t& num_inputs);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
-                                              const std::string& data_type,
                                               const std::string& math_kernel,
+                                              const std::array<std::string, 2>& data_types,
                                               const size_t& num_inputs);
+                static void add_pod_typedefs(codegen::CodeWriter& writer);
             };
         }
     }
