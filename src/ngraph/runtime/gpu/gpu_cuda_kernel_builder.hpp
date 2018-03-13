@@ -39,6 +39,14 @@ namespace ngraph
                                                const std::array<std::string, 2>& data_types,
                                                const size_t& num_inputs);
 
+                static void get_broadcast_op(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               const std::array<std::string, 2>& data_types);
+
+                static void get_onehot_op(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               const std::array<std::string, 2>& data_types);
+
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
