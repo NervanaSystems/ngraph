@@ -34,6 +34,9 @@ namespace ngraph
             void emit_broadcast(
                 void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
 
+            void emit_onehot(
+                void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
+
             template <typename T, typename... Inputs>
             void emit_elementwise_op(std::string name,
                                      size_t count,
