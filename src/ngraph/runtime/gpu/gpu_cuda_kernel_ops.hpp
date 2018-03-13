@@ -38,8 +38,6 @@ namespace ngraph
         class Subtract;
         class Divide;
         class Sign;
-
-        // requires different input and output types
         class Convert;
         class Equal;
         class NotEqual;
@@ -47,8 +45,6 @@ namespace ngraph
         class GreaterEq;
         class Less;
         class LessEq;
-
-        // Unimplemented or unused in favor of cuDNN impl.
         class Max;
         class Min;
         class Negative;
@@ -63,7 +59,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Abs>
             {
                 static constexpr const char* op = "fabsf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -71,7 +66,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Acos>
             {
                 static constexpr const char* op = "acosf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -79,7 +73,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Asin>
             {
                 static constexpr const char* op = "asinf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -87,7 +80,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Atan>
             {
                 static constexpr const char* op = "atanf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -95,7 +87,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Ceiling>
             {
                 static constexpr const char* op = "ceilf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -103,7 +94,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Cos>
             {
                 static constexpr const char* op = "cosf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -111,7 +101,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Cosh>
             {
                 static constexpr const char* op = "coshf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -119,7 +108,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Exp>
             {
                 static constexpr const char* op = "expf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -127,7 +115,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Floor>
             {
                 static constexpr const char* op = "floorf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -135,7 +122,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Log>
             {
                 static constexpr const char* op = "logf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -143,7 +129,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Max>
             {
                 static constexpr const char* op = "fmaxf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -151,7 +136,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Min>
             {
                 static constexpr const char* op = "fminf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -159,7 +143,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Sin>
             {
                 static constexpr const char* op = "sinf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -167,7 +150,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Sinh>
             {
                 static constexpr const char* op = "sinhf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -175,7 +157,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Sqrt>
             {
                 static constexpr const char* op = "sqrtf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -183,7 +164,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Tan>
             {
                 static constexpr const char* op = "tanf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -191,7 +171,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Tanh>
             {
                 static constexpr const char* op = "tanhf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -199,7 +178,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Power>
             {
                 static constexpr const char* op = "powf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -207,7 +185,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Subtract>
             {
                 static constexpr const char* op = "subtractf";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = "x0-x1";
             };
 
@@ -215,7 +192,6 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Divide>
             {
                 static constexpr const char* op = "fdividef";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = nullptr;
             };
 
@@ -223,8 +199,56 @@ namespace ngraph
             struct CudaOpMap<ngraph::op::Sign>
             {
                 static constexpr const char* op = "sign";
-                static constexpr const char* type = "float";
                 static constexpr const char* math_kernel = "(x0 > 0) - (x0 < 0)";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Convert>
+            {
+                static constexpr const char* op = "convert";
+                static constexpr const char* math_kernel = "x0";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Equal>
+            {
+                static constexpr const char* op = "equal";
+                static constexpr const char* math_kernel = "x0 == x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::NotEqual>
+            {
+                static constexpr const char* op = "not_equal";
+                static constexpr const char* math_kernel = "x0 != x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Greater>
+            {
+                static constexpr const char* op = "greater";
+                static constexpr const char* math_kernel = "x0 > x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::GreaterEq>
+            {
+                static constexpr const char* op = "greater_equal";
+                static constexpr const char* math_kernel = "x0 >= x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Less>
+            {
+                static constexpr const char* op = "less";
+                static constexpr const char* math_kernel = "x0 < x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::LessEq>
+            {
+                static constexpr const char* op = "less_equal";
+                static constexpr const char* math_kernel = "x0 <= x1";
             };
         }
     }

@@ -97,15 +97,13 @@
 #include "ngraph/util.hpp"
 
 using namespace std;
-using namespace ngraph;
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace gpu
         {
-            void runtime::gpu::GPU_Emitter::EmitElementwise(
+            void GPU_Emitter::EmitElementwise(
                 GPU_ExternalFunction* external_function,
                 codegen::CodeWriter& writer,
                 const ngraph::Node* n,
@@ -116,12 +114,14 @@ namespace ngraph
                 {
                     return;
                 }
+
                 writer << "{  // " << n->get_name() << "\n";
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "if(count == 0) return;\n";
                 writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
                        << n->description() << ">(\"" << n->description() << "\""
+                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                        << ", count"
                        << ", (CUdeviceptr) " << out[0].get_name();
                 for (size_t i = 0; i < args.size(); i++)

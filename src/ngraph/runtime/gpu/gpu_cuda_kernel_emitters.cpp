@@ -21,6 +21,7 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 using namespace ngraph;
+
 void runtime::gpu::emit_broadcast(
     void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count)
 {
