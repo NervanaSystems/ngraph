@@ -32,7 +32,7 @@ namespace ngraph
             // In English: return type is void and T must be an integral type.
             template <typename T>
             typename std::enable_if<std::is_integral<T>::value>::type
-                divide(T* arg0, T* arg1, T* out, size_t count)
+                divide(const T* arg0, const T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
@@ -47,7 +47,7 @@ namespace ngraph
             // In English: return type is void and T must be a floating point type.
             template <typename T>
             typename std::enable_if<std::is_floating_point<T>::value>::type
-                divide(T* arg0, T* arg1, T* out, size_t count)
+                divide(const T* arg0, const T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

@@ -25,8 +25,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void greater(T* arg0,
-                         T* arg1,
+            void greater(const T* arg0,
+                         const T* arg1,
                          char* out,
                          size_t count) // TODO: using char for bool, is this right?
             {
