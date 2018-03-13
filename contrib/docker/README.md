@@ -1,16 +1,16 @@
-# Docker Builds for the NGraph-Cpp _Reference-OS_
+# Docker Builds for ngraph with a _Reference-OS_
 
 ## Introduction
 
-This directory contains a basic build system for creating docker images of the _reference-OS_ on which NGraph-Cpp builds and unit tests are run.  The purpose is to provide reference builds for _Continuous Integration_ used in developing and testing NGraph-Cpp.
+This directory contains a basic build system for creating docker images of the _reference-OS_ on which ngraph builds and unit tests are run.  The purpose is to provide reference builds for _Continuous Integration_ used in developing and testing ngraph.
 
 The `Makefile` provides targets for:
 
 * Building the _reference-OS_ into a docker image
-* Building NGraph-Cpp and running unit tests in this cloned repo, mounted into the docker image of the _reference-OS_
+* Building ngraph and running unit tests in this cloned repo, mounted into the docker image of the _reference-OS_
 * Starting an interactive shell in the _reference-OS_ docker image, with the cloned repo available for manual builds and unit testing
 
-The _make targets_ are designed to handle all aspects of building the _reference-OS_ docker image, running NGraph-Cpp builds and unit testing in it, and opening up a session in the docker image for interactive use.  You should not need to issue any manual commands (unless you want to).  In addition the `Dockerfile.ngraph_cpp_cpu` provides a description of how the _reference-OS_ is built, should you want to build your own server or docker image.
+The _make targets_ are designed to handle all aspects of building the _reference-OS_ docker image, running ngraph builds and unit testing in it, and opening up a session in the docker image for interactive use.  You should not need to issue any manual commands (unless you want to).  In addition the `Dockerfile.ngraph_cpu` provides a description of how the _reference-OS_ is built, should you want to build your own server or docker image.
 
 ## Prerequisites
 
@@ -27,13 +27,13 @@ The _make targets_ are designed to provide easy commands to run actions using th
 
 Most make targets are structured in the form `<action>_<compiler>`.  The `<action>` indicates what you want to do (e.g. build, check, install), while the `<compiler>` indicates what you want to build with (i.e. gcc or clang).
 
-* In general, you simply need to run the command **`make check_all`**.  This first makes the `build_docker_ngraph_cpp` target as a dependency.  Then it makes the `build_*` and `check_*` targets, which will build NGraph-Cpp using _cmake_ and _make_ and then run unit testing.  Please keep in mind that `make check_*` targets do not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
+* In general, you simply need to run the command **`make check_all`**.  This first makes the `build_docker_ngraph` target as a dependency.  Then it makes the `build_*` and `check_*` targets, which will build ngraph using _cmake_ and _make_ and then run unit testing.  Please keep in mind that `make check_*` targets do not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
 
 * Two builds are supported: building with `gcc` and `clang`.  Targets are named `*_gcc` and `*_clang` when they refer to building with a specific compiler, and the `*_all` targets are available to build with both compilers.  Output directories are BUILD-GCC and BUILD-CLANG, at the top level.
 
-* You can also run the command **`make shell`** to start an interactive bash shell inside the docker image.  While this is not required for normal builds and unit testing, it allows you to run interactively within the docker image with the cloned repo mounted.  Again, `build_docker_ngraph_cpp` is made first as a dependency.  Please keep in mind that `make shell` does not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
+* You can also run the command **`make shell`** to start an interactive bash shell inside the docker image.  While this is not required for normal builds and unit testing, it allows you to run interactively within the docker image with the cloned repo mounted.  Again, `build_docker_ngraph` is made first as a dependency.  Please keep in mind that `make shell` does not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
 
-* Running the command **`make build_docker_ngraph_cpp`** is also available, if you simply want to build the docker image.  This target does work properly when your working directory is in an NFS filesystem.
+* Running the command **`make build_docker_ngraph`** is also available, if you simply want to build the docker image.  This target does work properly when your working directory is in an NFS filesystem.
 
 * Finally, **`make clean`** is available to clean up the BUILD-* and docker build directories.
 
@@ -53,7 +53,7 @@ A helper script to run as a normal user within the docker container.  This is do
 
 ## Notes
 
-* The top-level `Makefile` in this cloned repo can be used to build and unit-test NGraph-Cpp _outside_ of docker.  This directory is only for building and running unit tests for NGraph-Cpp in the _reference-OS_ docker image.
+* The top-level `Makefile` in this cloned repo can be used to build and unit-test ngraph _outside_ of docker.  This directory is only for building and running unit tests for ngraph in the _reference-OS_ docker image.
 
 * Due to limitations in how docker mounts work, `make check_cpu` and `make shell` will fail if you try to run them while in a working directory that is in an NFS-mount that has _root squash_ enabled.  The cause results from the process in the docker container running as root.  When a file or directory is created by root in the mounted directory tree, from within the docker image, the NFS-mount (in the host OS) does not allow a root-created file, leading to a permissions error.  This is dependent on whether the host OS performs "root squash" when mounting NFS filesystems.  The fix to this is easy: run `make check_cpu` and `make shell` from a local filesystem.
 
