@@ -338,21 +338,35 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
                 {
-                    auto batchnorm = static_cast<op::BatchNorm*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    batchnorm->set_op_annotations(op_annotations);
+                    auto input_shape = node->get_input_shape(2);
+                    auto input_rank = input_shape.size();
+                    if ((input_rank == 4 && node->get_input_element_type(2) == element::f32))
+                    {
+                        auto batchnorm = static_cast<op::BatchNorm*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        batchnorm->set_op_annotations(op_annotations);
+                    }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormBackprop)
                 {
-                    auto batchnorm = static_cast<op::BatchNormBackprop*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    batchnorm->set_op_annotations(op_annotations);
+                    auto input_shape = node->get_input_shape(2);
+                    auto input_rank = input_shape.size();
+                    auto delta_shape = node->get_input_shape(5);
+                    auto delta_rank = delta_shape.size();
+                    if ((input_rank == 4 && delta_rank == 4 &&
+                         node->get_input_element_type(5) == element::f32 &&
+                         node->get_input_element_type(2) == element::f32))
+                    {
+                        auto batchnorm = static_cast<op::BatchNormBackprop*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        batchnorm->set_op_annotations(op_annotations);
+                    }
                 }
             }
         }
