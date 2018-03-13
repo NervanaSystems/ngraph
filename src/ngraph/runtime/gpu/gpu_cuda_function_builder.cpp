@@ -20,46 +20,39 @@
 #include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
-namespace ngraph
+using namespace ngraph;
+
+std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::string& name,
+                                                                   const std::string& kernel,
+                                                                   int number_of_options,
+                                                                   const char** options)
 {
-    namespace runtime
+    nvrtcProgram prog;
+    NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
+                                       kernel.c_str(),
+                                       "op.cu",
+                                       0,      // numHeaders
+                                       NULL,   // headers
+                                       NULL)); // includeNames
+
+    nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
+
+    if (compile_result != NVRTC_SUCCESS)
     {
-        namespace gpu
-        {
-            std::shared_ptr<CUfunction> CudaFunctionBuilder::get(const std::string& name,
-                                                                 const std::string& kernel,
-                                                                 int number_of_options,
-                                                                 const char** options)
-            {
-                nvrtcProgram prog;
-                NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
-                                                   kernel.c_str(),
-                                                   "op.cu",
-                                                   0,      // numHeaders
-                                                   NULL,   // headers
-                                                   NULL)); // includeNames
-
-                nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
-
-                if (compile_result != NVRTC_SUCCESS)
-                {
-                    throw std::runtime_error("compile error: \n" + kernel + "\n options");
-                }
-
-                size_t ptx_size;
-                NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
-                char* ptx = new char[ptx_size];
-                NVRTC_SAFE_CALL(nvrtcGetPTX(
-                    prog,
-                    ptx)); // Load the generated PTX and get a handle to the parent kernel.
-                NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Destroy the program.
-
-                CUmodule module;
-                CUfunction function;
-                CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
-                CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
-                return std::make_shared<CUfunction>(function);
-            }
-        }
+        throw std::runtime_error("compile error: \n" + kernel + "\n options");
     }
+
+    size_t ptx_size;
+    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
+    char* ptx = new char[ptx_size];
+    NVRTC_SAFE_CALL(
+        nvrtcGetPTX(prog,
+                    ptx)); // Load the generated PTX and get a handle to the parent kernel.
+    NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Destroy the program.
+
+    CUmodule module;
+    CUfunction function;
+    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
+    CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
+    return std::make_shared<CUfunction>(function);
 }
