@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     if (!file_util::exists(source_path))
     {
         cout << "file '" << source_path << "' not found\n";
+        help();
         return 1;
     }
     else
