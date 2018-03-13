@@ -76,7 +76,7 @@ void runtime::gpu::emit_onehot(
     if (CudaFunctionPool::instance().get(name) == nullptr)
     {
         std::string kernel;
-        std::string data_type("float");
+        std::string data_type("int");
 
         kernel = R"(
 extern "C" __global__
@@ -113,3 +113,4 @@ void cuda_)" + name +
                                   0));  // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }
+

@@ -632,7 +632,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 size_t idx = onehot->get_one_hot_axis();
                 size_t repeat_times = result_shape[idx];
                 size_t repeat_size = 1;
-                for(int i = idx + 1; i < result_shape.size(); i++)
+                for(size_t i = idx + 1; i < result_shape.size(); i++)
                 {
                     repeat_size *= result_shape[i];
                 }
