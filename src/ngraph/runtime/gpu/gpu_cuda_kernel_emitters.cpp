@@ -33,9 +33,8 @@ void runtime::gpu::emit_broadcast(
 
         kernel = R"(
 extern "C" __global__
-void cuda_)" + name +
-                 "(" + data_type + "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" +
-                 R"(
+void cuda_)" + name + "(" + data_type +
+            "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" + R"(
 {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < n)
@@ -49,12 +48,12 @@ void cuda_)" + name +
 
     //convert runtime ptr to driver api ptr
     CUdeviceptr d_ptr_in, d_ptr_out;
-    d_ptr_in = (CUdeviceptr)in;
-    d_ptr_out = (CUdeviceptr)out;
+    d_ptr_in = CUdeviceptr(in);
+    d_ptr_out = CUdeviceptr(out);
 
     void* args_list[] = {&d_ptr_in, &d_ptr_out, &repeat_size, &repeat_times, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
-                                  count,
+                                  static_cast<unsigned int>(count),
                                   1,
                                   1, // grid dim
                                   1,
