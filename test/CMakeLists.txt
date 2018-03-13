@@ -31,6 +31,7 @@ set (SRC
     builder_xla.cpp
     build_graph.cpp
     copy.cpp
+    core_fusion.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
@@ -38,6 +39,8 @@ set (SRC
     input_output_assign.cpp
     main.cpp
     op.cpp
+    graph_partition.cpp
+    includes.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -50,6 +53,7 @@ set (SRC
     type_prop.cpp
     util/autodiff/backprop_function.cpp
     util/test_tools.cpp
+    util/benchmark.cpp
     util.cpp
     uuid.cpp
 )
@@ -79,7 +83,7 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
     link_directories(${CUDA_LIBRARIES})
     link_directories(${CUDA_CUBLAS_LIBRARIES})
@@ -96,7 +100,7 @@ if(NGRAPH_ARGON_ENABLE)
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
     set(SRC ${SRC} argon_fusion.cpp)
 
-    # enable additional Argon backend test 
+    # enable additional Argon backend test
     set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
     message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
     set(ADDITIONAL_ARGON_TEST
@@ -105,7 +109,7 @@ if(NGRAPH_ARGON_ENABLE)
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
-    
+
     # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
     add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
     set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
@@ -147,6 +151,8 @@ include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_INCLUDES=\\\"${JSON_INCLUDE_DIR}\\\"")
+
 if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
@@ -168,13 +174,15 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-  target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    find_library(CUDA_NVRTC_LIBRARY nvrtc /usr/local/cuda/lib64)
+    target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest ext_eigen)
+add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
@@ -190,4 +198,3 @@ add_custom_target(check
         style-check
         unit-test-check
         )
-

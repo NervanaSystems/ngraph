@@ -42,21 +42,23 @@ bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CL
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
+declare ARGON_SRC_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/src"
+declare ARGON_TEST_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/test"
+
 declare ROOT_SUBDIR
-for ROOT_SUBDIR in src test; do
+for ROOT_SUBDIR in src test ${ARGON_SRC_DIR} ${ARGON_TEST_DIR}; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
-	bash_lib_die "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+	    bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+    else
+        bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+
+        # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
+        # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
+        # mechanism, and this confuses clang-format.
+        find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
+
+        bash_lib_status "Done."
     fi
-
-    bash_lib_status "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
-
-    # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
-    # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
-    # mechanism, and this confuses clang-format.
-    find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
-
-    bash_lib_status "Done."
 done
 
 popd
-

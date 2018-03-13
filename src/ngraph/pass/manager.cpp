@@ -33,6 +33,10 @@ ngraph::pass::Manager::Manager()
 {
 }
 
+ngraph::pass::Manager::Manager(bool to_set_is_output)
+{
+}
+
 ngraph::pass::Manager::~Manager()
 {
 }
@@ -49,14 +53,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
     set<shared_ptr<Function>> tfs(begin(fs), end(fs));
     get_state().set_functions(tfs);
-
-    for (shared_ptr<Function> f : get_state().get_functions())
-    {
-        for (size_t i = 0; i < f->get_output_size(); ++i)
-        {
-            f->get_output_op(i)->set_is_output();
-        }
-    }
 
     for (shared_ptr<PassBase> pass : m_pass_list)
     {

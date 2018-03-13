@@ -1,9 +1,15 @@
 # Basic Makefile for contrib/docker. This can be expanded later as more targets
 # are added.
 
-# Default is to build with -j for parallel builds.  Turn off with
-#   make PARELLEL=
-PARALLEL=-j
+# Building LLVM from source has been observed to trigger the oom-killer
+#    on systems with a large number of cores
+#    running with make -j
+#
+# Default is to build with -j 22 for parallel cmake/make.
+# Override with make PARALLEL="-j <num_parallel_processes>" where
+#    <num_parallel_processes> = the number of make processes to run in parallel
+# Turn off with make PARALLEL=
+PARALLEL=-j 22 
 
 # DIR is an internal variable that serves as an anchor to this cloned git
 # repository.  DIR is mounted into the docker container, so that builds
@@ -28,13 +34,27 @@ DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
 
 # Enable additional options to be added on the command line
 ifndef CMAKE_OPTIONS_EXTRA
-    CMAKE_OPTIONS_EXTRA = ""
+    CMAKE_OPTIONS_EXTRA=
+endif
+
+# OS set to 'ubuntu1604' by default
+# can be overridden on the command line with 'make <target> OS=centos74"
+ifndef OS
+    OS="ubuntu1604"
+endif
+
+ifeq ("$(shell echo ${OS} | grep centos)","centos74")
+    RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_centos_user.sh
+    DOCKERFILE=Dockerfile.ngraph_cpp.centos74_cmake3
+else
+    DOCKERFILE ?= "Dockerfile.ngraph_cpp"
+    RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_ubuntu_user.sh
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
 # For clang builds, we DO make warnings into errors
 CMAKE_OPTIONS_COMMON=-DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo $(CMAKE_OPTIONS_EXTRA)
-CMAKE_OPTIONS_GCC=$(CMAKE_OPTIONS_COMMON) -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+CMAKE_OPTIONS_GCC=$(CMAKE_OPTIONS_COMMON) -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/ngraph_dist
 CMAKE_OPTIONS_CLANG=$(MAKE_OPTIONS_COMMON)-DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/ngraph_dist -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_WARNINGS_AS_ERRORS=ON -DNGRAPH_USE_PREBUILT_LLVM=TRUE
 
 CALLER_UID := $(shell id -u)
@@ -66,9 +86,12 @@ all: check_gcc check_clang
 # Docker actions
 
 expand_dockerfile_templates:
+	@echo "OS=${OS}"
+	@echo "DOCKERFILE=${DOCKERFILE}"
+	@echo "RUN_AS_USER_SCRIPT=${RUN_AS_USER_SCRIPT}"
 	cd "${DIR}"/contrib/docker
 	mkdir "${DBUILD_DIR}" || true
-	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' Dockerfile.ngraph_cpp > "${DBUILD_DIR}"/Dockerfile.build_ngraph_cpp
+	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' ${DOCKERFILE} > "${DBUILD_DIR}"/Dockerfile.build_ngraph_cpp
 
 build_docker_image: expand_dockerfile_templates
 	$(DOCKER_BUILD) -f="${DBUILD_DIR}"/Dockerfile.build_ngraph_cpp --build-arg python_version="${PYTHON_VERSION}" -t=build_ngraph_cpp:"${DBUILD_VERSION}" .
@@ -85,11 +108,11 @@ sphinx_doc: build_docker_image
 	# sphinx html docs build
 	docker run --rm --tty \
             ${VOLUME} \
-	    ${DOCKER_RUN_ENV} \
+	    {DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/doc/sphinx; env VERBOSE=1 make html 2>&1 | tee make_sphinx_html.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Build
 build_all: build_gcc build_clang
@@ -105,11 +128,11 @@ build_gcc: build_docker_image
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
+            --env RUN_CMD="set -x; set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-build_clang:
+build_clang: build_docker_image
 	# Remove old distribution directory if present
 	( test -d "${DIR}"/BUILD-CLANG/ngraph_dist && rm -fr "${DIR}"/BUILD-CLANG/ngraph_dist && echo "Removed old ${DIR}/BUILD-CLANG/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
 	# Make BUILD-CLANG directory as user
@@ -120,9 +143,9 @@ build_clang:
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Check (run unit-tests)
 
@@ -134,9 +157,9 @@ check_gcc: build_gcc
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log ; sed -E -e 's/classname\=\"[a-zA-Z0-9_]+/&1_gcc/' unit-test-results.xml > unit-test-results-gcc.xml" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; env VERBOSE=1 make unit-test-check 2>&1 | tee make_check_gcc.log ; sed -E -e 's/classname\=\"[a-zA-Z0-9_]+/&1_gcc/' unit-test-results.xml > unit-test-results-gcc.xml" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 check_clang: build_clang
 	docker run --rm --tty \
@@ -146,7 +169,17 @@ check_clang: build_clang
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log ; sed -E -e 's/classname\=\"[a-zA-Z0-9_]+/&1_clang/' unit-test-results.xml > unit-test-results-clang.xml" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
+
+style_clang: build_clang
+	docker run --rm --tty \
+            ${VOLUME} \
+	    ${DOCKER_RUN_ENV} \
+            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
+            --env RUN_UID="$(shell id -u)" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; env VERBOSE=1 make style-check 2>&1 | tee make_style_check_clang.log" \
+            "build_ngraph_cpp:${DBUILD_VERSION}" \
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Install
 
@@ -160,7 +193,7 @@ install_gcc: check_gcc
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_gcc.log ; tar czf ngraph_dist_gcc.tgz ngraph_dist 2>&1 | tee make_tarball_gcc.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 install_clang: check_clang
 	# Puts ngraph_dist in BUILD-CLANG directory.  This is used by Jenkins ngraph-tensorflow batch job.
@@ -170,7 +203,7 @@ install_clang: check_clang
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_clang.log ; tar czf ngraph_dist_clang.tgz ngraph_dist 2>&1 | tee make_tarball_clang.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Interactive shell
 
@@ -181,7 +214,7 @@ shell: build_docker_image
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
-            sh -c "cd ${DOCKUSER_HOME} ; ${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Clean
 

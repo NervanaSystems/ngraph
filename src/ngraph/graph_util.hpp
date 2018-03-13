@@ -16,24 +16,29 @@
 
 #pragma once
 
-#include <algorithm>
-#include <chrono>
-#include <deque>
 #include <functional>
-#include <iostream>
 #include <list>
-#include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
+
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
-    class Node;
-    class Function;
+    namespace descriptor
+    {
+        class Input;
+        class Output;
+    }
+
+    namespace op
+    {
+        class Parameter;
+    }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f);
@@ -44,21 +49,22 @@ namespace ngraph
 
     void free_nodes(std::shared_ptr<Function>);
 
-    void replace_node(std::shared_ptr<Node> target,
-                      std::shared_ptr<Node> replacement,
-                      bool replace_output = false);
+    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+
     // maps original to replacement nodes e.g. for clone utilities
     // performs index checking on access
     class NodeMap
     {
     public:
-        // map original node to replcacement node
+        // map original node to replacement node
         // throws ngraph_error if key already exists
         void add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
 
@@ -71,6 +77,8 @@ namespace ngraph
         {
             return (m_node_map.count(orig) != 0);
         }
+
+        void update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val);
 
         const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
             get_node_map() const
@@ -98,4 +106,18 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    // Assert that nodes in the function is colocated and return that placement
+    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+
+    // Split function to function(s) with unique placement
+    std::vector<std::shared_ptr<Function>> split_function_by_placement(
+        std::shared_ptr<Function> f,
+        std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<Node>>&
+            map_parameter_to_source_node);
+
+    // Insert parameter node between src_node and dst_node by splitting the graph
+    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
+                                        std::shared_ptr<Node> dst_node,
+                                        std::shared_ptr<op::Parameter> p_node);
 }

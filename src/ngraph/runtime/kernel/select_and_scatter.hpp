@@ -17,8 +17,8 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph

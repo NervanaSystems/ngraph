@@ -21,14 +21,7 @@
 
 namespace ngraph
 {
-    class Node;
     class Function;
-
-    namespace runtime
-    {
-        class Backend;
-        class Manager;
-    }
 
     namespace autodiff
     {

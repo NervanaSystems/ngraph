@@ -16,18 +16,12 @@
 
 #pragma once
 
-#include <algorithm>
 #include <chrono>
-#include <deque>
-#include <functional>
 #include <iostream>
-#include <list>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace ngraph
@@ -41,6 +35,8 @@ namespace ngraph
         class Backend;
         class Value;
     }
+
+    std::string to_cplusplus_sourcecode_literal(bool val);
 
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
@@ -58,7 +54,7 @@ namespace ngraph
     }
 
     template <typename T>
-    static std::string vector_to_string(const std::vector<T>& v)
+    static std::string vector_to_string(const T& v)
     {
         std::ostringstream os;
         os << "[ " << ngraph::join(v) << " ]";
@@ -204,40 +200,6 @@ namespace ngraph
         }
 
         return result;
-    }
-
-    template <class InputIt, class BinaryOp>
-    typename std::iterator_traits<InputIt>::value_type
-        reduce(InputIt first, InputIt last, BinaryOp op)
-    {
-        typename std::iterator_traits<InputIt>::value_type result;
-
-        if (first == last)
-        {
-            result = {};
-        }
-        else
-        {
-            result = *first++;
-            while (first != last)
-            {
-                result = op(result, *first);
-                first++;
-            }
-        }
-        return result;
-    }
-
-    template <typename T>
-    T plus(const T& a, const T& b)
-    {
-        return a + b;
-    }
-
-    template <typename T>
-    T mul(const T& a, const T& b)
-    {
-        return a * b;
     }
 
     template <typename T>

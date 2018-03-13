@@ -19,8 +19,6 @@
 #include <sstream>
 #include <string>
 
-#include "ngraph/log.hpp"
-
 namespace ngraph
 {
     namespace codegen
@@ -69,6 +67,18 @@ public:
     }
 
     std::string generate_temporary_name(std::string prefix = "tempvar");
+
+    void block_begin()
+    {
+        *this << "{\n";
+        indent++;
+    }
+
+    void block_end()
+    {
+        indent--;
+        *this << "}\n";
+    }
 
 private:
     std::stringstream m_ss;

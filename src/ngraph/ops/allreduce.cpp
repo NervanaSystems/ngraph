@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#ifdef NGRAPH_DISTRIBUTED
-
 #include "ngraph/ops/allreduce.hpp"
 
 using namespace std;
@@ -31,5 +29,3 @@ op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
         throw ngraph_error("Unsupported data type for AllReduce");
     }
 }
-
-#endif

@@ -229,10 +229,10 @@ TEST(memory_layout, constant)
 
     Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::ParameterVector{});
 
     pass_manager.run_passes(f);
     auto sorted = f->get_ordered_ops();
     size_t temporary_pool_size = f->get_temporary_pool_size();
-    EXPECT_EQ(0, temporary_pool_size);
+    EXPECT_EQ(4, temporary_pool_size);
 }

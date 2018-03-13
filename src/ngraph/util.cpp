@@ -25,10 +25,18 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/result_vector.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
 
+#include <iostream>
+
 using namespace std;
+
+std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
+{
+    return val ? "true" : "false";
+}
 
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
@@ -234,10 +242,21 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // create the new outputs for fprop and the new fprop function
-    Nodes fprop_outputs{fprop->get_results()};
-    fprop_outputs.insert(fprop_outputs.end(),
-                         fprop_cache.fprop_output_nodes.begin(),
-                         fprop_cache.fprop_output_nodes.end());
+    ResultVector fprop_outputs;
+
+    for (auto fpr : fprop->get_results())
+    {
+        fprop_outputs.push_back(fpr);
+    }
+
+    for (auto fpir : fprop_cache.fprop_output_nodes)
+    {
+        if (std::dynamic_pointer_cast<op::Result>(fpir))
+        {
+            throw ngraph_error("Expected op::Result in fprop->get_results()");
+        }
+        fprop_outputs.push_back(std::make_shared<op::Result>(fpir));
+    }
 
     fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
 
@@ -246,14 +265,19 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
     // get cloned bprop results
-    Nodes cloned_results;
+    ResultVector cloned_results;
     for (auto node : bprop->get_results())
     {
-        cloned_results.push_back(node_param_map.get(node));
+        auto result = std::dynamic_pointer_cast<op::Result>(node_param_map.get(node));
+        if (!result)
+        {
+            throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
+        }
+        cloned_results.push_back(result);
     }
 
     // get clone bprop parameters
-    op::Parameters bprop_input_params;
+    op::ParameterVector bprop_input_params;
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(

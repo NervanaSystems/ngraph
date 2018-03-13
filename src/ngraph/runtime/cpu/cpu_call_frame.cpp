@@ -65,7 +65,9 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
 
     if (runtime::cpu::IsTracingEnabled())
     {
-        GenerateTimeline(m_external_function->get_op_attrs(), ctx->op_durations);
+        GenerateTimeline(m_external_function->get_op_attrs(),
+                         ctx->op_durations,
+                         m_external_function->get_function_name() + ".timeline.json");
     }
 }
 
@@ -142,6 +144,9 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     {
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
+    const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
+    ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
+    ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()

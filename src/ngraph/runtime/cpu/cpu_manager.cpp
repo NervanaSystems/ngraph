@@ -30,7 +30,8 @@ std::shared_ptr<ngraph::runtime::Backend> runtime::cpu::CPU_Manager::allocate_ba
 std::shared_ptr<ngraph::runtime::ExternalFunction>
     runtime::cpu::CPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
-    return std::make_shared<CPU_ExternalFunction>(fun);
+    auto rc = std::make_shared<CPU_ExternalFunction>(fun);
+    return rc;
 }
 
 ngraph::runtime::Manager::Factory runtime::cpu::CPU_Manager::factory =

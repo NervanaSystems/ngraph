@@ -42,6 +42,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -54,7 +55,8 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     const auto& et = node->get_element_type();
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f =
+        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::ParameterVector{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
@@ -68,27 +70,6 @@ std::shared_ptr<Node> xla_sum(const std::shared_ptr<Node>& node, const AxisSet& 
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
     return op::Constant::create(element::i32, Shape{}, {n});
-}
-
-bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant)
-{
-    if (auto rc = std::dynamic_pointer_cast<op::Constant>(reduce_constant))
-    {
-        auto cshape = rc->get_shape();
-        size_t n = shape_size(cshape);
-        //awkward(but generic) way to construct a constant of a given type, shape, value
-        std::vector<std::string> vz{n, const_value};
-        auto zero_constant = std::make_shared<op::Constant>(rc->get_element_type(), cshape, vz);
-
-        //equally awkward way to compare elements to const_value
-        size_t n_bytes = n * rc->get_element_type().size();
-        NGRAPH_DEBUG << "Comparing " << n_bytes << " bytes";
-        return !memcmp(zero_constant->get_data_ptr(), rc->get_data_ptr(), n_bytes);
-    }
-    else
-    {
-        return false;
-    }
 }
 
 bool is_zero(std::shared_ptr<Node> reduce_constant)
@@ -109,9 +90,9 @@ bool sum_predicate(std::shared_ptr<Node> gn)
             return false;
         }
 
-        NGRAPH_DEBUG << "looking at function's result  "
-                     << r->get_functions()[0]->get_result()->get_name();
-        if (auto sum = std::dynamic_pointer_cast<op::Add>(r->get_functions()[0]->get_result()))
+        auto result = r->get_functions()[0]->get_result()->get_input_op(0);
+        NGRAPH_DEBUG << "looking at function's result  " << result->get_name();
+        if (auto sum = std::dynamic_pointer_cast<op::Add>(result))
         {
             auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(0));
             auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(1));
@@ -148,7 +129,8 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
     auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
     auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<op::Divide>(xmu, N);
-    auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+    auto variance_label =
+        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
 
     return variance_label;
 }
@@ -160,7 +142,7 @@ static std::shared_ptr<pattern::op::Label> construct_mean_graph()
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
     return mean_label;
 }
 
@@ -290,7 +272,7 @@ static void run_passes(pass::Manager& pass_manager,
                        shared_ptr<Node> graph,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
-    auto func = make_shared<Function>(graph, op::Parameters{parms});
+    auto func = make_shared<Function>(graph, op::ParameterVector{parms});
     pass_manager.run_passes(func);
 }
 
@@ -308,15 +290,15 @@ TEST(pattern, graph_rewrite)
         auto graph_a = a + iconst0;
         auto graph_b = b + iconst0;
 
-        auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
-                                            op::Parameters{a, b, c});
+        auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
+                                            op::ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
         ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
         ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
 
-        auto expected = ngraph::Nodes{a, b, a, c, b};
-        ASSERT_TRUE(f->get_results() == expected);
+        auto expected = ngraph::NodeVector{a, b, a, c, b};
+        ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
     }
 
     {
@@ -466,7 +448,7 @@ TEST(pattern, matcher)
 
     //Subgraph labels
     auto add = a + b;
-    auto label = std::make_shared<pattern::op::Label>(add, nullptr, Nodes{add});
+    auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
     ASSERT_TRUE(n.match(label, add));
     ASSERT_EQ(n.get_pattern_map()[label], add);
 
@@ -478,7 +460,7 @@ TEST(pattern, matcher)
     //Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
-    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, Nodes{tmp});
+    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, NodeVector{tmp});
     auto sub_label1 = label1 - label2;
     ASSERT_TRUE(n.match(sub_label1, a - add));
     ASSERT_EQ(n.get_pattern_map()[label1], a);

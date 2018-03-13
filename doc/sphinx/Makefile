@@ -23,8 +23,11 @@ clean:
 	@rm -rf $(BUILDDIR)/*
 	@rm -rf html
 	@rm -rf xml
-	@rm -rf doxygen
-	@rm -rf latex
+	@rm -rf ../doxygen/html
+	@rm -rf ../doxygen/xml
+	@rm -rf ../doxygen/man
+	@rm -rf ../doxygen/latex
+	@rm -rf ../doxygen/*.tmp
 
 doxy-code:
 	$(Q)(cat ngraph.doxyfile ; echo "STRIP_FROM_PATH=${NGRAPH_BASE}" ) | doxygen -  2>&1 | tee doc.log

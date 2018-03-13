@@ -25,20 +25,25 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -67,8 +72,10 @@
 #include "ngraph/runtime/kernel/less.hpp"
 #include "ngraph/runtime/kernel/less_eq.hpp"
 #include "ngraph/runtime/kernel/log.hpp"
+#include "ngraph/runtime/kernel/max.hpp"
 #include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/maximum.hpp"
+#include "ngraph/runtime/kernel/min.hpp"
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/kernel/negate.hpp"
@@ -77,10 +84,13 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
+#include "ngraph/runtime/kernel/product.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
+#include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/result.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
@@ -88,6 +98,7 @@
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
+#include "ngraph/runtime/kernel/softmax.hpp"
 #include "ngraph/runtime/kernel/sqrt.hpp"
 #include "ngraph/runtime/kernel/subtract.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
@@ -271,7 +282,8 @@ private:
                                 avg_pool->get_window_shape(),
                                 avg_pool->get_window_movement_strides(),
                                 avg_pool->get_padding_below(),
-                                avg_pool->get_padding_above());
+                                avg_pool->get_padding_above(),
+                                avg_pool->get_include_padding_in_avg_computation());
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -283,7 +295,8 @@ private:
                                          apb->get_window_shape(),
                                          apb->get_window_movement_strides(),
                                          apb->get_padding_below(),
-                                         apb->get_padding_above());
+                                         apb->get_padding_above(),
+                                         apb->get_include_padding_in_avg_computation());
         }
         else if (node_op == "Broadcast")
         {
@@ -489,6 +502,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+        else if (node_op == "Max")
+        {
+            const op::Max* max = static_cast<const op::Max*>(&node);
+            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           max->get_reduction_axes());
+        }
         else if (node_op == "Maximum")
         {
             kernel::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -523,6 +545,15 @@ private:
                                          max_pool_backprop->get_window_movement_strides(),
                                          max_pool_backprop->get_padding_below(),
                                          max_pool_backprop->get_padding_above());
+        }
+        else if (node_op == "Min")
+        {
+            const op::Min* min = static_cast<const op::Min*>(&node);
+            kernel::min<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           out[0]->get_shape(),
+                           min->get_reduction_axes());
         }
         else if (node_op == "Minimum")
         {
@@ -589,6 +620,15 @@ private:
                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
                              out[0]->get_element_count());
         }
+        else if (node_op == "Product")
+        {
+            const op::Product* product = static_cast<const op::Product*>(&node);
+            kernel::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               product->get_reduction_axes());
+        }
         else if (node_op == "Reduce")
         {
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
@@ -644,6 +684,19 @@ private:
                                   reduce_window->get_window_shape(),
                                   reduce_window->get_window_movement_strides());
         }
+        else if (node_op == "Relu")
+        {
+            kernel::relu<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            out[0]->get_element_count());
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     out[0]->get_element_count());
+        }
         // else if (node_op == "Remainder")
         // {
         //     // node = make_shared<op::Remainder>(args[0], args[1]);
@@ -668,6 +721,13 @@ private:
                             args[0]->get_shape(),
                             reshape->get_input_order(),
                             out[0]->get_shape());
+        }
+        else if (node_op == "Result")
+        {
+            ngraph::op::Result* res = dynamic_cast<ngraph::op::Result*>(&node);
+            kernel::result(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           shape_size(res->get_shape()));
         }
         else if (node_op == "Reverse")
         {
@@ -762,6 +822,14 @@ private:
                              slice->get_upper_bounds(),
                              slice->get_strides(),
                              out[0]->get_shape());
+        }
+        else if (node_op == "Softmax")
+        {
+            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
+            kernel::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_shape(),
+                               softmax->get_axes());
         }
         else if (node_op == "Sqrt")
         {

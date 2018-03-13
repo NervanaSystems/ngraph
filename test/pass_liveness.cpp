@@ -39,7 +39,7 @@ TEST(liveness, constant)
 {
     Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
@@ -47,14 +47,22 @@ TEST(liveness, constant)
 
     auto tmp = f->get_ordered_ops();
     vector<shared_ptr<Node>> sorted{tmp.begin(), tmp.end()};
-    ASSERT_EQ(2, sorted.size());
+    ASSERT_EQ(3, sorted.size());
     EXPECT_EQ(0, sorted[0]->liveness_live_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_free_list.size());
 
-    EXPECT_EQ(0, sorted[1]->liveness_live_list.size());
-    EXPECT_EQ(0, sorted[1]->liveness_new_list.size());
+    //op::Negative is live on output to op::Result
+    EXPECT_EQ(1, sorted[1]->liveness_live_list.size());
+    //op::Negative is new
+    EXPECT_EQ(1, sorted[1]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[1]->liveness_free_list.size());
+
+    //op::Negative is live on input to op::Result
+    EXPECT_EQ(1, sorted[2]->liveness_live_list.size());
+    EXPECT_EQ(0, sorted[2]->liveness_new_list.size());
+    //op::Negative is freed
+    EXPECT_EQ(1, sorted[2]->liveness_free_list.size());
 }
 
 TEST(liveness, liveness)

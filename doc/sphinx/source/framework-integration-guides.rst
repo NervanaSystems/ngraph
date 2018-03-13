@@ -18,6 +18,7 @@ Compile MXNet\* with ``libngraph``
    If the |nGl| code has not yet been installed to your system, please go back
    and return here to finish compiling MXNet with ``libngraph``.
 
+
 #. Set the ``LD_LIBRARY_PATH`` path to the location where we built the nGraph 
    libraries:
 

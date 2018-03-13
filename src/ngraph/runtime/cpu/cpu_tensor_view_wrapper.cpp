@@ -33,12 +33,12 @@ size_t runtime::cpu::TensorViewWrapper::get_size() const
     return m_tensor_view->get_tensor_view_layout()->get_size();
 }
 
-const vector<size_t>& runtime::cpu::TensorViewWrapper::get_shape() const
+const Shape& runtime::cpu::TensorViewWrapper::get_shape() const
 {
     return m_tensor_view->get_tensor_view_layout()->get_shape();
 }
 
-const vector<size_t>& runtime::cpu::TensorViewWrapper::get_strides() const
+const Strides& runtime::cpu::TensorViewWrapper::get_strides() const
 {
     return m_tensor_view->get_tensor_view_layout()->get_strides();
 }
@@ -68,4 +68,10 @@ const std::string& runtime::cpu::TensorViewWrapper::get_type() const
 bool runtime::cpu::TensorViewWrapper::is_output() const
 {
     return m_tensor_view->get_tensor().is_output();
+}
+
+const std::shared_ptr<descriptor::TensorView>
+    runtime::cpu::TensorViewWrapper::get_tensor_view() const
+{
+    return m_tensor_view;
 }

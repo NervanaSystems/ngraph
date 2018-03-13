@@ -17,6 +17,11 @@
 #include <chrono>
 #include <cstdint>
 
+namespace mkldnn
+{
+    class primitive;
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -31,6 +36,8 @@ namespace ngraph
             struct CPURuntimeContext
             {
                 int64_t* op_durations;
+                mkldnn::primitive* const* mkldnn_primitives;
+                char* const* mkldnn_workspaces;
             };
             }
         }

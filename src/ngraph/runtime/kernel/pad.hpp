@@ -18,9 +18,8 @@
 
 #include <cmath>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -50,7 +49,7 @@ namespace ngraph
                     input_axis_order[i] = i;
                 }
 
-                Shape input_dilation(arg0_shape.size());
+                Strides input_dilation(arg0_shape.size());
                 for (size_t i = 0; i < arg0_shape.size(); i++)
                 {
                     input_dilation[i] = padding_interior[i] + 1;

@@ -14,15 +14,17 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -86,8 +88,10 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     }
 
     AxisVector all_axes(m_n_axes);
-    size_t n = 0;
-    std::generate(all_axes.begin(), all_axes.end(), [&n]() -> size_t { return n++; });
+    for (size_t i = 0; i < all_axes.size(); i++)
+    {
+        all_axes[i] = i;
+    }
 
     if (!std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()))
     {
@@ -367,7 +371,7 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
     return true;
 }
 
-Coordinate CoordinateTransform::get_target_shape() const
+const Shape& CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }

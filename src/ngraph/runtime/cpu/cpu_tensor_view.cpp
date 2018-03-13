@@ -22,8 +22,10 @@
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/shape.hpp"
 
+using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
 
@@ -56,7 +58,16 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
             throw ngraph_error("Error allocating CPU Tensor View memory");
         }
         buffer = static_cast<char*>(ptr);
+
+// GCC major versions below 5 do not implement C++11 std::align
+#if !defined(__GNUC__) || __GNUC__ >= 5
         std::align(BufferAlignment, buffer_size, ptr, allocation_size);
+#else
+        ptr = static_cast<char*>(ptr) + (BufferAlignment - 1);
+        ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) &
+                                      ~(uintptr_t(BufferAlignment - 1)));
+#endif
+
         aligned_buffer = static_cast<char*>(ptr);
     }
 }
@@ -92,8 +103,35 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     {
         throw out_of_range("read access past end of tensor");
     }
-    const char* source = get_data_ptr();
-    memcpy(target, &source[tensor_offset], n);
+
+    auto tvl = this->get_tensor_view_layout();
+    auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+    if (cpu_tvl && cpu_tvl->get_mkldnn_format() != memory::format::format_undef &&
+        !runtime::cpu::mkldnn_utils::compare_mkldnn_formats(
+            cpu_tvl->get_mkldnn_format(),
+            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)))
+    {
+        auto tensor_shape = this->get_shape();
+        auto input_format = cpu_tvl->get_mkldnn_format();
+        auto output_format = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);
+        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+            this->get_descriptor()->get_tensor_view_type()->get_element_type());
+
+        engine cpu_engine{engine::cpu, 0};
+        memory::dims mkldnn_shape{tensor_shape.begin(), tensor_shape.end()};
+        memory::desc input_desc{mkldnn_shape, et, input_format};
+        memory::desc output_desc{mkldnn_shape, et, output_format};
+        memory input{{input_desc, cpu_engine}, aligned_buffer};
+        memory output{{output_desc, cpu_engine}, target};
+        reorder prim{input, output};
+        mkldnn::stream s(mkldnn::stream::kind::eager);
+        s.submit({prim}).wait();
+    }
+    else
+    {
+        const char* source = get_data_ptr();
+        memcpy(target, &source[tensor_offset], n);
+    }
 }
 
 size_t runtime::cpu::CPUTensorView::get_size() const

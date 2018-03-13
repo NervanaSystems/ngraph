@@ -33,12 +33,13 @@ bool validate_list(const list<shared_ptr<Node>>& nodes)
         auto node_tmp = *it;
         auto dependencies_tmp = node_tmp->get_input_ops();
         vector<Node*> dependencies;
+
         for (shared_ptr<Node> n : dependencies_tmp)
         {
             dependencies.push_back(n.get());
         }
-        auto tmp = it++;
-        for (; tmp != nodes.rend(); tmp++)
+        auto tmp = it;
+        for (tmp++; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
             auto found = find(dependencies.begin(), dependencies.end(), dep_tmp.get());
@@ -73,7 +74,8 @@ shared_ptr<Function> make_test_graph()
 
     auto r0 = make_shared<op::Add>(t3, t4);
 
-    auto f0 = make_shared<Function>(r0, op::Parameters{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
+    auto f0 =
+        make_shared<Function>(r0, op::ParameterVector{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
 
     return f0;
 }

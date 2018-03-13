@@ -4,10 +4,13 @@
 Constant
 ########
 
+.. code-block:: cpp
+
+   Constant // Literal constant tensor
+
+
 Description
 ===========
-
-Literal constant tensor.
 
 The output is a tensor initialized from the ``values`` attribute.
 
@@ -18,13 +21,13 @@ Attributes
 | Name            | Type                         | Notes                                 |
 +=================+==============================+=======================================+
 | ``type``        | ``ngraph::element::type``    | The element type of the value         |
-|                 |                              | in the computation.                   |
+|                 |                              | in the computation                    |
 +-----------------+------------------------------+---------------------------------------+
-| ``shape``       | ``ngraph::Shape``            | The shape of the constant.            |
+| ``shape``       | ``ngraph::Shape``            | The shape of the constant             |
 +-----------------+------------------------------+---------------------------------------+
 | ``values``      | ``const std::vector<T>&``    | Constant elements in row-major order. |
 |                 |                              | T must be compatible with the element |
-|                 |                              | type.                                 |
+|                 |                              | type                                  |
 +-----------------+------------------------------+---------------------------------------+
 
 Outputs
@@ -41,4 +44,5 @@ C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Constant
+   :project: ngraph
    :members:

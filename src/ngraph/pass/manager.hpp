@@ -36,6 +36,7 @@ class ngraph::pass::Manager
 {
 public:
     Manager();
+    Manager(bool to_set_is_output);
     ~Manager();
 
     void initialize_default_passes();

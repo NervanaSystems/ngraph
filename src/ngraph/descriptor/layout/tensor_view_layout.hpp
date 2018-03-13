@@ -17,7 +17,6 @@
 #pragma once
 
 #include <memory>
-#include <tuple>
 #include <vector>
 
 #include "ngraph/descriptor/buffer_pos.hpp"

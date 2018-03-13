@@ -19,13 +19,14 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -43,8 +44,10 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -52,12 +55,16 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -65,77 +72,39 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/util.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/ops/allreduce.hpp"
-#endif
+#include "nlohmann/json.hpp"
 
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
+
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
 
 static std::shared_ptr<ngraph::Function>
     read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
 
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
-
-// There should be a map from element type names to element types so deserialization can
-// find the singletons and serialization can serialize by name.
-static const element::Type& to_ref(const element::Type& t)
-{
-    if (t == element::boolean)
-    {
-        return element::boolean;
-    }
-    if (t == element::f32)
-    {
-        return element::f32;
-    }
-    if (t == element::f64)
-    {
-        return element::f64;
-    }
-    if (t == element::i8)
-    {
-        return element::i8;
-    }
-    if (t == element::i16)
-    {
-        return element::i16;
-    }
-    if (t == element::i32)
-    {
-        return element::i32;
-    }
-    if (t == element::i64)
-    {
-        return element::i64;
-    }
-    if (t == element::u8)
-    {
-        return element::u8;
-    }
-    if (t == element::u16)
-    {
-        return element::u16;
-    }
-    if (t == element::u32)
-    {
-        return element::u32;
-    }
-    if (t == element::u64)
-    {
-        return element::u64;
-    }
-    throw runtime_error("type not valid");
-}
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -144,12 +113,12 @@ static json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static const element::Type& read_element_type(const json& j)
+static element::Type read_element_type(const json& j)
 {
     size_t bitwidth = 0;
-    bool is_real;
-    bool is_signed;
-    string c_type_string;
+    bool is_real = false;
+    bool is_signed = false;
+    string c_type_string = "";
     if (j.is_object())
     {
         bitwidth = j.at("bitwidth").get<size_t>();
@@ -172,26 +141,7 @@ static const element::Type& read_element_type(const json& j)
             }
         }
     }
-    return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
-}
-
-static json write_tensor_type(const element::Type& element_type, const Shape& shape)
-{
-    json j;
-    j["element_type"] = write_element_type(element_type);
-    j["shape"] = shape;
-    return j;
-}
-
-static std::shared_ptr<const TensorViewType>
-    read_tensor_type(const json& j, const string& type, const string& sshape)
-{
-    const element::Type& et = read_element_type(j.at(type));
-    Shape shape =
-        j.count(sshape)
-            ? j.at(sshape).get<vector<size_t>>()
-            : Shape{} /*HACK, so we could call read_tensor_type uniformly @ each callsite*/;
-    return make_shared<TensorViewType>(et, shape);
+    return element::Type(bitwidth, is_real, is_signed, c_type_string);
 }
 
 string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
@@ -212,7 +162,7 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
     }
     else
     {
-        rc = j.dump(indent);
+        rc = j.dump(static_cast<int>(indent));
     }
     return rc;
 }
@@ -329,12 +279,10 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Add>(args[0], args[1]);
         }
-#ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
             node = make_shared<op::AllReduce>(args[0]);
         }
-#endif
         else if (node_op == "Asin")
         {
             node = make_shared<op::Asin>(args[0]);
@@ -350,8 +298,14 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            node = make_shared<op::AvgPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            auto include_padding_in_avg_computation =
+                node_js.at("include_padding_in_avg_computation").get<bool>();
+            node = make_shared<op::AvgPool>(args[0],
+                                            window_shape,
+                                            window_movement_strides,
+                                            padding_below,
+                                            padding_above,
+                                            include_padding_in_avg_computation);
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -361,17 +315,26 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            auto include_padding_in_avg_computation =
+                get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
             node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
                                                     args[0],
                                                     window_shape,
                                                     window_movement_strides,
                                                     padding_below,
-                                                    padding_above);
+                                                    padding_above,
+                                                    include_padding_in_avg_computation);
         }
         else if (node_op == "BatchNorm")
         {
             auto epsilon = node_js.at("eps").get<double>();
-            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
+            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
+        }
+        else if (node_op == "BatchNormBackprop")
+        {
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNormBackprop>(
+                epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
         }
         else if (node_op == "Broadcast")
         {
@@ -392,14 +355,14 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
             auto value = node_js.at("value").get<vector<string>>();
             node = make_shared<op::Constant>(element_type, shape, value);
         }
         else if (node_op == "Convert")
         {
-            auto& target_type = read_element_type(node_js.at("target_type"));
+            auto target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
         }
         else if (node_op == "Convolution")
@@ -528,10 +491,10 @@ static shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetOutputElement")
-        // {
-        //     node = make_shared<op::GetOutputElement>(args[0]);
-        // }
+        else if (node_op == "GetOutputElement")
+        {
+            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+        }
         else if (node_op == "Greater")
         {
             node = make_shared<op::Greater>(args[0], args[1]);
@@ -551,6 +514,11 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Log")
         {
             node = make_shared<op::Log>(args[0]);
+        }
+        else if (node_op == "Max")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Max>(args[0], reduction_axes);
         }
         else if (node_op == "MaxPool")
         {
@@ -601,6 +569,11 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Maximum>(args[0], args[1]);
         }
+        else if (node_op == "Min")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Min>(args[0], reduction_axes);
+        }
         else if (node_op == "Minimum")
         {
             node = make_shared<op::Minimum>(args[0], args[1]);
@@ -639,13 +612,18 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
             node = make_shared<op::Parameter>(element_type, shape);
         }
         else if (node_op == "Power")
         {
             node = make_shared<op::Power>(args[0], args[1]);
+        }
+        else if (node_op == "Product")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Product>(args[0], reduction_axes);
         }
         else if (node_op == "Reduce")
         {
@@ -668,6 +646,14 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Remainder>(args[0], args[1]);
         }
+        else if (node_op == "Relu")
+        {
+            node = make_shared<op::Relu>(args[0]);
+        }
+        else if (node_op == "ReluBackprop")
+        {
+            node = make_shared<op::ReluBackprop>(args[0], args[1]);
+        }
         else if (node_op == "ReplaceSlice")
         {
             auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
@@ -681,6 +667,10 @@ static shared_ptr<ngraph::Function>
             auto input_order = node_js.at("input_order").get<vector<size_t>>();
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
+        }
+        else if (node_op == "Result")
+        {
+            node = make_shared<op::Result>(args[0]);
         }
         else if (node_op == "Reverse")
         {
@@ -729,6 +719,11 @@ static shared_ptr<ngraph::Function>
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
         }
+        else if (node_op == "Softmax")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Softmax>(args[0], reduction_axes);
+        }
         else if (node_op == "Sqrt")
         {
             node = make_shared<op::Sqrt>(args[0]);
@@ -760,6 +755,11 @@ static shared_ptr<ngraph::Function>
             throw runtime_error(ss.str());
         }
         node_map[node_name] = node;
+
+        // Typically, it could be unsafe to change the name of a node since it may break nameing
+        // uniqueness. However, it could sometimes be helpful to use the original name from
+        // the serialization for debugging.
+        // node->set_name(node_name);
     }
 
     std::vector<std::shared_ptr<Node>> result;
@@ -836,6 +836,7 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "AvgPoolBackprop")
     {
@@ -845,10 +846,16 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "BatchNorm")
     {
         auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        node["eps"] = tmp->get_eps_value();
+    }
+    else if (node_op == "BatchNormBackprop")
+    {
+        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
     }
     else if (node_op == "Broadcast")
@@ -935,6 +942,8 @@ static json write(const Node& n)
     }
     else if (node_op == "GetOutputElement")
     {
+        auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
+        node["n"] = tmp->get_n();
     }
     else if (node_op == "Greater")
     {
@@ -950,6 +959,11 @@ static json write(const Node& n)
     }
     else if (node_op == "Log")
     {
+    }
+    else if (node_op == "Max")
+    {
+        auto tmp = dynamic_cast<const op::Max*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "MaxPool")
     {
@@ -969,6 +983,11 @@ static json write(const Node& n)
     }
     else if (node_op == "Maximum")
     {
+    }
+    else if (node_op == "Min")
+    {
+        auto tmp = dynamic_cast<const op::Min*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Minimum")
     {
@@ -1004,6 +1023,11 @@ static json write(const Node& n)
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
+    else if (node_op == "Product")
+    {
+        auto tmp = dynamic_cast<const op::Product*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+    }
     else if (node_op == "Power")
     {
     }
@@ -1020,6 +1044,12 @@ static json write(const Node& n)
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
+    else if (node_op == "Relu")
+    {
+    }
+    else if (node_op == "ReluBackprop")
+    {
+    }
     else if (node_op == "Remainder")
     {
     }
@@ -1035,6 +1065,9 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
+    }
+    else if (node_op == "Result")
+    {
     }
     else if (node_op == "Reverse")
     {

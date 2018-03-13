@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <memory>
+
 #include "ngraph/runtime/aligned_buffer.hpp"
 
 using namespace ngraph;

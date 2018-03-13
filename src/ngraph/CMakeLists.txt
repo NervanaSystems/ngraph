@@ -20,7 +20,6 @@ set (SRC
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
     builder/xla_tuple.cpp
-    common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -35,10 +34,11 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/allreduce.cpp
     ops/avg_pool.cpp
     ops/batch_norm.cpp
     ops/broadcast.cpp
-    ops/concatenate.cpp
+    ops/concat.cpp
     ops/constant.cpp
     ops/convert.cpp
     ops/convolution.cpp
@@ -63,25 +63,30 @@ set (SRC
     ops/power.cpp
     ops/reduce.cpp
     ops/reduce_window.cpp
+    ops/relu.cpp
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
+    ops/result.cpp
     ops/select.cpp
     ops/select_and_scatter.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
+    ops/softmax.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/util/binary_elementwise_arithmetic.cpp 
-    ops/util/binary_elementwise_comparison.cpp 
-    ops/util/binary_elementwise.cpp 
-    ops/util/requires_tensor_view_args.cpp 
-    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/arithmetic_reduction.cpp
+    ops/util/binary_elementwise_arithmetic.cpp
+    ops/util/binary_elementwise_comparison.cpp
+    ops/util/binary_elementwise.cpp
+    ops/util/requires_tensor_view_args.cpp
+    ops/util/unary_elementwise_arithmetic.cpp
     ops/util/unary_elementwise.cpp
+    pass/assign_placement.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
@@ -92,8 +97,10 @@ set (SRC
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
+    pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
@@ -109,6 +116,7 @@ set (SRC
     types/type.cpp
     util.cpp
     graph_util.cpp
+    placement.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -175,11 +183,17 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_tensor_view_wrapper.cpp
         runtime/cpu/cpu_layout_descriptor.cpp
         runtime/cpu/cpu_tracing.cpp
+        runtime/cpu/mkldnn_emitter.cpp
+        runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
+        runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/convert_layout.cpp
+        runtime/cpu/ops/sigmoid.cpp
         runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
+        runtime/cpu/pass/cpu_nop_elimination.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -201,18 +215,13 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             "NGRAPH_TBB_ENABLE"
         )
     endif()
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
-    # Add sources for distributed ngraph
-    # and all its dependencies
-    set(SRC ${SRC}
-        ops/allreduce.cpp
-    )
     set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
         "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
@@ -234,6 +243,11 @@ endif()
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
+            runtime/gpu/gpu_cuda_kernel_emitters.cpp
+            runtime/gpu/gpu_cuda_kernel_builder.cpp
+            runtime/gpu/gpu_cuda_function_builder.cpp
+            runtime/gpu/gpu_cuda_function_pool.cpp
+            runtime/gpu/gpu_cuda_context_manager.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -254,8 +268,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource)
-    include_directories(${CMAKE_BINARY_DIR})
+    add_dependencies(ngraph header_resource ext_json)
+    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
 if (NOT APPLE)
@@ -303,7 +318,9 @@ endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
+    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 if(MPI_CXX_INCLUDE_PATH)
@@ -338,11 +355,11 @@ install(DIRECTORY
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
 endif()
 

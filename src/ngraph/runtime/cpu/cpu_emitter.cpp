@@ -17,7 +17,6 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <typeindex>
@@ -34,7 +33,7 @@
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/concat.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -52,8 +51,10 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/min.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
@@ -64,11 +65,14 @@
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
+#include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -76,6 +80,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -83,8 +88,12 @@
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -112,39 +121,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
-// Mapping from POD types to MKLDNN data types
-// An empty string implies the corresponding MKLDNN data type
-// is not supported
-static const unordered_map<string, const string> mkldnn_data_type_map{
-    {"char", "memory::data_type::s8"},
-    {"float", "memory::data_type::f32"},
-    {"double", ""},
-    {"int8_t", "memory::data_type::s8"},
-    {"int16_t", "memory::data_type::s16"},
-    {"int32_t", "memory::data_type::s32"},
-    {"int64_t", ""},
-    {"uint8_t", "memory::data_type::u8"},
-    {"uint16_t", ""},
-    {"uint32_t", ""},
-    {"uint64_t", ""}};
-
-static const string& get_mkldnn_data_type(const string& type)
-{
-    auto it = mkldnn_data_type_map.find(type);
-    if (it == mkldnn_data_type_map.end() || it->second.empty())
-    {
-        throw ngraph_error("No MKLDNN data type exists for the given element type");
-    }
-    return it->second;
-}
-
-void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(codegen::CodeWriter& writer)
-{
-    writer << "// MKLDNN Preamble\n";
-    writer << "#include <mkldnn.hpp>\n";
-    writer << "using namespace mkldnn;\n\n";
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -170,12 +146,53 @@ namespace ngraph
                        << args[1].get_name() << ");\n";
                 writer << "out = arg0 + arg1;\n";
 #else
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
-                       << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    std::vector<float> scale_vector(2, 1);
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+
+                    auto input0_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto input1_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input0_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
+                    auto input1_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+
+                    size_t add_index = 0;
+                    add_index = mkldnn_emitter->build_elementwise_add(
+                        input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(add_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] + " << args[1].get_name() << "[i];\n";
+                    writer << "}\n";
+                }
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -207,10 +224,6 @@ namespace ngraph
             }
 #endif
 
-            //TODO: This could be further optimized to reduce the impact of memcpy by either
-            //a) emitting customized code for initializing output/bias
-            //b) emitting two cblas calls (one for gemm on W and x and the second for gemm on Bias and E^T + the result of the first gemm)
-            //@jbobba suggests b) is more efficient but we should benchmark both
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MatmulBias)
             {
@@ -218,7 +231,7 @@ namespace ngraph
 
                 const Shape& arg0_shape = cg->get_arg0_shape(); //W
                 const Shape& arg1_shape = cg->get_arg1_shape(); //x
-                const Shape& arg2_shape = args[2].get_shape();  //bias (C)
+                const Shape& arg2_shape = node->get_shape();    //bias (C)
 
                 static const char* ctranspose = "cblas::Transpose::Transpose, ";
                 static const char* cnotranspose = "cblas::Transpose::None, ";
@@ -248,16 +261,108 @@ namespace ngraph
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
 
-                writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
-                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                const char* cbeta = "0.0f";
 
                 writer << "cblas::cblas_sgemm("
                        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                        << ", " << k << ",\n"
                        << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
-                       << args[1].get_name() << ", " << max(1UL, ldb) << ", 1.0f,\n"
+                       << args[1].get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
                        << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
                        << ");\n";
+
+                if (args.size() > 2)
+                {
+                    auto axes = cg->get_broadcast_axes();
+                    if (axes.size() == 1)
+                    {
+                        if (*(axes.begin()) == 0)
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_row[" << arg2_shape[0] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[0]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
+
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                                   << ",\n"
+                                   << "        1.0f, ones_row, "
+                                   << "1"
+                                   << ", " << args[2].get_name() << ", " << max(1UL, arg2_shape[1])
+                                   << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
+                        else
+                        {
+                            writer << "static " << out[0].get_element_type().c_type_string()
+                                   << " ones_col[" << arg2_shape[1] << "]"
+                                   << " = { 1.0f";
+                            for (size_t i = 1; i < arg2_shape[1]; ++i)
+                            {
+                                writer << ", 1.0f";
+                            }
+                            writer << "};\n";
+
+                            writer << "cblas::cblas_sgemm("
+                                   << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                                   << arg2_shape[0] << ", " << arg2_shape[1] << ", 1,\n"
+                                   << "1.0f, " << args[2].get_name() << ", 1, "
+                                   << "ones_col, " << max(1UL, arg2_shape[1]) << ", "
+                                   << "1.0f"
+                                   << ",\n"
+                                   << "        " << out[0].get_name() << ", "
+                                   << max(1UL, arg2_shape[1]) << ");\n";
+                        }
+                    }
+                    else
+                    {
+                        if (axes.size() != 2)
+                        {
+                            throw ngraph_error("unexpected broadcast rank");
+                        }
+
+                        writer << out[0].get_element_type().c_type_string() << " bias["
+                               << arg2_shape[1] << "]"
+                               << " = { " << args[2].get_name() << "[0]";
+                        for (size_t i = 1; i < arg2_shape[1]; ++i)
+                        {
+                            writer << "," << args[2].get_name() << "[0]";
+                        }
+                        writer << "};\n";
+
+                        writer << "static " << out[0].get_element_type().c_type_string()
+                               << " ones_scalar[" << arg2_shape[0] << "]"
+                               << " = { 1.0f";
+                        for (size_t i = 1; i < arg2_shape[0]; ++i)
+                        {
+                            writer << ", 1.0f";
+                        }
+                        writer << "};\n";
+
+                        writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, " << cnotranspose << cnotranspose
+                               << arg2_shape[0] << ", " << arg2_shape[1] << ", 1"
+                               << ",\n"
+                               << "        1.0f, ones_scalar, "
+                               << "1"
+                               << ", "
+                               << "bias"
+                               << ", " << max(1UL, arg2_shape[1]) << ", "
+                               << "1.0f"
+                               << ",\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1])
+                               << ");\n";
+                    }
+                }
+
                 writer.indent--;
                 writer << "}\n";
             }
@@ -268,81 +373,132 @@ namespace ngraph
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
-                // get the shape of all the inputs and output to batchnorm
-                auto gamma_shape = args[0].get_shape();
-                auto beta_shape = args[1].get_shape();
-                auto input_shape = args[2].get_shape();
-                auto mean_shape = args[3].get_shape();
-                auto variance_shape = args[4].get_shape();
-                auto result_shape = out[0].get_shape();
-
-                // get input element type
-                const string& et = get_mkldnn_data_type(args[2].get_element_type().c_type_string());
-                writer << "{\n";
                 writer.indent++;
-
+                writer << "{\n";
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
-                       << ">bn_weights(2);\n";
-                auto weights_shape = Shape{2, input_shape[1]};
-
-                // push gamma and beta
-                writer << "auto gamma = " << args[0].get_name() << ";\n";
-                writer << "auto beta = " << args[1].get_name() << ";\n";
-
-                writer << "memcpy(&bn_weights[0], gamma,"
-                       << args[1].get_size() * args[0].get_element_type().size() << ");\n";
-                writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
+                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                       << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                // get the eps value from the bn node
-                writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                auto result_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                auto mean_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
+                auto variance_format =
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
 
-                // Bind to CPU engine
-                writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                // create memory descriptors
-                writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape)
-                       << "}, " << et << ", memory::format::nchw);\n";
-                // TODO define weights by stacking gamma and beta values
-                writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape)
-                       << "}, " << et << ", memory::format::nc);\n";
-                writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, "
-                       << et << ", memory::format::nchw);\n";
-                writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, "
-                       << et << ", memory::format::x);\n";
-                writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape)
-                       << "}, " << et << ", memory::format::x);\n";
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto weights_shape = Shape{2, args[0].get_size()};
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                auto results_desc = mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
+                auto variance_desc =
+                    mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
 
-                // Define memory for the user data
-                writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
+                auto batchnorm_index =
+                    mkldnn_emitter->build_batchnorm_forward(input_desc,
+                                                            weights_desc,
+                                                            results_desc,
+                                                            mean_desc,
+                                                            variance_desc,
+                                                            batchnorm->get_eps_value());
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
-                       << ");\n";
-                writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name()
-                       << ");\n";
-                writer << "memory variance = memory({variance_desc, cpu_engine}, "
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                       << ", bn_weights.data());\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << out[2].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(batchnorm_index) << ");\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            {
+                const ngraph::op::BatchNormBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+
+                writer.indent++;
+                writer << "{\n";
+                // define weights
+                writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
+                writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                       << ">bn_dweights(2*" << args[0].get_size() << ");\n";
+
+                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                       << args[1].get_name() << ", "
+                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
+                auto variance_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
+                auto delta_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 5);
+                auto dinput_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto weights_shape = Shape{2, args[0].get_size()};
+                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                auto mean_desc = mkldnn_emitter->build_memory_descriptor(args[3], mean_format);
+                auto variance_desc =
+                    mkldnn_emitter->build_memory_descriptor(args[4], variance_format);
+                auto delta_desc = mkldnn_emitter->build_memory_descriptor(args[5], delta_format);
+                auto dinput_desc = mkldnn_emitter->build_memory_descriptor(out[0], dinput_format);
+                auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+
+                auto batchnorm_index =
+                    mkldnn_emitter->build_batchnorm_backward(weights_desc,
+                                                             input_desc,
+                                                             mean_desc,
+                                                             variance_desc,
+                                                             delta_desc,
+                                                             dinput_desc,
+                                                             dweights_desc,
+                                                             batchnorm->get_eps_value());
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                       << ", bn_weights.data());\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
                        << args[4].get_name() << ");\n";
-                writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
-                       << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[5].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
+                       << ", bn_dweights.data());\n";
 
-                // create batchnorm descriptor
-                writer << "batch_normalization_forward::desc bn_fprop_desc = "
-                          "batch_normalization_forward::desc(forward_training,"
-                       << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
-                // bn fprop primitive descriptor
-                writer
-                    << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
-                       "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(batchnorm_index) << ");\n";
 
-                // create a batchnorm fprop primitive
-                writer << "batch_normalization_forward bn_fprop = "
-                          "batch_normalization_forward(bn_fprop_prim_desc, "
-                          "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
-                       << "primitive::at(weights), result); \n";
-
-                // create stream and execute
-                writer << "stream s = stream(stream::kind::eager);\n"
-                       << "s.submit({bn_fprop}).wait();\n";
+                writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(" << out[2].get_name() << ", &bn_dweights[0]+"
+                       << args[0].get_size() << ", "
+                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }
@@ -517,7 +673,8 @@ namespace ngraph
                 }
                 else if (result_shape.size() == 2)
                 {
-                    auto axis = (dynamic_cast<const op::Concat*>(node))->get_concatenation_axis();
+                    auto axis =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -542,7 +699,8 @@ namespace ngraph
                 {
                     if (s_use_ref_kernels)
                     {
-                        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
+                                        ->get_concatenation_axis();
 
                         std::vector<std::string> arg_names;
                         std::vector<std::string> arg_shape_strings;
@@ -562,7 +720,8 @@ namespace ngraph
                     }
                     else
                     {
-                        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
+                                        ->get_concatenation_axis();
 
                         std::vector<std::string> arg_names;
                         std::vector<Shape> arg_shapes;
@@ -1010,6 +1169,18 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Constant)
             {
+                // If an output is a constant then copy it
+                size_t output_index = 0;
+                for (shared_ptr<Node> result : external_function->get_function()->get_results())
+                {
+                    if (result.get() == node)
+                    {
+                        const descriptor::Tensor& tensor = node->get_output_tensor(0);
+                        writer << "memcpy(outputs[" << output_index << "], " << tensor.get_name()
+                               << ", " << tensor.size() << ");\n";
+                    }
+                    output_index++;
+                }
             }
 
             template <>
@@ -2015,110 +2186,52 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool filter_dilated = false;
-                for (size_t s : convolution->get_window_dilation_strides())
-                {
-                    filter_dilated = filter_dilated || (s != 1);
-                }
-
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides())
-                {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                // TODO(jmenon): MKLDNN streams should be static so we need to either implement
-                // codegen for statics or move primitive and stream construction out
-                // of the generated function and only generate code to run/rerun the stream
-
-                if (!filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
-                {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
-
-                    writer << "{\n";
-                    writer.indent++;
-
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape)
-                           << "}, " << et << ", memory::format::oihw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory weights = memory({weights_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer
-                        << "convolution_forward conv = convolution_forward({"
-                        << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
-                           "weights_desc, result_desc, {"
-                        << join(convolution->get_window_movement_strides()) << "}, {"
-                        << join(convolution->get_padding_below()) << "}, {"
-                        << join(convolution->get_padding_above())
-                        << "}, padding_kind::zero}, cpu_engine}, "
-                        << "input_data, weights, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({conv}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
-                }
-                else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                         args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
                     Strides window_dilation_strides_adjusted;
-
                     for (size_t s : convolution->get_window_dilation_strides())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
 
-                    writer << "{\n";
-                    writer.indent++;
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    size_t conv_index = 0;
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape)
-                           << "}, " << et << ", memory::format::oihw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
 
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory weights = memory({weights_desc, cpu_engine}, "
-                           << args[1].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    writer
-                        << "convolution_forward conv = convolution_forward({"
-                        << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
-                           "weights_desc, result_desc, {"
-                        << join(convolution->get_window_movement_strides()) << "}, {"
-                        << join(window_dilation_strides_adjusted) << "}, {"
-                        << join(convolution->get_padding_below()) << "}, {"
-                        << join(convolution->get_padding_above())
-                        << "}, padding_kind::zero}, cpu_engine}, "
-                        << "input_data, weights, result);\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({conv}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2151,87 +2264,44 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides_forward())
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
-                {
-                    const string& elem_type =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
-                    auto emit_memory_desc = [&writer](const std::string& var,
-                                                      const std::string& shape,
-                                                      const std::string& type,
-                                                      const std::string& layout) {
-                        writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", memory::format::" << layout << ");\n";
-                    };
 
-                    auto emit_memory = [&writer](
-                        const std::string& var, const std::string& desc, const std::string& data) {
-                        writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
-                               << data << ");\n";
-                    };
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto emit_memory_dims = [&writer](const std::string& var,
-                                                      const std::string& dims) {
-                        writer << "memory::dims " << var << "{" << dims << "};\n";
-                    };
+                    size_t conv_bwd_weights_index =
+                        mkldnn_emitter->build_convolution_backward_weights(
+                            input_desc,
+                            delta_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward());
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc("data_desc", join(arg0_shape), elem_type, "nchw");
-                    emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
-                    emit_memory_desc("result_desc", join(result_shape), elem_type, "oihw");
-                    emit_memory("data", "data_desc", args[0].get_name());
-                    emit_memory("delta", "delta_desc", args[1].get_name());
-                    emit_memory("result", "result_desc", out[0].get_name());
-                    emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
-                    emit_memory_dims("strides",
-                                     join(convolution->get_window_movement_strides_forward()));
-                    emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
-                    emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_weights_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer
-                        << "convolution_backward_weights::desc bwd_weights_desc("
-                           "algorithm::convolution_direct, "
-                           "data_desc, result_desc, delta_desc, strides, dilates,"
-                           "padding_l, padding_r, padding_kind::zero);\n"
-                           "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
-                           "algorithm::convolution_direct, data_desc, "
-                           "result_desc, delta_desc, strides, dilates, padding_l, padding_r, "
-                           "padding_kind::zero}, cpu_engine);\n"
-                           "convolution_backward_weights::primitive_desc "
-                           "bwd_weights_pd(bwd_weights_desc, "
-                           "cpu_engine, fwd_pd);\n"
-                           "convolution_backward_weights bwd_weights(bwd_weights_pd, data, delta, "
-                           "result);\n"
-                           "stream s = stream(stream::kind::eager);\n"
-                           "s.submit({bwd_weights}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_bwd_weights_index) << ");\n";
                 }
                 else
                 {
@@ -2264,20 +2334,9 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                auto arg0_rank = arg0_shape.size();
-                auto arg1_rank = arg1_shape.size();
 
-                bool data_dilated = false;
-                for (size_t s : convolution->get_data_dilation_strides_forward())
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    data_dilated = data_dilated || (s != 1);
-                }
-
-                if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                    args[0].get_element_type() == element::f32)
-                {
-                    const string& elem_type =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -2285,66 +2344,33 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto emit_memory_desc = [&writer](const std::string& var,
-                                                      const std::string& shape,
-                                                      const std::string& type,
-                                                      const std::string& layout) {
-                        writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
-                               << type << ", memory::format::" << layout << ");\n";
-                    };
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    auto emit_memory = [&writer](
-                        const std::string& var, const std::string& desc, const std::string& data) {
-                        writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
-                               << data << ");\n";
-                    };
+                    size_t conv_bwd_data_index = mkldnn_emitter->build_convolution_backward_data(
+                        weights_desc,
+                        delta_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides_forward(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below_forward(),
+                        convolution->get_padding_above_forward());
 
-                    auto emit_memory_dims = [&writer](const std::string& var,
-                                                      const std::string& dims) {
-                        writer << "memory::dims " << var << "{" << dims << "};\n";
-                    };
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_data_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "{\n";
-                    writer.indent++;
-                    writer << "try {\n";
-                    writer.indent++;
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    emit_memory_desc("weight_desc", join(arg0_shape), elem_type, "oihw");
-                    emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
-                    emit_memory_desc("result_desc", join(result_shape), elem_type, "nchw");
-                    emit_memory("weight", "weight_desc", args[0].get_name());
-                    emit_memory("delta", "delta_desc", args[1].get_name());
-                    emit_memory("result", "result_desc", out[0].get_name());
-                    emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
-                    emit_memory_dims("strides",
-                                     join(convolution->get_window_movement_strides_forward()));
-                    emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
-                    emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
-
-                    writer
-                        << "convolution_backward_data::desc "
-                           "bwd_data_desc(algorithm::convolution_direct, "
-                           "result_desc, weight_desc, delta_desc, strides, dilates, "
-                           "padding_l, padding_r, padding_kind::zero);\n"
-                           "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
-                           "algorithm::convolution_direct, result_desc, weight_desc, delta_desc, "
-                           "strides, dilates, padding_l, padding_r, padding_kind::zero}, "
-                           "cpu_engine);\n"
-                           "convolution_backward_data::primitive_desc bwd_data_pd(bwd_data_desc, "
-                           "cpu_engine, fwd_pd);\n"
-                           "convolution_backward_data bwd_data(bwd_data_pd, delta, weight, "
-                           "result);\n"
-                           "stream s = stream(stream::kind::eager);\n"
-                           "s.submit({bwd_data}).wait();\n";
-                    writer.indent--;
-                    writer << "} catch (const mkldnn::error& e) {\n";
-                    writer.indent++;
-                    writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
-                              "e.status) + \"): \" + e.message);\n";
-                    writer.indent--;
-                    writer << "}\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_bwd_data_index) << ");\n";
                 }
                 else
                 {
@@ -2367,6 +2393,134 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides_backward()) << "},\n";
                     writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::ConvolutionBias*>(node);
+
+                const TensorViewWrapper& data = args[0];
+                const TensorViewWrapper& weights = args[1];
+                const TensorViewWrapper& bias = args[2];
+                const TensorViewWrapper& result = out[0];
+
+                using namespace runtime::cpu::mkldnn_utils;
+
+                if (mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto data_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto data_desc = mkldnn_emitter->build_memory_descriptor(data, data_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(weights, weights_format);
+                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(bias, bias_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(result, result_format);
+
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    size_t conv_index = mkldnn_emitter->build_convolution_forward(
+                        data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << data.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << weights.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << bias.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << result.get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
+            {
+                auto convolution =
+                    static_cast<const ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
+                const TensorViewWrapper& data = args[0];
+                const TensorViewWrapper& delta = args[1];
+                const TensorViewWrapper& weights_delta = out[0];
+                const TensorViewWrapper& bias_delta = out[1];
+
+                using namespace runtime::cpu::mkldnn_utils;
+
+                if (mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto data_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto delta_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto weights_delta_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto bias_delta_format = mkldnn_utils::get_output_mkldnn_format(node, 1);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto data_desc = mkldnn_emitter->build_memory_descriptor(data, data_format);
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(delta, delta_format);
+                    auto weights_delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_delta, weights_delta_format);
+                    auto bias_delta_desc =
+                        mkldnn_emitter->build_memory_descriptor(bias_delta, bias_delta_format);
+
+                    size_t conv_index = mkldnn_emitter->build_convolution_backward_weights_bias(
+                        data_desc,
+                        delta_desc,
+                        weights_delta_desc,
+                        bias_delta_desc,
+                        convolution->get_window_movement_strides_forward(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below_forward(),
+                        convolution->get_padding_above_forward());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << data.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << delta.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << weights_delta.get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << bias_delta.get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
                 }
             }
 
@@ -2394,38 +2548,29 @@ namespace ngraph
                 if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                     args[0].get_element_type() == element::f32)
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
+                    size_t max_pool_index = mkldnn_emitter->build_pooling_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward max_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_max, "
-                           << "input_data_desc, result_desc, {"
-                           << join(max_pool->get_window_movement_strides()) << "}, {"
-                           << join(max_pool->get_window_shape()) << "}, {"
-                           << join(max_pool->get_padding_below()) << "}, "
-                           << "{" << join(max_pool->get_padding_above())
-                           << "}, padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({max_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
                 }
                 else
                 {
@@ -2564,51 +2709,38 @@ namespace ngraph
                 auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
 
                 auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
-
                 auto result_shape = out[0].get_shape();
-
-                // TODO(jmenon): Refactor into an MKLDNN Pooling emitter that handles
-                // all pooling variants
 
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
-                if (arg_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_forward(
+                        (avg_pool->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        input_desc,
+                        result_desc,
+                        avg_pool->get_window_movement_strides(),
+                        avg_pool->get_window_shape(),
+                        avg_pool->get_padding_below(),
+                        avg_pool->get_padding_above());
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(result_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
 
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-
-                    // TODO(jmenon): Use a workspace
-                    writer << "pooling_forward avg_pooling = pooling_forward({"
-                           << "{prop_kind::forward_inference, algorithm::pooling_avg, "
-                           << "input_data_desc, result_desc, {"
-                           << join(avg_pool->get_window_movement_strides()) << "}, {"
-                           << join(avg_pool->get_window_shape()) << "}, "
-                           << "{" << join(avg_pool->get_padding_below()) << "}, "
-                           << "{" << join(avg_pool->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine}, "
-                           << "input_data, result);\n";
-
-                    writer << "stream s = stream(stream::kind::eager);\n"
-                           << "s.submit({avg_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(avg_pool_index) << ");\n";
                 }
                 else
                 {
@@ -2621,8 +2753,12 @@ namespace ngraph
                     writer << "                 {" << join(avg_pool->get_window_movement_strides())
                            << "},\n";
                     writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
-                    writer << "                 {" << join(avg_pool->get_padding_above())
-                           << "});\n";
+                    writer << "                 {" << join(avg_pool->get_padding_above()) << "},\n";
+                    writer << "                 "
+                           << ngraph::to_cplusplus_sourcecode_literal(
+                                  avg_pool->get_include_padding_in_avg_computation())
+                           << "\n";
+                    writer << "                  );\n";
                 }
             }
 
@@ -2651,51 +2787,35 @@ namespace ngraph
                 auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
 
                 auto delta_shape = args[0].get_shape();
-                auto delta_rank = delta_shape.size();
                 auto out_shape = out[0].get_shape();
 
-                if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const string& et =
-                        get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    writer << "{\n";
-                    writer.indent++;
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_backward(
+                        (apb->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        diff_dst_desc,
+                        diff_src_desc,
+                        apb->get_window_movement_strides(),
+                        apb->get_window_shape(),
+                        apb->get_padding_below(),
+                        apb->get_padding_above());
 
-                    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
-                    writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory::desc result_desc = memory::desc({" << join(out_shape)
-                           << "}, " << et << ", memory::format::nchw);\n";
-                    writer << "memory input_data = memory({input_data_desc, cpu_engine}, "
-                           << args[0].get_name() << ");\n";
-                    writer << "memory result = memory({result_desc, cpu_engine}, "
-                           << out[0].get_name() << ");\n";
-                    // Dummy forward primitive descriptor to keep MKLDNN happy
-                    writer << "pooling_forward::primitive_desc fwd_pd = "
-                              "pooling_forward::primitive_desc("
-                           << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
-                           << "result_desc, input_data_desc, {"
-                           << join(apb->get_window_movement_strides()) << "}, {"
-                           << join(apb->get_window_shape()) << "}, "
-                           << "{" << join(apb->get_padding_below()) << "}, "
-                           << "{" << join(apb->get_padding_above()) << "}, "
-                           << "padding_kind::zero}, cpu_engine);\n";
-                    writer
-                        << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
-                        << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
-                        << "result_desc, input_data_desc, {"
-                        << join(apb->get_window_movement_strides()) << "}, {"
-                        << join(apb->get_window_shape()) << "}, "
-                        << "{" << join(apb->get_padding_below()) << "}, "
-                        << "{" << join(apb->get_padding_above()) << "}, "
-                        << "padding_kind::zero), cpu_engine, fwd_pd), "
-                        << "input_data, result);\n";
-                    writer << "auto s = stream(stream::kind::eager);\n"
-                           << "s.submit({avg_pooling}).wait();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(avg_pool_index) << ");\n";
                 }
                 else
                 {
@@ -2708,7 +2828,11 @@ namespace ngraph
                     writer << "                 {" << join(apb->get_window_movement_strides())
                            << "},\n";
                     writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-                    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+                    writer << "                 {" << join(apb->get_padding_above()) << "},\n";
+                    writer << "                 "
+                           << ngraph::to_cplusplus_sourcecode_literal(
+                                  apb->get_include_padding_in_avg_computation())
+                           << "\n";
                     writer << "                 );\n";
                 }
             }
@@ -2721,18 +2845,690 @@ namespace ngraph
                 auto delta_shape = args[1].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                writer << "kernel::max_pool_backprop<" << out[0].get_type() << ">("
-                       << args[0].get_name() << ",\n";
-                writer << "                 " << args[1].get_name() << ",\n";
-                writer << "                 " << out[0].get_name() << ",\n";
-                writer << "                 {" << join(delta_shape) << "},\n";
-                writer << "                 {" << join(out_shape) << "},\n";
-                writer << "                 {" << join(mpb->get_window_shape()) << "},\n";
-                writer << "                 {" << join(mpb->get_window_movement_strides())
-                       << "},\n";
-                writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
-                writer << "                 {" << join(mpb->get_padding_above()) << "}\n";
-                writer << "                 );\n";
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto fprop_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_backward(
+                        mkldnn::algorithm::pooling_max,
+                        fprop_src_desc,
+                        diff_dst_desc,
+                        diff_src_desc,
+                        mpb->get_window_movement_strides(),
+                        mpb->get_window_shape(),
+                        mpb->get_padding_below(),
+                        mpb->get_padding_above());
+
+                    auto& fdeps = mkldnn_emitter->get_primitive_deps(max_pool_index - 1);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[2])
+                           << ", ctx->mkldnn_workspaces[" << fdeps[3] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index - 1) << ");\n";
+
+                    auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[0])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[1])
+                           << ", ctx->mkldnn_workspaces[" << bdeps[3] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
+                }
+                else
+                {
+                    writer << "kernel::max_pool_backprop<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                 " << args[1].get_name() << ",\n";
+                    writer << "                 " << out[0].get_name() << ",\n";
+                    writer << "                 {" << join(delta_shape) << "},\n";
+                    writer << "                 {" << join(out_shape) << "},\n";
+                    writer << "                 {" << join(mpb->get_window_shape()) << "},\n";
+                    writer << "                 {" << join(mpb->get_window_movement_strides())
+                           << "},\n";
+                    writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
+                    writer << "                 {" << join(mpb->get_padding_above()) << "}\n";
+                    writer << "                 );\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Product)
+            {
+                const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                const Shape& arg_shape = args[0].get_shape();
+                size_t arg_rank = arg_shape.size();
+                const AxisSet& reduction_axes = product->get_reduction_axes();
+
+                // Trivial case: no reduction axes.
+                if (reduction_axes.size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Full reduction? Then reduce to scalar.
+                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_array1d(out[0]) << " =\n"
+                           << "    " << emit_array1d(args[0]) << ".prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".rowwise().prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".colwise().prod();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(product->get_reduction_axes())
+                           << "});\n";
+                }
+#else
+                // TODO: add an emitter akin to the emit_sum
+                writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                writer << "                         {" << join(product->get_reduction_axes())
+                       << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Max)
+            {
+                const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                const Shape& arg_shape = args[0].get_shape();
+                size_t arg_rank = arg_shape.size();
+                const AxisSet& reduction_axes = max->get_reduction_axes();
+
+                bool zero_sized = false;
+                for (size_t s : arg_shape)
+                {
+                    zero_sized |= (s == 0);
+                }
+
+                // Trivial case: no reduction axes.
+                if (!zero_sized && reduction_axes.size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Full reduction? Then reduce to scalar.
+                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_array1d(out[0]) << " =\n"
+                           << "    " << emit_array1d(args[0]) << ".maxCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".rowwise().maxCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".colwise().maxCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(max->get_reduction_axes())
+                           << "});\n";
+                }
+#else
+                // TODO: add an emitter akin to the emit_sum
+                writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                writer << "                         {" << join(max->get_reduction_axes())
+                       << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Min)
+            {
+                const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+#if PREFER_EIGEN == 1
+                const Shape& arg_shape = args[0].get_shape();
+                size_t arg_rank = arg_shape.size();
+                const AxisSet& reduction_axes = min->get_reduction_axes();
+
+                bool zero_sized = false;
+                for (size_t s : arg_shape)
+                {
+                    zero_sized |= (s == 0);
+                }
+
+                // Trivial case: no reduction axes.
+                if (!zero_sized && reduction_axes.size() == 0)
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                // Full reduction? Then reduce to scalar.
+                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_array1d(out[0]) << " =\n"
+                           << "    " << emit_array1d(args[0]) << ".minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".rowwise().minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
+                {
+                    writer << "{   // " << node->get_name() << "\n";
+                    writer.indent++;
+                    writer << emit_vector(out[0]) << " =\n"
+                           << "    " << emit_matrix(args[0]) << ".colwise().minCoeff();\n";
+                    writer.indent--;
+                    writer << "}\n";
+                }
+                else
+                {
+                    writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(min->get_reduction_axes())
+                           << "});\n";
+                }
+#else
+                // TODO: add an emitter akin to the emit_sum
+                writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                writer << "                         {" << join(min->get_reduction_axes())
+                       << "});\n";
+#endif
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::ConvertLayout)
+            {
+                auto input_tvl =
+                    node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+                auto input_format =
+                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
+                auto output_format =
+                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
+
+                // MKLDNN relies on format names for selecting optimized kernel implementations
+                // Hacky way to deal with this until they move to using canonicalized layouts
+                if (input_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
+                {
+                    input_format = mkldnn::memory::format::oihw;
+                }
+                if (output_format == mkldnn::memory::format::nchw &&
+                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
+                {
+                    output_format = mkldnn::memory::format::oihw;
+                }
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+
+                size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(reorder_index) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReluBackprop)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t relu_index =
+                        mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[1].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Relu)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t relu_index = mkldnn_emitter->build_relu_forward(input_desc, result_desc);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer << "{\n";
+                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                           << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
+                    writer << "}\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Sigmoid)
+            {
+                auto input_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
+
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidBackprop)
+            {
+                auto input_shape = args[0].get_shape();
+                auto delta_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+                int input_1d_size = static_cast<int>(shape_size(input_shape));
+                int delta_1d_size = static_cast<int>(shape_size(delta_shape));
+                int result_1d_size = static_cast<int>(shape_size(result_shape));
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto input_desc = mkldnn::memory::desc(
+                    {input_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto delta_desc = mkldnn::memory::desc(
+                    {delta_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                    mkldnn::memory::format::x);
+                auto result_desc = mkldnn::memory::desc(
+                    {result_1d_size},
+                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
+                    mkldnn::memory::format::x);
+
+                size_t sigmoid_index =
+                    mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, result_desc);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << out[0].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(sigmoid_index) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
+                auto type = out[0].get_type();
+                auto shape = out[0].get_shape();
+                auto dims = out[0].get_shape().size();
+                auto axes = softmax->get_axes();
+
+                // create arg/out if 1d
+                if (dims < 1)
+                {
+                    writer << type << "* arg = " << args[0].get_name() << "\n";
+                    writer << type << "* out = " << out[0].get_name() << "\n";
+                }
+                // else cast arg/out to an Nd array
+                else
+                {
+                    std::string shape1toN;
+                    for (size_t d = 1; d < dims; ++d)
+                    {
+                        shape1toN += "[";
+                        shape1toN += std::to_string(shape[d]);
+                        shape1toN += "]";
+                    }
+
+                    writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
+                           << shape1toN << ") " << args[0].get_name() << ";\n";
+                    writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
+                           << shape1toN << ") " << out[0].get_name() << ";\n";
+                }
+
+                // build arg/out index
+                std::string index;
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    index += "[i";
+                    index += std::to_string(d);
+                    index += "]";
+                }
+
+                // calculate e ^ (arg - max)
+                // outer loop(s) - for axis not in axes
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer << "#pragma omp parallel for\n";
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                // max inner loop(s)
+                writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
+
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "if (arg" << index << " > m)\n";
+                writer << "{\n";
+                writer.indent++;
+                writer << "m = arg" << index << ";\n";
+                writer.indent--;
+                writer << "}\n";
+
+                // end max inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // e ^ (arg - max) inner loop
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "out" << index << " = exp(arg" << index << " - m);\n";
+
+                // end e ^ (arg - max) inner loop
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // end e ^ (arg - max) outer loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
+                // outer loop(s) - for axis not in axes
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer << "#pragma omp parallel for\n";
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                // sum (e ^ (arg - max) inner loop(s)
+                writer << type << " d = 0;\n";
+
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "d += out" << index << ";\n";
+
+                // end sum (e ^ (arg - max) inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                writer << "d = 1 / d;\n";
+
+                // softmax inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                               << "; ++i" << d << ")\n";
+                        writer << "{\n";
+                        writer.indent++;
+                    }
+                }
+
+                writer << "out" << index << " *= d;\n";
+
+                // end softmax inner loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) != axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+
+                // end softmax outer loop(s)
+                for (size_t d = 0; d < dims; ++d)
+                {
+                    if (axes.find(d) == axes.end())
+                    {
+                        writer.indent--;
+                        writer << "}\n";
+                    }
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
+            {
+                const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
+
+                if (!result->needs_copy())
+                {
+                    return;
+                }
+
+                writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "               " << out[0].get_name() << ",\n";
+                writer << "               " << shape_size(node->get_shape()) << ");\n";
             }
         }
     }

@@ -17,7 +17,9 @@
 #pragma once
 
 #include <memory>
+
 #include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,22 +33,43 @@ namespace ngraph
             BatchNorm(double eps,
                       std::shared_ptr<Node> gamma,
                       std::shared_ptr<Node> beta,
-                      std::shared_ptr<Node> input,
-                      std::shared_ptr<Node> mean,
-                      std::shared_ptr<Node> variance);
+                      std::shared_ptr<Node> input);
 
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
             const Shape& get_mean_shape() const { return m_bn_mean_shape; }
             double get_eps_value() const { return m_epsilon; }
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
 
         private:
             Shape m_bn_input_shape;
             Shape m_bn_variance_shape;
             Shape m_bn_mean_shape;
             double m_epsilon;
+        };
+
+        class BatchNormBackprop : public util::RequiresTensorViewArgs
+        {
+        public:
+            BatchNormBackprop(double eps,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              std::shared_ptr<Node> input,
+                              std::shared_ptr<Node> mean,
+                              std::shared_ptr<Node> variance,
+                              std::shared_ptr<Node> delta);
+
+            double get_eps_value() const { return epsilon; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            double epsilon;
         };
     }
 }

@@ -23,12 +23,9 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/parameter_vector.hpp"
+#include "ngraph/ops/result_vector.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -37,13 +34,19 @@ namespace ngraph
     class Function
     {
     public:
-        Function(const Nodes& results,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+        Function(const NodeVector& results,
+                 const op::ParameterVector& parameters,
                  const std::string& name = "");
 
         Function(const std::shared_ptr<Node>& result,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const op::ParameterVector& parameters,
                  const std::string& name = "");
+
+        Function(const ResultVector& results,
+                 const op::ParameterVector& parameters,
+                 const std::string& name = "");
+
+        void init();
 
         virtual ~Function() {}
     public:
@@ -60,35 +63,29 @@ namespace ngraph
         const Shape& get_output_shape(size_t i) const;
 
         /// Return the function parameters
-        const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
-        {
-            return m_parameters;
-        }
-
-        /// Return the ops that generate the results
-        const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
+        const op::ParameterVector& get_parameters() const { return m_parameters; }
+        /// Return a list of function's outputs
+        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
-        std::string get_name() const;
-        void set_name(
-            const std::string&
-                name); //so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with an XLA or regular function
+        const std::string& get_friendly_name() const;
+        const std::string& get_name() const;
+        // so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with
+        //  an XLA or regular function
+        void set_name(const std::string& name);
         std::list<std::shared_ptr<Node>> get_ops() const;
         std::list<std::shared_ptr<Node>> get_ordered_ops();
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
         void set_temporary_pool_size(size_t);
-        //updates old w/ repl in m_results list
-        void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
-        //updates graph and m_results list
+        // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
-        Nodes m_results;
-        std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
-        std::string m_name;
+        ResultVector m_results;
+        op::ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:
@@ -97,5 +94,7 @@ namespace ngraph
 
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
+        std::string m_name;
+        const std::string m_unique_name;
     };
 }

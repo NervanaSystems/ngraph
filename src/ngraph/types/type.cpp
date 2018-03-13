@@ -16,8 +16,6 @@
 
 #include <memory>
 
-#include "ngraph/except.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/types/type.hpp"
 #include "ngraph/util.hpp"
 
