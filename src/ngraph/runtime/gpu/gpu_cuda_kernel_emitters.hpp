@@ -44,10 +44,7 @@ namespace ngraph
                                      CUdeviceptr out,
                                      Inputs&&... inputs)
             {
-                std::string type_signature = (data_types[0] != data_types[1])
-                                                 ? "_" + data_types[0] + "_" + data_types[1]
-                                                 : "";
-
+                std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
                 if (CudaFunctionPool::instance().get(name + type_signature) == nullptr)
                 {
                     codegen::CodeWriter writer;
