@@ -218,18 +218,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+                //case that can be treat as dot1d
+                if ((arg0_shape.size() == arg1_shape.size()) &&
+                    (arg0_shape.size() == dot->get_reduction_axes_count()))
+
                 {
+                    for (int i = 0; i < arg0_shape.size(); i++)
+                    {
+                        if (arg0_shape[i] != arg1_shape[i])
+                        {
+                            throw std::runtime_error(
+                                "input1 and input2 shape does not match for dot;");
+                        }
+                    }
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "cublasSdot("
-                           << "cublas_handle," << arg0_shape[0] << "," << args[0].get_name() << ","
+                           << "cublas_handle," << args[0].get_size() << "," << args[0].get_name()
+                           << ","
                            << "1," << args[1].get_name() << ","
                            << "1," << out[0].get_name() << ");\n";
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -250,14 +263,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     // GEMM Call
                     if (arg0_shape[0] != out[0].get_shape()[0] || // m
                         arg1_shape[1] != out[0].get_shape()[1] || // n
                         arg0_shape[1] != arg1_shape[0])           // k
                     {
-                        throw std::runtime_error("input and output shape is not correct for dot;");
+                        throw std::runtime_error("input and output shape does not match for dot;");
                     }
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -504,15 +518,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.indent++;
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
-
                 auto result_shape = out[0].get_shape();
-                auto& result_element_type = out[0].get_element_type();
-
                 auto input_order = reshape->get_input_order();
-
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-
                 size_t result_shape_product = 1;
+
                 for (auto i : result_shape)
                 {
                     result_shape_product *= i;

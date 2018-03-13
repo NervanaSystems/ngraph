@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/ops/util/requires_tensor_view_args.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -29,9 +30,32 @@ namespace ngraph
             Shape get_input_shape() const { return m_shape_input; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
 
         private:
             Shape m_shape_input;
+        };
+
+        /// \brief Elementwise SigmoidBackprop operation.
+        ///
+        class SigmoidBackprop : public util::RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs a SigmoidBackprop operation.
+            ///
+            /// \param arg Node that produces the Sigmoid forward input tensor.
+            SigmoidBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override
+            {
+                if (new_args.size() != 2)
+                {
+                    throw ngraph_error("Incorrect number of new arguments");
+                }
+                return std::make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
+            }
         };
     }
 }

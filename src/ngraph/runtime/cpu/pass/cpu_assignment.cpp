@@ -317,6 +317,19 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::SigmoidBackprop)
+                {
+                    auto sigmoid = static_cast<op::SigmoidBackprop*>(node);
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        sigmoid->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
                     auto relu_bprop = static_cast<op::ReluBackprop*>(node);
@@ -400,6 +413,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
