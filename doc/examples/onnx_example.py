@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,51 +15,23 @@
 # ******************************************************************************
 
 import onnx
-from ngraph.frontends.onnx.onnx_importer.model_wrappers import ModelWrapper
 
-
-def import_onnx_model(onnx_protobuf):  # type: (onnx.ModelProto) -> List[Dict]
-    """
-    Import an ONNX Protocol Buffers model and convert it into a list of ngraph operations.
-
-    An ONNX model defines a set of output nodes. Each output node will be added to the
-    returned list as a dict with the following fields:
-
-    * 'name' - name of the output, as specified in the imported ONNX model
-    * 'inputs' - a list of ngraph placeholder ops, used to feed data into the model
-    * 'output' - ngraph Op representing the output of the model
-
-    Usage example:
-
-    >>> onnx_protobuf = onnx.load('y_equals_a_plus_b.onnx.pb')
-    >>> import_onnx_model(onnx_protobuf)
-    [{
-        'name': 'Y',
-        'inputs': [<AssignableTensorOp(placeholder):4552991464>,
-                   <AssignableTensorOp(placeholder):4510192360>],
-        'output': <Add(Add_0):4552894504>
-    }]
-
-    >>> ng_model = import_onnx_model(model)[0]
-    >>> transformer = ng.transformers.make_transformer()
-    >>> computation = transformer.computation(ng_model['output'], *ng_model['inputs'])
-    >>> computation(4, 6)
-    array([ 10.], dtype=float32)
-
-    :param onnx_protobuf: ONNX Protocol Buffers model (onnx_pb2.ModelProto object)
-    :return: list of dicts representing ngraph Ops and their inputs
-    """
-    model = ModelWrapper(onnx_protobuf)
-    return model.graph.get_ng_model()
-
-
-def import_onnx_file(filename):  # type: (str) -> List[Dict]
-    """
-    Import ONNX model from a Protocol Buffers file and convert to ngraph operations.
-
-    :param filename: path to an ONNX file
-    :return: List of imported ngraph Ops (see docs for import_onnx_model).
-    """
-    onnx_protobuf = onnx.load(filename)
-    return import_onnx_model(onnx_protobuf)
-
+onnx_protobuf = onnx.load('/path/to/model/cntk_ResNet20_CIFAR10/model.onnx')
+ 
+# Convert ONNX model to an ngraph model
+from ngraph_onnx.onnx_importer.importer import import_onnx_model
+ng_model = import_onnx_model(onnx_protobuf)[0]
+ 
+ 
+# Using an ngraph runtime (CPU backend), create a callable computation
+import ngraph_api as ng
+runtime = ng.runtime(manager_name='CPU')
+resnet = runtime.computation(ng_model['output'], *ng_model['inputs'])
+ 
+# Load or create an image
+import numpy as np
+picture = np.ones([1, 3, 32, 32])
+ 
+# Run ResNet inference on picture
+resnet(picture)
+ 
