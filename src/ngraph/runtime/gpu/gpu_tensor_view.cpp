@@ -41,7 +41,7 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
     m_buffer_size = shape_size(shape) * element_type.size();
     if (m_buffer_size > 0)
     {
-        cudaMalloc((void**)&m_allocated_buffer_pool, m_buffer_size);
+        cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size);
     }
 }
 

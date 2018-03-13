@@ -53,12 +53,12 @@ void cuda_)" + name + "(" + data_type +
 
                 //convert runtime ptr to driver api ptr
                 CUdeviceptr d_ptr_in, d_ptr_out;
-                d_ptr_in = (CUdeviceptr)in;
-                d_ptr_out = (CUdeviceptr)out;
+                d_ptr_in = CUdeviceptr(in);
+                d_ptr_out = CUdeviceptr(out);
 
                 void* args_list[] = {&d_ptr_in, &d_ptr_out, &repeat_size, &repeat_times, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
-                                              count,
+                                              static_cast<unsigned int>(count),
                                               1,
                                               1, // grid dim
                                               1,

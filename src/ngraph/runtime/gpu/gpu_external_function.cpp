@@ -427,9 +427,6 @@ using namespace std;
                 for (shared_ptr<Function> current_function :
                      pass_manager.get_state().get_functions())
                 {
-                    bool temporaries_used = false;
-                    size_t worst_case_tmp_size = 0;
-
                     set<string> output_names;
                     for (shared_ptr<Node> op : current_function->get_results())
                     {
@@ -454,18 +451,6 @@ using namespace std;
                             continue;
                         }
                         string match_function_name;
-                        for (size_t j = i + 1; j < op_list.size(); j++)
-                        {
-                            if (0) //op_list[i]->is_functionally_identical(*op_list[j]))
-                            {
-                                if (match_function_name.empty())
-                                {
-                                    match_function_name = "func_" + op_list[i]->get_name();
-                                    match_functions.insert({op_list[i].get(), match_function_name});
-                                }
-                                match_functions.insert({op_list[j].get(), match_function_name});
-                            }
-                        }
                         if (!match_function_name.empty())
                         {
                             writer << "static void " << match_function_name << "(";
@@ -545,28 +530,24 @@ using namespace std;
                     writer << "{\n";
                     writer.indent++;
 
-                    for (shared_ptr<Function> current_function :
-                         pass_manager.get_state().get_functions())
+                    for (shared_ptr<Node> node : current_function->get_ordered_ops())
                     {
-                        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+                        const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
+                        if (c)
                         {
-                            const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
-                            if (c)
-                            {
-                                shared_ptr<descriptor::TensorView> tv =
-                                    node->get_outputs()[0].get_tensor_view();
-                                writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
-                                writer << "{\n";
-                                writer.indent++;
-                                writer << "runtime::gpu::cuda_memcpyHtD("
-                                       << tv->get_tensor().get_name() << ", "
-                                       << tv->get_tensor().get_name() << "_cpu, "
-                                       << tv->get_tensor().size() << ");\n";
-                                writer.indent--;
-                                writer << "}\n";
-                            }
+                            shared_ptr<descriptor::TensorView> tv =
+                                node->get_outputs()[0].get_tensor_view();
+                            writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
+                            writer << "{\n";
+                            writer.indent++;
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name()
+                                   << ", " << tv->get_tensor().get_name() << "_cpu, "
+                                   << tv->get_tensor().size() << ");\n";
+                            writer.indent--;
+                            writer << "}\n";
                         }
                     }
+
                     bool temporaries_used = false;
                     size_t worst_case_tmp_size = 0;
                     for (shared_ptr<Node> node : current_function->get_ordered_ops())
