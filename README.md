@@ -5,8 +5,8 @@
 Checkout ngraph++ and python wrapper code and build bdist wheel.
 
 ```
-git clone --branch python_binding --recursive https://github.com/NervanaSystems/ngraph-cpp.git
-cd ngraph-cpp/python
+git clone --branch python_binding --recursive https://github.com/NervanaSystems/ngraph.git
+cd ngraph/python
 ```
 To build python2 bdist wheel type
 ```
@@ -17,7 +17,7 @@ To build python3 bdist wheel type
 ./build3.sh
 ```
 
-The bdist wheel will be placed in ngraph-cpp/python/build/dist
+The bdist wheel will be placed in ngraph/python/build/dist
 Activate your virtual environment and install the bdist wheel
 
 ```
@@ -81,10 +81,10 @@ Follow these steps to install the ngraph's python wrapper and its prerequisites.
 
 Download the required version of ngraph-cpp and install it.
 ```
-git clone https://github.com/NervanaSystems/ngraph-cpp.git
+git clone https://github.com/NervanaSystems/ngraph.git
 cd ngraph-cpp
 git checkout a02aab014c92809b4a0b1bacf1b686d6318a16d4 -b "local branch name"
-Build and Install it : https://github.com/NervanaSystems/ngraph-cpp#steps
+Build and Install it : https://github.com/NervanaSystems/ngraph#steps
 ```
 
 ### ngraph-neon
