@@ -227,7 +227,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         if (arg0_shape[i] != arg1_shape[i])
                         {
-                            throw std::runtime_error("input1 and input2 shape does not match for dot;");
+                            throw std::runtime_error(
+                                "input1 and input2 shape does not match for dot;");
                         }
                     }
                     writer << "{   // " << node->get_name() << "\n";
