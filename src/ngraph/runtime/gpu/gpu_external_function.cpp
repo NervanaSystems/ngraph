@@ -521,6 +521,10 @@ using namespace std;
                 writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
                 writer << "{\n";
                 writer.indent++;
+                writer << tv->get_tensor().get_name() << " = ("
+                       << tv->get_tensor().get_element_type().c_type_string()
+                       << " *) runtime::gpu::create_gpu_buffer(" << tv->get_tensor().size()
+                       << ");\n";
                 writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name() << ", "
                        << tv->get_tensor().get_name() << "_cpu, " << tv->get_tensor().size()
                        << ");\n";
