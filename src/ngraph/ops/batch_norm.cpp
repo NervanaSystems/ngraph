@@ -42,10 +42,9 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
             "input tensor must have atleast one channel axis for batch normalization");
     }
 
-    if ((m_bn_mean_shape.size() != 1) && (m_bn_variance_shape.size() != 1) &&
-        (gamma->get_shape().size() != 1) && (beta->get_shape().size() != 1))
+    if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
     {
-        throw ngraph_error("gamma, beta, mean, variance shoud have all rank 1");
+        throw ngraph_error("gamma and beta shoud have rank 1");
     }
 
     if (gamma->get_shape().size() != beta->get_shape().size())
