@@ -54,6 +54,11 @@ void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
     return allocated_buffer_pool;
 }
 
+void runtime::gpu::free_gpu_buffer(void* buffer)
+{
+    cudaFree(buffer);
+}
+
 void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice);
