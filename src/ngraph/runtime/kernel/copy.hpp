@@ -25,7 +25,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void copy(T* arg, T* out, size_t count)
+            void copy(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

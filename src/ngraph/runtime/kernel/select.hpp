@@ -25,9 +25,9 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void select(char* arg0,
-                        T* arg1,
-                        T* arg2,
+            void select(const char* arg0,
+                        const T* arg1,
+                        const T* arg2,
                         T* out,
                         size_t count) // TODO: using char for bool, is this right?
             {
