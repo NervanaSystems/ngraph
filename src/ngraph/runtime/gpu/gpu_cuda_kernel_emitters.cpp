@@ -33,8 +33,9 @@ void runtime::gpu::emit_broadcast(
 
         kernel = R"(
 extern "C" __global__
-void cuda_)" + name + "(" + data_type +
-            "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" + R"(
+void cuda_)" + name +
+                 "(" + data_type + "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" +
+                 R"(
 {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < n)
