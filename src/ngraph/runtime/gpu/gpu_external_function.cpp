@@ -168,23 +168,23 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Concat>},
     {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::EmitElementwise},
-    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Equal>},
+    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::GetOutputElement),
      &runtime::gpu::GPU_Emitter::emit<ngraph::op::GetOutputElement>},
-    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Greater>},
-    {TI(ngraph::op::GreaterEq), &runtime::gpu::GPU_Emitter::emit<ngraph::op::GreaterEq>},
-    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Less>},
-    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit<ngraph::op::LessEq>},
+    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::EmitElementwise},
+    {TI(ngraph::op::GreaterEq), &runtime::gpu::GPU_Emitter::EmitElementwise},
+    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::EmitElementwise},
+    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Maximum>},
     {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Minimum>},
     {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Negative>},
-    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit<ngraph::op::NotEqual>},
+    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Select>},
     {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
-    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Convert>},
+    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::Constant), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Constant>},
     {TI(ngraph::op::Reshape), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reshape>},
     {TI(ngraph::op::FunctionCall), &runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
@@ -521,6 +521,10 @@ using namespace std;
                 writer << "if(" << tv->get_tensor().get_name() << " == NULL)\n";
                 writer << "{\n";
                 writer.indent++;
+                writer << tv->get_tensor().get_name() << " = ("
+                       << tv->get_tensor().get_element_type().c_type_string()
+                       << " *) runtime::gpu::create_gpu_buffer(" << tv->get_tensor().size()
+                       << ");\n";
                 writer << "runtime::gpu::cuda_memcpyHtD(" << tv->get_tensor().get_name() << ", "
                        << tv->get_tensor().get_name() << "_cpu, " << tv->get_tensor().size()
                        << ");\n";

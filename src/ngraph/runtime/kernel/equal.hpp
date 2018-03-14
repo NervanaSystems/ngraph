@@ -28,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void equal(T* arg0,
-                       T* arg1,
+            void equal(const T* arg0,
+                       const T* arg1,
                        char* out,
                        size_t count) // TODO: using char for bool, is this right?
             {

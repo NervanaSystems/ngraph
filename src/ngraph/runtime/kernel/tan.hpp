@@ -26,7 +26,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void tan(T* arg, T* out, size_t count)
+            void tan(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

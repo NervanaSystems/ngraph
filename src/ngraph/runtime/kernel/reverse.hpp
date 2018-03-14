@@ -27,7 +27,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void reverse(T* arg,
+            void reverse(const T* arg,
                          T* out,
                          const Shape& arg_shape,
                          const Shape& out_shape,
