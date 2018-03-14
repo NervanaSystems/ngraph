@@ -268,7 +268,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 //dot can be treat as matrix multiply
                 else
                 {
-                    // GEMM Call
                     size_t reduction_axes = dot->get_reduction_axes_count();
                     size_t m = 1, n = 1, k = 1;
                     //check if input and output size correct
@@ -312,6 +311,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                     }
 
+                    // GEMM Call
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "const float alpha = 1.0;\n";
