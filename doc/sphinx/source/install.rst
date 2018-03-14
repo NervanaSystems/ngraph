@@ -53,7 +53,6 @@ details about how to change or customize the install location.
 =======
    :doc:`../howto/execute` graph computations using resources available 
    through the library.
->>>>>>> c9a4939d4e562726e1a3418199e0a8be32ec8660
 
    .. code-block:: console
 
