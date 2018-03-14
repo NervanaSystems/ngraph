@@ -25,7 +25,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename TI, typename TO>
-            void convert(TI* arg, TO* out, size_t count)
+            void convert(const TI* arg, TO* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

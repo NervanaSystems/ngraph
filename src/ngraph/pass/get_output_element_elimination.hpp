@@ -16,23 +16,23 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstddef>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace kernel
-        {
-            template <typename T>
-            void tanh(const T* arg, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = std::tanh(arg[i]);
-                }
-            }
-        }
+        class GetOutputElementElimination;
     }
 }
+
+class ngraph::pass::GetOutputElementElimination : public FunctionPass
+{
+public:
+    GetOutputElementElimination()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

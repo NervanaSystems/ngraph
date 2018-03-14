@@ -28,7 +28,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void softmax(T* arg, T* out, const Shape& shape, const AxisSet& axes)
+            void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)
             {
                 auto temp_shape = project(shape, axes);
                 auto temp_elements = std::accumulate(

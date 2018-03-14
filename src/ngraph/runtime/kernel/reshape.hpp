@@ -28,7 +28,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void reshape(T* arg,
+            void reshape(const T* arg,
                          T* out,
                          const Shape& in_shape,
                          const AxisVector& in_axis_order,

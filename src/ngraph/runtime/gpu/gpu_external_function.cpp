@@ -231,7 +231,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Product), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Product>},
     {TI(ngraph::op::Max), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
     {TI(ngraph::op::Min), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
-    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Relu>},
+    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::EmitElementwise},
     {TI(ngraph::op::ReluBackprop), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
 };
@@ -710,6 +710,10 @@ using namespace std;
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
             }
+        }
+        if (temporaries_used)
+        {
+            writer << "ngraph::runtime::gpu::free_gpu_buffer(pool_base_ptr);\n";
         }
 
         writer.indent--;

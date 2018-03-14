@@ -14,5 +14,17 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(nbench)
-add_subdirectory(reserialize)
+if(MKLDNN_INCLUDE_DIR)
+    link_directories(${MKLDNN_LIB_DIR})
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    set (SRC
+        reserialize.cpp
+    )
+
+    add_executable(reserialize ${SRC})
+    add_dependencies(reserialize ngraph)
+
+    target_link_libraries(reserialize ngraph)
+endif()
