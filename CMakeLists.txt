@@ -23,6 +23,18 @@ endif()
 
 project (pyngraph)
 
+include(ExternalProject)
+
+ExternalProject_Add(
+    pybind11
+    GIT_REPOSITORY "https://github.com/jagerman/pybind11.git"
+    GIT_TAG "allow-nonconstructible-holders"
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/pybind11"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    )
+
 #
 # The user can always override this by using the cmake command listed below.
 if (DEFINED NGRAPH_INSTALL_PREFIX)
@@ -49,8 +61,6 @@ if(USE_EMBEDDED_NGRAPH)
     if(APPLE)
         set(NGRAPH_CMAKE_ARGS "-DCMAKE_MACOSX_RPATH=ON" ${NGRAPH_CMAKE_ARGS})
     endif()
-
-    include(ExternalProject)
 
     ExternalProject_Add(
         ngraph
