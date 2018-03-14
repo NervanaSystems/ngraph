@@ -23,7 +23,6 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/nop.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -103,10 +102,8 @@ static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function>
     for (auto r : f->get_results())
     {
         auto n = r->get_input_op(0);
-        std::cout << "looking at " << n->get_name() << std::endl;
         if (zero_length_nodes.count(n) != 0)
         {
-            std::cout << "removing " << n->get_name() << std::endl;
             zero_length_nodes.erase(n);
         }
     }
@@ -138,8 +135,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
             auto constant =
                 std::make_shared<op::Constant>(n->get_element_type(), n->get_shape(), cvals);
             replace_node(n, constant);
-            NGRAPH_DEBUG << " replacing " << n->get_name() << " with " << constant->get_name();
-            //zero_length_nodes.insert(constant);
+            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << constant->get_name();
             replaced = true;
             continue;
         }

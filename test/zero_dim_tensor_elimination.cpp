@@ -100,8 +100,8 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
     auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto avg_pool = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
-    auto abs_node = std::make_shared<op::Abs>(avg_pool);
+    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
@@ -111,4 +111,24 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
+}
+
+TEST(zero_dim_tensor_elimination, zero_const_slice)
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
+    auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
+    auto slice = make_shared<op::Slice>(A, Coordinate{0}, Coordinate{0});
+    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto abs_node = std::make_shared<op::Abs>(pad);
+    auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
+    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A, B});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.run_passes(f);
+    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
 }
