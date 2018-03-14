@@ -118,6 +118,7 @@ set (SRC
     util.cpp
     graph_util.cpp
     placement.cpp
+    cpio.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

@@ -21,40 +21,65 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 using namespace ngraph;
+using namespace ngraph::runtime::gpu;
 
-void runtime::gpu::emit_broadcast(
-    void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count)
+void runtime::gpu::emit_broadcast(std::string name,
+                                  CUdeviceptr in,
+                                  CUdeviceptr out,
+                                  std::array<std::string, 2> data_types,
+                                  size_t repeat_size,
+                                  size_t repeat_times,
+                                  size_t count)
 {
-    std::string name = "broadcast";
+    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
     // Create an instance of nvrtcProgram with the code string.
-    if (CudaFunctionPool::instance().get(name) == nullptr)
+    if (CudaFunctionPool::instance().get(name_signature) == nullptr)
     {
-        std::string kernel;
-        std::string data_type("float");
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_broadcast_op(writer, name_signature, data_types);
+        std::string kernel = writer.get_code();
+        CudaFunctionPool::instance().set(name_signature, kernel);
+    }
 
-        kernel = R"(
-extern "C" __global__
-void cuda_)" + name +
-                 "(" + data_type + "* in, " + data_type + "* out, size_t m, size_t k, size_t n)\n" +
-                 R"(
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
+                                  static_cast<unsigned int>(count),
+                                  1,
+                                  1, // grid dim
+                                  1,
+                                  1,
+                                  1, // block dim
+                                  0,
+                                  NULL, // shared mem and stream
+                                  args_list,
+                                  0));  // arguments
+    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+}
+
+void runtime::gpu::emit_onehot(std::string name,
+                               CUdeviceptr in,
+                               CUdeviceptr out,
+                               std::array<std::string, 2> data_types,
+                               size_t repeat_size,
+                               size_t repeat_times,
+                               size_t count)
 {
-    size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if(tid < n)
+    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
+    // Create an instance of nvrtcProgram with the code string.
+    if (CudaFunctionPool::instance().get(name_signature) == nullptr)
     {
-        size_t idx = tid / (m * k) * m + tid % m;
-        out[tid] = in[idx];
-    }
-})";
-        CudaFunctionPool::instance().set(name, kernel);
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_onehot_op(writer, name_signature, data_types);
+        std::string kernel = writer.get_code();
+        CudaFunctionPool::instance().set(name_signature, kernel);
     }
 
-    //convert runtime ptr to driver api ptr
-    CUdeviceptr d_ptr_in, d_ptr_out;
-    d_ptr_in = CUdeviceptr(in);
-    d_ptr_out = CUdeviceptr(out);
-
-    void* args_list[] = {&d_ptr_in, &d_ptr_out, &repeat_size, &repeat_times, &count};
-    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
                                   1, // grid dim
