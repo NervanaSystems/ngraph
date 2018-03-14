@@ -1,8 +1,8 @@
-.. testing-libngraph:
+.. test:
 
-########################
-Test the nGraph library
-########################
+#####
+Test 
+#####
 
 The |InG| library code base uses the `GTest framework`_ for unit tests. CMake 
 automatically downloads a copy of the required GTest files when configuring the 
@@ -35,7 +35,7 @@ for:
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
 * neon™ `frontend framework`_.
 
-Integration guides for other frameworks are tentatively forthcoming.
+Guides for other framework integrations are tentatively forthcoming.
 
 .. _GTest framework: https://github.com/google/googletest.git
 .. _frontend framework: http://neon.nervanasys.com/index.html/

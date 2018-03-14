@@ -1,4 +1,4 @@
-.. installation:
+.. install:
 
 ########
 Install 
@@ -11,19 +11,24 @@ The |release| version of |project| supports Linux\*-based systems which have
 recent updates of the following packages and prerequisites: 
 
 .. csv-table::
-   :header: "Operating System", "Compiler", "Build System", "Status", "Additional Packages"
+   :header: "Operating System", "Compiler", "Build System", "Status", 
+   "Additional Packages"
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
-   Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git libtinfo-dev``
-   Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
+   CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, 
+   ``patch diffutils zlib1g-dev libtinfo-dev`` 
+   Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, 
+   ``build-essential cmake clang-3.9 git zlib1g libtinfo-dev``
+   Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, 
+   experimental, bundles 
+   ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but aren't tested; on Ubuntu 16.04 with 
 ``gcc-5.4.0`` or ``clang-3.9``, for example, we recommend adding 
 ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the :command:`cmake` command in step 4
-below. This gets a pre-built tarball of LLVM+Clang from `llvm.org`_, and will
-substantially reduce build time.
+below. This gets a pre-built tarball of LLVM+Clang from the `llvm`_ site, 
+and will substantially reduce build time.
 
 If using ``gcc-4.8``, it may be necessary to add symlinks from ``gcc`` to
 ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
@@ -44,28 +49,25 @@ install ``ngraph_dist`` to the installing user's ``$HOME`` directory as
 the default location. See the :file:`CMakeLists.txt` file for more 
 information about how to change or customize this location.
 
-#.  (Optional) Create something like ``/opt/local`` and (with sudo permissions), 
-    give ownership of that directory to your user. Under this directory, you can 
-    add a placeholder for ``libraries`` to have a placeholder for the documented 
-    source cloned from the repo: 
+#.  (Optional) Create something like ``~/libraries`` to have a placeholder 
+    for the documented source cloned from the repo; later, if you want to
+    run a model based on one of our :doc:`framework-integration-guides`, it
+    can be helpful to have this directory separate from your ``frameworks``. 
 
     .. code-block:: console
 
-       $ cd /opt
-       $ sudo mkdir -p local/libraries
-       $ sudo chown -R username:username /opt/local
-
-#. Clone the `NervanaSystems` ``ngraph-cpp`` repo to your `/libraries`
-   directory.
+       $ cd ~/libraries
+ 
+#. Clone the `NervanaSystems` ``ngraph`` repo to your `~/libraries` directory.
 
    .. code-block:: console
 
-      $ cd /opt/local/libraries
-      $ git clone git@github.com:NervanaSystems/ngraph-cpp.git
-      $ cd ngraph-cpp
+      $ cd libraries
+      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ cd ngraph
 
-#. Create a build directory outside of the ``ngraph-cpp/src`` directory 
-   tree; somewhere like ``ngraph-cpp/build``, for example.
+#. Create a build directory outside of the ``ngraph/src`` directory 
+   tree; somewhere like ``ngraph/build``, for example.
 
    .. code-block:: console
 
@@ -126,6 +128,6 @@ according to those conventions. These scripts require the command
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
-.. _llvm.org: https://www.llvm.org 
-.. _NervanaSystems: https://github.com/NervanaSystems/ngraph-cpp/blob/master/README.md
+.. _llvm: https://www.llvm.org 
+.. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
 .. _website docs: http://ngraph.nervanasys.com/index.html/index.html

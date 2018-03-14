@@ -8,6 +8,7 @@ How to
    :caption: How to 
 
    execute.rst
+   handle.rst
     
 
 The "How to" articles in this section explain how to do specific tasks with the 
