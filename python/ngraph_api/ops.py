@@ -15,20 +15,21 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
-
 import numpy as np
 
 from ngraph import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
 
 from ngraph.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
-    Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, MaxPool, \
-    Minimum, Multiply, Negative, Not, NotEqual, Parameter, Reshape, Sqrt, Subtract, Sum, Tanh
+    Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
+    Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, Reshape, Sqrt, Subtract, \
+    Sum, Tanh
 
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph_api.utils.input_validation import assert_list_of_ints
+from ngraph_api.utils.reduction import get_reduction_axes
 from ngraph_api.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     as_node, NodeInput
 from ngraph_api.utils.types import get_element_type
@@ -303,13 +304,50 @@ def max_pool(x,                      # type: Node
 
 # reduction ops
 @nameable_op
-def sum(node, reduction_axes=None, name=None):  # type: (Node, Iterable[int], str) -> Node
+def sum(node, reduction_axes=None, name=None):
+    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
     """Element-wise sums the input tensor, eliminating the specified reduction axes.
 
     :param reduction_axes: The axes to eliminate through summation.
     """
-    if reduction_axes is None:
-        reduction_axes = set(range(len(node.shape)))
-    if type(reduction_axes) is not set:
-        reduction_axes = set(reduction_axes)
+    reduction_axes = get_reduction_axes(node, reduction_axes)
     return Sum(node, AxisSet(reduction_axes))
+
+
+@nameable_op
+def max(node, reduction_axes=None, name=None):
+    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    """Max-reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node: The tensor we want to max-reduce.
+    :param reduction_axes: The axes to eliminate through max operation.
+    :param name: Optional name for input node.
+    """
+    reduction_axes = get_reduction_axes(node, reduction_axes)
+    return Max(node, AxisSet(reduction_axes))
+
+
+@nameable_op
+def min(node, reduction_axes=None, name=None):
+    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    """Min-reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node: The tensor we want to max-reduce.
+    :param reduction_axes: The axes to eliminate through min operation.
+    :param name: Optional name for input node.
+    """
+    reduction_axes = get_reduction_axes(node, reduction_axes)
+    return Min(node, AxisSet(reduction_axes))
+
+
+@nameable_op
+def prod(node, reduction_axes=None, name=None):
+    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    """Product-reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node: The tensor we want to product-reduce.
+    :param reduction_axes: The axes to eliminate through product operation.
+    :param name: Optional name for input node.
+    """
+    reduction_axes = get_reduction_axes(node, reduction_axes)
+    return Product(node, AxisSet(reduction_axes))
