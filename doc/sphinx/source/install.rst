@@ -47,8 +47,13 @@ details about how to change or customize the install location.
    give ownership of that directory to your user. Creating such a placeholder 
    can be useful if you'd like to have a local reference for APIs and 
    documentation, or if you are a developer who wants to experiment with 
+<<<<<<< HEAD
    how to :doc:`../howto/execute` using resources available through the 
    code base.
+=======
+   :doc:`../howto/execute` graph computations using resources available 
+   through the library.
+>>>>>>> c9a4939d4e562726e1a3418199e0a8be32ec8660
 
    .. code-block:: console
 
