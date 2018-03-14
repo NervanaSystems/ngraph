@@ -27,7 +27,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void sum(T* arg,
+            void sum(const T* arg,
                      T* out,
                      const Shape& in_shape,
                      const Shape& out_shape,
