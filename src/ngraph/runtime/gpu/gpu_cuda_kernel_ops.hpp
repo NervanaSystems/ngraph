@@ -47,7 +47,6 @@ namespace ngraph
         class LessEq;
         class Not;
         class Relu;
-        class Softmax;
         class Max;
         class Min;
         class Negative;
