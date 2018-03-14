@@ -53,8 +53,7 @@ Sections
    :name: tocmaster
    :caption: Table of Contents
 
-   installation.rst
-   testing-libngraph.rst
+   install.rst
    framework-integration-guides.rst
    graph-basics.rst
    howto/index.rst

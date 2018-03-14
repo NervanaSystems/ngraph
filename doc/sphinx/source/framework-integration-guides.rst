@@ -4,15 +4,15 @@
 Framework Integration Guides
 #############################
 
-.. contents::
-
+:ref:`mxnet_intg`
+:ref:`tensorflow_intg`
 
 .. _mxnet_intg:
 
 Compile MXNet\* with ``libngraph``
 ==================================
 
-.. important:: These instructions pick up from where the :doc:`installation`
+.. important:: These instructions pick up from where the :doc:`install`
    installation instructions left off, so they presume that your system already
    has the library installed at ``$HOME/ngraph_dist`` as the default location.
    If the |nGl| code has not yet been installed to your system, please go back
@@ -97,7 +97,7 @@ Compile MXNet\* with ``libngraph``
 Build TensorFlow\* with an XLA plugin to ``libngraph``
 ======================================================
 
-.. important:: These instructions pick up where the :doc:`installation` 
+.. important:: These instructions pick up where the :doc:`install` 
    installation instructions left off, so they presume that your system already
    has the |nGl| installed. If the |nGl| code has not yet been installed to
    your system, please go back to complete those steps, and return here when
