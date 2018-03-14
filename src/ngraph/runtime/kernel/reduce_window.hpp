@@ -28,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void reduce_window(T* arg_reductee,
-                               T* arg_init,
+            void reduce_window(const T* arg_reductee,
+                               const T* arg_init,
                                T* out,
                                const Shape& arg_reductee_shape,
                                const Shape& out_shape,
