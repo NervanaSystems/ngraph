@@ -1,4 +1,4 @@
-.. install:
+.. install.rst:
 
 ########
 Install 
