@@ -1,6 +1,6 @@
-# ngraph-neon
+# ngraph python binding
 
-## Installation - New Way
+## Installation (If you haven't build ngraph yet.)
 
 Checkout ngraph++ and python wrapper code and build bdist wheel.
 
@@ -10,11 +10,11 @@ cd ngraph/python
 ```
 To build python2 bdist wheel type
 ```
-./build2.sh
+./build_python2_wheel.sh
 ```
 To build python3 bdist wheel type
 ```
-./build3.sh
+./build_python3_wheel.sh
 ```
 
 The bdist wheel will be placed in ngraph/python/build/dist
@@ -72,28 +72,3 @@ rm -rf .tox
 tox
 ```
 
-## Installation - Old Way (Still works)
-
-Follow these steps to install the ngraph's python wrapper and its prerequisites.
-
-
-### ngraph-cpp
-
-Download the required version of ngraph-cpp and install it.
-```
-git clone https://github.com/NervanaSystems/ngraph.git
-cd ngraph
-git checkout 89da71d33656b972e85ce4107e82643bfa195b5b -b "local branch name"
-Build and Install it : https://github.com/NervanaSystems/ngraph#steps
-```
-
-### ngraph-neon
-
-After installing ngraph-cpp, follow the steps below to install ngraph-neon.
-The NGRAPH_CPP_BUILD_PATH is set to default installation location of ngraph-cpp.
-```
-git clone --recursive https://github.com/NervanaSystems/ngraph-neon.git
-cd ngraph-neon
-export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-pip install -U .
-```

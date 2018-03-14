@@ -87,6 +87,7 @@ def cpp_flag(compiler):
 
 
 PYNGRAPH_SOURCE_DIR = "${CMAKE_SOURCE_DIR}"
+PYBIND11_INCLUDE_DIR = "${CMAKE_BINARY_DIR}" + "/pybind11/include"
 NGRAPH_CPP_INCLUDE_DIR = "${NGRAPH_INSTALL_PREFIX}" + "/include"
 NGRAPH_CPP_LIBRARY_DIR = "${NGRAPH_INSTALL_PREFIX}" + "/lib"
 
@@ -187,10 +188,9 @@ sources = ['pyngraph/function.cpp',
 
 sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]
 
-include_dirs = [# Path to pybind11 headers
-                PYNGRAPH_SOURCE_DIR + "/pybind11/include",
-                PYNGRAPH_SOURCE_DIR,
+include_dirs = [PYNGRAPH_SOURCE_DIR,
                 NGRAPH_CPP_INCLUDE_DIR,
+                PYBIND11_INCLUDE_DIR,
                ]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
