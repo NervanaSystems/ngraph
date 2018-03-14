@@ -4,13 +4,8 @@
 Framework Integration Guides
 #############################
 
-<<<<<<< HEAD
 * :ref:`mxnet_intg`
 * :ref:`tensorflow_intg`
-=======
-:ref:`mxnet_intg`
-:ref:`tensorflow_intg`
->>>>>>> c9a4939d4e562726e1a3418199e0a8be32ec8660
 
 .. _mxnet_intg:
 
