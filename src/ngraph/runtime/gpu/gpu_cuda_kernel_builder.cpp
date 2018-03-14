@@ -13,61 +13,85 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/codegen/code_writer.hpp"
 
-namespace ngraph
+using namespace ngraph;
+
+void runtime::gpu::CudaKernelBuilder::get_elementwise_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& op,
+    const std::array<std::string, 2>& data_types,
+    const size_t& num_inputs)
 {
-    namespace runtime
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for (size_t i = 0; i < num_inputs; i++)
     {
-        namespace gpu
-        {
-            void CudaKernelBuilder::get_1_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::string& op,
-                                                     std::string& kernel)
-            {
-                kernel = R"(  
-extern "C" __global__
-void cuda_)" + name + "(" +
-                         data_type + "* in, " + data_type + "* out, size_t n)\n" + R"({  
-size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
-if(tid < n) 
-{
-out[tid] =)" + op + "(in[tid]);\n" +
-                         R"(}
-})";
-                return;
-            }
-
-            void CudaKernelBuilder::get_2_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::string& op,
-                                                     std::string& kernel)
-            {
-                kernel = R"(  
-extern "C" __global__
-void )" + name + "(" + data_type +
-                         "* in1, " + data_type + "* in2, " + data_type + "* out, size_t n)\n" +
-                         R"({  
-size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
-if(tid < n) 
-{
-out[tid] = in1[tid] )" + op +
-                         "in2[tid]\n" +
-                         R"(}
-})";
-                return;
-            }
-
-            void CudaKernelBuilder::get_n_element_op(const std::string& name,
-                                                     const std::string& data_type,
-                                                     const std::vector<std::string>& ops,
-                                                     std::string& kernel)
-            {
-                kernel = "";
-                return;
-            }
-        }
+        writer << data_types[0] << "* in" << i << ", ";
     }
+    writer << data_types[1] << "* out,"
+           << "size_t n)\n";
+    writer << "{\n";
+    writer.indent++;
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < n)\n";
+        writer << "{\n";
+        writer.indent++;
+        {
+            writer << "out[tid] = " << op << "(";
+            for (size_t i = 0; i < num_inputs - 1; i++)
+            {
+                writer << "in" << i << "[tid], ";
+            }
+            writer << "in" << num_inputs - 1 << "[tid]);\n";
+        }
+        writer.indent--;
+        writer << "}\n";
+    }
+    writer.indent--;
+    writer << "}\n";
+
+    return;
+}
+
+void runtime::gpu::CudaKernelBuilder::get_device_helper(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& math_kernel,
+    const std::array<std::string, 2>& data_types,
+    const size_t& num_inputs)
+{
+    if (math_kernel.size())
+    {
+        writer << "__device__ " << data_types[1] << " " << name << "(";
+        for (size_t i = 0; i < num_inputs - 1; i++)
+        {
+            writer << data_types[0] << " x" << i << ", ";
+        }
+        writer << data_types[0] << " x" << num_inputs - 1;
+        writer << ")\n";
+        writer << "{\n";
+        writer.indent++;
+        {
+            writer << "return " + math_kernel << ";\n";
+        }
+        writer.indent--;
+        writer << "}\n";
+    }
+    return;
+}
+
+void runtime::gpu::CudaKernelBuilder::add_pod_typedefs(codegen::CodeWriter& writer)
+{
+    writer << "typedef signed char int8_t;\n";
+    writer << "typedef signed short int16_t;\n";
+    writer << "typedef signed int int32_t;\n";
+    writer << "typedef signed long int int64_t;\n";
+    writer << "typedef unsigned char uint8_t;\n";
+    writer << "typedef unsigned short uint16_t;\n";
+    writer << "typedef unsigned int uint32_t;\n";
+    writer << "typedef unsigned long int uint64_t;\n";
+    writer << "\n";
 }

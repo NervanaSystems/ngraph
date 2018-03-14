@@ -17,6 +17,7 @@
 #pragma once
 
 #include <exception>
+#include <functional>
 #include <sstream>
 
 #include "ngraph/pass/pass.hpp"

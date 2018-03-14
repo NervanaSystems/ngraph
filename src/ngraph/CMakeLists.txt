@@ -97,6 +97,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/dump_sorted.cpp
@@ -187,11 +188,14 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_emitter.cpp
         runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
+        runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/convert_layout.cpp
+        runtime/cpu/ops/sigmoid.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
+        runtime/cpu/pass/cpu_nop_elimination.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory

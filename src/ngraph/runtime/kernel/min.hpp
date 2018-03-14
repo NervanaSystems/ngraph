@@ -28,7 +28,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void min(T* arg,
+            void min(const T* arg,
                      T* out,
                      const Shape& in_shape,
                      const Shape& out_shape,

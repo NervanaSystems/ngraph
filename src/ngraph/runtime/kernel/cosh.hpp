@@ -26,7 +26,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void cosh(T* arg, T* out, size_t count)
+            void cosh(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
