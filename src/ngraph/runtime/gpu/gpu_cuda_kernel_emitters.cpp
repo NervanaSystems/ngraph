@@ -21,12 +21,13 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 using namespace ngraph;
+using namespace ngraph::runtime::gpu;
 
 void runtime::gpu::emit_broadcast(std::string name,
-                CUdeviceptr in, CUdeviceptr out, std::array<std::string, 2> data_types, size_t repeat_size, size_t repeat_times, size_t count);
+                CUdeviceptr in, CUdeviceptr out, std::array<std::string, 2> data_types, size_t repeat_size, size_t repeat_times, size_t count)
 {
      std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-     std::raplace(name_signature.begin(), name_signature.end(), ' ', '_');
+     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
     // Create an instance of nvrtcProgram with the code string.
     if (CudaFunctionPool::instance().get(name_signature) == nullptr)
     {
@@ -56,10 +57,10 @@ void runtime::gpu::emit_broadcast(std::string name,
 
 
 void runtime::gpu::emit_onehot(std::string name,
-                CUdeviceptr in, CUdeviceptr out, std::array<std::string, 2> data_types, size_t repeat_size, size_t repeat_times, size_t count);
+                CUdeviceptr in, CUdeviceptr out, std::array<std::string, 2> data_types, size_t repeat_size, size_t repeat_times, size_t count)
 {
      std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-     std::raplace(name_signature.begin(), name_signature.end(), ' ', '_');
+     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
     // Create an instance of nvrtcProgram with the code string.
     if (CudaFunctionPool::instance().get(name_signature) == nullptr)
     {
