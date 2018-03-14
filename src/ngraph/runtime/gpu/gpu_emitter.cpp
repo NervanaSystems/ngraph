@@ -495,7 +495,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
                            << "\"}"
                            << ", " << repeat_size << ", " << repeat_times << ", "
-                           << args[0].get_size() << ");\n";
+                           << out[0].get_size() << ");\n";
 
                     writer.indent--;
                     writer << "}\n";

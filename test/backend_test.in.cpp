@@ -4040,7 +4040,6 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};

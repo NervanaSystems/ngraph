@@ -44,7 +44,7 @@ void runtime::gpu::emit_broadcast(std::string name,
     }
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
-    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
                                   1, // grid dim
@@ -79,7 +79,7 @@ void runtime::gpu::emit_onehot(std::string name,
     }
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
-    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
                                   1, // grid dim
