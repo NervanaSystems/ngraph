@@ -56,7 +56,10 @@ void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
 
 void runtime::gpu::free_gpu_buffer(void* buffer)
 {
-    cudaFree(buffer);
+    if (buffer)
+    {
+        cudaFree(buffer);
+    }
 }
 
 void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
