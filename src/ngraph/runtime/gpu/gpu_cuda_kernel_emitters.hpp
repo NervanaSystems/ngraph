@@ -58,6 +58,7 @@ namespace ngraph
                                      Inputs&&... inputs)
             {
                 std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
+                std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
                 if (CudaFunctionPool::instance().get(name + type_signature) == nullptr)
                 {
                     codegen::CodeWriter writer;
