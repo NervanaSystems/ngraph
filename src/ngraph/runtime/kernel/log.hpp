@@ -26,7 +26,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void log(T* arg, T* out, size_t count)
+            void log(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
