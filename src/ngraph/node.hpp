@@ -41,10 +41,6 @@ namespace ngraph
     {
         class GetOutputElementElimination;
     }
-}
-
-namespace ngraph
-{
     namespace op
     {
         class Parameter;
@@ -70,7 +66,8 @@ namespace ngraph
         friend void insert_parameter_split_between(std::shared_ptr<Node> src_node,
                                                    std::shared_ptr<Node> dst_node,
                                                    std::shared_ptr<op::Parameter> p_node);
-        friend class ngraph::pass::GetOutputElementElimination;                                                   
+        
+        friend class ngraph::pass::GetOutputElementElimination;
 
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
@@ -79,12 +76,6 @@ namespace ngraph
             for (auto arg : m_arguments)
             {
                 arg->m_users.erase(this);
-            }
-            //std::cout << "destroying " << m_instance_id << std::endl;
-
-            for (auto& input : m_inputs)
-            {
-                input.get_output().remove_input(&input);
             }
         }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -100,8 +91,6 @@ namespace ngraph
         void set_name(const std::string& name);
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
-
-        std::multiset<Node*> build_users() const;
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.

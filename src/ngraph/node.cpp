@@ -38,8 +38,6 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
     , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
-
-    //std::cout << " creating node " << this->get_name() << std::endl;
     size_t i = 0;
     for (auto arg : m_arguments)
     {
@@ -47,8 +45,6 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
         for (descriptor::Output& output : arg->get_outputs())
         {
             m_inputs.emplace_back(this, i++, output);
-            auto& input = m_inputs.back();
-            //std::cout << " creating input " << &input << std::endl;
         }
     }
 }
@@ -165,10 +161,9 @@ NodeVector Node::get_input_ops() //const
             result.push_back(i.get_output().get_node());
         }
     }
-
     if (m_arguments != result)
     {
-       throw ngraph_error("Arguments aren't equal: different values");
+        throw ngraph_error("Arguments aren't equal: different values");
     }
     return result;
 }
@@ -304,30 +299,6 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
-}
-
-std::multiset<Node*> Node::build_users() const
-{
-    std::multiset<Node*> result;
-    //std::cout << "node = " << get_name() << std::endl;
-
-    // for (auto u : users())
-    // {
-    //     std::cout << "u = " << u->get_name() << std::endl;
-    // }
-
-    for (size_t i = 0; i < get_output_size(); i++)
-    {
-        
-        //std::cout << "input = " << get_output_inputs(i) << std::endl;
-        for (auto input : get_output_inputs(i))
-        {
-            //std::cout << "input = " << input << std::endl;
-            //std::cout << "input->get_node() = " << input->get_node()->get_name() << std::endl;
-            result.insert(input->get_node().get());
-        }
-    }
-    return result;
 }
 
 descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
