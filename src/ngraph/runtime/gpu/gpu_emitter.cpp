@@ -489,10 +489,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     writer << "{   // " << node->get_name() << " \n";
                     writer.indent++;
-                writer << "runtime::gpu::emit_broadcast(\"" << node->description() << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr(" << out[0].get_name() << ")"
-                        << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                        << ", " << repeat_size << ", " << repeat_times
-                        << ", " << args[0].get_size() << ");\n";
+                    writer << "runtime::gpu::emit_broadcast(\"" << node->description()
+                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << out[0].get_name() << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", " << repeat_size << ", " << repeat_times << ", "
+                           << args[0].get_size() << ");\n";
 
                     writer.indent--;
                     writer << "}\n";
@@ -634,7 +637,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 size_t idx = onehot->get_one_hot_axis();
                 size_t repeat_times = result_shape[idx];
                 size_t repeat_size = 1;
-                for(size_t i = idx + 1; i < result_shape.size(); i++)
+                for (size_t i = idx + 1; i < result_shape.size(); i++)
                 {
                     repeat_size *= result_shape[i];
                 }
@@ -642,11 +645,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "{   // " << node->get_name() << "\n";
                 writer.indent++;
                 writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
-                        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-                writer << "runtime::gpu::emit_onehot(\"" << node->description() << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr(" << out[0].get_name() << ")"
-                        << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                        << ", " << repeat_size << ", " << repeat_times
-                        << ", " << args[0].get_size() << ");\n";
+                       << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
+                writer << "runtime::gpu::emit_onehot(\"" << node->description()
+                       << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                       << out[0].get_name() << ")"
+                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", " << repeat_size << ", " << repeat_times << ", " << args[0].get_size()
+                       << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }
