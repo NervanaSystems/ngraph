@@ -97,6 +97,7 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -117,7 +118,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -620,10 +620,8 @@ using namespace ngraph::runtime;
             auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
             if (!res->needs_copy())
             {
-                
                 shared_ptr<descriptor::TensorView> itv =
                     res->get_inputs().at(0).get_output().get_tensor_view();
-                std::cout << "tensor_name = " << itv->get_tensor().get_name() << std::endl;
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
             }
         }
