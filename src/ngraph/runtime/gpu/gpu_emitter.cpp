@@ -186,6 +186,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
                 const Shape& arg0_shape = args[0].get_shape();
                 const Shape& arg1_shape = args[1].get_shape();
+                const Shape& out_shape = out[0].get_shape();
                 if (arg0_shape.empty() || arg1_shape.empty())
                 {
                     auto& first = (arg0_shape.empty() ? args[0] : args[1]);
@@ -241,6 +242,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
+                //matrix vector
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          (dot->get_reduction_axes_count() == 1))
                 {
@@ -263,23 +265,60 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
-                         (dot->get_reduction_axes_count() == 1))
+                //dot can be treat as matrix multiply
+                else
                 {
                     // GEMM Call
-                    if (arg0_shape[0] != out[0].get_shape()[0] || // m
-                        arg1_shape[1] != out[0].get_shape()[1] || // n
-                        arg0_shape[1] != arg1_shape[0])           // k
+                    size_t reduction_axes = dot->get_reduction_axes_count();
+                    size_t m = 1, n = 1, k = 1;
+                    //check if input and output size correct
+                    for (size_t i = 0, idxa = arg0_shape.size() - 1; i < reduction_axes;
+                         i++, idxa--)
                     {
-                        throw std::runtime_error("input and output shape does not match for dot;");
+                        if (arg0_shape[idxa] != arg1_shape[i])
+                        {
+                            throw std::runtime_error(
+                                "input and output shape does not match for dot;");
+                        }
+                        else
+                        {
+                            k *= arg1_shape[i];
+                        }
                     }
+                    for (size_t i = 0; i < arg0_shape.size() - reduction_axes; i++)
+                    {
+                        if (arg0_shape[i] != out_shape[i])
+                        {
+                            throw std::runtime_error(
+                                "input and output shape does not match for dot;");
+                        }
+                        else
+                        {
+                            m *= arg0_shape[i];
+                        }
+                    }
+                    for (size_t i = 0, idxa = arg1_shape.size() - 1, idxb = out_shape.size() - 1;
+                         i < arg1_shape.size() - reduction_axes;
+                         i++, idxa--, idxb--)
+                    {
+                        if (arg1_shape[idxa] != out_shape[idxb])
+                        {
+                            throw std::runtime_error(
+                                "input and output shape does not match for dot;");
+                        }
+                        else
+                        {
+                            n *= arg1_shape[idxa];
+                        }
+                    }
+
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0.0;\n";
-                    writer << "int m = " << arg0_shape[0] << ";\n";
-                    writer << "int n = " << arg1_shape[1] << ";\n";
-                    writer << "int k = " << arg0_shape[0] << ";\n";
+                    writer << "int m = " << m << ";\n";
+                    writer << "int n = " << n << ";\n";
+                    writer << "int k = " << k << ";\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgemm("
                            << "cublas_handle,"
@@ -298,11 +337,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.indent--;
                     writer << "}\n";
-                }
-                else
-                {
-                    throw std::runtime_error(node->get_name() +
-                                             " with more then 2D is not implemented.");
                 }
             }
 
