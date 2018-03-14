@@ -711,6 +711,10 @@ using namespace std;
                 }
             }
         }
+        if (temporaries_used)
+        {
+            writer << "ngraph::runtime::gpu::free_gpu_buffer(pool_base_ptr);\n";
+        }
 
         writer.indent--;
         // End generated function
