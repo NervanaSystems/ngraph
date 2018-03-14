@@ -19,9 +19,9 @@ from typing import List
 
 import numpy as np
 
-from pyngraph import Function, Node, serialize, TensorViewType, util
-from pyngraph.runtime import Manager
-from pyngraph.op import Parameter
+from ngraph import Function, Node, serialize, TensorViewType, util
+from ngraph.runtime import Manager
+from ngraph.op import Parameter
 
 from ngraph_api.utils.types import get_dtype, NumericData
 

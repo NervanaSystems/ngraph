@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-from pyngraph import Type, Function
-from pyngraph import Node
-from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
-from pyngraph.op import Constant, Exp, Log, Sum
-from pyngraph.op import Greater, Convert, Reduce
-from pyngraph.op import OneHot
+from ngraph import Type, Function
+from ngraph import Node
+from ngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
+from ngraph.op import Constant, Exp, Log, Sum
+from ngraph.op import Greater, Convert, Reduce
+from ngraph.op import OneHot
 
 from typing import List, Dict, Set
 

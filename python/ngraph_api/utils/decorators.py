@@ -16,7 +16,7 @@
 from functools import wraps
 from typing import Any, Callable
 
-from pyngraph import Node
+from ngraph import Node
 from ngraph_api.utils.types import as_node, NodeInput
 from ngraph_api.utils.broadcasting import as_elementwise_compatible_nodes
 

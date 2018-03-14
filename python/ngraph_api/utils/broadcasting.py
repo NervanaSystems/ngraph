@@ -19,7 +19,7 @@ from typing import Optional, Set, List
 import ngraph_api as ng
 import numpy as np
 
-from pyngraph import AxisSet, Node
+from ngraph import AxisSet, Node
 from ngraph_api.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
 
 log = logging.getLogger(__file__)

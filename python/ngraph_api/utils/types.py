@@ -20,9 +20,9 @@ from typing import Union, List
 
 import numpy as np
 
-from pyngraph import Type as NgraphType
-from pyngraph import Node, Shape
-from pyngraph.op import Constant
+from ngraph import Type as NgraphType
+from ngraph import Node, Shape
+from ngraph.op import Constant
 
 from ngraph_api.exceptions import NgraphTypeError
 

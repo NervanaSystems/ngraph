@@ -18,9 +18,9 @@
 
 import numpy as np
 
-from pyngraph import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
+from ngraph import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
 
-from pyngraph.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
+from ngraph.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
     Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, MaxPool, \
     Minimum, Multiply, Negative, Not, NotEqual, Parameter, Reshape, Sqrt, Subtract, Sum, Tanh
 

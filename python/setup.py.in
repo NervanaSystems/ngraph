@@ -42,7 +42,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     import multiprocessing.pool
 
     def _single_compile(obj):
-        try: 
+        try:
             src, ext = build[obj]
         except KeyError:
             return
@@ -246,7 +246,7 @@ requirements = [
 
 
 setup(
-    name='pyngraph',
+    name='ngraph',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
@@ -255,13 +255,13 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    package_dir={'pyngraph': PYNGRAPH_SOURCE_DIR + "/pyngraph",
-                 'pyngraph.op': PYNGRAPH_SOURCE_DIR + "/pyngraph/op",
-                 'pyngraph.op.util': PYNGRAPH_SOURCE_DIR + "/pyngraph/op/util",
-                 'pyngraph.runtime': PYNGRAPH_SOURCE_DIR + "/pyngraph/runtime",
+    package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
+                 'ngraph.op': PYNGRAPH_SOURCE_DIR + "/ngraph/op",
+                 'ngraph.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/op/util",
+                 'ngraph.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/runtime",
                  'ngraph_api': PYNGRAPH_SOURCE_DIR + "/ngraph_api",
                  'ngraph_api.utils': PYNGRAPH_SOURCE_DIR + "/ngraph_api/utils"},
-    packages = ['pyngraph', 'pyngraph.op', 'pyngraph.runtime', 'ngraph_api', 'ngraph_api.utils'],
+    packages = ['ngraph', 'ngraph.op', 'ngraph.runtime', 'ngraph_api', 'ngraph_api.utils'],
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     install_requires = requirements,

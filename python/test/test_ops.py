@@ -17,21 +17,21 @@
 import pytest
 import numpy as np
 
-import pyngraph.util as util
-from pyngraph import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
-from pyngraph import Type, Function, NodeVector
-from pyngraph.runtime import Manager
-from pyngraph.op import Acos, Asin, Atan, Cos, Sin, Tan
-from pyngraph.op import Cosh, Sinh, Tanh, Sqrt, Sign
-from pyngraph.op import Power, Negative, Ceiling, Floor
-from pyngraph.op import Parameter, Maximum, Minimum
-from pyngraph.op import Add, Subtract, Multiply, Divide, Dot
-from pyngraph.op import Constant, Abs, Exp, Log, Sum
-from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
-from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
-from pyngraph.op import Concat, Select
-from pyngraph.op import Reverse, MaxPool, ReplaceSlice, Slice
-from pyngraph.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
+import ngraph.util as util
+from ngraph import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
+from ngraph import Type, Function, NodeVector
+from ngraph.runtime import Manager
+from ngraph.op import Acos, Asin, Atan, Cos, Sin, Tan
+from ngraph.op import Cosh, Sinh, Tanh, Sqrt, Sign
+from ngraph.op import Power, Negative, Ceiling, Floor
+from ngraph.op import Parameter, Maximum, Minimum
+from ngraph.op import Add, Subtract, Multiply, Divide, Dot
+from ngraph.op import Constant, Abs, Exp, Log, Sum
+from ngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
+from ngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
+from ngraph.op import Concat, Select
+from ngraph.op import Reverse, MaxPool, ReplaceSlice, Slice
+from ngraph.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 
 def make_backend_call_frame(function):
