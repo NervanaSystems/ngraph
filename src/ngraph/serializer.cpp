@@ -166,8 +166,7 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
 
     traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
         traverse_nodes(const_cast<Function*>(f.get()), [&](shared_ptr<Node> node) {
-            auto c = dynamic_pointer_cast<op::Constant>(node);
-            if (c)
+            if (auto c = dynamic_pointer_cast<op::Constant>(node))
             {
                 uint32_t size = static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
                                                       c->get_output_element_type(0).size());
