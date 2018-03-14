@@ -266,7 +266,6 @@ namespace ngraph
                 static constexpr const char* op = "not";
                 static constexpr const char* math_kernel = "!x0";
             };
-
         }
     }
 }
