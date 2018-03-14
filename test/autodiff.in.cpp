@@ -909,7 +909,6 @@ TEST(${BACKEND_NAME}, backwards_log)
 
 TEST(${BACKEND_NAME}, backwards_maximum)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -930,7 +929,6 @@ TEST(${BACKEND_NAME}, backwards_maximum)
 
 TEST(${BACKEND_NAME}, backwards_minimum)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
