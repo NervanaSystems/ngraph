@@ -620,8 +620,10 @@ using namespace ngraph::runtime;
             auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
             if (!res->needs_copy())
             {
+                
                 shared_ptr<descriptor::TensorView> itv =
-                    res->get_input_op(0)->get_output_tensor_view();
+                    res->get_inputs().at(0).get_output().get_tensor_view();
+                std::cout << "tensor_name = " << itv->get_tensor().get_name() << std::endl;
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
             }
         }

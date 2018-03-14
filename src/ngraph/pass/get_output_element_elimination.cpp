@@ -41,12 +41,30 @@ bool ngraph::pass::GetOutputElementElimination::run_on_function(std::shared_ptr<
 
 			if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(input.get_output().get_node()))
 			{
+                auto multi = goe->get_inputs().at(0).get_output().get_node();
                 std::cout << "goe = " << goe->get_name() << std::endl;
                 std::cout << "n = " << n->get_name() << std::endl;
-                std::cout << "multi = " << goe->get_inputs().at(0).get_output().get_node()->get_name() << std::endl;
-                //GetOutputElement always has one input
-                //whose get_output should be a multi-output node
-				input.replace_output(goe->get_inputs().at(0).get_output());
+                std::cout << "multi = " << multi->get_name() << std::endl;
+
+				input.replace_output(goe->get_inputs().at(goe->get_n()).get_output());
+
+                //fix node arguments
+                auto& n_args = const_cast<ngraph::NodeVector&>(n->get_arguments_FOR_GRAPH_REWRITE_ONLY());
+                auto it = std::find(begin(n_args), end(n_args), goe);
+                if (it == end(n_args))
+                {
+                    throw ngraph_error ("Expected to find GetOutputElement in n's inputs");
+                }
+                *it = multi;
+
+                //fix users
+                const_cast<std::multiset<Node*>&>(multi->users()).insert(n.get());
+                
+                //we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
+                //const_cast<std::multiset<Node*>&>(multi->users()).erase(goe.get());
+                //const_cast<std::multiset<Node*>&>(goe->users()).erase(n.get());
+                //auto& goe_args = const_cast<ngraph::NodeVector&>(n->get_arguments_FOR_GRAPH_REWRITE_ONLY());
+
 				optimized = true;
 			}
 		}

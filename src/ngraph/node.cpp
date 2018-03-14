@@ -165,11 +165,11 @@ NodeVector Node::get_input_ops() //const
             result.push_back(i.get_output().get_node());
         }
     }
-    
-    //if (m_arguments != result)
-    //{
-    //    throw ngraph_error("Arguments aren't equal: different values");
-    //}
+
+    if (m_arguments != result)
+    {
+       throw ngraph_error("Arguments aren't equal: different values");
+    }
     return result;
 }
 

@@ -37,6 +37,14 @@
 
 namespace ngraph
 {
+    namespace pass
+    {
+        class GetOutputElementElimination;
+    }
+}
+
+namespace ngraph
+{
     namespace op
     {
         class Parameter;
@@ -62,6 +70,7 @@ namespace ngraph
         friend void insert_parameter_split_between(std::shared_ptr<Node> src_node,
                                                    std::shared_ptr<Node> dst_node,
                                                    std::shared_ptr<op::Parameter> p_node);
+        friend class ngraph::pass::GetOutputElementElimination;                                                   
 
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
