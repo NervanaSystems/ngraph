@@ -961,6 +961,29 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::SigmoidBackprop)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        //ensure delta and input have same layout
+                        prim_input_formats.push_back(input_layout);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(input_layout);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::ReluBackprop)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1006,6 +1029,36 @@ namespace ngraph
                     else
                     {
                         throw ngraph_error("Batchnorm only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormBackprop)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+
+                        prim_input_formats.push_back(memory::format::x);  // gamma
+                        prim_input_formats.push_back(memory::format::x);  // beta
+                        prim_input_formats.push_back(input_layout);       // input
+                        prim_input_formats.push_back(memory::format::x);  // mean
+                        prim_input_formats.push_back(memory::format::x);  // variance
+                        prim_input_formats.push_back(input_layout);       // delta
+                        prim_output_formats.push_back(input_layout);      // dinput
+                        prim_output_formats.push_back(memory::format::x); // dgamma
+                        prim_output_formats.push_back(memory::format::x); // dbeta
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Batchnorm Backprop only supported in MKLDNN for now");
                     }
                 }
 
@@ -1056,6 +1109,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BatchNormBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
@@ -1063,6 +1118,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Sigmoid>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

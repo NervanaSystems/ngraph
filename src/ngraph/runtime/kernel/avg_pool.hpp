@@ -31,7 +31,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void avg_pool_backprop(T* delta,
+            void avg_pool_backprop(const T* delta,
                                    T* out,
                                    const Shape& delta_shape,
                                    const Shape& out_shape,
@@ -120,7 +120,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void avg_pool(T* arg,
+            void avg_pool(const T* arg,
                           T* out,
                           const Shape& arg_shape,
                           const Shape& out_shape,

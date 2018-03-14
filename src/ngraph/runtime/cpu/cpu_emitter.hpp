@@ -58,8 +58,6 @@ namespace ngraph
                 {
                 }
 
-                static void emit_mkldnn_preamble(codegen::CodeWriter& writer);
-
             private:
                 static std::string emit_vector(const TensorViewWrapper&,
                                                const std::string& name = "");

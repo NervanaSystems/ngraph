@@ -388,7 +388,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
 TEST(${BACKEND_NAME}, backwards_abs)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -439,7 +438,6 @@ TEST(${BACKEND_NAME}, backwards_add)
 
 TEST(${BACKEND_NAME}, backwards_add_nested)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -577,7 +575,6 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
 TEST(${BACKEND_NAME}, backwards_ceiling)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -617,7 +614,6 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
 
 TEST(${BACKEND_NAME}, backwards_cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -639,7 +635,6 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
 TEST(${BACKEND_NAME}, backwards_cosh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -690,7 +685,6 @@ TEST(${BACKEND_NAME}, backwards_divide)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -712,7 +706,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -734,7 +727,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -756,7 +748,6 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -844,7 +835,6 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 
 TEST(${BACKEND_NAME}, backwards_exp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -862,7 +852,6 @@ TEST(${BACKEND_NAME}, backwards_exp)
 
 TEST(${BACKEND_NAME}, backwards_floor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -997,7 +986,6 @@ TEST(${BACKEND_NAME}, backwards_negative)
 
 TEST(${BACKEND_NAME}, backwards_parameter)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1112,7 +1100,6 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
 
 TEST(${BACKEND_NAME}, backwards_reshape)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1202,7 +1189,6 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
 TEST(${BACKEND_NAME}, backwards_sign)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1236,7 +1222,6 @@ TEST(${BACKEND_NAME}, backwards_sign)
 
 TEST(${BACKEND_NAME}, backwards_sin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1258,7 +1243,6 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
 TEST(${BACKEND_NAME}, backwards_sinh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
