@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-
+#include <iostream>
 #include <algorithm>
 #include <map>
 
@@ -42,7 +42,6 @@ void runtime::gpu::emit_broadcast(std::string name,
         std::string kernel = writer.get_code();
         CudaFunctionPool::instance().set(name_signature, kernel);
     }
-
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
@@ -78,7 +77,8 @@ void runtime::gpu::emit_onehot(std::string name,
         CudaFunctionPool::instance().set(name_signature, kernel);
     }
 
-    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
+    int error = 0;
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count, &error};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
@@ -91,4 +91,5 @@ void runtime::gpu::emit_onehot(std::string name,
                                   args_list,
                                   0));  // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    //std::cout << "onhot error " << error << std::endl;
 }

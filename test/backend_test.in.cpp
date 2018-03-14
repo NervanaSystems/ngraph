@@ -3830,7 +3830,6 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 
 TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3};
@@ -3863,7 +3862,6 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
@@ -3944,7 +3942,6 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
