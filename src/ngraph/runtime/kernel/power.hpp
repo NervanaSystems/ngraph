@@ -26,7 +26,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void power(T* arg0, T* arg1, T* out, size_t count)
+            void power(const T* arg0, const T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

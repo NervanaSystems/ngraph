@@ -25,7 +25,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void negate(T* arg, T* out, size_t count)
+            void negate(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
