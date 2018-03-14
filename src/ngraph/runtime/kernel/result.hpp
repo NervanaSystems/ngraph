@@ -27,7 +27,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void result(T* arg, T* out, size_t count)
+            void result(const T* arg, T* out, size_t count)
             {
                 memcpy(out, arg, sizeof(T) * count);
             }

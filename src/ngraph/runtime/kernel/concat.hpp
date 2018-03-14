@@ -27,7 +27,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void concat(const std::vector<T*>& args,
+            void concat(const std::vector<const T*>& args,
                         T* out,
                         const std::vector<Shape>& in_shapes,
                         const Shape& out_shape,
