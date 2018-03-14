@@ -85,7 +85,7 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
                                                     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t m, size_t k, size_t n, int err)\n";
+           << data_types[1] << "* out, size_t m, size_t k, size_t n, int* err)\n";
     writer << "{\n";
     writer.indent++;
     {
@@ -99,19 +99,19 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
             writer << "{\n";
             {
                 writer.indent++;
-                writer << "err = -1;\n";
+                writer << "err[0] = -1;\n";
                 writer << "return;\n";
                 writer.indent--;
-            } 
+            }
             writer << "}\n";
-            writer << "if(input - (size_t)input != 0)\n";
+            writer << "if(input - floorf(input) != 0)\n";
             writer << "{\n";
             {
                 writer.indent++;
-                writer << "err = -2;\n";
+                writer << "err[0] = -2;\n";
                 writer << "return;\n";
                 writer.indent--;
-            } 
+            }
             writer << "}\n";
             writer << "size_t idx = (tid / m) * m * k + (m * input) + tid % m;\n";
             writer << "out[idx] = 1;\n";

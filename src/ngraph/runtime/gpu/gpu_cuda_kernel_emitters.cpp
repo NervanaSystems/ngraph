@@ -13,8 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <map>
 
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
@@ -77,8 +77,10 @@ void runtime::gpu::emit_onehot(std::string name,
         CudaFunctionPool::instance().set(name_signature, kernel);
     }
 
-    int error = 0;
-    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count, &error};
+    int err_h[1] = {0};
+    void* err_d = ngraph::runtime::gpu::create_gpu_buffer(4);
+    CUdeviceptr err_d_ptr = CUdeviceptr(err_d);
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count, &err_d_ptr};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
@@ -91,5 +93,17 @@ void runtime::gpu::emit_onehot(std::string name,
                                   args_list,
                                   0));  // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-    //std::cout << "onhot error " << error << std::endl;
+    ngraph::runtime::gpu::cuda_memcpyDtH(err_h, err_d, 4);
+    if (err_d)
+    {
+        cudaFree(err_d);
+    }
+    if (err_h[0] == -2)
+    {
+        throw(std::range_error("One-hot: non-integral value in input"));
+    }
+    if (err_h[0] == -1)
+    {
+        throw(std::range_error("One-hot: value is out of category range"));
+    }
 }

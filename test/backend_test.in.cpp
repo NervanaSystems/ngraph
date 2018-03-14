@@ -3974,7 +3974,6 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
@@ -4061,7 +4060,6 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
