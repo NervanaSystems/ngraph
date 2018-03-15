@@ -25,7 +25,7 @@ PYBIND11_MODULE(_pyngraph, m){
     regclass_pyngraph_NodeVector(m);
     regclass_pyngraph_Shape(m);
     regclass_pyngraph_Strides(m);
-    regclass_pyngraph_CoordinateDiff(m); 
+    regclass_pyngraph_CoordinateDiff(m);
     regclass_pyngraph_AxisSet(m);
     regclass_pyngraph_AxisVector(m);
     regclass_pyngraph_Coordinate(m);
@@ -34,7 +34,7 @@ PYBIND11_MODULE(_pyngraph, m){
     regclass_pyngraph_Serializer(m);
     py::module m_op = m.def_submodule("op", "module pyngraph.op");
     regclass_pyngraph_op_Op(m_op);
-    regmodule_pyngraph_op_util(m);
+    regmodule_pyngraph_op_util(m_op);
     regmodule_pyngraph_op(m_op);
     regmodule_pyngraph_runtime(m);
     regmodule_pyngraph_passes(m);
