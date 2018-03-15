@@ -148,7 +148,7 @@ float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
@@ -321,7 +321,7 @@ float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
@@ -363,7 +363,7 @@ float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
@@ -405,7 +405,7 @@ float alpha1 = -1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
@@ -597,7 +597,7 @@ float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
@@ -671,7 +671,7 @@ float alpha1 = 1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
 cudnnCreateTensorDescriptor(&descriptor);
 cudnnSetTensor4dDescriptor(descriptor,
-                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
