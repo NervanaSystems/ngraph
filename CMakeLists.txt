@@ -46,6 +46,9 @@ else()
     message(WARNING "You are using an unsupported compiler. Compilation has only been tested with Clang (${CLANG_MIN_VERSION} and up), Apple Clang (${APPLE_CLANG_MIN_VERSION} and up), and GCC (${GCC_MIN_VERSION} and up).")
 endif()
 
+# Prevent Eigen from using any LGPL3 code
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY")
+
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
     set(NGRAPH_USE_PREBUILT_LLVM TRUE)
 endif()
