@@ -88,6 +88,7 @@ set (SRC
     ops/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/dump_sorted.cpp
+    pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
     pass/liveness.cpp
