@@ -289,9 +289,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
