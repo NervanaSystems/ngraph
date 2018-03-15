@@ -138,20 +138,25 @@ To perform unit tests on the install:
 Compile a framework with ``libngraph``
 ======================================
 
-After building and installing nGraph++ to your system, the next logical 
-step is to compile a framework that you can use to run a DL training or 
-inference model. If you've already extracted a model from a framework
-by following a tutorial from `ONNX_`, and you have a exported, serialized 
-file ready to be imported by the library, see our :doc:`../howto/handle`. 
+After building and installing nGraph++ to your system, there are two likely 
+paths for what you'll want to do next: either compile a framework to run a DL 
+training model, or load an import "already-trained" model for inference on an 
+Intel nGraph++ enabled backend
 
-For this early |release| release,  :doc:`framework-integration-guides`, 
-can help you get started with a framework. 
+For this former case, this early |release| release, :doc:`framework-integration-guides`, 
+can help you get started with a training a model on a supported framework. 
 
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
 * neon™ `frontend framework`_.
 
-Integration guides for other frameworks are tentatively forthcoming.
+For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
+exported, serialized model, you can skip the section on frameworks and go directly
+to our :doc:`../howto/import` documentation. 
+
+Please keep in mind that both of these are under continuous development, and will 
+be updated frequently in the coming months.  Stay tuned!  
+
 
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
