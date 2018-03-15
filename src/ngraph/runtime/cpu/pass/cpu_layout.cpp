@@ -116,6 +116,8 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
         auto tvt = tv->get_tensor_view_type();
         auto rank = tvt->get_shape().size();
 
+        std::cout << "Setting layout on " << node->get_name() << std::endl;
+
         auto tvl = tv->get_tensor_view_layout();
         if (tvl)
         {

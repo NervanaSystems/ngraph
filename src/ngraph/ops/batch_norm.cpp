@@ -148,8 +148,16 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto gamma = get_input_op(0);
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
-    auto mean = std::make_shared<op::GetOutputElement>(shared_from_this(), 1);
-    auto var = std::make_shared<op::GetOutputElement>(shared_from_this(), 2);
+
+
+    NodeVector goes;
+    for (auto _input : get_output_inputs(0))
+    {
+        goes.push_back(_input->get_node());
+    }     
+
+    auto mean = goes.at(1);
+    auto var = goes.at(2);
     auto bbn = std::make_shared<op::BatchNormBackprop>(
         get_eps_value(), gamma, beta, input, mean, var, delta);
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
