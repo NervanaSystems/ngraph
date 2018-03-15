@@ -136,7 +136,7 @@ Run ResNet20 inference on picture
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
-   :lines: 35
+   :lines: 36
  
 
 Put it all together
@@ -144,7 +144,7 @@ Put it all together
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
-   :lines: 17-36
+   :lines: 17-37
    :caption: "Code to run inference on a CIFAR10 trained model"
 
 
