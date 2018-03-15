@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/acos.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/acos.hpp"
 #include "pyngraph/ops/acos.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Acos(py::module m){
-    py::class_<ngraph::op::Acos, std::shared_ptr<ngraph::op::Acos>, ngraph::op::util::UnaryElementwiseArithmetic> acos(m, "Acos");
+void regclass_pyngraph_op_Acos(py::module m)
+{
+    py::class_<ngraph::op::Acos,
+               std::shared_ptr<ngraph::op::Acos>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        acos(m, "Acos");
     acos.doc() = "ngraph.op.Acos wraps ngraph::op::Acos";
-    acos.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    acos.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

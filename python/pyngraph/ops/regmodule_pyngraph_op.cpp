@@ -14,12 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op(py::module m_op){
+void regmodule_pyngraph_op(py::module m_op)
+{
     regclass_pyngraph_op_Abs(m_op);
     regclass_pyngraph_op_Acos(m_op);
     regclass_pyngraph_op_Asin(m_op);

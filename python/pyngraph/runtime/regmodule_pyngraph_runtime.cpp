@@ -14,13 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_runtime(py::module m){
-    py::module m_runtime = m.def_submodule("runtime", "Package ngraph.runtime wraps ngraph::runtime");
+void regmodule_pyngraph_runtime(py::module m)
+{
+    py::module m_runtime =
+        m.def_submodule("runtime", "Package ngraph.runtime wraps ngraph::runtime");
     regclass_pyngraph_runtime_TensorView(m_runtime);
     regclass_pyngraph_runtime_Backend(m_runtime);
     regclass_pyngraph_runtime_CallFrame(m_runtime);

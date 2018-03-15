@@ -14,15 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/floor.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/floor.hpp"
 #include "pyngraph/ops/floor.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Floor(py::module m){
-    py::class_<ngraph::op::Floor, std::shared_ptr<ngraph::op::Floor>, ngraph::op::util::UnaryElementwiseArithmetic> floor(m, "Floor");
+void regclass_pyngraph_op_Floor(py::module m)
+{
+    py::class_<ngraph::op::Floor,
+               std::shared_ptr<ngraph::op::Floor>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        floor(m, "Floor");
     floor.doc() = "ngraph.op.Floor wraps ngraph::op::Floor";
-    floor.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    floor.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

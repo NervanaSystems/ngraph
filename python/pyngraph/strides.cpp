@@ -14,18 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/strides.hpp" //ngraph::Strides
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/strides.hpp"      //ngraph::Strides
 #include "pyngraph/strides.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Strides(py::module m) {
-
+void regclass_pyngraph_Strides(py::module m)
+{
     py::class_<ngraph::Strides, std::shared_ptr<ngraph::Strides>> strides(m, "Strides");
     strides.doc() = "ngraph.Strides wraps ngraph::Strides";
-    strides.def(py::init<const std::initializer_list<size_t>& >());
-    strides.def(py::init<const std::vector<size_t>& >());
-    strides.def(py::init<const ngraph::Strides& >());
+    strides.def(py::init<const std::initializer_list<size_t>&>());
+    strides.def(py::init<const std::vector<size_t>&>());
+    strides.def(py::init<const ngraph::Strides&>());
 }

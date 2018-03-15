@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/tanh.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/tanh.hpp"
 #include "pyngraph/ops/tanh.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Tanh(py::module m){
-    py::class_<ngraph::op::Tanh, std::shared_ptr<ngraph::op::Tanh>, ngraph::op::util::UnaryElementwiseArithmetic> tanh(m, "Tanh");
+void regclass_pyngraph_op_Tanh(py::module m)
+{
+    py::class_<ngraph::op::Tanh,
+               std::shared_ptr<ngraph::op::Tanh>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        tanh(m, "Tanh");
     tanh.doc() = "ngraph.op.Tanh wraps ngraph::op::Tanh";
-    tanh.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    tanh.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

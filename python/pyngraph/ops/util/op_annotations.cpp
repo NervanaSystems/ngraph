@@ -22,7 +22,9 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_util_OpAnnotations(py::module m){
-    py::class_<ngraph::op::util::OpAnnotations, std::shared_ptr<ngraph::op::util::OpAnnotations>> opAnnotations(m, "OpAnnotations");
-    opAnnotations.def(py::init< >());
+void regclass_pyngraph_op_util_OpAnnotations(py::module m)
+{
+    py::class_<ngraph::op::util::OpAnnotations, std::shared_ptr<ngraph::op::util::OpAnnotations>>
+        opAnnotations(m, "OpAnnotations");
+    opAnnotations.def(py::init<>());
 }

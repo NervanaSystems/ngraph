@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/tan.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/tan.hpp"
 #include "pyngraph/ops/tan.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Tan(py::module m){
-    py::class_<ngraph::op::Tan, std::shared_ptr<ngraph::op::Tan>, ngraph::op::util::UnaryElementwiseArithmetic> tan(m, "Tan");
+void regclass_pyngraph_op_Tan(py::module m)
+{
+    py::class_<ngraph::op::Tan,
+               std::shared_ptr<ngraph::op::Tan>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        tan(m, "Tan");
     tan.doc() = "ngraph.op.Tan wraps ngraph::op::Tan";
-    tan.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    tan.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

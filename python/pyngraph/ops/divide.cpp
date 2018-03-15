@@ -22,11 +22,13 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Divide(py::module m){
-
-    py::class_<ngraph::op::Divide, std::shared_ptr<ngraph::op::Divide>, ngraph::op::util::BinaryElementwiseArithmetic> divide(m, "Divide");
+void regclass_pyngraph_op_Divide(py::module m)
+{
+    py::class_<ngraph::op::Divide,
+               std::shared_ptr<ngraph::op::Divide>,
+               ngraph::op::util::BinaryElementwiseArithmetic>
+        divide(m, "Divide");
     divide.doc() = "ngraph.op.Divide wraps ngraph::op::Divide";
-    divide.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Node>& >());
+    divide.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
-

@@ -17,21 +17,24 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/shape.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/shape.hpp"
 #include "pyngraph/ops/slice.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Slice(py::module m) {
-
-    py::class_<ngraph::op::Slice, std::shared_ptr<ngraph::op::Slice>, ngraph::op::util::RequiresTensorViewArgs> slice(m, "Slice");
-	slice.doc() = "ngraph.op.Slice wraps ngraph::op::Slice";
+void regclass_pyngraph_op_Slice(py::module m)
+{
+    py::class_<ngraph::op::Slice,
+               std::shared_ptr<ngraph::op::Slice>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        slice(m, "Slice");
+    slice.doc() = "ngraph.op.Slice wraps ngraph::op::Slice";
     slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		       const ngraph::Coordinate&,
-		       const ngraph::Coordinate&,
-		       const ngraph::Strides& >());
+                       const ngraph::Coordinate&,
+                       const ngraph::Coordinate&,
+                       const ngraph::Strides&>());
     slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		       const ngraph::Coordinate&,
-		       const ngraph::Coordinate& >());
+                       const ngraph::Coordinate&,
+                       const ngraph::Coordinate&>());
 }

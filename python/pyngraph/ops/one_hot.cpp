@@ -17,18 +17,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/shape.hpp"
 #include "ngraph/ops/one_hot.hpp" // ngraph::op::OneHot
+#include "ngraph/shape.hpp"
 #include "pyngraph/ops/one_hot.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_OneHot(py::module m) {
-
-    py::class_<ngraph::op::OneHot, std::shared_ptr<ngraph::op::OneHot>, ngraph::op::util::RequiresTensorViewArgs> onehot(m, "OneHot");
+void regclass_pyngraph_op_OneHot(py::module m)
+{
+    py::class_<ngraph::op::OneHot,
+               std::shared_ptr<ngraph::op::OneHot>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        onehot(m, "OneHot");
     onehot.doc() = "ngraph.op.OneHot wraps ngraph::op::OneHot";
     onehot.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&, size_t>());
     onehot.def("get_one_hot_axis", &ngraph::op::OneHot::get_one_hot_axis);
-
 }
-

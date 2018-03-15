@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/min.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/min.hpp"
 #include "pyngraph/ops/min.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Min(py::module m){
-
-    py::class_<ngraph::op::Min, std::shared_ptr<ngraph::op::Min>, ngraph::op::util::ArithmeticReduction> min(m, "Min");
+void regclass_pyngraph_op_Min(py::module m)
+{
+    py::class_<ngraph::op::Min,
+               std::shared_ptr<ngraph::op::Min>,
+               ngraph::op::util::ArithmeticReduction>
+        min(m, "Min");
     min.doc() = "ngraph.op.Min wraps ngraph::op::Min";
-    min.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet& >());
+    min.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

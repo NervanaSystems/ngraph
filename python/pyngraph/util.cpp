@@ -14,17 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/numpy.h>
 #include "pyngraph/util.hpp"
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-void* numpy_to_c(py::array a) {
+void* numpy_to_c(py::array a)
+{
     py::buffer_info info = a.request();
     return info.ptr;
 }
 
-void regmodule_pyngraph_util(py::module m) {
+void regmodule_pyngraph_util(py::module m)
+{
     py::module mod = m.def_submodule("util", "ngraph.util");
     mod.def("numpy_to_c", &numpy_to_c);
 }

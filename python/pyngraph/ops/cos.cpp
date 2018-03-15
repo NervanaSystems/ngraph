@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/cos.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/cos.hpp"
 #include "pyngraph/ops/cos.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Cos(py::module m){
-    py::class_<ngraph::op::Cos, std::shared_ptr<ngraph::op::Cos>, ngraph::op::util::UnaryElementwiseArithmetic> cos(m, "Cos");
+void regclass_pyngraph_op_Cos(py::module m)
+{
+    py::class_<ngraph::op::Cos,
+               std::shared_ptr<ngraph::op::Cos>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        cos(m, "Cos");
     cos.doc() = "ngraph.op.Cos wraps ngraph::op::Cos";
-    cos.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    cos.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

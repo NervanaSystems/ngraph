@@ -14,23 +14,28 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/relu.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/relu.hpp"
 #include "pyngraph/ops/relu.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Relu(py::module m){
-
-    py::class_<ngraph::op::Relu, std::shared_ptr<ngraph::op::Relu>, ngraph::op::util::UnaryElementwiseArithmetic> relu(m, "Relu");
+void regclass_pyngraph_op_Relu(py::module m)
+{
+    py::class_<ngraph::op::Relu,
+               std::shared_ptr<ngraph::op::Relu>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        relu(m, "Relu");
     relu.doc() = "ngraph.op.Relu wraps ngraph::op::Relu";
-    relu.def(py::init<std::shared_ptr<ngraph::Node>& >());
+    relu.def(py::init<std::shared_ptr<ngraph::Node>&>());
 }
 
-void regclass_pyngraph_op_ReluBackprop(py::module m){
-
-    py::class_<ngraph::op::ReluBackprop, std::shared_ptr<ngraph::op::ReluBackprop>, ngraph::op::util::RequiresTensorViewArgs> relu_backprop(m, "ReluBackprop");
-    relu_backprop.def(py::init<std::shared_ptr<ngraph::Node>&, std::shared_ptr<ngraph::Node>& >());
+void regclass_pyngraph_op_ReluBackprop(py::module m)
+{
+    py::class_<ngraph::op::ReluBackprop,
+               std::shared_ptr<ngraph::op::ReluBackprop>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        relu_backprop(m, "ReluBackprop");
+    relu_backprop.def(py::init<std::shared_ptr<ngraph::Node>&, std::shared_ptr<ngraph::Node>&>());
 }
-

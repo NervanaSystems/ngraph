@@ -22,10 +22,12 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Log(py::module m){
-
-    py::class_<ngraph::op::Log, std::shared_ptr<ngraph::op::Log>, ngraph::op::util::UnaryElementwiseArithmetic> log(m, "Log");
+void regclass_pyngraph_op_Log(py::module m)
+{
+    py::class_<ngraph::op::Log,
+               std::shared_ptr<ngraph::op::Log>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        log(m, "Log");
     log.doc() = "ngraph.op.Log wraps ngraph::op::Log";
-    log.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    log.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

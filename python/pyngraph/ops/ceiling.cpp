@@ -14,15 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/ceiling.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/ceiling.hpp"
 #include "pyngraph/ops/ceiling.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Ceiling(py::module m){
-    py::class_<ngraph::op::Ceiling, std::shared_ptr<ngraph::op::Ceiling>, ngraph::op::util::UnaryElementwiseArithmetic> ceiling(m, "Ceiling");
+void regclass_pyngraph_op_Ceiling(py::module m)
+{
+    py::class_<ngraph::op::Ceiling,
+               std::shared_ptr<ngraph::op::Ceiling>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        ceiling(m, "Ceiling");
     ceiling.doc() = "ngraph.op.Ceiling wraps ngraph::op::Ceiling";
-    ceiling.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    ceiling.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

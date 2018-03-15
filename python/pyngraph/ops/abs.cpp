@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/abs.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/abs.hpp"
 #include "pyngraph/ops/abs.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Abs(py::module m){
-    py::class_<ngraph::op::Abs, std::shared_ptr<ngraph::op::Abs>, ngraph::op::util::UnaryElementwiseArithmetic> abs(m, "Abs");
+void regclass_pyngraph_op_Abs(py::module m)
+{
+    py::class_<ngraph::op::Abs,
+               std::shared_ptr<ngraph::op::Abs>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        abs(m, "Abs");
     abs.doc() = "ngraph.op.Abs wraps ngraph::op::Abs";
-    abs.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    abs.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

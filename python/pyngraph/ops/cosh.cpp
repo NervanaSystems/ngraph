@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/cosh.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/cosh.hpp"
 #include "pyngraph/ops/cosh.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Cosh(py::module m){
-    py::class_<ngraph::op::Cosh, std::shared_ptr<ngraph::op::Cosh>, ngraph::op::util::UnaryElementwiseArithmetic> cosh(m, "Cosh");
+void regclass_pyngraph_op_Cosh(py::module m)
+{
+    py::class_<ngraph::op::Cosh,
+               std::shared_ptr<ngraph::op::Cosh>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        cosh(m, "Cosh");
     cosh.doc() = "ngraph.op.Cosh wraps ngraph::op::Cosh";
-    cosh.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    cosh.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

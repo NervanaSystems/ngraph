@@ -14,19 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/softmax.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/softmax.hpp"
 #include "pyngraph/ops/softmax.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Softmax(py::module m){
-
-    py::class_<ngraph::op::Softmax, std::shared_ptr<ngraph::op::Softmax>, ngraph::op::util::UnaryElementwiseArithmetic> softmax(m, "Softmax");
+void regclass_pyngraph_op_Softmax(py::module m)
+{
+    py::class_<ngraph::op::Softmax,
+               std::shared_ptr<ngraph::op::Softmax>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        softmax(m, "Softmax");
     softmax.doc() = "ngraph.op.Softmax wraps ngraph::op::Softmax";
-    softmax.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                         const ngraph::AxisSet& >());
-
+    softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }
-

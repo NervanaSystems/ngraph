@@ -14,21 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/serializer.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/serializer.hpp"
-#include "pyngraph/serializer.hpp"
 #include <string>
+#include "pyngraph/serializer.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Serializer(py::module m) {
-
+void regclass_pyngraph_Serializer(py::module m)
+{
     /*
     std::string serialize(std::shared_ptr<ngraph::Function>,
                           size_t indent = 0,
                           bool binary_constant_data = false);
     */
-    m.def("serialize", (std::string (*) (std::shared_ptr<ngraph::Function>, size_t, bool) )&ngraph::serialize, py::arg(), py::arg("indent") = 0, py::arg());
-
+    m.def("serialize",
+          (std::string(*)(std::shared_ptr<ngraph::Function>, size_t, bool)) & ngraph::serialize,
+          py::arg(),
+          py::arg("indent") = 0,
+          py::arg());
 }

@@ -14,21 +14,22 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/parameter_vector.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "ngraph/ops/parameter.hpp" //ngraph::op::Parameter
-#include "ngraph/ops/parameter_vector.hpp"
-#include "pyngraph/ops/parameter.hpp" 
+#include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter_vector.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_ParameterVector(py::module m) {
-
-    py::class_<ngraph::op::ParameterVector, std::shared_ptr<ngraph::op::ParameterVector>> parameter_vector(m, "ParameterVector");
+void regclass_pyngraph_op_ParameterVector(py::module m)
+{
+    py::class_<ngraph::op::ParameterVector, std::shared_ptr<ngraph::op::ParameterVector>>
+        parameter_vector(m, "ParameterVector");
     parameter_vector.doc() = "ngraph.op.ParameterVector wraps ngraph::op::ParameterVector";
-    parameter_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::op::Parameter>>& >());
-    parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>& > ());
-    parameter_vector.def(py::init<const ngraph::op::ParameterVector& >());
-
+    parameter_vector.def(
+        py::init<const std::initializer_list<std::shared_ptr<ngraph::op::Parameter>>&>());
+    parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>&>());
+    parameter_vector.def(py::init<const ngraph::op::ParameterVector&>());
 }

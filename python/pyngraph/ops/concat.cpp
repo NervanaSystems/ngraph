@@ -17,15 +17,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/shape.hpp"
 #include "ngraph/ops/concat.hpp"
+#include "ngraph/shape.hpp"
 #include "pyngraph/ops/concat.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Concat(py::module m) {
-
-    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
+void regclass_pyngraph_op_Concat(py::module m)
+{
+    py::class_<ngraph::op::Concat,
+               std::shared_ptr<ngraph::op::Concat>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        concat(m, "Concat");
     concat.doc() = "ngraph.op.Concat wraps ngraph::op::Concat";
-    concat.def(py::init<const ngraph::NodeVector&, size_t >());
+    concat.def(py::init<const ngraph::NodeVector&, size_t>());
 }

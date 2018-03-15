@@ -18,20 +18,22 @@
 #include <pybind11/stl.h>
 //#include <string>
 #include "ngraph/function.hpp"      //ngraph::Function
-#include "ngraph/types/type.hpp"    //ngraph::TensorViewType
 #include "ngraph/ops/parameter.hpp" //ngraph::op::Parameter
+#include "ngraph/types/type.hpp"    //ngraph::TensorViewType
 #include "pyngraph/function.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Function(py::module m) {
-
+void regclass_pyngraph_Function(py::module m)
+{
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
     function.doc() = "ngraph.Function wraps ngraph::Function";
     function.def(py::init<const ngraph::NodeVector&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const std::string&>());
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const std::string&>());
     function.def("get_output_size", &ngraph::Function::get_output_size);
     function.def("get_output_op", &ngraph::Function::get_output_op);
     function.def("get_output_element_type", &ngraph::Function::get_output_element_type);
@@ -42,4 +44,3 @@ void regclass_pyngraph_Function(py::module m) {
     function.def("get_name", &ngraph::Function::get_name);
     function.def("set_name", &ngraph::Function::set_name);
 }
-

@@ -22,10 +22,13 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Equal(py::module m){
-
-    py::class_<ngraph::op::Equal, std::shared_ptr<ngraph::op::Equal>, ngraph::op::util::BinaryElementwiseComparison> equal(m, "Equal");
+void regclass_pyngraph_op_Equal(py::module m)
+{
+    py::class_<ngraph::op::Equal,
+               std::shared_ptr<ngraph::op::Equal>,
+               ngraph::op::util::BinaryElementwiseComparison>
+        equal(m, "Equal");
     equal.doc() = "ngraph.op.Equal wraps ngraph::op::Equal";
-    equal.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                         const std::shared_ptr<ngraph::Node>& >());
+    equal.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

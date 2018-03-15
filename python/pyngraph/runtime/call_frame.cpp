@@ -22,8 +22,10 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_runtime_CallFrame(py::module m){
-    py::class_<ngraph::runtime::CallFrame, std::shared_ptr<ngraph::runtime::CallFrame>> callFrame(m, "CallFrame");
+void regclass_pyngraph_runtime_CallFrame(py::module m)
+{
+    py::class_<ngraph::runtime::CallFrame, std::shared_ptr<ngraph::runtime::CallFrame>> callFrame(
+        m, "CallFrame");
     callFrame.doc() = "ngraph.runtime.CallFrame wraps ngraph::runtime::CallFrame";
     callFrame.def("call", &ngraph::runtime::CallFrame::call);
 }

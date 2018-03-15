@@ -14,19 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/function_call.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/function_call.hpp"
 #include "ngraph/function.hpp"
 #include "pyngraph/ops/function_call.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_FunctionCall(py::module m){
-
-    py::class_<ngraph::op::FunctionCall, std::shared_ptr<ngraph::op::FunctionCall>, ngraph::Node> function_call(m, "FunctionCall");
+void regclass_pyngraph_op_FunctionCall(py::module m)
+{
+    py::class_<ngraph::op::FunctionCall, std::shared_ptr<ngraph::op::FunctionCall>, ngraph::Node>
+        function_call(m, "FunctionCall");
     function_call.doc() = "ngraph.op.FunctionCall wraps ngraph::op::FunctionCall";
-    function_call.def(py::init<std::shared_ptr<ngraph::Function>, const ngraph::NodeVector& >());
-
+    function_call.def(py::init<std::shared_ptr<ngraph::Function>, const ngraph::NodeVector&>());
 }
-

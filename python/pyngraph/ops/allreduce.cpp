@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/allreduce.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/allreduce.hpp"
 #include "pyngraph/ops/allreduce.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_AllReduce(py::module m){
-
-    py::class_<ngraph::op::AllReduce, std::shared_ptr<ngraph::op::AllReduce>, ngraph::op::util::RequiresTensorViewArgs> allreduce(m, "AllReduce");
+void regclass_pyngraph_op_AllReduce(py::module m)
+{
+    py::class_<ngraph::op::AllReduce,
+               std::shared_ptr<ngraph::op::AllReduce>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        allreduce(m, "AllReduce");
     allreduce.doc() = "ngraph.op.AllReduce wraps ngraph::op::AllReduce";
-    allreduce.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    allreduce.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

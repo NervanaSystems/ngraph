@@ -14,19 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/product.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/product.hpp"
 #include "pyngraph/ops/product.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Product(py::module m){
-
-    py::class_<ngraph::op::Product, std::shared_ptr<ngraph::op::Product>, ngraph::op::util::ArithmeticReduction> product(m, "Product");
+void regclass_pyngraph_op_Product(py::module m)
+{
+    py::class_<ngraph::op::Product,
+               std::shared_ptr<ngraph::op::Product>,
+               ngraph::op::util::ArithmeticReduction>
+        product(m, "Product");
     product.doc() = "ngraph.op.Product wraps ngraph::op::Product";
-    product.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                         const ngraph::AxisSet& >());
-
+    product.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }
-

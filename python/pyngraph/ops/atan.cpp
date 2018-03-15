@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/atan.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/atan.hpp"
 #include "pyngraph/ops/atan.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Atan(py::module m){
-    py::class_<ngraph::op::Atan, std::shared_ptr<ngraph::op::Atan>, ngraph::op::util::UnaryElementwiseArithmetic> atan(m, "Atan");
+void regclass_pyngraph_op_Atan(py::module m)
+{
+    py::class_<ngraph::op::Atan,
+               std::shared_ptr<ngraph::op::Atan>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        atan(m, "Atan");
     atan.doc() = "ngraph.op.Atan wraps ngraph::op::Atan";
-    atan.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    atan.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-

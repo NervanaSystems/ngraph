@@ -17,15 +17,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/shape.hpp"
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/shape.hpp"
 #include "pyngraph/ops/convolution.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Convolution(py::module m) {
-
-    py::class_<ngraph::op::Convolution, std::shared_ptr<ngraph::op::Convolution>, ngraph::op::util::RequiresTensorViewArgs> convolution(m, "Convolution");
+void regclass_pyngraph_op_Convolution(py::module m)
+{
+    py::class_<ngraph::op::Convolution,
+               std::shared_ptr<ngraph::op::Convolution>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        convolution(m, "Convolution");
     convolution.doc() = "ngraph.op.Convolution wraps ngraph::op::Convolution";
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
@@ -33,32 +36,34 @@ void regclass_pyngraph_op_Convolution(py::module m) {
                              const ngraph::Strides&,
                              const ngraph::CoordinateDiff&,
                              const ngraph::CoordinateDiff&,
-                             const ngraph::Strides& >());
+                             const ngraph::Strides&>());
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
                              const ngraph::Strides&,
                              const ngraph::Strides&,
                              const ngraph::CoordinateDiff&,
-                             const ngraph::CoordinateDiff& >());
+                             const ngraph::CoordinateDiff&>());
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
                              const ngraph::Strides&,
-                             const ngraph::Strides& >());
+                             const ngraph::Strides&>());
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
-                             const ngraph::Strides& >());
+                             const ngraph::Strides&>());
 
-    convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                             const std::shared_ptr<ngraph::Node>& >());
+    convolution.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
 
-
-void regclass_pyngraph_op_ConvolutionBackpropData(py::module m) {
-
-    py::class_<ngraph::op::ConvolutionBackpropData, std::shared_ptr<ngraph::op::ConvolutionBackpropData>, ngraph::op::util::RequiresTensorViewArgs> convolutionBackpropData(m, "ConvolutionBackpropData");
+void regclass_pyngraph_op_ConvolutionBackpropData(py::module m)
+{
+    py::class_<ngraph::op::ConvolutionBackpropData,
+               std::shared_ptr<ngraph::op::ConvolutionBackpropData>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        convolutionBackpropData(m, "ConvolutionBackpropData");
 
     convolutionBackpropData.def(py::init<const ngraph::Shape&,
                                          const std::shared_ptr<ngraph::Node>&,
@@ -67,13 +72,15 @@ void regclass_pyngraph_op_ConvolutionBackpropData(py::module m) {
                                          const ngraph::Strides&,
                                          const ngraph::CoordinateDiff&,
                                          const ngraph::CoordinateDiff&,
-                                         const ngraph::Strides& >());
+                                         const ngraph::Strides&>());
 }
 
-
-void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m) {
-
-    py::class_<ngraph::op::ConvolutionBackpropFilters, std::shared_ptr<ngraph::op::ConvolutionBackpropFilters>, ngraph::op::util::RequiresTensorViewArgs> convolutionBackpropFilters(m, "ConvolutionBackpropFilters");
+void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m)
+{
+    py::class_<ngraph::op::ConvolutionBackpropFilters,
+               std::shared_ptr<ngraph::op::ConvolutionBackpropFilters>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        convolutionBackpropFilters(m, "ConvolutionBackpropFilters");
 
     convolutionBackpropFilters.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                             const ngraph::Shape&,
@@ -82,5 +89,5 @@ void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m) {
                                             const ngraph::Strides&,
                                             const ngraph::CoordinateDiff&,
                                             const ngraph::CoordinateDiff&,
-                                            const ngraph::Strides& >());
+                                            const ngraph::Strides&>());
 }

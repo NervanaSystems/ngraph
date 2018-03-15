@@ -21,4 +21,3 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Add(py::module m);
-

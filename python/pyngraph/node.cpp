@@ -17,36 +17,46 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/node.hpp"          // ngraph::Node
-#include "ngraph/ops/add.hpp"       // ngraph::op::Add
-#include "ngraph/ops/multiply.hpp"  // ngraph::op::Multiply
-#include "ngraph/ops/divide.hpp"    // ngraph::op::Divide
-#include "ngraph/ops/subtract.hpp"  // ngraph::op::Subtract
+#include "ngraph/node.hpp"         // ngraph::Node
+#include "ngraph/ops/add.hpp"      // ngraph::op::Add
+#include "ngraph/ops/divide.hpp"   // ngraph::op::Divide
+#include "ngraph/ops/multiply.hpp" // ngraph::op::Multiply
+#include "ngraph/ops/subtract.hpp" // ngraph::op::Subtract
 #include "pyngraph/node.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Node(py::module m){
-
+void regclass_pyngraph_Node(py::module m)
+{
     py::class_<ngraph::Node, std::shared_ptr<ngraph::Node>> node(m, "Node");
     node.doc() = "ngraph.Node wraps ngraph::Node";
-    node.def("__add__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return a + b;
-               }, py::is_operator());
-    node.def("__sub__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return a - b;
-               }, py::is_operator());
-    node.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return a * b;
-               }, py::is_operator());
-    node.def("__div__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return a / b;
-               }, py::is_operator());
-    node.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return a / b;
-               }, py::is_operator());
+    node.def("__add__",
+             [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                 return a + b;
+             },
+             py::is_operator());
+    node.def("__sub__",
+             [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                 return a - b;
+             },
+             py::is_operator());
+    node.def("__mul__",
+             [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                 return a * b;
+             },
+             py::is_operator());
+    node.def("__div__",
+             [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                 return a / b;
+             },
+             py::is_operator());
+    node.def("__truediv__",
+             [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                 return a / b;
+             },
+             py::is_operator());
 
-    node.def("__repr__", [](const ngraph::Node &self) {
+    node.def("__repr__", [](const ngraph::Node& self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
         std::string shape = py::cast(self.get_shape()).attr("__str__")().cast<std::string>();
         return "<" + class_name + ": '" + self.get_name() + "' (" + shape + ")>";
@@ -61,6 +71,4 @@ void regclass_pyngraph_Node(py::module m){
 
     node.def_property("name", &ngraph::Node::get_name, &ngraph::Node::set_name);
     node.def_property_readonly("shape", &ngraph::Node::get_shape);
-
 }
-

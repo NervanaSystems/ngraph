@@ -17,40 +17,43 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/shape.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/shape.hpp"
 #include "pyngraph/ops/avg_pool.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_AvgPool(py::module m) {
-
-    py::class_<ngraph::op::AvgPool, std::shared_ptr<ngraph::op::AvgPool>, ngraph::op::util::RequiresTensorViewArgs> avg_pool(m, "AvgPool");
+void regclass_pyngraph_op_AvgPool(py::module m)
+{
+    py::class_<ngraph::op::AvgPool,
+               std::shared_ptr<ngraph::op::AvgPool>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        avg_pool(m, "AvgPool");
     avg_pool.doc() = "ngraph.op.AvgPool wraps ngraph::op::AvgPool";
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                    const ngraph::Shape&,
-                    const ngraph::Strides&,
-                    const ngraph::Shape&,
-                    const ngraph::Shape&,
-                    bool >());
+                          const ngraph::Shape&,
+                          const ngraph::Strides&,
+                          const ngraph::Shape&,
+                          const ngraph::Shape&,
+                          bool>());
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                    const ngraph::Shape&,
-                    const ngraph::Strides& >());
-    avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape& >());
-
+                          const ngraph::Shape&,
+                          const ngraph::Strides&>());
+    avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&>());
 }
 
-void regclass_pyngraph_op_AvgPoolBackprop(py::module m) {
-
-    py::class_<ngraph::op::AvgPoolBackprop, std::shared_ptr<ngraph::op::AvgPoolBackprop>, ngraph::op::util::RequiresTensorViewArgs> avg_pool_backprop(m, "AvgPoolBackprop");
+void regclass_pyngraph_op_AvgPoolBackprop(py::module m)
+{
+    py::class_<ngraph::op::AvgPoolBackprop,
+               std::shared_ptr<ngraph::op::AvgPoolBackprop>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        avg_pool_backprop(m, "AvgPoolBackprop");
     avg_pool_backprop.doc() = "ngraph.op.AvgPoolBackprop wraps ngraph::op::AvgPoolBackprop";
     avg_pool_backprop.def(py::init<const ngraph::Shape&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const ngraph::Shape&,
-                            const ngraph::Strides&,
-                            const ngraph::Shape&,
-                            const ngraph::Shape&,
-                            bool >());
-
+                                   const std::shared_ptr<ngraph::Node>&,
+                                   const ngraph::Shape&,
+                                   const ngraph::Strides&,
+                                   const ngraph::Shape&,
+                                   const ngraph::Shape&,
+                                   bool>());
 }
-

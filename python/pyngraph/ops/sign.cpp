@@ -14,16 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/ops/sign.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/sign.hpp"
 #include "pyngraph/ops/sign.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Sign(py::module m){
-    py::class_<ngraph::op::Sign, std::shared_ptr<ngraph::op::Sign>, ngraph::op::util::UnaryElementwiseArithmetic> sign(m, "Sign");
+void regclass_pyngraph_op_Sign(py::module m)
+{
+    py::class_<ngraph::op::Sign,
+               std::shared_ptr<ngraph::op::Sign>,
+               ngraph::op::util::UnaryElementwiseArithmetic>
+        sign(m, "Sign");
     sign.doc() = "ngraph.op.Sign wraps ngraph::op::Sign";
-    sign.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+    sign.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-
