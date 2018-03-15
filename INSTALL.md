@@ -36,6 +36,7 @@ General Instructions
 These instructions assume that your system has been prepared in accordance
 with the above prerequisites.
 
+```
 $ cd ngraph
 $ mkdir build
 $ cd build
@@ -43,3 +44,4 @@ $ cmake .. \
     -DCMAKE_C_COMPILER=<path to C compiler> \
     -DCMAKE_CXX_COMPILER=<path to C++ compiler>
 $ make -j install
+```
