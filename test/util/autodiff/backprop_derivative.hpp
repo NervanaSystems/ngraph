@@ -24,9 +24,6 @@
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"
 
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
-
 namespace ngraph
 {
     class Node;
@@ -171,15 +168,6 @@ namespace ngraph
             // create fprop cache
             // creates modified forward function -> (y, cached) = f(x)
             // creates modified backward function -> df/dX* = f'(c, cached)
-
-            pass::Manager pass_manager4;
-            pass_manager4.register_pass<pass::VisualizeTree>("bn_fprop_before_cache.pdf");
-            pass_manager4.run_passes(f);
-
-            pass::Manager pass_manager3;
-            pass_manager3.register_pass<pass::VisualizeTree>("bn_bprop_before_cache.pdf");
-            pass_manager3.run_passes(df);
-
             auto fprop_cache = cache_fprop(f, df, {c_param});
 
             // (y, cached) arguments
@@ -199,15 +187,6 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
-
-            pass::Manager pass_manager;
-            pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_cache.pdf");
-            pass_manager.run_passes(fprop_cache.fprop);
-
-            pass::Manager pass_manager2;
-            pass_manager2.register_pass<pass::VisualizeTree>("bn_bprop_after_cache.pdf");
-            pass_manager2.run_passes(fprop_cache.bprop);
-
             auto cache_fwd = manager->compile(fprop_cache.fprop);
             auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
             cache_fwd_cf->tensor_call(f_input_args, mod_f_output_args);

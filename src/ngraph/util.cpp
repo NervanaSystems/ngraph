@@ -191,14 +191,6 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop
-
-    std::cout << "bprop nodes : \n";
-
-    for (auto n : bprop->get_ordered_ops())
-    {
-        std::cout << "n = " << n->get_name() << std::endl;
-    }
-
     NodeMap node_param_map;
     ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
 
@@ -235,7 +227,6 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     std::vector<std::shared_ptr<Node>> unused_nodes;
     for (auto kv : node_param_map.get_node_map())
     {
-        std::cout << kv.first->get_name() << " -> " << kv.second->get_name() << std::endl;
         // if it's not in bprop, mark it unused
         if (in_bprop.count(kv.first) == 0)
         {
@@ -251,7 +242,6 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // erase all unused nodes form the map
     for (auto node : unused_nodes)
     {
-        std::cout << "erasing " << node->get_name() << std::endl;
         node_param_map.get_node_map().erase(node);
     }
 
