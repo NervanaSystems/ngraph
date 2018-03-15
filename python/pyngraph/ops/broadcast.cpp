@@ -25,8 +25,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Broadcast(py::module m) {
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::Broadcast, std::shared_ptr<ngraph::op::Broadcast>, ngraph::op::util::RequiresTensorViewArgs> broadcast(m, "ngraph.op.Broadcast wraps ngraph::op::Broadcast");
     broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
                            const ngraph::AxisSet& >());

@@ -25,8 +25,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_OneHot(py::module m) {
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::OneHot, std::shared_ptr<ngraph::op::OneHot>, ngraph::op::util::RequiresTensorViewArgs> onehot(m, "ngraph.op.OneHot wraps ngraph::op::OneHot");
     onehot.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&, size_t>());
     onehot.def("get_one_hot_axis", &ngraph::op::OneHot::get_one_hot_axis);

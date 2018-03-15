@@ -24,8 +24,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Subtract(py::module m) {
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::Subtract, std::shared_ptr<ngraph::op::Subtract>, ngraph::op::util::BinaryElementwiseArithmetic> subtract(m,  "ngraph.op.Subtract wraps ngraph::op::Subtract");
     subtract.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());

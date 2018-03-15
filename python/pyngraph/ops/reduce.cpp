@@ -26,8 +26,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Reduce(py::module m){
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::Reduce, std::shared_ptr<ngraph::op::Reduce>, ngraph::op::util::RequiresTensorViewArgs> reduce(m, "ngraph.op.Reduce wraps ngraph::op::Reduce");
     reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>&,

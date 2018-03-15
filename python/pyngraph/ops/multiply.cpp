@@ -24,8 +24,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Multiply(py::module m) {
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::Multiply, std::shared_ptr<ngraph::op::Multiply>, ngraph::op::util::BinaryElementwiseArithmetic> multiply(m, "ngraph.op.Multiply wraps ngraph::op::Multiply");
     multiply.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());

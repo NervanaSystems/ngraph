@@ -24,8 +24,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Greater(py::module m){
 
-    //py::module::import("wrapper.ngraph.ops.Op");
-
     py::class_<ngraph::op::Greater, std::shared_ptr<ngraph::op::Greater>, ngraph::op::util::BinaryElementwiseComparison> greater(m, "ngraph.op.Greater wraps ngraph::op::Greater");
     greater.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const std::shared_ptr<ngraph::Node>& >());
