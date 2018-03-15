@@ -23,7 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_AxisSet(py::module m) {
 
-    py::class_<ngraph::AxisSet, std::shared_ptr<ngraph::AxisSet>> axis_set(m, "AxisSet");
+    py::class_<ngraph::AxisSet, std::shared_ptr<ngraph::AxisSet>> axis_set(m, "ngraph.AxisSet wraps ngraph::AxisSet");
     axis_set.def(py::init<const std::initializer_list<size_t>& >());
     axis_set.def(py::init<const std::set<size_t>& >());
     axis_set.def(py::init<const ngraph::AxisSet& >());

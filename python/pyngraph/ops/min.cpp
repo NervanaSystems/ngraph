@@ -23,6 +23,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Min(py::module m){
 
-    py::class_<ngraph::op::Min, std::shared_ptr<ngraph::op::Min>, ngraph::op::util::ArithmeticReduction> min(m, "Min");
+    py::class_<ngraph::op::Min, std::shared_ptr<ngraph::op::Min>, ngraph::op::util::ArithmeticReduction> min(m, "ngraph.op.Min wraps ngraph::op::Min");
     min.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet& >());
 }

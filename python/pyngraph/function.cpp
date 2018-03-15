@@ -29,7 +29,7 @@ void regclass_pyngraph_Function(py::module m) {
     //py::module::import("pyngraph.ops.Parameter");
     //py::module::import("pyngraph.types.TensorViewType");
 
-    py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
+    py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "ngraph.Function wraps ngraph::Function");
 
     function.def(py::init<const ngraph::NodeVector&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());

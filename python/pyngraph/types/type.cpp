@@ -25,7 +25,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
+    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "ngraph.TensorViewType wraps ngraph::TensorViewType");
 
     tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
     tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);

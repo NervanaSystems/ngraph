@@ -23,7 +23,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Constant(py::module m){
-    py::class_<ngraph::op::Constant, std::shared_ptr<ngraph::op::Constant>, ngraph::Node> constant(m, "Constant");
+    py::class_<ngraph::op::Constant, std::shared_ptr<ngraph::op::Constant>, ngraph::Node> constant(m, "ngraph.op.Constant wraps ngraph::op::Constant");
     constant.def(py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<char>&>());
     constant.def(py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<float>&>());
     constant.def(py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<double>&>());

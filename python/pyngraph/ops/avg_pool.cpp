@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_AvgPool(py::module m) {
 
-    py::class_<ngraph::op::AvgPool, std::shared_ptr<ngraph::op::AvgPool>, ngraph::op::util::RequiresTensorViewArgs> avg_pool(m, "AvgPool");
+    py::class_<ngraph::op::AvgPool, std::shared_ptr<ngraph::op::AvgPool>, ngraph::op::util::RequiresTensorViewArgs> avg_pool(m, "ngraph.op.AvgPool wraps ngraph::op::AvgPool");
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
                     const ngraph::Shape&,
                     const ngraph::Strides&,
@@ -41,7 +41,7 @@ void regclass_pyngraph_op_AvgPool(py::module m) {
 
 void regclass_pyngraph_op_AvgPoolBackprop(py::module m) {
 
-    py::class_<ngraph::op::AvgPoolBackprop, std::shared_ptr<ngraph::op::AvgPoolBackprop>, ngraph::op::util::RequiresTensorViewArgs> avg_pool_backprop(m, "AvgPoolBackprop");
+    py::class_<ngraph::op::AvgPoolBackprop, std::shared_ptr<ngraph::op::AvgPoolBackprop>, ngraph::op::util::RequiresTensorViewArgs> avg_pool_backprop(m, "ngraph.op.AvgPoolBackprop wraps ngraph::op::AvgPoolBackprop");
     avg_pool_backprop.def(py::init<const ngraph::Shape&,
                             const std::shared_ptr<ngraph::Node>&,
                             const ngraph::Shape&,

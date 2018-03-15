@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_ParameterVector(py::module m) {
 
-    py::class_<ngraph::op::ParameterVector, std::shared_ptr<ngraph::op::ParameterVector>> parameter_vector(m, "ParameterVector");
+    py::class_<ngraph::op::ParameterVector, std::shared_ptr<ngraph::op::ParameterVector>> parameter_vector(m, "ngraph.op.ParameterVector wraps ngraph::op::ParameterVector");
 
     parameter_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::op::Parameter>>& >());
     parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>& > ());

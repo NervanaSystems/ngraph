@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Asin(py::module m){
-    py::class_<ngraph::op::Asin, std::shared_ptr<ngraph::op::Asin>, ngraph::op::util::UnaryElementwiseArithmetic> asin(m, "Asin");
+    py::class_<ngraph::op::Asin, std::shared_ptr<ngraph::op::Asin>, ngraph::op::util::UnaryElementwiseArithmetic> asin(m, "ngraph.op.Asin wraps ngraph::op::Asin");
     asin.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

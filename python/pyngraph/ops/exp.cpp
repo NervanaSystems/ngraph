@@ -26,7 +26,7 @@ void regclass_pyngraph_op_Exp(py::module m) {
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph::op::Exp, std::shared_ptr<ngraph::op::Exp>, ngraph::op::util::UnaryElementwiseArithmetic> exp(m, "Exp");
+    py::class_<ngraph::op::Exp, std::shared_ptr<ngraph::op::Exp>, ngraph::op::util::UnaryElementwiseArithmetic> exp(m, "ngraph.op.Exp wraps ngraph::op::Exp");
     exp.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

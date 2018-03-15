@@ -22,6 +22,6 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Floor(py::module m){
-    py::class_<ngraph::op::Floor, std::shared_ptr<ngraph::op::Floor>, ngraph::op::util::UnaryElementwiseArithmetic> floor(m, "Floor");
+    py::class_<ngraph::op::Floor, std::shared_ptr<ngraph::op::Floor>, ngraph::op::util::UnaryElementwiseArithmetic> floor(m, "ngraph.op.Floor wraps ngraph::op::Floor");
     floor.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }

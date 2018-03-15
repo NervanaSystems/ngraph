@@ -24,5 +24,5 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_util_RequiresTensorViewArgs(py::module m){
     py::class_<ngraph::op::util::RequiresTensorViewArgs, std::shared_ptr<ngraph::op::util::RequiresTensorViewArgs>,
-        ngraph::op::Op> requiresTensorViewArgs(m, "RequiresTensorViewArgs");
+        ngraph::op::Op> requiresTensorViewArgs(m, "ngraph.op.util.RequiresTensorViewArgs wraps ngraph::op::util::RequiresTensorViewArgs");
 }

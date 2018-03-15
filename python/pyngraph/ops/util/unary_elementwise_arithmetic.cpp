@@ -24,5 +24,5 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_util_UnaryElementwiseArithmetic(py::module m){
     py::class_<ngraph::op::util::UnaryElementwiseArithmetic, std::shared_ptr<ngraph::op::util::UnaryElementwiseArithmetic>,
-        ngraph::op::util::UnaryElementwise> unaryElementwiseArithmetic(m, "UnaryElementwiseArithmetic");
+        ngraph::op::util::UnaryElementwise> unaryElementwiseArithmetic(m, "ngraph.op.util.UnaryElementwiseArithmetic wraps ngraph::op::util::UnaryElementwiseArithmetic");
 }

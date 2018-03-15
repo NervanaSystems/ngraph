@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_NotEqual(py::module m){
 
-    py::class_<ngraph::op::NotEqual, std::shared_ptr<ngraph::op::NotEqual>, ngraph::op::util::BinaryElementwiseComparison> not_equal(m, "NotEqual");
+    py::class_<ngraph::op::NotEqual, std::shared_ptr<ngraph::op::NotEqual>, ngraph::op::util::BinaryElementwiseComparison> not_equal(m, "ngraph.op.NotEqual wraps ngraph::op::NotEqual");
     not_equal.def(py::init<const std::shared_ptr<ngraph::Node>&,
                            const std::shared_ptr<ngraph::Node>& >());
 }

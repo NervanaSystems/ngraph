@@ -20,7 +20,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pyngraph, m){
-    m.doc() = "pyngraph plugin";
+    m.doc() = "Package: ngraph";
     regclass_pyngraph_Node(m);
     regclass_pyngraph_NodeVector(m);
     regclass_pyngraph_Shape(m);
