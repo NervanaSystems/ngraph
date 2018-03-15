@@ -18,7 +18,8 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption('--backend', default='CPU',
-                     choices=['INTERPRETER', 'CPU', 'GPU', 'ARGON'], help='Select from available backends')
+                     choices=['INTERPRETER', 'CPU', 'GPU', 'ARGON'],
+                     help='Select from available backends')
 
 
 def pass_method(*args, **kwargs):

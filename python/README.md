@@ -32,7 +32,7 @@ pip install -U <full path to the bdist wheel>
 For example, On MacOS you would run a command like,
 
 ```
-pip install -U build/dist/pyngraph-0.0.1-cp27-cp27m-macosx_10_13_intel.whl
+pip install -U build/dist/ngraph-0.0.1-cp35-cp35m-linux_x86_64.whl
 ```
 
 To run unit tests, first install additional required packages.
