@@ -1,8 +1,8 @@
 .. handle.rst:
 
-#################
-Handle an Export 
-#################
+################
+Importing models
+################
 
 :ref:`from_onnx`
 
@@ -13,21 +13,19 @@ Handle an Export
 .. a trained model. 
 
 Intel nGraph APIs can be used to run inference on a model that has been *exported* 
-from a framework. A model that has been determined to be trained "well enough" 
-can be extracted from a framework and serialized. The entity extracting the model 
-produces an :term:`export`, which usually is simply a serialized format that can 
-be passed to one of the nGraph backends for computation.  
+from a Deep Learning framework. The entity exporting the model produces a file
+with a serialized model that can be passed to one of the nGraph backends for computation.
 
 
 .. _from_onnx:
 
-from ONNX
+Importing models from ONNX
 ==========
 
-The most common kind of :term:`export` available today is an `ONNX`_ export. 
-Models that have been serialized by ONNX are easy to identify; they are usually 
-named ``<some_model>.onnx``. These `tutorials from ONNX`_ describe how to turn
-trained models into an ``.onnx`` export.  
+The most widely supported :term:`export` format available today is an `ONNX`_.
+Models that have been serialized to ONNX are easy to identify; they are usually
+named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These `tutorials from ONNX`_
+describe how to turn trained models into an ``.onnx`` export.
 
 If you landed on this page and you already have an ``.onnx`` formatted-file, you 
 should be able to run the inference without needing to dig into anything from 
@@ -36,9 +34,16 @@ steps described in our :doc:`../install` guide.
 
 To demonstrate the functionality of the nGraph inference, we'll use an 
 `already serialized CIFAR10`_ ResNet model for demonstration purposes. Remember 
-that this model has already been trained and exported from some framework; we 
-are simply going to build an nGraph representation of the model and produce some 
-outputs.  
+that this model has already been trained and exported from a framework such as Caffe2,
+PyTorch or CNTK; we are simply going to build an nGraph representation of the model
+execute it and produce some outputs.
+
+
+Installing ngraph_onnx
+==========
+
+In order to use ONNX models with ngraph, you will need to install ngraph and the companion tool ngraph_onnx.
+ngraph_onnx requires Python 3.5 or higher.
 
 
 #. First set the environment variables to where we built the nGraph++ libraries;
@@ -51,12 +56,12 @@ outputs.
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
       export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib  # On MacOS
 
-#. Now add the following dependencies to your system:
+#. Now add Protocol Buffers and Python PIP dependencies to your system. ONNX requires Protocol Buffers version 2.6.1 or higher.
+For example on Ubuntu:
 
    .. code-block:: console
 
-      $ sudo apt-get update && install -y protobuf-compiler libprotobuf-dev python3-pip 
-      $ sudo apt-get clean autoclean
+      $ sudo apt install protobuf-compiler libprotobuf-dev python3-pip
 
 #. Checkout the branch named `python_binding`: 
 
@@ -73,8 +78,8 @@ outputs.
 
       $ git submodule update --init --recursive
       $ cd /path/to/ngraph/python
-	   $ pip3 install -r requirements.txt
-	   $ pip3 install .
+	  $ pip3 install -r requirements.txt
+	  $ pip3 install .
 
 
 #. Clone the ``ngraph-onnx`` repo and pip install the Python dependencies; if 
@@ -101,7 +106,7 @@ Import ONNX and load an ONNX file from disk
    :lines: 17-19
 
  
-Convert ONNX model to an ngraph model
+Convert an ONNX model to an ngraph model
 --------------------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
@@ -109,7 +114,7 @@ Convert ONNX model to an ngraph model
    :lines: 22-23
 
  
-Create a callable computation
+Create a callable computation object
 -----------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
@@ -142,10 +147,10 @@ Put it all together
 
 
 
-.. From NNVM
+.. Importing models from NNVM
    ----------
 
-.. From XLA
+.. Importing models from XLA
    --------
 
 .. etc, eof 
