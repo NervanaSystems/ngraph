@@ -1,3 +1,22 @@
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+doc/sphinx/ngraph_theme/static/fonts/Inconsolata-Bold.ttf
+doc/sphinx/ngraph_theme/static/fonts/Inconsolata-Regular.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Black.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-BlackItalic.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Bold.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-BoldItalic.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Hairline.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-HairlineItalic.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Italic.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Light.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-LightItalic.ttf
+doc/sphinx/ngraph_theme/static/fonts/Lato-Regular.ttf
+
+Refer to https://fonts.google.com/attribution for additional information.
+
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------

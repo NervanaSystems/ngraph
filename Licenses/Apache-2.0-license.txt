@@ -1,3 +1,22 @@
+This Font Software is licensed under the Apache License, Version 2.0.
+
+doc/sphinx/ngraph_theme/static/fonts/RobotoSlab-Bold.ttf
+doc/sphinx/ngraph_theme/static/fonts/RobotoSlab-Light.ttf
+doc/sphinx/ngraph_theme/static/fonts/RobotoSlab-Regular.ttf
+doc/sphinx/ngraph_theme/static/fonts/RobotoSlab-Thin.ttf
+
+Refer to https://fonts.google.com/attribution for additional information.
+
+
+The following license applies to the following files that utilize the swagger-api,
+which is licensed under the Apache License, Version 2.0.  See also swagger-ui-license.txt.
+
+doc/sphinx/ngraph_theme/static/css/swagger.css
+
+The license is copied below.
+
+---------------------
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/

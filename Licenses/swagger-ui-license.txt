@@ -1,3 +1,11 @@
+The following license applies to the following files that utilize the swagger-api.
+The license is copied below.  The Apache license is copied at Apache-2.0-license.txt.
+
+doc/sphinx/ngraph_theme/static/css/swagger.css
+
+https://github.com/swagger-api/swagger-ui/blob/master/LICENSE
+
+
 Copyright 2018 SmartBear Software
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -10,4 +18,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-The Apache license is copied at Apache-2.0-license.txt.
