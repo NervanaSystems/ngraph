@@ -125,9 +125,6 @@ std::shared_ptr<Node> autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
 void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
                                    const std::shared_ptr<Node>& delta)
 {
-
-    //std::cout << " x = " << x->get_name() << " shape = " << vector_to_string(x->get_shape()) << std::endl;
-    //std::cout << " delta = " << delta->get_name() << " shape = " << vector_to_string(delta->get_shape()) << std::endl;
     if (!x->has_same_type(delta) && delta->get_shape() != x->get_outputs().at(0).get_shape())
     {
         throw ngraph_error("Autodiff internal error: Mismatch on backprop and op in add_delta.");

@@ -287,10 +287,8 @@ const Shape& Node::get_input_shape(size_t i) const
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const
 {
-    std::cout << "Comparing " << this->get_name() << " with " << node->get_name() << std::endl;
     if (get_output_size() != node->get_output_size())
     {
-        std::cout << "Sizes don't match "<< get_output_size() << " " << node->get_output_size() << std::endl;
         return false;
     }
     for (size_t i = 0; i < get_output_size(); ++i)
@@ -298,8 +296,6 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         if (get_output_element_type(i) != node->get_output_element_type(i) ||
             get_output_shape(i) != node->get_output_shape(i))
         {            
-            std::cout << "type =  "<< get_output_element_type(i).c_type_string() << " other type = " << node->get_output_element_type(i).c_type_string() << std::endl;
-            std::cout << "size =  "<< vector_to_string(get_output_shape(i)) << " other size = " << vector_to_string(node->get_output_shape(i)) << std::endl;
             return false;
         }
     }
