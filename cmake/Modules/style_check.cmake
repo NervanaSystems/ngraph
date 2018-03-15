@@ -14,13 +14,17 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(FILE_NAME ${CMAKE_BINARY_DIR}/include/nlohmann/detail/macro_scope.hpp)
-file(READ ${FILE_NAME} FILE_CONTENTS)
-string(REPLACE
-  "#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900"
-  "#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40805"
-  REWRITTEN_FILE
-  "${FILE_CONTENTS}"
+set(DIRECTORIES_OF_INTEREST
+    src
+    test
 )
-file(WRITE ${FILE_NAME} "${REWRITTEN_FILE}")
-message(STATUS "json library gcc minimum version number patched")
+message(STATUS "NGRAPH_SOURCE_DIR ${NGRAPH_SOURCE_DIR}")
+message("************************************************************************")
+foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+    set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
+    message("DIR ${DIR}")
+    file(GLOB_RECURSE XPP_FILES ${DIR})
+    foreach(FILE ${XPP_FILES})
+        message("FILE ${FILE}")
+    endforeach(FILE)
+endforeach(DIRECTORY)
