@@ -148,6 +148,9 @@ void codegen::StaticCompiler::initialize()
     args.push_back("-mllvm");
     args.push_back("-inline-threshold=1000000");
 
+    // Prevent Eigen from using any LGPL3 code
+    args.push_back("-DEIGEN_MPL2_ONLY");
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
