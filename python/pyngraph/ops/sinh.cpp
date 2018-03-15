@@ -23,6 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Sinh(py::module m){
     py::class_<ngraph::op::Sinh, std::shared_ptr<ngraph::op::Sinh>, ngraph::op::util::UnaryElementwiseArithmetic> sinh(m, "Sinh");
+    sinh.doc() = "ngraph.op.Sinh wraps ngraph::op::Sinh";
     sinh.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

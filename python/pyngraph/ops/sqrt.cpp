@@ -23,5 +23,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Sqrt(py::module m){
     py::class_<ngraph::op::Sqrt, std::shared_ptr<ngraph::op::Sqrt>, ngraph::op::util::UnaryElementwiseArithmetic> sqrt(m, "Sqrt");
+    sqrt.doc() = "ngraph.op.Sqrt wraps ngraph::op::Sqrt";
     sqrt.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }

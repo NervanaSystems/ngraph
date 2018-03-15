@@ -26,6 +26,7 @@ void regclass_pyngraph_op_Power(py::module m) {
 
 
     py::class_<ngraph::op::Power, std::shared_ptr<ngraph::op::Power>, ngraph::op::util::BinaryElementwiseArithmetic> power(m, "Power");
+    power.doc() = "ngraph.op.Power wraps ngraph::op::Power";
     power.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 }

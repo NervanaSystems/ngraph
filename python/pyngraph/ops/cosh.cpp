@@ -23,6 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Cosh(py::module m){
     py::class_<ngraph::op::Cosh, std::shared_ptr<ngraph::op::Cosh>, ngraph::op::util::UnaryElementwiseArithmetic> cosh(m, "Cosh");
+    cosh.doc() = "ngraph.op.Cosh wraps ngraph::op::Cosh";
     cosh.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

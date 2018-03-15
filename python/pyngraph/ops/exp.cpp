@@ -25,6 +25,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Exp(py::module m) {
 
     py::class_<ngraph::op::Exp, std::shared_ptr<ngraph::op::Exp>, ngraph::op::util::UnaryElementwiseArithmetic> exp(m, "Exp");
+    exp.doc() = "ngraph.op.Exp wraps ngraph::op::Exp";
     exp.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

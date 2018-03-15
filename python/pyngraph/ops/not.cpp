@@ -25,6 +25,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Not(py::module m){
 
     py::class_<ngraph::op::Not, std::shared_ptr<ngraph::op::Not>, ngraph::op::util::UnaryElementwise> logical_not(m, "Not");
+    logical_not.doc() = "ngraph.op.Not wraps ngraph::op::Not";
     logical_not.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

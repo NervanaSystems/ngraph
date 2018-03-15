@@ -23,6 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Tan(py::module m){
     py::class_<ngraph::op::Tan, std::shared_ptr<ngraph::op::Tan>, ngraph::op::util::UnaryElementwiseArithmetic> tan(m, "Tan");
+    tan.doc() = "ngraph.op.Tan wraps ngraph::op::Tan";
     tan.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

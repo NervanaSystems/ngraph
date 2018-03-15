@@ -20,7 +20,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(_pyngraph, m){
-    m.doc() = "pyngraph plugin";
+    m.doc() = "Package ngraph that wraps nGraph's namespace ngraph";
     regclass_pyngraph_Node(m);
     regclass_pyngraph_NodeVector(m);
     regclass_pyngraph_Shape(m);
@@ -32,7 +32,7 @@ PYBIND11_MODULE(_pyngraph, m){
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);
-    py::module m_op = m.def_submodule("op", "module pyngraph.op");
+    py::module m_op = m.def_submodule("op", "Package ngraph.op that wraps ngraph::op");
     regclass_pyngraph_op_Op(m_op);
     regmodule_pyngraph_op_util(m_op);
     regmodule_pyngraph_op(m_op);

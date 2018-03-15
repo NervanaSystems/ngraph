@@ -20,6 +20,6 @@
 namespace py = pybind11;
 
 void regmodule_pyngraph_passes(py::module m){
-    py::module m_passes = m.def_submodule("passes", "module pyngraph.passes");
+    py::module m_passes = m.def_submodule("passes", "Package ngraph.passes wraps ngraph::passes");
     regclass_pyngraph_passes_Manager(m_passes);
 }

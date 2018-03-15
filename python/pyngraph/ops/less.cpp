@@ -24,6 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Less(py::module m){
     py::class_<ngraph::op::Less, std::shared_ptr<ngraph::op::Less>, ngraph::op::util::BinaryElementwiseComparison> less(m, "Less");
+    less.doc() = "ngraph.op.Less wraps ngraph::op::Less";
     less.def(py::init<const std::shared_ptr<ngraph::Node>&,
                       const std::shared_ptr<ngraph::Node>& >());
 }

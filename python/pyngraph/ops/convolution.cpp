@@ -26,7 +26,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Convolution(py::module m) {
 
     py::class_<ngraph::op::Convolution, std::shared_ptr<ngraph::op::Convolution>, ngraph::op::util::RequiresTensorViewArgs> convolution(m, "Convolution");
-
+    convolution.doc() = "ngraph.op.Convolution wraps ngraph::op::Convolution";
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
                              const ngraph::Strides&,

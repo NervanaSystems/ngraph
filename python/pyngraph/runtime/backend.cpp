@@ -29,7 +29,7 @@ namespace py = pybind11;
 void regclass_pyngraph_runtime_Backend(py::module m) {
 
     py::class_<ngraph::runtime::Backend, std::shared_ptr<ngraph::runtime::Backend>> backend(m, "Backend");
-
+    backend.doc() = "ngraph.runtime.Backend wraps ngraph::runtime::Backend";
     backend.def("make_call_frame", &ngraph::runtime::Backend::make_call_frame);
     backend.def("make_primary_tensor_view", (std::shared_ptr<ngraph::runtime::TensorView> (ngraph::runtime::Backend::*) (const ngraph::element::Type& , const ngraph::Shape& )) &ngraph::runtime::Backend::make_primary_tensor_view);
 

@@ -24,6 +24,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Relu(py::module m){
 
     py::class_<ngraph::op::Relu, std::shared_ptr<ngraph::op::Relu>, ngraph::op::util::UnaryElementwiseArithmetic> relu(m, "Relu");
+    relu.doc() = "ngraph.op.Relu wraps ngraph::op::Relu";
     relu.def(py::init<std::shared_ptr<ngraph::Node>& >());
 }
 
