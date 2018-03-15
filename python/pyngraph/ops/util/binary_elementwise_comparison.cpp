@@ -24,5 +24,5 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_util_BinaryElementwiseComparison(py::module m){
     py::class_<ngraph::op::util::BinaryElementwiseComparison, std::shared_ptr<ngraph::op::util::BinaryElementwiseComparison>,
-        ngraph::op::util::BinaryElementwise> binaryElementwiseComparison(m, "ngraph.op.util.BinaryElementwiseComparison wraps ngraph::op::util::BinaryElementwiseComparison");
+        ngraph::op::util::BinaryElementwise> binaryElementwiseComparison(m, "BinaryElementwiseComparison");
 }

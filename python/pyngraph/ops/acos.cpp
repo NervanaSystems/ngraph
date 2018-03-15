@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Acos(py::module m){
-    py::class_<ngraph::op::Acos, std::shared_ptr<ngraph::op::Acos>, ngraph::op::util::UnaryElementwiseArithmetic> acos(m, "ngraph.op.Acos wraps ngraph::op::Acos");
+    py::class_<ngraph::op::Acos, std::shared_ptr<ngraph::op::Acos>, ngraph::op::util::UnaryElementwiseArithmetic> acos(m, "Acos");
     acos.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

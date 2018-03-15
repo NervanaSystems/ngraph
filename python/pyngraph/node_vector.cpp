@@ -27,7 +27,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_NodeVector(py::module m){
 
-    py::class_<ngraph::NodeVector, std::shared_ptr<ngraph::NodeVector>> node_vector(m, "ngraph.NodeVector wraps ngraph::NodeVector");
+    py::class_<ngraph::NodeVector, std::shared_ptr<ngraph::NodeVector>> node_vector(m, "NodeVector");
     node_vector.def(py::init<const std::initializer_list<std::shared_ptr<ngraph::Node>>& >());
     node_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>& >());
     node_vector.def(py::init<const ngraph::NodeVector& >());

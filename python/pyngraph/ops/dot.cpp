@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Dot(py::module m) {
 
-    py::class_<ngraph::op::Dot, std::shared_ptr<ngraph::op::Dot>, ngraph::op::util::RequiresTensorViewArgs> dot(m, "ngraph.op.Dot wraps ngraph::op::Dot");
+    py::class_<ngraph::op::Dot, std::shared_ptr<ngraph::op::Dot>, ngraph::op::util::RequiresTensorViewArgs> dot(m, "Dot");
     dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const std::shared_ptr<ngraph::Node>& >());
     dot.def(py::init<const std::shared_ptr<ngraph::Node>&,

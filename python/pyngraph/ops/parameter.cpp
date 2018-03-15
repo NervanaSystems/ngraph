@@ -26,7 +26,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Parameter(py::module m){
 
-    py::class_<ngraph::op::Parameter, std::shared_ptr<ngraph::op::Parameter>, ngraph::Node> parameter(m, "ngraph.op.Parameter wraps ngraph::op::Parameter");
+    py::class_<ngraph::op::Parameter, std::shared_ptr<ngraph::op::Parameter>, ngraph::Node> parameter(m, "Parameter");
 
     parameter.def("__repr__", [](const ngraph::Node &self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();

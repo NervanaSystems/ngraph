@@ -23,7 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Max(py::module m){
 
-    py::class_<ngraph::op::Max, std::shared_ptr<ngraph::op::Max>, ngraph::op::util::ArithmeticReduction> max(m, "ngraph.op.Max wraps ngraph::op::Max");
+    py::class_<ngraph::op::Max, std::shared_ptr<ngraph::op::Max>, ngraph::op::util::ArithmeticReduction> max(m, "Max");
     max.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const ngraph::AxisSet& >());
 

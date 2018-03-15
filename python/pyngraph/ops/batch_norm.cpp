@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_BatchNorm(py::module m) {
 
-    py::class_<ngraph::op::BatchNorm, std::shared_ptr<ngraph::op::BatchNorm>, ngraph::op::util::RequiresTensorViewArgs> batch_norm(m, "ngraph.op.BatchNorm wraps ngraph::op::BatchNorm");
+    py::class_<ngraph::op::BatchNorm, std::shared_ptr<ngraph::op::BatchNorm>, ngraph::op::util::RequiresTensorViewArgs> batch_norm(m, "BatchNorm");
 
     batch_norm.def(py::init<double,
                             const std::shared_ptr<ngraph::Node>&,
@@ -36,7 +36,7 @@ void regclass_pyngraph_op_BatchNorm(py::module m) {
 
 void regclass_pyngraph_op_BatchNormBackprop(py::module m) {
 
-    py::class_<ngraph::op::BatchNormBackprop, std::shared_ptr<ngraph::op::BatchNormBackprop>, ngraph::op::util::RequiresTensorViewArgs> batch_norm_backprop(m, "ngraph.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop");
+    py::class_<ngraph::op::BatchNormBackprop, std::shared_ptr<ngraph::op::BatchNormBackprop>, ngraph::op::util::RequiresTensorViewArgs> batch_norm_backprop(m, "BatchNormBackprop");
 
     batch_norm_backprop.def(py::init<double,
                                      const std::shared_ptr<ngraph::Node>&,

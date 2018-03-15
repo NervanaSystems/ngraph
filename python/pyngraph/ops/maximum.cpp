@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Maximum(py::module m){
 
-    py::class_<ngraph::op::Maximum, std::shared_ptr<ngraph::op::Maximum>, ngraph::op::util::BinaryElementwiseArithmetic> maximum(m, "ngraph.op.Maximum wraps ngraph::op::Maximum");
+    py::class_<ngraph::op::Maximum, std::shared_ptr<ngraph::op::Maximum>, ngraph::op::util::BinaryElementwiseArithmetic> maximum(m, "Maximum");
     maximum.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 
