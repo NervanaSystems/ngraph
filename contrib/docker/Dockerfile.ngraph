@@ -1,28 +1,16 @@
-# Environment to build and unit-test ngraph-cpp
+# Environment to build and unit-test ngraph
 
 FROM ubuntu:16.04
 
 RUN apt-get update && apt-get install -y \
         build-essential cmake \
+        clang-3.9 clang-format-3.9 \
         git \
         wget patch diffutils zlib1g-dev libtinfo-dev \
         doxygen python-pip
 
-RUN which gcc && gcc --version || true
-RUN which cc++ && cc++ --version || true
-
-RUN apt-get install -y gcc-4.8 gcc++-4.8
-
-RUN which gcc && gcc --version || true
-RUN which cc++ && cc++ --version || true
-
-RUN ln -s /usr/bin/gcc-4.8 /usr/bin/gcc || true
-RUN ln -s /usr/bin/cc++-4.8 /usr/bin/cc++ || true
-RUN which gcc && gcc --version || true
-RUN which cc++ && cc++ --version || true
-
-#RUN apt-get clean autoclean && \
-#    apt-get autoremove -y
+RUN apt-get clean autoclean && \
+    apt-get autoremove -y
 RUN pip install --upgrade pip
 
 # need to use sphinx version 1.6 to build docs
@@ -31,9 +19,6 @@ RUN pip install --upgrade pip
 # installed sphinx with pip to get the updated version 1.6.5
 # allows for make html build under the doc/source directory as an interim build process
 RUN pip install sphinx
-
-# breathe package required to build documentation
 RUN pip install breathe
 
 WORKDIR /home
-
