@@ -26,7 +26,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void allreduce(T* arg, T* out, const element::Type element_type, int count)
+            void allreduce(const T* arg, T* out, const element::Type element_type, int count)
             {
                 auto data_type = MPI_FLOAT;
 

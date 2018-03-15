@@ -37,6 +37,10 @@
 
 namespace ngraph
 {
+    namespace pass
+    {
+        class GetOutputElementElimination;
+    }
     namespace op
     {
         class Parameter;
@@ -63,6 +67,8 @@ namespace ngraph
                                                    std::shared_ptr<Node> dst_node,
                                                    std::shared_ptr<op::Parameter> p_node);
 
+        friend class ngraph::pass::GetOutputElementElimination;
+
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node()
@@ -70,6 +76,10 @@ namespace ngraph
             for (auto arg : m_arguments)
             {
                 arg->m_users.erase(this);
+            }
+            for (auto& input : m_inputs)
+            {
+                input.get_output().remove_input(&input);
             }
         }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,

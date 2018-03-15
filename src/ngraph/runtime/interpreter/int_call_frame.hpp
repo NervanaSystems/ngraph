@@ -319,7 +319,7 @@ private:
         else if (node_op == "Concat")
         {
             const op::Concat* concat = static_cast<const op::Concat*>(&node);
-            std::vector<T*> in_args;
+            std::vector<const T*> in_args;
             std::vector<Shape> in_shapes;
             for (std::shared_ptr<HostTensorView> arg : args)
             {
