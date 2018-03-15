@@ -17,7 +17,7 @@
 import pytest
 import numpy as np
 
-import ngraph.util as util
+from ngraph import util
 from ngraph import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
 from ngraph import Type, Function, NodeVector
 from ngraph.runtime import Manager
