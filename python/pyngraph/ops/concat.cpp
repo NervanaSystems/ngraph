@@ -25,6 +25,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Concat(py::module m) {
 
-    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "ngraph.op.Concat wraps ngraph::op::Concat");
+    py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::util::RequiresTensorViewArgs> concat(m, "Concat");
     concat.def(py::init<const ngraph::NodeVector&, size_t >());
 }

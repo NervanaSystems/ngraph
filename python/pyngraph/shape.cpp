@@ -27,7 +27,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Shape(py::module m) {
 
-    py::class_<ngraph::Shape, std::shared_ptr<ngraph::Shape>> shape(m, "ngraph.Shape wraps ngraph::Shape");
+    py::class_<ngraph::Shape, std::shared_ptr<ngraph::Shape>> shape(m, "Shape");
     shape.def(py::init<const std::initializer_list<size_t>& >());
     shape.def(py::init<const std::vector<size_t>& >());
     shape.def(py::init<const ngraph::Shape& >());

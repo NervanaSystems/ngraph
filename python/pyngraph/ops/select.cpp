@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Select(py::module m) {
 
-    py::class_<ngraph::op::Select, std::shared_ptr<ngraph::op::Select>, ngraph::op::util::RequiresTensorViewArgs> select(m, "ngraph.op.Select wraps ngraph::op::Select");
+    py::class_<ngraph::op::Select, std::shared_ptr<ngraph::op::Select>, ngraph::op::util::RequiresTensorViewArgs> select(m, "Select");
     select.def(py::init<const std::shared_ptr<ngraph::Node>&,
 			const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());

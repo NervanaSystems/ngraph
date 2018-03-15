@@ -23,7 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Product(py::module m){
 
-    py::class_<ngraph::op::Product, std::shared_ptr<ngraph::op::Product>, ngraph::op::util::ArithmeticReduction> product(m, "ngraph.op.Product wraps ngraph::op::Product");
+    py::class_<ngraph::op::Product, std::shared_ptr<ngraph::op::Product>, ngraph::op::util::ArithmeticReduction> product(m, "Product");
     product.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const ngraph::AxisSet& >());
 

@@ -13,11 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""
-Package: ngraph.runtime
-Low level wrappers for the ngraph c++ api in ngraph::runtime.
-"""
-
 # flake8: noqa
 
 import sys

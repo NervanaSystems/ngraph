@@ -23,7 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Strides(py::module m) {
 
-    py::class_<ngraph::Strides, std::shared_ptr<ngraph::Strides>> strides(m, "ngraph.Strides wraps ngraph::Strides");
+    py::class_<ngraph::Strides, std::shared_ptr<ngraph::Strides>> strides(m, "Strides");
     strides.def(py::init<const std::initializer_list<size_t>& >());
     strides.def(py::init<const std::vector<size_t>& >());
     strides.def(py::init<const ngraph::Strides& >());

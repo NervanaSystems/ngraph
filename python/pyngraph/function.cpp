@@ -26,7 +26,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Function(py::module m) {
 
-    py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "ngraph.Function wraps ngraph::Function");
+    py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
 
     function.def(py::init<const ngraph::NodeVector&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());

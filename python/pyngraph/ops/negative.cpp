@@ -23,7 +23,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Negative(py::module m){
-    py::class_<ngraph::op::Negative, std::shared_ptr<ngraph::op::Negative>, ngraph::op::util::UnaryElementwiseArithmetic> negative(m, "ngraph.op.Negative wraps ngraph::op::Negative");
+    py::class_<ngraph::op::Negative, std::shared_ptr<ngraph::op::Negative>, ngraph::op::util::UnaryElementwiseArithmetic> negative(m, "Negative");
     negative.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

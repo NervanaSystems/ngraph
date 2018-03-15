@@ -24,7 +24,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Add(py::module m) {
 
-    py::class_<ngraph::op::Add, std::shared_ptr<ngraph::op::Add>, ngraph::op::util::BinaryElementwiseArithmetic> add(m, "ngraph.op.Add wraps ngraph::op::Add");
+    py::class_<ngraph::op::Add, std::shared_ptr<ngraph::op::Add>, ngraph::op::util::BinaryElementwiseArithmetic> add(m, "Add");
     add.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 }
