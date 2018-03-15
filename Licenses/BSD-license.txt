@@ -1,3 +1,5 @@
+The following license applies to software in the docs/sphinx directory that utilizes the Sphinx Python Documentation Generator:
+
 /*
  Copyright (c) 2011, Intel Corporation. All rights reserved.
 
