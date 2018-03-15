@@ -25,7 +25,6 @@
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/result.hpp"
 #include "ngraph/placement.hpp"
-#include "util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -295,7 +294,7 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
     {
         if (get_output_element_type(i) != node->get_output_element_type(i) ||
             get_output_shape(i) != node->get_output_shape(i))
-        {            
+        {
             return false;
         }
     }
