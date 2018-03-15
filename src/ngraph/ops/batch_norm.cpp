@@ -110,7 +110,6 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
         if (get_input_op(i)->get_shape() != channel_shape)
         {
-            std::cout << "gio = " << get_input_op(i)->get_name() << std::endl;
             auto err_msg = std::string("The shape of ") + input_names[i] +
                            " isn't equal to input channel's shape";
             throw ngraph_error(err_msg.c_str());
@@ -156,7 +155,6 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     for (auto _input : get_output_inputs(0))
     {
         auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
-        std::cout << "goe = " << goe->get_name() << std::endl;
         goes.at(goe->get_n()) = _input->get_node();
     }     
 
