@@ -26,6 +26,22 @@
 using namespace std;
 using namespace ngraph;
 
+TEST(codegen, eigen_gpl_test)
+{
+    // In order for this test to pass the in-memory compiler must define EIGEN_MPL2_ONLY
+    constexpr auto source = R"(
+#if not defined(EIGEN_MPL2_ONLY)
+#error("must define flag")
+#endif
+)";
+
+    codegen::Compiler compiler;
+    codegen::ExecutionEngine execution_engine;
+
+    auto module = compiler.compile(source);
+    ASSERT_NE(nullptr, module);
+}
+
 TEST(DISABLED_codegen, simple_return)
 {
     constexpr auto source = R"(extern "C" int test() { return 2+5; })";

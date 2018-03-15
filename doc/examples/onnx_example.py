@@ -1,7 +1,5 @@
-#!/bin/bash
-
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,21 +14,24 @@
 # limitations under the License.
 # ******************************************************************************
 
-# list active docker containers
-echo "Active docker containers..."
-docker ps -a
-echo
+import onnx
 
-# clean up old docker containers
-echo "Removing Exited docker containers..." 
-docker ps -a | grep Exited | cut -f 1 -d ' ' | xargs docker rm -f "${1}"
-echo
-
-#list docker images for ngraph
-echo "Docker images for ngraph..."
-docker images ngraph_* 
-echo
-
-# clean up docker images no longer in use
-echo "Removing docker images for ngraph..." 
-docker images -qa ngraph_* | xargs docker rmi -f "${1}"
+onnx_protobuf = onnx.load('/path/to/model/cntk_ResNet20_CIFAR10/model.onnx')
+ 
+# Convert ONNX model to an ngraph model
+from ngraph_onnx.onnx_importer.importer import import_onnx_model
+ng_model = import_onnx_model(onnx_protobuf)[0]
+ 
+ 
+# Using an ngraph runtime (CPU backend), create a callable computation
+import ngraph_api as ng
+runtime = ng.runtime(manager_name='CPU')
+resnet = runtime.computation(ng_model['output'], *ng_model['inputs'])
+ 
+# Load or create an image
+import numpy as np
+picture = np.ones([1, 3, 32, 32])
+ 
+# Run ResNet inference on picture
+resnet(picture)
+ 
