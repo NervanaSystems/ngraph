@@ -32,6 +32,7 @@ set (SRC
     build_graph.cpp
     copy.cpp
     core_fusion.cpp
+    cpio.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
@@ -59,6 +60,7 @@ set (SRC
 )
 
 add_subdirectory(models)
+add_subdirectory(files)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this

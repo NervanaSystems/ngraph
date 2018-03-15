@@ -16,19 +16,23 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    std::string serialize(std::shared_ptr<ngraph::Function>,
-                          size_t indent = 0,
-                          bool binary_constant_data = false);
-    void serialize(const std::string& path, std::shared_ptr<ngraph::Function>, size_t indent = 0);
-    void serialize(std::ostream& out, std::shared_ptr<ngraph::Function>, size_t indent = 0);
-
-    std::shared_ptr<ngraph::Function> deserialize(std::istream&);
-    std::shared_ptr<ngraph::Function> deserialize(const std::string&);
+    namespace pass
+    {
+        class GetOutputElementElimination;
+    }
 }
+
+class ngraph::pass::GetOutputElementElimination : public FunctionPass
+{
+public:
+    GetOutputElementElimination()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

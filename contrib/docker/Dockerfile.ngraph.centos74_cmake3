@@ -1,4 +1,4 @@
-# Environment to build and unit-test ngraph-cpp on centos74
+# Environment to build and unit-test ngraph on centos74
 # with gcc 4.8.5
 # with python 2.7
 # with cmake3
