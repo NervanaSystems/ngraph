@@ -1,8 +1,8 @@
 .. import.rst:
 
-################
-Importing models
-################
+###############
+Import a model
+###############
 
 :ref:`from_onnx`
 
@@ -12,10 +12,9 @@ Importing models
 .. install of the Intel nGraph++ bridges; they can use our Python APIs to run 
 .. a trained model. 
 
-Intel nGraph APIs can be used to run inference on a model that has been *exported* 
-from a Deep Learning framework. The entity exporting the model produces a file
-with a serialized model that can be passed to one of the nGraph backends for computation.
-
+Intel nGraph APIs can be used to import a model that has been *exported* from 
+a Deep Learning framework. The export producess a file with a serialized model 
+that can be loaded and passed to one of the nGraph backends for execution.
 
 .. _from_onnx:
 
@@ -28,20 +27,21 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
 `tutorials from ONNX`_ describe how to turn trained models into an 
 ``.onnx`` export.
 
-If you landed on this page and you already have an ``.onnx`` formatted-file, you 
-should be able to run the inference without needing to dig into anything from 
-the "Frameworks" sections. You will, however, need to have completed the 
-steps described in our :doc:`../install` guide.  
+.. important:: If you landed on this page and you already have an ``.onnx`` 
+   or ``.onnx.pb`` formatted file, you should be able to run the inference 
+   without needing to dig into anything from the "Frameworks" sections. You 
+   will, however, need to have completed the steps described in 
+   our :doc:`../install` guide.  
 
-To demonstrate the functionality of the nGraph inference, we'll use an 
-`already serialized CIFAR10`_ ResNet model for demonstration purposes. Remember 
-that this model has already been trained and exported from a framework such as 
-Caffe2, PyTorch or CNTK; we are simply going to build an nGraph representation 
-of the model, execute it, and produce some outputs.
+To demonstrate this functionality, we'll use an `already serialized CIFAR10`_ 
+model trained via ResNet20. Remember that this model *has already been trained* to 
+a degree deemed well enough by a developer, and then exported from a framework 
+such as Caffe2, PyTorch or CNTK. We are simply going to build an nGraph 
+representation of the model, execute it, and produce some outputs.
 
 
-Installing ngraph_onnx
------------------------
+Installing ``ngraph_onnx``
+--------------------------
 
 In order to use ONNX models, you will also need the companion tool ``ngraph_onnx``. 
 ``ngraph_onnx`` requires Python 3.5 or higher.
@@ -49,7 +49,8 @@ In order to use ONNX models, you will also need the companion tool ``ngraph_onnx
 
 #. First set the environment variables to where we built the nGraph++ libraries;
    This code assumes that you followed the default instructions from the 
-   :doc:`../install` guide and ``ngraph_dist`` can be found at ``$HOME/ngraph_dist``:
+   :doc:`../install` guide and that your version of ``ngraph_dist`` can be found 
+   at ``$HOME/ngraph_dist``:
 
    .. code-block:: bash
 
@@ -57,8 +58,8 @@ In order to use ONNX models, you will also need the companion tool ``ngraph_onnx
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
       export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib  # On MacOS
 
-#. Now add Protocol Buffers and Python PIP dependencies to your system. ONNX requires 
-   Protocol Buffers version 2.6.1 or higher.  For example, on Ubuntu:
+#. Now add *Protocol Buffers* and Python3 PIP dependencies to your system. ONNX 
+   requires Protocol Buffers version 2.6.1 or higher. For example, on Ubuntu:
 
    .. code-block:: console
 
@@ -68,7 +69,7 @@ In order to use ONNX models, you will also need the companion tool ``ngraph_onnx
 
    .. code-block:: console
 
-      $ cd /opt/libraries/ngraph-cpp
+      $ cd /opt/libraries/ngraph
       $ git checkout python_binding
         Switched to branch 'python_binding'
         Your branch is up-to-date with 'origin/python_binding'.       
@@ -78,15 +79,14 @@ In order to use ONNX models, you will also need the companion tool ``ngraph_onnx
    .. code-block:: console
 
       $ git submodule update --init --recursive
-      $ cd /path/to/ngraph/python
+      $ cd python
 	   $ pip3 install -r requirements.txt
 	   $ pip3 install .
 
-
-#. Clone the ``ngraph-onnx`` repo and pip install the Python dependencies
-   for this repo as well; if you set up your original nGraph installation 
-   under a ``libraries`` directory as recommended, it's a good idea to 
-   clone this repo there, too.
+#. Finally, clone the ``ngraph-onnx`` repo and use :command:`pip` to 
+   install the Python dependencies for this tool; if you set up your 
+   original nGraph library installation under a ``libraries`` directory 
+   as recommended, it's a good idea to clone this repo there, too.
    
    .. code-block:: console
 
@@ -96,20 +96,28 @@ In order to use ONNX models, you will also need the companion tool ``ngraph_onnx
       $ pip3 install -r requirements.txt
       $ pip3 install .
  
-Now we can use the following Python code to run a ResNet model:
- 
+
+Importing a serialized model
+-----------------------------
+
+.. Now we can import any model that has been serialized by ONNX, 
+   run Python code locally to interact with that model, create and
+   load objects, and run inference.
+
+These instructions demonstrate how to run ResNet on an 
+`already serialized CIFAR10`_ model trained via ResNet20. 
 
 
 Import ONNX and load an ONNX file from disk
---------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
    :lines: 17-19
 
  
-Prepare an ONNX model for computation
---------------------------------------
+Convert an ONNX model to an ngraph model 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -117,7 +125,7 @@ Prepare an ONNX model for computation
 
  
 Create a callable computation object
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -125,14 +133,14 @@ Create a callable computation object
 
 
 Load or create an image
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
    :lines: 32-33
 
-Run ResNet20 inference on picture
-----------------------------------
+Run ResNet inference on picture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -148,12 +156,30 @@ Put it all together
    :caption: "Code to run inference on a CIFAR10 trained model"
 
 
+If you tested the ``.onnx`` file used in the example above, the outputs 
+should look something like:  
+
+.. code-block:: python 
+
+   Attempting to write a float64 value to a <Type: 'float32'> tensor. Will attempt type conversion.
+   array([[ 1.3120822 , -1.6729498 ,  4.2079573 ,  1.4012246 , -3.5463796 ,
+        2.343378  ,  1.7799224 , -1.6155218 ,  0.07770489, -4.2944083 ]],
+     dtype=float32)
+
+
 
 .. Importing models from NNVM
    ---------------------------
 
+.. if you work on NNVM you can add this instuction here. 
+
+
+
 .. Importing models from XLA
    --------------------------
+
+.. if you work on XLA you can add this instruction here.
+
 
 .. etc, eof 
 

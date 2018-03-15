@@ -43,7 +43,7 @@ computation with an nGraph backend; this is analogous to a framework bridge.
 
 This section is under development; it will eventually be populated with more 
 articles geared toward data scientists, algorithm designers, framework developers, 
-backend engineers, and others.  We welcome 
-:doc:`contributions <../project/doc-contributor-README>`_ from the community. 
-    
+backend engineers, and others.  We welcome ideas and contributions from the 
+community. 
+
 
