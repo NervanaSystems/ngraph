@@ -97,7 +97,7 @@ details about how to change or customize the install location.
 macOS development
 -----------------
 
-.. note:: The macOS*\ platform is officially unsupported.
+.. note:: The macOS*\ platform is not officially unsupported.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 
@@ -138,7 +138,7 @@ To perform unit tests on the install:
 Compile a framework with ``libngraph``
 ======================================
 
-After building and installing nGraph++ to your system, there are two likely 
+After building and installing nGraph++ on your system, there are two likely 
 paths for what you'll want to do next: either compile a framework to run a DL 
 training model, or load an import "already-trained" model for inference on an 
 Intel nGraph++ enabled backend
