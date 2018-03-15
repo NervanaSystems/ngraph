@@ -14,6 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(compile_benchmark)
-add_subdirectory(nbench)
-add_subdirectory(reserialize)
+if(MKLDNN_INCLUDE_DIR)
+    link_directories(${MKLDNN_LIB_DIR})
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    set (SRC
+        compile_benchmark.cpp
+        ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
+    )
+
+    add_executable(compile_benchmark ${SRC})
+    add_dependencies(compile_benchmark ngraph)
+
+    set(HEADER_SEARCH_DEFINES
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+    )
+
+    target_link_libraries(compile_benchmark ngraph)
+    include_directories("${PROJECT_SOURCE_DIR}/test")
+
+    set_source_files_properties(compile_benchmark.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+endif()
