@@ -1,13 +1,18 @@
-# ngraph python binding
+# nGraph python binding
 
-## Installation (If you haven't build ngraph yet.)
+## Installation (If you haven't build nGraph yet.)
 
-Checkout ngraph++ and python wrapper code and build bdist wheel.
+Checkout nGraph and python wrapper code and build bdist wheel.
 
 ```
-git clone --branch python_binding --recursive https://github.com/NervanaSystems/ngraph.git
+git clone https://github.com/NervanaSystems/ngraph.git
 cd ngraph/python
 ```
+
+```
+pip install wheel
+```
+
 To build python2 bdist wheel type
 ```
 ./build_python2_wheel.sh
@@ -39,6 +44,7 @@ pip install -r test_requirements.txt
 Then run a test.
 ```
 pytest test/test_ops.py
+pytest test/ngraph_api/*
 ```
 
 ## Running tests with tox
@@ -53,7 +59,8 @@ pytest test/test_ops.py
 Installing and running test with Tox:
 
     pip install tox
-    export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+    export NGRAPH_CPP_BUILD_PATH=<current working directory>/build/ngraph_dist/
+    export LD_LIBRARY_PATH=<current working directory>/build/ngraph_dist/lib/ 
     tox
 
 You can run tests using only Python 3 or 2 using the `-e` (environment) switch:
