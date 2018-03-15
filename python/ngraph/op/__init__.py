@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
+"""
+Package: ngraph.op
+Low level wrappers for the nGraph c++ api in ngraph::op.
+"""
+
 # flake8: noqa
 
 import sys

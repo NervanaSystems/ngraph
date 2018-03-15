@@ -15,7 +15,7 @@
 # ******************************************************************************
 """
 Package: ngraph
-Low level wrappers for the ngraph c++ api.
+Low level wrappers for the nGraph c++ api.
 """
 
 # flake8: noqa

@@ -15,7 +15,7 @@
 # ******************************************************************************
 """
 Package: ngraph.op.util
-Low level wrappers for the ngraph c++ api in ngraph::op::util.
+Low level wrappers for the nGraph c++ api in ngraph::op::util.
 """
 # flake8: noqa
 

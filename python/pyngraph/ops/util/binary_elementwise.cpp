@@ -24,5 +24,5 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_util_BinaryElementwise(py::module m){
     py::class_<ngraph::op::util::BinaryElementwise, std::shared_ptr<ngraph::op::util::BinaryElementwise>,
-        ngraph::op::util::RequiresTensorViewArgs> binaryElementwise(m, "BinaryElementwise");
+        ngraph::op::util::RequiresTensorViewArgs> binaryElementwise(m, "ngraph.op.util.BinaryElementwise wraps ngraph::op::util::BinaryElementwise ");
 }
