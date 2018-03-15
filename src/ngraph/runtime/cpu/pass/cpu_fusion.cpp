@@ -687,7 +687,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto bn_relu_mean = std::make_shared<op::GetOutputElement>(bn_relu, 1);
         auto bn_relu_var = std::make_shared<op::GetOutputElement>(bn_relu, 2);
 
-        std::shared_ptr<Node> new_nodes [] = {bn_relu_output, bn_relu_mean, bn_relu_var};
+        std::shared_ptr<Node> new_nodes [] = {m.match_root(), bn_relu_mean, bn_relu_var};
 
         //get_output_inputs(0) contains all three GetOutputElements
         //each peeling `output`

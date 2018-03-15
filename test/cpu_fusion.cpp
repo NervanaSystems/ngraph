@@ -55,6 +55,8 @@
 
 #include "util/random.hpp"
 
+#include "ngraph/ops/relu.hpp"
+
 using namespace ngraph;
 using namespace std;
 
@@ -545,6 +547,11 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});
 
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_n4c3h2w2.pdf");
+    pass_manager.run_passes(df);
+
     //roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
@@ -1025,4 +1032,95 @@ TEST(cpu_fusion, bn_fprop_cache)
 
     ngraph::autodiff::backprop_derivative<float>(manager, backend, f, {x0, x1, x2}, {input, gamma, beta});
     //autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f);
+}
+
+
+
+TEST(cpu_fusion, bn_relu)
+{
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto beta_shape = Shape{2};
+    auto shape_r = Shape{2, 2, 2, 1};
+
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto relu_output = std::make_shared<op::Relu>(output_rt);
+    auto abs_output = std::make_shared<op::Abs>(relu_output);
+    auto abs_mean = std::make_shared<op::Abs>(mean_rt);
+    auto abs_mean2 = std::make_shared<op::Abs>(mean_rt);
+    auto abs_var = std::make_shared<op::Abs>(variance_rt);
+    auto abs_var2 = std::make_shared<op::Abs>(variance_rt);
+
+
+
+
+    auto f = make_shared<Function>(NodeVector{abs_output, abs_mean, abs_mean2, abs_var, abs_var2},
+                                    op::ParameterVector{input, gamma, beta});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_fusion.png");
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_fusion.png");
+    pass_manager.run_passes(f);
+}
+
+TEST(cpu_fusion, bn_bprop_exception)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/resnet-8-forward.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> f = ngraph::deserialize(ss);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("fprop_exception.pdf");
+    pass_manager.run_passes(f);
+
+    // Get the output
+    auto Y = f->get_output_op(0)->get_input_op(0);
+
+    // Create the Adjoint
+    auto C = std::make_shared<ngraph::op::Parameter>(Y->get_element_type(),
+                                                    Y->get_shape());
+    // get parameters
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters =
+        f->get_parameters();
+
+    // Perform autodiff
+    // NodeVector dYdXs(back_parameters.size());
+    // transform(back_parameters.begin(), back_parameters.end(), dYdXs.begin(),
+    //             [C, Y](const std::shared_ptr<Node> &X) { return Y->backprop_node(X, C); });
+
+    NodeVector dYdXs;
+    for (auto X : back_parameters)
+    {
+        dYdXs.push_back(Y->backprop_node(X, C));
+    }
+
+    // create the backward function
+    back_parameters.insert(back_parameters.begin(), C);
+
+    auto df = std::make_shared<ngraph::Function>(dYdXs, back_parameters);
+}
+
+TEST(cpu_fusion, bprop_fail)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_39.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bprop_fail.pdf");
+    pass_manager.run_passes(func);
 }

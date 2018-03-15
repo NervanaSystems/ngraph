@@ -22,6 +22,7 @@
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -32,12 +33,22 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
     {
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
+            size_t i = 0;
             for (auto arg : node->get_input_ops())
             {
+                size_t output = 0;
+                if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(node))
+                {
+                    output = goe->get_n();
+                }
+                stringstream label_edge;
+                label_edge << "[label=\" " << output << " -> " << i << " \"]";
                 m_ss << add_attributes(arg);
                 m_ss << add_attributes(node);
                 m_ss << "    " << arg->get_name() << " -> " << node->get_name();
+                m_ss << label_edge.str();
                 m_ss << ";\n";
+                i++;
             }
         });
     }
@@ -87,7 +98,7 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 
     if (std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES") != nullptr)
     {
-        ss << " " << vector_to_string(node->get_shape());
+        ss << " " << (node->get_outputs().size() != 1 ? std::string("[]") : vector_to_string(node->get_shape()));
     }
 
     ss << " \"]\n";
