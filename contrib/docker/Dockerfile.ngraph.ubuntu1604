@@ -1,4 +1,4 @@
-# Environment to build and unit-test ngraph-cpp
+# Environment to build and unit-test ngraph
 
 FROM ubuntu:16.04
 
