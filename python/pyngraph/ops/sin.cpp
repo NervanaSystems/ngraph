@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Sin(py::module m){
-    py::class_<ngraph::op::Sin, std::shared_ptr<ngraph::op::Sin>, ngraph::op::util::UnaryElementwiseArithmetic> sin(m, "Sin");
+    py::class_<ngraph::op::Sin, std::shared_ptr<ngraph::op::Sin>, ngraph::op::util::UnaryElementwiseArithmetic> sin(m, "ngraph.op.Sin wraps ngraph::op::Sin");
     sin.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

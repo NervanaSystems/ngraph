@@ -24,5 +24,5 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_util_UnaryElementwise(py::module m){
     py::class_<ngraph::op::util::UnaryElementwise, std::shared_ptr<ngraph::op::util::UnaryElementwise>,
-        ngraph::op::util::RequiresTensorViewArgs> unaryElementwise(m, "UnaryElementwise");
+        ngraph::op::util::RequiresTensorViewArgs> unaryElementwise(m, "ngraph.op.util.UnaryElementwise wraps ngraph::op::util::UnaryElementwise");
 }

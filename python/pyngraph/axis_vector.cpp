@@ -23,7 +23,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_AxisVector(py::module m) {
 
-    py::class_<ngraph::AxisVector, std::shared_ptr<ngraph::AxisVector>> axis_vector(m, "AxisVector");
+    py::class_<ngraph::AxisVector, std::shared_ptr<ngraph::AxisVector>> axis_vector(m, "ngraph.AxisVector wraps ngraph::AxisVector");
     axis_vector.def(py::init<const std::initializer_list<size_t>& >());
     axis_vector.def(py::init<const std::vector<size_t>& >());
     axis_vector.def(py::init<const ngraph::AxisVector& >());

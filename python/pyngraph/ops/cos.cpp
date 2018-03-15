@@ -22,7 +22,7 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Cos(py::module m){
-    py::class_<ngraph::op::Cos, std::shared_ptr<ngraph::op::Cos>, ngraph::op::util::UnaryElementwiseArithmetic> cos(m, "Cos");
+    py::class_<ngraph::op::Cos, std::shared_ptr<ngraph::op::Cos>, ngraph::op::util::UnaryElementwiseArithmetic> cos(m, "ngraph.op.Cos wraps ngraph::op::Cos");
     cos.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 

@@ -22,6 +22,6 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Ceiling(py::module m){
-    py::class_<ngraph::op::Ceiling, std::shared_ptr<ngraph::op::Ceiling>, ngraph::op::util::UnaryElementwiseArithmetic> ceiling(m, "Ceiling");
+    py::class_<ngraph::op::Ceiling, std::shared_ptr<ngraph::op::Ceiling>, ngraph::op::util::UnaryElementwiseArithmetic> ceiling(m, "ngraph.op.Ceiling wraps ngraph::op::Ceiling");
     ceiling.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }

@@ -23,5 +23,5 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_runtime_ExternalFunction(py::module m){
-    py::class_<ngraph::runtime::ExternalFunction, std::shared_ptr<ngraph::runtime::ExternalFunction>> externalFunction(m, "ExternalFunction");
+    py::class_<ngraph::runtime::ExternalFunction, std::shared_ptr<ngraph::runtime::ExternalFunction>> externalFunction(m, "ngraph.runtime.ExternalFunction wrap ngraph::runtime::ExternalFunction");
 }

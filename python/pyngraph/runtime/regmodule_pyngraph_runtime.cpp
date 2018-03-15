@@ -20,7 +20,7 @@
 namespace py = pybind11;
 
 void regmodule_pyngraph_runtime(py::module m){
-    py::module m_runtime = m.def_submodule("runtime", "module pyngraph.runtime");
+    py::module m_runtime = m.def_submodule("runtime", "Package ngraph.runtime");
     regclass_pyngraph_runtime_TensorView(m_runtime);
     regclass_pyngraph_runtime_Backend(m_runtime);
     regclass_pyngraph_runtime_CallFrame(m_runtime);
