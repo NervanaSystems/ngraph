@@ -227,11 +227,8 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-requirements = [
-    "setuptools",
-    "six",
-    "numpy" 
-]
+with open('requirements.txt') as req:
+    requirements = req.read().splitlines()
 
 
 setup(
