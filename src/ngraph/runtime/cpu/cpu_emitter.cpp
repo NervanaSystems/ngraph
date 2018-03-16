@@ -2766,6 +2766,22 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
+                if (arg0_shape.size() == 4 &&
+                    args[0].get_element_type() == element::f32 &&
+                    pad->get_padding_interior() == Shape(arg0_shape.size()))
+                {
+                    writer << "cpu::kernel::pad_4d_float32("
+                           << args[0].get_name() << ", "
+                           << out[0].get_name() << ", "
+                           << "*(" << args[1].get_name() << ")" << ", "
+                           << "{" << join(arg0_shape) << "}, "
+                           << "{" << join(result_shape) << "}, "
+                           << "{" << join(pad->get_padding_below()) << "}, "
+                           << "{" << join(pad->get_padding_above()) << "}"
+                           << ");\n";
+                }
+                else
+                {
                 writer << "kernel::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
@@ -2775,6 +2791,7 @@ namespace ngraph
                 writer << "            {" << join(pad->get_padding_below()) << "},\n";
                 writer << "            {" << join(pad->get_padding_above()) << "},\n";
                 writer << "            {" << join(pad->get_padding_interior()) << "});\n";
+                }
             }
 
             template <>
