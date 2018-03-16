@@ -1413,10 +1413,6 @@ namespace ngraph
                     }
                     else
                     {
-                        // shared_ptr<CallFrame> cf =
-                        //     dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-                        // ef->get_callees().emplace_back(cf);
-
                         writer << "{   // " << node->get_name() << " 5\n";
                         writer.indent++;
                         string type = f_result_element_type.c_type_string();
