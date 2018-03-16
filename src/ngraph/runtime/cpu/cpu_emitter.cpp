@@ -384,7 +384,7 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                if (args.size() != 5) //BatchNorm Training
+                if (batchnorm->get_training_flag()) //BatchNorm Training
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -414,7 +414,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
-                                                                "BatchNormTraining");
+                                                                batchnorm);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -459,7 +459,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
-                                                                "BatchNormInference");
+                                                                batchnorm);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])

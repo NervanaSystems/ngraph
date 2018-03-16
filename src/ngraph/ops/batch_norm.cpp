@@ -25,6 +25,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
+    , m_training(true)
 {
     if (m_bn_input_shape.size() < 2)
     {
@@ -62,14 +63,6 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     add_output(input->get_element_type(), m_bn_variance_shape);
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
-{
-    if (new_args.size() != 3)
-        throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNorm>(m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
-}
-
 ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
@@ -78,9 +71,10 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> variance)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
     , m_bn_input_shape(input->get_shape())
-    , m_bn_mean_shape(mean->get_shape())
     , m_bn_variance_shape(variance->get_shape())
+    , m_bn_mean_shape(mean->get_shape())
     , m_epsilon(eps)
+    , m_training(false)
 {
     if (m_bn_input_shape.size() < 2)
     {
@@ -106,7 +100,8 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
         }
     }
 
-    if ((variance->get_shape().size() != 1 || (mean->get_shape().size() != 1) || (gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    if ((variance->get_shape().size() != 1) || (mean->get_shape().size() != 1) ||
+        (gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
     {
         throw ngraph_error("gamma and beta shoud have rank 1");
     }
@@ -119,6 +114,35 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     if (gamma->get_shape().size() != beta->get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
+    }
+
+    add_output(input->get_element_type(), m_bn_input_shape);
+}
+
+std::shared_ptr<ngraph::Node>
+    ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (this->m_training)
+    {
+        if (new_args.size() != 3)
+        {
+            throw ngraph_error("Incorrect number of new arguments");
+        }
+        return std::make_shared<BatchNorm>(
+            m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+    }
+    else
+    {
+        if (new_args.size() != 5)
+        {
+            throw ngraph_error("Incorrect number of new arguments");
+        }
+        return std::make_shared<BatchNorm>(m_epsilon,
+                                           new_args.at(0),
+                                           new_args.at(1),
+                                           new_args.at(2),
+                                           new_args.at(3),
+                                           new_args.at(4));
     }
 }
 

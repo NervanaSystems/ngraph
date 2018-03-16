@@ -23,6 +23,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -170,7 +171,7 @@ namespace ngraph
                                                const mkldnn::memory::desc& mean_desc,
                                                const mkldnn::memory::desc& variance_desc,
                                                const double eps,
-                                               std::string& batchnorm_type);
+                                               const ngraph::op::BatchNorm* bn_node);
 
                 size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& input_desc,
