@@ -169,7 +169,8 @@ namespace ngraph
                                                const mkldnn::memory::desc& result_desc,
                                                const mkldnn::memory::desc& mean_desc,
                                                const mkldnn::memory::desc& variance_desc,
-                                               const double eps);
+                                               const double eps,
+                                               std::string& batchnorm_type);
 
                 size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& input_desc,

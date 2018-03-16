@@ -70,6 +70,58 @@ std::shared_ptr<ngraph::Node>
     return std::make_shared<BatchNorm>(m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
+ngraph::op::BatchNorm::BatchNorm(double eps,
+                                 std::shared_ptr<ngraph::Node> gamma,
+                                 std::shared_ptr<ngraph::Node> beta,
+                                 std::shared_ptr<ngraph::Node> input,
+                                 std::shared_ptr<ngraph::Node> mean,
+                                 std::shared_ptr<ngraph::Node> variance)
+    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
+    , m_bn_input_shape(input->get_shape())
+    , m_bn_mean_shape(mean->get_shape())
+    , m_bn_variance_shape(variance->get_shape())
+    , m_epsilon(eps)
+{
+    if (m_bn_input_shape.size() < 2)
+    {
+        throw ngraph_error("input tensor to batchnorm much have tensor of atleast rank 2");
+    }
+
+    if (m_bn_input_shape[1] == 0)
+    {
+        throw ngraph_error(
+            "input tensor must have atleast one channel axis for batch normalization");
+    }
+
+    auto et = input->get_element_type();
+    const char* input_names[] = {"gamma", "beta", "input", "mean", "variance"};
+
+    for (size_t i = 0; i < get_input_size(); i++)
+    {
+        if (get_input_op(i)->get_element_type() != et)
+        {
+            auto err_msg = std::string("The element type of ") + input_names[i] +
+                           " isn't equal to input data's type";
+            throw ngraph_error(err_msg.c_str());
+        }
+    }
+
+    if ((variance->get_shape().size() != 1 || (mean->get_shape().size() != 1) || (gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    {
+        throw ngraph_error("gamma and beta shoud have rank 1");
+    }
+
+    if (variance->get_shape()[0] != mean->get_shape()[0])
+    {
+        throw ngraph_error("mean and variance should have same size");
+    }
+
+    if (gamma->get_shape().size() != beta->get_shape().size())
+    {
+        throw ngraph_error("gamma and beta rank does not match");
+    }
+}
+
 ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
                                                  std::shared_ptr<ngraph::Node> gamma,
                                                  std::shared_ptr<ngraph::Node> beta,

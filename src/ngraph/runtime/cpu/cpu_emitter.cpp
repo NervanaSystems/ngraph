@@ -384,44 +384,98 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                auto result_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-                auto mean_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
-                auto variance_format =
-                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
+                if (args.size() != 5) //BatchNorm Training
+                {
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto mean_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
+                    auto variance_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto weights_shape = Shape{2, args[0].get_size()};
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
-                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                auto results_desc = mkldnn_emitter->build_memory_descriptor(out[0], result_format);
-                auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
-                auto variance_desc =
-                    mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto weights_shape = Shape{2, args[0].get_size()};
+                    auto input_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    auto results_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
+                    auto variance_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
 
-                auto batchnorm_index =
-                    mkldnn_emitter->build_batchnorm_forward(input_desc,
-                                                            weights_desc,
-                                                            results_desc,
-                                                            mean_desc,
-                                                            variance_desc,
-                                                            batchnorm->get_eps_value());
+                    auto batchnorm_index =
+                        mkldnn_emitter->build_batchnorm_forward(input_desc,
+                                                                weights_desc,
+                                                                results_desc,
+                                                                mean_desc,
+                                                                variance_desc,
+                                                                batchnorm->get_eps_value(),
+                                                                "BatchNormTraining");
 
-                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
-                       << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                       << ", bn_weights.data());\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
-                       << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
-                       << out[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
-                       << out[2].get_name() << ");\n";
+                    auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", bn_weights.data());\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
+                           << ", " << out[2].get_name() << ");\n";
 
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(batchnorm_index) << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(batchnorm_index) << ");\n";
+                }
+                else //BatchNorm Inference
+                {
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
+                    auto variance_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto weights_shape = Shape{2, args[0].get_size()};
+                    auto input_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    auto mean_desc = mkldnn_emitter->build_memory_descriptor(args[3], mean_format);
+                    auto variance_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[4], variance_format);
+                    auto results_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+
+                    auto batchnorm_index =
+                        mkldnn_emitter->build_batchnorm_forward(input_desc,
+                                                                weights_desc,
+                                                                results_desc,
+                                                                mean_desc,
+                                                                variance_desc,
+                                                                batchnorm->get_eps_value(),
+                                                                "BatchNormInference");
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[3].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[4].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", bn_weights.data());\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(batchnorm_index) << ");\n";
+                }
                 writer.indent--;
                 writer << "}\n";
             }
