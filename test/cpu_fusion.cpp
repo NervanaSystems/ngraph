@@ -596,6 +596,7 @@ TEST(cpu_fusion, rnn_matrix_fusion_pass)
     pass::Manager pass_manager;
 //    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("matrix_after_fusion.svg");
     pass_manager.run_passes(func);
 }
 
