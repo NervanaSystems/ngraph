@@ -45,6 +45,8 @@ namespace ngraph
         class GreaterEq;
         class Less;
         class LessEq;
+        class Not;
+        class Relu;
         class Max;
         class Min;
         class Negative;
@@ -249,6 +251,20 @@ namespace ngraph
             {
                 static constexpr const char* op = "less_equal";
                 static constexpr const char* math_kernel = "x0 <= x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Relu>
+            {
+                static constexpr const char* op = "relu";
+                static constexpr const char* math_kernel = "fmaxf(0,x0)";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Not>
+            {
+                static constexpr const char* op = "not";
+                static constexpr const char* math_kernel = "!x0";
             };
         }
     }

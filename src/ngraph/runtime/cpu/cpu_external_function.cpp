@@ -97,6 +97,7 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -288,6 +289,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
     pass_manager.run_passes(m_function);
@@ -619,7 +621,7 @@ using namespace ngraph::runtime;
             if (!res->needs_copy())
             {
                 shared_ptr<descriptor::TensorView> itv =
-                    res->get_input_op(0)->get_output_tensor_view();
+                    res->get_inputs().at(0).get_output().get_tensor_view();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
             }
         }

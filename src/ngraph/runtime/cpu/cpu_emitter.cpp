@@ -1413,10 +1413,6 @@ namespace ngraph
                     }
                     else
                     {
-                        // shared_ptr<CallFrame> cf =
-                        //     dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-                        // ef->get_callees().emplace_back(cf);
-
                         writer << "{   // " << node->get_name() << " 5\n";
                         writer.indent++;
                         string type = f_result_element_type.c_type_string();
@@ -2770,15 +2766,31 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                writer << "kernel::pad<" << out[0].get_type() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "            " << args[1].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(arg0_shape) << "},\n";
-                writer << "            {" << join(result_shape) << "},\n";
-                writer << "            {" << join(pad->get_padding_below()) << "},\n";
-                writer << "            {" << join(pad->get_padding_above()) << "},\n";
-                writer << "            {" << join(pad->get_padding_interior()) << "});\n";
+                if (arg0_shape.size() == 4 && args[0].get_element_type() == element::f32 &&
+                    pad->get_padding_interior() == Shape(arg0_shape.size()))
+                {
+                    writer << "cpu::kernel::pad_4d_float32(" << args[0].get_name() << ",\n"
+                           << "                            " << out[0].get_name() << ",\n"
+                           << "                            *(" << args[1].get_name() << "),\n"
+                           << "                            {" << join(arg0_shape) << "},\n"
+                           << "                            {" << join(result_shape) << "},\n"
+                           << "                            {" << join(pad->get_padding_below())
+                           << "},\n"
+                           << "                            {" << join(pad->get_padding_above())
+                           << "});\n";
+                }
+                else
+                {
+                    writer << "kernel::pad<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(arg0_shape) << "},\n";
+                    writer << "            {" << join(result_shape) << "},\n";
+                    writer << "            {" << join(pad->get_padding_below()) << "},\n";
+                    writer << "            {" << join(pad->get_padding_above()) << "},\n";
+                    writer << "            {" << join(pad->get_padding_interior()) << "});\n";
+                }
             }
 
             template <>
