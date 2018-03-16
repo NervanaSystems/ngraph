@@ -20,7 +20,7 @@ resources, it can either:
 * Provide a serialized model that can be imported to run on one of the nGraph
   backends. 
 
-.. note:: This section is aimed at intermediate-level developers. It assumes 
+.. note:: This section is aimed at intermediate-level developers. It assumes an
    understanding of the concepts in the previous sections. It does not assume 
    knowledge of any particular frontend framework. 
   
@@ -32,7 +32,7 @@ backends for *some* kinds of algorithmic operations while they impose inherent
 limitations or slow down others. 
 
 One of our goals with the nGraph++ library is to enable developers with tools to 
-build programs that quickly access and process data from a breadth of edge and 
+quickly build programs that access and process data from a breadth of edge and 
 networked devices. This might mean bringing compute resources closer to edge 
 devices, or it might mean programatically adjusting a model or the compute 
 resources it requires, at an unknown or arbitray time after it has been deemed 

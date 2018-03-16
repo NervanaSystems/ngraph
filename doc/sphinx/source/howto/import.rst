@@ -86,7 +86,8 @@ and the `ngraph` repo was cloned to ``/opt/libraries/``
       $ pip3 install .
 
 #. Finally, clone the ``ngraph-onnx`` repo and use :command:`pip` to install the 
-   Python dependencies for this tool; if you set up your original nGraph library installation under a ``libraries`` directory    as recommended, it's a good 
+   Python dependencies for this tool; if you set up your original nGraph library 
+   installation under a ``libraries`` directory    as recommended, it's a good 
    idea to clone this repo there, as well.
    
    .. code-block:: console
@@ -101,12 +102,11 @@ and the `ngraph` repo was cloned to ``/opt/libraries/``
 Importing a serialized model
 =============================
 
-Now we can import any model that has been serialized by ONNX, run Python code 
-locally to interact with that model, create and load objects, and run inference.  
-This is an example model from Microsoft\*'s Deep Learning framework, `CNTK`_ 
-
-These instructions demonstrate how to run ResNet on an `already serialized`_ 
-model trained on the CIFAR10 data set. 
+Now we can import any model that has been serialized by ONNX, interact locally 
+with the model by running Python code, create and load objects, and run 
+inference. On this example model from Microsoft\*'s Deep Learning 
+framework, `CNTK`_ , we can outline the procedure and demonstrate how to run 
+ResNet on an `already serialized`_ model trained on the CIFAR10 data set. 
 
 
 Enable ONNX and load an ONNX file from disk
@@ -118,7 +118,7 @@ Enable ONNX and load an ONNX file from disk
 
  
 Convert an ONNX model to an ngraph model 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
