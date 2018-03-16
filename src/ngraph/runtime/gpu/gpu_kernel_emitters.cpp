@@ -17,7 +17,6 @@
 #include <map>
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+
 
 using namespace ngraph;
-using namespace ngraph::runtime::gpu::kernel;

@@ -17,6 +17,8 @@
 #pragma once
 
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
 namespace ngraph
 {
@@ -26,6 +28,27 @@ namespace ngraph
         {
             namespace kernel
             {
+                void emit_prologue(codegen::CodeWriter& writer, const Node* node)
+                {
+                    writer << "{   //" << node->get_name() << "\n";
+                    writer.indent++;
+                }
+
+                void emit_epilogue(codegen::CodeWriter& writer)
+                {
+                    writer.indent--;
+                    writer << "}\n";
+                }
+
+                void emit_memcpyDtD(codegen::CodeWriter& writer,
+                                    const GPU_TensorViewWrapper& dst,
+                                    const GPU_TensorViewWrapper& src)
+                {
+                    writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", "
+                           << src.get_name() << ", " << dst.get_size() << " * "
+                           << dst.get_element_type().size() << ");\n";
+                    return;
+                }
             }
         }
     }
