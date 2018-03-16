@@ -197,8 +197,8 @@ namespace ngraph
             // call modfied f'(c, cached) to get df/dX*
             NodeMap nm2;
             auto clone_bwd = clone_function(fprop_cache.bprop, nm2);
-            auto cache_dfdx = get_autodiff<T>(
-                manager, backend, clone_bwd, mod_df_input_args, indep_params);
+            auto cache_dfdx =
+                get_autodiff<T>(manager, backend, clone_bwd, mod_df_input_args, indep_params);
 
             const auto numpy_atol = 1e-5f;
             const auto numpy_rtol = 1e-8f;
