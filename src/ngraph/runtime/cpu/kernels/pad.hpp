@@ -16,9 +16,11 @@
 
 #pragma once
 
+#define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/shape.hpp"
+#include "ngraph/runtime/cpu/kernels/eigen_thread_pool.hpp"
 
 namespace ngraph
 {
@@ -49,7 +51,7 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(output, out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input, in_dims);
 
-                    out = in.pad(padding, pad_value);
+                    out.device(eigen::global_thread_pool_device) = in.pad(padding, pad_value);
                 }
             }
         }
