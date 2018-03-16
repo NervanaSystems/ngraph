@@ -189,36 +189,29 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 {
     using namespace ngraph;
 
-    // Traverse fprop to make a map that stores parameters with the same
-    // shape and element type as the nodes in fprop
-    NodeMap node_param_map;
-    ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-
-        if (node->get_outputs().size() == 1)
-        {
-            node_param_map.add(
-                node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
-        }
-    });
-
     // Traverse bprop to find all of the nodes in the graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
     ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-        if (in_bprop.count(node) == 0 && node->get_outputs().size() == 1)
-        {
-            in_bprop.insert(node);
+
+        if (node->get_outputs().size() == 1)
+        {            
+            if (in_bprop.count(node) == 0)
+            {
+                in_bprop.insert(node);
+            }            
         }
+
     });
 
-    // Get the input paramters of fprop
-    std::unordered_set<std::shared_ptr<Node>> fprop_params;
-    for (auto node : fprop->get_parameters())
-    {
-        if (fprop_params.count(node) == 0)
+    // Traverse fprop to make a map that stores parameters with the same
+    // shape and element type as the nodes in fprop
+    NodeMap node_param_map;
+    ngraph::traverse_nodes(fprop, [&node_param_map, &in_bprop](std::shared_ptr<Node> node) {
+        if (in_bprop.count(node) != 0)
         {
-            fprop_params.insert(node);
+            node_param_map.add(node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
         }
-    }
+    });
 
     // Find all of the nodes that are intermediate values of fprop and used in
     // bprop
@@ -227,27 +220,11 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     std::vector<std::shared_ptr<Node>> unused_nodes;
     for (auto kv : node_param_map.get_node_map())
     {
-        // if it's not in bprop, mark it unused
-        if (in_bprop.count(kv.first) == 0)
-        {
-            unused_nodes.push_back(kv.first);
-        }
-        // otherwise save in in the ouputs
-        else
-        {
-            fprop_cache.fprop_output_nodes.push_back(kv.first);
-        }
-    }
-
-    // erase all unused nodes form the map
-    for (auto node : unused_nodes)
-    {
-        node_param_map.get_node_map().erase(node);
+        fprop_cache.fprop_output_nodes.push_back(kv.first);
     }
 
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs;
-
 
     for (auto fpr : fprop->get_results())
     {
