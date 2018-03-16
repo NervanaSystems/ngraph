@@ -18,12 +18,12 @@ import onnx
 
 onnx_protobuf = onnx.load('/path/to/model/cntk_ResNet20_CIFAR10/model.onnx')
  
-# Convert ONNX model to an ngraph model
+# Convert a serialized ONNX model to an ngraph model
 from ngraph_onnx.onnx_importer.importer import import_onnx_model
 ng_model = import_onnx_model(onnx_protobuf)[0]
  
- 
-# Using an ngraph runtime (CPU backend), create a callable computation
+
+# Using ngraph_api, create a callable computation object
 import ngraph_api as ng
 runtime = ng.runtime(manager_name='CPU')
 resnet = runtime.computation(ng_model['output'], *ng_model['inputs'])

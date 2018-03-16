@@ -148,9 +148,9 @@ Intel nGraph++ enabled backend
 For this former case, this early |release| release, :doc:`framework-integration-guides`, 
 can help you get started with a training a model on a supported framework. 
 
+* :doc:`neon<framework-integration-guides>` framework,  
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
-* neon™ `frontend framework`_.
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go directly

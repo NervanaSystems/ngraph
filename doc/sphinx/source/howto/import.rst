@@ -47,7 +47,7 @@ Installing ``ngraph_onnx``
 ==========================
 
 To use ONNX models with ngraph, you will also need the companion tool 
-``ngraph_onnx``. ``ngraph_onnx`` requires Python 3.5 or higher.
+``ngraph_onnx``. ``ngraph_onnx`` requires Python 3.4 or higher.
 
 This code assumes that you already followed the default instructions from the 
 :doc:`../install` guide; ``ngraph_dist`` was installed to ``$HOME/ngraph_dist``
@@ -102,11 +102,15 @@ and the `ngraph` repo was cloned to ``/opt/libraries/``
 Importing a serialized model
 =============================
 
-Now we can import any model that has been serialized by ONNX, interact locally 
-with the model by running Python code, create and load objects, and run 
-inference. On this example model from Microsoft\*'s Deep Learning 
-framework, `CNTK`_ , we can outline the procedure and demonstrate how to run 
-ResNet on an `already serialized`_ model trained on the CIFAR10 data set. 
+With the dependencies added, we can now import a model that has 
+been serialized by ONNX, interact locally with the model by running 
+Python code, create and load objects, and run inference. 
+
+This section assumes that you have your own ONNX model. With this 
+example model from Microsoft\*'s Deep Learning framework, `CNTK`_,
+we can outline the procedure to show how to run ResNet on model 
+that has been trained on the CIFAR10 data set and serialized with 
+ONNX. 
 
 
 Enable ONNX and load an ONNX file from disk
@@ -154,18 +158,18 @@ Put it all together
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
    :lines: 17-38
-   :caption: "Code to run inference on a CIFAR10 trained model"
+   :caption: "Demo sample code to run inference with nGraph"
 
 
-If you tested the same ``.onnx`` file used in the script above, the outputs 
-should look something like:  
+Outputs will vary greatly, depending on your model; for
+demonstration purposes, the code will look something like: 
+
 
 .. code-block:: python 
 
-   Attempting to write a float64 value to a <Type: 'float32'> tensor. Will attempt type conversion.
-   array([[ 1.3120822 , -1.6729498 ,  4.2079573 ,  1.4012246 , -3.5463796 ,
-        2.343378  ,  1.7799224 , -1.6155218 ,  0.07770489, -4.2944083 ]],
-     dtype=float32)
+   array([[ 1.312082 , -1.6729496,  4.2079577,  1.4012241, -3.5463796,
+         2.3433776,  1.7799224, -1.6155214,  0.0777044, -4.2944093]],
+      dtype=float32)
 
 
 
@@ -188,5 +192,4 @@ should look something like:
 
 .. _ONNX: http://onnx.ai
 .. _tutorials from ONNX: https://github.com/onnx/tutorials
-.. _already serialized CIFAR10: https://github.com/NervanaSystems/ngraph-onnx-val/tree/master/models
 .. _CNTK: https://www.microsoft.com/en-us/cognitive-toolkit/features/model-gallery/
