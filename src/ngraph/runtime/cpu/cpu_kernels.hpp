@@ -104,3 +104,25 @@ namespace mkl
                        size_t ldb);
     }
 }
+
+namespace ngraph
+{
+    class Shape;
+
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace kernel
+            {
+                void pad_4d_float32(float* input,
+                                    float* output,
+                                    float pad_value,
+                                    const Shape& input_shape,
+                                    const Shape& output_shape,
+                                    const Shape& padding_below,
+                                    const Shape& padding_above);
+            }
+        }
+    }
+}
