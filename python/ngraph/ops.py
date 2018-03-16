@@ -17,22 +17,22 @@
 """Factory functions for all ngraph ops."""
 import numpy as np
 
-from ngraph import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
+from ngraph_bind import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
 
-from ngraph.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
+from ngraph_bind.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
     Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, Reshape, Sqrt, Subtract, \
     Sum, Tanh
 
 from typing import Iterable, List, Optional
 
-from ngraph_api.utils.broadcasting import get_broadcast_axes
-from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
-from ngraph_api.utils.input_validation import assert_list_of_ints
-from ngraph_api.utils.reduction import get_reduction_axes
-from ngraph_api.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
+from ngraph.utils.broadcasting import get_broadcast_axes
+from ngraph.utils.decorators import nameable_op, binary_op, unary_op
+from ngraph.utils.input_validation import assert_list_of_ints
+from ngraph.utils.reduction import get_reduction_axes
+from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     as_node, NodeInput
-from ngraph_api.utils.types import get_element_type
+from ngraph.utils.types import get_element_type
 
 
 @nameable_op

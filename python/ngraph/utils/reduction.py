@@ -14,22 +14,23 @@
 # limitations under the License.
 # ******************************************************************************
 
-"""Helper functions for validating user input."""
-
-import logging
-from typing import Iterable
-
-from ngraph_api.exceptions import UserInputError
-
-log = logging.getLogger(__file__)
+from typing import Iterable, Optional
+from ngraph_bind import Node
 
 
-def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> None
-    """Verify that the provided value is an iterable of integers."""
-    try:
-        for value in value_list:
-            if not isinstance(value, int):
-                raise TypeError
-    except TypeError:
-        log.warning(message)
-        raise UserInputError(message, value_list)
+def get_reduction_axes(node, reduction_axes):
+    # type: (Node, Optional[Iterable[int]]) -> Iterable[int]
+    """Get reduction axes if it is None and convert it to set if its type is different.
+
+    If reduction_axes is None we default to reduce all axes.
+
+    :param node: The node we fill reduction axes for.
+    :param reduction_axes: The collection of indices of axes to reduce. May be None.
+    :return: Set filled with indices of axes we want to reduce.
+    """
+    if reduction_axes is None:
+        reduction_axes = set(range(len(node.shape)))
+
+    if type(reduction_axes) is not set:
+        reduction_axes = set(reduction_axes)
+    return reduction_axes
