@@ -188,6 +188,9 @@ namespace ngraph
         /// Get ouput descriptor that outputs to dst
         descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
 
+        /// Get all the nodes that uses the current node
+        NodeVector get_users() const;
+
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
 

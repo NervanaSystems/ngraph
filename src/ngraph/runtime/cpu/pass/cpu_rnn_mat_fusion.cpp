@@ -30,22 +30,9 @@
 
 using namespace ngraph;
 
-static NodeVector get_users(const Node& node)
-{
-    NodeVector result;
-    for (size_t i = 0; i < node.get_output_size(); ++i)
-    {
-        for (auto input : node.get_output_inputs(i))
-        {
-            result.push_back(input->get_node());
-        }
-    }
-    return result;
-}
-
 #define TI(x) std::type_index(typeid(x))
 
-// a sequence of nodes, identified with a segment type for the input type
+// a sequence of nodes, identified with a segment type for the input parameter type
 struct NodeSegment : public NodeVector
 {
     enum Type {
@@ -59,14 +46,12 @@ typedef std::pair<NodeSegment::Type, std::vector<std::type_index>> NodeTypeSeque
 typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
 
 // precondition: all valid sequences must be unique
-void FindValidSegments(const std::shared_ptr<Node> &n,
+void FindValidSegments(const std::shared_ptr<Node> &node,
                        NodeSegment segment,
                        std::vector<NodeSegment> &segment_bundle,
                        NodeTypeSequenceSet valid_sequence_list,
                        int depth)
 {
-    const Node& node = *n;
-
     // base case, we have one valid segment left, and depth is exeeding the valid seqence length
     // we found a match
     if (valid_sequence_list.size() == 1 && depth >= valid_sequence_list.front().second.size()) {
@@ -74,10 +59,11 @@ void FindValidSegments(const std::shared_ptr<Node> &n,
         segment_bundle.push_back(segment);
         return;
     }
+    const Node& node_ref = *node;
     for (auto seq_it = valid_sequence_list.begin(); seq_it != valid_sequence_list.end();) {
         const auto& valid_seq = seq_it->second;
         // skip and remove sequences which are longer or doesn't match current node at depth index
-        if (depth >= valid_seq.size() || TI(node) != valid_seq[depth]) {
+        if (depth >= valid_seq.size() || TI(node_ref) != valid_seq[depth]) {
             seq_it = valid_sequence_list.erase(seq_it);
             continue;
         }
@@ -89,8 +75,8 @@ void FindValidSegments(const std::shared_ptr<Node> &n,
     // valid_sequnce_list.size() > 0 : there's still valid sequence to match, continue recursion
     // valid_sequnce_list.size() = 0 : terminate
     if (valid_sequence_list.size() > 0) {
-        segment.push_back(n);
-        const auto outputs = get_users(node);
+        segment.push_back(node);
+        const auto outputs = node->get_users();
         for (const auto& out_node : outputs) {
             FindValidSegments(out_node, segment, segment_bundle, valid_sequence_list, depth + 1);
         }
@@ -98,8 +84,7 @@ void FindValidSegments(const std::shared_ptr<Node> &n,
 }
 
 
-bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(
-    std::shared_ptr<Function> function)
+bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modified = false;
 
@@ -117,9 +102,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(
 
     // iterate all parameters and find path to dot op
     std::vector<NodeSegment> segment_bundle;
-    for (auto& n : function->get_ordered_ops()) {
+    for (auto& node : function->get_ordered_ops()) {
         NodeSegment segment;
-        FindValidSegments(n, segment, segment_bundle, valid_sequences, 0);
+        FindValidSegments(node, segment, segment_bundle, valid_sequences, 0);
     }
 
     // combined all segments by last operator
@@ -154,7 +139,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(
     }
 
     // remove pairs with single op
-    for (auto it = param_list.begin(); it != param_list.end();) {
+    for (auto it = param_list.cbegin(); it != param_list.cend();) {
         if (it->second.size() < 2) {
             it = param_list.erase(it);
         }

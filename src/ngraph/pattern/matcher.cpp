@@ -222,21 +222,6 @@ namespace ngraph
             return cb(*this);
         }
 
-        static NodeVector get_users(std::shared_ptr<Node> node)
-        {
-            NodeVector result;
-
-            for (size_t i = 0; i < node->get_output_size(); ++i)
-            {
-                for (auto input : node->get_output_inputs(i))
-                {
-                    result.push_back(input->get_node());
-                }
-            }
-
-            return result;
-        }
-
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
         {
             //clear our state
@@ -247,8 +232,6 @@ namespace ngraph
             {
                 throw "m_pattern_node or graph_node are not set!";
             }
-
-            (void)get_users; //to supress an unused function warning
 
             NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
                          << " , graph_node = " << graph_node->get_name();

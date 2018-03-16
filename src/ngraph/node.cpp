@@ -324,3 +324,18 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
     }
     throw ngraph_error("Error: dst is not one of self's output Node");
 }
+
+NodeVector Node::get_users() const
+{
+    NodeVector result;
+
+    for (size_t i = 0; i < get_output_size(); ++i)
+    {
+        for (auto input : get_output_inputs(i))
+        {
+            result.push_back(input->get_node());
+        }
+    }
+
+    return result;
+}
