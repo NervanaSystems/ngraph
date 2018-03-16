@@ -710,6 +710,101 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "}\n";
                 return;
             }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Sum)
+            {
+                writer << "{   //" << node->get_name() << "\n";
+                writer.indent++;
+                {
+                    if (out[0].get_size() == 0)
+                    {
+                        return;
+                    }
+
+                    const constexpr size_t max_tensor_size = 4;
+                    if (args[0].get_shape().size() > max_tensor_size)
+                    {
+                        // fix before PR
+                        throw std::runtime_error("Tensors of dimension greater than 4 are not implemented.");
+                    }
+
+                    // construct input tensor descriptor rt impl.
+                    writer << "cudnnTensorDescriptor_t input_descriptor;\n";
+                    writer << "cudnnCreateTensorDescriptor(&input_descriptor);\n";
+                    auto& input_shape = args[0].get_shape();
+                    std::vector<size_t> dimensions;
+                    for (size_t i = input_shape.size(); i < max_tensor_size; i++)
+                    {
+                        dimensions.push_back(1);
+                    }
+                    std::copy(input_shape.begin(),input_shape.end(),std::back_inserter(dimensions));
+                    writer << "cudnnSetTensor4dDescriptor(input_descriptor,\n";
+                    writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
+                    writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
+                    for (auto const& dim : dimensions)
+                    {
+                        writer << ",\n                 /*dimension_size*/" << dim;
+                    }
+                    writer << ");\n";
+
+
+                    // construct out tensor descriptor rt impl.
+                    writer << "cudnnTensorDescriptor_t output_descriptor;\n";
+                    writer << "cudnnCreateTensorDescriptor(&output_descriptor);\n";
+                    auto sum_node = static_cast<const ngraph::op::Sum*>(node);
+                    auto reduction_axes = sum_node->get_reduction_axes();
+                    for (auto const& idx_dim : reduction_axes) {
+                        dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
+                    }
+                    writer << "cudnnSetTensor4dDescriptor(output_descriptor,\n";
+                    writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
+                    writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
+                    for (auto const& dim : dimensions)
+                    {
+                        writer << ",\n                 /*dimension_size*/" << dim;
+                    }
+                    writer << ");\n";
+
+                    writer += R"(
+cudnnReduceTensorDescriptor_t reduceTensorDesc;
+cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
+cudnnSetReduceTensorDescriptor(reduceTensorDesc,
+                               CUDNN_REDUCE_TENSOR_ADD,
+                               CUDNN_DATA_FLOAT,
+                               CUDNN_NOT_PROPAGATE_NAN,
+                               CUDNN_REDUCE_TENSOR_NO_INDICES,
+                               CUDNN_32BIT_INDICES);
+size_t workspace_size = 0;
+cudnnGetReductionWorkspaceSize(cudnn_handle,
+                               reduceTensorDesc,
+                               input_descriptor,
+                               output_descriptor,
+                               &workspace_size);
+
+void* workspace_ptr = ngraph::runtime::gpu::create_gpu_buffer(workspace_size);
+float alpha = 1.0, beta = 0;
+)";
+                    writer << "cudnnReduceTensor(cudnn_handle,\n";
+                    writer << "                  reduceTensorDesc,\n";
+                    writer << "                  nullptr,\n";
+                    writer << "                  0,\n";
+                    writer << "                  workspace_ptr,\n";
+                    writer << "                  workspace_size,\n";
+                    writer << "                  &alpha,\n";
+                    writer << "                  input_descriptor,\n";
+                    writer << "                  " << args[0].get_name() << ",\n";
+                    writer << "                  &beta,\n";
+                    writer << "                  output_descriptor,\n";
+                    writer << "                  " << out[0].get_name() << ");\n";
+
+
+
+                }
+                writer.indent--;
+                writer << "}\n";
+                return;
+            }
         }
     }
 }
