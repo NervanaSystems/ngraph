@@ -149,14 +149,13 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
 
+    std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
 
-    std::vector<std::shared_ptr<Node>> goes (get_outputs().size());
-    
     for (auto _input : get_output_inputs(0))
     {
         auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
         goes.at(goe->get_n()) = _input->get_node();
-    }     
+    }
 
     auto mean = goes.at(1);
     auto var = goes.at(2);

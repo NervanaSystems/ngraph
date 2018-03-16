@@ -194,11 +194,11 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
 
         if (node->get_outputs().size() == 1)
-        {            
+        {
             if (in_bprop.count(node) == 0)
             {
                 in_bprop.insert(node);
-            }            
+            }
         }
 
     });
@@ -210,7 +210,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::traverse_nodes(fprop, [&fprop_cache, &in_bprop](std::shared_ptr<Node> node) {
         if (in_bprop.count(node) != 0)
         {
-            fprop_cache.node_param_map->add(node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
+            fprop_cache.node_param_map->add(
+                node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
         }
     });
 
