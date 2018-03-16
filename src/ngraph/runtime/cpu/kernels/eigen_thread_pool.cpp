@@ -25,7 +25,8 @@ namespace ngraph
             namespace eigen
             {
                 Eigen::ThreadPool global_thread_pool(Eigen::nbThreads());
-                Eigen::ThreadPoolDevice global_thread_pool_device(&global_thread_pool, Eigen::nbThreads());
+                Eigen::ThreadPoolDevice global_thread_pool_device(&global_thread_pool,
+                                                                  Eigen::nbThreads());
             }
         }
     }
