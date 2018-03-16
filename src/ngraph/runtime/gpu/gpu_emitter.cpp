@@ -672,60 +672,61 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const constexpr size_t max_tensor_size = 4;
                 auto sum_node = static_cast<const ngraph::op::Sum*>(node);
                 auto reduction_axes = sum_node->get_reduction_axes();
+                auto& input_shape = args[0].get_shape();
 
                 kernel::emit_prologue(writer,node);
                 {
-                    if (out[0].get_size() == 0)
+                    // one of out[] axes has zero size
+                    if (out[0].get_size() != 0)
                     {
-                        return;
-                    }
-                    else if (args[0].get_shape().size() == out[0].get_shape().size())
-                    {
-                        kernel::emit_memcpyDtD(writer,out[0],args[0]);
-                    }
-                    else if (args[0].get_shape().size() > max_tensor_size)
-                    {
-                        // fix before PR
-                        throw std::runtime_error("Tensors of dimension greater than 4 are not implemented.");
-                    }
-                    else
-                    {
-                        // construct input tensor descriptor rt impl.
-                        writer << "cudnnTensorDescriptor_t input_descriptor;\n";
-                        writer << "cudnnCreateTensorDescriptor(&input_descriptor);\n";
-                        auto& input_shape = args[0].get_shape();
-                        std::vector<size_t> dimensions;
-                        for (size_t i = input_shape.size(); i < max_tensor_size; i++)
+                        // one of args[] axes has zero size, zero output
+                        if (args[0].get_size() == 0)
                         {
-                            dimensions.push_back(1);
+                            kernel::emit_memset(writer,out[0],0);
                         }
-                        std::copy(input_shape.begin(),input_shape.end(),std::back_inserter(dimensions));
-                        writer << "cudnnSetTensor4dDescriptor(input_descriptor,\n";
-                        writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
-                        writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
-                        for (auto const& dim : dimensions)
+                        // no change in dimensions, reduction not necessary
+                        else if (input_shape.size() == out[0].get_shape().size())
                         {
-                            writer << ",\n                 /*dimension_size*/" << dim;
+                            kernel::emit_memcpyDtD(writer,out[0],args[0]);
                         }
-                        writer << ");\n";
+                        // sum-reduce for 4d tensors
+                        else if (input_shape.size() <= max_tensor_size)
+                        {
+                            // construct input tensor descriptor rt impl.
+                            writer << "cudnnTensorDescriptor_t input_descriptor;\n";
+                            writer << "cudnnCreateTensorDescriptor(&input_descriptor);\n";
+                            std::vector<size_t> dimensions;
+                            for (size_t i = input_shape.size(); i < max_tensor_size; i++)
+                            {
+                                dimensions.push_back(1);
+                            }
+                            std::copy(input_shape.begin(),input_shape.end(),std::back_inserter(dimensions));
+                            writer << "cudnnSetTensor4dDescriptor(input_descriptor,\n";
+                            writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
+                            writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
+                            for (auto const& dim : dimensions)
+                            {
+                                writer << ",\n                 /*dimension_size*/" << dim;
+                            }
+                            writer << ");\n";
 
 
-                        // construct out tensor descriptor rt impl.
-                        writer << "cudnnTensorDescriptor_t output_descriptor;\n";
-                        writer << "cudnnCreateTensorDescriptor(&output_descriptor);\n";
-                        for (auto const& idx_dim : reduction_axes) {
-                            dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
-                        }
-                        writer << "cudnnSetTensor4dDescriptor(output_descriptor,\n";
-                        writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
-                        writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
-                        for (auto const& dim : dimensions)
-                        {
-                            writer << ",\n                 /*dimension_size*/" << dim;
-                        }
-                        writer << ");\n";
+                            // construct out tensor descriptor rt impl.
+                            writer << "cudnnTensorDescriptor_t output_descriptor;\n";
+                            writer << "cudnnCreateTensorDescriptor(&output_descriptor);\n";
+                            for (auto const& idx_dim : reduction_axes) {
+                                dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
+                            }
+                            writer << "cudnnSetTensor4dDescriptor(output_descriptor,\n";
+                            writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
+                            writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
+                            for (auto const& dim : dimensions)
+                            {
+                                writer << ",\n                 /*dimension_size*/" << dim;
+                            }
+                            writer << ");\n";
 
-                        writer += R"(
+                            writer += R"(
 cudnnReduceTensorDescriptor_t reduceTensorDesc;
 cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
 cudnnSetReduceTensorDescriptor(reduceTensorDesc,
@@ -744,21 +745,24 @@ cudnnGetReductionWorkspaceSize(cudnn_handle,
 void* workspace_ptr = ngraph::runtime::gpu::create_gpu_buffer(workspace_size);
 float alpha = 1.0, beta = 0;
 )";
-                        writer << "cudnnReduceTensor(cudnn_handle,\n";
-                        writer << "                  reduceTensorDesc,\n";
-                        writer << "                  nullptr,\n";
-                        writer << "                  0,\n";
-                        writer << "                  workspace_ptr,\n";
-                        writer << "                  workspace_size,\n";
-                        writer << "                  &alpha,\n";
-                        writer << "                  input_descriptor,\n";
-                        writer << "                  " << args[0].get_name() << ",\n";
-                        writer << "                  &beta,\n";
-                        writer << "                  output_descriptor,\n";
-                        writer << "                  " << out[0].get_name() << ");\n";
-
-
-
+                            writer << "cudnnReduceTensor(cudnn_handle,\n";
+                            writer << "                  reduceTensorDesc,\n";
+                            writer << "                  nullptr,\n";
+                            writer << "                  0,\n";
+                            writer << "                  workspace_ptr,\n";
+                            writer << "                  workspace_size,\n";
+                            writer << "                  &alpha,\n";
+                            writer << "                  input_descriptor,\n";
+                            writer << "                  " << args[0].get_name() << ",\n";
+                            writer << "                  &beta,\n";
+                            writer << "                  output_descriptor,\n";
+                            writer << "                  " << out[0].get_name() << ");\n";
+                        }
+                        // sum-reduce for Nd tensors
+                        else
+                        {
+                            throw std::runtime_error("Tensors of dimension greater than 4 are not implemented.");
+                        }
                     }
                 }
                 kernel::emit_epilogue(writer);

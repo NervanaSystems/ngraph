@@ -40,6 +40,20 @@ namespace ngraph
                     writer << "}\n";
                 }
 
+                void emit_memset(codegen::CodeWriter& writer,
+                                 const GPU_TensorViewWrapper& dst,
+                                 int value,
+                                 size_t buffer_size=0)
+                {
+                    if (buffer_size == 0)
+                    {
+                        buffer_size  = dst.get_size() * dst.get_element_type().size();
+                    }
+                    writer << "runtime::gpu::cuda_memset(" << dst.get_name() << ", "
+                           << value << ", "
+                           << buffer_size << ");\n";
+                }
+
                 void emit_memcpyDtD(codegen::CodeWriter& writer,
                                     const GPU_TensorViewWrapper& dst,
                                     const GPU_TensorViewWrapper& src)
