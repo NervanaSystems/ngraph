@@ -32,8 +32,7 @@ flags when building. (**Do NOT** supply the ``-DNGRAPH_USE_PREBUILT_LLVM``
 flag in this case, because the prebuilt tarball supplied on llvm.org is not 
 compatible with a gcc 4.8-based build.)
 
-Support for macOS is limited; see the `macOS development`_ section at the end 
-of this page for details.
+Support for macOS is limited; see the `macOS development`_ section for details.
 
 
 Installation Steps
@@ -42,6 +41,8 @@ Installation Steps
 The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME`` 
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
+
+The process documented here will work on Ubuntu 16.04 (LTS)
 
 #. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
    give ownership of that directory to your user. Creating such a placeholder 
@@ -94,10 +95,11 @@ details about how to change or customize the install location.
 
 .. macos_development: 
 
-macOS development
------------------
+macOS\* development
+--------------------
 
-.. note:: The macOS*\ platform is not officially unsupported.
+.. note:: Although we do not offer support for the macOS platform; some 
+   configurations and features may work.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 
