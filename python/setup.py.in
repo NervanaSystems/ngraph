@@ -239,13 +239,12 @@ class BuildExt(build_ext):
                 if has_flag(self.compiler, '-fvisibility=hidden'):
                     ext.extra_compile_args += ['-fvisibility=hidden']
                 ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
-            ext.extra_link_args += ['-z noexecstack']
-            ext.extra_link_args += ['-z relro']
-            ext.extra_link_args += ['-z now']
-            ext.extra_compile_args += ['-fPIE -fPIC']
-            ext.extra_link_args += ['-pie']
-            ext.extra_compile_args += ['-Wformat -Wformat-security']
-            ext.extra_compile_args += ['-O2 -D_FORTIFY_SOURCE=2']
+            if sys.platform != 'darwin':
+                ext.extra_link_args += ['-z', 'noexecstack']
+                ext.extra_link_args += ['-z', 'relro']
+                ext.extra_link_args += ['-z', 'now']
+            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
 
