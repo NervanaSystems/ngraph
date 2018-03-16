@@ -7116,6 +7116,74 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
               read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
+    Shape shape_a{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 4, 4};
+    Shape padding_below{0, 0, 1, 1};
+    Shape padding_above{0, 0, 1, 1};
+    Shape padding_interior{0, 0, 0, 0};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    // clang-format off
+    copy_data(a, test::NDArray<float, 4>(
+        {
+            {
+                {
+                    {0.0f, 0.0f},
+                    {0.0f, 0.0f}
+                },
+                {
+                    {0.0f, 0.0f},
+                    {0.0f, 0.0f}
+                }
+            }
+        }).get_vector());
+    // clang-format on
+
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, vector<float>{42});
+
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    // clang-format off
+    EXPECT_EQ((test::NDArray<float, 4>(
+        {
+            {
+                {
+                    {42.0f, 42.0f, 42.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 42.0f, 42.0f, 42.0f}
+                },
+                {
+                    {42.0f, 42.0f, 42.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 42.0f, 42.0f, 42.0f}
+                }
+            }
+        }).get_vector()),
+        read_vector<float>(result));
+    // clang-format on
+}
+
 // This is a regression test for one of TF's unit tests, which was failing.
 // The problem was inappropriate handling of the shape computation for a
 // zero-length axis with interior padding. Rather than subtract 1 from the
