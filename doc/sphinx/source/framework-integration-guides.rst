@@ -8,7 +8,7 @@ Framework Integration Guides
 * :ref:`mxnet_intg`
 * :ref:`tensorflow_intg`
 
-.. _neon_intg:  
+.. _neon_intg:
 
 Neon |trade|
 ============
@@ -16,20 +16,20 @@ Neon |trade|
 Use ``neon`` as a frontend
 ---------------------------
 
-``neon``is a open source Deep Learning framework specifically designed to be 
+``neon`` is a open source Deep Learning framework specifically designed to be 
 powered by |InG| backends.
 
 .. important:: The numbered instructions below pick up from where 
-   the :doc:`installation` installation instructions left off, and they presume 
+   the :doc:`install` installation instructions left off, and they presume 
    that your system already has the library installed at ``$HOME/ngraph_dist`` as 
    the default location. If the |nGl| code has not yet been installed to your 
    system, you can follow the instructions on the `ngraph-neon python README`_ to 
-   install everything at once.  If the |nGl| code already is installed, continue
+   install everything at once.  If the |nGl| code already is installed, 
 
 
 
-#. Set the ``LD_LIBRARY_PATH`` path to the location where we built the nGraph 
-   libraries:
+#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the location 
+   where you built the nGraph libraries:
 
    .. code-block:: bash
 
@@ -59,8 +59,7 @@ powered by |InG| backends.
    with models. 
 
 
-.. _mxnet_intg
-
+.. _mxnet_intg:
 
 Compile MXNet\* with ``libngraph``
 ==================================
@@ -275,3 +274,4 @@ your cloned version of `ngraph-tensorflow`_:
 .. _ngraph-tensorflow: https://github.com/NervanaSystems/ngraph-tensorflow
 .. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
+.. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md

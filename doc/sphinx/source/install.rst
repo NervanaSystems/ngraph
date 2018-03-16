@@ -32,8 +32,6 @@ flags when building. (**Do NOT** supply the ``-DNGRAPH_USE_PREBUILT_LLVM``
 flag in this case, because the prebuilt tarball supplied on llvm.org is not 
 compatible with a gcc 4.8-based build.)
 
-Support for macOS is limited; see the `macOS development`_ section for details.
-
 
 Installation Steps
 ==================
@@ -93,7 +91,6 @@ The process documented here will work on Ubuntu 16.04 (LTS)
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
 
-.. macos_development: 
 
 macOS\* development
 --------------------

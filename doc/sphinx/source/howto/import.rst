@@ -36,7 +36,7 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    will, however, need to have completed the steps outlined in 
    our :doc:`../install` guide.  
 
-To demonstrate functionality, we'll use an `already serialized CIFAR10`_ model 
+To demonstrate functionality, we'll use an already serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 
 exported from a framework such as Caffe2, PyTorch or CNTK; we are simply going 
 to build an nGraph representation of the model, execute it, and produce some 
@@ -157,7 +157,7 @@ Put it all together
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
-   :lines: 17-38
+   :lines: 17-37
    :caption: "Demo sample code to run inference with nGraph"
 
 
