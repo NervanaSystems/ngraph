@@ -45,7 +45,7 @@ static NodeVector get_users(const Node& node)
 
 #define TI(x) std::type_index(typeid(x))
 
-
+// a sequence of nodes, identified with a segment type for the input type
 struct NodeSegment : public NodeVector
 {
     enum Type {
@@ -59,21 +59,19 @@ typedef std::pair<NodeSegment::Type, std::vector<std::type_index>> NodeTypeSeque
 typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
 
 // precondition: all valid sequences must be unique
-void FindValidPathDFS(const std::shared_ptr<Node>& n,
-                      NodeSegment segment,
-                      std::vector<NodeSegment>& segment_bundle,
-                      NodeTypeSequenceSet valid_sequence_list,
-                      int depth)
+void FindValidSegments(const std::shared_ptr<Node> &n,
+                       NodeSegment segment,
+                       std::vector<NodeSegment> &segment_bundle,
+                       NodeTypeSequenceSet valid_sequence_list,
+                       int depth)
 {
     const Node& node = *n;
-//    std::cout << "visiting: " << node.get_friendly_name() << std::endl;
 
     // base case, we have one valid segment left, and depth is exeeding the valid seqence length
     // we found a match
     if (valid_sequence_list.size() == 1 && depth >= valid_sequence_list.front().second.size()) {
         segment.type = valid_sequence_list.front().first;
         segment_bundle.push_back(segment);
-//        std::cout << "adding " << node.get_friendly_name() << std::endl;
         return;
     }
     for (auto seq_it = valid_sequence_list.begin(); seq_it != valid_sequence_list.end();) {
@@ -87,120 +85,50 @@ void FindValidPathDFS(const std::shared_ptr<Node>& n,
             ++seq_it;
         }
     }
-    // postcondition: valid_sequnce_list.size() > 0 : there's still valid sequence to match, continue recursion
+    // postconditions:
+    // valid_sequnce_list.size() > 0 : there's still valid sequence to match, continue recursion
+    // valid_sequnce_list.size() = 0 : terminate
     if (valid_sequence_list.size() > 0) {
         segment.push_back(n);
         const auto outputs = get_users(node);
         for (const auto& out_node : outputs) {
-            FindValidPathDFS(out_node, segment, segment_bundle, valid_sequence_list, depth+1);
+            FindValidSegments(out_node, segment, segment_bundle, valid_sequence_list, depth + 1);
         }
     }
 }
 
-typedef std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>> OrderedParams;
-//{
-//public:
-//    OrderedParams(const std::shared_ptr<Node>& data, const std::shared_ptr<Node>& weights) {
-//        m_params.first = data;
-//        m_params.second = weights;
-//    }
-//    std::shared_ptr<Node> first() const { return m_params.first; }
-//    std::shared_ptr<Node> second() const { return m_params.second; }
-//private:
-//    friend bool operator< (const OrderedParams& n1, const OrderedParams& n2);
-//    std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>> m_params;
-//};
 
-//bool operator<(const OrderedParams& n1, const OrderedParams& n2)
-//{
-//    return n1.m_params < n2.m_params;
-//}
-
-bool ngraph::runtime::cpu::pass::CPURnnMatFusion::run_on_function(
-    std::shared_ptr<ngraph::Function> function)
+bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(
+    std::shared_ptr<Function> function)
 {
-    bool clobbered = false;
+    bool modified = false;
 
-    NodeTypeSequenceSet valid_sequences {
+    const NodeTypeSequenceSet valid_sequences {
         {NodeSegment::DATA,
-         {TI(ngraph::op::Parameter),
-          TI(ngraph::op::Slice),
-          TI(ngraph::op::Reshape),
-          TI(ngraph::op::Dot)}},
+         {TI(op::Parameter),
+          TI(op::Slice),
+          TI(op::Reshape),
+          TI(op::Dot)}},
         {NodeSegment::WEIGHTS,
-         {TI(ngraph::op::Parameter),
-          TI(ngraph::op::Reshape),
-          TI(ngraph::op::Dot)}}
+         {TI(op::Parameter),
+          TI(op::Reshape),
+          TI(op::Dot)}}
     };
 
-#if 0
-    std::list<std::shared_ptr<Node>> param_nodes;
-    for (auto& n : function->get_ordered_ops())
-    {
-        Node& node = *n;
-        if (TI(node) == TI(ngraph::op::Parameter)) {
-            param_nodes.push_back(n);
-        }
-
-        // debug
-//        std::cout << "instance id: " << node.get_instance_id() << std::endl;
-//        std::string type = "other";
-//        if (TI(node) == TI(ngraph::op::Slice)) {
-//            type = "Slice";
-//        }
-//        if (TI(node) == TI(ngraph::op::Reshape)) {
-//            type = "Reshape";
-//        }
-//        if (TI(node) == TI(ngraph::op::Dot)) {
-//            type = "Dot";
-//        }
-//        std::cout << "node (" << type << "): " << node.get_friendly_name() << std::endl;
-//        for (const auto& in : node.get_input_ops()) {
-//            std::cout << "    in:  " << in->get_friendly_name() << std::endl;
-//        }
-//        auto outputs = get_users(node);
-//        for (const auto& out : outputs) {
-//            std::cout << "    out: " << out->get_friendly_name() << std::endl;
-//        }
-    }
-#endif
-
-    std::cout << "find all dots" << std::endl;
     // iterate all parameters and find path to dot op
     std::vector<NodeSegment> segment_bundle;
     for (auto& n : function->get_ordered_ops()) {
-#if 0
-        std::cout << "param: " << p->get_friendly_name() << std::endl;
-        const auto outputs = get_users(*p);
-        for (const auto& out : outputs) {
-            std::cout << "    out: " << out->get_friendly_name() << std::endl;
-        }
-#endif
         NodeSegment segment;
-        FindValidPathDFS(n, segment, segment_bundle, valid_sequences, 0);
+        FindValidSegments(n, segment, segment_bundle, valid_sequences, 0);
     }
 
     // combined all segments by last operator
     std::map<std::shared_ptr<Node>, std::vector<NodeSegment>> op_seg_map;
     for (const auto& segment : segment_bundle) {
         op_seg_map[segment.back()].push_back(segment);
-        std::cout << "segment: \n";
-        for (auto& n : segment) {
-            std::cout << "  " << n->get_friendly_name() << std::endl;
-        }
     }
-//    for (auto& op : op_seg_map) {
-//        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
-//        for (auto& vn : op.second) {
-//            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
-//            for (auto& n : vn.nodes) {
-//                std::cout << "   node: " << n->get_friendly_name() << std::endl;
-//            }
-//        }
-//    }
 
-    std::cout << "remove single segments" << std::endl;
-    // remove dot ops with single path
+    // remove ops with single segment
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();) {
         if (op_it->second.size() < 2) {
             op_it = op_seg_map.erase(op_it);
@@ -209,17 +137,9 @@ bool ngraph::runtime::cpu::pass::CPURnnMatFusion::run_on_function(
             ++op_it;
         }
     }
-    for (auto& op : op_seg_map) {
-        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
-        for (auto& segment : op.second) {
-            std::cout << "  segment (" << static_cast<int>(segment.type) << "): " << std::endl;
-            for (auto& n : segment) {
-                std::cout << "   node: " << n->get_friendly_name() << std::endl;
-            }
-        }
-    }
 
-    std::cout << "find all param pairs" << std::endl;
+    // create a lookup map for each unique pair of parameters
+    typedef std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>> OrderedParams;
     std::map<OrderedParams, NodeVector> param_list;
     for (auto& op_seg : op_seg_map) {
         std::vector<NodeSegment>& segments = op_seg.second;
@@ -232,8 +152,8 @@ bool ngraph::runtime::cpu::pass::CPURnnMatFusion::run_on_function(
         p.second = segments[NodeSegment::WEIGHTS][0];
         param_list[p].push_back(op_seg.first);
     }
+
     // remove pairs with single op
-    std::cout << "removed single op pairs" << std::endl;
     for (auto it = param_list.begin(); it != param_list.end();) {
         if (it->second.size() < 2) {
             it = param_list.erase(it);
@@ -243,125 +163,45 @@ bool ngraph::runtime::cpu::pass::CPURnnMatFusion::run_on_function(
         }
     }
 
-
-
+    // Expecting in put data shape D=[x, y, z], weights W=[u, v]
+    // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
+    // in R=[x*y, v], then we need to slice the result by strided by time steps.
+    // iterate each unique pair of parameters, replace dot operations
     for (auto& p : param_list) {
         OrderedParams params = p.first;
-        std::cout << "pair: [" << params.first->get_friendly_name() << ", "
-                  << params.second->get_friendly_name() << "]" << std::endl;
-        for (auto& op : p.second) {
-            std::cout << "op: " << op->get_friendly_name() << std::endl;
-        }
-    }
+        NodeVector &op_nodes = p.second;
 
-    // TODO: check consistency
-    // check dot op matrix order
-    // check shape size
-
-    // create new ops
-    // for each parameter pair
-    // create
-    // for each dot op
-    std::cout << "replacing nodes" << std::endl;
-    for (auto& p : param_list) {
-        OrderedParams params = p.first;
         auto data_node = params.first;
         auto weights_node = params.second;
 
-        NodeVector &op_nodes = p.second;
         // get the first combo op
         auto first_op = op_nodes[0];
-        auto data_segment = op_seg_map[first_op][NodeSegment::DATA];
-        auto weights_segment = op_seg_map[first_op][NodeSegment::WEIGHTS];
+        auto first_weights_segment = op_seg_map[first_op][NodeSegment::WEIGHTS];
 
         // construct new op nodes
-        ngraph::AxisVector data_order(data_node->get_shape().size());
+        AxisVector data_order(data_node->get_shape().size());
         std::iota(begin(data_order), end(data_order), 0);
         const auto& data_shape = data_node->get_shape();
         auto data_reshape_node = std::make_shared<op::Reshape>(data_node, data_order, Shape{data_shape[0]*data_shape[1], data_shape[2]});
-        auto weights_reshape_node = weights_segment[1]->copy_with_new_args({weights_node});
-        auto dot_node = data_segment.back()->copy_with_new_args({data_reshape_node, weights_reshape_node});
-        // create a slice for each user of the dot op matching the original slice op's lower/upper bound
-        NodeVector slice_ops;
-        NodeVector reshape_ops;
-        const auto &dot_shape = dot_node->get_shape();
-        std::cout << dot_shape[0] << " " << dot_shape[1] << " " << dot_shape[2] << std::endl;
-        for (auto op : op_nodes) {
-            auto cur_data_segment = op_seg_map[op][NodeSegment::DATA];
-            auto old_slice = std::dynamic_pointer_cast<ngraph::op::Slice>(cur_data_segment[1]);
-            const auto& lb = old_slice->get_lower_bounds();
-            const auto& ub = old_slice->get_upper_bounds();
-            std::cout << lb[0] << " " << lb[1] << " " << lb[2] << std::endl;
-            std::cout << ub[0] << " " << ub[1] << " " << ub[2] << std::endl;
-            ngraph::Coordinate lower_bounds({ub[0]*lb[1], 0});
-            ngraph::Coordinate upper_bounds({ub[0]*ub[1], dot_shape[1]});
-            std::cout << lower_bounds[0] << " " << lower_bounds[1] << " " << lower_bounds[2] << std::endl;
-            std::cout << upper_bounds[0] << " " << upper_bounds[1] << " " << upper_bounds[2] << std::endl;
-            auto slice_node =
-                std::make_shared<ngraph::op::Slice>(dot_node, lower_bounds, upper_bounds);
+        auto weights_reshape_node = first_weights_segment[1]->copy_with_new_args({weights_node});
+        auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
+        const auto& dot_shape = dot_node->get_shape();
 
-//            ngraph::AxisVector order(slice_node->get_shape().size());
-//            std::iota(begin(order), end(order), 0);
-//            auto reshape_node =
-//                std::make_shared<op::Reshape>(slice_node, order, Shape{dot_shape[0], dot_shape[2]});
+        // create a slice for each user of the dot op matching the original dot op's output
+        for (auto op : op_nodes) {
+            const auto& cur_data_segment = op_seg_map[op][NodeSegment::DATA];
+            const auto old_slice = std::dynamic_pointer_cast<op::Slice>(cur_data_segment[1]);
+            const auto& lb = old_slice->get_lower_bounds();
+            // lower bound matching the current time step
+            const Coordinate lower_bounds{lb[1], 0};
+            // striding by the number of time steps
+            const Strides strides{data_shape[1],1};
+            auto slice_node = std::make_shared<op::Slice>(dot_node, lower_bounds, dot_shape, strides);
 
             // replace old nodes
             function->replace_node(op, slice_node);
         }
+        modified = true;
     }
-
-
-#if 0
-//        p1->
-//        function->replace_node(nv[i], p);
-//
-//        for (auto& dot : dot_ops) {
-//            for (auto& nv : dot.second) {
-//                const auto& param_node = nv[0];
-//                for (size_t i = 1; i < nv.size()-1; ++i) {
-//                    std::cout << "replacing " << nv[i]->get_friendly_name() << " with "
-//                              << param_node->get_friendly_name() << std::endl;
-//                    function->replace_node(nv[i], p);
-//                }
-//            }
-//        }
-//        for (auto v : p1->get_shape()) {
-//            std::cout << v << " ";
-//        }
-//        std::cout << std::endl;
-//        for (auto v : p2->get_shape()) {
-//            std::cout << v << " ";
-//        }
-//        std::cout << std::endl;
-//    for (auto& n : function->get_ordered_ops())
-//    {
-//        // Work around a warning [-Wpotentially-evaluated-expression]
-//        Node& node = *n;
-//        std::cout << "instance id: " << node.get_instance_id() << std::endl;
-//        std::string type = "other";
-//        if (TI(node) == TI(ngraph::op::Parameter)) {
-//            param_nodes.push_back(n);
-//        }
-//        if (TI(node) == TI(ngraph::op::Slice)) {
-//            type = "Slice";
-//        }
-//        if (TI(node) == TI(ngraph::op::Reshape)) {
-//            type = "Reshape";
-//        }
-//        if (TI(node) == TI(ngraph::op::Dot)) {
-//            type = "Dot";
-//        }
-//        std::cout << "node (" << type << "): " << node.get_friendly_name() << std::endl;
-//        for (const auto& in : node.get_input_ops()) {
-//            std::cout << "    in:  " << in->get_friendly_name() << std::endl;
-//        }
-//        auto outputs = get_users(node);
-//        for (const auto& out : outputs) {
-//            std::cout << "    out: " << out->get_friendly_name() << std::endl;
-//        }
-//    }
-
-//        std::shared_ptr<op::Reshape> n1_reshape = std::make_shared(op::Reshape(A, AxisVector{1, 0}, shape_r)));
-#endif
-    return clobbered;
+    return modified;
 }
