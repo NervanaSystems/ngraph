@@ -18,7 +18,7 @@
 include(ExternalProject)
 
 set(EIGEN_GIT_TAG patched)
-set(EIGEN_GIT_URL https://github.com/jmenon/eigen)
+set(EIGEN_GIT_URL https://github.com/NervanaSystems/eigen)
 
 #----------------------------------------------------------------------------------------------------------
 # Download and install Eigen
