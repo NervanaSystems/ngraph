@@ -12,6 +12,10 @@ The following license applies to the following files that utilize the swagger-ap
 which is licensed under the Apache License, Version 2.0.  See also swagger-ui-license.txt.
 
 doc/sphinx/ngraph_theme/static/css/swagger.css
+doc/sphinx/ngraph_theme/static/js/swagger-oauth.js
+doc/sphinx/ngraph_theme/static/js/swagger-ui.js
+doc/sphinx/ngraph_theme/static/js/swagger-ui.min.js
+
 
 The license is copied below.
 
