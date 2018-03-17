@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Acos(py::module m)
                std::shared_ptr<ngraph::op::Acos>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         acos(m, "Acos");
-    acos.doc() = "ngraph.op.Acos wraps ngraph::op::Acos";
+    acos.doc() = "ngraph.impl.op.Acos wraps ngraph::op::Acos";
     acos.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

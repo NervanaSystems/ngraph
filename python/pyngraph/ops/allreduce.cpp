@@ -27,6 +27,6 @@ void regclass_pyngraph_op_AllReduce(py::module m)
                std::shared_ptr<ngraph::op::AllReduce>,
                ngraph::op::util::RequiresTensorViewArgs>
         allreduce(m, "AllReduce");
-    allreduce.doc() = "ngraph.op.AllReduce wraps ngraph::op::AllReduce";
+    allreduce.doc() = "ngraph.impl.op.AllReduce wraps ngraph::op::AllReduce";
     allreduce.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

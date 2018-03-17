@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Sqrt(py::module m)
                std::shared_ptr<ngraph::op::Sqrt>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         sqrt(m, "Sqrt");
-    sqrt.doc() = "ngraph.op.Sqrt wraps ngraph::op::Sqrt";
+    sqrt.doc() = "ngraph.impl.op.Sqrt wraps ngraph::op::Sqrt";
     sqrt.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

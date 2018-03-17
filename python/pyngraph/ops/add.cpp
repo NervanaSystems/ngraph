@@ -28,6 +28,6 @@ void regclass_pyngraph_op_Add(py::module m)
                std::shared_ptr<ngraph::op::Add>,
                ngraph::op::util::BinaryElementwiseArithmetic>
         add(m, "Add");
-    add.doc() = "ngraph.op.Add wraps ngraph::op::Add";
+    add.doc() = "ngraph.impl.op.Add wraps ngraph::op::Add";
     add.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

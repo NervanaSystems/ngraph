@@ -24,7 +24,7 @@ ng_model = import_onnx_model(onnx_protobuf)[0]
  
  
 # Using an ngraph runtime (CPU backend), create a callable computation
-import ngraph_api as ng
+import ngraph as ng
 runtime = ng.runtime(manager_name='CPU')
 resnet = runtime.computation(ng_model['output'], *ng_model['inputs'])
  
