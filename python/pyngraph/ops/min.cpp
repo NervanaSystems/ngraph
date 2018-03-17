@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Min(py::module m)
                std::shared_ptr<ngraph::op::Min>,
                ngraph::op::util::ArithmeticReduction>
         min(m, "Min");
-    min.doc() = "ngraph.op.Min wraps ngraph::op::Min";
+    min.doc() = "ngraph.impl.op.Min wraps ngraph::op::Min";
     min.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

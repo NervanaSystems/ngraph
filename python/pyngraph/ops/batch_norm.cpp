@@ -28,7 +28,7 @@ void regclass_pyngraph_op_BatchNorm(py::module m)
                std::shared_ptr<ngraph::op::BatchNorm>,
                ngraph::op::util::RequiresTensorViewArgs>
         batch_norm(m, "BatchNorm");
-    batch_norm.doc() = "ngraph.op.BatchNorm wraps ngraph::op::BatchNorm";
+    batch_norm.doc() = "ngraph.impl.op.BatchNorm wraps ngraph::op::BatchNorm";
     batch_norm.def(py::init<double,
                             const std::shared_ptr<ngraph::Node>&,
                             const std::shared_ptr<ngraph::Node>&,
@@ -41,7 +41,7 @@ void regclass_pyngraph_op_BatchNormBackprop(py::module m)
                std::shared_ptr<ngraph::op::BatchNormBackprop>,
                ngraph::op::util::RequiresTensorViewArgs>
         batch_norm_backprop(m, "BatchNormBackprop");
-    batch_norm_backprop.doc() = "ngraph.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
+    batch_norm_backprop.doc() = "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
     batch_norm_backprop.def(py::init<double,
                                      const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,

@@ -29,6 +29,6 @@ void regclass_pyngraph_op_Concat(py::module m)
                std::shared_ptr<ngraph::op::Concat>,
                ngraph::op::util::RequiresTensorViewArgs>
         concat(m, "Concat");
-    concat.doc() = "ngraph.op.Concat wraps ngraph::op::Concat";
+    concat.doc() = "ngraph.impl.op.Concat wraps ngraph::op::Concat";
     concat.def(py::init<const ngraph::NodeVector&, size_t>());
 }

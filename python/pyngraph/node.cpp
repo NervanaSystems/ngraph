@@ -29,7 +29,7 @@ namespace py = pybind11;
 void regclass_pyngraph_Node(py::module m)
 {
     py::class_<ngraph::Node, std::shared_ptr<ngraph::Node>> node(m, "Node");
-    node.doc() = "ngraph.Node wraps ngraph::Node";
+    node.doc() = "ngraph.impl.Node wraps ngraph::Node";
     node.def("__add__",
              [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                  return a + b;

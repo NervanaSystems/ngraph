@@ -19,11 +19,11 @@ from typing import List
 
 import numpy as np
 
-from ngraph import Function, Node, serialize, TensorViewType, util
-from ngraph.runtime import Manager
-from ngraph.op import Parameter
+from ngraph.impl import Function, Node, serialize, TensorViewType, util
+from ngraph.impl.runtime import Manager
+from ngraph.impl.op import Parameter
 
-from ngraph_api.utils.types import get_dtype, NumericData
+from ngraph.utils.types import get_dtype, NumericData
 
 log = logging.getLogger(__file__)
 
@@ -64,7 +64,7 @@ class Computation:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.make_primary_tensor_view(element_type, shape))
-        self.function = Function(self.node, self.parameters, 'ngraph_API_computation')
+        self.function = Function(self.node, self.parameters, 'ngraph_computation')
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])

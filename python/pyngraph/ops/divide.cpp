@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Divide(py::module m)
                std::shared_ptr<ngraph::op::Divide>,
                ngraph::op::util::BinaryElementwiseArithmetic>
         divide(m, "Divide");
-    divide.doc() = "ngraph.op.Divide wraps ngraph::op::Divide";
+    divide.doc() = "ngraph.impl.op.Divide wraps ngraph::op::Divide";
     divide.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Minimum(py::module m)
                std::shared_ptr<ngraph::op::Minimum>,
                ngraph::op::util::BinaryElementwiseArithmetic>
         minimum(m, "Minimum");
-    minimum.doc() = "ngraph.op.Minimum wraps ngraph::op::Minimum";
+    minimum.doc() = "ngraph.impl.op.Minimum wraps ngraph::op::Minimum";
     minimum.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

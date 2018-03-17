@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Softmax(py::module m)
                std::shared_ptr<ngraph::op::Softmax>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         softmax(m, "Softmax");
-    softmax.doc() = "ngraph.op.Softmax wraps ngraph::op::Softmax";
+    softmax.doc() = "ngraph.impl.op.Softmax wraps ngraph::op::Softmax";
     softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }
