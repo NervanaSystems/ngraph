@@ -17,21 +17,21 @@
 import pytest
 import numpy as np
 
-from ngraph import util
-from ngraph import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
-from ngraph import Type, Function, NodeVector
-from ngraph.runtime import Manager
-from ngraph.op import Acos, Asin, Atan, Cos, Sin, Tan
-from ngraph.op import Cosh, Sinh, Tanh, Sqrt, Sign
-from ngraph.op import Power, Negative, Ceiling, Floor
-from ngraph.op import Parameter, Maximum, Minimum
-from ngraph.op import Add, Subtract, Multiply, Divide, Dot
-from ngraph.op import Constant, Abs, Exp, Log, Sum
-from ngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
-from ngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
-from ngraph.op import Concat, Select
-from ngraph.op import Reverse, MaxPool, ReplaceSlice, Slice
-from ngraph.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
+from ngraph_bind import util
+from ngraph_bind import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
+from ngraph_bind import Type, Function, NodeVector
+from ngraph_bind.runtime import Manager
+from ngraph_bind.op import Acos, Asin, Atan, Cos, Sin, Tan
+from ngraph_bind.op import Cosh, Sinh, Tanh, Sqrt, Sign
+from ngraph_bind.op import Power, Negative, Ceiling, Floor
+from ngraph_bind.op import Parameter, Maximum, Minimum
+from ngraph_bind.op import Add, Subtract, Multiply, Divide, Dot
+from ngraph_bind.op import Constant, Abs, Exp, Log, Sum
+from ngraph_bind.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
+from ngraph_bind.op import OneHot, Broadcast, Reshape, Convert, Reduce
+from ngraph_bind.op import Concat, Select
+from ngraph_bind.op import Reverse, MaxPool, ReplaceSlice, Slice
+from ngraph_bind.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 
 def make_backend_call_frame(function):

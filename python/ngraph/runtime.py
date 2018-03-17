@@ -19,11 +19,11 @@ from typing import List
 
 import numpy as np
 
-from ngraph import Function, Node, serialize, TensorViewType, util
-from ngraph.runtime import Manager
-from ngraph.op import Parameter
+from ngraph_bind import Function, Node, serialize, TensorViewType, util
+from ngraph_bind.runtime import Manager
+from ngraph_bind.op import Parameter
 
-from ngraph_api.utils.types import get_dtype, NumericData
+from ngraph.utils.types import get_dtype, NumericData
 
 log = logging.getLogger(__file__)
 

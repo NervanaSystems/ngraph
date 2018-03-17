@@ -70,7 +70,7 @@ You can run tests using only Python 3 or 2 using the `-e` (environment) switch:
 
 You can check styles in a particular code directory by specifying the path:
 
-    tox ngraph_api/
+    tox ngraph/
 
 In case of problems, try to recreate the virtual environments by deleting the `.tox` directory:
 

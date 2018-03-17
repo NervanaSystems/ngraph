@@ -20,11 +20,11 @@ from typing import Union, List
 
 import numpy as np
 
-from ngraph import Type as NgraphType
-from ngraph import Node, Shape
-from ngraph.op import Constant
+from ngraph_bind import Type as NgraphType
+from ngraph_bind import Node, Shape
+from ngraph_bind.op import Constant
 
-from ngraph_api.exceptions import NgraphTypeError
+from ngraph.exceptions import NgraphTypeError
 
 
 log = logging.getLogger(__file__)
