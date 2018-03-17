@@ -1,4 +1,4 @@
-# Intel® nGraph™ library 
+# nGraph library
 
 Welcome to Intel® nGraph™, an open source C++ library and compiler. This 
 project enables modern compute platforms to run and train Deep Neural Network 
