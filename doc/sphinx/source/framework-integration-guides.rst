@@ -57,7 +57,14 @@ This section covers installation only.
       (venv)$ pip install -U .
 
 #. See `this file`_ if you want detail about how to run unit tests. See the 
-   documentation `ngraph-neon docs`_ to start working with models. 
+   documentation at `ngraph-neon docs`_. To test the neon install you can run 
+   the sample available in the ngraph-neon clone named 
+   `python examples/cifar10/cifar10_conv.py` 
+
+   .. code-block:: console
+
+      (venv)$ python examples/cifar10/cifar10_conv.py
+
 
 
 .. _mxnet_intg:
