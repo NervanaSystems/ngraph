@@ -209,29 +209,37 @@ ext_modules = [Extension(
 
 
 class BuildExt(build_ext):
-    """A custom build extension for adding compiler-specific options."""
-
+    """
+    A custom build extension for adding compiler-specific options.
+    """
     def build_extensions(self):
+        ct = self.compiler.compiler_type
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
-            ext.extra_compile_args += ['-w']
+            if has_flag(self.compiler, '-fstack-protector-strong'):
+                ext.extra_compile_args += ['-fstack-protector-strong']
+            else:
+                ext.extra_compile_args += ['-fstack-protector']
             if has_flag(self.compiler, '-frtti'):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-                ext.extra_link_args += ['-Wl,-rpath,@loader_path/../..']
+                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
             else:
                 if has_flag(self.compiler, '-fvisibility=hidden'):
                     ext.extra_compile_args += ['-fvisibility=hidden']
                 ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
+            if sys.platform != 'darwin':
+                ext.extra_link_args += ['-z', 'noexecstack']
+                ext.extra_link_args += ['-z', 'relro']
+                ext.extra_link_args += ['-z', 'now']
+            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
 
-requirements = [
-    "setuptools",
-    "six",
-    "numpy" 
-]
+with open('requirements.txt') as req:
+    requirements = req.read().splitlines()
 
 
 setup(
