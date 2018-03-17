@@ -1,5 +1,4 @@
 pytest
-numpy==1.13.1
 tox
 flake8
 flake8-commas
