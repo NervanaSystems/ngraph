@@ -1836,8 +1836,16 @@ div[class^='highlight'] td.code {
   width: 100%;
 }
 
+.wy-menu-vertical p.caption {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 110%;
+  color: #fff;
+  white-space: nowrap;
+}
+
 code, p.caption { 
-  font-family: Inconsolata, sans, monospace;
+  font-family: Consolas, sans, monospace;
   color: #A79992;
   font-size: 0.99em;
   line-height: 1.39em;

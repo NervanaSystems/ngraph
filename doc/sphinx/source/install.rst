@@ -40,7 +40,7 @@ The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME``
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
 
-The process documented here will work on Ubuntu 16.04 (LTS)
+The process documented here will work on Ubuntu\* 16.04 (LTS)
 
 #. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
    give ownership of that directory to your user. Creating such a placeholder 
@@ -83,7 +83,8 @@ The process documented here will work on Ubuntu 16.04 (LTS)
 
    .. code-block:: console
       
-      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory errors if too many compilation processes are used
+      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory 
+               # errors if too many compilation processes are used
 
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
@@ -137,12 +138,12 @@ To perform unit tests on the install:
 Compile a framework with ``libngraph``
 ======================================
 
-After building and installing nGraph++ on your system, there are two likely 
+After building and installing nGraph on your system, there are two likely 
 paths for what you'll want to do next: either compile a framework to run a DL 
-training model, or load an import "already-trained" model for inference on an 
-Intel nGraph++ enabled backend
+training model, or load an import of an "already-trained" model for inference 
+on an Intel nGraph-enabled backend.
 
-For this former case, this early |release| release, :doc:`framework-integration-guides`, 
+For the former case, this early |version|, :doc:`framework-integration-guides`, 
 can help you get started with a training a model on a supported framework. 
 
 * :doc:`neon<framework-integration-guides>` framework,  
@@ -154,7 +155,7 @@ exported, serialized model, you can skip the section on frameworks and go direct
 to our :doc:`../howto/import` documentation. 
 
 Please keep in mind that both of these are under continuous development, and will 
-be updated frequently in the coming months.  Stay tuned!  
+be updated frequently in the coming months. Stay tuned!  
 
 
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
@@ -162,7 +163,6 @@ be updated frequently in the coming months.  Stay tuned!
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
-.. _website docs: http://ngraph.nervanasys.com/index.html/index.html
 .. _googletest framework: https://github.com/google/googletest.git
 .. _ONNX: http://onnx.ai
-.. _frontend framework: http://neon.nervanasys.com/index.html/
+.. _website docs: http://ngraph.nervanasys.com/docs/latest/

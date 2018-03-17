@@ -81,6 +81,7 @@ language = 'en'
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = []
 
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
@@ -187,7 +188,7 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-html_add_permalinks = ""
+html_add_permalinks = "true"
 
 breathe_projects = {
     "ngraph": "../../doxygen/xml",
