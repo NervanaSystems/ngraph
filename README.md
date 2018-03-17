@@ -7,7 +7,6 @@ used by Deep Learning (DL) frameworks.
 
 ![nGraph ecosystem][ngraph-ecosystem]
 
-[ngraph-ecosystem]: http://ngraph.nervanasys.com/index.html/_images/ngraph-ecosystem.png "nGraph Ecosystem"
 
 ## Documentation
 
@@ -41,6 +40,4 @@ We welcome community contributions to nGraph. If you have an idea how to improve
 
 [install]: http://ngraph.nervanasys.com/docs/latest/install.html
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
-[Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[pull request]: https://github.com/NervanaSystems/ngraph/pulls
->>>>>>> 77acc712ffc493f536e0c04c1d44c4e11859abaa
+[ngraph-ecosystem]: http://ngraph.nervanasys.com/index.html/_images/ngraph-ecosystem.png "nGraph Ecosystem"
