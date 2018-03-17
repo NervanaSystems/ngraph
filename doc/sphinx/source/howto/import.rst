@@ -6,13 +6,10 @@ Import a model
 
 :ref:`from_onnx`
 
-.. :ref:`from_nnvm`
-
-
-.. TODO Make sure that this is the first page data scientists find when they 
-.. are simply trying to run a trained model; they DO NOT need to do a system
-.. install of the Intel nGraph++  bridges; they can use our Python APIs to run 
-.. a trained model. 
+.. That can be the first page data scientists find when they are simply trying 
+.. to run a trained model; they DO NOT need to do a system install of the Intel
+.. nGraph++ bridges; they can use our Python APIs to run a trained model.
+..  
 
 The Intel nGraph APIs can be used to run inference on a model that has been 
 *exported* from a Deep Learning framework. An export produces a file with 

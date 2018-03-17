@@ -34,7 +34,7 @@ powered by |InG| backends.
    .. code-block:: bash
 
       export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-      export LD_LIBRARY_PATH=HOME/ngraph_dist/lib/       
+      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
 
       
 #. Install the dependency for the ``neon`` framework:
@@ -98,8 +98,8 @@ Compile MXNet\* with ``libngraph``
       $ cd ngraph-mxnet && git checkout ngraph-integration-dev
 
 #. Edit the ``make/config.mk`` file from the repo we just checked out to set
-   the ``USE_NGRAPH`` option (line ``80``) to true with `1` and set the :envvar:`NGRAPH_DIR`
-   (line ``81``) to point to the installation location target where the |nGl|
+   the ``USE_NGRAPH`` option (line ``100``) to true with `1` and set the :envvar:`NGRAPH_DIR`
+   (line ``101``) to point to the installation location target where the |nGl|
    was installed:
 
    .. code-block:: bash
@@ -108,7 +108,7 @@ Compile MXNet\* with ``libngraph``
       NGRAPH_DIR = $(HOME)/ngraph_dist
 
 #. Ensure that settings on the config file are disabled for ``USE_MKL2017``
-   (line ``93``) and ``USE_NNPACK`` (line ``100``).
+   (line ``113``) and ``USE_NNPACK`` (line ``120``).
 
    .. code-block:: bash
 
