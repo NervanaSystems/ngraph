@@ -63,6 +63,66 @@ namespace ngraph
                            << dst.get_element_type().size() << ");\n";
                     return;
                 }
+
+                void emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
+                                                  const std::string& name,
+                                                  const std::string& format,
+                                                  const std::string& data_type,
+                                                  const std::array<size_t,4>& axes)
+                {
+                    writer << "cudnnTensorDescriptor_t " << name << ";\n";
+                    writer << "cudnnCreateTensorDescriptor(&" << name << ");\n";
+                    writer << "cudnnSetTensor4dDescriptor(" << name << ",\n";
+                    writer << "                 /*format=*/"  << format << ",\n";
+                    writer << "                 /*dataType=*/"  << data_type;
+                    for (auto const& axis : axes)
+                    {
+                        writer << ",\n                 /*dimension_size*/" << axis;
+                    }
+                    writer << ");\n";
+                }
+
+                void emit_cudnnReduceTensor(codegen::CodeWriter& writer,
+                                            const GPU_TensorViewWrapper& in,
+                                            const GPU_TensorViewWrapper& out,
+                                            const std::string& reduce_op,
+                                            const std::string& data_type,
+                                            const std::string& nan_prop,
+                                            const std::string& input_desc,
+                                            const std::string& output_desc,
+                                            const float& alpha,
+                                            const float& beta)
+                {
+                    writer << "cudnnReduceTensorDescriptor_t reduceTensorDesc;\n";
+                    writer << "cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);\n";
+                    writer << "cudnnSetReduceTensorDescriptor(reduceTensorDesc,\n";
+                    writer << "                               " << reduce_op << ",\n";
+                    writer << "                               " << data_type << ",\n";
+                    writer << "                               " << nan_prop << ",\n";
+                    writer << "                               CUDNN_REDUCE_TENSOR_NO_INDICES,\n";
+                    writer << "                               CUDNN_32BIT_INDICES);\n";
+                    writer << "size_t workspace_size = 0;\n";
+                    writer << "cudnnGetReductionWorkspaceSize(cudnn_handle,\n";
+                    writer << "                               reduceTensorDesc,\n";
+                    writer << "                               " << input_desc << ",\n";
+                    writer << "                               " << output_desc << ",\n";
+                    writer << "                                &workspace_size);\n";
+                    writer << "void* workspace_ptr = ngraph::runtime::gpu::create_gpu_buffer(workspace_size);\n";
+                    writer << "float alpha = " << alpha << ", beta = " << beta <<";\n";
+                    writer << "cudnnReduceTensor(cudnn_handle,\n";
+                    writer << "                  reduceTensorDesc,\n";
+                    writer << "                  nullptr,\n";
+                    writer << "                  0,\n";
+                    writer << "                  workspace_ptr,\n";
+                    writer << "                  workspace_size,\n";
+                    writer << "                  &alpha,\n";
+                    writer << "                  " << input_desc << ",\n";
+                    writer << "                  " << in.get_name() << ",\n";
+                    writer << "                  &beta,\n";
+                    writer << "                  " << output_desc << ",\n";
+                    writer << "                  " << out.get_name() << ");\n";
+                }
+
             }
         }
     }

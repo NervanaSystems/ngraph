@@ -693,70 +693,42 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         else if (input_shape.size() <= max_tensor_size)
                         {
                             // construct input tensor descriptor rt impl.
-                            writer << "cudnnTensorDescriptor_t input_descriptor;\n";
-                            writer << "cudnnCreateTensorDescriptor(&input_descriptor);\n";
-                            std::vector<size_t> dimensions;
+                            std::array<size_t,4> dimensions;
+                            size_t pos = 0;
                             for (size_t i = input_shape.size(); i < max_tensor_size; i++)
                             {
-                                dimensions.push_back(1);
+                                dimensions[pos++] = 1;
                             }
-                            std::copy(input_shape.begin(),input_shape.end(),std::back_inserter(dimensions));
-                            writer << "cudnnSetTensor4dDescriptor(input_descriptor,\n";
-                            writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
-                            writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
-                            for (auto const& dim : dimensions)
+                            for (size_t i = 0; i < input_shape.size(); i++)
                             {
-                                writer << ",\n                 /*dimension_size*/" << dim;
+                                dimensions[pos++] = input_shape[i];
                             }
-                            writer << ");\n";
 
-
-                            // construct out tensor descriptor rt impl.
-                            writer << "cudnnTensorDescriptor_t output_descriptor;\n";
-                            writer << "cudnnCreateTensorDescriptor(&output_descriptor);\n";
+                            std::string input_desc = "input_descriptor";
+                            std::string output_desc = "output_descriptor";
+                            std::string tensor_format = "CUDNN_TENSOR_NCHW";
+                            std::string tensor_type = "CUDNN_DATA_FLOAT";
+                            kernel::emit_cudnnTensor4dDescriptor(writer,
+                                                                 input_desc,
+                                                                 tensor_format,
+                                                                 tensor_type,
+                                                                 dimensions);
+                            // mark reduced axes of input tensor
                             for (auto const& idx_dim : reduction_axes) {
                                 dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
                             }
-                            writer << "cudnnSetTensor4dDescriptor(output_descriptor,\n";
-                            writer << "                 /*format=*/CUDNN_TENSOR_NCHW,\n";
-                            writer << "                 /*dataType=*/CUDNN_DATA_FLOAT";
-                            for (auto const& dim : dimensions)
-                            {
-                                writer << ",\n                 /*dimension_size*/" << dim;
-                            }
-                            writer << ");\n";
+                            kernel::emit_cudnnTensor4dDescriptor(writer,
+                                                                 output_desc,
+                                                                 tensor_format,
+                                                                 tensor_type,
+                                                                 dimensions);
 
-                            writer += R"(
-cudnnReduceTensorDescriptor_t reduceTensorDesc;
-cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
-cudnnSetReduceTensorDescriptor(reduceTensorDesc,
-                               CUDNN_REDUCE_TENSOR_ADD,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN,
-                               CUDNN_REDUCE_TENSOR_NO_INDICES,
-                               CUDNN_32BIT_INDICES);
-size_t workspace_size = 0;
-cudnnGetReductionWorkspaceSize(cudnn_handle,
-                               reduceTensorDesc,
-                               input_descriptor,
-                               output_descriptor,
-                               &workspace_size);
-
-void* workspace_ptr = ngraph::runtime::gpu::create_gpu_buffer(workspace_size);
-float alpha = 1.0, beta = 0;
-)";
-                            writer << "cudnnReduceTensor(cudnn_handle,\n";
-                            writer << "                  reduceTensorDesc,\n";
-                            writer << "                  nullptr,\n";
-                            writer << "                  0,\n";
-                            writer << "                  workspace_ptr,\n";
-                            writer << "                  workspace_size,\n";
-                            writer << "                  &alpha,\n";
-                            writer << "                  input_descriptor,\n";
-                            writer << "                  " << args[0].get_name() << ",\n";
-                            writer << "                  &beta,\n";
-                            writer << "                  output_descriptor,\n";
-                            writer << "                  " << out[0].get_name() << ");\n";
+                            kernel::emit_cudnnReduceTensor(writer,args[0],out[0],
+                                                           "CUDNN_REDUCE_TENSOR_ADD",
+                                                           tensor_type,
+                                                           "CUDNN_NOT_PROPAGATE_NAN",
+                                                           input_desc,output_desc,
+                                                           1.0, 0.0);
                         }
                         // sum-reduce for Nd tensors
                         else
