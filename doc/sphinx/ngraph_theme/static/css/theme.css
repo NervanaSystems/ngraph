@@ -1836,12 +1836,18 @@ div[class^='highlight'] td.code {
   width: 100%;
 }
 
-code, p.caption, caption-text { 
+code, p.caption { 
   font-family: Inconsolata, sans, monospace;
   color: #A79992;
   font-size: 0.99em;
   line-height: 1.39em;
   }
+
+
+caption-text {
+  font-family: 'RobotoSlab', Lato, monospace;
+}
+
 
   .code-block-caption { 
     font-variant: small-caps;
