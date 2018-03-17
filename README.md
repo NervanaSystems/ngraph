@@ -13,8 +13,9 @@ See our [install] docs for how to get started.
 
 For this early release, we provide [framework integration guides] to
 compile MXNet and TensorFlow-based projects.  If you already have a
-trained model, we've put together a getting started guide for [how to
-import] a deep learning model and start working with the nGraph APIs.
+trained model, we've put together a getting started guide for
+[how to import] a deep learning model and start working with the nGraph
+APIs.
 
 ## Support
 
@@ -38,4 +39,5 @@ to improve the library:
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[ngraph-ecosystem]: http://ngraph.nervanasys.com/docs/latest/_images/ngraph-ecosystem.png "nGraph Ecosystem"
+[how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
+[ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
