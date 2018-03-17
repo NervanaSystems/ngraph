@@ -149,6 +149,12 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
 
+    //Extract mean and variance outputs from BatchNorm
+    //as these are used by BatchNormBackprop.
+    //The users of the outputs (GetOutputElements' Inputs) aren't sorted
+    //and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
+    //Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
+    //Please see `add_output` in `BatchNorm::BatchNorm` for more details
     std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
 
     for (auto _input : get_output_inputs(0))
