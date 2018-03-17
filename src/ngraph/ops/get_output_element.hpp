@@ -71,6 +71,8 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override
             {
+                //filter out updates(deltas) from mean and variance (for batchnorm)
+                //This logic needs to be generalized as new multi-output ops are introduced
                 if (get_n() == 0)
                 {
                     adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta);
