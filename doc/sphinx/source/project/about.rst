@@ -9,7 +9,7 @@ project enables modern compute platforms to run and train
 a variety of backends used by :abbr:`Deep Learning (DL)` frameworks. 
 
 .. figure:: ../graphics/ngraph-ecosys.png
-   :width: 585px 
+   :width: 585px	 
  
 The nGraph library translates a framework’s representation of computations into 
 an :abbr:`Intermediate Representation (IR)` designed to promote computational 
@@ -51,7 +51,7 @@ The *nGraph core* uses a **strongly-typed and platform-neutral stateless graph
 representation** for computations. Each node, or *op*, in the graph corresponds
 to one :term:`step` in a computation, where each step produces zero or more 
 tensor outputs from zero or more tensor inputs. For a more detailed dive into 
-how this works, read our documentation :doc:`../howto/execute`.
+how this works, read our documentation on how to :doc:`../howto/execute`.
 
 
 How do I connect it to a framework? 
