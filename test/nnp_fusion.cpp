@@ -33,7 +33,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/argon/pass/argon_fusion.hpp"
+#include "ngraph/runtime/nnp/pass/nnp_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"

@@ -112,8 +112,8 @@ if(NGRAPH_NNP_ENABLE)
             ${NNP_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
             ${NNP_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
 
-    # ensures ADDITIONAL_NNP_TEST are a dependency on argon transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_argon_transformer COMMAND "")
+    # ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
+    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
     set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
 endif()
 

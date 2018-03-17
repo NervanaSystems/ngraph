@@ -45,8 +45,8 @@ declare NUM_FILES_CHECKED=0
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare ARGON_SRC_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/src"
-declare ARGON_TEST_DIR="build/third-party/argon_transformer/src/ext_argon_transformer/test"
+declare ARGON_SRC_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/src"
+declare ARGON_TEST_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/test"
 
 declare ROOT_SUBDIR
 for ROOT_SUBDIR in src test ${ARGON_SRC_DIR} ${ARGON_TEST_DIR}; do
