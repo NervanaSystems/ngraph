@@ -52,7 +52,7 @@ TEST(Argon_fusion, fuse_max_with_constant_zero_input_as_relu)
     Shape shape_rt{1, 5};
     auto f = make_shared<Function>(max, op::ParameterVector{B});
 
-    auto manager = runtime::Manager::get("ARGON");
+    auto manager = runtime::Manager::get("NNP");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);

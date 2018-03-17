@@ -100,10 +100,10 @@ endif()
 if(NGRAPH_NNP_ENABLE)
     include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "NNP")
-    set(SRC ${SRC} argon_fusion.cpp)
+    set(SRC ${SRC} nnp_fusion.cpp)
 
     # enable additional Argon backend test
-    set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
+    set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)
     message(STATUS "NNP_ADDITIONAL_BACKEND_TESTS path: ${NNP_ADDITIONAL_BACKEND_TESTS}")
     set(ADDITIONAL_NNP_TEST
             ${NNP_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp

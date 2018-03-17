@@ -335,8 +335,8 @@ endif()
 if (NGRAPH_NNP_ENABLE)
     target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libargon.so)
     target_link_libraries(ngraph PRIVATE ${NNP_API_LIBS})
-    add_dependencies(ngraph ext_argon_transformer)
-    add_dependencies(ext_argon_transformer ext_llvm)
+    add_dependencies(ngraph ext_nnp_transformer)
+    add_dependencies(ext_nnp_transformer ext_llvm)
 endif()
 
 #-----------------------------------------------------------------------------------------------

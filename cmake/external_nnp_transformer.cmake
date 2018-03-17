@@ -36,17 +36,17 @@ if (NGRAPH_NNP_ENABLE)
         set(NNP_TRANSFORMER_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
     endif()
 
-    # Set argon_transformer tag
+    # Set nnp_transformer tag
     # Notes:
-    # - Before we have ngraph CI job for argon transformer, ngraph master might not be
-    #   compatible with argon transformer. To ensure compatibility, checkout the ngraph commit point
-    #   where the following `NNP_TRANSFORMER_GIT_TAG` is set and build ngraph with argon using this
+    # - Before we have ngraph CI job for nnp transformer, ngraph master might not be
+    #   compatible with nnp transformer. To ensure compatibility, checkout the ngraph commit point
+    #   where the following `NNP_TRANSFORMER_GIT_TAG` is set and build ngraph with nnp using this
     #   commit.
-    # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
-    #   argon transformer guaranteed by CI.
+    # - After we have ngraph CI job for nnp transformer, ngraph master will be compatible with
+    #   nnp transformer guaranteed by CI.
     set(NNP_TRANSFORMER_GIT_TAG cpp-master)
 
-    # Determines where argon-transformer will be located
+    # Determines where nnp-transformer will be located
     set(NNP_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
 
     # Print
@@ -58,7 +58,7 @@ if (NGRAPH_NNP_ENABLE)
     if (${CMAKE_VERSION} VERSION_LESS 3.2)
         if (DEFINED CUSTOM_NNP_TRANSFORMER_DIR)
             ExternalProject_Add(
-                ext_argon_transformer
+                ext_nnp_transformer
                 SOURCE_DIR ${CUSTOM_NNP_TRANSFORMER_DIR}
                 PREFIX ${NNP_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
@@ -75,7 +75,7 @@ if (NGRAPH_NNP_ENABLE)
             )
         else()
             ExternalProject_Add(
-                ext_argon_transformer
+                ext_nnp_transformer
                 GIT_REPOSITORY ${NNP_TRANSFORMER_GIT_REPOSITORY}
                 GIT_TAG ${NNP_TRANSFORMER_GIT_TAG}
                 PREFIX ${NNP_TRANSFORMER_PREFIX}
@@ -95,7 +95,7 @@ if (NGRAPH_NNP_ENABLE)
     else()
         if (DEFINED CUSTOM_NNP_TRANSFORMER_DIR)
             ExternalProject_Add(
-                ext_argon_transformer
+                ext_nnp_transformer
                 SOURCE_DIR ${CUSTOM_NNP_TRANSFORMER_DIR}
                 PREFIX ${NNP_TRANSFORMER_PREFIX}
                 UPDATE_COMMAND ""
@@ -113,7 +113,7 @@ if (NGRAPH_NNP_ENABLE)
             )
         else()
             ExternalProject_Add(
-                ext_argon_transformer
+                ext_nnp_transformer
                 GIT_REPOSITORY ${NNP_TRANSFORMER_GIT_REPOSITORY}
                 GIT_TAG ${NNP_TRANSFORMER_GIT_TAG}
                 PREFIX ${NNP_TRANSFORMER_PREFIX}
@@ -133,7 +133,7 @@ if (NGRAPH_NNP_ENABLE)
         endif()
     endif()
 
-    ExternalProject_Get_Property(ext_argon_transformer source_dir)
+    ExternalProject_Get_Property(ext_nnp_transformer source_dir)
     set(NNP_TRANSFORMER_SOURCE_DIR ${source_dir} PARENT_SCOPE)
     set(NNP_TRANSFORMER_INCLUDE_DIR ${NNP_TRANSFORMER_PREFIX}/include PARENT_SCOPE)
     set(NNP_TRANSFORMER_LIB_DIR ${NNP_TRANSFORMER_PREFIX}/lib PARENT_SCOPE)
@@ -141,7 +141,7 @@ if (NGRAPH_NNP_ENABLE)
     set(NNP_API_LIB_DIR ${NGRAPH_PREBUILD_NNP_API_PATH}/lib) # Used by find_library below
     set(NNP_API_LIB_DIR ${NGRAPH_PREBUILD_NNP_API_PATH}/lib PARENT_SCOPE)
 
-    # Find prebuild argon library
+    # Find prebuild nnp library
     find_library(NNP_API_LIBS
         NAMES
         argon_api
