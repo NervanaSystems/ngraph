@@ -86,6 +86,7 @@ void FindValidSegments(const std::shared_ptr<Node> &node,
 
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
+    std::cout << "##### Running CPURnnMatFusion" << std::endl;
     bool modified = false;
 
     const NodeTypeSequenceSet valid_sequences {
@@ -188,5 +189,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
         modified = true;
     }
+    std::cout << "##### Finished CPURnnMatFusion: " << modified << std::endl;
     return modified;
 }
