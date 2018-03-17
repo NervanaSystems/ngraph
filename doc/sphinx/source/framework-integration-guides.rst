@@ -10,26 +10,28 @@ Framework Integration Guides
 
 .. _neon_intg:
 
-Neon |trade|
+neon |trade|
 ============
 
-Use ``neon`` as a frontend
----------------------------
+Use ``neon`` as a frontend for nGraph backends
+-----------------------------------------------
 
-``neon`` is a open source Deep Learning framework specifically designed to be 
-powered by |InG| backends.
+``neon`` is a open source Deep Learning framework.  For info about how to 
+interact and use a model with this framework, see the `ngraph-neon docs`_. 
+This section covers installation only. 
 
 .. important:: The numbered instructions below pick up from where 
-   the :doc:`install` installation instructions left off, and they presume 
-   that your system already has the library installed at ``$HOME/ngraph_dist`` as 
-   the default location. If the |nGl| code has not yet been installed to your 
-   system, you can follow the instructions on the `ngraph-neon python README`_ to 
-   install everything at once.  If the |nGl| code already is installed, 
+   the :doc:`install` instructions left off, and they presume that your system 
+   already has the library installed at ``$HOME/ngraph_dist`` as the default 
+   location. If the |nGl| code has not yet been installed to your system, you 
+   can follow the instructions on the `ngraph-neon python README`_ to install 
+   everything at once.  If the |nGl| code base already is installed on a system, 
+   use this process.
 
 
-
-#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the location 
-   where you built the nGraph libraries:
+#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
+   location where you built the nGraph libraries. (This example shows the default 
+   location):
 
    .. code-block:: bash
 
@@ -44,8 +46,8 @@ powered by |InG| backends.
       $ sudo apt-get install python3-pip 
 
 
-#. (Optionally) activate a virtualenv if you like working with virtualenvs: 
-   and go to the `python` subdirectory of the ``ngraph`` repo:
+#. (Optionally) activate a virtualenv if you like working with virtualenvs and 
+   go to the `python` subdirectory of the ``ngraph`` repo:
    
    .. code-block:: console
 
@@ -54,15 +56,24 @@ powered by |InG| backends.
       (venv)$ cd ngraph/python
       (venv)$ pip install -U .
 
-#. See `this file`_ if you want detail about how to run unit tests. To start 
-   working with models, see the `ngraph-neon repo's README`_ to start working
-   with models. 
+#. See `this file`_ if you want detail about how to run unit tests. See the 
+   documentation at `ngraph-neon docs`_. To test the neon install you can run 
+   the sample available in the ngraph-neon clone named 
+   `python examples/cifar10/cifar10_conv.py` 
+
+   .. code-block:: console
+
+      (venv)$ python examples/cifar10/cifar10_conv.py
+
 
 
 .. _mxnet_intg:
 
-Compile MXNet\* with ``libngraph``
-==================================
+MXNet\* 
+========
+
+Compile MXNet with nGraph
+--------------------------
 
 .. important:: These instructions pick up from where the :doc:`install`
    installation instructions left off, so they presume that your system already
@@ -146,8 +157,11 @@ Compile MXNet\* with ``libngraph``
 
 .. _tensorflow_intg:
 
-Build TensorFlow\* with an XLA plugin to ``libngraph``
-======================================================
+TensorFlow\* 
+=============
+
+Build with an XLA plugin to ``libngraph``
+------------------------------------------
 
 .. important:: These instructions pick up where the :doc:`install` 
    installation instructions left off, so they presume that your system already
@@ -275,3 +289,4 @@ your cloned version of `ngraph-tensorflow`_:
 .. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
+.. _ngraph-neon docs: https://github.com/NervanaSystems/ngraph-neon/tree/master/doc
