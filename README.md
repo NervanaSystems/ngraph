@@ -38,5 +38,4 @@ to improve the library:
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[ngraph-ecosystem]: http://ngraph.nervanasys.com/index.html/_images/ngraph-ecosystem.png "nGraph Ecosystem"
-[ngraph-ecosystem]: http://ngraph.nervanasys.com/index.html/_images/ngraph-ecosystem.png "nGraph Ecosystem"
+[ngraph-ecosystem]: http://ngraph.nervanasys.com/docs/latest/_images/ngraph-ecosystem.png "nGraph Ecosystem"
