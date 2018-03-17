@@ -37,6 +37,7 @@ namespace ngraph
             {
                 int64_t* op_durations;
                 mkldnn::primitive* const* mkldnn_primitives;
+                char* const* mkldnn_workspaces;
             };
             }
         }

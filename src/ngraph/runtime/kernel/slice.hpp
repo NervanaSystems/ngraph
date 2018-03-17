@@ -27,7 +27,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void slice(T* arg,
+            void slice(const T* arg,
                        T* out,
                        const Shape& arg_shape,
                        const Coordinate& lower_bounds,

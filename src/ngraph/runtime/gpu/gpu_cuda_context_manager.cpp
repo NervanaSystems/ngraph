@@ -19,25 +19,18 @@
 
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace gpu
-        {
-            CudaContextManager& CudaContextManager::instance()
-            {
-                static CudaContextManager manager;
-                return manager;
-            }
+using namespace ngraph;
 
-            CudaContextManager::CudaContextManager()
-            {
-                CUDA_SAFE_CALL(cuInit(0));
-                CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-                CUDA_SAFE_CALL(cuCtxCreate(&m_context, 0, m_device));
-                m_context_ptr = std::make_shared<CUcontext>(m_context);
-            }
-        }
-    }
+runtime::gpu::CudaContextManager& runtime::gpu::CudaContextManager::instance()
+{
+    static CudaContextManager manager;
+    return manager;
+}
+
+runtime::gpu::CudaContextManager::CudaContextManager()
+{
+    CUDA_SAFE_CALL(cuInit(0));
+    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
+    CUDA_SAFE_CALL(cuCtxCreate(&m_context, 0, m_device));
+    m_context_ptr = std::make_shared<CUcontext>(m_context);
 }

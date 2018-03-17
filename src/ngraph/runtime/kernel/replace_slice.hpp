@@ -27,8 +27,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void replace_slice(T* arg0, // replacement context
-                               T* arg1, // replacement value
+            void replace_slice(const T* arg0, // replacement context
+                               const T* arg1, // replacement value
                                T* out,
                                const Shape& arg1_shape,
                                const Coordinate& lower_bounds,

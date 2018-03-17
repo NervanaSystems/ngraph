@@ -14,37 +14,43 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <cctype>
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 
+#include "ngraph/file_util.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 
-namespace ngraph
+static const std::string s_output_dir = "gpu_codegen";
+
+using namespace ngraph;
+
+runtime::gpu::CudaFunctionPool& runtime::gpu::CudaFunctionPool::instance()
 {
-    namespace runtime
+    static CudaFunctionPool pool;
+    return pool;
+}
+
+void runtime::gpu::CudaFunctionPool::set(const std::string& name, const std::string& kernel)
+{
+    const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};
+    std::string filename =
+        file_util::path_join(s_output_dir, "cuda_kernel_" + name + "_codegen.cu");
+    std::ofstream out(filename);
+    out << kernel;
+    out.close();
+    m_function_map.insert({name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts)});
+}
+
+std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::get(const std::string& name)
+{
+    auto it = m_function_map.find(name);
+    if (it != m_function_map.end())
     {
-        namespace gpu
-        {
-            CudaFunctionPool& CudaFunctionPool::instance()
-            {
-                static CudaFunctionPool pool;
-                return pool;
-            }
-
-            void CudaFunctionPool::set(std::string& name, std::shared_ptr<CUfunction> function)
-            {
-                m_function_map.insert({name, function});
-            }
-
-            std::shared_ptr<CUfunction> CudaFunctionPool::get(std::string& name)
-            {
-                auto it = m_function_map.find(name);
-                if (it != m_function_map.end())
-                {
-                    return (*it).second;
-                }
-                return nullptr;
-            }
-        }
+        return (*it).second;
     }
+    return nullptr;
 }
