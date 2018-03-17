@@ -43,15 +43,14 @@ namespace ngraph
                 void emit_memset(codegen::CodeWriter& writer,
                                  const GPU_TensorViewWrapper& dst,
                                  int value,
-                                 size_t buffer_size=0)
+                                 size_t buffer_size = 0)
                 {
                     if (buffer_size == 0)
                     {
-                        buffer_size  = dst.get_size() * dst.get_element_type().size();
+                        buffer_size = dst.get_size() * dst.get_element_type().size();
                     }
-                    writer << "runtime::gpu::cuda_memset(" << dst.get_name() << ", "
-                           << value << ", "
-                           << buffer_size << ");\n";
+                    writer << "runtime::gpu::cuda_memset(" << dst.get_name() << ", " << value
+                           << ", " << buffer_size << ");\n";
                 }
 
                 void emit_memcpyDtD(codegen::CodeWriter& writer,
@@ -68,13 +67,13 @@ namespace ngraph
                                                   const std::string& name,
                                                   const std::string& format,
                                                   const std::string& data_type,
-                                                  const std::array<size_t,4>& axes)
+                                                  const std::array<size_t, 4>& axes)
                 {
                     writer << "cudnnTensorDescriptor_t " << name << ";\n";
                     writer << "cudnnCreateTensorDescriptor(&" << name << ");\n";
                     writer << "cudnnSetTensor4dDescriptor(" << name << ",\n";
-                    writer << "                 /*format=*/"  << format << ",\n";
-                    writer << "                 /*dataType=*/"  << data_type;
+                    writer << "                 /*format=*/" << format << ",\n";
+                    writer << "                 /*dataType=*/" << data_type;
                     for (auto const& axis : axes)
                     {
                         writer << ",\n                 /*dimension_size*/" << axis;
@@ -107,8 +106,9 @@ namespace ngraph
                     writer << "                               " << input_desc << ",\n";
                     writer << "                               " << output_desc << ",\n";
                     writer << "                                &workspace_size);\n";
-                    writer << "void* workspace_ptr = ngraph::runtime::gpu::create_gpu_buffer(workspace_size);\n";
-                    writer << "float alpha = " << alpha << ", beta = " << beta <<";\n";
+                    writer << "void* workspace_ptr = "
+                              "ngraph::runtime::gpu::create_gpu_buffer(workspace_size);\n";
+                    writer << "float alpha = " << alpha << ", beta = " << beta << ";\n";
                     writer << "cudnnReduceTensor(cudnn_handle,\n";
                     writer << "                  reduceTensorDesc,\n";
                     writer << "                  nullptr,\n";
@@ -122,7 +122,6 @@ namespace ngraph
                     writer << "                  " << output_desc << ",\n";
                     writer << "                  " << out.get_name() << ");\n";
                 }
-
             }
         }
     }

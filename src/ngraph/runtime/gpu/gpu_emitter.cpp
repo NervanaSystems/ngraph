@@ -115,7 +115,7 @@ namespace ngraph
                     return;
                 }
 
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "if(count == 0) return;\n";
@@ -139,7 +139,7 @@ namespace ngraph
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
@@ -189,7 +189,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "int count = " << second.get_size() << ";\n";
                     writer << "cublasScopy("
                            << "cublas_handle,"
@@ -206,7 +206,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 //set output to 0 if input size is 0
                 if (args[0].get_size() == 0 || args[1].get_size() == 0)
                 {
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                            << out[0].get_size() << " * sizeof(float));\n";
                     kernel::emit_epilogue(writer);
@@ -226,7 +226,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                 "input1 and input2 shape does not match for dot;");
                         }
                     }
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "cublasSdot("
                            << "cublas_handle," << args[0].get_size() << "," << args[0].get_name()
                            << ","
@@ -237,7 +237,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          (dot->get_reduction_axes_count() == 1))
                 {
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0;\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
@@ -264,7 +264,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         throw std::runtime_error("input and output shape does not match for dot;");
                     }
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0.0;\n";
                     writer << "int m = " << arg0_shape[0] << ";\n";
@@ -302,7 +302,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -342,7 +342,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -382,7 +382,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
@@ -430,8 +430,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 //broadcast axes is empty, do a copy
                 if (axes.empty())
                 {
-                    kernel::emit_prologue(writer,node);
-                    kernel::emit_memcpyDtD(writer,out[0],args[0]);
+                    kernel::emit_prologue(writer, node);
+                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
                     kernel::emit_epilogue(writer);
                     return;
                 }
@@ -466,7 +466,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         repeat_size *= result_shape[i];
                     }
 
-                    kernel::emit_prologue(writer,node);
+                    kernel::emit_prologue(writer, node);
                     writer << "runtime::gpu::emit_broadcast(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
@@ -495,7 +495,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
                 auto reshape = static_cast<const op::Reshape*>(node);
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto result_shape = out[0].get_shape();
@@ -511,7 +511,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 //  we can just copy.
                 if (same_layout || result_shape_product < 2)
                 {
-                    kernel::emit_memcpyDtD(writer,out[0],args[0]);
+                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 }
                 // If there *is* a layout change in the 2D case, we transpose the input.
                 else if (arg_rank == 2)
@@ -554,7 +554,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -605,7 +605,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     repeat_size *= result_shape[i];
                 }
 
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
                 writer << "runtime::gpu::emit_onehot(\"" << node->description()
@@ -624,7 +624,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
@@ -660,8 +660,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
-                kernel::emit_prologue(writer,node);
-                kernel::emit_memcpyDtD(writer,out[0],args[0]);
+                kernel::emit_prologue(writer, node);
+                kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 kernel::emit_epilogue(writer);
                 return;
             }
@@ -674,7 +674,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto reduction_axes = sum_node->get_reduction_axes();
                 auto& input_shape = args[0].get_shape();
 
-                kernel::emit_prologue(writer,node);
+                kernel::emit_prologue(writer, node);
                 {
                     // one of out[] axes has zero size
                     if (out[0].get_size() != 0)
@@ -682,18 +682,18 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            kernel::emit_memset(writer,out[0],0);
+                            kernel::emit_memset(writer, out[0], 0);
                         }
                         // no change in dimensions, reduction not necessary
                         else if (input_shape.size() == out[0].get_shape().size())
                         {
-                            kernel::emit_memcpyDtD(writer,out[0],args[0]);
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
                         // sum-reduce for 4d tensors
                         else if (input_shape.size() <= max_tensor_size)
                         {
                             // construct input tensor descriptor rt impl.
-                            std::array<size_t,4> dimensions;
+                            std::array<size_t, 4> dimensions;
                             size_t pos = 0;
                             for (size_t i = input_shape.size(); i < max_tensor_size; i++)
                             {
@@ -708,32 +708,32 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             std::string output_desc = "output_descriptor";
                             std::string tensor_format = "CUDNN_TENSOR_NCHW";
                             std::string tensor_type = "CUDNN_DATA_FLOAT";
-                            kernel::emit_cudnnTensor4dDescriptor(writer,
-                                                                 input_desc,
-                                                                 tensor_format,
-                                                                 tensor_type,
-                                                                 dimensions);
+                            kernel::emit_cudnnTensor4dDescriptor(
+                                writer, input_desc, tensor_format, tensor_type, dimensions);
                             // mark reduced axes of input tensor
-                            for (auto const& idx_dim : reduction_axes) {
+                            for (auto const& idx_dim : reduction_axes)
+                            {
                                 dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
                             }
-                            kernel::emit_cudnnTensor4dDescriptor(writer,
-                                                                 output_desc,
-                                                                 tensor_format,
-                                                                 tensor_type,
-                                                                 dimensions);
+                            kernel::emit_cudnnTensor4dDescriptor(
+                                writer, output_desc, tensor_format, tensor_type, dimensions);
 
-                            kernel::emit_cudnnReduceTensor(writer,args[0],out[0],
+                            kernel::emit_cudnnReduceTensor(writer,
+                                                           args[0],
+                                                           out[0],
                                                            "CUDNN_REDUCE_TENSOR_ADD",
                                                            tensor_type,
                                                            "CUDNN_NOT_PROPAGATE_NAN",
-                                                           input_desc,output_desc,
-                                                           1.0, 0.0);
+                                                           input_desc,
+                                                           output_desc,
+                                                           1.0,
+                                                           0.0);
                         }
                         // sum-reduce for Nd tensors
                         else
                         {
-                            throw std::runtime_error("Tensors of dimension greater than 4 are not implemented.");
+                            throw std::runtime_error(
+                                "Tensors of dimension greater than 4 are not implemented.");
                         }
                     }
                 }

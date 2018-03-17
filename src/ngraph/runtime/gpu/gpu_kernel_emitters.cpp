@@ -18,5 +18,4 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 
-
 using namespace ngraph;
