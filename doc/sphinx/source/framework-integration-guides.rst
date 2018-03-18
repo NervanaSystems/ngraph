@@ -50,13 +50,23 @@ system that already has an ``ngraph_dist`` installed.
 
 #. Clone the ngraph-neon integration repo somewhere you can find it easily. The
    install configuration we'll document here places it under a directory we'll 
-   create named ``frameworks``:  
+   create named ``frameworks``
 
-   .. code-block:: console
+   #. This section is optional, but it is the configuration we'll assume for the 
+      ngraph-neon documenation:
 
-      $ sudo mkdir -p /opt/frameworks && cd /opt/frameworks
-      $ git clone git@github.com:NervanaSystems/ngraph-neon
-      $ cd ngraph-neon
+      .. code-block:: console
+
+         $ sudo mkdir -p /opt/frameworks   
+         $ sudo chown -R username:username /opt/frameworks
+         $ cd /opt/frameworks
+
+   #. This section is required:       
+
+      .. code-block:: console
+
+         $ git clone git@github.com:NervanaSystems/ngraph-neon
+         $ cd ngraph-neon
 
 #. *Optional* Activate a virtualenv if you like working with virtualenvs:
    
