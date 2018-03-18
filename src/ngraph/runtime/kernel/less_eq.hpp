@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace runtime
@@ -23,8 +25,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void less_eq(T* arg0,
-                         T* arg1,
+            void less_eq(const T* arg0,
+                         const T* arg1,
                          char* out,
                          size_t count) // TODO: using char for bool, is this right?
             {

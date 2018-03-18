@@ -23,7 +23,6 @@
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -35,6 +34,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -81,4 +81,28 @@ TEST(reshape_elimination, bn_bprop_rewrite)
     pass_manager.run_passes(func);
     size_t count_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
+}
+
+TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
+{
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    auto W = make_shared<op::Parameter>(element::f32, shape_w);
+    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+
+    auto dot = make_shared<op::Dot>(W, x);
+    auto reshape_dot = std::make_shared<op::Reshape>(dot, AxisVector{1, 0}, Shape{1, 2});
+    auto graph = make_shared<op::Abs>(reshape_dot);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    auto func = make_shared<Function>(graph, op::ParameterVector{W, x});
+    pass_manager.run_passes(func);
+    auto gdot = graph->get_input_op(0);
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Dot>(gdot));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_input_op(0)));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_input_op(1)));
+    ASSERT_EQ(gdot->get_input_op(0)->get_input_op(0), x);
+    ASSERT_EQ(gdot->get_input_op(1)->get_input_op(0), W);
+    ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
 }

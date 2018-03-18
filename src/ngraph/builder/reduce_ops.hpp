@@ -17,12 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {

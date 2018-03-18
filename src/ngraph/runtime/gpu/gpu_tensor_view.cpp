@@ -38,10 +38,10 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
-    m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
+    m_buffer_size = shape_size(shape) * element_type.size();
     if (m_buffer_size > 0)
     {
-        cudaMalloc((void**)&m_allocated_buffer_pool, m_buffer_size);
+        cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size);
     }
 }
 

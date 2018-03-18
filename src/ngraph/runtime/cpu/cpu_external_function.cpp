@@ -82,6 +82,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -89,15 +90,18 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -106,11 +110,14 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -194,6 +201,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
     {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
@@ -235,31 +243,45 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
+    {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
+    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::runtime::cpu::op::ConvertLayout),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
+    {TI(ngraph::op::Result), &runtime::cpu::CPU_Emitter::emit<op::Result>},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow>},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
+    {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::emit<op::BatchNormBackprop>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
     {TI(ngraph::op::Max), &runtime::cpu::CPU_Emitter::emit<op::Max>},
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
+    {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
-    , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
+    , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_function_name(function->get_name())
+{
+}
+
+runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
@@ -270,33 +292,24 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
-    string function_name = m_function->get_name();
+    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
 
-    m_mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
+    m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
 
+    pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(shared_from_this());
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(shared_from_this());
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
     pass_manager.run_passes(m_function);
-    codegen::CodeWriter writer;
 
-    bool include_mkldnn_headers = false;
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
-        {
-            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
-            {
-                include_mkldnn_headers = true;
-            }
-        }
-    }
+    codegen::CodeWriter writer;
 
     writer +=
         R"(// Generated by the nGraph CPU backend
@@ -324,6 +337,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/result.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
@@ -346,11 +360,6 @@ using namespace ngraph::runtime;
         writer << "#include <tbb/flow_graph.h>\n";
     }
 
-    if (include_mkldnn_headers)
-    {
-        runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(writer);
-    }
-
     string pch_header_source = writer.get_code();
 
     // The "dso_handle" symbol is required by __cxa_atexit()
@@ -364,6 +373,7 @@ using namespace ngraph::runtime;
     {
         writer << "// Declare debug timers\n";
         vector<string> names;
+        size_t index = 0;
         for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
         {
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -371,59 +381,43 @@ using namespace ngraph::runtime;
                 if (!node->is_parameter() && !node->is_constant())
                 {
                     names.push_back(node->get_name());
+                    m_name_index_map.insert({node->get_name(), index++});
                 }
             }
         }
-        for (const string& s : names)
-        {
-            writer << "ngraph::stopwatch timer_" << s << ";\n";
-        }
+        writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
         writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                << "; }\n";
         writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "const char* rc;\n";
-        writer << "switch(index)\n";
+        writer << "static const char* timer_names[" << names.size() << "] =\n";
         writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
+        writer.indent++;
+        vector<string> quoted_names;
+        for (const string& name : names)
         {
-            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+            quoted_names.push_back("\"" + name + "\"");
         }
-        writer << "default: rc = \"\";\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
+        writer << "\n};\n";
+        writer.indent--;
+        writer << "return timer_names[index];\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i]
-                   << ".get_total_microseconds(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size()
+               << " ? timers[index].get_total_microseconds() : 0);\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size() << " ? timers[index].get_call_count() : 0);\n";
         writer.indent--;
         writer << "}\n";
         writer << "\n";
@@ -437,15 +431,11 @@ using namespace ngraph::runtime;
             const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
+                m_active_constants.push_back(node);
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                auto c_value_strings = c->get_value_strings();
-                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
-                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
-                writer << "{\n";
-                writer.indent++;
-                writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
-                writer.indent--;
-                writer << "\n};\n\n";
+                string type = tv->get_tensor().get_element_type().c_type_string();
+                writer << "static " << type << "* " << tv->get_tensor().get_name() << " = (("
+                       << type << "*)(" << c->get_data_ptr() << "));\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
@@ -552,7 +542,7 @@ using namespace ngraph::runtime;
         }
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -612,6 +602,7 @@ using namespace ngraph::runtime;
         }
 
         // create output alias map
+        /*
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
@@ -627,48 +618,27 @@ using namespace ngraph::runtime;
             }
             output_index++;
         }
+        */
 
         // Add outputs to the variable name map
-        output_index = 0;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-            bool parameter_as_output = false;
-            for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
+            string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+            stringstream ss;
+            ss << "((" << type << "*)(outputs[" << i << "]))";
+            m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+
+            //it should be safe to assign both descriptors to one output*
+            //since needs_copy == false makes `op::Result` an nop
+            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+            if (!res->needs_copy())
             {
-                for (const descriptor::Output& pout : param->get_outputs())
-                {
-                    shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-                    if (tv == ptv)
-                    {
-                        parameter_as_output = true;
-                        writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-                               << output_index << "]), "
-                               << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-                               << ptv->get_tensor().size() << ");\n";
-                        break;
-                    }
-                }
+                shared_ptr<descriptor::TensorView> itv =
+                    res->get_inputs().at(0).get_output().get_tensor_view();
+                m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
             }
-            if (!parameter_as_output && !contains(aliases, output_index))
-            {
-                if (contains(constants, tv.get()))
-                {
-                    writer << "memcpy(outputs[" << output_index << "], "
-                           << tv->get_tensor().get_name() << ", " << tv->get_tensor().size()
-                           << ");\n";
-                }
-                else
-                {
-                    string type = et.c_type_string();
-                    stringstream ss;
-                    ss << "((" << type << "*)(outputs[" << output_index << "]))";
-                    m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-                }
-            }
-            output_index++;
         }
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -703,7 +673,7 @@ using namespace ngraph::runtime;
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (current_function->get_name() == function_name)
+                if (current_function->get_name() == m_function_name)
                 {
                     m_op_attrs.emplace_back(
                         node->description(), node_output_names, node_input_names);
@@ -716,25 +686,28 @@ using namespace ngraph::runtime;
                            << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
-                if (m_emit_timing)
-                {
-                    emit_debug_function_entry(writer, node.get(), in, out);
-                }
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
                 }
             }
 
-            writer << "\n// " << node->get_name() << "(";
-            vector<string> parameter_nodes = node_input_names;
-            parameter_nodes.insert(
-                parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
-            writer << join(parameter_nodes);
-            writer << ")\n";
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                writer << "\n// " << node->get_name() << "(";
+                vector<string> parameter_nodes = node_input_names;
+                parameter_nodes.insert(
+                    parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
+                writer << join(parameter_nodes);
+                writer << ")\n";
+            }
 
             // Emit operation body
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                emit_debug_function_entry(writer, node.get(), in, out);
+            }
             string func_name;
             auto it = match_functions.find(node.get());
             if (it == match_functions.end())
@@ -781,13 +754,9 @@ using namespace ngraph::runtime;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                handle_output_alias(writer, *node, output_alias_map);
-                if (m_emit_timing)
-                {
-                    emit_debug_function_exit(writer, node.get(), in, out);
-                }
+                emit_debug_function_exit(writer, node.get(), in, out);
                 if (runtime::cpu::IsTracingEnabled() &&
-                    current_function->get_name() == function_name)
+                    current_function->get_name() == m_function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "
                            << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
@@ -883,9 +852,8 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-
     file_util::make_directory(s_output_dir);
-    string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
@@ -904,7 +872,7 @@ using namespace ngraph::runtime;
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
-    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
+    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
 
     if (m_compiled_function == nullptr)
     {
@@ -915,35 +883,6 @@ using namespace ngraph::runtime;
     if (m_release_function)
     {
         release_function();
-    }
-}
-
-void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
-    codegen::CodeWriter& writer,
-    const Node& node,
-    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
-{
-    for (const descriptor::Output& output : node.get_outputs())
-    {
-        shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
-        auto it = output_alias_map.find(otv.get());
-        if (it != output_alias_map.end())
-        {
-            const vector<size_t>& outputs = it->second;
-            if (outputs.size() > 1)
-            {
-                writer << "{    // handle output alias for previous op\n";
-                writer.indent++;
-                for (size_t i = 1; i < outputs.size(); i++)
-                {
-                    writer << "memcpy(static_cast<void*>(outputs[" << outputs[i]
-                           << "]), static_cast<void*>(outputs[" << outputs[0] << "]), "
-                           << otv->get_tensor().size() << ");\n";
-                }
-                writer.indent--;
-                writer << "}\n";
-            }
-        }
     }
 }
 
@@ -976,7 +915,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".start();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+    }
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
@@ -985,7 +927,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+    }
 }
 
 bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(

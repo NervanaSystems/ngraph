@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace runtime
@@ -23,7 +25,7 @@ namespace ngraph
         namespace kernel
         {
             static inline void
-                logical_not(char* arg,
+                logical_not(const char* arg,
                             char* out,
                             size_t count) // TODO: using char for bool, is this right?
             {

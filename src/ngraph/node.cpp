@@ -23,7 +23,12 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/placement.hpp"
+
+#if not defined(EIGEN_MPL2_ONLY)
+#error("The flag `EIGEN_MPL2_ONLY` must be defined");
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -33,7 +38,7 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
-    , m_is_output(false)
+    , m_unique_name(description() + "_" + to_string(m_instance_id))
     , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
@@ -67,7 +72,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
         tensor_view_type,
         ngraph::descriptor::Tensor::make_tensor_name(this, i),
-        is_output(),
+        false,
         is_parameter(),
         is_constant());
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
@@ -95,16 +100,7 @@ bool Node::is_parameter() const
 
 bool Node::is_output() const
 {
-    return m_is_output;
-}
-
-void Node::set_is_output()
-{
-    m_is_output = true;
-    for (descriptor::Output& output : get_outputs())
-    {
-        output.get_tensor().set_is_output();
-    }
+    return false;
 }
 
 bool Node::is_constant() const
@@ -112,25 +108,18 @@ bool Node::is_constant() const
     return false;
 }
 
-std::string Node::get_node_id() const
+const std::string& Node::get_friendly_name() const
 {
-    stringstream ss;
-    ss << description() << "_" << m_instance_id;
-    return ss.str();
-}
-
-std::string Node::get_name() const
-{
-    string rc;
     if (m_name.empty())
     {
-        rc = description() + "_" + to_string(m_instance_id);
+        return m_unique_name;
     }
-    else
-    {
-        rc = m_name;
-    }
-    return rc;
+    return m_name;
+}
+
+const std::string& Node::get_name() const
+{
+    return m_unique_name;
 }
 
 void Node::set_name(const string& name)
@@ -207,11 +196,11 @@ namespace ngraph
         auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
         if (parameter_tmp)
         {
-            out << "Parameter(" << parameter_tmp->get_node_id() << ")";
+            out << "Parameter(" << parameter_tmp->get_name() << ")";
         }
         else
         {
-            out << "Node(" << node.get_node_id() << ")";
+            out << "Node(" << node.get_name() << ")";
         }
         return out;
     }

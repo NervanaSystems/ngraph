@@ -17,50 +17,78 @@
 #include <algorithm>
 #include <map>
 
-#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
-namespace ngraph
+using namespace ngraph;
+using namespace ngraph::runtime::gpu;
+
+void runtime::gpu::emit_broadcast(std::string name,
+                                  CUdeviceptr in,
+                                  CUdeviceptr out,
+                                  std::array<std::string, 2> data_types,
+                                  size_t repeat_size,
+                                  size_t repeat_times,
+                                  size_t count)
 {
-    namespace runtime
+    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
+    // Create an instance of nvrtcProgram with the code string.
+    if (CudaFunctionPool::instance().get(name_signature) == nullptr)
     {
-        namespace gpu
-        {
-            void emit_abs(void* in, void* out, size_t count)
-            {
-                std::string name = "abs";
-                // Create an instance of nvrtcProgram with the code string.
-                if (CudaFunctionPool::instance().get(name) == nullptr)
-                {
-                    const char* opts[] = {"--gpu-architecture=compute_35",
-                                          "--relocatable-device-code=true"};
-                    std::string kernel;
-                    CudaKernelBuilder::get_1_element_op(name, "float", "fabsf", kernel);
-                    CudaFunctionPool::instance().set(
-                        name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts));
-                }
-
-                //convert runtime ptr to driver api ptr
-                CUdeviceptr d_ptr_in, d_ptr_out;
-                d_ptr_in = (CUdeviceptr)in;
-                d_ptr_out = (CUdeviceptr)out;
-
-                void* args_list[] = {&d_ptr_in, &d_ptr_out, &count};
-                CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name).get(),
-                                              count,
-                                              1,
-                                              1, // grid dim
-                                              1,
-                                              1,
-                                              1, // block dim
-                                              0,
-                                              NULL, // shared mem and stream
-                                              args_list,
-                                              0));  // arguments
-                CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-            }
-        }
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_broadcast_op(writer, name_signature, data_types);
+        std::string kernel = writer.get_code();
+        CudaFunctionPool::instance().set(name_signature, kernel);
     }
+
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
+                                  static_cast<unsigned int>(count),
+                                  1,
+                                  1, // grid dim
+                                  1,
+                                  1,
+                                  1, // block dim
+                                  0,
+                                  NULL, // shared mem and stream
+                                  args_list,
+                                  0));  // arguments
+    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+}
+
+void runtime::gpu::emit_onehot(std::string name,
+                               CUdeviceptr in,
+                               CUdeviceptr out,
+                               std::array<std::string, 2> data_types,
+                               size_t repeat_size,
+                               size_t repeat_times,
+                               size_t count)
+{
+    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
+    // Create an instance of nvrtcProgram with the code string.
+    if (CudaFunctionPool::instance().get(name_signature) == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_onehot_op(writer, name_signature, data_types);
+        std::string kernel = writer.get_code();
+        CudaFunctionPool::instance().set(name_signature, kernel);
+    }
+
+    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
+                                  static_cast<unsigned int>(count),
+                                  1,
+                                  1, // grid dim
+                                  1,
+                                  1,
+                                  1, // block dim
+                                  0,
+                                  NULL, // shared mem and stream
+                                  args_list,
+                                  0));  // arguments
+    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }

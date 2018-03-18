@@ -34,6 +34,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/allreduce.cpp
     ops/avg_pool.cpp
     ops/batch_norm.cpp
     ops/broadcast.cpp
@@ -66,11 +67,13 @@ set (SRC
     ops/replace_slice.cpp
     ops/reshape.cpp
     ops/reverse.cpp
+    ops/result.cpp
     ops/select.cpp
     ops/select_and_scatter.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
+    ops/softmax.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
@@ -85,6 +88,7 @@ set (SRC
     ops/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/dump_sorted.cpp
+    pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
     pass/liveness.cpp
@@ -94,6 +98,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     pattern/core_fusion.cpp
@@ -113,6 +118,7 @@ set (SRC
     util.cpp
     graph_util.cpp
     placement.cpp
+    cpio.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -182,11 +188,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_emitter.cpp
         runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
+        runtime/cpu/kernels/eigen_thread_pool.cpp
+        runtime/cpu/kernels/pad.cpp
+        runtime/cpu/ops/conv_bias.cpp
         runtime/cpu/ops/convert_layout.cpp
+        runtime/cpu/ops/sigmoid.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
+        runtime/cpu/pass/cpu_nop_elimination.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -215,11 +226,6 @@ if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
-    # Add sources for distributed ngraph
-    # and all its dependencies
-    set(SRC ${SRC}
-        ops/allreduce.cpp
-    )
     set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
         "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
@@ -266,8 +272,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource)
-    include_directories(${CMAKE_BINARY_DIR})
+    add_dependencies(ngraph header_resource ext_json)
+    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
+    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
 if (NOT APPLE)
@@ -316,7 +323,7 @@ endif()
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64)
+    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
@@ -352,11 +359,11 @@ install(DIRECTORY
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb.so.*"
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
 endif()
 

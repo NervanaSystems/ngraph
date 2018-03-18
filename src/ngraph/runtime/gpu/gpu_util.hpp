@@ -61,8 +61,10 @@ namespace ngraph
             void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size);
-            void cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size);
-            void cuda_memcpyHtD(void* d, void* s, size_t buffer_size);
+            void free_gpu_buffer(void* buffer);
+            void cuda_memcpyDtD(void* dst, void* src, size_t buffer_size);
+            void cuda_memcpyHtD(void* dst, void* src, size_t buffer_size);
+            void cuda_memset(void* dst, int value, size_t buffer_size);
         }
     }
 }

@@ -17,30 +17,18 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 
 #include "ngraph/function.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    std::string serialize(std::shared_ptr<ngraph::Function>, size_t indent = 0);
+    std::string serialize(std::shared_ptr<ngraph::Function>,
+                          size_t indent = 0,
+                          bool binary_constant_data = false);
+    void serialize(const std::string& path, std::shared_ptr<ngraph::Function>, size_t indent = 0);
+    void serialize(std::ostream& out, std::shared_ptr<ngraph::Function>, size_t indent = 0);
+
     std::shared_ptr<ngraph::Function> deserialize(std::istream&);
     std::shared_ptr<ngraph::Function> deserialize(const std::string&);
-
-    template <typename T>
-    T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
-    {
-        T rc;
-        try
-        {
-            rc = j.at(key).get<T>();
-        }
-        catch (...)
-        {
-            rc = default_value;
-        }
-        return rc;
-    }
 }

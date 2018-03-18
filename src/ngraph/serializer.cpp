@@ -14,11 +14,16 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/serializer.hpp"
+#include <fstream>
+#include <functional>
+
+#include "ngraph/cpio.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -54,6 +59,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/product.hpp"
 #include "ngraph/ops/reduce.hpp"
@@ -62,6 +68,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
@@ -69,77 +76,43 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/softmax.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/ops/allreduce.hpp"
-#endif
+#include "nlohmann/json.hpp"
 
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
+using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
+
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
 
 static std::shared_ptr<ngraph::Function>
-    read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
+    read_function(const json&,
+                  std::unordered_map<std::string, std::shared_ptr<Function>>&,
+                  function<const_data_callback_t>);
 
-static json write(const ngraph::Function&);
-static json write(const ngraph::Node&);
-
-// There should be a map from element type names to element types so deserialization can
-// find the singletons and serialization can serialize by name.
-static const element::Type& to_ref(const element::Type& t)
-{
-    if (t == element::boolean)
-    {
-        return element::boolean;
-    }
-    if (t == element::f32)
-    {
-        return element::f32;
-    }
-    if (t == element::f64)
-    {
-        return element::f64;
-    }
-    if (t == element::i8)
-    {
-        return element::i8;
-    }
-    if (t == element::i16)
-    {
-        return element::i16;
-    }
-    if (t == element::i32)
-    {
-        return element::i32;
-    }
-    if (t == element::i64)
-    {
-        return element::i64;
-    }
-    if (t == element::u8)
-    {
-        return element::u8;
-    }
-    if (t == element::u16)
-    {
-        return element::u16;
-    }
-    if (t == element::u32)
-    {
-        return element::u32;
-    }
-    if (t == element::u64)
-    {
-        return element::u64;
-    }
-    throw runtime_error("type not valid");
-}
+static json write(const ngraph::Function&, bool binary_constant_data);
+static json write(const ngraph::Node&, bool binary_constant_data);
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -148,12 +121,12 @@ static json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static const element::Type& read_element_type(const json& j)
+static element::Type read_element_type(const json& j)
 {
     size_t bitwidth = 0;
-    bool is_real;
-    bool is_signed;
-    string c_type_string;
+    bool is_real = false;
+    bool is_signed = false;
+    string c_type_string = "";
     if (j.is_object())
     {
         bitwidth = j.at("bitwidth").get<size_t>();
@@ -176,34 +149,43 @@ static const element::Type& read_element_type(const json& j)
             }
         }
     }
-    return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
+    return element::Type(bitwidth, is_real, is_signed, c_type_string);
 }
 
-static json write_tensor_type(const element::Type& element_type, const Shape& shape)
+void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
 {
-    json j;
-    j["element_type"] = write_element_type(element_type);
-    j["shape"] = shape;
-    return j;
+    ofstream out(path);
+    serialize(out, func, indent);
 }
 
-static std::shared_ptr<const TensorViewType>
-    read_tensor_type(const json& j, const string& type, const string& sshape)
+void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
-    const element::Type& et = read_element_type(j.at(type));
-    Shape shape =
-        j.count(sshape) > 0
-            ? Shape(j.at(sshape).get<vector<size_t>>())
-            : Shape{} /*HACK, so we could call read_tensor_type uniformly @ each callsite*/;
-    return make_shared<TensorViewType>(et, shape);
+    string j = serialize(func, indent, true);
+    cpio::Writer writer(out);
+    writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
+
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        traverse_nodes(const_cast<Function*>(f.get()), [&](shared_ptr<Node> node) {
+            if (auto c = dynamic_pointer_cast<op::Constant>(node))
+            {
+                uint32_t size = static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                      c->get_output_element_type(0).size());
+                writer.write(c->get_name(), c->get_data_ptr(), size);
+            }
+        });
+    });
+
+    writer.close();
 }
 
-string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
+string
+    ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
     vector<json> functions;
-    traverse_functions(func,
-                       [&](shared_ptr<ngraph::Function> f) { functions.push_back(write(*f)); });
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        functions.push_back(write(*f, binary_constant_data));
+    });
     for (auto it = functions.rbegin(); it != functions.rend(); it++)
     {
         j.push_back(*it);
@@ -216,7 +198,7 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
     }
     else
     {
-        rc = j.dump(indent);
+        rc = j.dump(static_cast<int>(indent));
     }
     return rc;
 }
@@ -230,27 +212,71 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 {
-    json js = json::parse(s);
     shared_ptr<Function> rc;
-    unordered_map<string, shared_ptr<Function>> function_map;
-    for (json func : js)
+    if (file_util::exists(s))
     {
-        shared_ptr<Function> f = read_function(func, function_map);
-        rc = f;
+        cpio::Reader reader(s);
+        vector<cpio::FileInfo> file_info = reader.get_file_info();
+        if (file_info.size() > 0)
+        {
+            // The first file is the model
+            uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
+            char* data = new char[size];
+            reader.read(file_info[0].get_name(), data, size);
+            string jstr(data, size);
+            delete[] data;
+            json js = json::parse(jstr);
+            unordered_map<string, shared_ptr<Function>> function_map;
+            for (json func : js)
+            {
+                shared_ptr<Function> f = read_function(
+                    func,
+                    function_map,
+                    [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                        shared_ptr<Node> const_node;
+                        for (const cpio::FileInfo& info : file_info)
+                        {
+                            if (info.get_name() == const_name)
+                            {
+                                void* const_data = malloc(info.get_size());
+                                reader.read(const_name, const_data, info.get_size());
+                                const_node = make_shared<op::Constant>(et, shape, const_data);
+                                free(const_data);
+                                break;
+                            }
+                        }
+                        return const_node;
+                    });
+                rc = f;
+            }
+        }
+    }
+    else
+    {
+        json js = json::parse(s);
+        unordered_map<string, shared_ptr<Function>> function_map;
+        for (json func : js)
+        {
+            shared_ptr<Function> f = read_function(func, function_map, nullptr);
+            rc = f;
+        }
     }
 
     return rc;
 }
 
-static json write(const Function& f)
+static json write(const Function& f, bool binary_constant_data)
 {
     json function;
     function["name"] = f.get_name();
 
+    vector<string> parameter_list;
     for (auto param : f.get_parameters())
     {
-        function["parameters"].push_back(param->get_name());
+        parameter_list.push_back(param->get_name());
     }
+    function["parameters"] = parameter_list;
+
     // TODO Functions can return multiple results
     for (size_t i = 0; i < f.get_output_size(); ++i)
     {
@@ -293,14 +319,16 @@ static json write(const Function& f)
     json nodes;
     for (shared_ptr<Node> node : result_list)
     {
-        nodes.push_back(write(*node));
+        nodes.push_back(write(*node, binary_constant_data));
     }
     function["ops"] = nodes;
     return function;
 }
 
 static shared_ptr<ngraph::Function>
-    read_function(const json& func_js, unordered_map<string, shared_ptr<Function>>& function_map)
+    read_function(const json& func_js,
+                  unordered_map<string, shared_ptr<Function>>& function_map,
+                  function<const_data_callback_t> const_data_callback)
 {
     shared_ptr<ngraph::Function> rc;
 
@@ -333,12 +361,10 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Add>(args[0], args[1]);
         }
-#ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
             node = make_shared<op::AllReduce>(args[0]);
         }
-#endif
         else if (node_op == "Asin")
         {
             node = make_shared<op::Asin>(args[0]);
@@ -384,7 +410,13 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "BatchNorm")
         {
             auto epsilon = node_js.at("eps").get<double>();
-            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
+            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
+        }
+        else if (node_op == "BatchNormBackprop")
+        {
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNormBackprop>(
+                epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
         }
         else if (node_op == "Broadcast")
         {
@@ -405,14 +437,21 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
-            auto value = node_js.at("value").get<vector<string>>();
-            node = make_shared<op::Constant>(element_type, shape, value);
+            try
+            {
+                auto value = node_js.at("value").get<vector<string>>();
+                node = make_shared<op::Constant>(element_type, shape, value);
+            }
+            catch (...)
+            {
+                node = const_data_callback(node_name, element_type, shape);
+            }
         }
         else if (node_op == "Convert")
         {
-            auto& target_type = read_element_type(node_js.at("target_type"));
+            auto target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
         }
         else if (node_op == "Convolution")
@@ -541,10 +580,10 @@ static shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetOutputElement")
-        // {
-        //     node = make_shared<op::GetOutputElement>(args[0]);
-        // }
+        else if (node_op == "GetOutputElement")
+        {
+            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+        }
         else if (node_op == "Greater")
         {
             node = make_shared<op::Greater>(args[0], args[1]);
@@ -662,7 +701,7 @@ static shared_ptr<ngraph::Function>
         {
             auto type_node_js =
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
-            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
             node = make_shared<op::Parameter>(element_type, shape);
         }
@@ -718,6 +757,10 @@ static shared_ptr<ngraph::Function>
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
         }
+        else if (node_op == "Result")
+        {
+            node = make_shared<op::Result>(args[0]);
+        }
         else if (node_op == "Reverse")
         {
             auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
@@ -764,6 +807,11 @@ static shared_ptr<ngraph::Function>
             auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+        }
+        else if (node_op == "Softmax")
+        {
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            node = make_shared<op::Softmax>(args[0], reduction_axes);
         }
         else if (node_op == "Sqrt")
         {
@@ -820,7 +868,7 @@ static shared_ptr<ngraph::Function>
     return rc;
 }
 
-static json write(const Node& n)
+static json write(const Node& n, bool binary_constant_data)
 {
     json node;
     node["name"] = n.get_name();
@@ -894,6 +942,11 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
         node["eps"] = tmp->get_eps_value();
     }
+    else if (node_op == "BatchNormBackprop")
+    {
+        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        node["eps"] = tmp->get_eps_value();
+    }
     else if (node_op == "Broadcast")
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
@@ -911,7 +964,10 @@ static json write(const Node& n)
     else if (node_op == "Constant")
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        node["value"] = tmp->get_value_strings();
+        if (!binary_constant_data)
+        {
+            node["value"] = tmp->get_value_strings();
+        }
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
@@ -978,6 +1034,8 @@ static json write(const Node& n)
     }
     else if (node_op == "GetOutputElement")
     {
+        auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
+        node["n"] = tmp->get_n();
     }
     else if (node_op == "Greater")
     {
@@ -1099,6 +1157,9 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
+    }
+    else if (node_op == "Result")
+    {
     }
     else if (node_op == "Reverse")
     {

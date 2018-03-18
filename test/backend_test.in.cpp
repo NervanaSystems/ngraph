@@ -43,14 +43,91 @@ static const vector<element::Type> s_known_element_types = {element::from<float>
                                                             element::from<uint32_t>(),
                                                             element::from<uint64_t>()};
 
-TEST(${BACKEND_NAME}, aliased_output)
+TEST(${BACKEND_NAME}, function_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B}, "funky func name");
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, node_name)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
+    C->set_name("a node name");
+    auto f = make_shared<Function>(C, op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, component_cleanup)
+{
+    shared_ptr<runtime::Backend> backend;
+    shared_ptr<runtime::ExternalFunction> external;
+    shared_ptr<runtime::CallFrame> cf;
+    {
+        Shape shape{2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
+
+        auto manager = runtime::Manager::get("${BACKEND_NAME}");
+        external = manager->compile(f);
+        backend = manager->allocate_backend();
+        cf = backend->make_call_frame(external);
+    }
+    EXPECT_EQ(cf.use_count(), 1);
+    cf = nullptr;
+    EXPECT_EQ(backend.use_count(), 1);
+    backend = nullptr;
+    EXPECT_EQ(external.use_count(), 1);
+}
+
+TEST(${BACKEND_NAME}, aliased_output)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = A + B;
     auto D = A * B;
-    auto f = make_shared<Function>(NodeVector{C, C, D, D, C}, op::ParameterVector{A, B});
+    auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
+    auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, op::ParameterVector{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -65,18 +142,23 @@ TEST(${BACKEND_NAME}, aliased_output)
     shared_ptr<runtime::TensorView> out3 = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out4 = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out5 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out6 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out7 = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
     vector<float> expectedC{1, 3, 5, 7};
     vector<float> expectedD{0, 2, 6, 12};
+    vector<float> expectedE{1, 2, 3, 4};
 
-    cf->call({a, b}, {out1, out2, out3, out4, out5});
+    cf->call({a, b}, {out1, out2, out3, out4, out5, out6, out7});
     EXPECT_EQ(expectedC, read_vector<float>(out1));
     EXPECT_EQ(expectedC, read_vector<float>(out2));
     EXPECT_EQ(expectedD, read_vector<float>(out3));
     EXPECT_EQ(expectedD, read_vector<float>(out4));
     EXPECT_EQ(expectedC, read_vector<float>(out5));
+    EXPECT_EQ(expectedE, read_vector<float>(out6));
+    EXPECT_EQ(expectedE, read_vector<float>(out7));
 }
 
 TEST(${BACKEND_NAME}, parameter_as_output)
@@ -138,7 +220,7 @@ TEST(${BACKEND_NAME}, abc)
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
+    shared_ptr<runtime::ExternalFunction> external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
@@ -254,7 +336,6 @@ TEST(${BACKEND_NAME}, abs)
 
 TEST(${BACKEND_NAME}, ceiling)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::ParameterVector{A});
@@ -527,7 +608,6 @@ TEST(${BACKEND_NAME}, concat_5d)
 
 TEST(${BACKEND_NAME}, divide)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -671,7 +751,6 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
 
 TEST(${BACKEND_NAME}, equal)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -695,7 +774,6 @@ TEST(${BACKEND_NAME}, equal)
 
 TEST(${BACKEND_NAME}, floor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Floor>(A), op::ParameterVector{A});
@@ -716,7 +794,6 @@ TEST(${BACKEND_NAME}, floor)
 
 TEST(${BACKEND_NAME}, dot_0_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape{0};
@@ -746,7 +823,6 @@ TEST(${BACKEND_NAME}, dot_0_0)
 
 TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{2, 0};
@@ -783,7 +859,6 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 
 TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{0, 2};
@@ -812,7 +887,6 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{3, 2};
@@ -841,7 +915,6 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 
 TEST(${BACKEND_NAME}, dot_scalar_0x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{};
@@ -869,7 +942,6 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
 
 TEST(${BACKEND_NAME}, dot_2x0_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     Shape shape_a{2, 0};
@@ -900,7 +972,6 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
 
 TEST(${BACKEND_NAME}, dot1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -925,7 +996,6 @@ TEST(${BACKEND_NAME}, dot1d)
 
 TEST(${BACKEND_NAME}, dot2d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1052,7 +1122,6 @@ TEST(${BACKEND_NAME}, dot3d_2d)
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     Shape shape_b{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1077,7 +1146,6 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 2};
     Shape shape_b{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1102,7 +1170,6 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 
 TEST(${BACKEND_NAME}, dot_scalar_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1126,7 +1193,6 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, dot_matrix_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1178,7 +1244,6 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
 
 TEST(${BACKEND_NAME}, greater)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1202,7 +1267,6 @@ TEST(${BACKEND_NAME}, greater)
 
 TEST(${BACKEND_NAME}, greatereq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1226,7 +1290,6 @@ TEST(${BACKEND_NAME}, greatereq)
 
 TEST(${BACKEND_NAME}, less)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1250,7 +1313,6 @@ TEST(${BACKEND_NAME}, less)
 
 TEST(${BACKEND_NAME}, lesseq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1274,7 +1336,6 @@ TEST(${BACKEND_NAME}, lesseq)
 
 TEST(${BACKEND_NAME}, lesseq_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
@@ -1301,7 +1362,6 @@ TEST(${BACKEND_NAME}, lesseq_bool)
 
 TEST(${BACKEND_NAME}, log)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Log>(A), op::ParameterVector{A});
@@ -1395,7 +1455,6 @@ TEST(${BACKEND_NAME}, negative)
 
 TEST(${BACKEND_NAME}, notequal)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1446,7 +1505,6 @@ TEST(${BACKEND_NAME}, select)
 
 TEST(${BACKEND_NAME}, subtract)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1632,7 +1690,6 @@ TEST(${BACKEND_NAME}, function_call)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{4};
@@ -1655,7 +1712,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
@@ -1678,7 +1734,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 
 TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1701,7 +1756,6 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 
 TEST(${BACKEND_NAME}, broadcast_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
@@ -1723,7 +1777,6 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
 
 TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
@@ -1746,7 +1799,6 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
@@ -1818,7 +1870,6 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1841,7 +1892,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1864,7 +1914,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
 
 TEST(${BACKEND_NAME}, broadcast_matrix_2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -1887,7 +1936,6 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
@@ -1909,7 +1957,6 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
@@ -1931,7 +1978,6 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
@@ -2385,7 +2431,6 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
@@ -2408,7 +2453,6 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
@@ -2454,7 +2498,6 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2477,7 +2520,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
@@ -2500,7 +2542,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};
@@ -2618,7 +2659,6 @@ TEST(${BACKEND_NAME}, reshape_6d)
 
 TEST(${BACKEND_NAME}, sin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
@@ -2644,7 +2684,6 @@ TEST(${BACKEND_NAME}, sin)
 
 TEST(${BACKEND_NAME}, cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
@@ -2670,7 +2709,6 @@ TEST(${BACKEND_NAME}, cos)
 
 TEST(${BACKEND_NAME}, tan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
@@ -2691,12 +2729,11 @@ TEST(${BACKEND_NAME}, tan)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, asin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Asin>(A), op::ParameterVector{A});
@@ -2721,7 +2758,6 @@ TEST(${BACKEND_NAME}, asin)
 
 TEST(${BACKEND_NAME}, acos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
@@ -2746,7 +2782,6 @@ TEST(${BACKEND_NAME}, acos)
 
 TEST(${BACKEND_NAME}, atan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Atan>(A), op::ParameterVector{A});
@@ -2771,7 +2806,6 @@ TEST(${BACKEND_NAME}, atan)
 
 TEST(${BACKEND_NAME}, sinh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::ParameterVector{A});
@@ -2796,7 +2830,6 @@ TEST(${BACKEND_NAME}, sinh)
 
 TEST(${BACKEND_NAME}, cosh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::ParameterVector{A});
@@ -2821,7 +2854,6 @@ TEST(${BACKEND_NAME}, cosh)
 
 TEST(${BACKEND_NAME}, tanh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::ParameterVector{A});
@@ -2841,12 +2873,11 @@ TEST(${BACKEND_NAME}, tanh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, exp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Exp>(A), op::ParameterVector{A});
@@ -3067,7 +3098,7 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<float>{4.8}, read_vector<float>(result));
+    EXPECT_EQ(vector<float>{4.8f}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -3085,7 +3116,7 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto result = backend->make_primary_tensor_view(element::i64, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<int64_t>{{2112}}, read_vector<int64_t>(result));
+    EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -3104,7 +3135,7 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{4.8f, 4.7f, -5.3f, 0.0f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_int64)
@@ -3526,11 +3557,11 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1e-6, -1, 0, 1});
+    copy_data(a, vector<float>{1e-6f, -1, 0, 1});
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6}, 5e-2f));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6f}, 5e-2f));
     // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
 }
 
@@ -3551,18 +3582,17 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4, 1e-5, 1e-6, 1,  1,  1,  1, 1,
-                               1, -1, -1, -1, -1, -1, -1,   -1,   -1,   -1, -1, -1, -1});
+    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4f, 1e-5f, 1e-6f, 1,  1,  1,  1, 1,
+                               1, -1, -1, -1, -1, -1, -1,    -1,    -1,    -1, -1, -1, -1});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
     EXPECT_TRUE(
-        test::all_close(read_vector<float>(result), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
+        test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
 }
 
 TEST(${BACKEND_NAME}, sign)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sign>(A), op::ParameterVector{A});
@@ -3574,7 +3604,7 @@ TEST(${BACKEND_NAME}, sign)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0});
+    copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
@@ -3583,7 +3613,6 @@ TEST(${BACKEND_NAME}, sign)
 
 TEST(${BACKEND_NAME}, power)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -3602,7 +3631,7 @@ TEST(${BACKEND_NAME}, power)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 1, 729, 125}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, constant_equality_bool)
@@ -3735,7 +3764,6 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
 
 TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
@@ -3758,7 +3786,6 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 
 TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
@@ -3781,7 +3808,6 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 
 TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
@@ -3870,7 +3896,6 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 
 TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 8};
@@ -3895,7 +3920,6 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
@@ -3986,7 +4010,6 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 
 TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 3, 3};
@@ -4017,7 +4040,6 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
@@ -4846,7 +4868,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 
 TEST(${BACKEND_NAME}, not)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
@@ -5331,7 +5352,6 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
 
 TEST(${BACKEND_NAME}, abc_tbb)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
 
     // Force TBB flow graph generation in the CPU backend
@@ -6245,6 +6265,7 @@ TEST(${BACKEND_NAME}, convolution_outlining)
 TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
     ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
+
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
@@ -7095,6 +7116,74 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
                                         {2112, 2112, 2112, 2112, 2112}})
                    .get_vector()),
               read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+
+    Shape shape_a{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 4, 4};
+    Shape padding_below{0, 0, 1, 1};
+    Shape padding_above{0, 0, 1, 1};
+    Shape padding_interior{0, 0, 0, 0};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        op::ParameterVector{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    // clang-format off
+    copy_data(a, test::NDArray<float, 4>(
+        {
+            {
+                {
+                    {0.0f, 0.0f},
+                    {0.0f, 0.0f}
+                },
+                {
+                    {0.0f, 0.0f},
+                    {0.0f, 0.0f}
+                }
+            }
+        }).get_vector());
+    // clang-format on
+
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, vector<float>{42});
+
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    // clang-format off
+    EXPECT_EQ((test::NDArray<float, 4>(
+        {
+            {
+                {
+                    {42.0f, 42.0f, 42.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 42.0f, 42.0f, 42.0f}
+                },
+                {
+                    {42.0f, 42.0f, 42.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 0.0f, 0.0f, 42.0f},
+                    {42.0f, 42.0f, 42.0f, 42.0f}
+                }
+            }
+        }).get_vector()),
+        read_vector<float>(result));
+    // clang-format on
 }
 
 // This is a regression test for one of TF's unit tests, which was failing.
@@ -8263,7 +8352,6 @@ TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 
 TEST(${BACKEND_NAME}, relu_2Dfprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
@@ -8286,7 +8374,6 @@ TEST(${BACKEND_NAME}, relu_2Dfprop)
 
 TEST(${BACKEND_NAME}, relu_4Dfprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
@@ -8309,7 +8396,6 @@ TEST(${BACKEND_NAME}, relu_4Dfprop)
 
 TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
@@ -8381,4 +8467,94 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
 
     cf->call({a, delta}, {result});
     EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(${BACKEND_NAME}, softmax_all)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{-3, -2, -1, 0, 1, 2});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    auto d = expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2);
+
+    cf->call({a}, {result});
+    vector<float> expected{
+        expf(-3) / d, expf(-2) / d, expf(-1) / d, expf(0) / d, expf(1) / d, expf(2) / d};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+
+    // empty AxisSet is the same as "full" AxisSet
+    f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::ParameterVector{A});
+    external = manager->compile(f);
+    cf = backend->make_call_frame(external);
+
+    cf->call({a}, {result});
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+TEST(${BACKEND_NAME}, softmax_axis)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    auto d0 = expf(-10) + expf(-20) + expf(-30);
+    auto d1 = expf(-40) + expf(-50) + expf(-60);
+
+    cf->call({a}, {result});
+    vector<float> expected{expf(-10) / d0,
+                           expf(-20) / d0,
+                           expf(-30) / d0,
+                           expf(-40) / d1,
+                           expf(-50) / d1,
+                           expf(-60) / d1};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+TEST(${BACKEND_NAME}, softmax_underflow)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto low = std::numeric_limits<float>::lowest();
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{low, 1, 2, 3, 4, 5});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    auto d0 = expf(low) + expf(3);
+    auto d1 = expf(1) + expf(4);
+    auto d2 = expf(2) + expf(5);
+
+    cf->call({a}, {result});
+    vector<float> expected{
+        expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }

@@ -37,6 +37,10 @@
 
 namespace ngraph
 {
+    namespace pass
+    {
+        class GetOutputElementElimination;
+    }
     namespace op
     {
         class Parameter;
@@ -63,6 +67,8 @@ namespace ngraph
                                                    std::shared_ptr<Node> dst_node,
                                                    std::shared_ptr<op::Parameter> p_node);
 
+        friend class ngraph::pass::GetOutputElementElimination;
+
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node()
@@ -70,6 +76,10 @@ namespace ngraph
             for (auto arg : m_arguments)
             {
                 arg->m_users.erase(this);
+            }
+            for (auto& input : m_inputs)
+            {
+                input.get_output().remove_input(&input);
             }
         }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -80,12 +90,11 @@ namespace ngraph
     public:
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
-        std::string get_name() const;
+        const std::string& get_friendly_name() const;
+        const std::string& get_name() const;
         void set_name(const std::string& name);
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
-        std::string get_node_id() const;
-
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
@@ -95,7 +104,6 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-    public:
         // Set the value type if it has not already been set; otherwise, ensure that
         // value_type agrees with the value type that was set.
         // This is used when the framework specifies a value type for the value, and we
@@ -104,8 +112,7 @@ namespace ngraph
         void set_value_type_checked(const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
-        bool is_output() const;
-        void set_is_output();
+        virtual bool is_output() const;
         virtual bool is_constant() const;
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
@@ -122,7 +129,6 @@ namespace ngraph
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
 
-    public:
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
 
@@ -197,12 +203,12 @@ namespace ngraph
 
         std::string m_node_type;
         std::multiset<Node*> m_users;
-        std::string m_name;
         size_t m_instance_id;
+        std::string m_name;
+        const std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
-        bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
 

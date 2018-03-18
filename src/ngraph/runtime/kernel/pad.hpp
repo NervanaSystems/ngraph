@@ -20,7 +20,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -29,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void pad(T* arg0,
-                     T* arg1,
+            void pad(const T* arg0,
+                     const T* arg1,
                      T* out,
                      const Shape& arg0_shape,
                      const Shape& out_shape,

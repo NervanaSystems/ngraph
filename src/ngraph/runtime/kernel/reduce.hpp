@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 
 #include "ngraph/coordinate_transform.hpp"
 
@@ -27,8 +28,8 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void reduce(T* arg0,
-                        T* arg1, // TODO: really we should just pass a T here.
+            void reduce(const T* arg0,
+                        const T* arg1, // TODO: really we should just pass a T here.
                         T* out,
                         const Shape& in_shape,
                         const Shape& out_shape,

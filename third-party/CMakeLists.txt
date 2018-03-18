@@ -19,6 +19,7 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
 endif()
 
 include( ../cmake/external_gtest.cmake )
+include( ../cmake/external_json.cmake )
 include( ../cmake/external_eigen.cmake )
 include( ../cmake/external_mkldnn.cmake )
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)

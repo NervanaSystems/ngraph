@@ -18,7 +18,6 @@
 
 #include <memory>
 
-#include "ngraph/log.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 

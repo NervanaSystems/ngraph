@@ -388,7 +388,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
 TEST(${BACKEND_NAME}, backwards_abs)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -439,7 +438,6 @@ TEST(${BACKEND_NAME}, backwards_add)
 
 TEST(${BACKEND_NAME}, backwards_add_nested)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -577,7 +575,6 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
 TEST(${BACKEND_NAME}, backwards_ceiling)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -617,7 +614,6 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
 
 TEST(${BACKEND_NAME}, backwards_cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -639,7 +635,6 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
 TEST(${BACKEND_NAME}, backwards_cosh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -690,7 +685,6 @@ TEST(${BACKEND_NAME}, backwards_divide)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -712,7 +706,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -734,7 +727,6 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -756,7 +748,6 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 
 TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -844,7 +835,6 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 
 TEST(${BACKEND_NAME}, backwards_exp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -862,7 +852,6 @@ TEST(${BACKEND_NAME}, backwards_exp)
 
 TEST(${BACKEND_NAME}, backwards_floor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -920,7 +909,6 @@ TEST(${BACKEND_NAME}, backwards_log)
 
 TEST(${BACKEND_NAME}, backwards_maximum)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -941,7 +929,6 @@ TEST(${BACKEND_NAME}, backwards_maximum)
 
 TEST(${BACKEND_NAME}, backwards_minimum)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -997,7 +984,6 @@ TEST(${BACKEND_NAME}, backwards_negative)
 
 TEST(${BACKEND_NAME}, backwards_parameter)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1112,7 +1098,6 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
 
 TEST(${BACKEND_NAME}, backwards_reshape)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1202,7 +1187,6 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
 TEST(${BACKEND_NAME}, backwards_sign)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1236,7 +1220,6 @@ TEST(${BACKEND_NAME}, backwards_sign)
 
 TEST(${BACKEND_NAME}, backwards_sin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1258,7 +1241,6 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
 TEST(${BACKEND_NAME}, backwards_sinh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1303,27 +1285,120 @@ TEST(${BACKEND_NAME}, backwards_slice)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_sqrt)
+TEST(${BACKEND_NAME}, backwards_softmax_all)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    // Deriv has an asymptote at 0 so we'll stay away from there.
-    test::Uniform<float> rng(0.1f, 10.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sqrt>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
 
-    for (auto i = 0; i < ${TEST_LOOPS}; i++)
-    {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+TEST(${BACKEND_NAME}, backwards_softmax_axis)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
-    }
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
+
+TEST(${BACKEND_NAME}, backwards_softmax_underflow)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto low = std::numeric_limits<float>::lowest();
+
+    Shape shape{2, 3};
+    auto x0 = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(x0, vector<float>{low, 1, 2, 3, 4, 5});
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
+
+TEST(${BACKEND_NAME}, backwards_softmax_3d)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    Shape shape{2, 3, 4};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph0 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph0, {x0}, .01f, .01f));
+
+    auto make_graph1 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph1, {x0}, .01f, .01f));
+
+    auto make_graph2 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph2, {x0}, .01f, .01f));
+
+    auto make_graph01 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph01, {x0}, .01f, .01f));
+
+    auto make_graph02 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph02, {x0}, .01f, .01f));
+
+    auto make_graph12 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph12, {x0}, .01f, .01f));
+
+    auto make_graph012 = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1, 2}),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph012, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_subtract)

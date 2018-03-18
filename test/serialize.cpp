@@ -20,15 +20,30 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
 using json = nlohmann::json;
+
+template <typename T>
+T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+{
+    T rc;
+    try
+    {
+        rc = j.at(key).get<T>();
+    }
+    catch (...)
+    {
+        rc = default_value;
+    }
+    return rc;
+}
 
 TEST(serialize, main)
 {
@@ -60,8 +75,8 @@ TEST(serialize, main)
     string js = serialize(h, 4);
 
     {
-        ofstream f("serialize_function.js");
-        f << js;
+        ofstream out("serialize_function.js");
+        out << js;
     }
 
     istringstream in(js);
@@ -116,6 +131,31 @@ TEST(serialize, default_value)
     EXPECT_EQ(x2, 2);
     int x3 = get_or_default<int>(j, "test3", 3);
     EXPECT_EQ(x3, 3);
+}
+
+TEST(serialize, constant)
+{
+    const string tmp_file = "serialize_constant.cpio";
+    Shape shape{2, 2, 2};
+    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
+
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
+    serialize(tmp_file, f);
+    auto g = deserialize(tmp_file);
+    file_util::remove_file(tmp_file);
+    bool found = false;
+    for (shared_ptr<Node> node : g->get_ops())
+    {
+        shared_ptr<op::Constant> c = dynamic_pointer_cast<op::Constant>(node);
+        if (c)
+        {
+            found = true;
+            EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), c->get_vector<float>());
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
 }
 
 TEST(benchmark, serialize)

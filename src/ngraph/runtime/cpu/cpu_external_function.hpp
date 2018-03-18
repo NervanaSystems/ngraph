@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -75,6 +76,7 @@ namespace ngraph
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
@@ -86,6 +88,7 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
+                const std::string& get_function_name() const { return m_function_name; }
             protected:
                 void compile();
 
@@ -117,12 +120,20 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::map<std::string, size_t> m_name_index_map;
+
+                // Because we are directly accessing the constant data stored in the
+                // Constant ops we need to keep a list of shared_ptr to each Constant
+                // so they don't get freed before we are done with them
+                std::vector<std::shared_ptr<Node>> m_active_constants;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
+
+                std::string m_function_name;
             };
         }
     }

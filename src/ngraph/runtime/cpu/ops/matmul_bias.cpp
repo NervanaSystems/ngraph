@@ -15,21 +15,25 @@
 *******************************************************************************/
 
 #include "matmul_bias.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
 std::shared_ptr<ngraph::Node>
     ngraph::op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 2 && new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
+
     return std::make_shared<MatmulBias>(new_args.at(0),
                                         new_args.at(1),
-                                        new_args.at(1),
+                                        new_args.size() == 3 ? new_args.at(2) : nullptr,
                                         m_shape_w,
                                         m_shape_x,
                                         m_transpose_w,
-                                        m_transpose_x);
+                                        m_transpose_x,
+                                        m_broadcast_axes);
 }
 
 ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
@@ -38,14 +42,33 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
                                    Shape shape_w,
                                    Shape shape_x,
                                    bool transpose_w,
-                                   bool transpose_x)
-    : RequiresTensorViewArgs("MatMulBias", {W, x, b})
+                                   bool transpose_x,
+                                   AxisSet axes)
+    : RequiresTensorViewArgs("MatMulBias",
+                             b == nullptr ? std::vector<std::shared_ptr<Node>>{W, x}
+                                          : std::vector<std::shared_ptr<Node>>{W, x, b})
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)
     , m_transpose_x(transpose_x)
+    , m_broadcast_axes(axes)
 
 {
+    if (axes.size() == 0 && b != nullptr)
+    {
+        throw ngraph_error("Bias but no broadcast axes");
+    }
+
+    if (b == nullptr && axes.size() != 0)
+    {
+        throw ngraph_error("Broadcast axes but no bias");
+    }
+
+    if (axes.size() > 2)
+    {
+        throw ngraph_error("Broadcasting to > 2D tensor");
+    }
+
     if (shape_w.size() != 2)
     {
         NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w);
@@ -72,8 +95,12 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
     }
 
     Shape dot_shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
-    NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape)
-                 << " , b shape = " << vector_to_string(b->get_shape());
+    NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
+
+    if (b)
+    {
+        NGRAPH_DEBUG << "b shape = " << vector_to_string(b->get_shape());
+    }
 
     add_output(W->get_element_type(), dot_shape);
 }

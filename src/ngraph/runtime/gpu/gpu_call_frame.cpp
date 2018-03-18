@@ -47,7 +47,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     }
 
     // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 }
 
 runtime::gpu::GPU_CallFrame::~GPU_CallFrame()

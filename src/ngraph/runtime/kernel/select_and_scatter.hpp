@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 
 #include "ngraph/coordinate_transform.hpp"
 
@@ -27,9 +28,9 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void select_and_scatter(T* arg_selectee,
-                                    T* arg_source,
-                                    T* arg_init,
+            void select_and_scatter(const T* arg_selectee,
+                                    const T* arg_source,
+                                    const T* arg_init,
                                     T* out,
                                     const Shape& arg_selectee_shape,
                                     const Shape& arg_source_shape,
