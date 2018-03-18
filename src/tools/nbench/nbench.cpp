@@ -106,7 +106,7 @@ OPTIONS
         -b|--backend       Backend to use (default: CPU)
         -i|--iterations    Iterations (default: 10)
         -s|--statistics    Display op stastics
-        -v|--visualize     Visualize a model (WARNING: requires dot installed)
+        -v|--visualize     Visualize a model (WARNING: requires GraphViz installed)
         --timing_detail    Gather detailed timing
 )###";
         return 1;
@@ -118,13 +118,8 @@ OPTIONS
 
     if (visualize)
     {
-        const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
-        if (!format)
-        {
-            format = "png";
-        }
-        auto model_file_name =
-            ngraph::file_util::get_file_name(model) + std::string(".") + std::string(format);
+        auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
+                               pass::VisualizeTree::get_file_ext();
 
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
