@@ -28,6 +28,7 @@ namespace ngraph
 {
     class Node;
     class Function;
+    class NodeMap;
     class stopwatch;
 
     namespace runtime
@@ -229,6 +230,7 @@ namespace ngraph
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
         std::vector<std::shared_ptr<Node>> fprop_output_nodes;
+        std::shared_ptr<NodeMap> node_param_map;
     };
 
     /**
