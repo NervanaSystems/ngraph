@@ -48,9 +48,9 @@ system that already has an ``ngraph_dist`` installed.
       $ sudo apt-get install python3-pip python3-venv
 
 
-# Clone the ngraph-neon integration repo somewhere you can find it easily. The
-  install configuration we'll document here places it under a directory we'll 
-  create named ``frameworks``:  
+#. Clone the ngraph-neon integration repo somewhere you can find it easily. The
+   install configuration we'll document here places it under a directory we'll 
+   create named ``frameworks``:  
 
    .. code-block:: console
 
@@ -69,9 +69,20 @@ system that already has an ``ngraph_dist`` installed.
 #. Clone the ngraph-neon repo and install the neon dependencies via ``pip``
    if you are using a ``.venv`` and pip3 otherwise:
 
+
+   For Virtual Env:  
+
    .. code-block:: console 
 
       (.venv)$ pip install -U .  
+        Running setup.py install for neon ... done
+        Successfully installed neon-3.0
+
+
+   For System:  
+
+   .. code-block:: console 
+
       $ pip3 install -U . 
         Running setup.py install for neon ... done
         Successfully installed neon-3.0
