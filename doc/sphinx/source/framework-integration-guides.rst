@@ -16,7 +16,7 @@ neon |trade|
 Use ``neon`` as a frontend for nGraph backends
 -----------------------------------------------
 
-``neon`` is an open source Deep Learning famework that has a history 
+``neon`` is an open source Deep Learning framework that has a history 
 of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
 Detailed info about neon's features and functionality can be found in the 
 `neon docs`_. This section covers installing neon on an existing 
@@ -52,8 +52,8 @@ system that already has an ``ngraph_dist`` installed.
    install configuration we'll document here places it under a directory we'll 
    create named ``frameworks``
 
-   #. This section is optional, but it is the configuration we'll assume for the 
-      ngraph-neon documenation:
+   * This section is optional, but it is the configuration we'll assume for the 
+     ``ngraph-neon`` documenation:
 
       .. code-block:: console
 
@@ -61,14 +61,14 @@ system that already has an ``ngraph_dist`` installed.
          $ sudo chown -R username:username /opt/frameworks
          $ cd /opt/frameworks
 
-   #. This section is required:       
+   * This section is required:       
 
       .. code-block:: console
 
          $ git clone git@github.com:NervanaSystems/ngraph-neon
          $ cd ngraph-neon
 
-#. *Optional* Activate a virtualenv if you like working with virtualenvs:
+#. *Optional* Activate a virtualenv if you prefer working with virtualenvs:
    
    .. code-block:: console
 
@@ -79,18 +79,18 @@ system that already has an ``ngraph_dist`` installed.
    if you are using a ``.venv`` and pip3 otherwise:
 
 
-   For Virtual Env:  
+   * For neon via virtual env:  
 
-   .. code-block:: console 
+     .. code-block:: console 
 
-      (.venv)$ pip install -U .  
+        (.venv)$ pip install -U .  
         Running setup.py install for neon ... done
         Successfully installed neon-3.0
 
 
-   For System:  
+   * For a system install of neon-ngraph:  
 
-   .. code-block:: console 
+     .. code-block:: console 
 
       $ pip3 install -U . 
         Running setup.py install for neon ... done
