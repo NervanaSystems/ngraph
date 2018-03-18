@@ -18,6 +18,7 @@ with the following packages and prerequisites:
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
    Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
+   macOS\*, Apple Clang 9.0.0, CMake 3.9, **no official support** (but see :ref:`building-on-macOS`),
 
 Other configurations may work, but should be considered experimental with
 limited support. On Ubuntu 16.04 with ``gcc-5.4.0`` or ``clang-3.9``, for 
@@ -92,29 +93,68 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
 
+.. _building-on-macOS:
 
-macOS\* development
+Building on macOS\*
 --------------------
 
-.. note:: Although we do not offer support for the macOS platform; some 
-   configurations and features may work.
+.. note:: Although we do not offer support for the macOS platform, some
+   configurations and features may work. This section is intended to address
+   known pitfalls.
 
-The repository includes two scripts (``maint/check-code-format.sh`` and 
-``maint/apply-code-format.sh``) that are used respectively to check adherence 
-to ``libngraph`` code formatting conventions, and to automatically reformat code 
-according to those conventions. These scripts require the command 
-``clang-format-3.9`` to be in your ``PATH``. Run the following commands 
-(you will need to adjust them if you are not using bash):
+* **Build failure with CMake-3.10**: If you have CMake-3.10 installed on your
+  system, you may find that ``cmake`` fails with an error message similar to the
+  following.
 
-.. code-block:: bash
+  .. code-block:: console
 
-   $ brew install llvm@3.9
-   $ mkdir -p $HOME/bin
-   $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
-   $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
+     CMake Error: CMAKE_Fortran_COMPILER not set, after EnableLanguage
+     CMake Error at /opt/local/share/cmake-3.10/Modules/FindMPI.cmake:970 (try_compile):
+       Failed to configure test project build system.
+     Call Stack (most recent call first):
+       /opt/local/share/cmake-3.10/Modules/FindMPI.cmake:987 (_MPI_try_staged_settings)
+       /opt/local/share/cmake-3.10/Modules/FindMPI.cmake:1167 (_MPI_check_lang_works)
+       cmake/FindPASTIX.cmake:235 (find_package)
+       test/CMakeLists.txt:94 (find_package)
 
 
-Test 
+     -- Configuring incomplete, errors occurred!
+
+  This is apparently due to a bug related to Eigen and CMake-3.10. We aim to fix
+  this issue in a later release. In the meantime, the recommended workaround
+  is to download `prebuilt binaries for CMake-3.9 <https://cmake.org/download/#previous>`_
+  and use them in place of your system-installed ``cmake``. Note that it
+  is not necessary to "install" the prebuilt ``cmake`` binaries; simply
+  untarring the binaries and running them ``cmake`` directly from the unpacked
+  directory should work just fine. For example:
+
+  .. code-block:: bash
+
+    $ curl -O https://cmake.org/files/v3.9/cmake-3.9.6-Darwin-x86_64.tar.gz
+    $ tar xvzf cmake-3.9.6-Darwin-x86_64.tar.gz
+    $ export PATH=`pwd`/cmake-3.9.6-Darwin-x86_64/CMake.app/Contents/bin:$PATH
+    # then proceed with nGraph build as normal, including the "cmake" step
+
+  |
+
+* **For developers/contributors only; not required to build nGraph**: The
+  ``ngraph`` repository includes two scripts (``maint/check-code-format.sh``
+  and ``maint/apply-code-format.sh``) that are used respectively to check
+  adherence to ``libngraph`` code formatting conventions, and to automatically
+  reformat code according to those conventions. These scripts require the
+  command ``clang-format-3.9`` to be in your ``PATH``. This can be installed
+  via `Homebrew\* <https://brew.sh>`_. If you have Homebrew installed, run the
+  following commands (you will need to adjust them if you are not using
+  ``bash``):
+
+  .. code-block:: bash
+
+     $ brew install llvm@3.9
+     $ mkdir -p $HOME/bin
+     $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
+     $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
+
+Test
 ====
 
 The |InG| library code base uses GoogleTest's\* `googletest framework`_ 
