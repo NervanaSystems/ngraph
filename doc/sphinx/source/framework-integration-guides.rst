@@ -16,18 +16,18 @@ neon |trade|
 Use ``neon`` as a frontend for nGraph backends
 -----------------------------------------------
 
-``neon`` is an open source Deep Learning frontend framework that has a long 
-history of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
+``neon`` is an open source Deep Learning famework that has a history 
+of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
 Detailed info about neon's features and functionality can be found in the 
-`ngraph-neon docs`_. This section covers installing neon an existing system that 
-already has an ``ngraph_dist`` installed. 
+`neon docs`_. This section covers installing neon on an existing 
+system that already has an ``ngraph_dist`` installed. 
 
 .. important:: The numbered instructions below pick up from where 
    the :doc:`install` instructions left off, and they presume that your system 
-   already has the library installed at ``$HOME/ngraph_dist`` as the default 
-   location. If the |nGl| code has not yet been installed to your system, you 
-   can follow the instructions on the `ngraph-neon python README`_ to install 
-   everything at once.  
+   already has the ngraph library installed installed at ``$HOME/ngraph_dist`` 
+   as the default location. If the |nGl| code has not yet been installed to 
+   your system, you can follow the instructions on the `ngraph-neon python README`_ 
+   to install everything at once.  
 
 
 #. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
@@ -40,30 +40,41 @@ already has an ``ngraph_dist`` installed.
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
 
       
-#. Install the dependency for the ``neon`` framework:
+#. neon uses the :command:`pip` package manager during installation; install it 
+   with Python version 3.5 or higher:
 
    .. code-block:: console
 
-      $ sudo apt-get install python3-pip 
+      $ sudo apt-get install python3-pip python3-venv
 
+
+# Clone the ngraph-neon integration repo somewhere you can find it easily. The
+  install configuration we'll document here places it under a directory we'll 
+  create named ``frameworks``:  
+
+   .. code-block:: console
+
+      $ sudo mkdir -p /opt/frameworks && cd /opt/frameworks
+      $ git clone git@github.com:NervanaSystems/ngraph-neon
 
 #. *Optional* Activate a virtualenv if you like working with virtualenvs and 
-   go to the `python` subdirectory of the ``ngraph`` repo to install pip dependencies:
+   go to the `python` subdirectory of the ``ngraph`` repo to install pip 
+   dependencies:
    
    .. code-block:: console
 
-      $ python3 -m venv .venv
-      $ . .venv/bin/activate
-      (venv)$ cd ngraph/python
-      (venv)$ pip3 install -U .
+      $ python3 -m venv .
+      $ . bin/activate
 
-#. Details about how to run unit tests are in `ngraph-neon docs`_. To simply test a 
-   training example, you can run the CIFAR10 sample from the *examples* directory under
-   the python integration:  
+#. Clone the ngraph-neon repo and install the neon dependencies via ``pip``
+   if you are using a ``.venv`` and pip3 otherwise:
 
-   .. code-block:: console
+   .. code-block:: console 
 
-      (venv)$ python examples/cifar10/cifar10_conv.py
+      (.venv)$ pip install -U .  
+      $ pip3 install -U . 
+        Running setup.py install for neon ... done
+        Successfully installed neon-3.0
 
 
 
@@ -288,6 +299,6 @@ your cloned version of `ngraph-tensorflow`_:
 .. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
-.. _ngraph-neon docs: https://github.com/NervanaSystems/ngraph-neon/tree/master/doc
+.. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc
 .. _being the fastest: https://github.com/soumith/convnet-benchmarks/
 .. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack/
