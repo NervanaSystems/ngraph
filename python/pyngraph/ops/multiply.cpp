@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Multiply(py::module m)
                std::shared_ptr<ngraph::op::Multiply>,
                ngraph::op::util::BinaryElementwiseArithmetic>
         multiply(m, "Multiply");
-    multiply.doc() = "ngraph.op.Multiply wraps ngraph::op::Multiply";
+    multiply.doc() = "ngraph.impl.op.Multiply wraps ngraph::op::Multiply";
     multiply.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

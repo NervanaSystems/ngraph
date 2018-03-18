@@ -29,7 +29,7 @@ void regclass_pyngraph_op_ReplaceSlice(py::module m)
                std::shared_ptr<ngraph::op::ReplaceSlice>,
                ngraph::op::util::RequiresTensorViewArgs>
         replace_slice(m, "ReplaceSlice");
-    replace_slice.doc() = "ngraph.op.ReplaceSlice wraps ngraph::op::ReplaceSlice";
+    replace_slice.doc() = "ngraph.impl.op.ReplaceSlice wraps ngraph::op::ReplaceSlice";
     replace_slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                const std::shared_ptr<ngraph::Node>&,
                                const ngraph::Coordinate&,

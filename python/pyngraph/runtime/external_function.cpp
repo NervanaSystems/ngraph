@@ -28,5 +28,5 @@ void regclass_pyngraph_runtime_ExternalFunction(py::module m)
                std::shared_ptr<ngraph::runtime::ExternalFunction>>
         externalFunction(m, "ExternalFunction");
     externalFunction.doc() =
-        "ngraph.runtime.ExternalFunction wraps ngraph::runtime::ExternalFunction";
+        "ngraph.impl.runtime.ExternalFunction wraps ngraph::runtime::ExternalFunction";
 }

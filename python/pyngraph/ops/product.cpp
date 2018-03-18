@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Product(py::module m)
                std::shared_ptr<ngraph::op::Product>,
                ngraph::op::util::ArithmeticReduction>
         product(m, "Product");
-    product.doc() = "ngraph.op.Product wraps ngraph::op::Product";
+    product.doc() = "ngraph.impl.op.Product wraps ngraph::op::Product";
     product.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

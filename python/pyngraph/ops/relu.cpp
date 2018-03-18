@@ -27,7 +27,7 @@ void regclass_pyngraph_op_Relu(py::module m)
                std::shared_ptr<ngraph::op::Relu>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         relu(m, "Relu");
-    relu.doc() = "ngraph.op.Relu wraps ngraph::op::Relu";
+    relu.doc() = "ngraph.impl.op.Relu wraps ngraph::op::Relu";
     relu.def(py::init<std::shared_ptr<ngraph::Node>&>());
 }
 

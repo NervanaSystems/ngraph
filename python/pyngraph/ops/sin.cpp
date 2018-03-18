@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Sin(py::module m)
                std::shared_ptr<ngraph::op::Sin>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         sin(m, "Sin");
-    sin.doc() = "ngraph.op.Sin wraps ngraph::op::Sin";
+    sin.doc() = "ngraph.impl.op.Sin wraps ngraph::op::Sin";
     sin.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

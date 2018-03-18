@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Cosh(py::module m)
                std::shared_ptr<ngraph::op::Cosh>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         cosh(m, "Cosh");
-    cosh.doc() = "ngraph.op.Cosh wraps ngraph::op::Cosh";
+    cosh.doc() = "ngraph.impl.op.Cosh wraps ngraph::op::Cosh";
     cosh.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

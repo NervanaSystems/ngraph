@@ -25,7 +25,7 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Op(py::module m)
 {
     py::class_<ngraph::op::Op, std::shared_ptr<ngraph::op::Op>, ngraph::Node> op(m, "Op");
-    op.doc() = "ngraph.op.Op wraps ngraph::op::Op";
+    op.doc() = "ngraph.impl.op.Op wraps ngraph::op::Op";
     op.def_property(
         "op_annotations", &ngraph::op::Op::get_op_annotations, &ngraph::op::Op::set_op_annotations);
 }

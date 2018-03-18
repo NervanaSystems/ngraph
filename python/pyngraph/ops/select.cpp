@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Select(py::module m)
                std::shared_ptr<ngraph::op::Select>,
                ngraph::op::util::RequiresTensorViewArgs>
         select(m, "Select");
-    select.doc() = "ngraph.op.Select wraps ngraph::op::Select";
+    select.doc() = "ngraph.impl.op.Select wraps ngraph::op::Select";
     select.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>&>());
