@@ -21,15 +21,18 @@
 #include <map>
 #include <stack>
 #include <numeric>
+#include <fstream>
 
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "cpu_rnn_mat_fusion.hpp"
+#include "ngraph/serializer.hpp"
 
 using namespace ngraph;
 
+int runtime::cpu::pass::CPURnnMatFusion::counter = 0;
 #define TI(x) std::type_index(typeid(x))
 
 // a sequence of nodes, identified with a segment type for the input parameter type
@@ -45,24 +48,23 @@ struct NodeSegment : public NodeVector
 typedef std::pair<NodeSegment::Type, std::vector<std::type_index>> NodeTypeSequence;
 typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
 
+// Preorder traversal to collect all valid segments in the graph
 // precondition: all valid sequences must be unique
+// [a, b, c] and [a, c, b] are different, for valid sequences like [a, b, c] and [a, b], the
+// longest sequence will be matched.
 void FindValidSegments(const std::shared_ptr<Node> &node,
                        NodeSegment segment,
                        std::vector<NodeSegment> &segment_bundle,
                        NodeTypeSequenceSet valid_sequence_list,
                        int depth)
 {
-    // base case, we have one valid segment left, and depth is exeeding the valid seqence length
-    // we found a match
-    if (valid_sequence_list.size() == 1 && depth >= valid_sequence_list.front().second.size()) {
-        segment.type = valid_sequence_list.front().first;
-        segment_bundle.push_back(segment);
-        return;
-    }
+//    std::cout << "visiting: " << node->get_friendly_name() << std::endl;
     const Node& node_ref = *node;
+    // check current node against all valid sequences at current depth level. Remove sequences
+    // which does not match current node type
     for (auto seq_it = valid_sequence_list.begin(); seq_it != valid_sequence_list.end();) {
         const auto& valid_seq = seq_it->second;
-        // skip and remove sequences which are longer or doesn't match current node at depth index
+        // remove sequences which are too short or doesn't match current node type at depth index
         if (depth >= valid_seq.size() || TI(node_ref) != valid_seq[depth]) {
             seq_it = valid_sequence_list.erase(seq_it);
             continue;
@@ -72,13 +74,27 @@ void FindValidSegments(const std::shared_ptr<Node> &node,
         }
     }
     // postconditions:
-    // valid_sequnce_list.size() > 0 : there's still valid sequence to match, continue recursion
-    // valid_sequnce_list.size() = 0 : terminate
+    // valid_sequnce_list.size() > 0 : there's still valid sequences to match
+    // otherwise : terminate
     if (valid_sequence_list.size() > 0) {
         segment.push_back(node);
-        const auto outputs = node->get_users();
-        for (const auto& out_node : outputs) {
-            FindValidSegments(out_node, segment, segment_bundle, valid_sequence_list, depth + 1);
+        // base case, we have one valid segment left (since valid sequences are expected to be
+        // unique), and current depth matches (sequence-length - 1) (i.e. last node)
+        // we found a match
+        if (valid_sequence_list.size() == 1 && depth == (valid_sequence_list.front().second.size()-1)) {
+            segment.type = valid_sequence_list.front().first;
+            segment_bundle.push_back(segment);
+//            std::cout << "### added " << segment.back()->get_friendly_name() << " (" << segment.type <<
+//                                                                                                   ")"
+//                                                                      << std::endl;
+            return;
+        }
+        // still have more than one sequences to check, continue traversal
+        else {
+            const auto outputs = node->get_users();
+            for (const auto& out_node : outputs) {
+                FindValidSegments(out_node, segment, segment_bundle, valid_sequence_list, depth + 1);
+            }
         }
     }
 }
@@ -87,6 +103,18 @@ void FindValidSegments(const std::shared_ptr<Node> &node,
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     std::cout << "##### Running CPURnnMatFusion" << std::endl;
+    {
+#if 0
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-before.json";
+        std::string json_data = ngraph::serialize(function, 4, false);
+        std::cout << "serializing: " << file_string << std::endl;
+        std::ofstream write;
+        write.open(file_string.c_str(), std::ios::out);
+        write << json_data;
+        write.close();
+#endif
+    }
+
     bool modified = false;
 
     const NodeTypeSequenceSet valid_sequences {
@@ -104,19 +132,38 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     // iterate all parameters and find path to dot op
     std::vector<NodeSegment> segment_bundle;
     for (auto& node : function->get_ordered_ops()) {
+//        std::cout << "param: " << node->get_friendly_name() << std::endl;
+//        const auto outputs = node->get_users();
+//        for (const auto& out : outputs) {
+//            std::cout << "    out: " << out->get_friendly_name() << std::endl;
+//        }
         NodeSegment segment;
         FindValidSegments(node, segment, segment_bundle, valid_sequences, 0);
     }
 
+//    std::cout << "###### valid segments" << std::endl;
     // combined all segments by last operator
     std::map<std::shared_ptr<Node>, std::vector<NodeSegment>> op_seg_map;
     for (const auto& segment : segment_bundle) {
+//        std::cout << "segment: \n";
+//        for (auto& n : segment) {
+//            std::cout << "  " << n->get_friendly_name() << std::endl;
+//        }
         op_seg_map[segment.back()].push_back(segment);
     }
-
+//    std::cout << "###### op seg map" << std::endl;
+//    for (auto& op : op_seg_map) {
+//        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
+//        for (auto& vn : op.second) {
+//            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
+//            for (auto& n : vn) {
+//                std::cout << "   node: " << n->get_friendly_name() << std::endl;
+//            }
+//        }
+//    }
     // remove ops with single segment
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();) {
-        if (op_it->second.size() < 2) {
+        if (op_it->second.size() < 2 || op_it->second[0].type == op_it->second[1].type) {
             op_it = op_seg_map.erase(op_it);
         }
         else {
@@ -160,6 +207,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         auto data_node = params.first;
         auto weights_node = params.second;
 
+        const auto& data_shape = data_node->get_shape();
+        const auto& weights_shape = weights_node->get_shape();
+
         // get the first combo op
         auto first_op = op_nodes[0];
         auto first_weights_segment = op_seg_map[first_op][NodeSegment::WEIGHTS];
@@ -167,7 +217,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         // construct new op nodes
         AxisVector data_order(data_node->get_shape().size());
         std::iota(begin(data_order), end(data_order), 0);
-        const auto& data_shape = data_node->get_shape();
         auto data_reshape_node = std::make_shared<op::Reshape>(data_node, data_order, Shape{data_shape[0]*data_shape[1], data_shape[2]});
         auto weights_reshape_node = first_weights_segment[1]->copy_with_new_args({weights_node});
         auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
@@ -189,6 +238,19 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
         modified = true;
     }
+#if 0
+    if (modified) {
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-after.json";
+//        ngraph::serialize(file_string, function, 4);
+        std::string json_data = ngraph::serialize(function, 4, false);
+        std::ofstream write;
+        std::cout << "serializing: " << file_string << std::endl;
+        write.open(file_string.c_str(), std::ios::out);
+        write << json_data;
+        write.close();
+    }
+    ++counter;
+#endif
     std::cout << "##### Finished CPURnnMatFusion: " << modified << std::endl;
     return modified;
 }

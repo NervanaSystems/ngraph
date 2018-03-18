@@ -30,6 +30,7 @@ namespace ngraph
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    static int counter;
                 };
             }
         }
