@@ -56,10 +56,9 @@ system that already has an ``ngraph_dist`` installed.
 
       $ sudo mkdir -p /opt/frameworks && cd /opt/frameworks
       $ git clone git@github.com:NervanaSystems/ngraph-neon
+      $ cd ngraph-neon
 
-#. *Optional* Activate a virtualenv if you like working with virtualenvs and 
-   go to the `python` subdirectory of the ``ngraph`` repo to install pip 
-   dependencies:
+#. *Optional* Activate a virtualenv if you like working with virtualenvs:
    
    .. code-block:: console
 
