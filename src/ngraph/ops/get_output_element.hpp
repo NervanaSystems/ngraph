@@ -68,6 +68,17 @@ namespace ngraph
             }
 
         protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override
+            {
+                //Filter out updates(deltas) from mean and variance (for batchnorm)
+                //as dinput is the only update required.
+                //This logic needs to be generalized as new multi-output ops are introduced
+                if (get_n() == 0)
+                {
+                    adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta);
+                }
+            }
             size_t m_n;
         };
     }
