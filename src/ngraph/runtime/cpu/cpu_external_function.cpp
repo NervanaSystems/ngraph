@@ -763,7 +763,7 @@ using namespace ngraph::runtime;
                  node->get_element_type() == element::f64))
             {
                 //check inputs and constants?
-                if (!node->is_parameter() || !node->is_constant() ||
+                if ((!node->is_parameter() && !node->is_constant()) ||
                     std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
                 {
                     if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
