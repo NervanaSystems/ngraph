@@ -87,7 +87,7 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 
     if (std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES") != nullptr)
     {
-        ss << " " << vector_to_string(node->get_shape());
+        ss << " " << (node->get_outputs().size() != 1 ? std::string("[]") : vector_to_string(node->get_shape()));
     }
 
     ss << " \"]\n";
