@@ -14,7 +14,7 @@ nGraph currently supports :doc:`three popular <../framework-integration-guides>`
 frameworks for :abbr:`Deep Learning (DL)` models through what we call 
 a :term:`bridge` that can be integrated during the framework's build time. 
 For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`How to Guide <../howto/index>` guide so you can learn how to create 
+we've created a :doc:`How to Guide <../howto/index>` so you can learn how to create 
 custom bridge code that can be used to :doc:`compile and run <../howto/execute>` 
 a training model.
 
@@ -44,10 +44,6 @@ including:
 .. note:: The library code is under active development as we're continually 
    adding support for more kinds of DL models and ops, framework compiler 
    optimizations, and backends. 
-
-
-Further project details can be found on our :doc:`../project/about` page, or see 
-our :doc:`../install` guide for how to get started.
 
 
 Why was this needed?
@@ -121,9 +117,7 @@ design decisions and what is tentatively in the pipeline for development in
 our `arXiv paper`_ from the 2018 SysML conference.
 
 
-.. _widely-supported frameworks: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
-.. _ONNX: http://onnx.ai 
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf
+.. _ONNX: http://onnx.ai 
 .. _Intel® MKL-DNN: https://github.com/intel/mkl-dnn
 .. _Movidius: https://developer.movidius.com/
-.. _Intel Nervana NNPs: 
