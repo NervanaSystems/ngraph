@@ -283,9 +283,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-    if (std::getenv("NGRAPH_CPU_RNN_MAT_FUSION") != nullptr) {
-        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    }
+//    if (std::getenv("NGRAPH_CPU_RNN_MAT_FUSION") != nullptr) {
+//        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+//    }
     pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();

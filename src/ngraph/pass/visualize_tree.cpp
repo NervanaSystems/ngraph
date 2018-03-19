@@ -116,8 +116,7 @@ void pass::VisualizeTree::render() const
             format = "png";
         }
 
-//        ss << "dot -T" << format << " " << tmp_file << " -o " << m_name;
-        ss << "sfdp -T" << format << " " << tmp_file << " -o " << m_name;
+        ss << "dot -T" << format << " " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);

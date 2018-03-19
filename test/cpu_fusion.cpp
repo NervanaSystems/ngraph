@@ -19,6 +19,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <random>
 
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
@@ -985,4 +986,73 @@ TEST(cpu_fusion, rnn_matrix_fusion_pass)
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("matrix_after_fusion.svg");
     pass_manager.run_passes(func);
+}
+
+
+TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
+{
+    const size_t time_steps = 10;
+    Shape data_shape{300, time_steps, 500};
+    Shape weights_shape{700, data_shape[2]};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
+
+    NodeVector results;
+    for (size_t t = 0; t < time_steps; ++t) {
+        auto data_slice = make_shared<op::Slice>(data, Coordinate{0, t, 0}, Coordinate{data_shape[0], t+1, data_shape[2]});
+        auto data_reshape = make_shared<op::Reshape>(data_slice, AxisVector{0, 1, 2}, Shape{data_shape[0], data_shape[2]});
+        auto weights_reshape = make_shared<op::Reshape>(weights, AxisVector{1, 0}, Shape{weights_shape[1], weights_shape[0]});
+        auto dot = make_shared<op::Dot>(data_reshape, weights_reshape);
+        results.push_back(dot);
+    }
+    auto func = make_shared<Function>(results, op::ParameterVector{data, weights});
+//    pass::Manager pass_manager;
+//    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+//    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+//    pass_manager.register_pass<pass::VisualizeTree>("rnn_after_rnn_fusion.svg");
+//    pass_manager.run_passes(func);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> data_tensor =
+        backend->make_primary_tensor_view(element::f32, data->get_shape());
+    shared_ptr<runtime::TensorView> weights_tensor =
+        backend->make_primary_tensor_view(element::f32, weights->get_shape());
+
+    std::vector<shared_ptr<runtime::TensorView>> results_tensor;
+    for (auto r : results) {
+        results_tensor.push_back(backend->make_primary_tensor_view(element::f32, r->get_shape()));
+    }
+
+    size_t data_size = std::accumulate(begin(data_shape), end(data_shape), 1, std::multiplies<size_t>());
+    size_t weights_size = std::accumulate(begin(weights_shape), end(weights_shape), 1, std::multiplies<size_t>());
+    std::mt19937_64 gen(0);
+    std::uniform_real_distribution<> real_random(0.0, 1.0);
+    auto rand = [&](){ return real_random(gen); };
+    vector<float> data_val(data_size);
+    vector<float> weights_val(weights_size);
+    std::generate(data_val.begin(), data_val.end(), rand);
+    std::generate(weights_val.begin(), weights_val.end(), rand);
+
+    copy_data(data_tensor, data_val);
+    copy_data(weights_tensor, weights_val);
+
+    cf->call({data_tensor, weights_tensor}, results_tensor);
+    int i = 0;
+    for (auto r : results_tensor) {
+        vector<float> r_val = read_vector<float>(r);
+        std::cout << i << ": ";
+        for (auto v : r_val) {
+            std::cout << v << " ";
+        }
+        ++i;
+        std::cout << std::endl;
+    }
+
+//    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+
+
 }
