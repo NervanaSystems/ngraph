@@ -3593,7 +3593,7 @@ TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
-    EXPECT_EQ(std::vector<float>{std::pow(3, 5)}, read_vector<float>(result));
+    EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sign)
