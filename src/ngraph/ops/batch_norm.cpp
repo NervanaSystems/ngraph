@@ -100,10 +100,13 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
         }
     }
 
-    if ((variance->get_shape().size() != 1) || (mean->get_shape().size() != 1) ||
-        (gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    for (size_t index = 0; index < get_input_size(); index++)
     {
-        throw ngraph_error("gamma and beta shoud have rank 1");
+        if (index != 2 && get_input_op(index)->get_shape().size() != 1)
+        {
+            auto err_msg = std::string(input_names[index]) + " should have rank of 1";
+            throw ngraph_error(err_msg.c_str());
+        }
     }
 
     if (variance->get_shape()[0] != mean->get_shape()[0])
