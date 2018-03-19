@@ -84,7 +84,7 @@ namespace ngraph
                 void emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
                                                   const std::string& name,
                                                   const std::string& data_type,
-                                                  const int& num_axes,
+                                                  const size_t& num_axes,
                                                   const std::vector<size_t>& axes,
                                                   const std::vector<size_t>& strides)
                 {
@@ -151,6 +151,7 @@ namespace ngraph
                     writer << "                  &beta,\n";
                     writer << "                  " << output_desc << ",\n";
                     writer << "                  " << out.get_name() << ");\n";
+                    writer << "ngraph::runtime::gpu::free_gpu_buffer(workspace_ptr);\n";
                 }
             }
         }

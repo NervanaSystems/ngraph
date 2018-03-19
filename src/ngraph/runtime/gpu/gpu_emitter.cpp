@@ -737,7 +737,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                 std::vector<size_t> strides(dimensions.size(), 1);
                                 std::copy(
                                     dimensions.begin() + 1, dimensions.end(), strides.begin());
-                                for (int i = dimensions.size() - 2; i >= 0; i--)
+                                for (int64_t i = dimensions.size() - 2; i >= 0; i--)
                                 {
                                     strides[i] *= strides[i + 1];
                                 }
