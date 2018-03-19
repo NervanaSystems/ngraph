@@ -28,7 +28,7 @@ void regclass_pyngraph_op_LessEq(py::module m)
                std::shared_ptr<ngraph::op::LessEq>,
                ngraph::op::util::BinaryElementwiseComparison>
         less_eq(m, "LessEq");
-    less_eq.doc() = "ngraph.op.LessEq wraps ngraph::op::LessEq";
+    less_eq.doc() = "ngraph.impl.op.LessEq wraps ngraph::op::LessEq";
     less_eq.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

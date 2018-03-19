@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Sign(py::module m)
                std::shared_ptr<ngraph::op::Sign>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         sign(m, "Sign");
-    sign.doc() = "ngraph.op.Sign wraps ngraph::op::Sign";
+    sign.doc() = "ngraph.impl.op.Sign wraps ngraph::op::Sign";
     sign.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

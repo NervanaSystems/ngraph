@@ -17,7 +17,7 @@
 import numpy as np
 import pytest
 
-import ngraph_api as ng
+import ngraph as ng
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,

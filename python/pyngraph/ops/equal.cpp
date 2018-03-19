@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Equal(py::module m)
                std::shared_ptr<ngraph::op::Equal>,
                ngraph::op::util::BinaryElementwiseComparison>
         equal(m, "Equal");
-    equal.doc() = "ngraph.op.Equal wraps ngraph::op::Equal";
+    equal.doc() = "ngraph.impl.op.Equal wraps ngraph::op::Equal";
     equal.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

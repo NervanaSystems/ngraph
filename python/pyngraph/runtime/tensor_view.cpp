@@ -26,7 +26,7 @@ void regclass_pyngraph_runtime_TensorView(py::module m)
 {
     py::class_<ngraph::runtime::TensorView, std::shared_ptr<ngraph::runtime::TensorView>>
         tensorView(m, "TensorView");
-    tensorView.doc() = "ngraph.runtime.TensorView wraps ngraph::runtime::TensorView";
+    tensorView.doc() = "ngraph.impl.runtime.TensorView wraps ngraph::runtime::TensorView";
     tensorView.def("write",
                    (void (ngraph::runtime::TensorView::*)(const void*, size_t, size_t)) &
                        ngraph::runtime::TensorView::write);
