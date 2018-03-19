@@ -16,17 +16,18 @@ neon |trade|
 Use ``neon`` as a frontend for nGraph backends
 -----------------------------------------------
 
-``neon`` is a open source Deep Learning framework.  For info about how to 
-interact and use a model with this framework, see the `ngraph-neon docs`_. 
-This section covers installation only. 
+``neon`` is an open source Deep Learning framework that has a history 
+of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
+Detailed info about neon's features and functionality can be found in the 
+`neon docs`_. This section covers installing neon on an existing 
+system that already has an ``ngraph_dist`` installed. 
 
 .. important:: The numbered instructions below pick up from where 
    the :doc:`install` instructions left off, and they presume that your system 
-   already has the library installed at ``$HOME/ngraph_dist`` as the default 
-   location. If the |nGl| code has not yet been installed to your system, you 
-   can follow the instructions on the `ngraph-neon python README`_ to install 
-   everything at once.  If the |nGl| code base already is installed on a system, 
-   use this process.
+   already has the ngraph library installed installed at ``$HOME/ngraph_dist`` 
+   as the default location. If the |nGl| code has not yet been installed to 
+   your system, you can follow the instructions on the `ngraph-neon python README`_ 
+   to install everything at once.  
 
 
 #. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
@@ -39,31 +40,61 @@ This section covers installation only.
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
 
       
-#. Install the dependency for the ``neon`` framework:
+#. neon uses the :command:`pip` package manager during installation; install it 
+   with Python version 3.5 or higher:
 
    .. code-block:: console
 
-      $ sudo apt-get install python3-pip 
+      $ sudo apt-get install python3-pip python3-venv
 
 
-#. (Optionally) activate a virtualenv if you like working with virtualenvs and 
-   go to the `python` subdirectory of the ``ngraph`` repo:
+#. Clone the ngraph-neon integration repo somewhere you can find it easily. The
+   install configuration we'll document here places it under a directory we'll 
+   create named ``frameworks``
+
+   * This section is optional, but it is the configuration we'll assume for the 
+     ``ngraph-neon`` documenation:
+
+      .. code-block:: console
+
+         $ sudo mkdir -p /opt/frameworks   
+         $ sudo chown -R username:username /opt/frameworks
+         $ cd /opt/frameworks
+
+   * This section is required:       
+
+      .. code-block:: console
+
+         $ git clone git@github.com:NervanaSystems/ngraph-neon
+         $ cd ngraph-neon
+
+#. *Optional* Activate a virtualenv if you prefer working with virtualenvs:
    
    .. code-block:: console
 
-      $ python3 -m venv .venv
-      $ . .venv/bin/activate
-      (venv)$ cd ngraph/python
-      (venv)$ pip install -U .
+      $ python3 -m venv .
+      $ . bin/activate
 
-#. See `this file`_ if you want detail about how to run unit tests. See the 
-   documentation at `ngraph-neon docs`_. To test the neon install you can run 
-   the sample available in the ngraph-neon clone named 
-   `python examples/cifar10/cifar10_conv.py` 
+#. Clone the ngraph-neon repo and install the neon dependencies via ``pip``
+   if you are using a ``.venv`` and pip3 otherwise:
 
-   .. code-block:: console
 
-      (venv)$ python examples/cifar10/cifar10_conv.py
+   * For neon via virtual env:  
+
+     .. code-block:: console 
+
+        (.venv)$ pip install -U .  
+        Running setup.py install for neon ... done
+        Successfully installed neon-3.0
+
+
+   * For a system install of neon-ngraph:  
+
+     .. code-block:: console 
+
+      $ pip3 install -U . 
+        Running setup.py install for neon ... done
+        Successfully installed neon-3.0
 
 
 
@@ -281,7 +312,6 @@ your cloned version of `ngraph-tensorflow`_:
 
 
 
-.. _this file: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _bazel version 0.5.4: https://github.com/bazelbuild/bazel/releases/tag/0.5.4
 .. _1.3 installation guide: https://www.tensorflow.org/versions/r1.3/install/install_sources#prepare_environment_for_linux
@@ -289,4 +319,6 @@ your cloned version of `ngraph-tensorflow`_:
 .. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
-.. _ngraph-neon docs: https://github.com/NervanaSystems/ngraph-neon/tree/master/doc
+.. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc
+.. _being the fastest: https://github.com/soumith/convnet-benchmarks/
+.. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack/
