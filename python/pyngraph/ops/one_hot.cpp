@@ -29,7 +29,7 @@ void regclass_pyngraph_op_OneHot(py::module m)
                std::shared_ptr<ngraph::op::OneHot>,
                ngraph::op::util::RequiresTensorViewArgs>
         onehot(m, "OneHot");
-    onehot.doc() = "ngraph.op.OneHot wraps ngraph::op::OneHot";
+    onehot.doc() = "ngraph.impl.op.OneHot wraps ngraph::op::OneHot";
     onehot.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&, size_t>());
     onehot.def("get_one_hot_axis", &ngraph::op::OneHot::get_one_hot_axis);
 }

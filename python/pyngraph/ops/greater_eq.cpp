@@ -28,7 +28,7 @@ void regclass_pyngraph_op_GreaterEq(py::module m)
                std::shared_ptr<ngraph::op::GreaterEq>,
                ngraph::op::util::BinaryElementwiseComparison>
         greater_eq(m, "GreaterEq");
-    greater_eq.doc() = "ngraph.op.GreaterEq wraps ngraph::op::GreaterEq";
+    greater_eq.doc() = "ngraph.impl.op.GreaterEq wraps ngraph::op::GreaterEq";
     greater_eq.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

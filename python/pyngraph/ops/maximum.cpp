@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Maximum(py::module m)
                std::shared_ptr<ngraph::op::Maximum>,
                ngraph::op::util::BinaryElementwiseArithmetic>
         maximum(m, "Maximum");
-    maximum.doc() = "ngraph.op.Maximum wraps ngraph::op::Maximum";
+    maximum.doc() = "ngraph.impl.op.Maximum wraps ngraph::op::Maximum";
     maximum.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

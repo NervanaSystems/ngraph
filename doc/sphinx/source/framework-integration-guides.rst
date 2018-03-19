@@ -4,13 +4,76 @@
 Framework Integration Guides
 #############################
 
+* :ref:`neon_intg`
 * :ref:`mxnet_intg`
 * :ref:`tensorflow_intg`
 
+.. _neon_intg:
+
+neon |trade|
+============
+
+Use ``neon`` as a frontend for nGraph backends
+-----------------------------------------------
+
+``neon`` is a open source Deep Learning framework.  For info about how to 
+interact and use a model with this framework, see the `ngraph-neon docs`_. 
+This section covers installation only. 
+
+.. important:: The numbered instructions below pick up from where 
+   the :doc:`install` instructions left off, and they presume that your system 
+   already has the library installed at ``$HOME/ngraph_dist`` as the default 
+   location. If the |nGl| code has not yet been installed to your system, you 
+   can follow the instructions on the `ngraph-neon python README`_ to install 
+   everything at once.  If the |nGl| code base already is installed on a system, 
+   use this process.
+
+
+#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
+   location where you built the nGraph libraries. (This example shows the default 
+   location):
+
+   .. code-block:: bash
+
+      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
+      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
+
+      
+#. Install the dependency for the ``neon`` framework:
+
+   .. code-block:: console
+
+      $ sudo apt-get install python3-pip 
+
+
+#. (Optionally) activate a virtualenv if you like working with virtualenvs and 
+   go to the `python` subdirectory of the ``ngraph`` repo:
+   
+   .. code-block:: console
+
+      $ python3 -m venv .venv
+      $ . .venv/bin/activate
+      (venv)$ cd ngraph/python
+      (venv)$ pip install -U .
+
+#. See `this file`_ if you want detail about how to run unit tests. See the 
+   documentation at `ngraph-neon docs`_. To test the neon install you can run 
+   the sample available in the ngraph-neon clone named 
+   `python examples/cifar10/cifar10_conv.py` 
+
+   .. code-block:: console
+
+      (venv)$ python examples/cifar10/cifar10_conv.py
+
+
+
 .. _mxnet_intg:
 
-Compile MXNet\* with ``libngraph``
-==================================
+MXNet\* 
+========
+
+Compile MXNet with nGraph
+--------------------------
 
 .. important:: These instructions pick up from where the :doc:`install`
    installation instructions left off, so they presume that your system already
@@ -46,8 +109,8 @@ Compile MXNet\* with ``libngraph``
       $ cd ngraph-mxnet && git checkout ngraph-integration-dev
 
 #. Edit the ``make/config.mk`` file from the repo we just checked out to set
-   the ``USE_NGRAPH`` option (line ``80``) to true with `1` and set the :envvar:`NGRAPH_DIR`
-   (line ``81``) to point to the installation location target where the |nGl|
+   the ``USE_NGRAPH`` option (line ``100``) to true with `1` and set the :envvar:`NGRAPH_DIR`
+   (line ``101``) to point to the installation location target where the |nGl|
    was installed:
 
    .. code-block:: bash
@@ -56,7 +119,7 @@ Compile MXNet\* with ``libngraph``
       NGRAPH_DIR = $(HOME)/ngraph_dist
 
 #. Ensure that settings on the config file are disabled for ``USE_MKL2017``
-   (line ``93``) and ``USE_NNPACK`` (line ``100``).
+   (line ``113``) and ``USE_NNPACK`` (line ``120``).
 
    .. code-block:: bash
 
@@ -94,8 +157,11 @@ Compile MXNet\* with ``libngraph``
 
 .. _tensorflow_intg:
 
-Build TensorFlow\* with an XLA plugin to ``libngraph``
-======================================================
+TensorFlow\* 
+=============
+
+Build with an XLA plugin to ``libngraph``
+------------------------------------------
 
 .. important:: These instructions pick up where the :doc:`install` 
    installation instructions left off, so they presume that your system already
@@ -214,8 +280,13 @@ your cloned version of `ngraph-tensorflow`_:
    $ python mnist_softmax_ngraph.py
 
 
+
+.. _this file: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _bazel version 0.5.4: https://github.com/bazelbuild/bazel/releases/tag/0.5.4
 .. _1.3 installation guide: https://www.tensorflow.org/versions/r1.3/install/install_sources#prepare_environment_for_linux
 .. _ngraph-tensorflow: https://github.com/NervanaSystems/ngraph-tensorflow
 .. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
+.. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
+.. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
+.. _ngraph-neon docs: https://github.com/NervanaSystems/ngraph-neon/tree/master/doc

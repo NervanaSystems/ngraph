@@ -29,7 +29,7 @@ void regclass_pyngraph_op_Convolution(py::module m)
                std::shared_ptr<ngraph::op::Convolution>,
                ngraph::op::util::RequiresTensorViewArgs>
         convolution(m, "Convolution");
-    convolution.doc() = "ngraph.op.Convolution wraps ngraph::op::Convolution";
+    convolution.doc() = "ngraph.impl.op.Convolution wraps ngraph::op::Convolution";
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>&,
                              const ngraph::Strides&,

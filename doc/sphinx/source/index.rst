@@ -13,19 +13,22 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-######################
-Intel nGraph++ library
-######################
+###############
+nGraph library
+###############
 
 Welcome to Intel® nGraph™, an open source C++ library and compiler. This 
-project enables modern compute platforms to run and train :abbr:`Deep Neural Network (DNN)`
+project enables modern compute platforms to run and train :abbr:`Deep Neural Network (DNN)` 
 models. It is framework-neutral and supports a variety of backends used by 
 :abbr:`Deep Learning (DL)` frameworks. 
 
-.. figure:: graphics/ngraph-hub.png  
+.. image:: graphics/ngraph-ecosys.png
+   :width: 585px
 
 For this early release, we've provided :doc:`framework-integration-guides` to 
-compile and run MXNet\* and TensorFlow\*-based projects.
+compile and run MXNet\* and TensorFlow\*-based projects. If you already have 
+a trained model, see our section on How to :doc:`howto/import` and start working 
+with the nGraph APIs.  
 
 .. note:: The library code is under active development as we're continually 
    adding support for more ops, more frameworks, and more backends. 
@@ -43,19 +46,19 @@ Further project details can be found on our :doc:`project/about` page.
 
 =======
 
-Sections
-=========
+Contents
+========
 
 .. toctree::
    :maxdepth: 1
    :name: tocmaster
-   :caption: Table of Contents
+   :caption: Documentation
 
    install.rst
-   framework-integration-guides.rst
    graph-basics.rst
    howto/index.rst
    ops/index.rst
+   framework-integration-guides.rst
    project/index.rst
 
 
