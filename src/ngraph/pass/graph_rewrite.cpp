@@ -39,11 +39,8 @@ bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
                 NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
                              << node->get_name();
                 rewritten = true;
-                auto result = matcher->process_match();
-                if (result)
+                if (matcher->process_match())
                 {
-                    f->replace_node(node, result);
-                    //move onto the next node
                     break;
                 }
             }
