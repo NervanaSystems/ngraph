@@ -81,6 +81,36 @@ namespace ngraph
                     writer << ");\n";
                 }
 
+                void emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
+                                                  const std::string& name,
+                                                  const std::string& data_type,
+                                                  const int& num_axes,
+                                                  const std::vector<size_t>& axes,
+                                                  const std::vector<size_t>& strides)
+                {
+                    writer << "const int " << name << "_axes[] = {";
+                    for (auto const& axis : axes)
+                    {
+                        writer << axis << ",";
+                    }
+                    writer << "};\n";
+
+                    writer << "const int " << name << "_strides[] = {";
+                    for (auto const& axis_stride : strides)
+                    {
+                        writer << axis_stride << ",";
+                    }
+                    writer << "};\n";
+
+                    writer << "cudnnTensorDescriptor_t " << name << ";\n";
+                    writer << "cudnnCreateTensorDescriptor(&" << name << ");\n";
+                    writer << "cudnnSetTensorNdDescriptor(" << name << ",\n";
+                    writer << "                 /*dataType=*/" << data_type << ",\n";
+                    writer << "                 /*num_dimensions=*/" << num_axes << ",\n";
+                    writer << "                 /*dimensions*/" << name << "_axes,\n";
+                    writer << "                 /*strides*/" << name << "_strides);\n";
+                }
+
                 void emit_cudnnReduceTensor(codegen::CodeWriter& writer,
                                             const GPU_TensorViewWrapper& in,
                                             const GPU_TensorViewWrapper& out,

@@ -669,10 +669,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Sum)
             {
-                const constexpr size_t max_tensor_size = 4;
                 auto sum_node = static_cast<const ngraph::op::Sum*>(node);
                 auto reduction_axes = sum_node->get_reduction_axes();
                 auto& input_shape = args[0].get_shape();
+                const std::string input_desc = "input_descriptor";
+                const std::string output_desc = "output_descriptor";
+                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
 
                 kernel::emit_prologue(writer, node);
                 {
@@ -689,13 +692,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        // sum-reduce for 4d tensors
-                        else if (input_shape.size() <= max_tensor_size)
+                        // descriptors for tensors  with <= 4 dimensions
+                        else if (input_shape.size() <= 4)
                         {
                             // construct input tensor descriptor rt impl.
                             std::array<size_t, 4> dimensions;
                             size_t pos = 0;
-                            for (size_t i = input_shape.size(); i < max_tensor_size; i++)
+                            for (size_t i = input_shape.size(); i < 4; i++)
                             {
                                 dimensions[pos++] = 1;
                             }
@@ -704,37 +707,63 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                 dimensions[pos++] = input_shape[i];
                             }
 
-                            std::string input_desc = "input_descriptor";
-                            std::string output_desc = "output_descriptor";
-                            std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                            std::string tensor_type = "CUDNN_DATA_FLOAT";
                             kernel::emit_cudnnTensor4dDescriptor(
                                 writer, input_desc, tensor_format, tensor_type, dimensions);
-                            // mark reduced axes of input tensor
+
+                            // mark reduced axes of input tensor for output tensor descriptor
                             for (auto const& idx_dim : reduction_axes)
                             {
-                                dimensions[(max_tensor_size - input_shape.size()) + idx_dim] = 1;
+                                dimensions[(4 - input_shape.size()) + idx_dim] = 1;
                             }
                             kernel::emit_cudnnTensor4dDescriptor(
                                 writer, output_desc, tensor_format, tensor_type, dimensions);
-
-                            kernel::emit_cudnnReduceTensor(writer,
-                                                           args[0],
-                                                           out[0],
-                                                           "CUDNN_REDUCE_TENSOR_ADD",
-                                                           tensor_type,
-                                                           "CUDNN_NOT_PROPAGATE_NAN",
-                                                           input_desc,
-                                                           output_desc,
-                                                           1.0,
-                                                           0.0);
                         }
-                        // sum-reduce for Nd tensors
+                        // descriptors for Nd tensors
                         else
                         {
-                            throw std::runtime_error(
-                                "Tensors of dimension greater than 4 are not implemented.");
+                            std::vector<size_t> dimensions = input_shape;
+                            auto compute_strides = [](const std::vector<size_t>& dimensions) {
+                                std::vector<size_t> strides(dimensions.size(), 1);
+                                std::copy(
+                                    dimensions.begin() + 1, dimensions.end(), strides.begin());
+                                for (int i = dimensions.size() - 2; i >= 0; i--)
+                                {
+                                    strides[i] *= strides[i + 1];
+                                }
+                                return strides;
+                            };
+
+                            kernel::emit_cudnnTensorNdDescriptor(writer,
+                                                                 input_desc,
+                                                                 tensor_type,
+                                                                 dimensions.size(),
+                                                                 dimensions,
+                                                                 compute_strides(dimensions));
+
+                            // mark reduced axes of input tensor for output tensor descriptor
+                            for (auto const& idx_dim : reduction_axes)
+                            {
+                                dimensions[idx_dim] = 1;
+                            }
+                            kernel::emit_cudnnTensorNdDescriptor(writer,
+                                                                 output_desc,
+                                                                 tensor_type,
+                                                                 dimensions.size(),
+                                                                 dimensions,
+                                                                 compute_strides(dimensions));
                         }
+
+                        // emit sum reduce operation
+                        kernel::emit_cudnnReduceTensor(writer,
+                                                       args[0],
+                                                       out[0],
+                                                       "CUDNN_REDUCE_TENSOR_ADD",
+                                                       tensor_type,
+                                                       "CUDNN_NOT_PROPAGATE_NAN",
+                                                       input_desc,
+                                                       output_desc,
+                                                       1.0,
+                                                       0.0);
                     }
                 }
                 kernel::emit_epilogue(writer);

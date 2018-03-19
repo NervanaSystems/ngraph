@@ -3574,6 +3574,28 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
         test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
 }
 
+TEST(${BACKEND_NAME}, sum_5d_to_scalar)
+{
+    Shape shape_a{3, 3, 3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2, 3, 4}),
+                                   op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, std::vector<float>(std::pow(3, 5), 1));
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(std::vector<float>{std::pow(3, 5)}, read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, sign)
 {
     Shape shape{2, 3};
