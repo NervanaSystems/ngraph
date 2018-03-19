@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Floor(py::module m)
                std::shared_ptr<ngraph::op::Floor>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         floor(m, "Floor");
-    floor.doc() = "ngraph.op.Floor wraps ngraph::op::Floor";
+    floor.doc() = "ngraph.impl.op.Floor wraps ngraph::op::Floor";
     floor.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

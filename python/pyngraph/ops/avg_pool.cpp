@@ -29,7 +29,7 @@ void regclass_pyngraph_op_AvgPool(py::module m)
                std::shared_ptr<ngraph::op::AvgPool>,
                ngraph::op::util::RequiresTensorViewArgs>
         avg_pool(m, "AvgPool");
-    avg_pool.doc() = "ngraph.op.AvgPool wraps ngraph::op::AvgPool";
+    avg_pool.doc() = "ngraph.impl.op.AvgPool wraps ngraph::op::AvgPool";
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const ngraph::Shape&,
                           const ngraph::Strides&,
@@ -48,7 +48,7 @@ void regclass_pyngraph_op_AvgPoolBackprop(py::module m)
                std::shared_ptr<ngraph::op::AvgPoolBackprop>,
                ngraph::op::util::RequiresTensorViewArgs>
         avg_pool_backprop(m, "AvgPoolBackprop");
-    avg_pool_backprop.doc() = "ngraph.op.AvgPoolBackprop wraps ngraph::op::AvgPoolBackprop";
+    avg_pool_backprop.doc() = "ngraph.impl.op.AvgPoolBackprop wraps ngraph::op::AvgPoolBackprop";
     avg_pool_backprop.def(py::init<const ngraph::Shape&,
                                    const std::shared_ptr<ngraph::Node>&,
                                    const ngraph::Shape&,
