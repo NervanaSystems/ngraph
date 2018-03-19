@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Greater(py::module m)
                std::shared_ptr<ngraph::op::Greater>,
                ngraph::op::util::BinaryElementwiseComparison>
         greater(m, "Greater");
-    greater.doc() = "ngraph.op.Greater wraps ngraph::op::Greater";
+    greater.doc() = "ngraph.impl.op.Greater wraps ngraph::op::Greater";
     greater.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

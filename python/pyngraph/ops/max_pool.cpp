@@ -46,7 +46,7 @@ void regclass_pyngraph_op_MaxPoolBackprop(py::module m)
                std::shared_ptr<ngraph::op::MaxPoolBackprop>,
                ngraph::op::util::RequiresTensorViewArgs>
         max_pool_backprop(m, "MaxPoolBackprop");
-    max_pool_backprop.doc() = "ngraph.op.MaxPoolBackprop wraps ngraph::op::MaxPoolBackprop";
+    max_pool_backprop.doc() = "ngraph.impl.op.MaxPoolBackprop wraps ngraph::op::MaxPoolBackprop";
     max_pool_backprop.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                    const std::shared_ptr<ngraph::Node>&,
                                    const ngraph::Shape&,

@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Max(py::module m)
                std::shared_ptr<ngraph::op::Max>,
                ngraph::op::util::ArithmeticReduction>
         max(m, "Max");
-    max.doc() = "ngraph.op.Max wraps ngraph::op::Max";
+    max.doc() = "ngraph.impl.op.Max wraps ngraph::op::Max";
     max.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

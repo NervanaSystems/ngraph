@@ -21,7 +21,7 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
 # Parallel build from:

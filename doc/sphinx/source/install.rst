@@ -16,7 +16,7 @@ with the following packages and prerequisites:
    :escape: ~
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
-   Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git zlib1g libtinfo-dev``
+   Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but should be considered experimental with
@@ -32,9 +32,6 @@ flags when building. (**Do NOT** supply the ``-DNGRAPH_USE_PREBUILT_LLVM``
 flag in this case, because the prebuilt tarball supplied on llvm.org is not 
 compatible with a gcc 4.8-based build.)
 
-Support for macOS is limited; see the `macOS development`_ section at the end 
-of this page for details.
-
 
 Installation Steps
 ==================
@@ -42,6 +39,8 @@ Installation Steps
 The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME`` 
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
+
+The process documented here will work on Ubuntu\* 16.04 (LTS)
 
 #. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
    give ownership of that directory to your user. Creating such a placeholder 
@@ -84,7 +83,8 @@ details about how to change or customize the install location.
 
    .. code-block:: console
       
-      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory errors if too many compilation processes are used
+      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory 
+               # errors if too many compilation processes are used
 
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
@@ -92,12 +92,12 @@ details about how to change or customize the install location.
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
 
-.. macos_development: 
 
-macOS development
------------------
+macOS\* development
+--------------------
 
-.. note:: The macOS*\ platform is not officially unsupported.
+.. note:: Although we do not offer support for the macOS platform; some 
+   configurations and features may work.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 
@@ -138,24 +138,24 @@ To perform unit tests on the install:
 Compile a framework with ``libngraph``
 ======================================
 
-After building and installing nGraph++ on your system, there are two likely 
+After building and installing nGraph on your system, there are two likely 
 paths for what you'll want to do next: either compile a framework to run a DL 
-training model, or load an import "already-trained" model for inference on an 
-Intel nGraph++ enabled backend
+training model, or load an import of an "already-trained" model for inference 
+on an Intel nGraph-enabled backend.
 
-For this former case, this early |release| release, :doc:`framework-integration-guides`, 
+For the former case, this early |version|, :doc:`framework-integration-guides`, 
 can help you get started with a training a model on a supported framework. 
 
+* :doc:`neon<framework-integration-guides>` framework,  
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
-* neon™ `frontend framework`_.
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go directly
 to our :doc:`../howto/import` documentation. 
 
 Please keep in mind that both of these are under continuous development, and will 
-be updated frequently in the coming months.  Stay tuned!  
+be updated frequently in the coming months. Stay tuned!  
 
 
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
@@ -163,7 +163,6 @@ be updated frequently in the coming months.  Stay tuned!
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
-.. _website docs: http://ngraph.nervanasys.com/index.html/index.html
 .. _googletest framework: https://github.com/google/googletest.git
 .. _ONNX: http://onnx.ai
-.. _frontend framework: http://neon.nervanasys.com/index.html/
+.. _website docs: http://ngraph.nervanasys.com/docs/latest/

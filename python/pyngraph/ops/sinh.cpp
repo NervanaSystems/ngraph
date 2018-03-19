@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Sinh(py::module m)
                std::shared_ptr<ngraph::op::Sinh>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         sinh(m, "Sinh");
-    sinh.doc() = "ngraph.op.Sinh wraps ngraph::op::Sinh";
+    sinh.doc() = "ngraph.impl.op.Sinh wraps ngraph::op::Sinh";
     sinh.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
