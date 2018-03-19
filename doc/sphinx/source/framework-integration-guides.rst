@@ -16,17 +16,18 @@ neon |trade|
 Use ``neon`` as a frontend for nGraph backends
 -----------------------------------------------
 
-``neon`` is a open source Deep Learning framework.  For info about how to 
-interact and use a model with this framework, see the `ngraph-neon docs`_. 
-This section covers installation only. 
+``neon`` is an open source Deep Learning frontend framework that has a long 
+history of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
+Detailed info about neon's features and functionality can be found in the 
+`ngraph-neon docs`_. This section covers installing neon an existing system that 
+already has an ``ngraph_dist`` installed. 
 
 .. important:: The numbered instructions below pick up from where 
    the :doc:`install` instructions left off, and they presume that your system 
    already has the library installed at ``$HOME/ngraph_dist`` as the default 
    location. If the |nGl| code has not yet been installed to your system, you 
    can follow the instructions on the `ngraph-neon python README`_ to install 
-   everything at once.  If the |nGl| code base already is installed on a system, 
-   use this process.
+   everything at once.  
 
 
 #. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
@@ -46,20 +47,19 @@ This section covers installation only.
       $ sudo apt-get install python3-pip 
 
 
-#. (Optionally) activate a virtualenv if you like working with virtualenvs and 
-   go to the `python` subdirectory of the ``ngraph`` repo:
+#. *Optional* Activate a virtualenv if you like working with virtualenvs and 
+   go to the `python` subdirectory of the ``ngraph`` repo to install pip dependencies:
    
    .. code-block:: console
 
       $ python3 -m venv .venv
       $ . .venv/bin/activate
       (venv)$ cd ngraph/python
-      (venv)$ pip install -U .
+      (venv)$ pip3 install -U .
 
-#. See `this file`_ if you want detail about how to run unit tests. See the 
-   documentation at `ngraph-neon docs`_. To test the neon install you can run 
-   the sample available in the ngraph-neon clone named 
-   `python examples/cifar10/cifar10_conv.py` 
+#. Details about how to run unit tests are in `ngraph-neon docs`_. To simply test a 
+   training example, you can run the CIFAR10 sample from the *examples* directory under
+   the python integration:  
 
    .. code-block:: console
 
@@ -281,7 +281,6 @@ your cloned version of `ngraph-tensorflow`_:
 
 
 
-.. _this file: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _bazel version 0.5.4: https://github.com/bazelbuild/bazel/releases/tag/0.5.4
 .. _1.3 installation guide: https://www.tensorflow.org/versions/r1.3/install/install_sources#prepare_environment_for_linux
@@ -290,3 +289,5 @@ your cloned version of `ngraph-tensorflow`_:
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
 .. _ngraph-neon docs: https://github.com/NervanaSystems/ngraph-neon/tree/master/doc
+.. _being the fastest: https://github.com/soumith/convnet-benchmarks/
+.. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack/
