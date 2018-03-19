@@ -40,10 +40,12 @@
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
+#include "ngraph/runtime/cpu/ops/conv_relu.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 
@@ -672,5 +674,34 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    
+    auto pconv = std::make_shared<op::Convolution>(data_batch,
+                                                    filters,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{0, 0},
+                                                    CoordinateDiff{0, 0},
+                                                    Strides{1, 1});
+    
+    auto prelu = std::make_shared<op::Relu>(pconv);
+
+    pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
+                     << m.match_root()->get_name();
+        
+        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
+        auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionRelu(conv));
+        return conv_relu;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback);
     this->add_matcher(m);
 }

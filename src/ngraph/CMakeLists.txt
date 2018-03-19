@@ -191,6 +191,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/kernels/eigen_thread_pool.cpp
         runtime/cpu/kernels/pad.cpp
         runtime/cpu/ops/conv_bias.cpp
+        runtime/cpu/ops/conv_relu.cpp
         runtime/cpu/ops/convert_layout.cpp
         runtime/cpu/ops/sigmoid.cpp
         runtime/cpu/ops/matmul_bias.cpp
