@@ -16,7 +16,7 @@
 
 # To build ngraph with Argon transformer using pre-build Argon API
 # ```
-# cmake -DNGRAPH_NNP_ENABLE=True -DNGRAPH_PREBUILD_NNP_API_PATH=$HOME/dev/system/_out/debug-x86_64-Linux ..
+# cmake -DNGRAPH_NNP_ENABLE=True -DNGRAPH_PREBUILD_ARGON_API_PATH=$HOME/dev/system/_out/debug-x86_64-Linux ..
 # make -j
 # ```
 
@@ -25,8 +25,8 @@ include(ExternalProject)
 
 if (NGRAPH_NNP_ENABLE)
     # We require pre-build Argon API library
-    if (NOT DEFINED NGRAPH_PREBUILD_NNP_API_PATH)
-        message(FATAL_ERROR "NGRAPH_PREBUILD_NNP_API_PATH not defined, set it with -DNGRAPH_PREBUILD_NNP_API_PATH=")
+    if (NOT DEFINED NGRAPH_PREBUILD_ARGON_API_PATH)
+        message(FATAL_ERROR "NGRAPH_PREBUILD_ARGON_API_PATH not defined, set it with -DNGRAPH_PREBUILD_ARGON_API_PATH=")
     endif()
 
     # Repository
@@ -52,7 +52,7 @@ if (NGRAPH_NNP_ENABLE)
     # Print
     message(STATUS "NGRAPH_INCLUDE_PATH: ${NGRAPH_INCLUDE_PATH}")
     message(STATUS "LLVM_INCLUDE_DIR: ${LLVM_INCLUDE_DIR}")
-    message(STATUS "NGRAPH_PREBUILD_NNP_API_PATH: ${NGRAPH_PREBUILD_NNP_API_PATH}")
+    message(STATUS "NGRAPH_PREBUILD_ARGON_API_PATH: ${NGRAPH_PREBUILD_ARGON_API_PATH}")
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2
     if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -67,7 +67,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                         -DNGRAPH_INSTALL_PREFIX=${NNP_TRANSFORMER_PREFIX}
-                        -DPREBUILD_NNP_API_PATH=${NGRAPH_PREBUILD_NNP_API_PATH}
+                        -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
@@ -85,7 +85,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                         -DNGRAPH_INSTALL_PREFIX=${NNP_TRANSFORMER_PREFIX}
-                        -DPREBUILD_NNP_API_PATH=${NGRAPH_PREBUILD_NNP_API_PATH}
+                        -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
@@ -104,7 +104,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                         -DNGRAPH_INSTALL_PREFIX=${NNP_TRANSFORMER_PREFIX}
-                        -DPREBUILD_NNP_API_PATH=${NGRAPH_PREBUILD_NNP_API_PATH}
+                        -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
@@ -123,7 +123,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                         -DNGRAPH_INSTALL_PREFIX=${NNP_TRANSFORMER_PREFIX}
-                        -DPREBUILD_NNP_API_PATH=${NGRAPH_PREBUILD_NNP_API_PATH}
+                        -DPREBUILD_ARGON_API_PATH=${NGRAPH_PREBUILD_ARGON_API_PATH}
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
@@ -137,12 +137,12 @@ if (NGRAPH_NNP_ENABLE)
     set(NNP_TRANSFORMER_SOURCE_DIR ${source_dir} PARENT_SCOPE)
     set(NNP_TRANSFORMER_INCLUDE_DIR ${NNP_TRANSFORMER_PREFIX}/include PARENT_SCOPE)
     set(NNP_TRANSFORMER_LIB_DIR ${NNP_TRANSFORMER_PREFIX}/lib PARENT_SCOPE)
-    set(NNP_API_INCLUDE_DIR ${NGRAPH_PREBUILD_NNP_API_PATH}/include PARENT_SCOPE)
-    set(NNP_API_LIB_DIR ${NGRAPH_PREBUILD_NNP_API_PATH}/lib) # Used by find_library below
-    set(NNP_API_LIB_DIR ${NGRAPH_PREBUILD_NNP_API_PATH}/lib PARENT_SCOPE)
+    set(ARGON_API_INCLUDE_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/include PARENT_SCOPE)
+    set(ARGON_API_LIB_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/lib) # Used by find_library below
+    set(ARGON_API_LIB_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/lib PARENT_SCOPE)
 
     # Find prebuild nnp library
-    find_library(NNP_API_LIBS
+    find_library(ARGON_API_LIBS
         NAMES
         argon_api
         optimizer
@@ -151,7 +151,7 @@ if (NGRAPH_NNP_ENABLE)
         flex
         disasm
         HINTS
-        ${NNP_API_LIB_DIR}
+        ${ARGON_API_LIB_DIR}
         $ENV{LD_LIBRARY_PATH}
     )
 
