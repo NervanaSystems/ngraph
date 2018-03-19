@@ -679,7 +679,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 kernel::emit_prologue(writer, node);
                 {
-                    // one of out[] axes has zero size
                     if (out[0].get_size() != 0)
                     {
                         // one of args[] axes has zero size, zero output
@@ -717,6 +716,18 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             }
                             kernel::emit_cudnnTensor4dDescriptor(
                                 writer, output_desc, tensor_format, tensor_type, dimensions);
+
+                            // emit sum reduce operation
+                            kernel::emit_cudnnReduceTensor(writer,
+                                                           args[0],
+                                                           out[0],
+                                                           "CUDNN_REDUCE_TENSOR_ADD",
+                                                           tensor_type,
+                                                           "CUDNN_NOT_PROPAGATE_NAN",
+                                                           input_desc,
+                                                           output_desc,
+                                                           1.0,
+                                                           0.0);
                         }
                         // descriptors for Nd tensors
                         else
@@ -751,19 +762,18 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                  dimensions.size(),
                                                                  dimensions,
                                                                  compute_strides(dimensions));
+                            // emit sum reduce operation
+                            kernel::emit_cudnnReduceTensor(writer,
+                                                           args[0],
+                                                           out[0],
+                                                           "CUDNN_REDUCE_TENSOR_ADD",
+                                                           tensor_type,
+                                                           "CUDNN_NOT_PROPAGATE_NAN",
+                                                           input_desc,
+                                                           output_desc,
+                                                           1.0,
+                                                           0.0);
                         }
-
-                        // emit sum reduce operation
-                        kernel::emit_cudnnReduceTensor(writer,
-                                                       args[0],
-                                                       out[0],
-                                                       "CUDNN_REDUCE_TENSOR_ADD",
-                                                       tensor_type,
-                                                       "CUDNN_NOT_PROPAGATE_NAN",
-                                                       input_desc,
-                                                       output_desc,
-                                                       1.0,
-                                                       0.0);
                     }
                 }
                 kernel::emit_epilogue(writer);
