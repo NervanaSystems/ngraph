@@ -41,7 +41,8 @@ void regclass_pyngraph_op_BatchNormBackprop(py::module m)
                std::shared_ptr<ngraph::op::BatchNormBackprop>,
                ngraph::op::util::RequiresTensorViewArgs>
         batch_norm_backprop(m, "BatchNormBackprop");
-    batch_norm_backprop.doc() = "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
+    batch_norm_backprop.doc() =
+        "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
     batch_norm_backprop.def(py::init<double,
                                      const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,

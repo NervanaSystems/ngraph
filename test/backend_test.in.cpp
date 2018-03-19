@@ -97,11 +97,7 @@ TEST(${BACKEND_NAME}, node_name)
 
 TEST(${BACKEND_NAME}, component_cleanup)
 {
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
->>>>>>> master
     shared_ptr<runtime::Backend> backend;
     shared_ptr<runtime::ExternalFunction> external;
     shared_ptr<runtime::CallFrame> cf;
@@ -2308,11 +2304,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
 TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}"); // Correct values but need to handle precisions
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}"); // Correct values but need to handle precisions
->>>>>>> master
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
@@ -3875,11 +3867,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
->>>>>>> master
 
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3995,11 +3983,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
->>>>>>> master
 
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -4726,11 +4710,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
->>>>>>> master
 
     Shape shape_a{1, 1, 5, 5};
     Shape window_shape{2, 3};
@@ -4897,11 +4877,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 
 TEST(${BACKEND_NAME}, not)
 {
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
->>>>>>> master
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
@@ -7570,11 +7546,7 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
 TEST(${BACKEND_NAME}, product_3d_to_vector)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}"); // Correct values but OOB
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}"); // Correct values but OOB
->>>>>>> master
 
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7603,11 +7575,7 @@ TEST(${BACKEND_NAME}, product_3d_to_vector)
 TEST(${BACKEND_NAME}, product_3d_to_scalar)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-<<<<<<< HEAD
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}"); // Correct values but OOB
-=======
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}"); // Correct values but OOB
->>>>>>> master
 
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
