@@ -17,7 +17,7 @@
 import numpy as np
 import pytest
 
-import ngraph_api as ng
+import ngraph as ng
 
 
 def test_default_arguments_convolution_2d():

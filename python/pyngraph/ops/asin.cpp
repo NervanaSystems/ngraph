@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Asin(py::module m)
                std::shared_ptr<ngraph::op::Asin>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         asin(m, "Asin");
-    asin.doc() = "ngraph.op.Asin wraps ngraph::op::Asin";
+    asin.doc() = "ngraph.impl.op.Asin wraps ngraph::op::Asin";
     asin.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

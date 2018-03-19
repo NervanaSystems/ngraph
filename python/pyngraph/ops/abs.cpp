@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Abs(py::module m)
                std::shared_ptr<ngraph::op::Abs>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         abs(m, "Abs");
-    abs.doc() = "ngraph.op.Abs wraps ngraph::op::Abs";
+    abs.doc() = "ngraph.impl.op.Abs wraps ngraph::op::Abs";
     abs.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

@@ -16,7 +16,7 @@
 """Usage example for the ngraph Pythonic API."""
 
 import numpy as np
-import ngraph_api as ng
+import ngraph as ng
 
 shape = [2, 2]
 A = ng.parameter(shape, name='A')

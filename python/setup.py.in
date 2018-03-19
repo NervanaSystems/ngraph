@@ -27,7 +27,7 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
 # Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
@@ -226,6 +226,10 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
+            if has_flag(self.compiler, '-fstack-protector-strong'):
+                ext.extra_compile_args += ['-fstack-protector-strong']
+            else:
+                ext.extra_compile_args += ['-fstack-protector']
             if has_flag(self.compiler, '-frtti'):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':
@@ -234,15 +238,18 @@ class BuildExt(build_ext):
             else:
                 if has_flag(self.compiler, '-fvisibility=hidden'):
                     ext.extra_compile_args += ['-fvisibility=hidden']
-                ext.extra_link_args += ["-Wl,-rpath,$ORIGIN/../.."]
+                ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
+            if sys.platform != 'darwin':
+                ext.extra_link_args += ['-z', 'noexecstack']
+                ext.extra_link_args += ['-z', 'relro']
+                ext.extra_link_args += ['-z', 'now']
+            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
 
-requirements = [
-    "setuptools",
-    "six",
-    "numpy",
-]
+with open('${CMAKE_SOURCE_DIR}/requirements.txt') as req:
+    requirements = req.read().splitlines()
 
 
 setup(
@@ -256,13 +263,14 @@ setup(
     long_description='',
     ext_modules=ext_modules,
     package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
-                 'ngraph.op': PYNGRAPH_SOURCE_DIR + "/ngraph/op",
-                 'ngraph.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/op/util",
-                 'ngraph.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/passes",
-                 'ngraph.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/runtime",
-                 'ngraph_api': PYNGRAPH_SOURCE_DIR + "/ngraph_api",
-                 'ngraph_api.utils': PYNGRAPH_SOURCE_DIR + "/ngraph_api/utils"},
-    packages = ['ngraph', 'ngraph.op', 'ngraph.op.util', 'ngraph.passes', 'ngraph.runtime', 'ngraph_api', 'ngraph_api.utils'],
+                 'ngraph.utils': PYNGRAPH_SOURCE_DIR + "/ngraph/utils",
+                 'ngraph.impl': PYNGRAPH_SOURCE_DIR + "/ngraph/impl",
+                 'ngraph.impl.op': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op",
+                 'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
+                 'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
+                 'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime"},
+    packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.op',
+                'ngraph.impl.op.util', 'ngraph.impl.passes', 'ngraph.impl.runtime'],
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     install_requires = requirements,

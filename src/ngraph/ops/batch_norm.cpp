@@ -148,8 +148,23 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto gamma = get_input_op(0);
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
-    auto mean = std::make_shared<op::GetOutputElement>(shared_from_this(), 1);
-    auto var = std::make_shared<op::GetOutputElement>(shared_from_this(), 2);
+
+    //Extract mean and variance outputs from BatchNorm
+    //as these are used by BatchNormBackprop.
+    //The users of the outputs (GetOutputElements' Inputs) aren't sorted
+    //and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
+    //Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
+    //Please see `add_output` in `BatchNorm::BatchNorm` for more details
+    std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
+
+    for (auto _input : get_output_inputs(0))
+    {
+        auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
+        goes.at(goe->get_n()) = _input->get_node();
+    }
+
+    auto mean = goes.at(1);
+    auto var = goes.at(2);
     auto bbn = std::make_shared<op::BatchNormBackprop>(
         get_eps_value(), gamma, beta, input, mean, var, delta);
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);

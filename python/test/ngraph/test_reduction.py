@@ -16,7 +16,7 @@
 import numpy as np
 import pytest
 
-import ngraph_api as ng
+import ngraph as ng
 
 
 @pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
