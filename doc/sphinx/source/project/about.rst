@@ -8,36 +8,46 @@ training :abbr:`Deep Neural Network (DNN)` models. This project is
 framework-neutral and can target a variety of modern devices or platforms. 
 
 .. figure:: ../graphics/ngraph-ecosystem.png
-   :width: 585px	 
+   :width: 585px   
   
-nGraph currently supports :doc:`three of the most popular <../framework-integration-guides>` 
-frameworks for :abbr:`Deep Learning (DL)` models. through what we call 
+nGraph currently supports :doc:`three popular <../framework-integration-guides>` 
+frameworks for :abbr:`Deep Learning (DL)` models through what we call 
 a :term:`bridge` that can be integrated during the framework's build time. 
 For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`../howto/index` guide so you can learn how to create 
-custom bridge code that can be used to :doc:`../howto/execute` a training 
-model.
+we've created a :doc:`How to Guide <../howto/index>` guide so you can learn how to create 
+custom bridge code that can be used to :doc:`compile and run <../howto/execute>` 
+a training model.
 
-With nGraph, data scientists can focus on data science rather than worrying 
-about how to adapt models to train and run efficiently on different devices.
 We've recently added initial support for the `ONNX`_ format. Developers who 
 already have a "trained" model can use nGraph to bypass a lot of the 
 framework-based complexity and :doc:`../howto/import` to test or run it 
 on targeted and efficient backends with our user-friendly ``ngraph_api``. 
+With nGraph, data scientists can focus on data science rather than worrying 
+about how to adapt models to train and run efficiently on different devices.
+
 
 Supported platforms
 --------------------
 
-Initially-supported backends include 
+Initially-supported backends include:
 
-* Intel Architecture (CPUs), 
-* Intel® Nervana Neural Network Processor™ (NNPs), and 
+* Intel® Architecture Processors (CPUs), 
+* Intel® Nervana™ Neural Network Processor™ (NNPs), and 
 * NVIDIA\* CUDA (GPUs). 
 
-Tentatively in the pipeline, we'll be adding backend support for
+Tentatively in the pipeline, we plan to add support for more backends,
+including:
 
 * :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
 * `Movidius`_ compute stick 
+
+.. note:: The library code is under active development as we're continually 
+   adding support for more kinds of DL models and ops, framework compiler 
+   optimizations, and backends. 
+
+
+Further project details can be found on our :doc:`../project/about` page, or see 
+our :doc:`../install` guide for how to get started.
 
 
 Why was this needed?
@@ -57,7 +67,7 @@ to similar ops in the new framework, and finally make the necessary changes
 for the preferred backend configuration on the new framework.
 
 We designed the Intel nGraph project to substantially reduce these kinds of 
-engineering complexities. Our conpiler-inspired approach means that developers 
+engineering complexities. Our compiler-inspired approach means that developers 
 have fewer constraints imposed by frameworks when working with their models; 
 they can pick and choose only the components they need to build custom algorithms 
 for advanced deep learning tasks. Furthermore, if working with a model that is 
