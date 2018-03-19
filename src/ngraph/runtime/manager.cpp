@@ -32,7 +32,7 @@ using namespace std;
 // called to register the backend.
 #ifdef NGRAPH_NNP_ENABLE
 bool REGISTER_NNP_RUNTIME();
-static bool argon_runtime_initialized = REGISTER_NNP_RUNTIME();
+static bool nnp_runtime_initialized = REGISTER_NNP_RUNTIME();
 #endif
 
 runtime::Manager::FactoryMap& runtime::Manager::get_factory_map()
