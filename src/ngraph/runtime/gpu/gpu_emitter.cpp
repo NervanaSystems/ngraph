@@ -735,8 +735,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             std::vector<size_t> dimensions = input_shape;
                             auto compute_strides = [](const std::vector<size_t>& dim) {
                                 std::vector<size_t> strides(dim.size(), 1);
-                                std::copy(
-                                    dim.begin() + 1, dim.end(), strides.begin());
+                                std::copy(dim.begin() + 1, dim.end(), strides.begin());
                                 for (int64_t i = dim.size() - 2; i >= 0; i--)
                                 {
                                     strides[i] *= strides[i + 1];
