@@ -110,14 +110,11 @@ namespace ngraph
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
 
-    // Split function to function(s) with unique placement
-    std::vector<std::shared_ptr<Function>> split_function_by_placement(
-        std::shared_ptr<Function> f,
-        std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<Node>>&
-            map_parameter_to_source_node);
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+        insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
+                                      const std::shared_ptr<Node>& dst_node);
 
-    // Insert parameter node between src_node and dst_node by splitting the graph
-    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
-                                        std::shared_ptr<Node> dst_node,
-                                        std::shared_ptr<op::Parameter> p_node);
+    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
+                                 const std::shared_ptr<Node>& dst_node,
+                                 const std::shared_ptr<Node>& new_node);
 }
