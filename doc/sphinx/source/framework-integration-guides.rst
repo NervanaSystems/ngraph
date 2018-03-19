@@ -40,37 +40,39 @@ system that already has an ``ngraph_dist`` installed.
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
 
       
-#. neon uses the :command:`pip` package manager during installation; install it 
-   with Python version 3.5 or higher:
+#. The neon framework uses the :command:`pip` package manager during installation; 
+   install it with Python version 3.5 or higher:
 
    .. code-block:: console
 
       $ sudo apt-get install python3-pip python3-venv
-      $ python3 -m venv .venv
-      (.venv)$ . bin/activate
+      $ python3 -m venv frameworks
+      $ cd frameworks 
+      $ . bin/activate
+      (frameworks) ~/frameworks$ 
 
-#. Go to the "python" subdirectory of the ``ngraph`` repo and complete the 
-   steps needed to get the wrapper installed: 
-
-   .. code-block:: console
-
-      (.venv)$ cd ngraph/python
-      (.venv)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-      (.venv)$ pip install -U . 
-
-#. Finally are we ready to install the `neon` integration: 
+#. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
+   previous :doc:`install`, and complete these actions: 
 
    .. code-block:: console
 
-      (.venv)$ git clone git@github.com:NervanaSystems/ngraph-neon
-      (.venv)$ cd ngraph-neon
-      (.venv)$ make install
+      (frameworks)$ cd /opt/libraries/ngraph/python
+      (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      (frameworks)$ pip install -U . 
+
+#. Finally we're ready to install the `neon` integration: 
+
+   .. code-block:: console
+
+      (frameworks)$ git clone git@github.com:NervanaSystems/ngraph-neon
+      (frameworks)$ cd ngraph-neon
+      (frameworks)$ make install
 
 #. To test a training example, you can run the following from ``ngraph-neon/examples/cifar10``
    
    .. code-block:: console
 
-      (.venv)$ python cifar10_conv.py
+      (frameworks)$ python cifar10_conv.py
 
 
 
