@@ -43,7 +43,7 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(Argon_fusion, fuse_max_with_constant_zero_input_as_relu)
+TEST(nnp_fusion, fuse_max_with_constant_zero_input_as_relu)
 {
     Shape shape_a{1, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});

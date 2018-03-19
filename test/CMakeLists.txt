@@ -102,7 +102,7 @@ if(NGRAPH_NNP_ENABLE)
     set(BACKEND_NAMES ${BACKEND_NAMES} "NNP")
     set(SRC ${SRC} nnp_fusion.cpp)
 
-    # enable additional Argon backend test
+    # enable additional nnp backend test
     set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)
     message(STATUS "NNP_ADDITIONAL_BACKEND_TESTS path: ${NNP_ADDITIONAL_BACKEND_TESTS}")
     set(ADDITIONAL_NNP_TEST
