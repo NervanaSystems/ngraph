@@ -152,7 +152,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
                                                     m_matmul->get_is_arg1_transposed(),
                                                     m_broadcast->get_broadcast_axes());
 
-        return mmb;
+        ngraph::replace_node(m.match_root(), mmb);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
@@ -182,7 +183,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
         NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        std::shared_ptr<Node> nn;
 
         auto mpattern = m.match_root();
         auto dot = m.match_root();
@@ -190,33 +190,33 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
         if (mpattern->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
-            return nn;
+            return false;
         }
 
         if (dot->get_shape().size() != 2)
         {
             NGRAPH_DEBUG << "dot = " << dot->get_name() << " shape is not equal to 2!";
-            return nn;
+            return false;
         }
 
         if (shape_size(dot->get_shape()) == 0)
         {
             NGRAPH_DEBUG << "dot has a zero dimension";
-            return nn;
+            return false;
         }
 
         bool transpose_w = false;
         Shape shape_arg0{pattern_map[W]->get_shape()};
         if (!init_cblas_arg(dot->get_input_op(0), pattern_map[W], transpose_w, shape_arg0))
         {
-            return nn;
+            return false;
         }
 
         bool transpose_x = false;
         Shape shape_arg1{pattern_map[x]->get_shape()};
         if (!init_cblas_arg(dot->get_input_op(1), pattern_map[x], transpose_x, shape_arg1))
         {
-            return nn;
+            return false;
         }
 
         auto cg = std::shared_ptr<Node>(new op::MatmulBias(pattern_map[W],
@@ -226,7 +226,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
                                                            shape_arg1,
                                                            transpose_w,
                                                            transpose_x));
-        return cg;
+
+        ngraph::replace_node(mpattern, cg);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, callback);
@@ -286,7 +288,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.match_root()->get_name();
 
-            std::shared_ptr<Node> nn = nullptr;
             //TODO - add assert's based on the matched node
             auto pattern_map = m.get_pattern_map();
             NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
@@ -306,7 +307,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             if (pattern_map[input]->get_shape().size() != 4)
             {
                 NGRAPH_DEBUG << "Input to bn doesnt not have a rank=4, so not fusing";
-                return nn;
+                return false;
             }
             Shape bn_output_shape{m.match_root()->get_shape()};
             Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
@@ -320,7 +321,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 
             auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
 
-            return normalized_output;
+            ngraph::replace_node(m.match_root(), normalized_output);
+            return true;
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
@@ -408,57 +410,58 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
 
     ngraph::pattern::gr_callback_fn callback =
         [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
-            pattern::Matcher& m) -> std::shared_ptr<Node> {
-        auto pattern_map = m.get_pattern_map();
+            pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+            auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
 
-        const auto& matched_conv =
-            std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
-        const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
-        const auto& matched_reshape =
-            std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
+            const auto& matched_conv =
+                std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
+            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+            const auto& matched_reshape =
+                std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
-        const auto& input_order = matched_reshape->get_input_order();
-        auto hoisted_reshape_output_shape =
-            apply_permutation<Shape::value_type>(pattern_map[pad_input]->get_shape(), input_order);
+            const auto& input_order = matched_reshape->get_input_order();
+            auto hoisted_reshape_output_shape = apply_permutation<Shape::value_type>(
+                pattern_map[pad_input]->get_shape(), input_order);
 
-        auto hoisted_reshape = std::make_shared<op::Reshape>(
-            pattern_map[pad_input],
-            input_order,
-            Shape(hoisted_reshape_output_shape.begin(), hoisted_reshape_output_shape.end()));
+            auto hoisted_reshape = std::make_shared<op::Reshape>(
+                pattern_map[pad_input],
+                input_order,
+                Shape(hoisted_reshape_output_shape.begin(), hoisted_reshape_output_shape.end()));
 
-        if (!zero_padded_conv_consistency_check(m.match_root(),
-                                                pad_value_op,
-                                                pattern_map[pad_input],
-                                                matched_pad,
-                                                matched_conv,
-                                                input_order[0],
-                                                input_order[1]))
-        {
-            return nullptr;
-        }
+            if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                    pad_value_op,
+                                                    pattern_map[pad_input],
+                                                    matched_pad,
+                                                    matched_conv,
+                                                    input_order[0],
+                                                    input_order[1]))
+            {
+                return false;
+            }
 
-        CoordinateDiff padding_below{static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_below().at(input_order[2])),
-                                     static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_below().at(input_order[3]))};
-        CoordinateDiff padding_above{static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_above().at(input_order[2])),
-                                     static_cast<CoordinateDiff::value_type>(
-                                         matched_pad->get_padding_above().at(input_order[3]))};
+            CoordinateDiff padding_below{static_cast<CoordinateDiff::value_type>(
+                                             matched_pad->get_padding_below().at(input_order[2])),
+                                         static_cast<CoordinateDiff::value_type>(
+                                             matched_pad->get_padding_below().at(input_order[3]))};
+            CoordinateDiff padding_above{static_cast<CoordinateDiff::value_type>(
+                                             matched_pad->get_padding_above().at(input_order[2])),
+                                         static_cast<CoordinateDiff::value_type>(
+                                             matched_pad->get_padding_above().at(input_order[3]))};
 
-        auto zero_padded_conv =
-            std::make_shared<op::Convolution>(hoisted_reshape,
-                                              pattern_map[conv_filter],
-                                              matched_conv->get_window_movement_strides(),
-                                              matched_conv->get_window_dilation_strides(),
-                                              padding_below,
-                                              padding_above,
-                                              matched_conv->get_data_dilation_strides());
+            auto zero_padded_conv =
+                std::make_shared<op::Convolution>(hoisted_reshape,
+                                                  pattern_map[conv_filter],
+                                                  matched_conv->get_window_movement_strides(),
+                                                  matched_conv->get_window_dilation_strides(),
+                                                  padding_below,
+                                                  padding_above,
+                                                  matched_conv->get_data_dilation_strides());
 
-        return zero_padded_conv;
-    };
+            ngraph::replace_node(m.match_root(), zero_padded_conv);
+            return true;
+        };
 
     this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
 }
@@ -483,45 +486,45 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     ngraph::pattern::gr_callback_fn callback =
-        [pad_input, pad_value, pad_label, conv_filter, conv_label](
-            pattern::Matcher& m) -> std::shared_ptr<Node> {
-        auto pattern_map = m.get_pattern_map();
+        [pad_input, pad_value, pad_label, conv_filter, conv_label](pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
 
-        auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+            auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
 
-        const auto& matched_conv =
-            std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
-        const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+            const auto& matched_conv =
+                std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
+            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
 
-        if (!zero_padded_conv_consistency_check(m.match_root(),
-                                                pad_value_op,
-                                                pattern_map[pad_input],
-                                                matched_pad,
-                                                matched_conv,
-                                                0,
-                                                1))
-        {
-            return nullptr;
-        }
+            if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                    pad_value_op,
+                                                    pattern_map[pad_input],
+                                                    matched_pad,
+                                                    matched_conv,
+                                                    0,
+                                                    1))
+            {
+                return false;
+            }
 
-        CoordinateDiff padding_below{
-            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(2)),
-            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(3))};
-        CoordinateDiff padding_above{
-            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(2)),
-            static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
+            CoordinateDiff padding_below{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(3))};
+            CoordinateDiff padding_above{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
 
-        auto zero_padded_conv =
-            std::make_shared<op::Convolution>(pattern_map[pad_input],
-                                              pattern_map[conv_filter],
-                                              matched_conv->get_window_movement_strides(),
-                                              matched_conv->get_window_dilation_strides(),
-                                              padding_below,
-                                              padding_above,
-                                              matched_conv->get_data_dilation_strides());
+            auto zero_padded_conv =
+                std::make_shared<op::Convolution>(pattern_map[pad_input],
+                                                  pattern_map[conv_filter],
+                                                  matched_conv->get_window_movement_strides(),
+                                                  matched_conv->get_window_dilation_strides(),
+                                                  padding_below,
+                                                  padding_above,
+                                                  matched_conv->get_data_dilation_strides());
 
-        return zero_padded_conv;
-    };
+            ngraph::replace_node(m.match_root(), zero_padded_conv);
+            return true;
+        };
 
     this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
 }
@@ -541,8 +544,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback =
-        [input](pattern::Matcher& m) -> std::shared_ptr<Node> {
+    ngraph::pattern::gr_callback_fn callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -550,18 +552,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
         if (m.match_root()->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
-            return nullptr;
+            return false;
         }
 
         if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
-            return nullptr;
+            return false;
         }
 
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        return sigmoid_node;
+        ngraph::replace_node(m.match_root(), sigmoid_node);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
@@ -593,26 +596,26 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
     auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback =
-        [input, delta](pattern::Matcher& m) -> std::shared_ptr<Node> {
+    ngraph::pattern::gr_callback_fn callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         if (m.match_root()->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
-            return nullptr;
+            return false;
         }
 
         if (m.match_root()->get_shape().size() != pattern_map[input]->get_shape().size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
-            return nullptr;
+            return false;
         }
         auto dsigmoid =
             std::make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
-        return dsigmoid;
+        ngraph::replace_node(m.match_root(), dsigmoid);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback);
@@ -641,7 +644,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        std::shared_ptr<Node> nn;
 
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
         if (conv->get_input_shape(0).size() == 4)
@@ -658,17 +660,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                 auto bias_reshape =
                     std::make_shared<op::Reshape>(bias, order, Shape{conv->get_input_shape(1)[0]});
                 auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
-                return conv_bias;
+                ngraph::replace_node(m.match_root(), conv_bias);
+                return true;
             }
             else
             {
                 auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
-                return conv_bias;
+                ngraph::replace_node(m.match_root(), conv_bias);
+                return true;
             }
         }
         NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
                      << "conv_bias fusion skipped due to input rank size != 4.";
-        return std::shared_ptr<Node>(nullptr);
+        return false;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
