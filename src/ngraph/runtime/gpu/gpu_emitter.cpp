@@ -268,47 +268,51 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 //dot can be treat as matrix multiply
                 else
                 {
+                    //any dot can be treat as out[m,n]=arg0[m,k]*arg1[k,n]
                     size_t reduction_axes = dot->get_reduction_axes_count();
+                    size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
+                    size_t num_of_axes_for_n = arg1_shape.size() - reduction_axes;
+                    size_t num_of_axes_for_k = reduction_axes;
                     size_t m = 1, n = 1, k = 1;
-                    //check if input and output size correct
-                    for (size_t i = 0, idxa = arg0_shape.size() - 1; i < reduction_axes;
-                         i++, idxa--)
+                    
+                    //check if input and output size correct, 
+                    //check and calculate k for arg0 and arg1
+                    size_t arg0_k_idx = num_of_axes_for_m; //first axe in arg0 for k
+                    size_t arg1_k_idx = 0;                 //first axe in arg1 for k
+                    for (size_t i = 0; i < num_of_axes_for_k; i++)
                     {
-                        if (arg0_shape[idxa] != arg1_shape[i])
+                        k *= arg0_shape[arg0_k_idx];
+                        if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
                         {
                             throw std::runtime_error(
-                                "input and output shape does not match for dot;");
-                        }
-                        else
-                        {
-                            k *= arg1_shape[i];
+                                "arg0 and arg1 shape does not match for dot;");
                         }
                     }
-                    for (size_t i = 0; i < arg0_shape.size() - reduction_axes; i++)
+                    //check and calculate m for arg0 and out
+                    size_t arg0_m_idx = 0;                  //first axe in arg0 for m
+                    size_t out_m_idx = 0;                   //first axe in out for m
+                    for (size_t i = 0; i < num_of_axes_for_m; i++)
                     {
-                        if (arg0_shape[i] != out_shape[i])
+                        m *= arg0_shape[arg0_m_idx];
+                        if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
                         {
                             throw std::runtime_error(
-                                "input and output shape does not match for dot;");
+                                "arg0 and output shape does not match for dot;");
                         }
-                        else
-                        {
-                            m *= arg0_shape[i];
-                        }
+
                     }
-                    for (size_t i = 0, idxa = arg1_shape.size() - 1, idxb = out_shape.size() - 1;
-                         i < arg1_shape.size() - reduction_axes;
-                         i++, idxa--, idxb--)
+                    //check and calculate n for arg1 and out
+                    size_t arg1_n_idx = num_of_axes_for_k;   //first axe in arg1 for n
+                    size_t out_n_idx = num_of_axes_for_m;    //first axe in arg1 for n
+                    for (size_t i = 0; i < num_of_axes_for_n; i++)
                     {
-                        if (arg1_shape[idxa] != out_shape[idxb])
+                        n *= arg1_shape[arg1_n_idx];
+                        if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
                         {
                             throw std::runtime_error(
-                                "input and output shape does not match for dot;");
+                                "arg1 and output shape does not match for dot;");
                         }
-                        else
-                        {
-                            n *= arg1_shape[idxa];
-                        }
+
                     }
 
                     // GEMM Call
