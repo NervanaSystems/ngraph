@@ -54,6 +54,7 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
+#include <sys/time.h>
 
 using namespace ngraph;
 using namespace std;
@@ -975,6 +976,15 @@ TEST(cpu_fusion, rnn_matrix_fusion)
     pass_manager.run_passes(func);
 }
 
+static double dtime()
+{
+    double tseconds = 0.0;
+    struct timeval mytime;
+    gettimeofday(&mytime,(struct timezone*)0);
+    tseconds = (double)(mytime.tv_sec +
+        mytime.tv_usec*1.0e-6);
+    return( tseconds );
+}
 TEST(cpu_fusion, rnn_matrix_fusion_pass)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/seq2seq_fwd.json");
@@ -991,9 +1001,9 @@ TEST(cpu_fusion, rnn_matrix_fusion_pass)
 
 TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
 {
-    const size_t time_steps = 10;
-    Shape data_shape{300, time_steps, 500};
-    Shape weights_shape{700, data_shape[2]};
+    const size_t time_steps = 16;
+    Shape data_shape{128, time_steps, 512};
+    Shape weights_shape{256, data_shape[2]};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
 
@@ -1039,18 +1049,25 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
 
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
-
-    cf->call({data_tensor, weights_tensor}, results_tensor);
-    int i = 0;
-    for (auto r : results_tensor) {
-        vector<float> r_val = read_vector<float>(r);
-        std::cout << i << ": ";
-        for (auto v : r_val) {
-            std::cout << v << " ";
-        }
-        ++i;
-        std::cout << std::endl;
+    double tstart = dtime();
+    volatile int max = 100;
+    for (int i = 0; i < max; ++i) {
+        std::cout << i << " ";
+        cf->call({data_tensor, weights_tensor}, results_tensor);
     }
+    std::cout << std::endl;
+    double ttime = dtime() - tstart;
+    std::cout << "time: " << ttime << std::endl;
+//    int i = 0176627f;
+//    for (auto r : results_tensor) {
+//        vector<float> r_val = read_vector<float>(r);
+//        std::cout << i << ": ";
+//        for (auto v : r_val) {
+//            std::cout << v << " ";
+//        }
+//        ++i;
+//        std::cout << std::endl;
+//    }
 
 //    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 

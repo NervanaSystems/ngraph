@@ -22,6 +22,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <sys/time.h>
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -119,6 +120,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
+#include "ngraph/serializer.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/ops/allreduce.hpp"
@@ -270,7 +272,16 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
-
+static double dtime()
+{
+    double tseconds = 0.0;
+    struct timeval mytime;
+    gettimeofday(&mytime,(struct timezone*)0);
+    tseconds = (double)(mytime.tv_sec +
+        mytime.tv_usec*1.0e-6);
+    return( tseconds );
+}
+static int counter = 0;
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
@@ -283,9 +294,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-//    if (std::getenv("NGRAPH_CPU_RNN_MAT_FUSION") != nullptr) {
-//        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-//    }
     pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -295,8 +303,33 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
+#if 1
+    {
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-before.json";
+        std::string json_data = ngraph::serialize(m_function, 4, false);
+        std::cout << "serializing: " << file_string << std::endl;
+        std::ofstream write;
+        write.open(file_string.c_str(), std::ios::out);
+        write << json_data;
+        write.close();
+    }
+#endif
+    double tstart = dtime();
     pass_manager.run_passes(m_function);
-
+    double ttime = dtime() - tstart;
+    std::cout << "pass time: " << ttime << std::endl;
+#if 1
+    {
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-after.json";
+        std::string json_data = ngraph::serialize(m_function, 4, false);
+        std::cout << "serializing: " << file_string << std::endl;
+        std::ofstream write;
+        write.open(file_string.c_str(), std::ios::out);
+        write << json_data;
+        write.close();
+    }
+    ++counter;
+#endif
     codegen::CodeWriter writer;
 
     writer +=

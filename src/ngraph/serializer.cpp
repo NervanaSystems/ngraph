@@ -85,6 +85,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -837,6 +838,19 @@ static shared_ptr<ngraph::Function>
         // else if (node_op == "XLAGetTupleElement")
         // {
         // }
+        else if (node_op == "MatMulBias") {
+            if (args.size() == 2) {
+                node = make_shared<op::MatmulBias>(
+                    args[0], args[1],
+                    nullptr, args[0]->get_shape(), args[1]->get_shape(), true, true,
+                    AxisSet{});
+            }
+            else {
+                node = make_shared<op::MatmulBias>(
+                    args[0], args[1], args[2], args[0]->get_shape(), args[1]->get_shape(), true, true,
+                    AxisSet{0});
+            }
+        }
         else
         {
             stringstream ss;

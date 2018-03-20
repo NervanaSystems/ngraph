@@ -22,6 +22,7 @@
 #include <stack>
 #include <numeric>
 #include <fstream>
+#include <sys/time.h>
 
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -31,7 +32,15 @@
 #include "ngraph/serializer.hpp"
 
 using namespace ngraph;
-
+static double dtime()
+{
+    double tseconds = 0.0;
+    struct timeval mytime;
+    gettimeofday(&mytime,(struct timezone*)0);
+    tseconds = (double)(mytime.tv_sec +
+            mytime.tv_usec*1.0e-6);
+    return( tseconds );
+}
 int runtime::cpu::pass::CPURnnMatFusion::counter = 0;
 #define TI(x) std::type_index(typeid(x))
 
@@ -102,6 +111,7 @@ void FindValidSegments(const std::shared_ptr<Node> &node,
 
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
+    double tstart = dtime();
     std::cout << "##### Running CPURnnMatFusion" << std::endl;
     {
 #if 0
@@ -252,5 +262,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     ++counter;
 #endif
     std::cout << "##### Finished CPURnnMatFusion: " << modified << std::endl;
+    double ttime = dtime() - tstart;
+    std::cout << "rnn fusion time: " << ttime << std::endl;
     return modified;
 }
