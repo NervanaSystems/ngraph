@@ -139,7 +139,6 @@ namespace ngraph
                     return;
                 }
                 writer.block_begin("  // " + node->get_name());
-                writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
