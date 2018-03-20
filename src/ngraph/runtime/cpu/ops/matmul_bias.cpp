@@ -72,16 +72,20 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
     if (shape_w.size() != 2)
     {
         NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w);
-        throw ngraph_error("W.shape.rank != 2 while creating MatmulBias");
+//        throw ngraph_error("W.shape.rank != 2 while creating MatmulBias");
     }
 
     if (shape_x.size() != 2)
     {
         NGRAPH_DEBUG << "x shape = " << vector_to_string(shape_x);
-        throw ngraph_error("x.shape.rank != 2 while creating MatmulBias");
+//        throw ngraph_error("x.shape.rank != 2 while creating MatmulBias");
     }
 
-    size_t dot_dimension_w = (transpose_w) ? 0 : 1;
+    size_t max_dim = 1;
+    if (m_shape_w.size() == 3) {
+        max_dim = 2;
+    }
+    size_t dot_dimension_w = (transpose_w) ? 0 : max_dim;
     size_t dot_dimension_x = (transpose_x) ? 1 : 0;
 
     NGRAPH_DEBUG << "dot_dimension_w = " << dot_dimension_w
@@ -91,7 +95,7 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
 
     if (shape_w.at(dot_dimension_w) != shape_x.at(dot_dimension_x))
     {
-        throw ngraph_error("product dimensions are not equal while creating MatmulBias");
+//        throw ngraph_error("product dimensions are not equal while creating MatmulBias");
     }
 
     Shape dot_shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};

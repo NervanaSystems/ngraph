@@ -839,6 +839,8 @@ static shared_ptr<ngraph::Function>
         // {
         // }
         else if (node_op == "MatMulBias") {
+            std::cout << "matmulbias 0: " << args[0]->get_shape().size() << std::endl;
+            std::cout << "matmulbias 1: " << args[1]->get_shape().size() << std::endl;
             if (args.size() == 2) {
                 node = make_shared<op::MatmulBias>(
                     args[0], args[1],

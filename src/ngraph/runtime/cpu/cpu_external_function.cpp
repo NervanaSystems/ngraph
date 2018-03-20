@@ -103,6 +103,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/result_copy_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/core_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -305,13 +306,19 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 #if 1
     {
-        const std::string file_string = "rnn-" + std::to_string(counter) + "-before.json";
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-before-other.json";
         std::string json_data = ngraph::serialize(m_function, 4, false);
         std::cout << "serializing: " << file_string << std::endl;
         std::ofstream write;
         write.open(file_string.c_str(), std::ios::out);
         write << json_data;
         write.close();
+        {
+            std::cout << "visualizing " << file_string << std::endl;
+            ngraph::pass::Manager pass_manager;
+            pass_manager.register_pass<ngraph::pass::VisualizeTree>(file_string+".pdf");
+            pass_manager.run_passes(m_function);
+        }
     }
 #endif
     double tstart = dtime();
@@ -320,13 +327,19 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     std::cout << "pass time: " << ttime << std::endl;
 #if 1
     {
-        const std::string file_string = "rnn-" + std::to_string(counter) + "-after.json";
+        const std::string file_string = "rnn-" + std::to_string(counter) + "-after-all.json";
         std::string json_data = ngraph::serialize(m_function, 4, false);
         std::cout << "serializing: " << file_string << std::endl;
         std::ofstream write;
         write.open(file_string.c_str(), std::ios::out);
         write << json_data;
         write.close();
+        {
+            std::cout << "visualizing " << file_string << std::endl;
+            ngraph::pass::Manager pass_manager;
+            pass_manager.register_pass<ngraph::pass::VisualizeTree>(file_string+".pdf");
+            pass_manager.run_passes(m_function);
+        }
     }
     ++counter;
 #endif
