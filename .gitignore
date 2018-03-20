@@ -98,3 +98,5 @@ python-wheels/
 *.whl
 .venv
 
+# python wheels
+python/share/*
