@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             // NOTE: Execution throws `std::domain_error` if either a non-integral value or an out-of-bounds
             // value is detected in the input tensor.

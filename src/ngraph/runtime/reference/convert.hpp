@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename TI, typename TO>
             void convert(const TI* arg, TO* out, size_t count)

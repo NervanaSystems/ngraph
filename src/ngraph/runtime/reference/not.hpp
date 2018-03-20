@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             static inline void
                 logical_not(const char* arg,

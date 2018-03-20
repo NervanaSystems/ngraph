@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)

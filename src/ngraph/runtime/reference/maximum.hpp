@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void maximum(const T* arg0, const T* arg1, T* out, size_t count)

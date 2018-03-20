@@ -578,7 +578,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::dot(" << args[0].get_name() << ",\n";
+                    writer << "reference::dot(" << args[0].get_name() << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
                     writer << "            " << out[0].get_name() << ",\n";
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
@@ -711,8 +711,8 @@ namespace ngraph
                             arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
                         }
 
-                        writer << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names)
-                               << "},\n";
+                        writer << "reference::concat<" << out[0].get_type() << ">({"
+                               << join(arg_names) << "},\n";
                         writer << "                         " << out[0].get_name() << ",\n";
                         writer << "                         {" << join(arg_shape_strings) << "},\n";
                         writer << "                         {" << join(result_shape) << "},\n";
@@ -733,12 +733,12 @@ namespace ngraph
                         }
 
                         kernel::emit_concat(writer,
-                                            args[0].get_element_type().c_type_string(),
-                                            arg_names,
-                                            out[0].get_name(),
-                                            arg_shapes,
-                                            result_shape,
-                                            axis);
+                                               args[0].get_element_type().c_type_string(),
+                                               arg_names,
+                                               out[0].get_name(),
+                                               arg_shapes,
+                                               result_shape,
+                                               axis);
                     }
                 }
 #else
@@ -755,12 +755,12 @@ namespace ngraph
                 }
 
                 kernel::emit_concat(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    arg_names,
-                                    out[0].get_name(),
-                                    arg_shapes,
-                                    result_shape,
-                                    axis);
+                                       args[0].get_element_type().c_type_string(),
+                                       arg_names,
+                                       out[0].get_name(),
+                                       arg_shapes,
+                                       result_shape,
+                                       axis);
 #endif
             }
 
@@ -1121,7 +1121,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::broadcast<" << out[0].get_type() << ">("
+                    writer << "reference::broadcast<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(arg_shape) << "},\n";
@@ -1131,12 +1131,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_broadcast(writer,
-                                       args[0].get_element_type().c_type_string(),
-                                       args[0].get_name(),
-                                       out[0].get_name(),
-                                       args[0].get_shape(),
-                                       out[0].get_shape(),
-                                       broadcast->get_broadcast_axes());
+                                          args[0].get_element_type().c_type_string(),
+                                          args[0].get_name(),
+                                          out[0].get_name(),
+                                          args[0].get_shape(),
+                                          out[0].get_shape(),
+                                          broadcast->get_broadcast_axes());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1248,8 +1248,8 @@ namespace ngraph
                 // Other cases
                 else
                 {
-                    writer << "kernel::reshape<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::reshape<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                " << out[0].get_name() << ",\n";
                     writer << "               {" << join(args[0].get_shape()) << "},\n";
                     writer << "               {" << join(reshape->get_input_order()) << "},\n";
@@ -1258,12 +1258,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_reshape(writer,
-                                     args[0].get_element_type().c_type_string(),
-                                     args[0].get_name(),
-                                     out[0].get_name(),
-                                     args[0].get_shape(),
-                                     out[0].get_shape(),
-                                     reshape->get_input_order());
+                                        args[0].get_element_type().c_type_string(),
+                                        args[0].get_name(),
+                                        out[0].get_name(),
+                                        args[0].get_shape(),
+                                        out[0].get_shape(),
+                                        reshape->get_input_order());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1484,8 +1484,8 @@ namespace ngraph
                     writer.indent--;
                     writer << "};\n";
 
-                    writer << "kernel::reduce<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::reduce<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "               " << args[1].get_name() << ",\n";
                     writer << "               " << out[0].get_name() << ",\n";
                     writer << "               {" << join(args[0].get_shape()) << "},\n";
@@ -1514,13 +1514,13 @@ namespace ngraph
                 writer << "};\n";
 
                 kernel::emit_reduce(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    args[0].get_name(),
-                                    args[1].get_name(),
-                                    out[0].get_name(),
-                                    args[0].get_shape(),
-                                    out[0].get_shape(),
-                                    reduce->get_reduction_axes());
+                                       args[0].get_element_type().c_type_string(),
+                                       args[0].get_name(),
+                                       args[1].get_name(),
+                                       out[0].get_name(),
+                                       args[0].get_shape(),
+                                       out[0].get_shape(),
+                                       reduce->get_reduction_axes());
 
                 writer.indent--;
                 writer << "}\n";
@@ -1607,7 +1607,7 @@ namespace ngraph
                 // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
                 else
                 {
-                    writer << "kernel::slice<" << out[0].get_type() << ">(" << args[0].get_name()
+                    writer << "reference::slice<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -1620,14 +1620,14 @@ namespace ngraph
                 }
 #else
                 kernel::emit_slice(writer,
-                                   args[0].get_element_type().c_type_string(),
-                                   args[0].get_name(),
-                                   out[0].get_name(),
-                                   args[0].get_shape(),
-                                   out[0].get_shape(),
-                                   slice->get_lower_bounds(),
-                                   slice->get_upper_bounds(),
-                                   slice->get_strides());
+                                      args[0].get_element_type().c_type_string(),
+                                      args[0].get_name(),
+                                      out[0].get_name(),
+                                      args[0].get_shape(),
+                                      out[0].get_shape(),
+                                      slice->get_lower_bounds(),
+                                      slice->get_upper_bounds(),
+                                      slice->get_strides());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1685,7 +1685,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::sum<" << out[0].get_type() << ">(" << args[0].get_name()
+                    writer << "reference::sum<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -1695,12 +1695,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_sum(writer,
-                                 args[0].get_element_type().c_type_string(),
-                                 args[0].get_name(),
-                                 out[0].get_name(),
-                                 args[0].get_shape(),
-                                 out[0].get_shape(),
-                                 sum->get_reduction_axes());
+                                    args[0].get_element_type().c_type_string(),
+                                    args[0].get_name(),
+                                    out[0].get_name(),
+                                    args[0].get_shape(),
+                                    out[0].get_shape(),
+                                    sum->get_reduction_axes());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1993,7 +1993,7 @@ namespace ngraph
                 // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
                 else
                 {
-                    writer << "kernel::replace_slice<" << out[0].get_type() << ">("
+                    writer << "reference::replace_slice<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2008,15 +2008,15 @@ namespace ngraph
                 }
 #else
                 kernel::emit_replace_slice(writer,
-                                           args[0].get_element_type().c_type_string(),
-                                           args[0].get_name(),
-                                           args[1].get_name(),
-                                           out[0].get_name(),
-                                           args[1].get_shape(),
-                                           out[0].get_shape(),
-                                           replace_slice->get_lower_bounds(),
-                                           replace_slice->get_upper_bounds(),
-                                           replace_slice->get_strides());
+                                              args[0].get_element_type().c_type_string(),
+                                              args[0].get_name(),
+                                              args[1].get_name(),
+                                              out[0].get_name(),
+                                              args[1].get_shape(),
+                                              out[0].get_shape(),
+                                              replace_slice->get_lower_bounds(),
+                                              replace_slice->get_upper_bounds(),
+                                              replace_slice->get_strides());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -2111,8 +2111,8 @@ namespace ngraph
                 // Other cases are not handled yet.
                 else
                 {
-                    writer << "kernel::one_hot<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::one_hot<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                   " << out[0].get_name() << ",\n";
                     writer << "                   {" << join(args[0].get_shape()) << "},\n";
                     writer << "                   {" << join(out[0].get_shape()) << "},\n";
@@ -2236,7 +2236,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2306,7 +2306,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2383,7 +2383,7 @@ namespace ngraph
                 else
                 {
                     // Note that args[1] and args[0] are switched here from the usual order.
-                    writer << "kernel::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution<" << out[0].get_type() << ">("
                            << args[1].get_name() << ",\n";
                     writer << "                         " << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2535,7 +2535,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Not)
             {
-                writer << "kernel::logical_not(" << args[0].get_name() << ",\n"
+                writer << "reference::logical_not(" << args[0].get_name() << ",\n"
                        << "                    " << out[0].get_name() << ",\n"
                        << "                    " << out[0].get_size() << ");\n";
             }
@@ -2582,8 +2582,8 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::max_pool<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                 " << out[0].get_name() << ",\n";
                     writer << "                 {" << join(arg_shape) << "},\n";
                     writer << "                 {" << join(result_shape) << "},\n";
@@ -2604,7 +2604,7 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                writer << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "reference::reverse<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                " << out[0].get_name() << ",\n";
                 writer << "                {" << join(arg_shape) << "},\n";
@@ -2637,7 +2637,7 @@ namespace ngraph
                 writer.indent--;
                 writer << "};\n";
 
-                writer << "kernel::reduce_window<" << out[0].get_type() << ">("
+                writer << "reference::reduce_window<" << out[0].get_type() << ">("
                        << args[0].get_name() << ",\n";
                 writer << "                      " << args[1].get_name() << ",\n";
                 writer << "                      " << out[0].get_name() << ",\n";
@@ -2692,7 +2692,7 @@ namespace ngraph
                 writer.indent--;
                 writer << "};\n";
 
-                writer << "kernel::select_and_scatter<" << out[0].get_type() << ">("
+                writer << "reference::select_and_scatter<" << out[0].get_type() << ">("
                        << args[0].get_name() << ",\n";
                 writer << "                " << args[1].get_name() << ",\n";
                 writer << "                " << args[2].get_name() << ",\n";
@@ -2752,8 +2752,8 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::avg_pool<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::avg_pool<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                 " << out[0].get_name() << ",\n";
                     writer << "                 {" << join(arg_shape) << "},\n";
                     writer << "                 {" << join(result_shape) << "},\n";
@@ -2793,7 +2793,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::pad<" << out[0].get_type() << ">(" << args[0].get_name()
+                    writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
                     writer << "            " << out[0].get_name() << ",\n";
@@ -2843,7 +2843,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">("
+                    writer << "reference::avg_pool_backprop<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                 " << out[0].get_name() << ",\n";
                     writer << "                 {" << join(delta_shape) << "},\n";
@@ -2912,7 +2912,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::max_pool_backprop<" << out[0].get_type() << ">("
+                    writer << "reference::max_pool_backprop<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                 " << args[1].get_name() << ",\n";
                     writer << "                 " << out[0].get_name() << ",\n";
@@ -2979,8 +2979,8 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
+                    writer << "reference::product<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
                     writer << "                         {" << join(out[0].get_shape()) << "},\n";
@@ -2989,7 +2989,7 @@ namespace ngraph
                 }
 #else
                 // TODO: add an emitter akin to the emit_sum
-                writer << "kernel::product<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "reference::product<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -3059,7 +3059,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                    writer << "reference::max<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -3069,7 +3069,7 @@ namespace ngraph
                 }
 #else
                 // TODO: add an emitter akin to the emit_sum
-                writer << "kernel::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "reference::max<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -3139,7 +3139,7 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
+                    writer << "reference::min<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -3149,7 +3149,7 @@ namespace ngraph
                 }
 #else
                 // TODO: add an emitter akin to the emit_sum
-                writer << "kernel::min<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "reference::min<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
@@ -3549,7 +3549,7 @@ namespace ngraph
                     return;
                 }
 
-                writer << "kernel::result<" << out[0].get_type() << ">(" << args[0].get_name()
+                writer << "reference::result<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";
                 writer << "               " << shape_size(node->get_shape()) << ");\n";

@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void reduce(const T* arg0,

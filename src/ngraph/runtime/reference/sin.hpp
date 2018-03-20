@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void sin(const T* arg, T* out, size_t count)

@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void result(const T* arg, T* out, size_t count)

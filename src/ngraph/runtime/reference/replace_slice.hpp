@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void replace_slice(const T* arg0, // replacement context

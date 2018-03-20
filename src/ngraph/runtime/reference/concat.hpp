@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void concat(const std::vector<const T*>& args,

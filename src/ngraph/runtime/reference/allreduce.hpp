@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void allreduce(const T* arg, T* out, const element::Type element_type, int count)

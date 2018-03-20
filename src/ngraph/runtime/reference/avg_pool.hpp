@@ -28,7 +28,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace reference
         {
             template <typename T>
             void avg_pool_backprop(const T* delta,
