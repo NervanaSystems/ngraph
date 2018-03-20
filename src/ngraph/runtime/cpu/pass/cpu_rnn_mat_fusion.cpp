@@ -24,6 +24,8 @@
 #include <fstream>
 #include <sys/time.h>
 
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
@@ -32,6 +34,9 @@
 #include "ngraph/serializer.hpp"
 
 using namespace ngraph;
+
+typedef std::shared_ptr<Node> NodePtr;
+
 static double dtime()
 {
     double tseconds = 0.0;
@@ -50,6 +55,7 @@ struct NodeSegment : public NodeVector
     enum Type {
       DATA = 0,
       WEIGHTS,
+      BIAS,
       UNDEFINED
     };
     Type type {UNDEFINED};
@@ -61,7 +67,7 @@ typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
 // precondition: all valid sequences must be unique
 // [a, b, c] and [a, c, b] are different, for valid sequences like [a, b, c] and [a, b], the
 // longest sequence will be matched.
-void FindValidSegments(const std::shared_ptr<Node> &node,
+void FindValidSegments(const NodePtr &node,
                        NodeSegment segment,
                        std::vector<NodeSegment> &segment_bundle,
                        NodeTypeSequenceSet valid_sequence_list,
@@ -108,6 +114,40 @@ void FindValidSegments(const std::shared_ptr<Node> &node,
     }
 }
 
+struct OrderedParams
+{
+public:
+    OrderedParams()
+    : m_params{nullptr, nullptr, nullptr}
+    {}
+
+    bool exist(const NodeSegment::Type type) {
+        return m_params[type] != nullptr;
+    }
+
+    bool valid() {
+        return std::none_of(m_params.cbegin(), m_params.cend(),
+                            [](const NodePtr& n) { return n == nullptr; });
+    }
+
+    void set(const NodeSegment::Type type, const NodePtr& node) {
+        m_params[type] = node;
+    }
+
+    NodePtr get(const NodeSegment::Type type) const {
+        return m_params.at(type);
+    }
+
+    friend bool operator<(const OrderedParams& a, const OrderedParams& b);
+private:
+    // order based on NodeSegment::Type
+    // <data, weights, bias>
+    std::array<NodePtr, 3> m_params;
+};
+
+bool operator<(const OrderedParams& a, const OrderedParams& b) {
+    return a.m_params < b.m_params;
+}
 
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
@@ -132,48 +172,67 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
          {TI(op::Parameter),
           TI(op::Slice),
           TI(op::Reshape),
-          TI(op::Dot)}},
+          TI(op::Dot),
+          TI(op::Add)}},
         {NodeSegment::WEIGHTS,
          {TI(op::Parameter),
           TI(op::Reshape),
-          TI(op::Dot)}}
+          TI(op::Dot),
+          TI(op::Add)}},
+        {NodeSegment::BIAS,
+         {TI(op::Parameter),
+          TI(op::Broadcast),
+          TI(op::Add)}}
     };
+    // this is the expected sequence count for fusing
+    const size_t sequence_count = 3;
 
-    // iterate all parameters and find path to dot op
-    std::vector<NodeSegment> segment_bundle;
+    // find all parameter nodes
+    std::vector<NodePtr> param_nodes;
     for (auto& node : function->get_ordered_ops()) {
-//        std::cout << "param: " << node->get_friendly_name() << std::endl;
-//        const auto outputs = node->get_users();
-//        for (const auto& out : outputs) {
-//            std::cout << "    out: " << out->get_friendly_name() << std::endl;
-//        }
+        const Node& node_ref = *node;
+        if (TI(node_ref) == TI(op::Parameter)) {
+            param_nodes.push_back(node);
+        }
+    }
+
+    // iterate all parameters and find all valid segments
+    std::vector<NodeSegment> segment_bundle;
+    for (auto& node : param_nodes) {
+        std::cout << "param: " << node->get_friendly_name() << std::endl;
+        const auto outputs = node->get_users();
+        for (const auto& out : outputs) {
+            std::cout << "    out: " << out->get_friendly_name() << std::endl;
+        }
         NodeSegment segment;
         FindValidSegments(node, segment, segment_bundle, valid_sequences, 0);
     }
 
-//    std::cout << "###### valid segments" << std::endl;
+    std::cout << "###### valid segments" << std::endl;
     // combined all segments by last operator
-    std::map<std::shared_ptr<Node>, std::vector<NodeSegment>> op_seg_map;
+    std::map<NodePtr, std::vector<NodeSegment>> op_seg_map;
     for (const auto& segment : segment_bundle) {
-//        std::cout << "segment: \n";
-//        for (auto& n : segment) {
-//            std::cout << "  " << n->get_friendly_name() << std::endl;
-//        }
+        std::cout << "segment: \n";
+        for (auto& n : segment) {
+            std::cout << "  " << n->get_friendly_name() << std::endl;
+        }
         op_seg_map[segment.back()].push_back(segment);
     }
-//    std::cout << "###### op seg map" << std::endl;
-//    for (auto& op : op_seg_map) {
-//        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
-//        for (auto& vn : op.second) {
-//            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
-//            for (auto& n : vn) {
-//                std::cout << "   node: " << n->get_friendly_name() << std::endl;
-//            }
-//        }
-//    }
+    std::cout << "###### op seg map" << std::endl;
+    for (auto& op : op_seg_map) {
+        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
+        for (auto& vn : op.second) {
+            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
+            for (auto& n : vn) {
+                std::cout << "   node: " << n->get_friendly_name() << std::endl;
+            }
+        }
+    }
+
     // remove ops with single segment
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();) {
-        if (op_it->second.size() < 2 || op_it->second[0].type == op_it->second[1].type) {
+        // remove ops with less than expected segements
+        if (op_it->second.size() < sequence_count) {
             op_it = op_seg_map.erase(op_it);
         }
         else {
@@ -182,21 +241,19 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     }
 
     // create a lookup map for each unique pair of parameters
-    typedef std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>> OrderedParams;
     std::map<OrderedParams, NodeVector> param_list;
     for (auto& op_seg : op_seg_map) {
         std::vector<NodeSegment>& segments = op_seg.second;
         OrderedParams p;
-        // make first element data, second weights
-        if (segments[0].type != NodeSegment::DATA) {
-            segments[0].swap(segments[1]);
+        for (auto& seg : segments) {
+            p.set(seg.type, seg[0]);
         }
-        p.first = segments[NodeSegment::DATA][0];
-        p.second = segments[NodeSegment::WEIGHTS][0];
-        param_list[p].push_back(op_seg.first);
+        if (p.valid()) {
+            param_list[p].push_back(op_seg.first);
+        }
     }
 
-    // remove pairs with single op
+    // remove params with single combo op (meaning no need to combine slicing)
     for (auto it = param_list.cbegin(); it != param_list.cend();) {
         if (it->second.size() < 2) {
             it = param_list.erase(it);
@@ -206,6 +263,18 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
+    for (auto& p : param_list) {
+        std::cout << "params: ["
+                  << p.first.get(NodeSegment::DATA)->get_friendly_name() << ", "
+                  << p.first.get(NodeSegment::WEIGHTS)->get_friendly_name() << ", "
+                  << p.first.get(NodeSegment::BIAS)->get_friendly_name() << "]" << std::endl;
+        std::cout << "  op: " << std::endl;
+        for (auto& n : p.second) {
+            std::cout << "   node: " << n->get_friendly_name() << std::endl;
+        }
+    }
+
+#if 0
     // Expecting in put data shape D=[x, y, z], weights W=[u, v]
     // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
     // in R=[x*y, v], then we need to slice the result by strided by time steps.
@@ -214,11 +283,13 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         OrderedParams params = p.first;
         NodeVector &op_nodes = p.second;
 
-        auto data_node = params.first;
-        auto weights_node = params.second;
+        auto data_node = params.get(NodeSegment::DATA);
+        auto weights_node = params.get(NodeSegment::WEIGHTS);
+        auto bias_node = params.get(NodeSegment::BIAS);
 
         const auto& data_shape = data_node->get_shape();
         const auto& weights_shape = weights_node->get_shape();
+        const auto& bias_shape = bias_node->get_shape();
 
         // get the first combo op
         auto first_op = op_nodes[0];
@@ -248,6 +319,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
         modified = true;
     }
+#endif
 #if 0
     if (modified) {
         const std::string file_string = "rnn-" + std::to_string(counter) + "-after.json";
