@@ -39,6 +39,7 @@ extensions = ['sphinx.ext.mathjax',
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+static_path = ['static']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
