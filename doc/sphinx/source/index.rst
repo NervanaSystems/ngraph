@@ -22,7 +22,7 @@ project enables modern compute platforms to run and train :abbr:`Deep Neural Net
 models. It is framework neutral and supports a variety of backends used by 
 :abbr:`Deep Learning (DL)` frameworks. 
 
-.. image:: graphics/ngraph-ecosys.png
+.. image:: ../static/ngraph-ecosystem.png
    :width: 585px
 
 For this early release, we've provided :doc:`framework-integration-guides` to 
