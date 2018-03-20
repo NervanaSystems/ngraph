@@ -41,7 +41,7 @@ namespace ngraph
         INTERPRETER,
         CPU,
         GPU,
-        ARGON,
+        NNP,
     };
 
     std::string placement_to_string(Placement placement);
