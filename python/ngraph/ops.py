@@ -279,7 +279,7 @@ def avg_pool(x,                      # type: Node
         padding_below = [0] * len(window_shape)
 
     return AvgPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_above), zero_pad)
+                   Shape(padding_above), Shape(padding_below), zero_pad)
 
 
 @nameable_op
@@ -300,7 +300,7 @@ def max_pool(x,                      # type: Node
         padding_below = [0] * len(window_shape)
 
     return MaxPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_above))
+                   Shape(padding_above), Shape(padding_below))
 
 
 # reduction ops
