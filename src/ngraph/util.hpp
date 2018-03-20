@@ -17,6 +17,8 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -214,6 +216,30 @@ namespace ngraph
     {
         return y > x ? 0 : x - y;
     }
+
+    template <typename T, bool (*func)(T)>
+    void check_fp_values(const char* name, const T* array, size_t n)
+    {
+        bool (*fPtr)(T) = &std::isinf;
+        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
+        for (size_t i = 0; i < n; i++)
+        {
+            if (func(array[i]))
+            {
+                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
+                                         "'");
+            }
+        }
+    }
+
+    template void
+        check_fp_values<float, std::isinf>(const char* name, const float* array, size_t n);
+    template void
+        check_fp_values<float, std::isnan>(const char* name, const float* array, size_t n);
+    template void
+        check_fp_values<double, std::isinf>(const char* name, const double* array, size_t n);
+    template void
+        check_fp_values<double, std::isnan>(const char* name, const double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
