@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/shape.hpp"              // ngraph::Shape
+#include "ngraph/shape.hpp"             // ngraph::Shape
 #include "ngraph/type/element_type.hpp" // ngraph::element::Type
 #include "ngraph/type/type.hpp"         // ngraph::TensorViewType
 #include "pyngraph/types/type.hpp"
