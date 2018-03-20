@@ -28,18 +28,6 @@ namespace ngraph
         {
             namespace kernel
             {
-                void emit_prologue(codegen::CodeWriter& writer, const Node* node)
-                {
-                    writer << "{   //" << node->get_name() << "\n";
-                    writer.indent++;
-                }
-
-                void emit_epilogue(codegen::CodeWriter& writer)
-                {
-                    writer.indent--;
-                    writer << "}\n";
-                }
-
                 void emit_memset(codegen::CodeWriter& writer,
                                  const GPU_TensorViewWrapper& dst,
                                  int value,
