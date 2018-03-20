@@ -114,6 +114,22 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     return ss.str();
 }
 
+std::string pass::VisualizeTree::get_file_ext()
+{
+    const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
+    if (!format)
+    {
+        format = "png";
+    }
+
+    if (format[0] == '.')
+    {
+        format += 1;
+    }
+
+    return std::string(format);
+}
+
 void pass::VisualizeTree::render() const
 {
 #ifdef GRAPHVIZ_FOUND
@@ -128,13 +144,7 @@ void pass::VisualizeTree::render() const
 
         stringstream ss;
 
-        const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
-        if (!format)
-        {
-            format = "png";
-        }
-
-        ss << "dot -T" << format << " " << tmp_file << " -o " << m_name;
+        ss << "dot -T" << get_file_ext() << " " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
