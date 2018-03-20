@@ -100,7 +100,7 @@ namespace ngraph
 
         /// Invoke a call frame where some arguments might be XLATuples
         void call(std::shared_ptr<runtime::CallFrame> call_frame,
-                  const ngraph::runtime::TensorViewPtrs& inputs,
-                  const ngraph::runtime::TensorViewPtrs& outputs);
+                  const ngraph::runtime::TensorViewPtrs& outputs,
+                  const ngraph::runtime::TensorViewPtrs& inputs);
     }
 }
