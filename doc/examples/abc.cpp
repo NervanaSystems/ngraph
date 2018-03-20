@@ -58,7 +58,7 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    cf->call({t_result}, {t_a, t_b, t_c});
+    cf->call({t_a, t_b, t_c}, {t_result});
 
     // Get the result
     float r[2][3];
