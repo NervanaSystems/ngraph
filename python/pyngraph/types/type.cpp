@@ -18,8 +18,8 @@
 #include <pybind11/stl.h>
 //#include <string>
 #include "ngraph/shape.hpp"              // ngraph::Shape
-#include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
+#include "ngraph/type/element_type.hpp" // ngraph::element::Type
+#include "ngraph/type/type.hpp"         // ngraph::TensorViewType
 #include "pyngraph/types/type.hpp"
 
 namespace py = pybind11;

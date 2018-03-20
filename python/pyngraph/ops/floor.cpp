@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/floor.hpp"
+#include "ngraph/op/floor.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/ops/floor.hpp"
