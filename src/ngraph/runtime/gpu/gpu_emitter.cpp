@@ -207,7 +207,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                //set output to 0 if input size is 0
+                // set output to 0 if input size is 0
                 if (args[0].get_size() == 0 || args[1].get_size() == 0)
                 {
                     writer << "{   // " << node->get_name() << "\n";
@@ -219,7 +219,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                //case that can be treat as dot1d
+                // case that can be treat as dot1d
                 if ((arg0_shape.size() == arg1_shape.size()) &&
                     (arg0_shape.size() == dot->get_reduction_axes_count()))
 
@@ -228,8 +228,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         if (arg0_shape[i] != arg1_shape[i])
                         {
-                            throw std::runtime_error(
-                                "input1 and input2 shape does not match for dot;");
+                            throw std::invalid_argument(
+                                "arg0 and arg0 shape does not match for dot.");
                         }
                     }
                     writer << "{   // " << node->get_name() << "\n";
@@ -242,7 +242,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                //matrix vector
+                // matrix vector
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          (dot->get_reduction_axes_count() == 1))
                 {
@@ -265,52 +265,54 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                //dot can be treat as matrix multiply
+                // cases that can be treat as matrix multiply
                 else
                 {
-                    //any dot can be treat as out[m,n]=arg0[m,k]*arg1[k,n]
+                    // treat as out[m,n] = arg0[m,k] * arg1[k,n]
                     size_t reduction_axes = dot->get_reduction_axes_count();
                     size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
                     size_t num_of_axes_for_n = arg1_shape.size() - reduction_axes;
                     size_t num_of_axes_for_k = reduction_axes;
-                    size_t m = 1, n = 1, k = 1;
+                    size_t m = 1;
+                    size_t n = 1;
+                    size_t k = 1;
                     
-                    //check if input and output size correct, 
-                    //check and calculate k for arg0 and arg1
-                    size_t arg0_k_idx = num_of_axes_for_m; //first axe in arg0 for k
-                    size_t arg1_k_idx = 0;                 //first axe in arg1 for k
+                    // check if input and output size correct 
+                    // check and calculate k for arg0 and arg1
+                    size_t arg0_k_idx = num_of_axes_for_m; // first axe in arg0 for k
+                    size_t arg1_k_idx = 0;                 // first axe in arg1 for k
                     for (size_t i = 0; i < num_of_axes_for_k; i++)
                     {
                         k *= arg0_shape[arg0_k_idx];
                         if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
                         {
-                            throw std::runtime_error(
-                                "arg0 and arg1 shape does not match for dot;");
+                            throw std::invalid_argument(
+                                "arg0 and arg1 shape does not match for dot.");
                         }
                     }
-                    //check and calculate m for arg0 and out
-                    size_t arg0_m_idx = 0;                  //first axe in arg0 for m
-                    size_t out_m_idx = 0;                   //first axe in out for m
+                    // check and calculate m for arg0 and out
+                    size_t arg0_m_idx = 0;                  // first axe in arg0 for m
+                    size_t out_m_idx = 0;                   // first axe in out for m
                     for (size_t i = 0; i < num_of_axes_for_m; i++)
                     {
                         m *= arg0_shape[arg0_m_idx];
                         if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
                         {
-                            throw std::runtime_error(
-                                "arg0 and output shape does not match for dot;");
+                            throw std::invalid_argument(
+                                "arg0 and output shape does not match for dot.");
                         }
 
                     }
-                    //check and calculate n for arg1 and out
-                    size_t arg1_n_idx = num_of_axes_for_k;   //first axe in arg1 for n
-                    size_t out_n_idx = num_of_axes_for_m;    //first axe in arg1 for n
+                    // check and calculate n for arg1 and out
+                    size_t arg1_n_idx = num_of_axes_for_k;   // first axe in arg1 for n
+                    size_t out_n_idx = num_of_axes_for_m;    // first axe in arg1 for n
                     for (size_t i = 0; i < num_of_axes_for_n; i++)
                     {
                         n *= arg1_shape[arg1_n_idx];
                         if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
                         {
-                            throw std::runtime_error(
-                                "arg1 and output shape does not match for dot;");
+                            throw std::invalid_argument(
+                                "arg1 and output shape does not match for dot.");
                         }
 
                     }
@@ -482,7 +484,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto result_shape = out[0].get_shape();
 
                 auto& axes = broadcast->get_broadcast_axes();
-                //broadcast axes is empty, do a copy
+                // broadcast axes is empty, do a copy
                 if (axes.empty())
                 {
                     writer << "{   // " << node->get_name() << " \n";
@@ -495,7 +497,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                //broadcast axes size is 1, or can be group to 1 (consecutive axes, like 01 or 12 or 123 etc)
+                // broadcast axes size is 1, or can be group to 1 (consecutive axes, like 01 or 12 or 123 etc)
                 vector<int> axes_v;
                 std::copy(axes.begin(), axes.end(), std::back_inserter(axes_v));
                 std::sort(axes_v.begin(), axes_v.end());
@@ -571,7 +573,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     result_shape_product *= i;
                 }
                 // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
-                //  we can just copy.
+                // we can just copy.
                 if (same_layout || result_shape_product < 2)
                 {
                     writer << "{   // " << node->get_name() << " 1\n";
