@@ -61,19 +61,19 @@ void pass::CoreFusion::construct_relu_pattern()
     pattern::gr_callback_fn callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
                      << m.match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-        shared_ptr<Node> nn;
 
+        auto pattern_map = m.get_pattern_map();
         auto mzero = m.get_pattern_map()[zero];
         if (!is_zero(mzero))
         {
             NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
-            return nn;
+            return false;
         }
         auto mpattern = m.match_root();
 
         auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
-        return cg;
+        ngraph::replace_node(m.match_root(), cg);
+        return true;
     };
 
     auto m = make_shared<pattern::Matcher>(max, callback);

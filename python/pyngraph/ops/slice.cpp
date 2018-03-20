@@ -29,7 +29,7 @@ void regclass_pyngraph_op_Slice(py::module m)
                std::shared_ptr<ngraph::op::Slice>,
                ngraph::op::util::RequiresTensorViewArgs>
         slice(m, "Slice");
-    slice.doc() = "ngraph.op.Slice wraps ngraph::op::Slice";
+    slice.doc() = "ngraph.impl.op.Slice wraps ngraph::op::Slice";
     slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
                        const ngraph::Coordinate&,
                        const ngraph::Coordinate&,

@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Tanh(py::module m)
                std::shared_ptr<ngraph::op::Tanh>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         tanh(m, "Tanh");
-    tanh.doc() = "ngraph.op.Tanh wraps ngraph::op::Tanh";
+    tanh.doc() = "ngraph.impl.op.Tanh wraps ngraph::op::Tanh";
     tanh.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

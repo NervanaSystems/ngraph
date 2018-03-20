@@ -25,7 +25,7 @@ namespace py = pybind11;
 void regclass_pyngraph_Type(py::module m)
 {
     py::class_<ngraph::element::Type, std::shared_ptr<ngraph::element::Type>> type(m, "Type");
-    type.doc() = "ngraph.Type wraps ngraph::element::Type";
+    type.doc() = "ngraph.impl.Type wraps ngraph::element::Type";
     type.attr("boolean") = ngraph::element::boolean;
     type.attr("f32") = ngraph::element::f32;
     type.attr("f64") = ngraph::element::f64;

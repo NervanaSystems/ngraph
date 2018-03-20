@@ -27,6 +27,6 @@ void regclass_pyngraph_op_Atan(py::module m)
                std::shared_ptr<ngraph::op::Atan>,
                ngraph::op::util::UnaryElementwiseArithmetic>
         atan(m, "Atan");
-    atan.doc() = "ngraph.op.Atan wraps ngraph::op::Atan";
+    atan.doc() = "ngraph.impl.op.Atan wraps ngraph::op::Atan";
     atan.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

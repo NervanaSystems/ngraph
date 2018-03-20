@@ -21,7 +21,7 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
 # Parallel build from:
@@ -179,7 +179,7 @@ sources = ['pyngraph/function.cpp',
            ]
 
 include_dirs = [  # Path to pybind11 headers
-    'build/pybind11/include',
+    'pybind11/include',
     NGRAPH_CPP_INCLUDE_DIR,
     '.',
 ]
