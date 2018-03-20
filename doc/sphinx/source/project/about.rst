@@ -10,17 +10,19 @@ framework-neutral and can target a variety of modern devices or platforms.
 .. figure:: ../graphics/ngraph-ecosystem.png
    :width: 585px	 
   
-nGraph currently supports :doc:`three of the most popular <framework-integration-guides>` 
+nGraph currently supports :doc:`three of the most popular <../framework-integration-guides>` 
 frameworks for :abbr:`Deep Learning (DL)` models. through what we call 
 a :term:`bridge` that can be integrated during the framework's build time. 
 For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`howto/index` guide so you can teach yourself how to 
-create bridge code that can be used to :doc:`howto/execute`.
+we've created a :doc:`../howto/index` guide so you can learn how to create 
+custom bridge code that can be used to :doc:`../howto/execute` a training 
+model.
 
 With nGraph, data scientists can focus on data science rather than worrying 
 about how to adapt models to train and run efficiently on different devices.
-We've recently added initial support for the `ONNX`_ format. Developers who already have a "trained" model can use nGraph to bypass a lot 
-of the framework-based complexity and :doc:`howto/import` to test or run it 
+We've recently added initial support for the `ONNX`_ format. Developers who 
+already have a "trained" model can use nGraph to bypass a lot of the 
+framework-based complexity and :doc:`../howto/import` to test or run it 
 on targeted and efficient backends with our user-friendly ``ngraph_api``. 
 
 Supported platforms
@@ -28,14 +30,14 @@ Supported platforms
 
 Initially-supported backends include 
 
-* Intel Architecture CPUs, 
-* the Intel® Nervana Neural Network Processor™ (NNP), and 
-* NVIDIA\* CUDA GPUs. 
+* Intel Architecture (CPUs), 
+* Intel® Nervana Neural Network Processor™ (NNPs), and 
+* NVIDIA\* CUDA (GPUs). 
 
-Tentaively in the pipeline, we'll be adding backend support for
+Tentatively in the pipeline, we'll be adding backend support for
 
-* :abbr:`Field Programmable Gate Arrays (FPGA)`
-* Movidius compute stick
+* :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
+* `Movidius`_ compute stick 
 
 
 Why was this needed?
@@ -113,4 +115,5 @@ our `arXiv paper`_ from the 2018 SysML conference.
 .. _ONNX: http://onnx.ai 
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf
 .. _Intel® MKL-DNN: https://github.com/intel/mkl-dnn
-
+.. _Movidius: https://developer.movidius.com/
+.. _Intel Nervana NNPs: 

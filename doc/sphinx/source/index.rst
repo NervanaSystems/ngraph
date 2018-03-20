@@ -17,18 +17,42 @@
 nGraph library
 ###############
 
-Welcome to Intel® nGraph™, an open source C++ library and compiler. This 
-project enables modern compute platforms to run and train :abbr:`Deep Neural Network (DNN)` 
-models. It is framework neutral and supports a variety of backends used by 
-:abbr:`Deep Learning (DL)` frameworks. 
 
-.. image:: ../static/ngraph-ecosystem.png
-   :width: 585px
+Welcome to nGraph™, an open-source C++ compiler library for running and 
+training :abbr:`Deep Neural Network (DNN)` models. This project is 
+framework-neutral and can target a variety of modern devices or platforms. 
 
-For this early release, we've provided :doc:`framework-integration-guides` to 
-compile and run MXNet\* and TensorFlow\*-based projects. If you already have 
-a trained model, see our section on How to :doc:`howto/import` and start working 
-with the nGraph APIs.  
+.. figure:: graphics/ngraph-ecosystem.png
+   :width: 585px   
+  
+nGraph currently supports :doc:`three of the most popular <framework-integration-guides>` 
+frameworks for :abbr:`Deep Learning (DL)` models. through what we call 
+a :term:`bridge` that can be integrated during the framework's build time. 
+For developers working with other frameworks (even those not listed above), 
+we've created a :doc:`howto/index` guide so you can learn how to create 
+custom bridge code that can be used to :doc:`howto/execute` a training 
+model.
+
+With nGraph, data scientists can focus on data science rather than worrying 
+about how to adapt models to train and run efficiently on different devices.
+We've recently added initial support for the ONNX format. Developers who 
+already have a "trained" model can use nGraph to bypass a lot of the 
+framework-based complexity and :doc:`howto/import` to test or run it 
+on targeted and efficient backends with our user-friendly ``ngraph_api``. 
+
+Supported platforms
+--------------------
+
+Initially-supported backends include 
+
+* Intel Architecture (CPUs), 
+* Intel® Nervana Neural Network Processor™ (NNPs), and 
+* NVIDIA\* CUDA (GPUs). 
+
+Tentatively in the pipeline, we'll be adding backend support for
+
+* :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
+* Movidius 
 
 .. note:: The library code is under active development as we're continually 
    adding support for more kinds of DL models and ops, framework compiler 
