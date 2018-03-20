@@ -34,7 +34,7 @@ std::string ngraph::placement_to_string(Placement placement)
     case Placement::INTERPRETER: return "INTERPRETER";
     case Placement::CPU: return "CPU";
     case Placement::GPU: return "GPU";
-    case Placement::ARGON: return "ARGON";
+    case Placement::NNP: return "NNP";
     }
 }
 
