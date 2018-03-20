@@ -47,7 +47,7 @@ if (NGRAPH_NNP_ENABLE)
     set(NNP_TRANSFORMER_GIT_TAG cpp-master)
 
     # Determines where nnp-transformer will be located
-    set(NNP_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
+    set(NNP_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/nnp_transformer)
 
     # Print
     message(STATUS "NGRAPH_INCLUDE_PATH: ${NGRAPH_INCLUDE_PATH}")

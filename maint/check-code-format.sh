@@ -45,8 +45,8 @@ declare NUM_FILES_CHECKED=0
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare NNP_SRC_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/src"
-declare NNP_TEST_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/test"
+declare NNP_SRC_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/src"
+declare NNP_TEST_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/test"
 
 declare ROOT_SUBDIR
 for ROOT_SUBDIR in src test ${NNP_SRC_DIR} ${NNP_TEST_DIR}; do

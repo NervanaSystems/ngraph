@@ -42,8 +42,8 @@ bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CL
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare NNP_SRC_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/src"
-declare NNP_TEST_DIR="build/third-party/argon_transformer/src/ext_nnp_transformer/test"
+declare NNP_SRC_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/src"
+declare NNP_TEST_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/test"
 declare PYBIND_WRAPPER="python/pyngraph"
 
 declare ROOT_SUBDIR
