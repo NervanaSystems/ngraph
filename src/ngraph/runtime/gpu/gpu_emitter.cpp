@@ -276,8 +276,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     size_t m = 1;
                     size_t n = 1;
                     size_t k = 1;
-                    
-                    // check if input and output size correct 
+
+                    // check if input and output size correct
                     // check and calculate k for arg0 and arg1
                     size_t arg0_k_idx = num_of_axes_for_m; // first axe in arg0 for k
                     size_t arg1_k_idx = 0;                 // first axe in arg1 for k
@@ -291,8 +291,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                     }
                     // check and calculate m for arg0 and out
-                    size_t arg0_m_idx = 0;                  // first axe in arg0 for m
-                    size_t out_m_idx = 0;                   // first axe in out for m
+                    size_t arg0_m_idx = 0; // first axe in arg0 for m
+                    size_t out_m_idx = 0;  // first axe in out for m
                     for (size_t i = 0; i < num_of_axes_for_m; i++)
                     {
                         m *= arg0_shape[arg0_m_idx];
@@ -301,11 +301,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             throw std::invalid_argument(
                                 "arg0 and output shape does not match for dot.");
                         }
-
                     }
                     // check and calculate n for arg1 and out
-                    size_t arg1_n_idx = num_of_axes_for_k;   // first axe in arg1 for n
-                    size_t out_n_idx = num_of_axes_for_m;    // first axe in arg1 for n
+                    size_t arg1_n_idx = num_of_axes_for_k; // first axe in arg1 for n
+                    size_t out_n_idx = num_of_axes_for_m;  // first axe in arg1 for n
                     for (size_t i = 0; i < num_of_axes_for_n; i++)
                     {
                         n *= arg1_shape[arg1_n_idx];
@@ -314,7 +313,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             throw std::invalid_argument(
                                 "arg1 and output shape does not match for dot.");
                         }
-
                     }
 
                     // GEMM Call
