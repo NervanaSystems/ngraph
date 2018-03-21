@@ -574,7 +574,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
                                               const double eps,
-                                              const ngraph::op::BatchNorm* bn_node)
+                                              bool bn_training_flag)
 {
     size_t input_index = build_memory_primitive(input_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -582,7 +582,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     size_t mean_index = build_memory_primitive(mean_desc);
     size_t variance_index = build_memory_primitive(variance_desc);
 
-    if (bn_node->get_training_flag())
+    if (bn_training_flag)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
             {{mkldnn::prop_kind::forward_training,

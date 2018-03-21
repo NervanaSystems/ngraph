@@ -414,7 +414,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
-                                                                batchnorm);
+                                                                batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -459,7 +459,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
-                                                                batchnorm);
+                                                                batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])

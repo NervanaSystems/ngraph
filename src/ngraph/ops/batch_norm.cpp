@@ -29,7 +29,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 {
     if (m_bn_input_shape.size() < 2)
     {
-        throw ngraph_error("input tensor to batchnorm much have tensor of atleast rank 2");
+        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
     }
     else
     {
@@ -40,7 +40,20 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     if (m_bn_input_shape[1] == 0)
     {
         throw ngraph_error(
-            "input tensor must have atleast one channel axis for batch normalization");
+            "input tensor must have at least one channel axis for batch normalization");
+    }
+
+    auto et = input->get_element_type();
+    const char* input_names[] = {"gamma", "beta"};
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        if (get_input_op(i)->get_element_type() != et)
+        {
+            auto err_msg = std::string("The element type of ") + input_names[i] +
+                           " isn't equal to input data's type";
+            throw ngraph_error(err_msg.c_str());
+        }
     }
 
     if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
@@ -78,13 +91,13 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 {
     if (m_bn_input_shape.size() < 2)
     {
-        throw ngraph_error("input tensor to batchnorm much have tensor of atleast rank 2");
+        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
     }
 
     if (m_bn_input_shape[1] == 0)
     {
         throw ngraph_error(
-            "input tensor must have atleast one channel axis for batch normalization");
+            "input tensor must have at least one channel axis for batch normalization");
     }
 
     auto et = input->get_element_type();
@@ -107,16 +120,19 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
             auto err_msg = std::string(input_names[index]) + " should have rank of 1";
             throw ngraph_error(err_msg.c_str());
         }
+
+        if (index != 2 && get_input_op(index)->get_shape()[0] != m_bn_input_shape[1])
+        {
+            auto err_msg = std::string(input_names[index]) +
+                           " shape should match the input channel size (" +
+                           std::to_string(m_bn_input_shape[1]) + ",)";
+            throw ngraph_error(err_msg.c_str());
+        }
     }
 
     if (variance->get_shape()[0] != mean->get_shape()[0])
     {
         throw ngraph_error("mean and variance should have same size");
-    }
-
-    if (gamma->get_shape().size() != beta->get_shape().size())
-    {
-        throw ngraph_error("gamma and beta rank does not match");
     }
 
     add_output(input->get_element_type(), m_bn_input_shape);
@@ -228,6 +244,10 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     auto beta = get_input_op(1);
     auto input = get_input_op(2);
 
+    if (!this->get_training_flag())
+    {
+        throw ngraph_error("generate_adjoints called on BatchNormInference op " + this->get_name());
+    }
     //Extract mean and variance outputs from BatchNorm
     //as these are used by BatchNormBackprop.
     //The users of the outputs (GetOutputElements' Inputs) aren't sorted

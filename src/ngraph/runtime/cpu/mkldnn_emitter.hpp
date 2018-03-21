@@ -171,7 +171,7 @@ namespace ngraph
                                                const mkldnn::memory::desc& mean_desc,
                                                const mkldnn::memory::desc& variance_desc,
                                                const double eps,
-                                               const ngraph::op::BatchNorm* bn_node);
+                                               bool bn_training_flag);
 
                 size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& input_desc,
