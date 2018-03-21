@@ -74,7 +74,6 @@ tmp/
 
 config_args.txt
 .nfs*
-venv/
 .vscode/
 
 # VisualGDB files
@@ -90,13 +89,20 @@ doc/doxygen/latex/*
 doc/doxygen/xml/*
 doc/doxygen/html/*
 
+.tox/
+.cache
 
-# python venv things that might get added accidentally
+# python venv things 
+venv/
 ../
-python-wheels/
-.whl
-*.whl
 .venv
+.python-version
+ENV
 
 # python wheels
 python/share/*
+python-wheels/
+**/*.whl
+.whl*
+*-any.whl
+
