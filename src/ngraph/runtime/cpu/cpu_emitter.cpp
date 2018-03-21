@@ -2216,7 +2216,7 @@ namespace ngraph
                     size_t conv_index = 0;
 
                     const float ops_scale = 1.f;
-                    const float ops_alpha = 0.f; // relu negative slope
+                    const float ops_alpha = -0.f; // relu negative slope
                     const float ops_beta = 0.f;
 
                     mkldnn::post_ops ops;

@@ -29,6 +29,7 @@
 #include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -41,6 +42,7 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
+#include "ngraph/runtime/cpu/ops/conv_relu.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -959,4 +961,77 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
 
     vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+TEST(cpu_fusion, fuse_conv_relu)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto weights = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto convolution = std::make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
+    auto relu = std::make_shared<op::Relu>(convolution);
+    auto abs_node = std::make_shared<op::Abs>(std::make_shared<op::Abs>(std::make_shared<op::Abs>(relu)));
+    auto func = make_shared<Function>(abs_node, op::ParameterVector{A, weights});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func);
+    size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
+    ASSERT_GT(cb, 0);
+}
+
+TEST(cpu_fusion, conv_relu_n2c1h2w2)
+{
+
+    Shape shape_a {2, 1, 6, 6};
+    Shape shape_weights{1, 1, 2, 2};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+    auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+    auto relu = std::make_shared<op::Relu>(conv);
+    auto conv_relu = std::make_shared<op::ConvolutionRelu>(conv);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto backend = manager->allocate_backend();
+
+    auto _a = backend->make_primary_tensor_view(element::f32, shape_a);
+    vector<float> va
+    {
+        1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f,
+        3.25f, -4.25f, 7.25f, 8.25f, -1.25f, -1.25f,
+        1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f,
+        1.25f, 2.25f, -4.25f, 2.25f, 4.25f, 4.25f,
+        0.f, 0.f, -1.f, 0.f, 2.f, 2.f,
+        0.f, 0.f, 0.f, 0.f,  2.f, 2.f,
+        //
+        1.25f, 2.25f, 5.25f, 6.25f, 1.25f, 1.25f,
+        3.25f, 4.25f, -7.25f, 8.25f, 1.25f, -1.25f,
+        -1.25f, 2.25f, 3.25f, 2.25f, -4.25f, -4.25f,
+        -1.25f, -2.25f, 4.25f, 2.25f, 4.25f, 4.25f,
+        0.f, 0.f, 1.f, 0.f, -2.f, 2.f,
+        0.f, 0.f, 0.f, 0.f,  -2.f, -2.f,
+
+        // -1.25, -2.25, -3.25, -4.25, 
+        // -5.25, 6.25, 7.25, 8.25, 
+        //9.25, 10.25, 11.25, 12.25, 
+        //13.25, 14.25, 15.25, 16.25
+    };
+
+    copy_data(_a, va);
+
+    auto _weights = backend->make_primary_tensor_view(element::f32, shape_weights);
+    copy_data(_weights, vector<float> {2., 2., 2., 2.});
+    
+    auto f = make_shared<Function>(NodeVector{conv_relu, relu}, op::ParameterVector{A, weights});
+
+    auto external = manager->compile(f);
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> _conv_relu =
+        backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
+
+    shared_ptr<runtime::TensorView> _relu =
+        backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
+    
+    cf->call({_a, _weights}, {_conv_relu, _relu});
+    EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
 }

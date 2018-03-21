@@ -34,6 +34,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
+#include "ngraph/runtime/cpu/ops/conv_relu.hpp"
 #include "ngraph/runtime/cpu/ops/sigmoid.hpp"
 
 using namespace std;
@@ -99,6 +100,16 @@ namespace ngraph
                         op_annotations->set_mkldnn_op(true);
                         convolution->set_op_annotations(op_annotations);
                     }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionRelu)
+                {
+                    auto convolution = static_cast<op::ConvolutionRelu*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    convolution->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -398,6 +409,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::Convolution),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
+    {TI(ngraph::op::ConvolutionRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
