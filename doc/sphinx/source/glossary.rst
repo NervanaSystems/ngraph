@@ -24,8 +24,19 @@ Glossary
 
    function graph
 
-      The Intel nGraph library uses a function graph to represent an
-      ``op``'s parameters and results.
+      For backend users, the function graph represents an ``op``'s 
+      parameters and results; it may contain the functional 
+      operations of one or more subgraphs comprising the graph.
+
+   fusing 
+
+      The combining, merging, collapsing, or refactoring of a graph's 
+      functional operations (``ops``) into one or more of nGraph's 
+      core ops. 
+
+   node 
+
+      A node is where 
 
    op
 

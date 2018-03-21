@@ -85,7 +85,7 @@ how this works, read our documentation on how to :doc:`../howto/execute`.
 How do I connect it to a framework? 
 ------------------------------------
 
-Currently, we offer *framework bridges* for some `widely-supported frameworks`_. 
+Currently, we offer *framework bridges* for some widely-supported frameworks. 
 The bridge acts as an intermediary between the *ngraph core* and the framework,
 providing a means to use various execution platforms. The result is a function 
 that can be executed from the framework bridge.

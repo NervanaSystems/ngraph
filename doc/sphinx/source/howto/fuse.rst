@@ -5,8 +5,8 @@
 Fuse ops
 #########
 
-:ref:`pattern_matcing`
-:ref:`graph_rewrite`
+* :ref:`pattern_matching`
+* :ref:`graph_rewrite`
 
 In working with a :term:`function graph`, there are many ways to describe what 
 happens when we need to do something with the ops (AKA "operational functions") 
@@ -27,6 +27,7 @@ Apply pattern matching to fuse ops
 ------------------------------------
 
 
+.. TODO
 
 
 
@@ -37,3 +38,4 @@ Apply pattern matching to fuse ops
 Using GraphRewrite to fuse ops
 --------------------------------
 
+.. TODO 
