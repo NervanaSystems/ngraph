@@ -733,12 +733,12 @@ namespace ngraph
                         }
 
                         kernel::emit_concat(writer,
-                                               args[0].get_element_type().c_type_string(),
-                                               arg_names,
-                                               out[0].get_name(),
-                                               arg_shapes,
-                                               result_shape,
-                                               axis);
+                                            args[0].get_element_type().c_type_string(),
+                                            arg_names,
+                                            out[0].get_name(),
+                                            arg_shapes,
+                                            result_shape,
+                                            axis);
                     }
                 }
 #else
@@ -755,12 +755,12 @@ namespace ngraph
                 }
 
                 kernel::emit_concat(writer,
-                                       args[0].get_element_type().c_type_string(),
-                                       arg_names,
-                                       out[0].get_name(),
-                                       arg_shapes,
-                                       result_shape,
-                                       axis);
+                                    args[0].get_element_type().c_type_string(),
+                                    arg_names,
+                                    out[0].get_name(),
+                                    arg_shapes,
+                                    result_shape,
+                                    axis);
 #endif
             }
 
@@ -1131,12 +1131,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_broadcast(writer,
-                                          args[0].get_element_type().c_type_string(),
-                                          args[0].get_name(),
-                                          out[0].get_name(),
-                                          args[0].get_shape(),
-                                          out[0].get_shape(),
-                                          broadcast->get_broadcast_axes());
+                                       args[0].get_element_type().c_type_string(),
+                                       args[0].get_name(),
+                                       out[0].get_name(),
+                                       args[0].get_shape(),
+                                       out[0].get_shape(),
+                                       broadcast->get_broadcast_axes());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1258,12 +1258,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_reshape(writer,
-                                        args[0].get_element_type().c_type_string(),
-                                        args[0].get_name(),
-                                        out[0].get_name(),
-                                        args[0].get_shape(),
-                                        out[0].get_shape(),
-                                        reshape->get_input_order());
+                                     args[0].get_element_type().c_type_string(),
+                                     args[0].get_name(),
+                                     out[0].get_name(),
+                                     args[0].get_shape(),
+                                     out[0].get_shape(),
+                                     reshape->get_input_order());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1514,13 +1514,13 @@ namespace ngraph
                 writer << "};\n";
 
                 kernel::emit_reduce(writer,
-                                       args[0].get_element_type().c_type_string(),
-                                       args[0].get_name(),
-                                       args[1].get_name(),
-                                       out[0].get_name(),
-                                       args[0].get_shape(),
-                                       out[0].get_shape(),
-                                       reduce->get_reduction_axes());
+                                    args[0].get_element_type().c_type_string(),
+                                    args[0].get_name(),
+                                    args[1].get_name(),
+                                    out[0].get_name(),
+                                    args[0].get_shape(),
+                                    out[0].get_shape(),
+                                    reduce->get_reduction_axes());
 
                 writer.indent--;
                 writer << "}\n";
@@ -1620,14 +1620,14 @@ namespace ngraph
                 }
 #else
                 kernel::emit_slice(writer,
-                                      args[0].get_element_type().c_type_string(),
-                                      args[0].get_name(),
-                                      out[0].get_name(),
-                                      args[0].get_shape(),
-                                      out[0].get_shape(),
-                                      slice->get_lower_bounds(),
-                                      slice->get_upper_bounds(),
-                                      slice->get_strides());
+                                   args[0].get_element_type().c_type_string(),
+                                   args[0].get_name(),
+                                   out[0].get_name(),
+                                   args[0].get_shape(),
+                                   out[0].get_shape(),
+                                   slice->get_lower_bounds(),
+                                   slice->get_upper_bounds(),
+                                   slice->get_strides());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -1695,12 +1695,12 @@ namespace ngraph
                 }
 #else
                 kernel::emit_sum(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    args[0].get_name(),
-                                    out[0].get_name(),
-                                    args[0].get_shape(),
-                                    out[0].get_shape(),
-                                    sum->get_reduction_axes());
+                                 args[0].get_element_type().c_type_string(),
+                                 args[0].get_name(),
+                                 out[0].get_name(),
+                                 args[0].get_shape(),
+                                 out[0].get_shape(),
+                                 sum->get_reduction_axes());
 #endif
                 writer.indent--;
                 writer << "}\n";
@@ -2008,15 +2008,15 @@ namespace ngraph
                 }
 #else
                 kernel::emit_replace_slice(writer,
-                                              args[0].get_element_type().c_type_string(),
-                                              args[0].get_name(),
-                                              args[1].get_name(),
-                                              out[0].get_name(),
-                                              args[1].get_shape(),
-                                              out[0].get_shape(),
-                                              replace_slice->get_lower_bounds(),
-                                              replace_slice->get_upper_bounds(),
-                                              replace_slice->get_strides());
+                                           args[0].get_element_type().c_type_string(),
+                                           args[0].get_name(),
+                                           args[1].get_name(),
+                                           out[0].get_name(),
+                                           args[1].get_shape(),
+                                           out[0].get_shape(),
+                                           replace_slice->get_lower_bounds(),
+                                           replace_slice->get_upper_bounds(),
+                                           replace_slice->get_strides());
 #endif
                 writer.indent--;
                 writer << "}\n";
