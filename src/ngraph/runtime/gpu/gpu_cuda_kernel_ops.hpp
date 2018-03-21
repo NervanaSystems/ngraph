@@ -47,6 +47,7 @@ namespace ngraph
         class LessEq;
         class Not;
         class Relu;
+        class ReluBackprop;
         class Max;
         class Min;
         class Negative;
@@ -266,6 +267,14 @@ namespace ngraph
                 static constexpr const char* op = "not";
                 static constexpr const char* math_kernel = "!x0";
             };
+
+            template <>
+            struct CudaOpMap<ngraph::op::ReluBackprop>
+            {
+                static constexpr const char* op = "relu_backprop";
+                static constexpr const char* math_kernel = "x1 * int(x0 > 0)";
+            };
+
         }
     }
 }
