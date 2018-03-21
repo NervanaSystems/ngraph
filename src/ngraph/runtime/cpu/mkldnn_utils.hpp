@@ -20,7 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
