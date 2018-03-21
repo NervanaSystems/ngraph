@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg,
+op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -191,12 +191,12 @@ op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg,
     Shape result_shape(1 + 1 + spatial_dimension_count);
     result_shape[0] = batch_size;
     result_shape[1] = channel_count;
-    std::copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
+    copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
     set_value_type_checked(get_input_element_type(0), result_shape);
 }
 
-static Shape default_padding(const std::shared_ptr<Node>& arg)
+static Shape default_padding(const shared_ptr<Node>& arg)
 {
     if (arg->get_outputs().size() != 1)
     {
@@ -214,7 +214,7 @@ static Shape default_padding(const std::shared_ptr<Node>& arg)
     return Shape(arg_shape.size() - 2, 0);
 }
 
-op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg,
+op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : AvgPool(arg,
@@ -226,7 +226,7 @@ op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg,
 {
 }
 
-static Strides default_strides(const std::shared_ptr<Node>& arg)
+static Strides default_strides(const shared_ptr<Node>& arg)
 {
     if (arg->get_outputs().size() != 1)
     {
@@ -244,7 +244,7 @@ static Strides default_strides(const std::shared_ptr<Node>& arg)
     return Strides(arg_shape.size() - 2, 1);
 }
 
-op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape)
+op::AvgPool::AvgPool(const shared_ptr<Node>& arg, const Shape& window_shape)
     : AvgPool(arg,
               window_shape,
               default_strides(arg),
@@ -254,8 +254,23 @@ op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 {
 }
 
+shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+
+    return make_shared<AvgPool>(new_args.at(0),
+                                m_window_shape,
+                                m_window_movement_strides,
+                                m_padding_below,
+                                m_padding_above,
+                                m_include_padding_in_avg_computation);
+}
+
 op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                     const std::shared_ptr<Node>& delta,
+                                     const shared_ptr<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
@@ -435,7 +450,7 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     Shape forward_result_shape(1 + 1 + spatial_dimension_count);
     forward_result_shape[0] = batch_size;
     forward_result_shape[1] = channel_count;
-    std::copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
+    copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
 
     if (forward_result_shape != delta_shape)
     {
@@ -446,17 +461,33 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     set_value_type_checked(get_input_element_type(0), forward_arg_shape);
 }
 
-void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
-                                    const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+
+    AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
+                                                new_args.at(0),
+                                                m_window_shape,
+                                                m_window_movement_strides,
+                                                m_padding_below,
+                                                m_padding_above,
+                                                m_include_padding_in_avg_computation);
+    return shared_ptr<op::AvgPoolBackprop>(avpn);
+}
+
+void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto operand = get_input_op(0);
     auto& operand_shape = get_input_shape(0);
-    auto backprop = std::make_shared<op::AvgPoolBackprop>(operand_shape,
-                                                          delta,
-                                                          m_window_shape,
-                                                          m_window_movement_strides,
-                                                          m_padding_below,
-                                                          m_padding_above,
-                                                          m_include_padding_in_avg_computation);
+    auto backprop = make_shared<op::AvgPoolBackprop>(operand_shape,
+                                                     delta,
+                                                     m_window_shape,
+                                                     m_window_movement_strides,
+                                                     m_padding_below,
+                                                     m_padding_above,
+                                                     m_include_padding_in_avg_computation);
     adjoints.add_delta(operand, backprop);
 }

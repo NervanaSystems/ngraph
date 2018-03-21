@@ -131,14 +131,7 @@ namespace ngraph
             }
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 0)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Constant>(m_element_type, m_shape, m_data);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The initialization literals for the tensor constant.
             std::vector<std::string> get_value_strings() const;

@@ -29,3 +29,13 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string&
         throw ngraph_error("Arguments must have the same tensor view element type");
     }
 }
+
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(
+    const BinaryElementwiseComparison& other, const NodeVector& new_args)
+    : BinaryElementwise(other, new_args)
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+}

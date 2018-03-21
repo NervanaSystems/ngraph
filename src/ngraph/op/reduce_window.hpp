@@ -67,18 +67,7 @@ namespace ngraph
                          const Strides& window_movement_strides);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 2)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<ReduceWindow>(new_args.at(0),
-                                                      new_args.at(1),
-                                                      m_reduction_function,
-                                                      m_window_shape,
-                                                      m_window_movement_strides);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return A singleton vector containing the function to use for reduction.
             std::vector<std::shared_ptr<Function>> get_functions() const override

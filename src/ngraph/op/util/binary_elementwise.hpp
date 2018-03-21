@@ -54,6 +54,7 @@ namespace ngraph
                                   const element::Type& result_element_type,
                                   const std::shared_ptr<Node>& arg0,
                                   const std::shared_ptr<Node>& arg1);
+                BinaryElementwise(const BinaryElementwise&, const NodeVector& new_args);
             };
         }
     }

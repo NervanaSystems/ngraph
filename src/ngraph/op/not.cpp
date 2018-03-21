@@ -24,3 +24,12 @@ op::Not::Not(const shared_ptr<Node>& arg)
     : UnaryElementwise("Not", arg->get_element_type(), arg)
 {
 }
+
+shared_ptr<Node> op::Not::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Not>(new_args.at(0));
+}

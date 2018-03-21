@@ -88,20 +88,7 @@ namespace ngraph
                              const Strides& window_movement_strides);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 3)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<SelectAndScatter>(new_args.at(0),
-                                                          new_args.at(1),
-                                                          new_args.at(2),
-                                                          m_selection_function,
-                                                          m_scatter_function,
-                                                          m_window_shape,
-                                                          m_window_movement_strides);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return A vector of length 2 containing the selection function as element 0, and the scatter function as element 1.
             std::vector<std::shared_ptr<Function>> get_functions() const override

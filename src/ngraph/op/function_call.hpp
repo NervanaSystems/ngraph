@@ -33,16 +33,10 @@ namespace ngraph
             FunctionCall(std::shared_ptr<Function> function, const NodeVector& args);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                return std::make_shared<FunctionCall>(m_function, new_args);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return A singleton vector containing the function to be called.
-            std::vector<std::shared_ptr<Function>> get_functions() const override
-            {
-                return std::vector<std::shared_ptr<Function>>{m_function};
-            }
+            std::vector<std::shared_ptr<Function>> get_functions() const override;
 
         protected:
             std::shared_ptr<Function> m_function;

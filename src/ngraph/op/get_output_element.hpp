@@ -51,34 +51,15 @@ namespace ngraph
             GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<GetOutputElement>(new_args.at(0), m_n);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
-            virtual NodeVector get_input_ops() override
-            {
-                return NodeVector{get_inputs().at(0).get_output().get_node()};
-            }
+            virtual NodeVector get_input_ops() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override
-            {
-                //Filter out updates(deltas) from mean and variance (for batchnorm)
-                //as dinput is the only update required.
-                //This logic needs to be generalized as new multi-output ops are introduced
-                if (get_n() == 0)
-                {
-                    adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta);
-                }
-            }
+                                           const std::shared_ptr<Node>& delta) override;
             size_t m_n;
         };
     }

@@ -29,3 +29,9 @@ op::Op::Op(const std::string& node_type, const NodeVector& args)
     : Node(node_type, args)
 {
 }
+
+op::Op::Op(const Op& other, const NodeVector& new_args)
+    : Node(other, new_args)
+{
+    NGRAPH_INFO << "Op::Op";
+}

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Slice::Slice(const std::shared_ptr<Node>& arg,
+op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
@@ -31,7 +31,7 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
     check_args();
 }
 
-op::Slice::Slice(const std::shared_ptr<Node>& arg,
+op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
     : RequiresTensorViewArgs("Slice", {arg})
@@ -93,7 +93,16 @@ void op::Slice::check_args()
     set_value_type_checked(input.get_element_type(), result_shape);
 }
 
-void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
+}
+
+void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
 

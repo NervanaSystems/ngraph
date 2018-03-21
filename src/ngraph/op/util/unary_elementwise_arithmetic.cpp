@@ -27,3 +27,9 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
         throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
 }
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(
+    const UnaryElementwiseArithmetic& other, const NodeVector& new_args)
+    : UnaryElementwise(other, new_args)
+{
+}

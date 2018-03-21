@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
+op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
     : RequiresTensorViewArgs("Broadcast", {arg})
@@ -40,8 +40,16 @@ op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
     set_value_type_checked(make_shared<TensorViewType>(input.get_element_type(), m_shape));
 }
 
-void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
-                                      const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
+}
+
+void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 

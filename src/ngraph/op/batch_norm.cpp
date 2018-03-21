@@ -18,10 +18,13 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
-ngraph::op::BatchNorm::BatchNorm(double eps,
-                                 std::shared_ptr<ngraph::Node> gamma,
-                                 std::shared_ptr<ngraph::Node> beta,
-                                 std::shared_ptr<ngraph::Node> input)
+using namespace std;
+using namespace ngraph;
+
+op::BatchNorm::BatchNorm(double eps,
+                         shared_ptr<Node> gamma,
+                         shared_ptr<Node> beta,
+                         shared_ptr<Node> input)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
@@ -165,13 +168,13 @@ std::shared_ptr<ngraph::Node>
     }
 }
 
-ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
-                                                 std::shared_ptr<ngraph::Node> gamma,
-                                                 std::shared_ptr<ngraph::Node> beta,
-                                                 std::shared_ptr<ngraph::Node> input,
-                                                 std::shared_ptr<ngraph::Node> mean,
-                                                 std::shared_ptr<ngraph::Node> variance,
-                                                 std::shared_ptr<ngraph::Node> delta)
+op::BatchNormBackprop::BatchNormBackprop(double eps,
+                                         shared_ptr<Node> gamma,
+                                         shared_ptr<Node> beta,
+                                         shared_ptr<Node> input,
+                                         shared_ptr<Node> mean,
+                                         shared_ptr<Node> variance,
+                                         shared_ptr<Node> delta)
     : RequiresTensorViewArgs("BatchNormBackprop", {gamma, beta, input, mean, variance, delta})
     , epsilon(eps)
 
@@ -188,7 +191,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     {
         if (get_input_op(i)->get_element_type() != et)
         {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
+            auto err_msg = string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";
             throw ngraph_error(err_msg.c_str());
         }
@@ -205,8 +208,8 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
         if (get_input_op(i)->get_shape() != channel_shape)
         {
-            auto err_msg = std::string("The shape of ") + input_names[i] +
-                           " isn't equal to input channel's shape";
+            auto err_msg =
+                string("The shape of ") + input_names[i] + " isn't equal to input channel's shape";
             throw ngraph_error(err_msg.c_str());
         }
     }
@@ -221,24 +224,22 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     add_output(beta->get_element_type(), beta->get_shape());
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::BatchNormBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 6)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<op::BatchNormBackprop>(epsilon,
-                                                   new_args.at(0),
-                                                   new_args.at(1),
-                                                   new_args.at(2),
-                                                   new_args.at(3),
-                                                   new_args.at(4),
-                                                   new_args.at(5));
+    return make_shared<op::BatchNormBackprop>(epsilon,
+                                              new_args.at(0),
+                                              new_args.at(1),
+                                              new_args.at(2),
+                                              new_args.at(3),
+                                              new_args.at(4),
+                                              new_args.at(5));
 }
 
-void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const std::shared_ptr<Node>& delta)
+void op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto gamma = get_input_op(0);
     auto beta = get_input_op(1);
@@ -254,21 +255,21 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     //and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
     //Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
     //Please see `add_output` in `BatchNorm::BatchNorm` for more details
-    std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
+    vector<shared_ptr<Node>> goes(get_outputs().size());
 
     for (auto _input : get_output_inputs(0))
     {
-        auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
+        auto goe = dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
         goes.at(goe->get_n()) = _input->get_node();
     }
 
     auto mean = goes.at(1);
     auto var = goes.at(2);
-    auto bbn = std::make_shared<op::BatchNormBackprop>(
-        get_eps_value(), gamma, beta, input, mean, var, delta);
-    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
-    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
-    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
+    auto bbn =
+        make_shared<op::BatchNormBackprop>(get_eps_value(), gamma, beta, input, mean, var, delta);
+    auto dinput = make_shared<op::GetOutputElement>(bbn, 0);
+    auto dgamma = make_shared<op::GetOutputElement>(bbn, 1);
+    auto dbeta = make_shared<op::GetOutputElement>(bbn, 2);
 
     adjoints.add_delta(input, dinput);
     adjoints.add_delta(gamma, dgamma);
