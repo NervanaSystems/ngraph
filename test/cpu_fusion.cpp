@@ -1007,7 +1007,7 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
     auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    cf->call({_input, _gamma, _beta, _mean, _var}, {bn_output});
+    cf->call({bn_output}, {_input, _gamma, _beta, _mean, _var});
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));

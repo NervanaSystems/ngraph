@@ -23,7 +23,6 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"

@@ -19,7 +19,6 @@
 
 #include "mkldnn_emitter.hpp"
 
-#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
