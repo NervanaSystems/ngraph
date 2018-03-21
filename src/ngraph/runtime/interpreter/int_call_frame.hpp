@@ -135,8 +135,8 @@ public:
     /// @brief Invoke the function with values matching the signature of the function.
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
-    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
     std::vector<runtime::PerformanceCounter> get_performance_data() const override;
 
     void set_nan_check(bool);
@@ -144,13 +144,13 @@ public:
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
-    void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<TensorView>>& outputs) override;
-    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& inputs,
-                     const std::vector<std::shared_ptr<HostTensorView>>& outputs);
+    void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
+                     const std::vector<std::shared_ptr<TensorView>>& inputs) override;
+    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& outputs,
+                     const std::vector<std::shared_ptr<HostTensorView>>& inputs);
     void call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
-              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs,
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
@@ -466,7 +466,7 @@ private:
         else if (node_op == "FunctionCall")
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
-            call(function, args, out);
+            call(function, out, args);
         }
         else if (node_op == "Greater")
         {
@@ -643,7 +643,7 @@ private:
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(reduction_function, {tx, ty}, {tr});
+                call(reduction_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
@@ -671,7 +671,7 @@ private:
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(reduction_function, {tx, ty}, {tr});
+                call(reduction_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
@@ -763,7 +763,7 @@ private:
                     element::boolean, Shape{}, "selection_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(selection_function, {tx, ty}, {tr});
+                call(selection_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<char*>(tr->get_data_ptr()));
             };
 
@@ -778,7 +778,7 @@ private:
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(scatter_function, {tx, ty}, {tr});
+                call(scatter_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
