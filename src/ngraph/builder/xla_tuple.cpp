@@ -184,10 +184,10 @@ namespace
 }
 
 void xla::call(shared_ptr<runtime::CallFrame> call_frame,
-               const runtime::TensorViewPtrs& inputs,
-               const runtime::TensorViewPtrs& outputs)
+               const runtime::TensorViewPtrs& outputs,
+               const runtime::TensorViewPtrs& inputs)
 {
-    runtime::TensorViewPtrs flat_inputs(flatten(inputs));
     runtime::TensorViewPtrs flat_outputs(flatten(outputs));
-    call_frame->tensor_call(flat_inputs, flat_outputs);
+    runtime::TensorViewPtrs flat_inputs(flatten(inputs));
+    call_frame->tensor_call(flat_outputs, flat_inputs);
 }

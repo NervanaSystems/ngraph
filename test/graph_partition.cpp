@@ -72,8 +72,8 @@ public:
     {
     }
 
-    void call(const vector<shared_ptr<runtime::TensorView>>& inputs,
-              const vector<shared_ptr<runtime::TensorView>>& outputs)
+    void call(const vector<shared_ptr<runtime::TensorView>>& outputs,
+              const vector<shared_ptr<runtime::TensorView>>& inputs)
     {
         // Every parameter and result node in every sub_function maps to one TensorView
         unordered_map<shared_ptr<Node>, shared_ptr<runtime::TensorView>> map_node_to_tensor_view;
@@ -142,7 +142,7 @@ public:
             }
 
             // Call
-            call_frame->call(parameter_tvs, result_tvs);
+            call_frame->call(result_tvs, parameter_tvs);
         }
     }
 
@@ -336,7 +336,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
     auto f0_external = int_manager->compile(f0);
     auto f0_call_frame = int_backend->make_call_frame(f0_external);
-    f0_call_frame->call({a, b, c}, {r0, r1});
+    f0_call_frame->call({r0, r1}, {a, b, c});
 
     // f1 on CPU
     auto p0 = cpu_backend->make_primary_tensor_view(element::f32, shape);
@@ -348,7 +348,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
     auto f1_external = cpu_manager->compile(f1);
     auto f1_call_frame = cpu_backend->make_call_frame(f1_external);
-    f1_call_frame->call({p0, p1}, {r2});
+    f1_call_frame->call({r2}, {p0, p1});
 
     // f2 on INT
     auto p2 = int_backend->make_primary_tensor_view(element::f32, shape);
@@ -358,7 +358,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
     auto f2_external = int_manager->compile(f2);
     auto f2_call_frame = int_backend->make_call_frame(f2_external);
-    f2_call_frame->call({p2}, {r});
+    f2_call_frame->call({r}, {p2});
 
     // Check final result on INT
     EXPECT_EQ(read_vector<float>(r),
@@ -410,7 +410,7 @@ TEST(graph_partition, hybrid_abc)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
@@ -453,7 +453,7 @@ TEST(graph_partition, hybrid_abcd)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    cf->call({a, b, c, d}, {r});
+    cf->call({r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
@@ -491,7 +491,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
@@ -532,7 +532,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
@@ -562,6 +562,6 @@ TEST(graph_partition, hybrid_no_split)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({a, b}, {c});
+    cf->call({c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
