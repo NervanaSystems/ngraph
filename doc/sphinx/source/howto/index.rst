@@ -9,6 +9,7 @@ How to
 
    execute.rst
    import.rst
+   fuse.rst
     
 
 The "How to" articles in this section explain how to do specific tasks with the 
