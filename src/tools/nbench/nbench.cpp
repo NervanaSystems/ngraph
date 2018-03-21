@@ -22,6 +22,9 @@
 
 #include <fstream>
 #include <ngraph/file_util.hpp>
+#include <ngraph/file_util.hpp>
+#include <ngraph/pass/manager.hpp>
+#include <ngraph/pass/visualize_tree.hpp>
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
@@ -41,6 +44,7 @@ int main(int argc, char** argv)
     bool failed = false;
     bool statistics = false;
     bool timing_detail = false;
+    bool visualize = false;
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -72,6 +76,10 @@ int main(int argc, char** argv)
         {
             timing_detail = true;
         }
+        else if (arg == "-v" || arg == "--visualize")
+        {
+            visualize = true;
+        }
         else
         {
             cout << "Unknown option: " << arg << endl;
@@ -98,6 +106,7 @@ OPTIONS
         -b|--backend       Backend to use (default: CPU)
         -i|--iterations    Iterations (default: 10)
         -s|--statistics    Display op stastics
+        -v|--visualize     Visualize a model (WARNING: requires GraphViz installed)
         --timing_detail    Gather detailed timing
 )###";
         return 1;
@@ -106,6 +115,17 @@ OPTIONS
     const string json_string = file_util::read_file_to_string(model);
     stringstream ss(json_string);
     shared_ptr<Function> f = deserialize(ss);
+
+    if (visualize)
+    {
+        auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
+                               pass::VisualizeTree::get_file_ext();
+
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
+        pass_manager.run_passes(f);
+    }
+
     if (statistics)
     {
         cout << "statistics:" << endl;

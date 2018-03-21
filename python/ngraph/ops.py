@@ -17,12 +17,13 @@
 """Factory functions for all ngraph ops."""
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, CoordinateDiff, Node, Shape, Strides
+from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
+    Shape, Strides
 
-from ngraph.impl.op import Abs, Add, AvgPool, Broadcast, Ceiling, Constant, Convert, Convolution, \
-    Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, Reshape, Sqrt, Subtract, \
-    Sum, Tanh
+from ngraph.impl.op import Abs, Add, AvgPool, Broadcast, Ceiling, Concat, Constant, Convert, \
+    Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, \
+    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, \
+    Reshape, Slice, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List, Optional
 
@@ -278,7 +279,7 @@ def avg_pool(x,                      # type: Node
         padding_below = [0] * len(window_shape)
 
     return AvgPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_above), zero_pad)
+                   Shape(padding_above), Shape(padding_below), zero_pad)
 
 
 @nameable_op
@@ -299,13 +300,13 @@ def max_pool(x,                      # type: Node
         padding_below = [0] * len(window_shape)
 
     return MaxPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_above))
+                   Shape(padding_above), Shape(padding_below))
 
 
 # reduction ops
 @nameable_op
 def sum(node, reduction_axes=None, name=None):
-    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    # type: (Node, Iterable[int], str) -> Node
     """Element-wise sums the input tensor, eliminating the specified reduction axes.
 
     :param reduction_axes: The axes to eliminate through summation.
@@ -316,7 +317,7 @@ def sum(node, reduction_axes=None, name=None):
 
 @nameable_op
 def max(node, reduction_axes=None, name=None):
-    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    # type: (Node, Iterable[int], str) -> Node
     """Max-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node: The tensor we want to max-reduce.
@@ -329,7 +330,7 @@ def max(node, reduction_axes=None, name=None):
 
 @nameable_op
 def min(node, reduction_axes=None, name=None):
-    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    # type: (Node, Iterable[int], str) -> Node
     """Min-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node: The tensor we want to max-reduce.
@@ -342,7 +343,7 @@ def min(node, reduction_axes=None, name=None):
 
 @nameable_op
 def prod(node, reduction_axes=None, name=None):
-    # type: (Node, Optional[Iterable[int]], Optional[str]) -> Node
+    # type: (Node, Iterable[int], str) -> Node
     """Product-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node: The tensor we want to product-reduce.
@@ -351,3 +352,35 @@ def prod(node, reduction_axes=None, name=None):
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Product(node, AxisSet(reduction_axes))
+
+
+# reshape ops
+@nameable_op
+def slice(node, lower_bounds, upper_bounds, strides=None, name=None):
+    # type: (Node, List[int], List[int], List[int], str) -> Node
+    """Take a slice of an input tensor, (sub-tensor) that resides within a bounding box.
+
+    Optionally this function may be provided with stride along each axis.
+
+    :param node: The tensor we want to slice.
+    :param lower_bounds: The (inclusive) lower-bound coordinates for the tensor slice.
+    :param upper_bounds: The (exclusive) upper-bound coordinates for the tensor slice.
+    :param strides: The strides for the tensor slice.
+    :param name: Optional name for the output node.
+    :return: Return node that represents a slice of input nodes data.
+    """
+    if strides is None:
+        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds))
+    else:
+        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds), Strides(strides))
+
+
+@nameable_op
+def concat(nodes, axis):  # type: (List[Node], int) -> Node
+    """Concatenate input nodes into single new node along specified axis.
+
+    :param nodes: The nodes we want concatenate into single new node.
+    :param axis: The axis along which we want to concatenate input nodes.
+    :return: Return new node that is a concatenation of input nodes.
+    """
+    return Concat(NodeVector(nodes), axis)
