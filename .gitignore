@@ -89,3 +89,14 @@ doc/doxygen/man/*
 doc/doxygen/latex/*
 doc/doxygen/xml/*
 doc/doxygen/html/*
+
+
+# python venv things that might get added accidentally
+../
+python-wheels/
+.whl
+*.whl
+.venv
+
+# python wheels
+python/share/*
