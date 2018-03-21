@@ -21,9 +21,9 @@
 #include <unordered_map>
 
 #include "cpu_nop_elimination.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/sum.hpp"
 
 #define TI(x) std::type_index(typeid(x))
 

@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include "ngraph/ops/result.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 

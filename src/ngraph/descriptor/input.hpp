@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {

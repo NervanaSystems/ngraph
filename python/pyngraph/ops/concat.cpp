@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/concat.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/concat.hpp"
 
