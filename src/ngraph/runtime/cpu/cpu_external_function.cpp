@@ -304,7 +304,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-#if 1
+#if 0
     {
         const std::string file_string = "rnn-" + std::to_string(counter) + "-before-other.json";
         std::string json_data = ngraph::serialize(m_function, 4, false);
@@ -325,7 +325,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.run_passes(m_function);
     double ttime = dtime() - tstart;
     std::cout << "pass time: " << ttime << std::endl;
-#if 1
+#if 0
     {
         const std::string file_string = "rnn-" + std::to_string(counter) + "-after-all.json";
         std::string json_data = ngraph::serialize(m_function, 4, false);
