@@ -22,12 +22,12 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/reshape.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -63,8 +63,6 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-
-        std::shared_ptr<ngraph::Node> nn;
         auto gop = pattern_map[op];
 
         auto r1 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
@@ -72,7 +70,7 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
         if (r1->get_shape() != gop->get_shape())
         {
             NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
-            return nn;
+            return false;
         }
 
         Shape do_r1(r1->get_shape().size());
@@ -81,10 +79,11 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
         if (do_r1 != r1->get_input_order())
         {
             NGRAPH_DEBUG << "Not a no-op; Not in default input order!";
-            return nn;
+            return false;
         }
 
-        return gop;
+        ngraph::replace_node(m.match_root(), gop);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(reshape1, callback);
@@ -105,7 +104,6 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        std::shared_ptr<ngraph::Node> nn;
         auto gop = pattern_map[op];
 
         if (gop->get_shape() != m.match_root()->get_shape())
@@ -115,7 +113,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
                          << "shape = " << vector_to_string(gop->get_shape());
             NGRAPH_DEBUG << "match_root " << m.match_root()->get_name()
                          << "shape = " << vector_to_string(m.match_root()->get_shape());
-            return nn;
+            return false;
         }
 
         auto r2 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
@@ -134,7 +132,8 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         if (r1->get_input_order() == do_r1 && r2->get_input_order() == do_r2)
         {
             NGRAPH_DEBUG << "Two reshapes were removed!";
-            return gop;
+            ngraph::replace_node(m.match_root(), gop);
+            return true;
         }
 
         auto perm1 = apply_permutation(do_r1, r1->get_input_order());
@@ -142,10 +141,11 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         if (perm2 == do_r1)
         {
             NGRAPH_DEBUG << "Two transposes were removed!";
-            return gop;
+            ngraph::replace_node(m.match_root(), gop);
+            return true;
         }
 
-        return nn;
+        return false;
     };
     auto m = std::make_shared<ngraph::pattern::Matcher>(reshape2, callback);
     this->add_matcher(m);
@@ -165,21 +165,20 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.match_root()->get_name();
 
-        std::shared_ptr<Node> nn;
         auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
         //this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
             NGRAPH_DEBUG << "Reshape isn't transpose. "
                          << vector_to_string(mtranspose->get_input_order());
-            return nn;
+            return false;
         }
 
         auto mdot = mtranspose->get_input_op(0);
         if (mdot->get_shape().size() != 2)
         {
             NGRAPH_DEBUG << "Dot has the wrong shape. " << vector_to_string(mdot->get_shape());
-            return nn;
+            return false;
         }
 
         auto arg0 = mdot->get_input_op(0);
@@ -191,7 +190,8 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         auto reshape1 = std::make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
         auto tdot = std::shared_ptr<Node>(new op::Dot(reshape1, reshape0));
-        return tdot;
+        ngraph::replace_node(m.match_root(), tdot);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(preshape, callback);

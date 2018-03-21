@@ -38,13 +38,13 @@ devices, or it might mean programatically adjusting a model or the compute
 resources it requires, at an unknown or arbitray time after it has been deemed 
 to be trained well enough.
 
-To get started, we've provided a basic example for how to :doc:`execute` a 
-computation with an nGraph backend; this is analogous to a framework bridge.
+To get started, we've provided a basic example for how to :doc:`execute` with 
+an nGraph backend; this is analogous to a framework bridge.
 
 For data scientists or algorithm developers who are trying to extract specifics 
 about the state of a model at a certain node, or who want to optimize a model 
-at a more granular level, we provide an example for how to :doc:`import` a 
-model and run inference after it has been exported from a DL framework.    
+at a more granular level, we provide an example for how to :doc:`import` and 
+run inference after it has been exported from a DL framework.    
 
 This section is under development; we'll continually populate it with more 
 articles geared toward data scientists, algorithm designers, framework developers, 

@@ -19,13 +19,13 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/power.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
 
 namespace ngraph
 {
