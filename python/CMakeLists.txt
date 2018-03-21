@@ -41,27 +41,23 @@ if (DEFINED NGRAPH_INSTALL_PREFIX)
     if(NOT EXISTS ${NGRAPH_INSTALL_PREFIX}/include/ngraph)
         message(FATAL_ERROR "Cannot find ngraph library in ${NGRAPH_INSTALL_PREFIX} make sure that NGRAPH_INSTALL_PREFIX is set correctly")
     endif()
-    set(USE_EMBEDDED_NGRAPH FALSE)
 else()
     if(NOT EXISTS ${CMAKE_SOURCE_DIR}/../src/ngraph)
         message(FATAL_ERROR "Cannot find ngraph source in ${CMAKE_SOURCE_DIR}/..")
     endif()
     set(USE_EMBEDDED_NGRAPH TRUE)
     set(NGRAPH_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/ngraph_dist)
-endif()
-
-set(SETUP_PY_IN "${CMAKE_SOURCE_DIR}/setup.py.in")
-set(SETUP_PY    "${CMAKE_BINARY_DIR}/setup.py")
-configure_file(${SETUP_PY_IN} ${SETUP_PY})
-
-if(USE_EMBEDDED_NGRAPH)
-    set(NGRAPH_SOURCE_DIR ${CMAKE_SOURCE_DIR}/..)
     set(NGRAPH_CMAKE_ARGS "-DNGRAPH_INSTALL_PREFIX=${NGRAPH_INSTALL_PREFIX}")
-
+    if (DEFINED NGRAPH_GPU_ENABLE)
+        set(NGRAPH_CMAKE_ARGS "-DNGRAPH_GPU_ENABLE=TRUE" ${NGRAPH_CMAKE_ARGS})
+    endif()
+    if (DEFINED NGRAPH_USE_PREBUILT_LLVM)
+        set(NGRAPH_CMAKE_ARGS "-DNGRAPH_USE_PREBUILT_LLVM=TRUE" ${NGRAPH_CMAKE_ARGS})
+    endif()
     if(APPLE)
         set(NGRAPH_CMAKE_ARGS "-DCMAKE_MACOSX_RPATH=ON" ${NGRAPH_CMAKE_ARGS})
     endif()
-
+    set(NGRAPH_SOURCE_DIR ${CMAKE_SOURCE_DIR}/..)
     ExternalProject_Add(
         ngraph
         DOWNLOAD_COMMAND ""
@@ -69,3 +65,8 @@ if(USE_EMBEDDED_NGRAPH)
         CMAKE_ARGS ${NGRAPH_CMAKE_ARGS}
         )
 endif()
+
+set(SETUP_PY_IN "${CMAKE_SOURCE_DIR}/setup.py.in")
+set(SETUP_PY    "${CMAKE_BINARY_DIR}/setup.py")
+configure_file(${SETUP_PY_IN} ${SETUP_PY})
+
