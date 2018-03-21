@@ -19,6 +19,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <map>
+#include <array>
 #include <stack>
 #include <numeric>
 #include <fstream>
@@ -185,7 +186,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
           TI(op::Add)}}
     };
     // this is the expected sequence count for fusing
-    const size_t sequence_count = 3;
+    const size_t segment_count = 3;
 
     // find all parameter nodes
     std::vector<NodePtr> param_nodes;
@@ -199,40 +200,52 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     // iterate all parameters and find all valid segments
     std::vector<NodeSegment> segment_bundle;
     for (auto& node : param_nodes) {
-        std::cout << "param: " << node->get_friendly_name() << std::endl;
-        const auto outputs = node->get_users();
-        for (const auto& out : outputs) {
-            std::cout << "    out: " << out->get_friendly_name() << std::endl;
-        }
+//        std::cout << "param: " << node->get_friendly_name() << std::endl;
+//        const auto outputs = node->get_users();
+//        for (const auto& out : outputs) {
+//            std::cout << "    out: " << out->get_friendly_name() << std::endl;
+//        }
         NodeSegment segment;
         FindValidSegments(node, segment, segment_bundle, valid_sequences, 0);
     }
 
-    std::cout << "###### valid segments" << std::endl;
+//    std::cout << "###### valid segments" << std::endl;
     // combined all segments by last operator
     std::map<NodePtr, std::vector<NodeSegment>> op_seg_map;
     for (const auto& segment : segment_bundle) {
-        std::cout << "segment: \n";
-        for (auto& n : segment) {
-            std::cout << "  " << n->get_friendly_name() << std::endl;
+//        std::cout << "segment: \n";
+//        for (auto& n : segment) {
+//            std::cout << "  " << n->get_friendly_name() << std::endl;
+//        }
+        auto op_it = op_seg_map.find(segment.back());
+        if (op_it == op_seg_map.end()) {
+            auto insert_result = op_seg_map.insert(std::make_pair(segment.back(), std::vector<NodeSegment>(segment_count)));
+            op_it = insert_result.first;
         }
-        op_seg_map[segment.back()].push_back(segment);
+        (op_it->second)[segment.type] = segment;
     }
-    std::cout << "###### op seg map" << std::endl;
-    for (auto& op : op_seg_map) {
-        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
-        for (auto& vn : op.second) {
-            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
-            for (auto& n : vn) {
-                std::cout << "   node: " << n->get_friendly_name() << std::endl;
-            }
-        }
-    }
+//    std::cout << "###### op seg map" << std::endl;
+//    for (auto& op : op_seg_map) {
+//        std::cout << "op: " << op.first->get_friendly_name() << std::endl;
+//        for (auto& vn : op.second) {
+//            std::cout << "  segment (" << static_cast<int>(vn.type) << "): " << std::endl;
+//            for (auto& n : vn) {
+//                std::cout << "   node: " << n->get_friendly_name() << std::endl;
+//            }
+//        }
+//    }
 
-    // remove ops with single segment
+    // remove ops with less than segment_count
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();) {
         // remove ops with less than expected segements
-        if (op_it->second.size() < sequence_count) {
+        bool valid = true;
+        for (auto& seg : op_it->second) {
+            if (seg.empty()) {
+                valid = false;
+                break;
+            }
+        }
+        if (!valid) {
             op_it = op_seg_map.erase(op_it);
         }
         else {
@@ -263,16 +276,16 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
-    for (auto& p : param_list) {
-        std::cout << "params: ["
-                  << p.first.get(NodeSegment::DATA)->get_friendly_name() << ", "
-                  << p.first.get(NodeSegment::WEIGHTS)->get_friendly_name() << ", "
-                  << p.first.get(NodeSegment::BIAS)->get_friendly_name() << "]" << std::endl;
-        std::cout << "  op: " << std::endl;
-        for (auto& n : p.second) {
-            std::cout << "   node: " << n->get_friendly_name() << std::endl;
-        }
-    }
+//    for (auto& p : param_list) {
+//        std::cout << "params: ["
+//                  << p.first.get(NodeSegment::DATA)->get_friendly_name() << ", "
+//                  << p.first.get(NodeSegment::WEIGHTS)->get_friendly_name() << ", "
+//                  << p.first.get(NodeSegment::BIAS)->get_friendly_name() << "]" << std::endl;
+//        std::cout << "  op: " << std::endl;
+//        for (auto& n : p.second) {
+//            std::cout << "   node: " << n->get_friendly_name() << std::endl;
+//        }
+//    }
 
 #if 1
     // Expecting in put data shape D=[x, y, z], weights W=[u, v]
@@ -316,10 +329,10 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             const Coordinate lower_bounds{lb[1], 0};
             // striding by the number of time steps
             const Strides strides{data_shape[1],1};
-//            auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
-//
-//            // replace old nodes
-//            function->replace_node(op, slice_node);
+            auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+
+            // replace old nodes
+            function->replace_node(op, slice_node);
         }
         modified = true;
     }
