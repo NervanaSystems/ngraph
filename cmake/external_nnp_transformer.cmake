@@ -44,7 +44,7 @@ if (NGRAPH_NNP_ENABLE)
     #   commit.
     # - After we have ngraph CI job for nnp transformer, ngraph master will be compatible with
     #   nnp transformer guaranteed by CI.
-    set(NNP_TRANSFORMER_GIT_TAG cpp-master)
+    set(NNP_TRANSFORMER_GIT_TAG master)
 
     # Determines where nnp-transformer will be located
     set(NNP_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/nnp_transformer)
