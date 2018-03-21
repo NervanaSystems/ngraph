@@ -834,9 +834,6 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Tanh>(args[0]);
         }
-        // else if (node_op == "XLAGetTupleElement")
-        // {
-        // }
         else
         {
             stringstream ss;
@@ -1208,9 +1205,6 @@ static json write(const Node& n, bool binary_constant_data)
     {
     }
     else if (node_op == "Tanh")
-    {
-    }
-    else if (node_op == "XLAGetTupleElement")
     {
     }
 
