@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/relu.hpp"
+#include "ngraph/op/relu.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/ops/relu.hpp"
