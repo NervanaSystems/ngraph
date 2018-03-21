@@ -50,8 +50,16 @@ void runtime::gpu::check_cuda_errors(CUresult err)
 void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
 {
     void* allocated_buffer_pool;
-    cudaMalloc((void**)&allocated_buffer_pool, buffer_size);
+    cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size);
     return allocated_buffer_pool;
+}
+
+void runtime::gpu::free_gpu_buffer(void* buffer)
+{
+    if (buffer)
+    {
+        cudaFree(buffer);
+    }
 }
 
 void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)

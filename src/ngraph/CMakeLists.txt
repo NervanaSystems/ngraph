@@ -32,62 +32,63 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
-    ops/abs.cpp
-    ops/add.cpp
-    ops/allreduce.cpp
-    ops/avg_pool.cpp
-    ops/batch_norm.cpp
-    ops/broadcast.cpp
-    ops/concat.cpp
-    ops/constant.cpp
-    ops/convert.cpp
-    ops/convolution.cpp
-    ops/cos.cpp
-    ops/cosh.cpp
-    ops/divide.cpp
-    ops/dot.cpp
-    ops/exp.cpp
-    ops/function_call.cpp
-    ops/get_output_element.cpp
-    ops/log.cpp
-    ops/max_pool.cpp
-    ops/maximum.cpp
-    ops/minimum.cpp
-    ops/multiply.cpp
-    ops/negative.cpp
-    ops/not.cpp
-    ops/one_hot.cpp
-    ops/op.cpp
-    ops/pad.cpp
-    ops/parameter.cpp
-    ops/power.cpp
-    ops/reduce.cpp
-    ops/reduce_window.cpp
-    ops/relu.cpp
-    ops/replace_slice.cpp
-    ops/reshape.cpp
-    ops/reverse.cpp
-    ops/result.cpp
-    ops/select.cpp
-    ops/select_and_scatter.cpp
-    ops/sin.cpp
-    ops/sinh.cpp
-    ops/slice.cpp
-    ops/softmax.cpp
-    ops/sqrt.cpp
-    ops/subtract.cpp
-    ops/sum.cpp
-    ops/tan.cpp
-    ops/tanh.cpp
-    ops/util/arithmetic_reduction.cpp
-    ops/util/binary_elementwise_arithmetic.cpp
-    ops/util/binary_elementwise_comparison.cpp
-    ops/util/binary_elementwise.cpp
-    ops/util/requires_tensor_view_args.cpp
-    ops/util/unary_elementwise_arithmetic.cpp
-    ops/util/unary_elementwise.cpp
+    op/abs.cpp
+    op/add.cpp
+    op/allreduce.cpp
+    op/avg_pool.cpp
+    op/batch_norm.cpp
+    op/broadcast.cpp
+    op/concat.cpp
+    op/constant.cpp
+    op/convert.cpp
+    op/convolution.cpp
+    op/cos.cpp
+    op/cosh.cpp
+    op/divide.cpp
+    op/dot.cpp
+    op/exp.cpp
+    op/function_call.cpp
+    op/get_output_element.cpp
+    op/log.cpp
+    op/max_pool.cpp
+    op/maximum.cpp
+    op/minimum.cpp
+    op/multiply.cpp
+    op/negative.cpp
+    op/not.cpp
+    op/one_hot.cpp
+    op/op.cpp
+    op/pad.cpp
+    op/parameter.cpp
+    op/power.cpp
+    op/reduce.cpp
+    op/reduce_window.cpp
+    op/relu.cpp
+    op/replace_slice.cpp
+    op/reshape.cpp
+    op/reverse.cpp
+    op/result.cpp
+    op/select.cpp
+    op/select_and_scatter.cpp
+    op/sin.cpp
+    op/sinh.cpp
+    op/slice.cpp
+    op/softmax.cpp
+    op/sqrt.cpp
+    op/subtract.cpp
+    op/sum.cpp
+    op/tan.cpp
+    op/tanh.cpp
+    op/util/arithmetic_reduction.cpp
+    op/util/binary_elementwise_arithmetic.cpp
+    op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise.cpp
+    op/util/requires_tensor_view_args.cpp
+    op/util/unary_elementwise_arithmetic.cpp
+    op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/dump_sorted.cpp
+    pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
     pass/liveness.cpp
@@ -112,11 +113,12 @@ set (SRC
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
-    types/element_type.cpp
-    types/type.cpp
+    type/element_type.cpp
+    type/type.cpp
     util.cpp
     graph_util.cpp
     placement.cpp
+    cpio.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -186,10 +188,12 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_emitter.cpp
         runtime/cpu/mkldnn_invoke.cpp
         runtime/cpu/mkldnn_utils.cpp
-        runtime/cpu/ops/conv_bias.cpp
-        runtime/cpu/ops/convert_layout.cpp
-        runtime/cpu/ops/sigmoid.cpp
-        runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/kernel/eigen_thread_pool.cpp
+        runtime/cpu/kernel/pad.cpp
+        runtime/cpu/op/conv_bias.cpp
+        runtime/cpu/op/convert_layout.cpp
+        runtime/cpu/op/sigmoid.cpp
+        runtime/cpu/op/matmul_bias.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
@@ -255,9 +259,9 @@ endif()
 
 endif()
 
-if (NGRAPH_ARGON_ENABLE)
-    link_directories(${ARGON_TRANSFORMER_LIB_DIR})
-    include_directories(${ARGON_TRANSFORMER_INCLUDE_DIR})
+if (NGRAPH_NNP_ENABLE)
+    link_directories(${NNP_TRANSFORMER_LIB_DIR})
+    include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -292,8 +296,8 @@ if (NOT APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-if (NGRAPH_ARGON_ENABLE)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_ARGON_ENABLE)
+if (NGRAPH_NNP_ENABLE)
+    target_compile_definitions(ngraph PRIVATE NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
@@ -327,12 +331,12 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-# Argon
-if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.so)
+# NNP
+if (NGRAPH_NNP_ENABLE)
+    target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
     target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
-    add_dependencies(ngraph ext_argon_transformer)
-    add_dependencies(ext_argon_transformer ext_llvm)
+    add_dependencies(ngraph ext_nnp_transformer)
+    add_dependencies(ext_nnp_transformer ext_llvm)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -363,16 +367,16 @@ if (NGRAPH_TBB_ENABLE)
     )
 endif()
 
-if (NGRAPH_ARGON_ENABLE)
-    install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
+if (NGRAPH_NNP_ENABLE)
+    install(DIRECTORY ${NNP_TRANSFORMER_LIB_DIR}/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING PATTERN "*.so"
     )
-    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
         DESTINATION ${NGRAPH_INSTALL_INCLUDE}
         FILES_MATCHING PATTERN "*.hpp"
     )
-    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
         DESTINATION ${NGRAPH_INSTALL_INCLUDE}
         FILES_MATCHING PATTERN "*.h"
     )

@@ -22,9 +22,13 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/result.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
+
+#if not defined(EIGEN_MPL2_ONLY)
+#error("The flag `EIGEN_MPL2_ONLY` must be defined");
+#endif
 
 using namespace std;
 using namespace ngraph;

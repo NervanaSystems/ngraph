@@ -25,7 +25,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/result_vector.hpp"
+#include "ngraph/op/result_vector.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
 
@@ -189,56 +189,39 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 {
     using namespace ngraph;
 
-    // Traverse fprop to make a map that stores parameters with the same
-    // shape and element type as the nodes in fprop
-    NodeMap node_param_map;
-    ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-        node_param_map.add(
-            node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
-    });
-
     // Traverse bprop to find all of the nodes in the graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
     ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-        if (in_bprop.count(node) == 0)
+
+        if (node->get_outputs().size() == 1)
         {
-            in_bprop.insert(node);
+            if (in_bprop.count(node) == 0)
+            {
+                in_bprop.insert(node);
+            }
         }
+
     });
 
-    // Get the input paramters of fprop
-    std::unordered_set<std::shared_ptr<Node>> fprop_params;
-    for (auto node : fprop->get_parameters())
-    {
-        if (fprop_params.count(node) == 0)
+    // Traverse fprop to make a map that stores parameters with the same
+    // shape and element type as the nodes in fprop
+    FpropCache fprop_cache;
+    fprop_cache.node_param_map = std::make_shared<NodeMap>();
+    ngraph::traverse_nodes(fprop, [&fprop_cache, &in_bprop](std::shared_ptr<Node> node) {
+        if (in_bprop.count(node) != 0)
         {
-            fprop_params.insert(node);
+            fprop_cache.node_param_map->add(
+                node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
         }
-    }
+    });
 
     // Find all of the nodes that are intermediate values of fprop and used in
     // bprop
     // and store those nodes that aren't needed in bprop
-    FpropCache fprop_cache;
     std::vector<std::shared_ptr<Node>> unused_nodes;
-    for (auto kv : node_param_map.get_node_map())
+    for (auto kv : fprop_cache.node_param_map->get_node_map())
     {
-        // if it's not in bprop, mark it unused
-        if (in_bprop.count(kv.first) == 0)
-        {
-            unused_nodes.push_back(kv.first);
-        }
-        // otherwise save in in the ouputs
-        else
-        {
-            fprop_cache.fprop_output_nodes.push_back(kv.first);
-        }
-    }
-
-    // erase all unused nodes form the map
-    for (auto node : unused_nodes)
-    {
-        node_param_map.get_node_map().erase(node);
+        fprop_cache.fprop_output_nodes.push_back(kv.first);
     }
 
     // create the new outputs for fprop and the new fprop function
@@ -262,13 +245,13 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // clone the nodes in bprop, replacing fprop-related nodes with the
     // intermediate parameters
-    ngraph::clone_nodes(bprop->get_ops(), node_param_map);
+    ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
 
     // get cloned bprop results
     ResultVector cloned_results;
     for (auto node : bprop->get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_param_map.get(node));
+        auto result = std::dynamic_pointer_cast<op::Result>(fprop_cache.node_param_map->get(node));
         if (!result)
         {
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
@@ -281,14 +264,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(param)));
+            std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(param)));
     }
 
     // add the cached fprop nodes as inputs to bprop
     for (auto x : fprop_cache.fprop_output_nodes)
     {
         bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(x)));
+            std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(x)));
     }
 
     // create the new bprop function

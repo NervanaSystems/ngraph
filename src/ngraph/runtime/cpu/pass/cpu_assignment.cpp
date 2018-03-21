@@ -25,15 +25,16 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/relu.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -246,9 +247,47 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPool)
+                {
+                    auto max_pool = static_cast<op::MaxPool*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        max_pool->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolBackprop)
+                {
+                    auto max_pool = static_cast<op::MaxPoolBackprop*>(node);
+
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg1_rank = arg1_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(1) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        max_pool->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Relu)
                 {
-                    auto avg_pool = static_cast<op::Relu*>(node);
+                    auto relu = static_cast<op::Relu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
@@ -260,7 +299,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        avg_pool->set_op_annotations(op_annotations);
+                        relu->set_op_annotations(op_annotations);
                     }
                 }
 
@@ -278,31 +317,69 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::SigmoidBackprop)
+                {
+                    auto sigmoid = static_cast<op::SigmoidBackprop*>(node);
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        sigmoid->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
-                    auto avg_pool = static_cast<op::ReluBackprop*>(node);
+                    auto relu_bprop = static_cast<op::ReluBackprop*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        avg_pool->set_op_annotations(op_annotations);
+                        relu_bprop->set_op_annotations(op_annotations);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
                 {
-                    auto batchnorm = static_cast<op::BatchNorm*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    batchnorm->set_op_annotations(op_annotations);
+                    auto input_shape = node->get_input_shape(2);
+                    auto input_rank = input_shape.size();
+                    if ((input_rank == 4 && node->get_input_element_type(2) == element::f32))
+                    {
+                        auto batchnorm = static_cast<op::BatchNorm*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        batchnorm->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormBackprop)
+                {
+                    auto input_shape = node->get_input_shape(2);
+                    auto input_rank = input_shape.size();
+                    auto delta_shape = node->get_input_shape(5);
+                    auto delta_rank = delta_shape.size();
+                    if ((input_rank == 4 && delta_rank == 4 &&
+                         node->get_input_element_type(5) == element::f32 &&
+                         node->get_input_element_type(2) == element::f32))
+                    {
+                        auto batchnorm = static_cast<op::BatchNormBackprop*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        batchnorm->set_op_annotations(op_annotations);
+                    }
                 }
             }
         }
@@ -313,24 +390,31 @@ namespace ngraph
 
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
+    {TI(ngraph::op::AvgPoolBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BatchNormBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::Convolution),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPool>},
+    {TI(ngraph::op::MaxPoolBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPoolBackprop>},
     {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
-    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

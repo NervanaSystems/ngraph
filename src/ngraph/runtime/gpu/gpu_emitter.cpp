@@ -28,116 +28,107 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/abs.hpp"
-#include "ngraph/ops/acos.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/allreduce.hpp"
-#include "ngraph/ops/asin.hpp"
-#include "ngraph/ops/atan.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/cos.hpp"
-#include "ngraph/ops/cosh.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/equal.hpp"
-#include "ngraph/ops/exp.hpp"
-#include "ngraph/ops/floor.hpp"
-#include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/greater_eq.hpp"
-#include "ngraph/ops/less.hpp"
-#include "ngraph/ops/less_eq.hpp"
-#include "ngraph/ops/log.hpp"
-#include "ngraph/ops/max.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/min.hpp"
-#include "ngraph/ops/minimum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/negative.hpp"
-#include "ngraph/ops/not.hpp"
-#include "ngraph/ops/not_equal.hpp"
-#include "ngraph/ops/one_hot.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/power.hpp"
-#include "ngraph/ops/product.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/ops/reduce_window.hpp"
-#include "ngraph/ops/relu.hpp"
-#include "ngraph/ops/remainder.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/result.hpp"
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/ops/select.hpp"
-#include "ngraph/ops/select_and_scatter.hpp"
-#include "ngraph/ops/sign.hpp"
-#include "ngraph/ops/sin.hpp"
-#include "ngraph/ops/sinh.hpp"
-#include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/softmax.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/tan.hpp"
-#include "ngraph/ops/tanh.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/function_call.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/remainder.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
-using namespace ngraph;
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace gpu
         {
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
+            void GPU_Emitter::EmitElementwise(
+                GPU_ExternalFunction* external_function,
+                codegen::CodeWriter& writer,
+                const ngraph::Node* n,
+                const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
             {
                 if (out[0].get_size() == 0)
                 {
                     return;
                 }
-                writer << "{  // " << node->get_name() << "\n";
-                writer.indent++;
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "ngraph::runtime::gpu::emit_abs((void*) " << args[0].get_name()
-                       << ", (void*) " << out[0].get_name() << ", count);\n";
-                writer.indent--;
-                writer << "}\n";
-            }
 
-            void GPU_Emitter::EmitUnaryElementwise(GPU_ExternalFunction* external_function,
-                                                   codegen::CodeWriter& writer,
-                                                   const ngraph::Node* node,
-                                                   const std::vector<GPU_TensorViewWrapper>& args,
-                                                   const std::vector<GPU_TensorViewWrapper>& out)
-            {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-                writer << "{  // " << node->get_name() << "\n";
+                writer << "{  // " << n->get_name() << "\n";
                 writer.indent++;
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "if(count == 0) return;\n";
-                writer << "ngraph::runtime::gpu::emit_unary_elementwise_op<ngraph::op::"
-                       << node->description() << ">((void*) " << args[0].get_name() << ", (void*) "
-                       << out[0].get_name() << ", count, \"" << node->description() << "\");\n";
+                writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
+                       << n->description() << ">(\"" << n->description() << "\""
+                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", count"
+                       << ", CUdeviceptr(" << out[0].get_name() << ")";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
+                }
+                writer << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }
@@ -227,18 +218,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+                //case that can be treat as dot1d
+                if ((arg0_shape.size() == arg1_shape.size()) &&
+                    (arg0_shape.size() == dot->get_reduction_axes_count()))
+
                 {
+                    for (int i = 0; i < arg0_shape.size(); i++)
+                    {
+                        if (arg0_shape[i] != arg1_shape[i])
+                        {
+                            throw std::runtime_error(
+                                "input1 and input2 shape does not match for dot;");
+                        }
+                    }
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "cublasSdot("
-                           << "cublas_handle," << arg0_shape[0] << "," << args[0].get_name() << ","
+                           << "cublas_handle," << args[0].get_size() << "," << args[0].get_name()
+                           << ","
                            << "1," << args[1].get_name() << ","
                            << "1," << out[0].get_name() << ");\n";
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -259,14 +263,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.indent--;
                     writer << "}\n";
                 }
-                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+                else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
+                         (dot->get_reduction_axes_count() == 1))
                 {
                     // GEMM Call
                     if (arg0_shape[0] != out[0].get_shape()[0] || // m
                         arg1_shape[1] != out[0].get_shape()[1] || // n
                         arg0_shape[1] != arg1_shape[0])           // k
                     {
-                        throw std::runtime_error("input and output shape is not correct for dot;");
+                        throw std::runtime_error("input and output shape does not match for dot;");
                     }
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
@@ -484,9 +489,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     writer << "{   // " << node->get_name() << " \n";
                     writer.indent++;
-                    writer << "runtime::gpu::emit_broadcast(" << args[0].get_name() << ", "
-                           << out[0].get_name() << ", " << repeat_size << ", " << repeat_times
-                           << ", " << out[0].get_size() << ");\n";
+                    writer << "runtime::gpu::emit_broadcast(\"" << node->description()
+                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << out[0].get_name() << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", " << repeat_size << ", " << repeat_times << ", "
+                           << out[0].get_size() << ");\n";
+
                     writer.indent--;
                     writer << "}\n";
                 }
@@ -513,15 +523,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.indent++;
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
-
                 auto result_shape = out[0].get_shape();
-                auto& result_element_type = out[0].get_element_type();
-
                 auto input_order = reshape->get_input_order();
-
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-
                 size_t result_shape_product = 1;
+
                 for (auto i : result_shape)
                 {
                     result_shape_product *= i;
@@ -614,6 +620,38 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                        << "descriptor," << args[1].get_name() << ","
                        << "&beta,"
                        << "descriptor," << out[0].get_name() << ");\n";
+                writer.indent--;
+                writer << "}\n";
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::OneHot)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto onehot = static_cast<const ngraph::op::OneHot*>(node);
+                auto arg_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+                size_t idx = onehot->get_one_hot_axis();
+                size_t repeat_times = result_shape[idx];
+                size_t repeat_size = 1;
+                for (size_t i = idx + 1; i < result_shape.size(); i++)
+                {
+                    repeat_size *= result_shape[i];
+                }
+
+                writer << "{   // " << node->get_name() << "\n";
+                writer.indent++;
+                writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
+                       << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
+                writer << "runtime::gpu::emit_onehot(\"" << node->description()
+                       << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                       << out[0].get_name() << ")"
+                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", " << repeat_size << ", " << repeat_times << ", " << args[0].get_size()
+                       << ");\n";
                 writer.indent--;
                 writer << "}\n";
             }

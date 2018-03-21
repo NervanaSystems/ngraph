@@ -18,8 +18,9 @@
 
 #include <memory>
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"
@@ -98,7 +99,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                cf->tensor_call(df_input_args, df_output_args);
+                cf->tensor_call(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -187,13 +188,17 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
-            auto cache_fwd = manager->compile(fprop_cache.fprop);
+            NodeMap nm1;
+            auto clone_fwd = clone_function(fprop_cache.fprop, nm1);
+            auto cache_fwd = manager->compile(clone_fwd);
             auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
-            cache_fwd_cf->tensor_call(f_input_args, mod_f_output_args);
+            cache_fwd_cf->tensor_call(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
-            auto cache_dfdx = get_autodiff<T>(
-                manager, backend, fprop_cache.bprop, mod_df_input_args, indep_params);
+            NodeMap nm2;
+            auto clone_bwd = clone_function(fprop_cache.bprop, nm2);
+            auto cache_dfdx =
+                get_autodiff<T>(manager, backend, clone_bwd, mod_df_input_args, indep_params);
 
             const auto numpy_atol = 1e-5f;
             const auto numpy_rtol = 1e-8f;

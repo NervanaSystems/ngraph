@@ -14,76 +14,82 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/serializer.hpp"
+#include <fstream>
+#include <functional>
+
+#include "ngraph/cpio.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/ops/abs.hpp"
-#include "ngraph/ops/acos.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/allreduce.hpp"
-#include "ngraph/ops/asin.hpp"
-#include "ngraph/ops/atan.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/cos.hpp"
-#include "ngraph/ops/cosh.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/equal.hpp"
-#include "ngraph/ops/exp.hpp"
-#include "ngraph/ops/floor.hpp"
-#include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/greater_eq.hpp"
-#include "ngraph/ops/less.hpp"
-#include "ngraph/ops/less_eq.hpp"
-#include "ngraph/ops/log.hpp"
-#include "ngraph/ops/max.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/min.hpp"
-#include "ngraph/ops/minimum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/negative.hpp"
-#include "ngraph/ops/not.hpp"
-#include "ngraph/ops/not_equal.hpp"
-#include "ngraph/ops/one_hot.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/power.hpp"
-#include "ngraph/ops/product.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/ops/reduce_window.hpp"
-#include "ngraph/ops/relu.hpp"
-#include "ngraph/ops/remainder.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/result.hpp"
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/ops/select.hpp"
-#include "ngraph/ops/select_and_scatter.hpp"
-#include "ngraph/ops/sign.hpp"
-#include "ngraph/ops/sin.hpp"
-#include "ngraph/ops/sinh.hpp"
-#include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/softmax.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/tan.hpp"
-#include "ngraph/ops/tanh.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/function_call.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/remainder.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
+using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
@@ -101,10 +107,12 @@ T get_or_default(nlohmann::json& j, const std::string& key, const T& default_val
 }
 
 static std::shared_ptr<ngraph::Function>
-    read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
+    read_function(const json&,
+                  std::unordered_map<std::string, std::shared_ptr<Function>>&,
+                  function<const_data_callback_t>);
 
-static json write(const ngraph::Function&);
-static json write(const ngraph::Node&);
+static json write(const ngraph::Function&, bool binary_constant_data);
+static json write(const ngraph::Node&, bool binary_constant_data);
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -144,12 +152,40 @@ static element::Type read_element_type(const json& j)
     return element::Type(bitwidth, is_real, is_signed, c_type_string);
 }
 
-string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
+void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
+{
+    ofstream out(path);
+    serialize(out, func, indent);
+}
+
+void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+{
+    string j = serialize(func, indent, true);
+    cpio::Writer writer(out);
+    writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
+
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        traverse_nodes(const_cast<Function*>(f.get()), [&](shared_ptr<Node> node) {
+            if (auto c = dynamic_pointer_cast<op::Constant>(node))
+            {
+                uint32_t size = static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                      c->get_output_element_type(0).size());
+                writer.write(c->get_name(), c->get_data_ptr(), size);
+            }
+        });
+    });
+
+    writer.close();
+}
+
+string
+    ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
     vector<json> functions;
-    traverse_functions(func,
-                       [&](shared_ptr<ngraph::Function> f) { functions.push_back(write(*f)); });
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        functions.push_back(write(*f, binary_constant_data));
+    });
     for (auto it = functions.rbegin(); it != functions.rend(); it++)
     {
         j.push_back(*it);
@@ -176,27 +212,71 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 {
-    json js = json::parse(s);
     shared_ptr<Function> rc;
-    unordered_map<string, shared_ptr<Function>> function_map;
-    for (json func : js)
+    if (file_util::exists(s))
     {
-        shared_ptr<Function> f = read_function(func, function_map);
-        rc = f;
+        cpio::Reader reader(s);
+        vector<cpio::FileInfo> file_info = reader.get_file_info();
+        if (file_info.size() > 0)
+        {
+            // The first file is the model
+            uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
+            char* data = new char[size];
+            reader.read(file_info[0].get_name(), data, size);
+            string jstr(data, size);
+            delete[] data;
+            json js = json::parse(jstr);
+            unordered_map<string, shared_ptr<Function>> function_map;
+            for (json func : js)
+            {
+                shared_ptr<Function> f = read_function(
+                    func,
+                    function_map,
+                    [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                        shared_ptr<Node> const_node;
+                        for (const cpio::FileInfo& info : file_info)
+                        {
+                            if (info.get_name() == const_name)
+                            {
+                                void* const_data = malloc(info.get_size());
+                                reader.read(const_name, const_data, info.get_size());
+                                const_node = make_shared<op::Constant>(et, shape, const_data);
+                                free(const_data);
+                                break;
+                            }
+                        }
+                        return const_node;
+                    });
+                rc = f;
+            }
+        }
+    }
+    else
+    {
+        json js = json::parse(s);
+        unordered_map<string, shared_ptr<Function>> function_map;
+        for (json func : js)
+        {
+            shared_ptr<Function> f = read_function(func, function_map, nullptr);
+            rc = f;
+        }
     }
 
     return rc;
 }
 
-static json write(const Function& f)
+static json write(const Function& f, bool binary_constant_data)
 {
     json function;
     function["name"] = f.get_name();
 
+    vector<string> parameter_list;
     for (auto param : f.get_parameters())
     {
-        function["parameters"].push_back(param->get_name());
+        parameter_list.push_back(param->get_name());
     }
+    function["parameters"] = parameter_list;
+
     // TODO Functions can return multiple results
     for (size_t i = 0; i < f.get_output_size(); ++i)
     {
@@ -239,14 +319,16 @@ static json write(const Function& f)
     json nodes;
     for (shared_ptr<Node> node : result_list)
     {
-        nodes.push_back(write(*node));
+        nodes.push_back(write(*node, binary_constant_data));
     }
     function["ops"] = nodes;
     return function;
 }
 
 static shared_ptr<ngraph::Function>
-    read_function(const json& func_js, unordered_map<string, shared_ptr<Function>>& function_map)
+    read_function(const json& func_js,
+                  unordered_map<string, shared_ptr<Function>>& function_map,
+                  function<const_data_callback_t> const_data_callback)
 {
     shared_ptr<ngraph::Function> rc;
 
@@ -357,8 +439,15 @@ static shared_ptr<ngraph::Function>
                 node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
             auto element_type = read_element_type(type_node_js.at("element_type"));
             auto shape = type_node_js.at("shape");
-            auto value = node_js.at("value").get<vector<string>>();
-            node = make_shared<op::Constant>(element_type, shape, value);
+            try
+            {
+                auto value = node_js.at("value").get<vector<string>>();
+                node = make_shared<op::Constant>(element_type, shape, value);
+            }
+            catch (...)
+            {
+                node = const_data_callback(node_name, element_type, shape);
+            }
         }
         else if (node_op == "Convert")
         {
@@ -779,7 +868,7 @@ static shared_ptr<ngraph::Function>
     return rc;
 }
 
-static json write(const Node& n)
+static json write(const Node& n, bool binary_constant_data)
 {
     json node;
     node["name"] = n.get_name();
@@ -875,7 +964,10 @@ static json write(const Node& n)
     else if (node_op == "Constant")
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        node["value"] = tmp->get_value_strings();
+        if (!binary_constant_data)
+        {
+            node["value"] = tmp->get_value_strings();
+        }
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }

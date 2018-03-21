@@ -13,52 +13,74 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-########################
-Intel nGraph++ library
-########################
-
-Welcome to Intel® nGraph™, an open source C++ library for developers of 
-:abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
-components, APIs, and documentation that can be used to compile and run 
-:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of 
-frameworks.  
-
-.. figure:: graphics/ngraph-hub.png  
+###############
+nGraph library
+###############
 
 
-For this early release, we've provided :doc:`framework-integration-guides` to 
-compile and run MXNet\* and TensorFlow\*-based projects.
+Welcome to nGraph™, an open-source C++ compiler library for running and 
+training :abbr:`Deep Neural Network (DNN)` models. This project is 
+framework-neutral and can target a variety of modern devices or platforms. 
+
+.. figure:: graphics/ngraph-ecosystem.png
+   :width: 585px   
+  
+nGraph currently supports :doc:`three popular <framework-integration-guides>` 
+frameworks for :abbr:`Deep Learning (DL)` models through what we call 
+a :term:`bridge` that can be integrated during the framework's build time. 
+For developers working with other frameworks (even those not listed above), 
+we've created a :doc:`How to Guide <howto/index>` guide so you can learn how to create 
+custom bridge code that can be used to :doc:`compile and run <howto/execute>` 
+a training model.
+
+We've recently added initial support for the ONNX format. Developers who 
+already have a "trained" model can use nGraph to bypass a lot of the 
+framework-based complexity and :doc:`howto/import` to test or run it 
+on targeted and efficient backends with our user-friendly ``ngraph_api``. 
+With nGraph, data scientists can focus on data science rather than worrying 
+about how to adapt models to train and run efficiently on different devices.
+
+
+Supported platforms
+--------------------
+
+Initially-supported backends include:
+
+* Intel® Architecture Processors (CPUs), 
+* Intel® Nervana™ Neural Network Processor™ (NNPs), and 
+* NVIDIA\* CUDA (GPUs). 
+
+Tentatively in the pipeline, we plan to add support for more backends,
+including:
+
+* :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
+* Movidius 
 
 .. note:: The library code is under active development as we're continually 
-   adding support for more ops, more frameworks, and more backends. 
+   adding support for more kinds of DL models and ops, framework compiler 
+   optimizations, and backends. 
 
-The nGraph++ library translates a framework’s representation of computations 
-into an :abbr:`Intermediate Representation (IR)` that promotes computational 
-efficiency on target hardware. Initially-supported backends include Intel 
-Architecture CPUs (``CPU``), the Intel® Nervana Neural Network Processor™ (NNP), 
-and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
-memory management and data layout abstraction. 
 
-Further project details can be found on our :doc:`project/about` page. 
+Further project details can be found on our :doc:`project/about` page, or see 
+our :doc:`install` guide for how to get started.   
 
 
 
 =======
 
-Sections
-=========
+Contents
+========
 
 .. toctree::
    :maxdepth: 1
    :name: tocmaster
-   :caption: Table of Contents
+   :caption: Documentation
 
-   installation.rst
-   testing-libngraph.rst
-   framework-integration-guides.rst
+   install.rst
    graph-basics.rst
    howto/index.rst
    ops/index.rst
+   framework-integration-guides.rst
    project/index.rst
 
 

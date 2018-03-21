@@ -33,70 +33,71 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/abs.hpp"
-#include "ngraph/ops/acos.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/allreduce.hpp"
-#include "ngraph/ops/asin.hpp"
-#include "ngraph/ops/atan.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/ceiling.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/cos.hpp"
-#include "ngraph/ops/cosh.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/equal.hpp"
-#include "ngraph/ops/exp.hpp"
-#include "ngraph/ops/floor.hpp"
-#include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/greater_eq.hpp"
-#include "ngraph/ops/less.hpp"
-#include "ngraph/ops/less_eq.hpp"
-#include "ngraph/ops/log.hpp"
-#include "ngraph/ops/max.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/min.hpp"
-#include "ngraph/ops/minimum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/negative.hpp"
-#include "ngraph/ops/not.hpp"
-#include "ngraph/ops/not_equal.hpp"
-#include "ngraph/ops/one_hot.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/power.hpp"
-#include "ngraph/ops/product.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/ops/reduce_window.hpp"
-#include "ngraph/ops/relu.hpp"
-#include "ngraph/ops/remainder.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/result.hpp"
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/ops/select.hpp"
-#include "ngraph/ops/select_and_scatter.hpp"
-#include "ngraph/ops/sign.hpp"
-#include "ngraph/ops/sin.hpp"
-#include "ngraph/ops/sinh.hpp"
-#include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/softmax.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/tan.hpp"
-#include "ngraph/ops/tanh.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/function_call.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/remainder.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -109,17 +110,17 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
-#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
-#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/ops/allreduce.hpp"
+#include "ngraph/op/allreduce.hpp"
 #endif
 
 using namespace std;
@@ -129,6 +130,21 @@ static const string s_output_dir = "cpu_codegen";
 
 // Temporary Memory Pool alignment
 static const size_t s_memory_pool_alignment = 4096;
+
+static void
+    generate_isnan_isinf_check(codegen::CodeWriter& writer,
+                               std::shared_ptr<Node> node,
+                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
+                               const char* funcname)
+{
+    auto ctype = node->get_element_type().c_type_string();
+    writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
+    writer.indent++;
+    writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
+           << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
+    writer.indent--;
+    writer << "}\n";
+}
 
 class StaticInitializers
 {
@@ -252,13 +268,14 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
+    {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
-    , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
+    , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     , m_function_name(function->get_name())
 {
@@ -275,6 +292,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
+    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
+
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
@@ -285,23 +304,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
-
-    bool include_mkldnn_headers = false;
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
-        {
-            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
-            {
-                include_mkldnn_headers = true;
-            }
-        }
-    }
 
     writer +=
         R"(// Generated by the nGraph CPU backend
@@ -312,28 +320,28 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/kernel/avg_pool.hpp"
-#include "ngraph/runtime/kernel/broadcast.hpp"
-#include "ngraph/runtime/kernel/concat.hpp"
-#include "ngraph/runtime/kernel/convolution.hpp"
-#include "ngraph/runtime/kernel/dot.hpp"
-#include "ngraph/runtime/kernel/max.hpp"
-#include "ngraph/runtime/kernel/max_pool.hpp"
-#include "ngraph/runtime/kernel/min.hpp"
-#include "ngraph/runtime/kernel/not.hpp"
-#include "ngraph/runtime/kernel/one_hot.hpp"
-#include "ngraph/runtime/kernel/pad.hpp"
-#include "ngraph/runtime/kernel/product.hpp"
-#include "ngraph/runtime/kernel/reduce.hpp"
-#include "ngraph/runtime/kernel/reduce_window.hpp"
-#include "ngraph/runtime/kernel/relu.hpp"
-#include "ngraph/runtime/kernel/replace_slice.hpp"
-#include "ngraph/runtime/kernel/reshape.hpp"
-#include "ngraph/runtime/kernel/result.hpp"
-#include "ngraph/runtime/kernel/reverse.hpp"
-#include "ngraph/runtime/kernel/select_and_scatter.hpp"
-#include "ngraph/runtime/kernel/slice.hpp"
-#include "ngraph/runtime/kernel/sum.hpp"
+#include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
+#include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/max.hpp"
+#include "ngraph/runtime/reference/max_pool.hpp"
+#include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/not.hpp"
+#include "ngraph/runtime/reference/one_hot.hpp"
+#include "ngraph/runtime/reference/pad.hpp"
+#include "ngraph/runtime/reference/product.hpp"
+#include "ngraph/runtime/reference/reduce.hpp"
+#include "ngraph/runtime/reference/reduce_window.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
+#include "ngraph/runtime/reference/replace_slice.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/result.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
@@ -352,11 +360,6 @@ using namespace ngraph::runtime;
         writer << "#include <tbb/flow_graph.h>\n";
     }
 
-    if (include_mkldnn_headers)
-    {
-        runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(writer);
-    }
-
     string pch_header_source = writer.get_code();
 
     // The "dso_handle" symbol is required by __cxa_atexit()
@@ -370,6 +373,7 @@ using namespace ngraph::runtime;
     {
         writer << "// Declare debug timers\n";
         vector<string> names;
+        size_t index = 0;
         for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
         {
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -377,59 +381,43 @@ using namespace ngraph::runtime;
                 if (!node->is_parameter() && !node->is_constant())
                 {
                     names.push_back(node->get_name());
+                    m_name_index_map.insert({node->get_name(), index++});
                 }
             }
         }
-        for (const string& s : names)
-        {
-            writer << "ngraph::stopwatch timer_" << s << ";\n";
-        }
+        writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
         writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                << "; }\n";
         writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "const char* rc;\n";
-        writer << "switch(index)\n";
+        writer << "static const char* timer_names[" << names.size() << "] =\n";
         writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
+        writer.indent++;
+        vector<string> quoted_names;
+        for (const string& name : names)
         {
-            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+            quoted_names.push_back("\"" + name + "\"");
         }
-        writer << "default: rc = \"\";\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
+        writer << "\n};\n";
+        writer.indent--;
+        writer << "return timer_names[index];\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i]
-                   << ".get_total_microseconds(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size()
+               << " ? timers[index].get_total_microseconds() : 0);\n";
         writer.indent--;
         writer << "}\n";
+
         writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         writer << "{\n";
         writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+        writer << "return (index < " << names.size() << " ? timers[index].get_call_count() : 0);\n";
         writer.indent--;
         writer << "}\n";
         writer << "\n";
@@ -443,15 +431,11 @@ using namespace ngraph::runtime;
             const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
+                m_active_constants.push_back(node);
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                auto c_value_strings = c->get_value_strings();
-                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
-                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
-                writer << "{\n";
-                writer.indent++;
-                writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
-                writer.indent--;
-                writer << "\n};\n\n";
+                string type = tv->get_tensor().get_element_type().c_type_string();
+                writer << "static " << type << "* " << tv->get_tensor().get_name() << " = (("
+                       << type << "*)(" << c->get_data_ptr() << "));\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
@@ -652,7 +636,7 @@ using namespace ngraph::runtime;
             if (!res->needs_copy())
             {
                 shared_ptr<descriptor::TensorView> itv =
-                    res->get_input_op(0)->get_output_tensor_view();
+                    res->get_inputs().at(0).get_output().get_tensor_view();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
             }
         }
@@ -702,10 +686,6 @@ using namespace ngraph::runtime;
                            << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
-                if (m_emit_timing)
-                {
-                    emit_debug_function_entry(writer, node.get(), in, out);
-                }
                 if (runtime::cpu::IsTracingEnabled() &&
                     current_function->get_name() == m_function_name)
                 {
@@ -713,14 +693,21 @@ using namespace ngraph::runtime;
                 }
             }
 
-            writer << "\n// " << node->get_name() << "(";
-            vector<string> parameter_nodes = node_input_names;
-            parameter_nodes.insert(
-                parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
-            writer << join(parameter_nodes);
-            writer << ")\n";
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                writer << "\n// " << node->get_name() << "(";
+                vector<string> parameter_nodes = node_input_names;
+                parameter_nodes.insert(
+                    parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
+                writer << join(parameter_nodes);
+                writer << ")\n";
+            }
 
             // Emit operation body
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                emit_debug_function_entry(writer, node.get(), in, out);
+            }
             string func_name;
             auto it = match_functions.find(node.get());
             if (it == match_functions.end())
@@ -742,13 +729,32 @@ using namespace ngraph::runtime;
                 writer << func_name << "(" << join(names) << ", ctx);\n";
             }
 
+            //skip multi-output nodes since they would be covered by GetOutputElement
+            if (node->get_output_size() == 1 &&
+                //skip non-FP nodes
+                (node->get_element_type() == element::f32 ||
+                 node->get_element_type() == element::f64))
+            {
+                //check inputs and constants?
+                if ((!node->is_parameter() && !node->is_constant()) ||
+                    std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
+                {
+                    if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
+                    {
+                        generate_isnan_isinf_check(writer, node, out, "std::isnan");
+                    }
+
+                    if (std::getenv("NGRAPH_CPU_INF_CHECK"))
+                    {
+                        generate_isnan_isinf_check(writer, node, out, "std::isinf");
+                    }
+                }
+            }
+
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (m_emit_timing)
-                {
-                    emit_debug_function_exit(writer, node.get(), in, out);
-                }
+                emit_debug_function_exit(writer, node.get(), in, out);
                 if (runtime::cpu::IsTracingEnabled() &&
                     current_function->get_name() == m_function_name)
                 {
@@ -909,7 +915,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".start();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+    }
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
@@ -918,7 +927,10 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n";
+    if (m_emit_timing)
+    {
+        writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+    }
 }
 
 bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(

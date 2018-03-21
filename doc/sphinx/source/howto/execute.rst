@@ -1,11 +1,11 @@
 .. execute-cmp.rst
 
 ######################
-Execute a Computation
+Execute a computation
 ######################
 
 This section explains how to manually perform the steps that would normally be 
-performed by a framework :term:`bridge` to execute a computation. Intel® nGraph++ 
+performed by a framework :term:`bridge` to execute a computation. The nGraph 
 library is targeted toward automatic construction; it is far easier for a 
 processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
 it is for a user to map out how that computation happens. Unfortunately, things 

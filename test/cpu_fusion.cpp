@@ -25,10 +25,10 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -40,14 +40,16 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
-#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/autodiff/backprop_function.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -109,14 +111,10 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
-    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
-    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+    auto bias = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{2.0f, 3.0f});
 
-    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
-
-    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{0});
     auto cg = make_shared<op::MatmulBias>(
-        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{0});
+        A, B, bias, A->get_shape(), B->get_shape(), true, true, AxisSet{0});
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
@@ -135,9 +133,9 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    cf->call({a, b}, {result});
-    vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    cf->call({result}, {a, b});
+    vector<float> expected{11, 30, 38, 111};
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_column)
@@ -148,14 +146,10 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
-    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
-    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+    auto bias = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{2.0f, 3.0f});
 
-    auto one = op::Constant::create<float>(element::f32, Shape{2}, std::vector<float>{1.0f, 1.0f});
-
-    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{1});
     auto cg = make_shared<op::MatmulBias>(
-        A, B, one, A->get_shape(), B->get_shape(), true, true, AxisSet{1});
+        A, B, bias, A->get_shape(), B->get_shape(), true, true, AxisSet{1});
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
@@ -174,9 +168,9 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    cf->call({a, b}, {result});
-    vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    cf->call({result}, {a, b});
+    vector<float> expected{11, 29, 39, 111};
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
@@ -213,7 +207,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    cf->call({a, b}, {result});
+    cf->call({result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -249,7 +243,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    cf->call({a, b}, {result});
+    cf->call({result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -390,7 +384,7 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     vector<float> expected_mean{0.602912f, 0.599727f};
     vector<float> expected_variance{0.00472505f, 0.0361782f};
 
-    cf->call({_input, _gamma, _beta}, {bn_output, result_mean, result_variance});
+    cf->call({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
@@ -445,7 +439,7 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     vector<float> expected_mean{0.583388f, 0.619252f};
     vector<float> expected_variance{0.0119972f, 0.0282681f};
-    cf->call({_input, _gamma, _beta}, {bn_output, result_mean, result_variance});
+    cf->call({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
@@ -564,7 +558,7 @@ TEST(cpu_fusion, bn_bprop_n4c3h2w2)
     shared_ptr<runtime::TensorView> _dbeta =
         backend->make_primary_tensor_view(element::f32, beta_shape);
 
-    cf->call({_mean, _var, _input, _gamma, _beta, _delta}, {_dinput, _dgamma, _dbeta});
+    cf->call({_dinput, _dgamma, _dbeta}, {_mean, _var, _input, _gamma, _beta, _delta});
 
     vector<float> expected_input{
         8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
@@ -818,8 +812,8 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto external = manager->compile(f);
     auto cf = backend->make_call_frame(external);
 
-    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val},
-             {conv_test.result_val});
+    cf->call({conv_test.result_val},
+             {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -851,8 +845,8 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
 
-    cf->call({conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val},
-             {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val});
+    cf->call({conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
+             {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
     EXPECT_TRUE(
         test::all_close(conv_test.expected_d_data_val, read_vector<float>(conv_test.d_data_val)));
@@ -894,7 +888,7 @@ TEST(cpu_fusion, sigmoid_n1c1h2w2)
     vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
     copy_data(a, dataA);
 
-    cf->call({a}, {result});
+    cf->call({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -918,7 +912,51 @@ TEST(cpu_fusion, sigmoid_n1c1h4)
     vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
     copy_data(a, dataA);
 
-    cf->call({a}, {result});
+    cf->call({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, sigmoid_bprop_fusion)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    auto df = autodiff::backprop_function(func);
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(df);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(element::f32, delta->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    cf->call({result}, {a, b});
+
+    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }

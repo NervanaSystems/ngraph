@@ -32,6 +32,7 @@ set (SRC
     build_graph.cpp
     copy.cpp
     core_fusion.cpp
+    cpio.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
@@ -59,6 +60,7 @@ set (SRC
 )
 
 add_subdirectory(models)
+add_subdirectory(files)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this
@@ -95,24 +97,23 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
-if(NGRAPH_ARGON_ENABLE)
-    include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
-    set(SRC ${SRC} argon_fusion.cpp)
+if(NGRAPH_NNP_ENABLE)
+    include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP")
 
-    # enable additional Argon backend test
-    set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
-    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
-    set(ADDITIONAL_ARGON_TEST
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
+    # enable additional nnp backend test
+    set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)
+    message(STATUS "NNP_ADDITIONAL_BACKEND_TESTS path: ${NNP_ADDITIONAL_BACKEND_TESTS}")
+    set(ADDITIONAL_NNP_TEST
+            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
+            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
+            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
+            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
+            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
 
-    # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
-    set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
+    # ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
+    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
+    set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
