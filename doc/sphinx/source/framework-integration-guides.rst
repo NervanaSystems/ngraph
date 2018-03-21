@@ -188,13 +188,13 @@ Build with an XLA plugin to ``libngraph``
 
 #. To prepare to build TensorFlow with an XLA plugin capable of running |nGl|, 
    use the standard build process which is a system called "bazel". These 
-   instructions were tested with `bazel version 0.5.4`_. 
+   instructions were tested with `bazel version 0.11.1`_. 
 
    .. code-block:: console
 
-      $ wget https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh
-      $ chmod +x bazel-0.5.4-installer-linux-x86_64.sh
-      $ ./bazel-0.5.4-installer-linux-x86_64.sh --user
+      $ wget https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-installer-linux-x86_64.sh
+      $ chmod +x bazel-0.11.1-installer-linux-x86_64.sh
+      $ ./bazel-0.11.1-installer-linux-x86_64.sh --user
 
 #. Add and source the ``bin`` path to your ``~/.bashrc`` file in order to be 
    able to call bazel from the user's installation we set up:
