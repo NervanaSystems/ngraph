@@ -35,37 +35,10 @@ namespace ngraph
             ///
             /// Output `[d0, ...]`
             ///
-            Softmax(const std::shared_ptr<Node>& arg, const AxisSet& axes)
-                : UnaryElementwiseArithmetic("Softmax", arg)
-                , m_axes(axes)
-            {
-                for (auto axis : m_axes)
-                {
-                    if (axis >= get_shape().size())
-                    {
-                        throw ngraph_error("Axis for softmax reduction operator is out of bounds");
-                    }
-                }
-
-                // empty axes == all axes
-                if (m_axes.size() == 0)
-                {
-                    for (size_t i = 0; i < get_shape().size(); ++i)
-                    {
-                        m_axes.insert(i);
-                    }
-                }
-            }
+            Softmax(const std::shared_ptr<Node>& arg, const AxisSet& axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Softmax>(new_args.at(0), m_axes);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             const AxisSet& get_axes() const { return m_axes; }
         protected:

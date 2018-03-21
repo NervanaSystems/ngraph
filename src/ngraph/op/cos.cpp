@@ -19,10 +19,26 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/sin.hpp"
 
-void ngraph::op::Cos::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Cos::Cos(const shared_ptr<Node>& arg)
+    : UnaryElementwiseArithmetic("Cos", arg)
+{
+}
+
+shared_ptr<Node> op::Cos::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Cos>(new_args.at(0));
+}
+
+void op::Cos::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 
-    adjoints.add_delta(x, -delta * (std::make_shared<op::Sin>(x)));
+    adjoints.add_delta(x, -delta * (make_shared<op::Sin>(x)));
 }

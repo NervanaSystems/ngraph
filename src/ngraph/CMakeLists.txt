@@ -33,11 +33,15 @@ set (SRC
     log.cpp
     node.cpp
     op/abs.cpp
+    op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/asin.cpp
+    op/atan.cpp
     op/avg_pool.cpp
     op/batch_norm.cpp
     op/broadcast.cpp
+    op/ceiling.cpp
     op/concat.cpp
     op/constant.cpp
     op/convert.cpp
@@ -46,30 +50,42 @@ set (SRC
     op/cosh.cpp
     op/divide.cpp
     op/dot.cpp
+    op/equal.cpp
     op/exp.cpp
+    op/floor.cpp
     op/function_call.cpp
     op/get_output_element.cpp
+    op/greater.cpp
+    op/greater_eq.cpp
+    op/less.cpp
+    op/less_eq.cpp
     op/log.cpp
-    op/max_pool.cpp
+    op/max.cpp
     op/maximum.cpp
+    op/max_pool.cpp
+    op/min.cpp
     op/minimum.cpp
     op/multiply.cpp
     op/negative.cpp
     op/not.cpp
+    op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
+    op/product.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
+    op/remainder.cpp
     op/replace_slice.cpp
     op/reshape.cpp
-    op/reverse.cpp
     op/result.cpp
-    op/select.cpp
+    op/reverse.cpp
     op/select_and_scatter.cpp
+    op/select.cpp
+    op/sign.cpp
     op/sin.cpp
     op/sinh.cpp
     op/slice.cpp

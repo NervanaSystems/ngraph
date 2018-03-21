@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
+op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
     : RequiresTensorViewArgs("AllReduce", {arg})
 {
     auto& input = m_inputs.at(0);
@@ -30,4 +30,13 @@ op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
     {
         throw ngraph_error("Unsupported data type for AllReduce");
     }
+}
+
+shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<AllReduce>(new_args.at(0));
 }

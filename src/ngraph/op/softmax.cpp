@@ -25,11 +25,44 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 
-void ngraph::op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
+    : UnaryElementwiseArithmetic("Softmax", arg)
+    , m_axes(axes)
+{
+    for (auto axis : m_axes)
+    {
+        if (axis >= get_shape().size())
+        {
+            throw ngraph_error("Axis for softmax reduction operator is out of bounds");
+        }
+    }
+
+    // empty axes == all axes
+    if (m_axes.size() == 0)
+    {
+        for (size_t i = 0; i < get_shape().size(); ++i)
+        {
+            m_axes.insert(i);
+        }
+    }
+}
+
+shared_ptr<Node> op::Softmax::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Softmax>(new_args.at(0), m_axes);
+}
+
+void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto z = delta * shared_from_this();
-    auto zsum = std::make_shared<op::Sum>(z, m_axes);
+    auto zsum = make_shared<op::Sum>(z, m_axes);
 
     Shape shape;
     for (size_t i = 0; i < get_shape().size(); ++i)
@@ -44,8 +77,8 @@ void ngraph::op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints,
         }
     }
     AxisVector order(zsum->get_shape().size());
-    std::iota(order.begin(), order.end(), 0);
-    auto zreshape = std::make_shared<op::Reshape>(zsum, order, shape);
+    iota(order.begin(), order.end(), 0);
+    auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
     auto adjoint =
         z - builder::make_with_numpy_broadcast<op::Multiply>(shared_from_this(), zreshape);
