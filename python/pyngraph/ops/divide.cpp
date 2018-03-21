@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/ops/divide.hpp"
+#include "ngraph/op/divide.hpp"
 #include "pyngraph/ops/divide.hpp"
 
 namespace py = pybind11;

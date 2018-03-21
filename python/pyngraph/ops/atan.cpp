@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/atan.hpp"
+#include "ngraph/op/atan.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/ops/atan.hpp"

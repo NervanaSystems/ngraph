@@ -20,16 +20,16 @@
 #include <unordered_set>
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/relu.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/type/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
 

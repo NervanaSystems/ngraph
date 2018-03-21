@@ -59,13 +59,13 @@ TEST(builder_xla, simple)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
     auto result_tuple = xla::make_tuple({result});
 
-    xla::call(cf, {abc}, {result_tuple});
+    xla::call(cf, {result_tuple}, {abc});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    xla::call(cf, {bac}, {result_tuple});
+    xla::call(cf, {result_tuple}, {bac});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    xla::call(cf, {acb}, {result_tuple});
+    xla::call(cf, {result_tuple}, {acb});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
