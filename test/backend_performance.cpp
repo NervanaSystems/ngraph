@@ -162,7 +162,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         result_tvs.push_back(result_tv);
 
         std::function<void()> cb = [input_vals, result_tv, cf]() {
-            cf->call(input_vals, {result_tv});
+            cf->call({result_tv}, input_vals);
         };
 
         test_callbacks.push_back(cb);
