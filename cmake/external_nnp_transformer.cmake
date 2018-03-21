@@ -33,7 +33,7 @@ if (NGRAPH_NNP_ENABLE)
     if (DEFINED CUSTOM_NNP_TRANSFORMER_GIT_REPOSITORY)
         set(NNP_TRANSFORMER_GIT_REPOSITORY ${CUSTOM_NNP_TRANSFORMER_GIT_REPOSITORY})
     else()
-        set(NNP_TRANSFORMER_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
+        set(NNP_TRANSFORMER_GIT_REPOSITORY https://github.com/NervanaSystems/nnp-transformer.git)
     endif()
 
     # Set nnp_transformer tag
