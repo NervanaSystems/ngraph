@@ -7,7 +7,7 @@ Core Ops
 :ref:`alphabetical_list`
 
 
-.. more_about: 
+.. _more_about: 
 
 More about Core ``ops`` in nGraph
 -----------------------------------
@@ -47,7 +47,7 @@ that must be performed are:
     implementation should favor clarity over efficiency.
 
 
-.. alphabetical_list:
+.. _alphabetical_list:
 
 Alphabetical list of Core ``ops``
 ----------------------------------

@@ -21,7 +21,7 @@ Often the first challenge of an API user, then, is to figure out how to fuse
 those ops.  There are two main ways to to this:  
 
 
-.. pattern_matching: 
+.. _pattern_matching: 
 
 Apply pattern matching to fuse ops
 ------------------------------------
@@ -33,7 +33,7 @@ Apply pattern matching to fuse ops
 
 
 
-.. graph_rewrite:
+.. _graph_rewrite:
 
 Using GraphRewrite to fuse ops
 --------------------------------
