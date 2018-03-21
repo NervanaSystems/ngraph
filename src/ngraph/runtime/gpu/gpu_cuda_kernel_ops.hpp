@@ -274,7 +274,6 @@ namespace ngraph
                 static constexpr const char* op = "relu_backprop";
                 static constexpr const char* math_kernel = "x1 * int(x0 > 0)";
             };
-
         }
     }
 }
