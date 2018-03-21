@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/ops/get_output_element.hpp"

@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/ceiling.hpp"
+#include "ngraph/op/ceiling.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/ops/ceiling.hpp"

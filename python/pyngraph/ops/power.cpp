@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/power.hpp" // ngraph::op::Power
+#include "ngraph/op/power.hpp" // ngraph::op::Power
 #include "pyngraph/ops/power.hpp"
 
 namespace py = pybind11;
