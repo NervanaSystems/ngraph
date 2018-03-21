@@ -274,7 +274,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
-#if 0
+#if 1
     // Expecting in put data shape D=[x, y, z], weights W=[u, v]
     // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
     // in R=[x*y, v], then we need to slice the result by strided by time steps.
@@ -303,6 +303,10 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
         const auto& dot_shape = dot_node->get_shape();
 
+        auto bias_broadcast_node = std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
+        auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
+        const auto& add_shape = add_node->get_shape();
+
         // create a slice for each user of the dot op matching the original dot op's output
         for (auto op : op_nodes) {
             const auto& cur_data_segment = op_seg_map[op][NodeSegment::DATA];
@@ -312,10 +316,10 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             const Coordinate lower_bounds{lb[1], 0};
             // striding by the number of time steps
             const Strides strides{data_shape[1],1};
-            auto slice_node = std::make_shared<op::Slice>(dot_node, lower_bounds, dot_shape, strides);
-
-            // replace old nodes
-            function->replace_node(op, slice_node);
+//            auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+//
+//            // replace old nodes
+//            function->replace_node(op, slice_node);
         }
         modified = true;
     }
