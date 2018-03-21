@@ -26,7 +26,7 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 
-#include "ngraph/runtime/kernel/avg_pool.hpp"
+#include "ngraph/runtime/reference/avg_pool.hpp"
 
 using namespace std;
 using namespace ngraph;

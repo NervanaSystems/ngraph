@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/reverse.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/reverse.hpp"
 

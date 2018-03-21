@@ -20,7 +20,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"

@@ -20,10 +20,10 @@
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph/type/type.hpp"
 
 using namespace std;
 using namespace ngraph;
