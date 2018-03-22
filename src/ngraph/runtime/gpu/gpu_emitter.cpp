@@ -569,9 +569,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
                 else
                 {
-                    size_t* input_strides = new size_t[arg_rank];
-                    size_t* output_strides = new size_t[arg_rank];
-                    size_t* trans_strides = new size_t[arg_rank];
+                    std::vector<size_t> input_strides(arg_rank);
+                    std::vector<size_t> output_strides(arg_rank);
+                    std::vector<size_t> trans_strides(arg_rank);
                     size_t stride = 1;
                     for (int i = arg_rank - 1; i >= 0; i--)
                     {
@@ -591,14 +591,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "size_t input_strides_h[] = {" << input_strides[0] << "UL";
+                    writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
                     for (int i = 1; i < arg_rank; i++)
                     {
                         writer << ", " << input_strides[i] << "UL";
                     }
                     writer << "};\n";
 
-                    writer << "size_t trans_strides_h[] = {" << trans_strides[0] << "UL";
+                    writer << "std::vector<size_t> trans_strides_h = {" << trans_strides[0] << "UL";
                     for (int i = 1; i < arg_rank; i++)
                     {
                         writer << ", " << trans_strides[i] << "UL";
@@ -609,9 +609,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
                     writer << "void* trans_strides_d = "
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h, "
+                    writer << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
                               "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h, "
+                    writer << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
                               "sizeof(size_t) * rank);\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
