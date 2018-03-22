@@ -138,8 +138,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
                      << m.match_root()->get_name();
 
         auto mpattern = m.match_root(); //add
-        auto m_matmul = std::dynamic_pointer_cast<op::MatmulBias>(mpattern->get_input_op(0));
-        auto m_broadcast = std::dynamic_pointer_cast<op::Broadcast>(mpattern->get_input_op(1));
+        auto m_matmul = ngraph::pattern::Matcher::unique_match<op::MatmulBias>(mpattern);
+        auto m_broadcast = ngraph::pattern::Matcher::unique_match<op::Broadcast>(mpattern);
         auto m_bias = m_broadcast->get_input_op(0);
         auto pattern_map = m.get_pattern_map();
 
