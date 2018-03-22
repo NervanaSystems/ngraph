@@ -859,11 +859,31 @@ static shared_ptr<ngraph::Function>
         // node->set_name(node_name);
     }
 
-    std::vector<std::shared_ptr<Node>> result;
+    //This handles both graphs w/ `op::Result` and legacy graphs w/o it
+    //If we are dealing w/ a legacy graph, add op::Result for each output node
+    ResultVector result;
+    size_t results = 0;
     for (auto result_name : func_result)
     {
-        result.push_back(node_map.at(result_name));
+        auto fr = node_map.at(result_name);
+        if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
+        {
+            result.push_back(res);
+            //make sure we have `op::Result` on top of all outputs
+            results++;
+        }
+        else
+        {
+            result.push_back(std::make_shared<op::Result>(fr));
+        }
     }
+
+    if (results != 0 && results != func_result.size())
+    {
+        throw ngraph_error(
+            " Graph serialization is inconsistent. Some op::Results appear to be missing");
+    }
+
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto param_name : func_parameters)
     {
