@@ -3163,7 +3163,6 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
 // Trivial case with no summed axes.
 TEST(${BACKEND_NAME}, sum_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
@@ -3185,7 +3184,6 @@ TEST(${BACKEND_NAME}, sum_trivial)
 // Failure has been reported at 5D for some reason
 TEST(${BACKEND_NAME}, sum_trivial_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
@@ -3209,7 +3207,6 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
 
 TEST(${BACKEND_NAME}, sum_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
@@ -3234,7 +3231,6 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
 
 TEST(${BACKEND_NAME}, sum_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
@@ -3260,7 +3256,6 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
 
 TEST(${BACKEND_NAME}, sum_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -3286,7 +3281,6 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
 
 TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0};
@@ -3315,9 +3309,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
 
 TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
-
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3345,7 +3337,6 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
 
 TEST(${BACKEND_NAME}, sum_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape_a{0};
@@ -3374,7 +3365,6 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
 
 TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape_a{0, 0};
@@ -3403,7 +3393,6 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
 
 TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -3435,7 +3424,6 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
 
 TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -3467,7 +3455,6 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
 
 TEST(${BACKEND_NAME}, sum_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -3493,7 +3480,6 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
 
 TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -3519,7 +3505,6 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 
 TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0, 2};
@@ -3546,7 +3531,6 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 
 TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape{2, 2};
@@ -3570,7 +3554,6 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 
 TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     Shape shape_a{3, 3, 3};
@@ -3592,6 +3575,28 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
     cf->call({result}, {a});
     EXPECT_TRUE(
         test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
+}
+
+TEST(${BACKEND_NAME}, sum_5d_to_scalar)
+{
+    Shape shape_a{3, 3, 3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2, 3, 4}),
+                                   op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, std::vector<float>(std::pow(3, 5), 1));
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({result}, {a});
+    EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sign)
