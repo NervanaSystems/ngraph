@@ -54,7 +54,6 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
-#include <sys/time.h>
 
 using namespace ngraph;
 using namespace std;
@@ -1016,48 +1015,8 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-TEST(cpu_fusion, rnn_matrix_fusion)
+std::vector<shared_ptr<runtime::TensorView>> rnn_matrix_fusion_eval(const bool enable_pass)
 {
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/seq2seq_fwd.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass::Manager pass_manager;
-//    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("matrix_fusion.svg");
-    pass_manager.run_passes(func);
-}
-
-static double dtime()
-{
-    double tseconds = 0.0;
-    struct timeval mytime;
-    gettimeofday(&mytime,(struct timezone*)0);
-    tseconds = (double)(mytime.tv_sec +
-        mytime.tv_usec*1.0e-6);
-    return( tseconds );
-}
-TEST(cpu_fusion, rnn_matrix_fusion_pass)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/seq2seq_fwd.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("matrix_after_fusion.svg");
-    pass_manager.run_passes(func);
-}
-
-
-TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
-{
-//    const size_t time_steps = 16;
-//    Shape data_shape{128, time_steps, 512};
-//    Shape weights_shape{256, data_shape[2]};
-//    Shape bias_shape{256};
-
     const size_t time_steps = 4;
     Shape data_shape{3, time_steps, 5};
     Shape weights_shape{6, data_shape[2]};
@@ -1066,22 +1025,32 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
     auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
 
+    // results from each time step
     NodeVector results;
-    for (size_t t = 0; t < time_steps; ++t) {
-        auto data_slice = make_shared<op::Slice>(data, Coordinate{0, t, 0}, Coordinate{data_shape[0], t+1, data_shape[2]});
-        auto data_reshape = make_shared<op::Reshape>(data_slice, AxisVector{0, 1, 2}, Shape{data_shape[0], data_shape[2]});
-        auto weights_reshape = make_shared<op::Reshape>(weights, AxisVector{1, 0}, Shape{weights_shape[1], weights_shape[0]});
+    for (size_t t = 0; t < time_steps; ++t)
+    {
+        auto data_slice = make_shared<op::Slice>(
+            data, Coordinate{0, t, 0}, Coordinate{data_shape[0], t + 1, data_shape[2]});
+        auto data_reshape = make_shared<op::Reshape>(
+            data_slice, AxisVector{0, 1, 2}, Shape{data_shape[0], data_shape[2]});
+        auto weights_reshape = make_shared<op::Reshape>(
+            weights, AxisVector{1, 0}, Shape{weights_shape[1], weights_shape[0]});
         auto dot = make_shared<op::Dot>(data_reshape, weights_reshape);
         auto bias_broadcast = make_shared<op::Broadcast>(bias, dot->get_shape(), AxisSet{0});
         auto add = make_shared<op::Add>(dot, bias_broadcast);
         results.push_back(add);
     }
     auto func = make_shared<Function>(results, op::ParameterVector{data, weights, bias});
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("rnn_after_rnn_fusion.svg");
-    pass_manager.run_passes(func);
+    if (enable_pass)
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(func);
+        // check all of our dot/add are converted to a single MatmulBias op.
+        size_t count = count_ops_of_type<op::MatmulBias>(func);
+        EXPECT_EQ(count, 1);
+    }
 
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(func);
@@ -1095,17 +1064,21 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     shared_ptr<runtime::TensorView> bias_tensor =
         backend->make_primary_tensor_view(element::f32, bias->get_shape());
 
-    std::vector<shared_ptr<runtime::TensorView>> results_tensor;
-    for (auto r : results) {
-        results_tensor.push_back(backend->make_primary_tensor_view(element::f32, r->get_shape()));
+    std::vector<shared_ptr<runtime::TensorView>> result_tensors;
+    for (auto r : results)
+    {
+        result_tensors.push_back(backend->make_primary_tensor_view(element::f32, r->get_shape()));
     }
 
-    size_t data_size = std::accumulate(begin(data_shape), end(data_shape), 1, std::multiplies<size_t>());
-    size_t weights_size = std::accumulate(begin(weights_shape), end(weights_shape), 1, std::multiplies<size_t>());
-    size_t bias_size = std::accumulate(begin(bias_shape), end(bias_shape), 1, std::multiplies<size_t>());
+    size_t data_size =
+        std::accumulate(begin(data_shape), end(data_shape), 1, std::multiplies<size_t>());
+    size_t weights_size =
+        std::accumulate(begin(weights_shape), end(weights_shape), 1, std::multiplies<size_t>());
+    size_t bias_size =
+        std::accumulate(begin(bias_shape), end(bias_shape), 1, std::multiplies<size_t>());
     std::mt19937_64 gen(0);
     std::uniform_real_distribution<> real_random(0.0, 1.0);
-    auto rand = [&](){ return real_random(gen); };
+    auto rand = [&]() { return real_random(gen); };
     vector<float> data_val(data_size);
     vector<float> weights_val(weights_size);
     vector<float> bias_val(bias_size);
@@ -1116,29 +1089,16 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    double tstart = dtime();
-    volatile int max = 1;
-    for (int i = 0; i < max; ++i) {
-        std::cout << i << " ";
-        cf->call({data_tensor, weights_tensor, bias_tensor}, results_tensor);
-    }
-    std::cout << std::endl;
-    double ttime = dtime() - tstart;
-    std::cout << "time: " << ttime << std::endl;
-    int i = 0;
-    for (auto r : results_tensor) {
-        vector<float> r_val = read_vector<float>(r);
-        std::cout << i << ": ";
-        for (auto v : r_val) {
-            std::cout << v << " ";
-        }
-        ++i;
-        std::cout << std::endl;
-    }
-
-//    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
-
-
+    cf->call(result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    return result_tensors;
 }
 
-
+TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
+{
+    std::vector<shared_ptr<runtime::TensorView>> result_expected = rnn_matrix_fusion_eval(false);
+    std::vector<shared_ptr<runtime::TensorView>> result_fused = rnn_matrix_fusion_eval(true);
+    for (size_t i = 0; i < result_expected.size(); ++i)
+    {
+        EXPECT_TRUE(test::all_close<float>(result_expected[i], result_fused[i]));
+    }
+}
