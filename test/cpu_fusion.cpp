@@ -28,8 +28,8 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -42,10 +42,10 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -969,7 +969,8 @@ TEST(cpu_fusion, fuse_conv_relu)
     auto weights = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto convolution = std::make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
     auto relu = std::make_shared<op::Relu>(convolution);
-    auto abs_node = std::make_shared<op::Abs>(std::make_shared<op::Abs>(std::make_shared<op::Abs>(relu)));
+    auto abs_node =
+        std::make_shared<op::Abs>(std::make_shared<op::Abs>(std::make_shared<op::Abs>(relu)));
     auto func = make_shared<Function>(abs_node, op::ParameterVector{A, weights});
 
     pass::Manager pass_manager;
@@ -981,8 +982,7 @@ TEST(cpu_fusion, fuse_conv_relu)
 
 TEST(cpu_fusion, conv_relu_n2c1h2w2)
 {
-
-    Shape shape_a {2, 1, 6, 6};
+    Shape shape_a{2, 1, 6, 6};
     Shape shape_weights{1, 1, 2, 2};
     auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
     auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
@@ -994,33 +994,92 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2)
     auto backend = manager->allocate_backend();
 
     auto _a = backend->make_primary_tensor_view(element::f32, shape_a);
-    vector<float> va
-    {
-        1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f,
-        3.25f, -4.25f, 7.25f, 8.25f, -1.25f, -1.25f,
-        1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f,
-        1.25f, 2.25f, -4.25f, 2.25f, 4.25f, 4.25f,
-        0.f, 0.f, -1.f, 0.f, 2.f, 2.f,
-        0.f, 0.f, 0.f, 0.f,  2.f, 2.f,
+    vector<float> va{
+        1.25f,
+        2.25f,
+        5.25f,
+        6.25f,
+        -1.25f,
+        -1.25f,
+        3.25f,
+        -4.25f,
+        7.25f,
+        8.25f,
+        -1.25f,
+        -1.25f,
+        1.25f,
+        2.25f,
+        -3.25f,
+        2.25f,
+        4.25f,
+        4.25f,
+        1.25f,
+        2.25f,
+        -4.25f,
+        2.25f,
+        4.25f,
+        4.25f,
+        0.f,
+        0.f,
+        -1.f,
+        0.f,
+        2.f,
+        2.f,
+        0.f,
+        0.f,
+        0.f,
+        0.f,
+        2.f,
+        2.f,
         //
-        1.25f, 2.25f, 5.25f, 6.25f, 1.25f, 1.25f,
-        3.25f, 4.25f, -7.25f, 8.25f, 1.25f, -1.25f,
-        -1.25f, 2.25f, 3.25f, 2.25f, -4.25f, -4.25f,
-        -1.25f, -2.25f, 4.25f, 2.25f, 4.25f, 4.25f,
-        0.f, 0.f, 1.f, 0.f, -2.f, 2.f,
-        0.f, 0.f, 0.f, 0.f,  -2.f, -2.f,
+        1.25f,
+        2.25f,
+        5.25f,
+        6.25f,
+        1.25f,
+        1.25f,
+        3.25f,
+        4.25f,
+        -7.25f,
+        8.25f,
+        1.25f,
+        -1.25f,
+        -1.25f,
+        2.25f,
+        3.25f,
+        2.25f,
+        -4.25f,
+        -4.25f,
+        -1.25f,
+        -2.25f,
+        4.25f,
+        2.25f,
+        4.25f,
+        4.25f,
+        0.f,
+        0.f,
+        1.f,
+        0.f,
+        -2.f,
+        2.f,
+        0.f,
+        0.f,
+        0.f,
+        0.f,
+        -2.f,
+        -2.f,
 
-        // -1.25, -2.25, -3.25, -4.25, 
-        // -5.25, 6.25, 7.25, 8.25, 
-        //9.25, 10.25, 11.25, 12.25, 
+        // -1.25, -2.25, -3.25, -4.25,
+        // -5.25, 6.25, 7.25, 8.25,
+        //9.25, 10.25, 11.25, 12.25,
         //13.25, 14.25, 15.25, 16.25
     };
 
     copy_data(_a, va);
 
     auto _weights = backend->make_primary_tensor_view(element::f32, shape_weights);
-    copy_data(_weights, vector<float> {2., 2., 2., 2.});
-    
+    copy_data(_weights, vector<float>{2., 2., 2., 2.});
+
     auto f = make_shared<Function>(NodeVector{conv_relu, relu}, op::ParameterVector{A, weights});
 
     auto external = manager->compile(f);
@@ -1031,7 +1090,7 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2)
 
     shared_ptr<runtime::TensorView> _relu =
         backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
-    
+
     cf->call({_a, _weights}, {_conv_relu, _relu});
     EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
 }

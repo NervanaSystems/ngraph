@@ -2220,8 +2220,9 @@ namespace ngraph
                     const float ops_beta = 0.f;
 
                     mkldnn::post_ops ops;
-                    ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-                    
+                    ops.append_eltwise(
+                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+
                     conv_index = mkldnn_emitter->build_convolution_forward(
                         input_data_desc,
                         weights_desc,

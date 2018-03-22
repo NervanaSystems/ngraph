@@ -36,11 +36,11 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/relu.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -686,21 +686,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    
+
     auto pconv = std::make_shared<op::Convolution>(data_batch,
-                                                    filters,
-                                                    Strides{1, 1},
-                                                    Strides{1, 1},
-                                                    CoordinateDiff{0, 0},
-                                                    CoordinateDiff{0, 0},
-                                                    Strides{1, 1});
-    
+                                                   filters,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
     auto prelu = std::make_shared<op::Relu>(pconv);
 
     pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.match_root()->get_name();
-        
+
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
         auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionRelu(conv));
         ngraph::replace_node(m.match_root(), conv_relu);

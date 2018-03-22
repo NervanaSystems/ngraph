@@ -129,7 +129,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
-          conv_attr,
+         conv_attr,
          mkldnn_utils::global_cpu_engine},
         *m_mkldnn_primitives[input_data_index],
         *m_mkldnn_primitives[weights_index],
