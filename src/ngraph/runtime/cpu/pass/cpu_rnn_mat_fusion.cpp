@@ -182,7 +182,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         (op_it->second)[segment.type] = segment;
     }
 
-    // remove ops with less than segment_count
+    // remove ops with less than segment_count number of segments
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();)
     {
         // remove ops with less than expected segements
@@ -205,7 +205,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
-    // create a lookup map for each unique pair of parameters
+    // create a lookup map for each unique set of parameters
     std::map<OrderedParams, NodeVector> param_list;
     for (auto& op_seg : op_seg_map)
     {
@@ -274,10 +274,10 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         {
             const auto& cur_data_segment = op_seg_map[op][NodeSegment::DATA];
             const auto old_slice = std::dynamic_pointer_cast<op::Slice>(cur_data_segment[1]);
-            const auto& lb = old_slice->get_lower_bounds();
+            const auto& old_lower_bounds = old_slice->get_lower_bounds();
             // lower bound matching the current time step
-            const Coordinate lower_bounds{lb[1], 0};
-            // striding by the number of time steps
+            const Coordinate lower_bounds{old_lower_bounds[1], 0};
+            // striding by the number of data
             const Strides strides{data_shape[1], 1};
             auto slice_node =
                 std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
