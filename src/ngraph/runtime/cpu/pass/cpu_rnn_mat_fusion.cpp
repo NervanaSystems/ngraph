@@ -49,7 +49,7 @@ struct NodeSegment : public NodeVector
     Type type{UNDEFINED};
 };
 typedef std::pair<NodeSegment::Type, std::vector<std::type_index>> NodeTypeSequence;
-typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
+typedef std::list<NodeTypeSequence> NodeTypeSequenceList;
 
 // Preorder traversal to collect all valid segments in the graph
 // precondition: all valid sequences must be unique
@@ -58,7 +58,7 @@ typedef std::list<NodeTypeSequence> NodeTypeSequenceSet;
 void FindValidSegments(const NodePtr& node,
                        NodeSegment segment,
                        std::vector<NodeSegment>& segment_bundle,
-                       NodeTypeSequenceSet valid_sequence_list,
+                       NodeTypeSequenceList valid_sequence_list,
                        int depth)
 {
     const Node& node_ref = *node;
@@ -141,7 +141,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 {
     bool modified = false;
 
-    const NodeTypeSequenceSet valid_sequences{
+    const NodeTypeSequenceList valid_sequences{
         {NodeSegment::DATA,
          {TI(op::Parameter), TI(op::Slice), TI(op::Reshape), TI(op::Dot), TI(op::Add)}},
         {NodeSegment::WEIGHTS, {TI(op::Parameter), TI(op::Reshape), TI(op::Dot), TI(op::Add)}},
