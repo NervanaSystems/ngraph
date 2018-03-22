@@ -64,7 +64,7 @@ namespace ngraph
             bool match(const std::shared_ptr<Node>& graph_node);
 
             template <typename T>
-            static std::shared_ptr<T> matched(std::shared_ptr<Node> node)
+            static std::shared_ptr<T> unique_match(std::shared_ptr<Node> node)
             {
                 std::shared_ptr<T> matched;
                 for (auto arg : node->get_input_ops())
