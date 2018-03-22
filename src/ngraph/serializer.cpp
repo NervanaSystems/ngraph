@@ -861,6 +861,8 @@ static shared_ptr<ngraph::Function>
         if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
         {
             result.push_back(res);
+            //make sure we have `op::Result` on top of all outputs
+            results++;
         }
         else
         {
