@@ -218,8 +218,8 @@ Build with an XLA plugin to ``libngraph``
 
    .. code-block:: console
 
-      $ git clone git@github.com:NervanaSystems/ngraph-tensorflow.git
-      $ cd ngraph-tensorflow
+      $ git clone git@github.com:NervanaSystems/ngraph-tensorflow-1.3.git
+      $ cd ngraph-tensorflow-1.3
 
 #. Now run :command:`configure` and choose `y` when prompted to build TensorFlow
    with XLA just-in-time compiler.
