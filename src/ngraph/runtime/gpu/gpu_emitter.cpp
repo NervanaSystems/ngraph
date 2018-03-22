@@ -609,10 +609,12 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
                     writer << "void* trans_strides_d = "
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
-                              "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
-                              "sizeof(size_t) * rank);\n";
+                    writer
+                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
+                           "sizeof(size_t) * rank);\n";
+                    writer
+                        << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
+                           "sizeof(size_t) * rank);\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
@@ -625,9 +627,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "runtime::gpu::free_gpu_buffer(trans_strides_d);\n";
                     writer.indent--;
                     writer << "}\n";
-                    delete[] input_strides;
-                    delete[] output_strides;
-                    delete[] trans_strides;
                 }
                 writer.indent--;
                 writer << "}\n";
