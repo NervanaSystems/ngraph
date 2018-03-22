@@ -51,13 +51,13 @@ namespace ngraph
                              size_t count);
 
             void emit_reshape(std::string name,
-                             CUdeviceptr in,
-                             CUdeviceptr out,
-                             std::array<std::string, 2> data_types,
-                             CUdeviceptr input_stride,
-                             CUdeviceptr output_stride,
-                             size_t rank,
-                             size_t count);
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              std::array<std::string, 2> data_types,
+                              CUdeviceptr input_stride,
+                              CUdeviceptr output_stride,
+                              size_t rank,
+                              size_t count);
 
             template <typename T, typename... Inputs>
             void emit_elementwise_op(std::string name,

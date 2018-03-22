@@ -571,51 +571,66 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     size_t* input_strides = new size_t[arg_rank];
                     size_t* output_strides = new size_t[arg_rank];
+                    size_t* trans_strides = new size_t[arg_rank];
                     size_t stride = 1;
-                    for(int i = arg_rank - 1; i >= 0; i--)
+                    for (int i = arg_rank - 1; i >= 0; i--)
                     {
-                        output_strides[i] = stride;
+                        input_strides[i] = stride;
                         stride *= arg_shape[i];
                     }
-                    for(int i = 0; i < arg_rank; i++)
+                    stride = 1;
+                    for (int i = arg_rank - 1; i >= 0; i--)
                     {
-                        input_strides[i] = output_strides[input_order[i]];
+                        trans_strides[i] = stride;
+                        stride *= arg_shape[input_order[i]];
+                    }
+
+                    for (int i = 0; i < arg_rank; i++)
+                    {
+                        output_strides[input_order[i]] = trans_strides[i];
                     }
                     writer << "{   // " << node->get_name() << "\n";
                     writer.indent++;
                     writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "size_t input_strides_h[] = {" << input_strides[0] << "UL";
-                    for(int i = 1; i < arg_rank; i++)
+                    for (int i = 1; i < arg_rank; i++)
                     {
                         writer << ", " << input_strides[i] << "UL";
                     }
                     writer << "};\n";
-                    
+
                     writer << "size_t output_strides_h[] = {" << output_strides[0] << "UL";
-                    for(int i = 1; i < arg_rank; i++)
+                    for (int i = 1; i < arg_rank; i++)
                     {
                         writer << ", " << output_strides[i] << "UL";
                     }
                     writer << "};\n";
 
-                    writer << "void* input_strides_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "void* output_strides_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h, sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(output_strides_d, output_strides_h, sizeof(size_t) * rank);\n";
+                    writer << "void* input_strides_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "void* output_strides_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h, "
+                              "sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(output_strides_d, output_strides_h, "
+                              "sizeof(size_t) * rank);\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description()
-                        << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                        << out[0].get_name() << ")"
-                        << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                        << ", " << "CUdeviceptr(input_strides_d), CUdeviceptr(output_strides_d)" << ", " 
-                        << arg_rank << ", " << args[0].get_size()
-                        << ");\n";
+                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << out[0].get_name() << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", "
+                           << "CUdeviceptr(input_strides_d), CUdeviceptr(output_strides_d)"
+                           << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
                     writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
                     writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
                     writer.indent--;
                     writer << "}\n";
-                    }
-                    writer.indent--;
-                    writer << "}\n";
+                    delete[] input_strides;
+                    delete[] output_strides;
+                }
+                writer.indent--;
+                writer << "}\n";
             }
 
             template <>

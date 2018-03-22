@@ -94,13 +94,13 @@ void runtime::gpu::emit_onehot(std::string name,
 }
 
 void runtime::gpu::emit_reshape(std::string name,
-                    CUdeviceptr in,
-                    CUdeviceptr out,
-                    std::array<std::string, 2> data_types,
-                    CUdeviceptr input_stride,
-                    CUdeviceptr output_stride,
-                    size_t rank,
-                    size_t count)
+                                CUdeviceptr in,
+                                CUdeviceptr out,
+                                std::array<std::string, 2> data_types,
+                                CUdeviceptr input_stride,
+                                CUdeviceptr output_stride,
+                                size_t rank,
+                                size_t count)
 {
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
