@@ -53,6 +53,7 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1);
+                BinaryElementwiseArithmetic(const BinaryElementwiseArithmetic&, const NodeVector& new_args);
             };
         }
     }

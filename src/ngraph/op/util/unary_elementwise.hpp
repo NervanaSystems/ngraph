@@ -50,6 +50,7 @@ namespace ngraph
                 UnaryElementwise(const std::string& node_type,
                                  const element::Type& result_element_type,
                                  const std::shared_ptr<Node>& arg);
+                UnaryElementwise(const UnaryElementwise&, const std::shared_ptr<Node>& new_arg);
             };
         }
     }

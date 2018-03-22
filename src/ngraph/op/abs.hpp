@@ -37,6 +37,7 @@ namespace ngraph
             /// Output `[d1, ...]`
             ///
             Abs(const std::shared_ptr<Node>& arg);
+            Abs(const op::Abs& other, const std::shared_ptr<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

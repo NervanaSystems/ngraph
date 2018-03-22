@@ -27,3 +27,14 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
         throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
 }
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(
+    const UnaryElementwiseArithmetic& other, const std::shared_ptr<Node>& new_arg)
+    : UnaryElementwise(other, new_arg)
+{
+    NGRAPH_INFO << "UnaryElementwiseArithmetic::UnaryElementwiseArithmetic";
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+}

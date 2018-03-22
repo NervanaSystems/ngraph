@@ -38,3 +38,10 @@ op::util::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node
         }
     }
 }
+
+op::util::RequiresTensorViewArgs::RequiresTensorViewArgs(const RequiresTensorViewArgs& other,
+                                                         const NodeVector& new_args)
+    : Op(other, new_args)
+{
+    NGRAPH_INFO << "RequiresTensorViewArgs::RequiresTensorViewArgs";
+}

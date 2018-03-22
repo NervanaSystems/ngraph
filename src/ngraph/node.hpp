@@ -79,23 +79,17 @@ namespace ngraph
 
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
-        virtual ~Node()
-        {
-            for (auto arg : m_arguments)
-            {
-                arg->m_users.erase(this);
-            }
-            for (auto& input : m_inputs)
-            {
-                input.get_output().remove_input(&input);
-            }
-        }
+
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
         {
         }
 
     public:
+        // This is the replacement for copy_with_new_args
+        Node(const Node&, const NodeVector& new_args);
+        virtual ~Node();
+
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
         const std::string& get_friendly_name() const;
