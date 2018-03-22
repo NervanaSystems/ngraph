@@ -229,7 +229,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         if (arg0_shape[i] != arg1_shape[i])
                         {
                             throw std::invalid_argument(
-                                "arg0 and arg0 shape does not match for dot.");
+                                "arg0 and arg1 shape does not match for dot.");
                         }
                     }
                     writer << "{   // " << node->get_name() << "\n";
