@@ -873,7 +873,7 @@ static shared_ptr<ngraph::Function>
     if (results != 0 && results != func_result.size())
     {
         throw ngraph_error(
-            " Graph serialization is incosistent. Some op::Results appear to be missing");
+            " Graph serialization is inconsistent. Some op::Results appear to be missing");
     }
 
     std::vector<std::shared_ptr<op::Parameter>> params;
