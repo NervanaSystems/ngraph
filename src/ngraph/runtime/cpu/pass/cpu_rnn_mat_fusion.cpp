@@ -109,7 +109,7 @@ struct OrderedParams
 {
 public:
     OrderedParams()
-        : m_params{nullptr, nullptr, nullptr}
+        : m_params{{nullptr, nullptr, nullptr}}
     {
     }
 
@@ -247,8 +247,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         auto bias_node = params.get(NodeSegment::BIAS);
 
         const auto& data_shape = data_node->get_shape();
-        const auto& weights_shape = weights_node->get_shape();
-        const auto& bias_shape = bias_node->get_shape();
 
         // get the first combo op
         auto first_op = op_nodes[0];
