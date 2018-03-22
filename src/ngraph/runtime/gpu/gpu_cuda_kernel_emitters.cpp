@@ -98,7 +98,7 @@ void runtime::gpu::emit_reshape(std::string name,
                     CUdeviceptr out,
                     std::array<std::string, 2> data_types,
                     CUdeviceptr input_stride,
-                    CUdeviceptr ouput_stride,
+                    CUdeviceptr output_stride,
                     size_t rank,
                     size_t count)
 {

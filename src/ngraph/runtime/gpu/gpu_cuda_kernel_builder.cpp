@@ -117,16 +117,16 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
         writer.block_begin();
         {
             writer << "size_t idx_out = tid;\n";
-            writer << "size_t idx_int = 0;\n"
+            writer << "size_t idx_in = 0;\n";
 
-            writer << "for(int i = 0; i < rank; i++)\n"
+            writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "idx_in += idx_out / out_stirdes[i] * in_strides[i];\n";
-                writer << "idx_out %= out_stirdes[i];\n";
+                writer << "idx_in += idx_out / output_strides[i] * input_strides[i];\n";
+                writer << "idx_out %= output_strides[i];\n";
             }
             writer.block_end();
-            writer << "out[tid] = int[idx_in];\n";
+            writer << "out[tid] = in[idx_in];\n";
         }
         writer.block_end();
     }
