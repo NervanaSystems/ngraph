@@ -23,10 +23,10 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-void runtime::gpu::emit_broadcast(std::string name,
+void runtime::gpu::emit_broadcast(const std::string& name,
                                   CUdeviceptr in,
                                   CUdeviceptr out,
-                                  std::array<std::string, 2> data_types,
+                                  const std::array<std::string, 2>& data_types,
                                   size_t repeat_size,
                                   size_t repeat_times,
                                   size_t count)
@@ -58,10 +58,10 @@ void runtime::gpu::emit_broadcast(std::string name,
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }
 
-void runtime::gpu::emit_onehot(std::string name,
+void runtime::gpu::emit_onehot(const std::string& name,
                                CUdeviceptr in,
                                CUdeviceptr out,
-                               std::array<std::string, 2> data_types,
+                               const std::array<std::string, 2>& data_types,
                                size_t repeat_size,
                                size_t repeat_times,
                                size_t count)
@@ -93,10 +93,10 @@ void runtime::gpu::emit_onehot(std::string name,
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }
 
-void runtime::gpu::emit_reshape(std::string name,
+void runtime::gpu::emit_reshape(const std::string& name,
                                 CUdeviceptr in,
                                 CUdeviceptr out,
-                                std::array<std::string, 2> data_types,
+                                const std::array<std::string, 2>& data_types,
                                 CUdeviceptr input_strides,
                                 CUdeviceptr trans_strides,
                                 size_t rank,
