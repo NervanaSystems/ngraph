@@ -25,19 +25,17 @@ def test_avg_pooling_3d():
     manager_name = pytest.config.getoption('backend', default='CPU')
     rt = ng.runtime(manager_name=manager_name)
 
-    input = np.array(range(16), dtype=np.float32)
-    input = input + 11
-    input = input.reshape((1, 1, 4, 4))
-    input = np.broadcast_to(input, (1, 1, 4, 4, 4))
+    data = np.arange(11, 27, dtype=np.float32)
+    data = data.reshape((1, 1, 4, 4))
+    data = np.broadcast_to(data, (1, 1, 4, 4, 4))
 
-    param = ng.parameter(input.shape)
+    param = ng.parameter(data.shape)
 
     avgpool = ng.avg_pool(param,
                           [2, 2, 2],
-                          [2, 2, 2],
-                          zero_pad=False)
+                          [2, 2, 2])
     comp = rt.computation(avgpool, param)
-    result = comp(input)
+    result = comp(data)
     result_ref = [[[[[13.5, 15.5],
                      [21.5, 23.5]],
 
