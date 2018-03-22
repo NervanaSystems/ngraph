@@ -1021,3 +1021,4 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2)
     cf->call({_a, _weights}, {_conv_relu, _relu});
     EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
 }
+
