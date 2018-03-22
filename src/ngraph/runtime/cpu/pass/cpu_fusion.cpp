@@ -702,6 +702,34 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
                      << m.match_root()->get_name();
 
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
+
+        bool data_dilated = false;
+        for (size_t s : conv->get_data_dilation_strides())
+        {
+            data_dilated = data_dilated || (s != 1);
+        }
+
+        if (data_dilated)
+        {
+            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
+            return false;
+        }
+
+        if (conv->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Convolution isn't of type float";
+            return false;
+        }
+
+        auto arg0_rank = conv->get_input_shape(0).size();
+        auto arg1_rank = conv->get_input_shape(1).size();
+
+        if (arg0_rank != 4 || arg1_rank != 4)
+        {
+            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
         auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionRelu(conv));
         ngraph::replace_node(m.match_root(), conv_relu);
         return true;
