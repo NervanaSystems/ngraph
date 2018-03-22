@@ -111,6 +111,7 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -231,7 +232,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Max), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
     {TI(ngraph::op::Min), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
     {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::ReluBackprop), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::ReluBackprop), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
 };
 

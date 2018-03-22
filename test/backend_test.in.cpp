@@ -3595,7 +3595,7 @@ TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     copy_data(a, std::vector<float>(std::pow(3, 5), 1));
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
-    cf->call({a}, {result});
+    cf->call({result}, {a});
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
@@ -8438,7 +8438,6 @@ TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
 
 TEST(${BACKEND_NAME}, relu_2Dbackprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
@@ -8464,7 +8463,6 @@ TEST(${BACKEND_NAME}, relu_2Dbackprop)
 
 TEST(${BACKEND_NAME}, relu_4Dbackprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
