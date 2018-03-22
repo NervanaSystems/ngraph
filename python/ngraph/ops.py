@@ -32,7 +32,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    as_node, NodeInput
+    NodeInput
 from ngraph.utils.types import get_element_type
 
 
@@ -55,7 +55,6 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 @unary_op
 def absolute(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies f(x) = abs(x) to the input node elementwise."""
-    node = as_node(node)
     return Abs(node)
 
 
