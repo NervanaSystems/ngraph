@@ -28,8 +28,6 @@
 #include <ngraph/runtime/backend.hpp>
 #include <ngraph/runtime/call_frame.hpp>
 #include <ngraph/runtime/manager.hpp>
-#include <ngraph/pass/manager.hpp>
-#include <ngraph/pass/visualize_tree.hpp>
 #include <ngraph/util.hpp>
 
 #include "util/benchmark.hpp"
@@ -53,10 +51,6 @@ int main(int argc, char** argv)
         if (arg == "-f" || arg == "--file")
         {
             model = argv[++i];
-        }
-        else if (arg == "-v" || arg == "--visualize")
-        {
-            visualize = true;
         }
         else if (arg == "-b" || arg == "--backend")
         {
@@ -109,7 +103,6 @@ SYNOPSIS
 
 OPTIONS
         -f|--file          Serialized model file
-        -v|--visualize     Visualize model file
         -b|--backend       Backend to use (default: CPU)
         -i|--iterations    Iterations (default: 10)
         -s|--statistics    Display op stastics
@@ -172,12 +165,6 @@ OPTIONS
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
         run_benchmark(f, backend, iterations, timing_detail);
-    }
-    else if (visualize) {
-        std::cout << "visualizing " << model << std::endl;
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>(model+".svg");
-        pass_manager.run_passes(f);
     }
 
     return 0;
