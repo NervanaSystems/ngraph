@@ -23,92 +23,92 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/concat.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/max.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/min.hpp"
-#include "ngraph/ops/one_hot.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/product.hpp"
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/ops/reduce_window.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/result.hpp"
-#include "ngraph/ops/reverse.hpp"
-#include "ngraph/ops/select_and_scatter.hpp"
-#include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/softmax.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/runtime/kernel/abs.hpp"
-#include "ngraph/runtime/kernel/acos.hpp"
-#include "ngraph/runtime/kernel/add.hpp"
-#include "ngraph/runtime/kernel/asin.hpp"
-#include "ngraph/runtime/kernel/atan.hpp"
-#include "ngraph/runtime/kernel/avg_pool.hpp"
-#include "ngraph/runtime/kernel/broadcast.hpp"
-#include "ngraph/runtime/kernel/ceiling.hpp"
-#include "ngraph/runtime/kernel/concat.hpp"
-#include "ngraph/runtime/kernel/constant.hpp"
-#include "ngraph/runtime/kernel/convert.hpp"
-#include "ngraph/runtime/kernel/convolution.hpp"
-#include "ngraph/runtime/kernel/copy.hpp"
-#include "ngraph/runtime/kernel/cos.hpp"
-#include "ngraph/runtime/kernel/cosh.hpp"
-#include "ngraph/runtime/kernel/divide.hpp"
-#include "ngraph/runtime/kernel/dot.hpp"
-#include "ngraph/runtime/kernel/equal.hpp"
-#include "ngraph/runtime/kernel/exp.hpp"
-#include "ngraph/runtime/kernel/floor.hpp"
-#include "ngraph/runtime/kernel/greater.hpp"
-#include "ngraph/runtime/kernel/greater_eq.hpp"
-#include "ngraph/runtime/kernel/less.hpp"
-#include "ngraph/runtime/kernel/less_eq.hpp"
-#include "ngraph/runtime/kernel/log.hpp"
-#include "ngraph/runtime/kernel/max.hpp"
-#include "ngraph/runtime/kernel/max_pool.hpp"
-#include "ngraph/runtime/kernel/maximum.hpp"
-#include "ngraph/runtime/kernel/min.hpp"
-#include "ngraph/runtime/kernel/minimum.hpp"
-#include "ngraph/runtime/kernel/multiply.hpp"
-#include "ngraph/runtime/kernel/negate.hpp"
-#include "ngraph/runtime/kernel/not.hpp"
-#include "ngraph/runtime/kernel/not_equal.hpp"
-#include "ngraph/runtime/kernel/one_hot.hpp"
-#include "ngraph/runtime/kernel/pad.hpp"
-#include "ngraph/runtime/kernel/power.hpp"
-#include "ngraph/runtime/kernel/product.hpp"
-#include "ngraph/runtime/kernel/reduce.hpp"
-#include "ngraph/runtime/kernel/reduce_window.hpp"
-#include "ngraph/runtime/kernel/relu.hpp"
-#include "ngraph/runtime/kernel/replace_slice.hpp"
-#include "ngraph/runtime/kernel/reshape.hpp"
-#include "ngraph/runtime/kernel/result.hpp"
-#include "ngraph/runtime/kernel/reverse.hpp"
-#include "ngraph/runtime/kernel/select.hpp"
-#include "ngraph/runtime/kernel/select_and_scatter.hpp"
-#include "ngraph/runtime/kernel/sign.hpp"
-#include "ngraph/runtime/kernel/sin.hpp"
-#include "ngraph/runtime/kernel/sinh.hpp"
-#include "ngraph/runtime/kernel/slice.hpp"
-#include "ngraph/runtime/kernel/softmax.hpp"
-#include "ngraph/runtime/kernel/sqrt.hpp"
-#include "ngraph/runtime/kernel/subtract.hpp"
-#include "ngraph/runtime/kernel/sum.hpp"
-#include "ngraph/runtime/kernel/tan.hpp"
-#include "ngraph/runtime/kernel/tanh.hpp"
+#include "ngraph/runtime/reference/abs.hpp"
+#include "ngraph/runtime/reference/acos.hpp"
+#include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/asin.hpp"
+#include "ngraph/runtime/reference/atan.hpp"
+#include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/ceiling.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
+#include "ngraph/runtime/reference/constant.hpp"
+#include "ngraph/runtime/reference/convert.hpp"
+#include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
+#include "ngraph/runtime/reference/cos.hpp"
+#include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/divide.hpp"
+#include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/exp.hpp"
+#include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/greater.hpp"
+#include "ngraph/runtime/reference/greater_eq.hpp"
+#include "ngraph/runtime/reference/less.hpp"
+#include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/log.hpp"
+#include "ngraph/runtime/reference/max.hpp"
+#include "ngraph/runtime/reference/max_pool.hpp"
+#include "ngraph/runtime/reference/maximum.hpp"
+#include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/minimum.hpp"
+#include "ngraph/runtime/reference/multiply.hpp"
+#include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/not.hpp"
+#include "ngraph/runtime/reference/not_equal.hpp"
+#include "ngraph/runtime/reference/one_hot.hpp"
+#include "ngraph/runtime/reference/pad.hpp"
+#include "ngraph/runtime/reference/power.hpp"
+#include "ngraph/runtime/reference/product.hpp"
+#include "ngraph/runtime/reference/reduce.hpp"
+#include "ngraph/runtime/reference/reduce_window.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
+#include "ngraph/runtime/reference/replace_slice.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/result.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/select.hpp"
+#include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/sign.hpp"
+#include "ngraph/runtime/reference/sin.hpp"
+#include "ngraph/runtime/reference/sinh.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
+#include "ngraph/runtime/reference/sqrt.hpp"
+#include "ngraph/runtime/reference/subtract.hpp"
+#include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/runtime/reference/tan.hpp"
+#include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/runtime/kernel/allreduce.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #endif
 
 namespace ngraph
@@ -135,8 +135,8 @@ public:
     /// @brief Invoke the function with values matching the signature of the function.
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
-    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
     std::vector<runtime::PerformanceCounter> get_performance_data() const override;
 
     void set_nan_check(bool);
@@ -144,13 +144,13 @@ public:
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
-    void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<TensorView>>& outputs) override;
-    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& inputs,
-                     const std::vector<std::shared_ptr<HostTensorView>>& outputs);
+    void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
+                     const std::vector<std::shared_ptr<TensorView>>& inputs) override;
+    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& outputs,
+                     const std::vector<std::shared_ptr<HostTensorView>>& inputs);
     void call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
-              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs,
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
@@ -233,70 +233,70 @@ private:
         std::string node_op = node.description();
         if (node_op == "Abs")
         {
-            kernel::abs<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::abs<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Acos")
         {
-            kernel::acos<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::acos<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Add")
         {
-            kernel::add<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::add<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
 #ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
-            kernel::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                 args[0]->get_element_type(),
-                                 static_cast<int>(args[0]->get_element_count()));
+            reference::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                    reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                    args[0]->get_element_type(),
+                                    static_cast<int>(args[0]->get_element_count()));
         }
 #endif
         else if (node_op == "Asin")
         {
-            kernel::asin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::asin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Atan")
         {
-            kernel::atan<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::atan<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "AvgPool")
         {
             ngraph::op::AvgPool* avg_pool = dynamic_cast<ngraph::op::AvgPool*>(&node);
 
-            kernel::avg_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                args[0]->get_shape(),
-                                out[0]->get_shape(),
-                                avg_pool->get_window_shape(),
-                                avg_pool->get_window_movement_strides(),
-                                avg_pool->get_padding_below(),
-                                avg_pool->get_padding_above(),
-                                avg_pool->get_include_padding_in_avg_computation());
+            reference::avg_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   out[0]->get_shape(),
+                                   avg_pool->get_window_shape(),
+                                   avg_pool->get_window_movement_strides(),
+                                   avg_pool->get_padding_below(),
+                                   avg_pool->get_padding_above(),
+                                   avg_pool->get_include_padding_in_avg_computation());
         }
         else if (node_op == "AvgPoolBackprop")
         {
             ngraph::op::AvgPoolBackprop* apb = dynamic_cast<ngraph::op::AvgPoolBackprop*>(&node);
-            kernel::avg_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                         reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                         args[0]->get_shape(),
-                                         out[0]->get_shape(),
-                                         apb->get_window_shape(),
-                                         apb->get_window_movement_strides(),
-                                         apb->get_padding_below(),
-                                         apb->get_padding_above(),
-                                         apb->get_include_padding_in_avg_computation());
+            reference::avg_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            apb->get_window_shape(),
+                                            apb->get_window_movement_strides(),
+                                            apb->get_padding_below(),
+                                            apb->get_padding_above(),
+                                            apb->get_include_padding_in_avg_computation());
         }
         else if (node_op == "Broadcast")
         {
@@ -304,17 +304,17 @@ private:
             Shape in_shape = args[0]->get_shape();
             Shape out_shape = out[0]->get_shape();
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            kernel::broadcast<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                 in_shape,
-                                 out_shape,
-                                 broadcast_axes);
+            reference::broadcast<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                    reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                    in_shape,
+                                    out_shape,
+                                    broadcast_axes);
         }
         else if (node_op == "Ceiling")
         {
-            kernel::ceiling<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
+            reference::ceiling<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  out[0]->get_element_count());
         }
         else if (node_op == "Concat")
         {
@@ -326,276 +326,276 @@ private:
                 in_args.push_back(reinterpret_cast<T*>(arg->get_data_ptr()));
                 in_shapes.push_back(arg->get_shape());
             }
-            kernel::concat<T>(in_args,
-                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                              in_shapes,
-                              out[0]->get_shape(),
-                              concat->get_concatenation_axis());
+            reference::concat<T>(in_args,
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 in_shapes,
+                                 out[0]->get_shape(),
+                                 concat->get_concatenation_axis());
         }
         else if (node_op == "Constant")
         {
             const op::Constant* c = static_cast<const op::Constant*>(&node);
-            kernel::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                out[0]->get_element_count());
+            reference::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   out[0]->get_element_count());
         }
         else if (node_op == "Convert")
         {
-            kernel::convert<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<S*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
+            reference::convert<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<S*>(out[0]->get_data_ptr()),
+                                  out[0]->get_element_count());
         }
         else if (node_op == "Convolution")
         {
             auto c = static_cast<const op::Convolution*>(&node);
-            kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                   args[0]->get_shape(),
-                                   args[1]->get_shape(),
-                                   out[0]->get_shape(),
-                                   c->get_window_movement_strides(),
-                                   c->get_window_dilation_strides(),
-                                   c->get_padding_below(),
-                                   c->get_padding_above(),
-                                   c->get_data_dilation_strides(),
-                                   0,
-                                   1,
-                                   1,
-                                   0,
-                                   0,
-                                   1,
-                                   false);
+            reference::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                      reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                      reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                      args[0]->get_shape(),
+                                      args[1]->get_shape(),
+                                      out[0]->get_shape(),
+                                      c->get_window_movement_strides(),
+                                      c->get_window_dilation_strides(),
+                                      c->get_padding_below(),
+                                      c->get_padding_above(),
+                                      c->get_data_dilation_strides(),
+                                      0,
+                                      1,
+                                      1,
+                                      0,
+                                      0,
+                                      1,
+                                      false);
         }
         else if (node_op == "ConvolutionBackpropFilters")
         {
             auto c = static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                   args[0]->get_shape(),
-                                   args[1]->get_shape(),
-                                   out[0]->get_shape(),
-                                   c->get_window_movement_strides_backward(),
-                                   c->get_window_dilation_strides_backward(),
-                                   c->get_padding_below_backward(),
-                                   c->get_padding_above_backward(),
-                                   c->get_data_dilation_strides_backward(),
-                                   1,
-                                   0,
-                                   0,
-                                   1,
-                                   1,
-                                   0,
-                                   false);
+            reference::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                      reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                      reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                      args[0]->get_shape(),
+                                      args[1]->get_shape(),
+                                      out[0]->get_shape(),
+                                      c->get_window_movement_strides_backward(),
+                                      c->get_window_dilation_strides_backward(),
+                                      c->get_padding_below_backward(),
+                                      c->get_padding_above_backward(),
+                                      c->get_data_dilation_strides_backward(),
+                                      1,
+                                      0,
+                                      0,
+                                      1,
+                                      1,
+                                      0,
+                                      false);
         }
         else if (node_op == "ConvolutionBackpropData")
         {
             // Note that args[1] and args[0] are switched here from the usual order.
             auto c = static_cast<const op::ConvolutionBackpropData*>(&node);
-            kernel::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                   reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                   args[1]->get_shape(),
-                                   args[0]->get_shape(),
-                                   out[0]->get_shape(),
-                                   c->get_window_movement_strides_backward(),
-                                   c->get_window_dilation_strides_backward(),
-                                   c->get_padding_below_backward(),
-                                   c->get_padding_above_backward(),
-                                   c->get_data_dilation_strides_backward(),
-                                   0,
-                                   1,
-                                   0,
-                                   1,
-                                   0,
-                                   1,
-                                   true);
+            reference::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                      reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                      reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                      args[1]->get_shape(),
+                                      args[0]->get_shape(),
+                                      out[0]->get_shape(),
+                                      c->get_window_movement_strides_backward(),
+                                      c->get_window_dilation_strides_backward(),
+                                      c->get_padding_below_backward(),
+                                      c->get_padding_above_backward(),
+                                      c->get_data_dilation_strides_backward(),
+                                      0,
+                                      1,
+                                      0,
+                                      1,
+                                      0,
+                                      1,
+                                      true);
         }
         else if (node_op == "Cos")
         {
-            kernel::cos<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::cos<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Cosh")
         {
-            kernel::cosh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::cosh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Divide")
         {
-            kernel::divide<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                              out[0]->get_element_count());
+            reference::divide<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                 reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 out[0]->get_element_count());
         }
         else if (node_op == "Dot")
         {
             ngraph::op::Dot* dot = dynamic_cast<ngraph::op::Dot*>(&node);
 
-            kernel::dot(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                        args[0]->get_shape(),
-                        args[1]->get_shape(),
-                        out[0]->get_shape(),
-                        dot->get_reduction_axes_count());
+            reference::dot(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
+                           args[1]->get_shape(),
+                           out[0]->get_shape(),
+                           dot->get_reduction_axes_count());
         }
 
         else if (node_op == "Equal")
         {
-            kernel::equal<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                             reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                             reinterpret_cast<char*>(out[0]->get_data_ptr()),
-                             out[0]->get_element_count());
+            reference::equal<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
         }
         else if (node_op == "Exp")
         {
-            kernel::exp<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::exp<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Floor")
         {
-            kernel::floor<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                             out[0]->get_element_count());
+            reference::floor<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
         }
         else if (node_op == "FunctionCall")
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
-            call(function, args, out);
+            call(function, out, args);
         }
         else if (node_op == "Greater")
         {
-            kernel::greater<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                               reinterpret_cast<char*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
-        }
-        else if (node_op == "GreaterEq")
-        {
-            kernel::greater_eq<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+            reference::greater<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
                                   reinterpret_cast<char*>(out[0]->get_data_ptr()),
                                   out[0]->get_element_count());
         }
+        else if (node_op == "GreaterEq")
+        {
+            reference::greater_eq<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                     out[0]->get_element_count());
+        }
         else if (node_op == "Less")
         {
-            kernel::less<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                            reinterpret_cast<char*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
-        }
-        else if (node_op == "LessEq")
-        {
-            kernel::less_eq<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+            reference::less<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
                                reinterpret_cast<char*>(out[0]->get_data_ptr()),
                                out[0]->get_element_count());
         }
+        else if (node_op == "LessEq")
+        {
+            reference::less_eq<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                  reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                  out[0]->get_element_count());
+        }
         else if (node_op == "Log")
         {
-            kernel::log<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::log<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Max")
         {
             const op::Max* max = static_cast<const op::Max*>(&node);
-            kernel::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           args[0]->get_shape(),
-                           out[0]->get_shape(),
-                           max->get_reduction_axes());
+            reference::max<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              args[0]->get_shape(),
+                              out[0]->get_shape(),
+                              max->get_reduction_axes());
         }
         else if (node_op == "Maximum")
         {
-            kernel::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
+            reference::maximum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  out[0]->get_element_count());
         }
         else if (node_op == "MaxPool")
         {
             ngraph::op::MaxPool* max_pool = dynamic_cast<ngraph::op::MaxPool*>(&node);
 
-            kernel::max_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                args[0]->get_shape(),
-                                out[0]->get_shape(),
-                                max_pool->get_window_shape(),
-                                max_pool->get_window_movement_strides(),
-                                max_pool->get_padding_below(),
-                                max_pool->get_padding_above());
+            reference::max_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   out[0]->get_shape(),
+                                   max_pool->get_window_shape(),
+                                   max_pool->get_window_movement_strides(),
+                                   max_pool->get_padding_below(),
+                                   max_pool->get_padding_above());
         }
         else if (node_op == "MaxPoolBackprop")
         {
             ngraph::op::MaxPoolBackprop* max_pool_backprop =
                 dynamic_cast<ngraph::op::MaxPoolBackprop*>(&node);
 
-            kernel::max_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                         reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                         reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                         args[1]->get_shape(),
-                                         out[0]->get_shape(),
-                                         max_pool_backprop->get_window_shape(),
-                                         max_pool_backprop->get_window_movement_strides(),
-                                         max_pool_backprop->get_padding_below(),
-                                         max_pool_backprop->get_padding_above());
+            reference::max_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                            args[1]->get_shape(),
+                                            out[0]->get_shape(),
+                                            max_pool_backprop->get_window_shape(),
+                                            max_pool_backprop->get_window_movement_strides(),
+                                            max_pool_backprop->get_padding_below(),
+                                            max_pool_backprop->get_padding_above());
         }
         else if (node_op == "Min")
         {
             const op::Min* min = static_cast<const op::Min*>(&node);
-            kernel::min<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           args[0]->get_shape(),
-                           out[0]->get_shape(),
-                           min->get_reduction_axes());
+            reference::min<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              args[0]->get_shape(),
+                              out[0]->get_shape(),
+                              min->get_reduction_axes());
         }
         else if (node_op == "Minimum")
         {
-            kernel::minimum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               out[0]->get_element_count());
+            reference::minimum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  out[0]->get_element_count());
         }
         else if (node_op == "Multiply")
         {
-            kernel::multiply<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                out[0]->get_element_count());
+            reference::multiply<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   out[0]->get_element_count());
         }
         else if (node_op == "Negative")
         {
-            kernel::negate<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                              out[0]->get_element_count());
+            reference::negate<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 out[0]->get_element_count());
         }
         else if (node_op == "Not")
         {
-            kernel::logical_not(reinterpret_cast<char*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<char*>(out[0]->get_data_ptr()),
-                                out[0]->get_element_count());
+            reference::logical_not(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                   out[0]->get_element_count());
         }
         else if (node_op == "NotEqual")
         {
-            kernel::not_equal<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                 reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                 reinterpret_cast<char*>(out[0]->get_data_ptr()),
-                                 out[0]->get_element_count());
+            reference::not_equal<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                    reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                    reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                    out[0]->get_element_count());
         }
         else if (node_op == "OneHot")
         {
             auto oh = static_cast<const op::OneHot*>(&node);
-            kernel::one_hot<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               args[0]->get_shape(),
-                               out[0]->get_shape(),
-                               oh->get_one_hot_axis());
+            reference::one_hot<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  args[0]->get_shape(),
+                                  out[0]->get_shape(),
+                                  oh->get_one_hot_axis());
         }
         else if (node_op == "Parameter")
         {
@@ -604,30 +604,30 @@ private:
         {
             ngraph::op::Pad* pad = dynamic_cast<ngraph::op::Pad*>(&node);
 
-            kernel::pad(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                        node.get_inputs().at(0).get_shape(),
-                        node.get_output_shape(0),
-                        pad->get_padding_below(),
-                        pad->get_padding_above(),
-                        pad->get_padding_interior());
+            reference::pad(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           node.get_inputs().at(0).get_shape(),
+                           node.get_output_shape(0),
+                           pad->get_padding_below(),
+                           pad->get_padding_above(),
+                           pad->get_padding_interior());
         }
         else if (node_op == "Power")
         {
-            kernel::power<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                             reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                             out[0]->get_element_count());
+            reference::power<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
         }
         else if (node_op == "Product")
         {
             const op::Product* product = static_cast<const op::Product*>(&node);
-            kernel::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               args[0]->get_shape(),
-                               out[0]->get_shape(),
-                               product->get_reduction_axes());
+            reference::product<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  args[0]->get_shape(),
+                                  out[0]->get_shape(),
+                                  product->get_reduction_axes());
         }
         else if (node_op == "Reduce")
         {
@@ -643,17 +643,17 @@ private:
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(reduction_function, {tx, ty}, {tr});
+                call(reduction_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
-            kernel::reduce(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           node.get_inputs().at(0).get_shape(),
-                           node.get_output_shape(0),
-                           reduce->get_reduction_axes(),
-                           f);
+            reference::reduce(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              node.get_inputs().at(0).get_shape(),
+                              node.get_output_shape(0),
+                              reduce->get_reduction_axes(),
+                              f);
         }
         else if (node_op == "ReduceWindow")
         {
@@ -671,31 +671,31 @@ private:
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(reduction_function, {tx, ty}, {tr});
+                call(reduction_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
-            kernel::reduce_window(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                  node.get_inputs().at(0).get_shape(),
-                                  node.get_output_shape(0),
-                                  f,
-                                  reduce_window->get_window_shape(),
-                                  reduce_window->get_window_movement_strides());
+            reference::reduce_window(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     node.get_inputs().at(0).get_shape(),
+                                     node.get_output_shape(0),
+                                     f,
+                                     reduce_window->get_window_shape(),
+                                     reduce_window->get_window_movement_strides());
         }
         else if (node_op == "Relu")
         {
-            kernel::relu<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::relu<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "ReluBackprop")
         {
-            kernel::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                     out[0]->get_element_count());
+            reference::relu_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                        out[0]->get_element_count());
         }
         // else if (node_op == "Remainder")
         // {
@@ -704,47 +704,47 @@ private:
         else if (node_op == "ReplaceSlice")
         {
             const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
-            kernel::replace_slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                     args[1]->get_shape(),
-                                     slice->get_lower_bounds(),
-                                     slice->get_upper_bounds(),
-                                     slice->get_strides(),
-                                     out[0]->get_shape());
+            reference::replace_slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                        args[1]->get_shape(),
+                                        slice->get_lower_bounds(),
+                                        slice->get_upper_bounds(),
+                                        slice->get_strides(),
+                                        out[0]->get_shape());
         }
         else if (node_op == "Reshape")
         {
             ngraph::op::Reshape* reshape = dynamic_cast<ngraph::op::Reshape*>(&node);
-            kernel::reshape(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            args[0]->get_shape(),
-                            reshape->get_input_order(),
-                            out[0]->get_shape());
+            reference::reshape(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               reshape->get_input_order(),
+                               out[0]->get_shape());
         }
         else if (node_op == "Result")
         {
             ngraph::op::Result* res = dynamic_cast<ngraph::op::Result*>(&node);
-            kernel::result(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           shape_size(res->get_shape()));
+            reference::result(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              shape_size(res->get_shape()));
         }
         else if (node_op == "Reverse")
         {
             ngraph::op::Reverse* reverse = dynamic_cast<ngraph::op::Reverse*>(&node);
-            kernel::reverse(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            args[0]->get_shape(),
-                            out[0]->get_shape(),
-                            reverse->get_reversed_axes());
+            reference::reverse(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               reverse->get_reversed_axes());
         }
         else if (node_op == "Select")
         {
-            kernel::select<T>(reinterpret_cast<char*>(args[0]->get_data_ptr()),
-                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                              reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                              out[0]->get_element_count());
+            reference::select<T>(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                 reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                 reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 out[0]->get_element_count());
         }
         else if (node_op == "SelectAndScatter")
         {
@@ -763,7 +763,7 @@ private:
                     element::boolean, Shape{}, "selection_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(selection_function, {tx, ty}, {tr});
+                call(selection_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<char*>(tr->get_data_ptr()));
             };
 
@@ -778,92 +778,92 @@ private:
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                call(scatter_function, {tx, ty}, {tr});
+                call(scatter_function, {tr}, {tx, ty});
                 return *(reinterpret_cast<T*>(tr->get_data_ptr()));
             };
 
-            kernel::select_and_scatter<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                          reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                          reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                                          reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                          args[0]->get_shape(),
-                                          args[1]->get_shape(),
-                                          out[0]->get_shape(),
-                                          f_selection,
-                                          f_scatter,
-                                          select_and_scatter->get_window_shape(),
-                                          select_and_scatter->get_window_movement_strides());
+            reference::select_and_scatter<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                             reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                             reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                             args[0]->get_shape(),
+                                             args[1]->get_shape(),
+                                             out[0]->get_shape(),
+                                             f_selection,
+                                             f_scatter,
+                                             select_and_scatter->get_window_shape(),
+                                             select_and_scatter->get_window_movement_strides());
         }
         else if (node_op == "Sign")
         {
-            kernel::sign<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::sign<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Sin")
         {
-            kernel::sin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::sin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Sinh")
         {
-            kernel::sinh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::sinh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Slice")
         {
             const op::Slice* slice = static_cast<const op::Slice*>(&node);
-            kernel::slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                             args[0]->get_shape(),
-                             slice->get_lower_bounds(),
-                             slice->get_upper_bounds(),
-                             slice->get_strides(),
-                             out[0]->get_shape());
+            reference::slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                args[0]->get_shape(),
+                                slice->get_lower_bounds(),
+                                slice->get_upper_bounds(),
+                                slice->get_strides(),
+                                out[0]->get_shape());
         }
         else if (node_op == "Softmax")
         {
             const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
-            kernel::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                               out[0]->get_shape(),
-                               softmax->get_axes());
+            reference::softmax<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  out[0]->get_shape(),
+                                  softmax->get_axes());
         }
         else if (node_op == "Sqrt")
         {
-            kernel::sqrt<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::sqrt<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else if (node_op == "Subtract")
         {
-            kernel::subtract<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                out[0]->get_element_count());
+            reference::subtract<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   out[0]->get_element_count());
         }
         else if (node_op == "Sum")
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            kernel::sum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           args[0]->get_shape(),
-                           out[0]->get_shape(),
-                           sum->get_reduction_axes());
+            reference::sum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              args[0]->get_shape(),
+                              out[0]->get_shape(),
+                              sum->get_reduction_axes());
         }
         else if (node_op == "Tan")
         {
-            kernel::tan<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           out[0]->get_element_count());
+            reference::tan<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                              out[0]->get_element_count());
         }
         else if (node_op == "Tanh")
         {
-            kernel::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            reference::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                               out[0]->get_element_count());
         }
         else
         {

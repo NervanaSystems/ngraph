@@ -19,7 +19,7 @@
 #include <cassert>
 #include <memory.h>
 #include "ngraph/node.hpp"
-#include "ngraph/ops/constant.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
