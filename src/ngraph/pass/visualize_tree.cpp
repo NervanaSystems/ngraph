@@ -99,7 +99,7 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         ss << "    " << node->get_name() << " [shape=ellipse color=black";
     }
 
-    ss << " label=\"" << node->get_friendly_name();
+    ss << " label=\"" << node->get_name();
 
     if (std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES") != nullptr)
     {
@@ -133,7 +133,6 @@ std::string pass::VisualizeTree::get_file_ext()
 void pass::VisualizeTree::render() const
 {
 #ifdef GRAPHVIZ_FOUND
-    std::cout << "rendering..." << std::endl;
     auto tmp_file = m_name + ".tmp";
     ofstream out(tmp_file);
     if (out)

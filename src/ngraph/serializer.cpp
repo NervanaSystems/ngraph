@@ -85,7 +85,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
-#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -846,30 +845,6 @@ static shared_ptr<ngraph::Function>
         // else if (node_op == "XLAGetTupleElement")
         // {
         // }
-        else if (node_op == "MatMulBias")
-        {
-            auto shape0 = node_js.at("arg0_shape").get<vector<size_t>>();
-            auto shape1 = node_js.at("arg1_shape").get<vector<size_t>>();
-            bool transpose0 = node_js.at("is_arg0_transposed").get<bool>();
-            bool transpose1 = node_js.at("is_arg1_transposed").get<bool>();
-            auto axes = node_js.at("broadcast_axes").get<set<size_t>>();
-
-            //if we already have 3 args it won't matter
-            //if we have 2 now nullptr falls in the right spot
-            //similar to a macro trick
-            args.push_back(nullptr);
-
-            node = make_shared<op::MatmulBias> (
-                    args[0],
-                    args[1],
-                    args[2],
-                    shape0,
-                    shape1,
-                    transpose0,
-                    transpose1,
-                    axes
-            );
-        }
         else
         {
             stringstream ss;
@@ -881,7 +856,7 @@ static shared_ptr<ngraph::Function>
         // Typically, it could be unsafe to change the name of a node since it may break nameing
         // uniqueness. However, it could sometimes be helpful to use the original name from
         // the serialization for debugging.
-         node->set_name(node_name);
+        // node->set_name(node_name);
     }
 
     //This handles both graphs w/ `op::Result` and legacy graphs w/o it
@@ -1006,15 +981,6 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
-    }
-    else if (node_op == "MatMulBias")
-    {
-        auto tmp = dynamic_cast<const op::MatmulBias*>(&n);
-        node["is_arg0_transposed"] = tmp->get_is_arg0_transposed();
-        node["is_arg1_transposed"] = tmp->get_is_arg1_transposed();
-        node["arg0_shape"] = tmp->get_arg0_shape();
-        node["arg1_shape"] = tmp->get_arg1_shape();
-        node["broadcast_axes"] = tmp->get_broadcast_axes();
     }
     else if (node_op == "Ceiling")
     {
