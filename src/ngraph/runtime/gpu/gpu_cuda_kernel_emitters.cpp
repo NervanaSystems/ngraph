@@ -92,3 +92,39 @@ void runtime::gpu::emit_onehot(std::string name,
                                   0));  // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }
+
+void runtime::gpu::emit_reshape(std::string name,
+                    CUdeviceptr in,
+                    CUdeviceptr out,
+                    std::array<std::string, 2> data_types,
+                    CUdeviceptr input_stride,
+                    CUdeviceptr ouput_stride,
+                    size_t rank,
+                    size_t count)
+{
+    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
+    // Create an instance of nvrtcProgram with the code string.
+    if (CudaFunctionPool::instance().get(name_signature) == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_reshape_op(writer, name_signature, data_types);
+        std::string kernel = writer.get_code();
+        CudaFunctionPool::instance().set(name_signature, kernel);
+    }
+
+    void* args_list[] = {&in, &out, &input_stride, &output_stride, &rank, &count};
+    CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
+                                  static_cast<unsigned int>(count),
+                                  1,
+                                  1, // grid dim
+                                  1,
+                                  1,
+                                  1, // block dim
+                                  0,
+                                  NULL, // shared mem and stream
+                                  args_list,
+                                  0));  // arguments
+    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+}

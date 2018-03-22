@@ -104,6 +104,35 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
+void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::array<std::string, 2>& data_types)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, size_t* input_strides, size_t* output_strides, size_t rank, size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "size_t idx_out = tid;\n";
+            writer << "size_t idx_int = 0;\n"
+
+            writer << "for(int i = 0; i < rank; i++)\n"
+            writer.block_begin();
+            {
+                writer << "idx_in += idx_out / out_stirdes[i] * in_strides[i];\n";
+                writer << "idx_out %= out_stirdes[i];\n";
+            }
+            writer.block_end();
+            writer << "out[tid] = int[idx_in];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 void runtime::gpu::CudaKernelBuilder::get_device_helper(
     codegen::CodeWriter& writer,
     const std::string& name,
