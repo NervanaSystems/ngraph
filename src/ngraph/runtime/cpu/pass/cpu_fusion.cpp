@@ -703,6 +703,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
 
+        //These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
         for (size_t s : conv->get_data_dilation_strides())
         {
