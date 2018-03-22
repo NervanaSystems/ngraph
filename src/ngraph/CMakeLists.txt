@@ -260,9 +260,9 @@ endif()
 
 endif()
 
-if (NGRAPH_ARGON_ENABLE)
-    link_directories(${ARGON_TRANSFORMER_LIB_DIR})
-    include_directories(${ARGON_TRANSFORMER_INCLUDE_DIR})
+if (NGRAPH_NNP_ENABLE)
+    link_directories(${NNP_TRANSFORMER_LIB_DIR})
+    include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -297,8 +297,8 @@ if (NOT APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-if (NGRAPH_ARGON_ENABLE)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_ARGON_ENABLE)
+if (NGRAPH_NNP_ENABLE)
+    target_compile_definitions(ngraph PRIVATE NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
@@ -332,12 +332,12 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-# Argon
-if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.so)
+# NNP
+if (NGRAPH_NNP_ENABLE)
+    target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
     target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
-    add_dependencies(ngraph ext_argon_transformer)
-    add_dependencies(ext_argon_transformer ext_llvm)
+    add_dependencies(ngraph ext_nnp_transformer)
+    add_dependencies(ext_nnp_transformer ext_llvm)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -368,16 +368,16 @@ if (NGRAPH_TBB_ENABLE)
     )
 endif()
 
-if (NGRAPH_ARGON_ENABLE)
-    install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
+if (NGRAPH_NNP_ENABLE)
+    install(DIRECTORY ${NNP_TRANSFORMER_LIB_DIR}/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING PATTERN "*.so"
     )
-    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
         DESTINATION ${NGRAPH_INSTALL_INCLUDE}
         FILES_MATCHING PATTERN "*.hpp"
     )
-    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
         DESTINATION ${NGRAPH_INSTALL_INCLUDE}
         FILES_MATCHING PATTERN "*.h"
     )

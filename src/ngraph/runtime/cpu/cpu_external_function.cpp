@@ -135,6 +135,21 @@ static const string s_output_dir = "cpu_codegen";
 // Temporary Memory Pool alignment
 static const size_t s_memory_pool_alignment = 4096;
 
+static void
+    generate_isnan_isinf_check(codegen::CodeWriter& writer,
+                               std::shared_ptr<Node> node,
+                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
+                               const char* funcname)
+{
+    auto ctype = node->get_element_type().c_type_string();
+    writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
+    writer.indent++;
+    writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
+           << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
+    writer.indent--;
+    writer << "}\n";
+}
+
 class StaticInitializers
 {
 public:
@@ -761,6 +776,28 @@ using namespace ngraph::runtime;
                     names.push_back(tv.get_name());
                 }
                 writer << func_name << "(" << join(names) << ", ctx);\n";
+            }
+
+            //skip multi-output nodes since they would be covered by GetOutputElement
+            if (node->get_output_size() == 1 &&
+                //skip non-FP nodes
+                (node->get_element_type() == element::f32 ||
+                 node->get_element_type() == element::f64))
+            {
+                //check inputs and constants?
+                if ((!node->is_parameter() && !node->is_constant()) ||
+                    std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
+                {
+                    if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
+                    {
+                        generate_isnan_isinf_check(writer, node, out, "std::isnan");
+                    }
+
+                    if (std::getenv("NGRAPH_CPU_INF_CHECK"))
+                    {
+                        generate_isnan_isinf_check(writer, node, out, "std::isinf");
+                    }
+                }
             }
 
             // Emit operation epilogue
