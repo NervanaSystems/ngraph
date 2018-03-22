@@ -15,7 +15,7 @@
 *******************************************************************************/
 
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 using namespace std;

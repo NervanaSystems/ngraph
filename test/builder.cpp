@@ -37,7 +37,7 @@ shared_ptr<runtime::TensorView>
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
@@ -57,7 +57,7 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
@@ -77,7 +77,7 @@ shared_ptr<runtime::TensorView> make_reduce_result_false(
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
