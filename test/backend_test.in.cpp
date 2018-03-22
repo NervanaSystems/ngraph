@@ -1044,7 +1044,6 @@ TEST(${BACKEND_NAME}, dot2d)
 //
 TEST(${BACKEND_NAME}, dot3d_3d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1093,7 +1092,6 @@ TEST(${BACKEND_NAME}, dot3d_3d)
 //
 TEST(${BACKEND_NAME}, dot3d_2d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{3, 4};
