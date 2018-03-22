@@ -33,7 +33,6 @@ using namespace ngraph;
 
 typedef std::shared_ptr<Node> NodePtr;
 
-int runtime::cpu::pass::CPURnnMatFusion::counter = 0;
 #define TI(x) std::type_index(typeid(x))
 
 // a sequence of nodes, identified with a segment type for the input parameter type
