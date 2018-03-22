@@ -32,8 +32,8 @@ op::util::UnaryElementwise::UnaryElementwise(const std::string& node_type,
 }
 
 op::util::UnaryElementwise::UnaryElementwise(const UnaryElementwise& other,
-                                             const shared_ptr<Node>& new_arg)
-    : RequiresTensorViewArgs(other, NodeVector{new_arg})
+                                             const NodeVector& new_args)
+    : RequiresTensorViewArgs(other, new_args)
 {
     NGRAPH_INFO << "UnaryElementwise::UnaryElementwise";
     if (new_args.size() != 1)

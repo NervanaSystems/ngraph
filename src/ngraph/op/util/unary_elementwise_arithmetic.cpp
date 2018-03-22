@@ -29,12 +29,8 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
 }
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(
-    const UnaryElementwiseArithmetic& other, const std::shared_ptr<Node>& new_arg)
-    : UnaryElementwise(other, new_arg)
+    const UnaryElementwiseArithmetic& other, const NodeVector& new_args)
+    : UnaryElementwise(other, new_args)
 {
     NGRAPH_INFO << "UnaryElementwiseArithmetic::UnaryElementwiseArithmetic";
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
 }

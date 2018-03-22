@@ -50,7 +50,7 @@ namespace ngraph
                 UnaryElementwiseArithmetic(const std::string& node_type,
                                            const std::shared_ptr<Node>& arg);
                 UnaryElementwiseArithmetic(const UnaryElementwiseArithmetic&,
-                                           const std::shared_ptr<Node>& new_arg);
+                                           const NodeVector& new_args);
             };
         }
     }
