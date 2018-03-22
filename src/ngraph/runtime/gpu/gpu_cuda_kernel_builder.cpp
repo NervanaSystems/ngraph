@@ -110,7 +110,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1]
-           << "* out, size_t* input_strides, size_t* output_strides, size_t rank, size_t n)\n";
+           << "* out, size_t* input_strides, size_t* trans_strides, size_t rank, size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -123,7 +123,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "idx_out += (idx_in / input_strides[i]) * output_strides[i];\n";
+                writer << "idx_out += (idx_in / input_strides[i]) * trans_strides[i];\n";
                 writer << "idx_in %= input_strides[i];\n";
             }
             writer.block_end();

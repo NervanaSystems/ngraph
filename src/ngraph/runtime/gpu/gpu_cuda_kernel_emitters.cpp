@@ -97,8 +97,8 @@ void runtime::gpu::emit_reshape(std::string name,
                                 CUdeviceptr in,
                                 CUdeviceptr out,
                                 std::array<std::string, 2> data_types,
-                                CUdeviceptr input_stride,
-                                CUdeviceptr output_stride,
+                                CUdeviceptr input_strides,
+                                CUdeviceptr trans_strides,
                                 size_t rank,
                                 size_t count)
 {
@@ -114,7 +114,7 @@ void runtime::gpu::emit_reshape(std::string name,
         CudaFunctionPool::instance().set(name_signature, kernel);
     }
 
-    void* args_list[] = {&in, &out, &input_stride, &output_stride, &rank, &count};
+    void* args_list[] = {&in, &out, &input_strides, &trans_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,

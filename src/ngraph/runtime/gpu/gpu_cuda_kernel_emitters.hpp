@@ -54,8 +54,8 @@ namespace ngraph
                               CUdeviceptr in,
                               CUdeviceptr out,
                               std::array<std::string, 2> data_types,
-                              CUdeviceptr input_stride,
-                              CUdeviceptr output_stride,
+                              CUdeviceptr input_strides,
+                              CUdeviceptr trans_strides,
                               size_t rank,
                               size_t count);
 
