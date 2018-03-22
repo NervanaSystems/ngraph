@@ -260,7 +260,7 @@ namespace ngraph
     };
 
     /**
-    * This utility takes forward-propogation and back-propogation XLAunctions
+    * This utility takes forward-propogation and back-propagation functions
     * and turns them into clone functions where the intermediate values of
     * the forward prop are added to the output of fprop and the input of the bprop
     * to avoid repeat calcualtions.
