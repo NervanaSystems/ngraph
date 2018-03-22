@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "test_tools.hpp"
 
 namespace ngraph

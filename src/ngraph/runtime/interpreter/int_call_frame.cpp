@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include "ngraph/ops/result.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 
@@ -36,8 +36,8 @@ runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> 
 
 void runtime::interpreter::INT_CallFrame::call(
     std::shared_ptr<Function> function,
-    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs)
 {
     if (m_nan_check)
     {
@@ -211,15 +211,15 @@ void runtime::interpreter::INT_CallFrame::generate_calls(
 }
 
 void runtime::interpreter::INT_CallFrame::tensor_call(
-    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs)
 {
-    call(m_function, input_tvs, output_tvs);
+    call(m_function, output_tvs, input_tvs);
 }
 
 void runtime::interpreter::INT_CallFrame::tensor_call(
-    const vector<shared_ptr<runtime::TensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::TensorView>>& output_tvs,
+    const vector<shared_ptr<runtime::TensorView>>& input_tvs)
 {
     vector<shared_ptr<runtime::HostTensorView>> args;
     vector<shared_ptr<runtime::HostTensorView>> out;
@@ -231,12 +231,12 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     {
         out.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
     }
-    tensor_call(args, out);
+    tensor_call(out, args);
 }
 
 void runtime::interpreter::INT_CallFrame::call(
-    const vector<shared_ptr<runtime::TensorView>>& arguments,
-    const vector<shared_ptr<runtime::TensorView>>& results)
+    const vector<shared_ptr<runtime::TensorView>>& results,
+    const vector<shared_ptr<runtime::TensorView>>& arguments)
 {
     vector<shared_ptr<runtime::TensorView>> inputs;
     for (shared_ptr<runtime::TensorView> argument : arguments)
@@ -250,7 +250,7 @@ void runtime::interpreter::INT_CallFrame::call(
         result->collect_tensor_views(outputs, result);
     }
 
-    tensor_call(inputs, outputs);
+    tensor_call(outputs, inputs);
 }
 
 vector<runtime::PerformanceCounter>

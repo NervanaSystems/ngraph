@@ -53,6 +53,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     std::transform(
         v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
-    cf->call({a}, {result});
+    cf->call({result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }

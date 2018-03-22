@@ -52,14 +52,13 @@ namespace ngraph
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void
-                    call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
-                         const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+                void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
                 /// @brief Invoke the function with tuples pre-expanded to their underlying
                 /// tensor views.
-                void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                                 const std::vector<std::shared_ptr<TensorView>>& outputs) override;
+                void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
+                                 const std::vector<std::shared_ptr<TensorView>>& inputs) override;
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
