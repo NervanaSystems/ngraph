@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Convolution + bias forward prop for batched convolution operation.
+        /// \brief Relu(Convolution) forward prop for batched convolution operation.
         class ConvolutionRelu : public util::RequiresTensorViewArgs
         {
         public:
