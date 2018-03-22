@@ -71,7 +71,6 @@ void FindValidSegments(const NodePtr& node,
         if (depth >= valid_seq.size() || TI(node_ref) != valid_seq[depth])
         {
             seq_it = valid_sequence_list.erase(seq_it);
-            continue;
         }
         else
         {
