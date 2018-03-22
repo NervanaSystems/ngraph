@@ -1016,9 +1016,8 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2)
         backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
 
     shared_ptr<runtime::TensorView> _relu =
-        backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
+        backend->make_primary_tensor_view(element::f32, relu->get_shape());
 
-    cf->call({_a, _weights}, {_conv_relu, _relu});
+    cf->call({_conv_relu, _relu}, {_a, _weights});
     EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
 }
-
