@@ -19,9 +19,9 @@
 #include "ngraph/ops/get_output_element.hpp"
 
 ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
-                                 std::shared_ptr<ngraph::Node> gamma,
-                                 std::shared_ptr<ngraph::Node> beta,
-                                 std::shared_ptr<ngraph::Node> input)
+                                         std::shared_ptr<ngraph::Node> gamma,
+                                         std::shared_ptr<ngraph::Node> beta,
+                                         std::shared_ptr<ngraph::Node> input)
     : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
@@ -67,5 +67,6 @@ std::shared_ptr<ngraph::Node>
 {
     if (new_args.size() != 3)
         throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNormRelu>(m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+    return std::make_shared<BatchNormRelu>(
+        m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
 }

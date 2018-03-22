@@ -24,6 +24,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -32,10 +33,12 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
@@ -43,13 +46,10 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/ops/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/ops/conv_bias.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/ops/sigmoid.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/relu.hpp"
-#include "ngraph/runtime/cpu/ops/batch_norm_relu.hpp"
-#include "ngraph/ops/get_output_element.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -681,45 +681,60 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 {
-    
-	auto input_shape = Shape{ 1, 2, 2, 2 };
-	auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
-	auto mean_shape = Shape{ 2 };
-	auto var_shape = Shape{ 2 };
-	auto gamma_shape = Shape{ 2 };
-	auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
-	auto beta_shape = Shape{ 2 };
-	auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-	double eps = 0.001;
-	auto shape_r = Shape{ 1, 2, 2, 2 };
-	auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input);
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
-	auto prelu = std::make_shared<op::Relu>(goe);
+    auto prelu = std::make_shared<op::Relu>(goe);
 
     ngraph::pattern::gr_callback_fn callback = [input, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
-                        << m.match_root()->get_name();
-        
-        auto pattern_map = m.get_pattern_map();
-        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.match_root()->get_input_op(0));
+                     << m.match_root()->get_name();
 
-        auto bn_relu = std::make_shared<op::BatchNormRelu>(m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
+        auto pattern_map = m.get_pattern_map();
+        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
+            m.match_root()->get_input_op(0)->get_inputs().at(0).get_output().get_node());
+
+        auto bn_relu = std::make_shared<op::BatchNormRelu>(
+            m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
         auto bn_relu_output = std::make_shared<op::GetOutputElement>(bn_relu, 0);
         auto bn_relu_mean = std::make_shared<op::GetOutputElement>(bn_relu, 1);
         auto bn_relu_var = std::make_shared<op::GetOutputElement>(bn_relu, 2);
 
-        std::shared_ptr<Node> new_nodes [] = {bn_relu_output, bn_relu_mean, bn_relu_var};
+        std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
+
+        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
+        for (auto _input : m_bn->get_output_inputs(0))
+        {
+            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
+            mgoes[mgoe->get_n()] = mgoe;
+        }
+
+        mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
+
+        for (size_t i = 0; i < mgoes.size(); i++)
+        {
+            ngraph::replace_node(mgoes.at(i), new_nodes[i]);
+        }
 
         //get_output_inputs(0) contains all three GetOutputElements
         //each peeling `output`
-        size_t i = 0;
+        // size_t i = 0;
 
-        for (auto _input : m_bn->get_output_inputs(0))
-        {
-            ngraph::replace_node(_input->get_node(), new_nodes[i]);
-            i++;
-        }        
+        // for (auto _input : m_bn->get_output_inputs(0))
+        // {
+        //     ngraph::replace_node(_input->get_node(), new_nodes[i]);
+        //     i++;
+        // }
 
         //hack : to make sure that GraphRewrite won't try to also replace a node.
         std::shared_ptr<Node> nn;
