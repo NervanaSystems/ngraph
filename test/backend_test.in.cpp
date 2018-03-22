@@ -8433,7 +8433,6 @@ TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
 
 TEST(${BACKEND_NAME}, relu_2Dbackprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
@@ -8459,7 +8458,6 @@ TEST(${BACKEND_NAME}, relu_2Dbackprop)
 
 TEST(${BACKEND_NAME}, relu_4Dbackprop)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
