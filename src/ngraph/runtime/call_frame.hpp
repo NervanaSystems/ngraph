@@ -54,12 +54,12 @@ namespace ngraph
             virtual ~CallFrame() {}
             /// @brief Invoke the function with values matching the signature of the function.
             ///
-            virtual void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) = 0;
+            virtual void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
             /// @brief Invoke the function
-            virtual void tensor_call(const TensorViewPtrs& inputs,
-                                     const TensorViewPtrs& outputs) = 0;
+            virtual void tensor_call(const TensorViewPtrs& outputs,
+                                     const TensorViewPtrs& inputs) = 0;
 
             virtual std::vector<PerformanceCounter> get_performance_data() const
             {

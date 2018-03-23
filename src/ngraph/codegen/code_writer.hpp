@@ -68,16 +68,16 @@ public:
 
     std::string generate_temporary_name(std::string prefix = "tempvar");
 
-    void block_begin()
+    void block_begin(std::string block_prefix = "")
     {
-        *this << "{\n";
+        *this << "{" << block_prefix << "\n";
         indent++;
     }
 
-    void block_end()
+    void block_end(std::string block_suffix = "")
     {
         indent--;
-        *this << "}\n";
+        *this << "}" << block_suffix << "\n";
     }
 
 private:

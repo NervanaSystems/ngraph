@@ -158,7 +158,7 @@ void run_benchmark(shared_ptr<Function> f,
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
     {
-        cf->tensor_call(args, results);
+        cf->tensor_call(results, args);
     }
     t1.stop();
     float time = t1.get_milliseconds();

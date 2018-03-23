@@ -36,6 +36,8 @@ public:
     VisualizeTree(const std::string& file_name);
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
+    static std::string get_file_ext();
+
 private:
     std::string add_attributes(std::shared_ptr<Node> node);
     std::string get_attributes(std::shared_ptr<Node> node);

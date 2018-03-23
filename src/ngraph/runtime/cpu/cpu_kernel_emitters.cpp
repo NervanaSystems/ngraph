@@ -124,7 +124,7 @@ void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
 }
 
 //
-// For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
+// For the reference kernel this is based on, see ngraph/runtime/reference/concat.hpp.
 //
 void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
                                                const string& element_type,

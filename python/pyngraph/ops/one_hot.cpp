@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/ops/one_hot.hpp" // ngraph::op::OneHot
+#include "ngraph/op/one_hot.hpp" // ngraph::op::OneHot
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/one_hot.hpp"
 

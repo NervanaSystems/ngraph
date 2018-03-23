@@ -87,7 +87,7 @@ class Computation:
 
         external = self.runtime.manager.compile(self.function)
         call_frame = self.runtime.backend.make_call_frame(external)
-        call_frame.call(self.tensor_views, [result_view])
+        call_frame.call([result_view], self.tensor_views)
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
@@ -114,7 +114,7 @@ class Computation:
 
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
-        tensor_view.write(util.numpy_to_c(value), 0, buffer_size)
+        tensor_view.write(util.numpy_to_c(np.ascontiguousarray(value)), 0, buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):

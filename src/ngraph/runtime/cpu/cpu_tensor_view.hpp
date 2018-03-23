@@ -19,7 +19,7 @@
 #include <string>
 
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {

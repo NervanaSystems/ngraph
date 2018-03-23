@@ -33,7 +33,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -44,14 +44,19 @@ namespace ngraph
     namespace op
     {
         class Parameter;
+        class Result;
     }
 
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
-    void insert_parameter_split_between(std::shared_ptr<Node> src_node,
-                                        std::shared_ptr<Node> dst_node,
-                                        std::shared_ptr<op::Parameter> p_node);
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+        insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
+                                      const std::shared_ptr<Node>& dst_node);
+
+    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
+                                 const std::shared_ptr<Node>& dst_node,
+                                 const std::shared_ptr<Node>& new_node);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -63,9 +68,12 @@ namespace ngraph
         friend class descriptor::Input;
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
-        friend void insert_parameter_split_between(std::shared_ptr<Node> src_node,
-                                                   std::shared_ptr<Node> dst_node,
-                                                   std::shared_ptr<op::Parameter> p_node);
+        friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+            insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
+                                          const std::shared_ptr<Node>& dst_node);
+        friend void insert_new_node_between(const std::shared_ptr<Node>& src_node,
+                                            const std::shared_ptr<Node>& dst_node,
+                                            const std::shared_ptr<Node>& new_node);
 
         friend class ngraph::pass::GetOutputElementElimination;
 

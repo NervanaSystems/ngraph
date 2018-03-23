@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/ops/maximum.hpp"
+#include "ngraph/op/maximum.hpp"
 #include "pyngraph/ops/maximum.hpp"
 
 namespace py = pybind11;

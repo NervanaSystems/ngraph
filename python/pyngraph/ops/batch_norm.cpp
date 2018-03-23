@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "pyngraph/ops/batch_norm.hpp"
 
 namespace py = pybind11;

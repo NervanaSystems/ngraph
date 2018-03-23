@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/util/unary_elementwise.hpp"
+#include "ngraph/op/util/unary_elementwise.hpp"
 #include "pyngraph/ops/util/unary_elementwise.hpp"
 
 namespace py = pybind11;

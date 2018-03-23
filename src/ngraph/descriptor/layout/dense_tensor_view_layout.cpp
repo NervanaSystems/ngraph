@@ -17,8 +17,8 @@
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 

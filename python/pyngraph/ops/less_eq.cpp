@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/less_eq.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "pyngraph/ops/less_eq.hpp"
 
 namespace py = pybind11;

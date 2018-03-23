@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/op/batch_norm.hpp"
 
 #include <memory>
 using namespace std;

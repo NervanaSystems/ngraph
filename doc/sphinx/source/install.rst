@@ -85,7 +85,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
       
       $ make   # note: make -j <N> may work, but sometimes results in out-of-memory 
                # errors if too many compilation processes are used
-
+      $ make install          
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 

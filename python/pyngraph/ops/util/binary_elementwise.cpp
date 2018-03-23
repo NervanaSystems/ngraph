@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/util/binary_elementwise.hpp"
+#include "ngraph/op/util/binary_elementwise.hpp"
 #include "pyngraph/ops/util/binary_elementwise.hpp"
 
 namespace py = pybind11;

@@ -57,8 +57,8 @@ runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs)
 {
     //Device tensors
     vector<void*> inputs;
@@ -81,8 +81,8 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
 }
 
 void runtime::gpu::GPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& results)
+    const std::vector<std::shared_ptr<runtime::TensorView>>& results,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments)
 {
     // TODO: Check types of args and result
     vector<shared_ptr<runtime::TensorView>> inputs;
@@ -97,5 +97,5 @@ void runtime::gpu::GPU_CallFrame::call(
         result->collect_tensor_views(outputs, result);
     }
 
-    tensor_call(inputs, outputs);
+    tensor_call(outputs, inputs);
 }

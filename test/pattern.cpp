@@ -25,15 +25,15 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -169,12 +169,11 @@ public:
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return nn;
+                return false;
             }
 
             auto const_values = const_node->get_vector<int32_t>();
@@ -184,9 +183,11 @@ public:
             if (!all_ones)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 1";
-                return nn;
+                return false;
             }
-            return pattern_map[pattern];
+
+            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return true;
         };
 
         auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
@@ -213,14 +214,11 @@ public:
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            //ASSERT_NE(nullptr, const_node);
-
-            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return nn;
+                return false;
             }
 
             auto const_values = const_node->get_vector<int>();
@@ -230,10 +228,11 @@ public:
             if (!all_zeros)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 0";
-                return nn;
+                return false;
             }
 
-            return pattern_map[pattern];
+            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return true;
         };
 
         auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
@@ -252,7 +251,9 @@ public:
             NGRAPH_DEBUG << "reducee = " << reducee->get_name();
             auto sum =
                 std::shared_ptr<ngraph::Node>(new op::Sum(reducee, reduce->get_reduction_axes()));
-            return sum;
+
+            ngraph::replace_node(m.match_root(), sum);
+            return true;
         };
 
         auto m = make_shared<TestMatcher>(sum_pattern, callback);

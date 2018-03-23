@@ -179,7 +179,7 @@ sources = ['pyngraph/function.cpp',
            ]
 
 include_dirs = [  # Path to pybind11 headers
-    'build/pybind11/include',
+    'pybind11/include',
     NGRAPH_CPP_INCLUDE_DIR,
     '.',
 ]
