@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/util/op_annotations.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 
 namespace ngraph
 {

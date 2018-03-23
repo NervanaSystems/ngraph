@@ -87,7 +87,7 @@ class Computation:
 
         external = self.runtime.manager.compile(self.function)
         call_frame = self.runtime.backend.make_call_frame(external)
-        call_frame.call(self.tensor_views, [result_view])
+        call_frame.call([result_view], self.tensor_views)
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)

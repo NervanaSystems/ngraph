@@ -19,7 +19,7 @@
 #include <cassert>
 #include <memory.h>
 #include "ngraph/node.hpp"
-#include "ngraph/ops/constant.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
@@ -62,6 +62,27 @@ namespace ngraph
             ///
             /// \param graph_node is an input graph to be matched against
             bool match(const std::shared_ptr<Node>& graph_node);
+
+            template <typename T>
+            static std::shared_ptr<T> unique_match(std::shared_ptr<Node> node)
+            {
+                std::shared_ptr<T> matched;
+                for (auto arg : node->get_input_ops())
+                {
+                    if (auto t_casted = std::dynamic_pointer_cast<T>(arg))
+                    {
+                        if (matched)
+                        {
+                            throw ngraph_error("There's more than two arguments of the same type");
+                        }
+                        else
+                        {
+                            matched = t_casted;
+                        }
+                    }
+                }
+                return matched;
+            }
 
             bool process_match(gr_callback_fn callback = nullptr);
 

@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/avg_pool.hpp"
 

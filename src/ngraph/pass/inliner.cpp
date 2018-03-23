@@ -17,7 +17,7 @@
 #include "inliner.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/function_call.hpp"
+#include "ngraph/op/function_call.hpp"
 
 std::vector<std::shared_ptr<ngraph::op::FunctionCall>>
     ngraph::pass::InlineSmallCalls::create_inlining_plan(std::shared_ptr<ngraph::Function> f,

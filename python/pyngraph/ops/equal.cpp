@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/equal.hpp"
+#include "ngraph/op/equal.hpp"
 #include "pyngraph/ops/equal.hpp"
 
 namespace py = pybind11;

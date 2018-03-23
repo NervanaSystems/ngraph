@@ -24,14 +24,14 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/replace_slice.hpp"
-#include "ngraph/ops/slice.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/strides.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 

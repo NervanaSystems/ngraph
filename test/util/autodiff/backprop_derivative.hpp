@@ -20,7 +20,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"
@@ -99,7 +99,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                cf->tensor_call(df_input_args, df_output_args);
+                cf->tensor_call(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -192,7 +192,7 @@ namespace ngraph
             auto clone_fwd = clone_function(fprop_cache.fprop, nm1);
             auto cache_fwd = manager->compile(clone_fwd);
             auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
-            cache_fwd_cf->tensor_call(f_input_args, mod_f_output_args);
+            cache_fwd_cf->tensor_call(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             NodeMap nm2;

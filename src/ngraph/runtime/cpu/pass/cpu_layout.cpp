@@ -26,21 +26,21 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/get_output_element.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/relu.hpp"
-#include "ngraph/ops/result.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
-#include "ngraph/runtime/cpu/ops/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
 using namespace mkldnn;
@@ -1009,6 +1009,7 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::BatchNorm)
                 {
+                    auto bn = static_cast<const ngraph::op::BatchNorm*>(node.get());
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_layout =
@@ -1016,12 +1017,25 @@ namespace ngraph
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
-                        prim_output_formats.push_back(memory::format::x);
-                        prim_output_formats.push_back(memory::format::x);
+
+                        if (bn->get_training_flag())
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_output_formats.push_back(input_layout);
+                            prim_output_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(memory::format::x);
+                        }
+                        else
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(input_layout);
+                        }
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);

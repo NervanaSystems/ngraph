@@ -28,7 +28,6 @@ set (SRC
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
-    builder_xla.cpp
     build_graph.cpp
     copy.cpp
     core_fusion.cpp

@@ -20,7 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/log.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 
 namespace ngraph
 {

@@ -33,7 +33,7 @@ if (NGRAPH_NNP_ENABLE)
     if (DEFINED CUSTOM_NNP_TRANSFORMER_GIT_REPOSITORY)
         set(NNP_TRANSFORMER_GIT_REPOSITORY ${CUSTOM_NNP_TRANSFORMER_GIT_REPOSITORY})
     else()
-        set(NNP_TRANSFORMER_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
+        set(NNP_TRANSFORMER_GIT_REPOSITORY https://github.com/NervanaSystems/nnp-transformer.git)
     endif()
 
     # Set nnp_transformer tag
@@ -44,7 +44,7 @@ if (NGRAPH_NNP_ENABLE)
     #   commit.
     # - After we have ngraph CI job for nnp transformer, ngraph master will be compatible with
     #   nnp transformer guaranteed by CI.
-    set(NNP_TRANSFORMER_GIT_TAG cpp-master)
+    set(NNP_TRANSFORMER_GIT_TAG master)
 
     # Determines where nnp-transformer will be located
     set(NNP_TRANSFORMER_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/nnp_transformer)

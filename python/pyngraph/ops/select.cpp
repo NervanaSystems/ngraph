@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/select.hpp"
+#include "ngraph/op/select.hpp"
 #include "pyngraph/ops/select.hpp"
 
 namespace py = pybind11;
