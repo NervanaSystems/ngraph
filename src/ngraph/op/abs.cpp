@@ -26,11 +26,6 @@ op::Abs::Abs(const shared_ptr<Node>& arg)
 {
 }
 
-op::Abs::Abs(const op::Abs& other, const NodeVector& new_args)
-    : UnaryElementwiseArithmetic(other, new_args)
-{
-}
-
 shared_ptr<Node> op::Abs::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)

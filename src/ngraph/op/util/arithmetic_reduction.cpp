@@ -48,13 +48,3 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
 
     set_value_type_checked(input.get_element_type(), result_shape);
 }
-
-op::util::ArithmeticReduction::ArithmeticReduction(const ArithmeticReduction& other,
-                                                   const NodeVector& new_args)
-    : RequiresTensorViewArgs(other, new_args)
-{
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-}

@@ -36,7 +36,6 @@ namespace ngraph
                 ArithmeticReduction(const std::string& node_type,
                                     const std::shared_ptr<Node>& arg,
                                     const AxisSet& reduction_axes);
-                ArithmeticReduction(const ArithmeticReduction&, const NodeVector& new_args);
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.
                 const AxisSet& get_reduction_axes() const { return m_reduction_axes; }

@@ -53,8 +53,6 @@ namespace ngraph
                 BinaryElementwiseComparison(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1);
-                BinaryElementwiseComparison(const BinaryElementwiseComparison&,
-                                            const NodeVector& new_args);
             };
         }
     }

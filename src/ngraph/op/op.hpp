@@ -40,7 +40,6 @@ namespace ngraph
 
         protected:
             Op(const std::string& node_type, const NodeVector& arguments);
-            Op(const Op&, const NodeVector& new_args);
 
         private:
             std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;

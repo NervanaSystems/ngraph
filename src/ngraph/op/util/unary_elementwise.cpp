@@ -30,13 +30,3 @@ op::util::UnaryElementwise::UnaryElementwise(const std::string& node_type,
 
     set_value_type_checked(result_element_type, input.get_shape());
 }
-
-op::util::UnaryElementwise::UnaryElementwise(const UnaryElementwise& other,
-                                             const NodeVector& new_args)
-    : RequiresTensorViewArgs(other, new_args)
-{
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-}

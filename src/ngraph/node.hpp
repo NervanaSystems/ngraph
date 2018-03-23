@@ -86,8 +86,6 @@ namespace ngraph
         }
 
     public:
-        // This is the replacement for copy_with_new_args
-        Node(const Node&, const NodeVector& new_args);
         virtual ~Node();
 
         /// The class name, must not contain spaces

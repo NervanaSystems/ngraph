@@ -35,13 +35,3 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
         throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
 }
-
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
-    const BinaryElementwiseArithmetic& other, const NodeVector& new_args)
-    : BinaryElementwise(other, new_args)
-{
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-}
