@@ -132,16 +132,16 @@ The process documented here will work on CentOS 7.4.
       # ./bootstrap
       # make && make install  
 
-#. Clone the `NervanaSystems` ``ngraph`` repo and use Cmake to install the 
-   nGraph libraries to ``$HOME/ngraph_dist``
+#. As non-root users, you can now clone the `NervanaSystems` ``ngraph`` repo 
+   and use Cmake 3.4.3 to install the nGraph libraries to ``$HOME/ngraph_dist``.
 
    .. code-block:: console
 
-      # cd /opt/libraries 
-      # git clone git@github.com:NervanaSystems/ngraph.git
-      # mkdir build && cd build
-      # cmake ../
-      # make 
+      $ cd /opt/libraries 
+      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ mkdir build && cd build
+      $ cmake ../
+      $ make 
 
 
 macOS\* development
