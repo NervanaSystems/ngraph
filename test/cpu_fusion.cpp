@@ -1015,12 +1015,16 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-std::vector<shared_ptr<runtime::TensorView>> rnn_matrix_fusion_eval(const bool enable_pass)
+std::vector<shared_ptr<runtime::TensorView>>
+    rnn_matrix_fusion_eval(size_t time_steps,
+                           const Shape& data_shape,
+                           const Shape& weights_shape,
+                           const Shape& bias_shape,
+                           const vector<float>& data_val,
+                           const vector<float>& weights_val,
+                           const vector<float>& bias_val,
+                           const bool enable_pass)
 {
-    const size_t time_steps = 4;
-    Shape data_shape{3, time_steps, 5};
-    Shape weights_shape{6, data_shape[2]};
-    Shape bias_shape{6};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
     auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
@@ -1070,6 +1074,20 @@ std::vector<shared_ptr<runtime::TensorView>> rnn_matrix_fusion_eval(const bool e
         result_tensors.push_back(backend->make_primary_tensor_view(element::f32, r->get_shape()));
     }
 
+    copy_data(data_tensor, data_val);
+    copy_data(weights_tensor, weights_val);
+    copy_data(bias_tensor, bias_val);
+    cf->call(result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    return result_tensors;
+}
+
+TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
+{
+    const size_t time_steps = 4;
+    Shape data_shape{3, time_steps, 5};
+    Shape weights_shape{6, data_shape[2]};
+    Shape bias_shape{6};
+
     size_t data_size =
         std::accumulate(begin(data_shape), end(data_shape), 1, std::multiplies<size_t>());
     size_t weights_size =
@@ -1086,17 +1104,10 @@ std::vector<shared_ptr<runtime::TensorView>> rnn_matrix_fusion_eval(const bool e
     std::generate(weights_val.begin(), weights_val.end(), rand);
     std::generate(bias_val.begin(), bias_val.end(), rand);
 
-    copy_data(data_tensor, data_val);
-    copy_data(weights_tensor, weights_val);
-    copy_data(bias_tensor, bias_val);
-    cf->call(result_tensors, {data_tensor, weights_tensor, bias_tensor});
-    return result_tensors;
-}
-
-TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
-{
-    std::vector<shared_ptr<runtime::TensorView>> result_expected = rnn_matrix_fusion_eval(false);
-    std::vector<shared_ptr<runtime::TensorView>> result_fused = rnn_matrix_fusion_eval(true);
+    std::vector<shared_ptr<runtime::TensorView>> result_expected = rnn_matrix_fusion_eval(
+        time_steps, data_shape, weights_shape, bias_shape, data_val, weights_val, bias_val, false);
+    std::vector<shared_ptr<runtime::TensorView>> result_fused = rnn_matrix_fusion_eval(
+        time_steps, data_shape, weights_shape, bias_shape, data_val, weights_val, bias_val, true);
     for (size_t i = 0; i < result_expected.size(); ++i)
     {
         EXPECT_TRUE(test::all_close<float>(result_expected[i], result_fused[i]));
