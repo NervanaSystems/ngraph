@@ -105,6 +105,9 @@ void FindValidSegments(const NodePtr& node,
     }
 }
 
+// this is the expected sequence count for fusing
+const size_t SEGMENT_COUNT = 3;
+
 struct OrderedParams
 {
 public:
@@ -127,7 +130,7 @@ public:
 private:
     // order based on NodeSegment::Type
     // <data, weights, bias>
-    std::array<NodePtr, 3> m_params;
+    std::array<NodePtr, SEGMENT_COUNT> m_params;
 };
 
 bool operator<(const OrderedParams& a, const OrderedParams& b)
@@ -144,8 +147,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
          {TI(op::Parameter), TI(op::Slice), TI(op::Reshape), TI(op::Dot), TI(op::Add)}},
         {NodeSegment::WEIGHTS, {TI(op::Parameter), TI(op::Reshape), TI(op::Dot), TI(op::Add)}},
         {NodeSegment::BIAS, {TI(op::Parameter), TI(op::Broadcast), TI(op::Add)}}};
-    // this is the expected sequence count for fusing
-    const size_t segment_count = 3;
 
     // find all parameter nodes
     std::vector<NodePtr> param_nodes;
@@ -173,13 +174,13 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         if (op_it == op_seg_map.end())
         {
             auto insert_result = op_seg_map.insert(
-                std::make_pair(segment.back(), std::vector<NodeSegment>(segment_count)));
+                std::make_pair(segment.back(), std::vector<NodeSegment>(SEGMENT_COUNT)));
             op_it = insert_result.first;
         }
         (op_it->second)[segment.type] = segment;
     }
 
-    // remove ops with less than segment_count number of segments
+    // remove ops with less than SEGMENT_COUNT number of segments
     for (auto op_it = op_seg_map.cbegin(); op_it != op_seg_map.cend();)
     {
         // remove ops with less than expected segements
@@ -208,10 +209,14 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     {
         std::vector<NodeSegment>& segments = op_seg.second;
         OrderedParams p;
+        // put each segment's parameter in the OrderedParams by type
         for (auto& seg : segments)
         {
             p.set(seg.type, seg[0]);
         }
+        // if any of them is missing, p will be invalid
+        // this can happen for example, when two of them are both
+        // weights
         if (p.valid())
         {
             param_list[p].push_back(op_seg.first);
