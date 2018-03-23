@@ -1016,7 +1016,7 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
 }
 
 std::vector<shared_ptr<runtime::TensorView>>
-    rnn_matrix_fusion_eval(size_t time_steps,
+    rnn_matrix_fusion_eval(const size_t time_steps,
                            const Shape& data_shape,
                            const Shape& weights_shape,
                            const Shape& bias_shape,
