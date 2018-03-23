@@ -56,7 +56,6 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
 Node::Node(const Node& other, const NodeVector& new_args)
     : Node(other.m_node_type, new_args)
 {
-    NGRAPH_INFO << "Node::Node";
 }
 
 Node::~Node()

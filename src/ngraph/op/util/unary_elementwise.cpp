@@ -35,7 +35,6 @@ op::util::UnaryElementwise::UnaryElementwise(const UnaryElementwise& other,
                                              const NodeVector& new_args)
     : RequiresTensorViewArgs(other, new_args)
 {
-    NGRAPH_INFO << "UnaryElementwise::UnaryElementwise";
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");

@@ -32,5 +32,4 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(
     const UnaryElementwiseArithmetic& other, const NodeVector& new_args)
     : UnaryElementwise(other, new_args)
 {
-    NGRAPH_INFO << "UnaryElementwiseArithmetic::UnaryElementwiseArithmetic";
 }

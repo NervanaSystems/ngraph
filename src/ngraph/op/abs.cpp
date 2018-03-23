@@ -33,7 +33,11 @@ op::Abs::Abs(const op::Abs& other, const NodeVector& new_args)
 
 shared_ptr<Node> op::Abs::copy_with_new_args(const NodeVector& new_args) const
 {
-    return make_shared<Abs>(*this, new_args);
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Abs>(new_args.at(0));
 }
 
 void op::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)

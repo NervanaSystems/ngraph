@@ -43,5 +43,4 @@ op::util::RequiresTensorViewArgs::RequiresTensorViewArgs(const RequiresTensorVie
                                                          const NodeVector& new_args)
     : Op(other, new_args)
 {
-    NGRAPH_INFO << "RequiresTensorViewArgs::RequiresTensorViewArgs";
 }
