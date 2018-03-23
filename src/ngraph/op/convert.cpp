@@ -21,16 +21,24 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convert::Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
+op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_type)
     : UnaryElementwise("Convert", element_type, arg)
     , m_element_type(element_type)
 {
 }
 
-void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Convert>(new_args.at(0), m_element_type);
+}
+
+void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 
-    adjoints.add_delta(x, std::make_shared<op::Convert>(delta, x->get_element_type()));
+    adjoints.add_delta(x, make_shared<op::Convert>(delta, x->get_element_type()));
 }

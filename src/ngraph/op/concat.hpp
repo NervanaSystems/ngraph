@@ -35,10 +35,7 @@ namespace ngraph
             Concat(const NodeVector& args, size_t concatenation_axis);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                return std::make_shared<Concat>(new_args, m_concatenation_axis);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }

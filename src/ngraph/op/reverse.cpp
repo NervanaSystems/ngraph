@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reverse::Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes)
+op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
     : RequiresTensorViewArgs("Reverse", {arg})
     , m_reversed_axes(reversed_axes)
 {
@@ -36,7 +36,7 @@ op::Reverse::Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_a
     {
         if (axis >= input_rank)
         {
-            std::stringstream ss;
+            stringstream ss;
             ss << "Reverse axis " << axis << " is out of bounds (input rank is " << input_rank
                << ").";
             throw ngraph_error(ss.str());
@@ -46,8 +46,16 @@ op::Reverse::Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_a
     set_value_type_checked(input.get_element_type(), input_shape);
 }
 
-void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints,
-                                    const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Reverse::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Reverse>(new_args.at(0), m_reversed_axes);
+}
+
+void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 

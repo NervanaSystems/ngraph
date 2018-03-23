@@ -77,15 +77,7 @@ namespace ngraph
                          const Coordinate& upper_bounds);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 2)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<ReplaceSlice>(
-                    new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }

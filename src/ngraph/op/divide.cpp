@@ -18,12 +18,33 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 
-void ngraph::op::Divide::generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Divide::Divide(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseArithmetic("Divide", arg0, arg1)
+{
+}
+
+shared_ptr<Node> op::Divide::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Divide>(new_args.at(0), new_args.at(1));
+}
+
+void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
     auto y = get_input_op(1);
 
     adjoints.add_delta(x, delta / y);
     adjoints.add_delta(y, -delta * shared_from_this() / y);
+}
+
+shared_ptr<Node> ngraph::operator/(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)
+{
+    return make_shared<op::Divide>(arg0, arg1);
 }
