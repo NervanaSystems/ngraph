@@ -45,12 +45,18 @@ namespace ngraph
                 initialize(const std::shared_ptr<runtime::TensorView>& ptv)
             {
                 std::vector<T> vec = read_vector<T>(ptv);
+                initialize(vec);
+                write_vector(ptv, vec);
+                return ptv;
+            }
+            /// @brief Randomly initialize a vector
+            /// @param vec The tensor to initialize
+            void initialize(std::vector<T>& vec)
+            {
                 for (T& elt : vec)
                 {
                     elt = m_r();
                 }
-                write_vector(ptv, vec);
-                return ptv;
             }
 
         protected:

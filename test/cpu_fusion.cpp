@@ -19,7 +19,6 @@
 #include <iostream>
 #include <list>
 #include <memory>
-#include <random>
 
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
@@ -53,6 +52,7 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
+#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -1088,21 +1088,13 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     Shape weights_shape{6, data_shape[2]};
     Shape bias_shape{6};
 
-    size_t data_size =
-        std::accumulate(begin(data_shape), end(data_shape), 1, std::multiplies<size_t>());
-    size_t weights_size =
-        std::accumulate(begin(weights_shape), end(weights_shape), 1, std::multiplies<size_t>());
-    size_t bias_size =
-        std::accumulate(begin(bias_shape), end(bias_shape), 1, std::multiplies<size_t>());
-    std::mt19937_64 gen(0);
-    std::uniform_real_distribution<> real_random(0.0, 1.0);
-    auto rand = [&]() { return real_random(gen); };
-    vector<float> data_val(data_size);
-    vector<float> weights_val(weights_size);
-    vector<float> bias_val(bias_size);
-    std::generate(data_val.begin(), data_val.end(), rand);
-    std::generate(weights_val.begin(), weights_val.end(), rand);
-    std::generate(bias_val.begin(), bias_val.end(), rand);
+    test::Uniform<float> rng{0, 1, 0};
+    vector<float> data_val(shape_size(data_shape));
+    vector<float> weights_val(shape_size(weights_shape));
+    vector<float> bias_val(shape_size(bias_shape));
+    rng.initialize(data_val);
+    rng.initialize(weights_val);
+    rng.initialize(bias_val);
 
     std::vector<shared_ptr<runtime::TensorView>> result_expected = rnn_matrix_fusion_eval(
         time_steps, data_shape, weights_shape, bias_shape, data_val, weights_val, bias_val, false);

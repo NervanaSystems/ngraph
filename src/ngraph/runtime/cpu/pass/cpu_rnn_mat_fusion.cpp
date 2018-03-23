@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <fstream>
+#include <array>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -113,7 +113,6 @@ public:
     {
     }
 
-    bool exist(const NodeSegment::Type type) { return m_params[type] != nullptr; }
     bool valid()
     {
         return std::none_of(m_params.cbegin(), m_params.cend(), [](const NodePtr& n) -> bool {
@@ -152,8 +151,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     std::vector<NodePtr> param_nodes;
     for (auto& node : function->get_ordered_ops())
     {
-        const Node& node_ref = *node;
-        if (TI(node_ref) == TI(op::Parameter))
+        if (node->is_parameter())
         {
             param_nodes.push_back(node);
         }
@@ -233,7 +231,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
-    // Expecting in put data shape D=[x, y, z], weights W=[u, v], bias B = [w]
+    // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
     // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
     // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
     // iterate each unique set of parameters, replace original operations
