@@ -20,12 +20,12 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
     Shape, Strides
 
-from ngraph.impl.op import Abs, Add, AvgPool, Broadcast, Ceiling, Concat, Constant, Convert, \
+from ngraph.impl.op import Abs, Acos, Add, AvgPool, Broadcast, Ceiling, Concat, Constant, Convert, \
     Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, \
     Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, \
     Reshape, Slice, Sqrt, Subtract, Sum, Tanh
 
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
@@ -54,8 +54,24 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 # Unary ops
 @unary_op
 def absolute(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies f(x) = abs(x) to the input node elementwise."""
+    """Return node which applies f(x) = abs(x) to the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with Abs operation applied on it.
+    """
     return Abs(node)
+
+
+@unary_op
+def acos(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply inverse cosine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with arccos operation applied on it.
+    """
+    return Acos(node)
 
 
 @unary_op

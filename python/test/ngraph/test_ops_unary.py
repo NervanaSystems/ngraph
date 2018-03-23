@@ -24,16 +24,35 @@ def _get_runtime():
     return ng.runtime(manager_name=manager_name)
 
 
-def _run_unary_op(input_data, unary_op):
+def _run_unary_op_node(input_data, unary_op, as_node=True):
     runtime = _get_runtime()
     parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
-    model = unary_op(parameter_a)
-    computation = runtime.computation(model, parameter_a)
+    if as_node:
+        node = unary_op(parameter_a)
+    else:
+        # unary_op can handle scalars and numpy.ndarray parameters
+        node = unary_op(input_data)
+    computation = runtime.computation(node, parameter_a)
     return computation(input_data)
 
 
-def test_absolute():
-    input_data = -1 + np.random.rand(2, 3, 4) * 2
-    result = _run_unary_op(input_data, ng.absolute)
+@pytest.mark.parametrize('input_data, as_node', [
+    (-1 + np.random.rand(2, 3, 4) * 2, True),
+    (-1 + np.random.rand(2, 3, 4) * 2, False),
+    (np.float32(-3), False),
+])
+def test_absolute(input_data, as_node):
+    result = _run_unary_op_node(input_data, ng.absolute, as_node)
     expected = np.abs(input_data)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('input_data, as_node', [
+    (-1 + np.random.rand(2, 3, 4) * 2, True),
+    (-1 + np.random.rand(2, 3, 4) * 2, False),
+    (np.float32(-0.5), False),
+])
+def test_acos(input_data, as_node):
+    result = _run_unary_op_node(input_data, ng.acos, as_node)
+    expected = np.arccos(input_data)
     assert np.allclose(result, expected)
