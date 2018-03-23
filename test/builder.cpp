@@ -1,18 +1,18 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+ * Copyright 2017-2018 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -139,4 +139,30 @@ TEST(builder, numpy_transpose)
         dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
     EXPECT_ANY_THROW(
         dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
+}
+
+TEST(builder, tensor_mask)
+{
+    Shape max_sequence_length{3};
+    auto sequence_lengths = make_shared<op::Parameter>(element::u32, max_sequence_length);
+
+    Shape mask_shape{3, 5};
+    auto f =
+        make_shared<Function>(builder::tensor_mask(sequence_lengths, AxisSet{1}, mask_shape, 1),
+                              op::ParameterVector{sequence_lengths});
+
+    auto manager = runtime::Manager::get("INTERPRETER");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto sequence_lengths_data =
+        backend->make_primary_tensor_view(element::u32, max_sequence_length);
+    copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
+    auto result = backend->make_primary_tensor_view(element::boolean, mask_shape);
+
+    cf->call({result}, {sequence_lengths_data});
+    vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
+
+    EXPECT_EQ(expected, read_vector<char>(result));
 }
