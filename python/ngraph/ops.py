@@ -20,10 +20,10 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
     Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, AvgPool, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, LessEq, Log, Max, \
-    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter, Product, \
-    Reshape, Slice, Sqrt, Subtract, Sum, Tanh
+from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
+    Constant, Convert, Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, \
+    LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter,\
+    Product, Reshape, Slice, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -72,6 +72,28 @@ def acos(node, name=None):  # type: (NodeInput, str) -> Node
     :return: New node with arccos operation applied on it.
     """
     return Acos(node)
+
+
+@unary_op
+def asin(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply inverse sine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with arcsin operation applied on it.
+    """
+    return Asin(node)
+
+
+@unary_op
+def atan(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply inverse tangent function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with arctan operation applied on it.
+    """
+    return Atan(node)
 
 
 @unary_op
