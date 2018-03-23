@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const std::shared_ptr<Node>& arg)
+op::Result::Result(const shared_ptr<Node>& arg)
     : RequiresTensorViewArgs("Result", {arg})
 {
     if (arg->get_outputs().size() != 1)
@@ -37,7 +37,7 @@ op::Result::Result(const std::shared_ptr<Node>& arg)
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
-std::shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -49,7 +49,12 @@ std::shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args)
         throw ngraph_error("Expected a single-output argument");
     }
 
-    auto res = std::make_shared<Result>(new_args.at(0));
+    auto res = make_shared<Result>(new_args.at(0));
     res->set_needs_copy(res->needs_copy());
     return res;
+}
+
+void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+{
+    adjoints.add_delta(get_input_op(0), delta);
 }

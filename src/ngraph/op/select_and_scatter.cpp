@@ -22,11 +22,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::SelectAndScatter::SelectAndScatter(const std::shared_ptr<Node>& arg_selectee,
-                                       const std::shared_ptr<Node>& arg_source,
-                                       const std::shared_ptr<Node>& arg_init,
-                                       const std::shared_ptr<Function>& selection_function,
-                                       const std::shared_ptr<Function>& scatter_function,
+op::SelectAndScatter::SelectAndScatter(const shared_ptr<Node>& arg_selectee,
+                                       const shared_ptr<Node>& arg_source,
+                                       const shared_ptr<Node>& arg_init,
+                                       const shared_ptr<Function>& selection_function,
+                                       const shared_ptr<Function>& scatter_function,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides)
     : RequiresTensorViewArgs("SelectAndScatter", {arg_selectee, arg_source, arg_init})
@@ -215,4 +215,19 @@ op::SelectAndScatter::SelectAndScatter(const std::shared_ptr<Node>& arg_selectee
     // Result type is the same element type and shape as the selectee.
     //
     set_value_type_checked(input_selectee_element_type, input_selectee_shape);
+}
+
+shared_ptr<Node> op::SelectAndScatter::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 3)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<SelectAndScatter>(new_args.at(0),
+                                         new_args.at(1),
+                                         new_args.at(2),
+                                         m_selection_function,
+                                         m_scatter_function,
+                                         m_window_shape,
+                                         m_window_movement_strides);
 }

@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
-                   const std::shared_ptr<Node>& arg_init,
-                   const std::shared_ptr<Function>& reduction_function,
+op::Reduce::Reduce(const shared_ptr<Node>& arg_reductee,
+                   const shared_ptr<Node>& arg_init,
+                   const shared_ptr<Function>& reduction_function,
                    const AxisSet& reduction_axes)
     : RequiresTensorViewArgs("Reduce", {arg_reductee, arg_init})
     , m_reduction_function(reduction_function)
@@ -91,4 +91,14 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
     }
 
     add_output(input_reductee.get_element_type(), result_shape);
+}
+
+shared_ptr<Node> op::Reduce::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Reduce>(
+        new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
 }
