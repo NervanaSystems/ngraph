@@ -117,9 +117,7 @@ The process documented here will work on CentOS 7.4.
    .. code-block:: console
 
       # yum update
-      # yum -y install zlib-devel
-      # yum install ncurses-libs ncurses-devel patch diffutils wget 
-      gcc-c++ make git perl-Data-Dumper
+      # yum -y install zlib-devel install ncurses-libs ncurses-devel patch diffutils wget gcc-c++ make git perl-Data-Dumper
 
 
 #. Install Cmake 3.4:
@@ -141,7 +139,7 @@ The process documented here will work on CentOS 7.4.
       $ git clone git@github.com:NervanaSystems/ngraph.git
       $ mkdir build && cd build
       $ cmake ../
-      $ make 
+      $ make && make install 
 
 
 macOS\* development
