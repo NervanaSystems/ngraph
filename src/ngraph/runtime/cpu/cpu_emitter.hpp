@@ -25,7 +25,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
-    emit<op_name>(CPU_ExternalFunction * external_function,                                        \
+    emit<op_name>(MKLDNNEmitter * mkldnn_emitter,                                                  \
                   codegen::CodeWriter & writer,                                                    \
                   const ngraph::Node* node,                                                        \
                   const std::vector<TensorViewWrapper>& args,                                      \
@@ -41,7 +41,7 @@ namespace ngraph
             {
             public:
                 template <typename OP>
-                static void emit(CPU_ExternalFunction* external_function,
+                static void emit(MKLDNNEmitter* mkldnn_emitter,
                                  codegen::CodeWriter& writer,
                                  const ngraph::Node* node,
                                  const std::vector<TensorViewWrapper>& args,
@@ -50,7 +50,7 @@ namespace ngraph
                     throw std::runtime_error("Unimplemented op in CPU emitter");
                 }
 
-                static void nop(CPU_ExternalFunction* external_function,
+                static void nop(MKLDNNEmitter* mkldnn_emitter,
                                 codegen::CodeWriter& writer,
                                 const ngraph::Node* node,
                                 const std::vector<TensorViewWrapper>& args,

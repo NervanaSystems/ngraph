@@ -45,7 +45,7 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
 
-            using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
+            using OpFunction = std::function<void(MKLDNNEmitter* mkldnn_emitter,
                                                   codegen::CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
@@ -87,6 +87,8 @@ namespace ngraph
                 {
                     return m_mkldnn_emitter;
                 }
+
+                static const OpFunction* get_emitter(const Node& node);
 
                 const std::string& get_function_name() const { return m_function_name; }
             protected:
