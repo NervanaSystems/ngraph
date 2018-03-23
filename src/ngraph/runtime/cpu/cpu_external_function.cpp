@@ -278,7 +278,6 @@ const runtime::cpu::OpFunction* runtime::cpu::CPU_ExternalFunction::get_emitter(
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {
-        NGRAPH_INFO;
         throw runtime_error("did not find emitter for " + node.get_name());
     }
     return &(handler->second);
