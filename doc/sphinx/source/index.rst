@@ -29,7 +29,7 @@ nGraph currently supports :doc:`three popular <framework-integration-guides>`
 frameworks for :abbr:`Deep Learning (DL)` models through what we call 
 a :term:`bridge` that can be integrated during the framework's build time. 
 For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`How to Guide <howto/index>` guide so you can learn how to create 
+we've created a :doc:`How to Guide <howto/index>` so you can learn how to create 
 custom bridge code that can be used to :doc:`compile and run <howto/execute>` 
 a training model.
 
