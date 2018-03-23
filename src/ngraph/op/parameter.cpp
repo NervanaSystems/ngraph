@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
+op::Parameter::Parameter(const element::Type& element_type, const Shape& shape)
     : Op("Parameter", {})
 {
     add_output(element_type, shape);
@@ -37,7 +37,6 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<Parameter>(output.get_element_type(), output.get_shape());
 }
 
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints,
-                                      const std::shared_ptr<Node>& delta)
+void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
 }
