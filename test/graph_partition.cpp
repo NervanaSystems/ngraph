@@ -300,7 +300,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto D = A + B;
     auto E = D * C;
     auto R = make_shared<op::Result>(E);
-    auto f = make_shared<Function>(R, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(ResultVector{R}, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -392,7 +392,7 @@ TEST(graph_partition, hybrid_abc)
     auto D = A + B;
     auto E = D * C;
     auto R = make_shared<op::Result>(E);
-    auto f = make_shared<Function>(R, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(ResultVector{R}, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
