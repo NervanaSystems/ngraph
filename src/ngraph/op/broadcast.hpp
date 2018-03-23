@@ -38,14 +38,7 @@ namespace ngraph
                       const AxisSet& broadcast_axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return A set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }

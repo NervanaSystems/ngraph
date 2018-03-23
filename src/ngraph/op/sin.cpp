@@ -18,10 +18,26 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/multiply.hpp"
 
-void ngraph::op::Sin::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Sin::Sin(const shared_ptr<Node>& arg)
+    : UnaryElementwiseArithmetic("Sin", arg)
+{
+}
+
+shared_ptr<Node> op::Sin::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Sin>(new_args.at(0));
+}
+
+void op::Sin::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 
-    adjoints.add_delta(x, delta * (std::make_shared<op::Cos>(x)));
+    adjoints.add_delta(x, delta * (make_shared<op::Cos>(x)));
 }

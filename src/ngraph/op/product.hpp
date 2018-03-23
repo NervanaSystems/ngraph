@@ -82,20 +82,10 @@ namespace ngraph
             ///
             /// \param arg The tensor view to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-                : ArithmeticReduction("Product", arg, reduction_axes)
-            {
-            }
+            Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Product>(new_args.at(0), m_reduction_axes);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }
