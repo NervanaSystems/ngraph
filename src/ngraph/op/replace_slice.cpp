@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
-                               const std::shared_ptr<Node>& arg1,
+op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
+                               const shared_ptr<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
                                const Strides& strides)
@@ -34,8 +34,8 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
     check_args();
 }
 
-op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
-                               const std::shared_ptr<Node>& arg1,
+op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
+                               const shared_ptr<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds)
     : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
@@ -117,8 +117,18 @@ void op::ReplaceSlice::check_args()
     set_value_type_checked(input_0_element_type, input_0_shape);
 }
 
+shared_ptr<Node> op::ReplaceSlice::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<ReplaceSlice>(
+        new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
+}
+
 void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
-                                         const std::shared_ptr<Node>& delta)
+                                         const shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
     auto& y_input = get_inputs().at(1);
@@ -129,8 +139,7 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
     auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 
     adjoints.add_delta(x,
-                       std::make_shared<op::ReplaceSlice>(
+                       make_shared<op::ReplaceSlice>(
                            delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
-    adjoints.add_delta(
-        y, std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_delta(y, make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }

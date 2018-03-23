@@ -34,14 +34,7 @@ namespace ngraph
             Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Convert>(new_args.at(0), m_element_type);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             const element::Type& get_convert_element_type() const { return m_element_type; }
         protected:

@@ -18,25 +18,27 @@
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
+using namespace std;
+using namespace ngraph;
+
+shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::make_shared<Sigmoid>(new_args.at(0));
+    return make_shared<Sigmoid>(new_args.at(0));
 }
 
-ngraph::op::Sigmoid::Sigmoid(std::shared_ptr<ngraph::Node> input)
+op::Sigmoid::Sigmoid(shared_ptr<Node> input)
     : RequiresTensorViewArgs("Sigmoid", {input})
     , m_shape_input(input->get_shape())
 {
     add_output(input->get_element_type(), m_shape_input);
 }
 
-ngraph::op::SigmoidBackprop::SigmoidBackprop(std::shared_ptr<Node> arg, std::shared_ptr<Node> delta)
+op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
 {
     if (arg->get_element_type() != delta->get_element_type())
@@ -50,9 +52,17 @@ ngraph::op::SigmoidBackprop::SigmoidBackprop(std::shared_ptr<Node> arg, std::sha
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
-void ngraph::op::Sigmoid::generate_adjoints(ngraph::autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto backprop = std::make_shared<op::SigmoidBackprop>(get_input_op(0), delta);
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
+}
+
+void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+{
+    auto backprop = make_shared<op::SigmoidBackprop>(get_input_op(0), delta);
     adjoints.add_delta(get_input_op(0), backprop);
 }

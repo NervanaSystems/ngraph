@@ -25,8 +25,6 @@ namespace ngraph
             /// \brief Abstract base class for annotations added to graph ops
             class OpAnnotations
             {
-            public:
-                OpAnnotations() {}
             };
         }
     }

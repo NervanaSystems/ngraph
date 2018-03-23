@@ -36,20 +36,10 @@ namespace ngraph
             ///
             /// Output `[d1, ...]`
             ///
-            Atan(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Atan", arg)
-            {
-            }
+            Atan(const std::shared_ptr<Node>& arg);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Atan>(new_args.at(0));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }
