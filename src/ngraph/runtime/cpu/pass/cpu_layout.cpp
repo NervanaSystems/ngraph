@@ -1009,6 +1009,7 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::BatchNorm)
                 {
+                    auto bn = static_cast<const ngraph::op::BatchNorm*>(node.get());
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_layout =
@@ -1016,12 +1017,25 @@ namespace ngraph
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
-                        prim_output_formats.push_back(memory::format::x);
-                        prim_output_formats.push_back(memory::format::x);
+
+                        if (bn->get_training_flag())
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_output_formats.push_back(input_layout);
+                            prim_output_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(memory::format::x);
+                        }
+                        else
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(input_layout);
+                        }
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);

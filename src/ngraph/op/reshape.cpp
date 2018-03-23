@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
+op::Reshape::Reshape(const shared_ptr<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
     : RequiresTensorViewArgs("Reshape", {arg})
@@ -40,8 +40,8 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
 
     for (size_t i = 0; i < input_rank; i++)
     {
-        auto it = std::find(std::begin(m_input_order), std::end(m_input_order), i);
-        if (std::end(m_input_order) == it)
+        auto it = find(begin(m_input_order), end(m_input_order), i);
+        if (end(m_input_order) == it)
         {
             throw ngraph_error(
                 "Input axis order for reshape is not a permutation of argument's axes");
@@ -70,8 +70,16 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
     set_value_type_checked(input.get_element_type(), m_output_shape);
 }
 
-void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
-                                    const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
+}
+
+void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x_shape = get_inputs().at(0).get_shape();
     auto x_rank = x_shape.size();
