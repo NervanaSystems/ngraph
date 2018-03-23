@@ -139,8 +139,6 @@ The process documented here will work on CentOS 7.4.
 
       # cd /opt/libraries 
       # git clone git@github.com:NervanaSystems/ngraph.git
-      # cd ngraph
-      # git clone https://github.com/NervanaSystems/ngraph.git
       # mkdir build && cd build
       # cmake ../
       # make 
