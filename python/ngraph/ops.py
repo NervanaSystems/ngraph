@@ -143,7 +143,7 @@ def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, 
 
 @binary_op
 def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which applies f(x) = A+B to the input nodes elementwise."""
+    """Return node which applies f(x) = A+B to the input nodes element-wise."""
     return Add(left_node, right_node)
 
 

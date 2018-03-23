@@ -34,20 +34,9 @@ def _run_unary_op_node(input_data, unary_op):
 
 def _run_unary_op_numeric_data(input_data, unary_op):
     runtime = _get_runtime()
-    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
     node = unary_op(input_data)
-    computation = runtime.computation(node, parameter_a)
-    return computation(input_data)
-
-
-@pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
-    (ng.absolute, np.abs, -1 + np.random.rand(2, 3, 4) * 2),
-    (ng.acos, np.arccos, -1 + np.random.rand(2, 3, 4) * 2),
-])
-def test_unary_op(ng_api_fn, numpy_fn, input_data):
-    result = _run_unary_op_node(input_data, ng_api_fn)
-    expected = numpy_fn(input_data)
-    assert np.allclose(result, expected)
+    computation = runtime.computation(node)
+    return computation()
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
@@ -56,7 +45,11 @@ def test_unary_op(ng_api_fn, numpy_fn, input_data):
     (ng.acos, np.arccos, -1 + np.random.rand(2, 3, 4) * 2),
     (ng.acos, np.arccos, np.float32(-0.5)),
 ])
-def test_unary_op_with_numeric_data(ng_api_fn, numpy_fn, input_data):
-    result = _run_unary_op_numeric_data(input_data, ng_api_fn)
+def test_unary_op(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
+
+    result = _run_unary_op_node(input_data, ng_api_fn)
+    assert np.allclose(result, expected)
+
+    result = _run_unary_op_numeric_data(input_data, ng_api_fn)
     assert np.allclose(result, expected)
