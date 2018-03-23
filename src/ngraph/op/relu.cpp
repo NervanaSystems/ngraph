@@ -26,6 +26,15 @@ op::Relu::Relu(shared_ptr<Node> arg)
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
+shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Relu>(new_args.at(0));
+}
+
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : RequiresTensorViewArgs("ReluBackprop", {arg, delta})
 {
@@ -40,8 +49,17 @@ op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
-void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::ReluBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto backprop = std::make_shared<op::ReluBackprop>(get_input_op(0), delta);
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
+}
+
+void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+{
+    auto backprop = make_shared<op::ReluBackprop>(get_input_op(0), delta);
     adjoints.add_delta(get_input_op(0), backprop);
 }

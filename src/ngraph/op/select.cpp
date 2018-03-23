@@ -26,9 +26,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Select::Select(const std::shared_ptr<Node>& arg0,
-                   const std::shared_ptr<Node>& arg1,
-                   const std::shared_ptr<Node>& arg2)
+op::Select::Select(const shared_ptr<Node>& arg0,
+                   const shared_ptr<Node>& arg1,
+                   const shared_ptr<Node>& arg2)
     : RequiresTensorViewArgs("Select", NodeVector{arg0, arg1, arg2})
 {
     auto& input_0 = get_inputs().at(0);
@@ -51,16 +51,23 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
     set_value_type_checked(input_1.get_element_type(), input_1.get_shape());
 }
 
-void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 3)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
+}
+
+void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto p = get_inputs().at(0).get_output().get_node();
     auto x = get_inputs().at(1).get_output().get_node();
     auto y = get_inputs().at(2).get_output().get_node();
 
-    auto p_as_x_type = std::make_shared<op::Convert>(p, x->get_element_type());
-    auto not_p_as_y_type =
-        std::make_shared<op::Convert>(std::make_shared<op::Not>(p), y->get_element_type());
+    auto p_as_x_type = make_shared<op::Convert>(p, x->get_element_type());
+    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y->get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);

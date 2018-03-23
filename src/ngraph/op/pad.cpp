@@ -20,8 +20,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Pad::Pad(const std::shared_ptr<Node>& arg,
-             const std::shared_ptr<Node>& arg_pad_value,
+op::Pad::Pad(const shared_ptr<Node>& arg,
+             const shared_ptr<Node>& arg_pad_value,
              const Shape& padding_below,
              const Shape& padding_above,
              const Shape& padding_interior)
@@ -70,13 +70,13 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
     set_value_type_checked(get_input_element_type(0), result_shape);
 }
 
-std::shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Pad>(
+    return make_shared<Pad>(
         new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_padding_interior);
 }
 
@@ -118,7 +118,7 @@ std::shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) co
 
    and push that back.
 */
-void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
-    throw std::invalid_argument("Autodiff is not yet implemented for Pad");
+    throw invalid_argument("Autodiff is not yet implemented for Pad");
 }

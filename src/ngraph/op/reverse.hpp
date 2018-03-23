@@ -53,14 +53,7 @@ namespace ngraph
             Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Reverse>(new_args.at(0), m_reversed_axes);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The set of axes to reverse.
             const AxisSet& get_reversed_axes() const { return m_reversed_axes; }

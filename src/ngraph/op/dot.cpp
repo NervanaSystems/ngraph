@@ -33,8 +33,7 @@ using namespace ngraph;
 // Helper function to compute the number of dot axes according to default behavior when
 // they are not specified.
 //
-size_t default_reduction_axes_count(const std::shared_ptr<Node>& arg0,
-                                    const std::shared_ptr<Node>& arg1)
+size_t default_reduction_axes_count(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 {
     if (arg0->get_shape().size() == 0 || arg1->get_shape().size() == 0)
     {
@@ -46,13 +45,13 @@ size_t default_reduction_axes_count(const std::shared_ptr<Node>& arg0,
     }
 }
 
-op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : Dot(arg0, arg1, default_reduction_axes_count(arg0, arg1))
 {
 }
 
-op::Dot::Dot(const std::shared_ptr<Node>& arg0,
-             const std::shared_ptr<Node>& arg1,
+op::Dot::Dot(const shared_ptr<Node>& arg0,
+             const shared_ptr<Node>& arg1,
              size_t reduction_axes_count)
     : RequiresTensorViewArgs("Dot", {arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
@@ -88,19 +87,18 @@ op::Dot::Dot(const std::shared_ptr<Node>& arg0,
 
     Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * reduction_axes_count);
 
-    std::copy(
-        input_0_shape.begin(), input_0_shape.end() - reduction_axes_count, result_shape.begin());
-    std::copy(input_1_shape.begin() + reduction_axes_count,
-              input_1_shape.end(),
-              result_shape.begin() + (input_0_shape.size() - reduction_axes_count));
+    copy(input_0_shape.begin(), input_0_shape.end() - reduction_axes_count, result_shape.begin());
+    copy(input_1_shape.begin() + reduction_axes_count,
+         input_1_shape.end(),
+         result_shape.begin() + (input_0_shape.size() - reduction_axes_count));
 
     auto result_type = make_shared<TensorViewType>(input_0.get_element_type(), result_shape);
     set_value_type_checked(result_type);
 }
 
-std::shared_ptr<op::Reshape> make_reshape_axes_to_front(const std::shared_ptr<Node>& n,
-                                                        const Shape& front_shape,
-                                                        const Shape& back_shape)
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+                                                   const Shape& front_shape,
+                                                   const Shape& back_shape)
 {
     AxisVector input_order;
     Shape output_shape;
@@ -120,7 +118,7 @@ std::shared_ptr<op::Reshape> make_reshape_axes_to_front(const std::shared_ptr<No
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
-void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
     auto y = get_inputs().at(1).get_output().get_node();

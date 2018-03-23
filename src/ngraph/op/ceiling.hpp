@@ -29,20 +29,10 @@ namespace ngraph
             /// \brief Constructs a ceiling operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Ceiling(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Ceiling", arg)
-            {
-            }
+            Ceiling(const std::shared_ptr<Node>& arg);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Ceiling>(new_args.at(0));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

@@ -30,20 +30,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic("Maximum", arg0, arg1)
-            {
-            }
+            Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 2)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Maximum>(new_args.at(0), new_args.at(1));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual bool is_commutative() override { return true; }
         protected:

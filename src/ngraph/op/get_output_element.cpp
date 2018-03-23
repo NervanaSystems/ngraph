@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t n)
+op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
     : Node("GetOutputElement", {arg})
     , m_n{n}
 {
@@ -31,4 +31,30 @@ op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t 
     }
 
     set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
+}
+
+shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<GetOutputElement>(new_args.at(0), m_n);
+}
+
+NodeVector op::GetOutputElement::get_input_ops()
+{
+    return NodeVector{get_inputs().at(0).get_output().get_node()};
+}
+
+void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
+                                             const shared_ptr<Node>& delta)
+{
+    //Filter out updates(deltas) from mean and variance (for batchnorm)
+    //as dinput is the only update required.
+    //This logic needs to be generalized as new multi-output ops are introduced
+    if (get_n() == 0)
+    {
+        adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta);
+    }
 }

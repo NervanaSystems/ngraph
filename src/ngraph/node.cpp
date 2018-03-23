@@ -53,6 +53,18 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
     }
 }
 
+Node::~Node()
+{
+    for (auto arg : m_arguments)
+    {
+        arg->m_users.erase(this);
+    }
+    for (auto& input : m_inputs)
+    {
+        input.get_output().remove_input(&input);
+    }
+}
+
 void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
 {
     if (m_outputs.size() == 0)

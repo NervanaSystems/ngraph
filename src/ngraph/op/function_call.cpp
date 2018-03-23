@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::FunctionCall::FunctionCall(std::shared_ptr<Function> function, const NodeVector& args)
+op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& args)
     : Node("FunctionCall", args)
     , m_function(function)
 {
@@ -47,4 +47,15 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function, const NodeVec
     {
         add_output(function->get_output_element_type(i), function->get_output_shape(i));
     }
+}
+
+shared_ptr<Node> op::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
+{
+    return make_shared<FunctionCall>(m_function, new_args);
+}
+
+/// \return A singleton vector containing the function to be called.
+vector<shared_ptr<Function>> op::FunctionCall::get_functions() const
+{
+    return vector<shared_ptr<Function>>{m_function};
 }
