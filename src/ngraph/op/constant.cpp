@@ -25,14 +25,14 @@ using namespace ngraph;
 using namespace std;
 
 template <typename T>
-std::string to_cpp_string(T value)
+string to_cpp_string(T value)
 {
     string rc;
-    if (std::isnan(value))
+    if (isnan(value))
     {
         rc = "NAN";
     }
-    else if (std::isinf(value))
+    else if (isinf(value))
     {
         if (value > 0)
         {
@@ -56,11 +56,11 @@ op::Constant::~Constant()
 {
     if (m_data)
     {
-        ngraph::aligned_free(m_data);
+        aligned_free(m_data);
     }
 }
 
-std::vector<std::string> op::Constant::get_value_strings() const
+vector<string> op::Constant::get_value_strings() const
 {
     vector<string> rc;
 
@@ -143,10 +143,19 @@ std::vector<std::string> op::Constant::get_value_strings() const
     }
     else
     {
-        throw std::runtime_error("unsupported type");
+        throw runtime_error("unsupported type");
     }
 
     return rc;
+}
+
+shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 0)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Constant>(m_element_type, m_shape, m_data);
 }
 
 //
@@ -159,11 +168,11 @@ namespace ngraph
     namespace op
     {
         template <>
-        void Constant::write_to_buffer<std::string>(const element::Type& target_type,
-                                                    const Shape& target_shape,
-                                                    const std::vector<std::string>& source,
-                                                    void* target,
-                                                    size_t target_element_count)
+        void Constant::write_to_buffer<string>(const element::Type& target_type,
+                                               const Shape& target_shape,
+                                               const vector<string>& source,
+                                               void* target,
+                                               size_t target_element_count)
         {
         }
     }

@@ -45,20 +45,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic("Remainder", arg0, arg1)
-            {
-            }
+            Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 2)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Remainder>(new_args.at(0), new_args.at(1));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

@@ -18,10 +18,26 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sinh.hpp"
 
-void ngraph::op::Cosh::generate_adjoints(autodiff::Adjoints& adjoints,
-                                         const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Cosh::Cosh(const shared_ptr<Node>& arg)
+    : UnaryElementwiseArithmetic("Cosh", arg)
+{
+}
+
+shared_ptr<Node> op::Cosh::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Cosh>(new_args.at(0));
+}
+
+void op::Cosh::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
 
-    adjoints.add_delta(x, delta * (std::make_shared<op::Sinh>(x)));
+    adjoints.add_delta(x, delta * (make_shared<op::Sinh>(x)));
 }
