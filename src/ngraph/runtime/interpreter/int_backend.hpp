@@ -22,8 +22,13 @@ namespace ngraph
 {
     namespace runtime
     {
+        class CallFrame;
+
         namespace interpreter
         {
+            class ExternalFunction;
+            class INT_CallFrame;
+
             class INT_Backend : public runtime::Backend
             {
             public:
@@ -34,6 +39,24 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::TensorView>
                     make_primary_tensor_view(const ngraph::element::Type& element_type,
                                              const Shape& shape) override;
+
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    create_tensor(const ngraph::element::Type& element_type,
+                                  const Shape& shape) override;
+
+                bool compile(const ngraph::Function& fun) override;
+
+                bool is_callable() const override;
+
+                bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+            private:
+                std::vector<size_t> get_subdevices() const override;
+
+                std::shared_ptr<interpreter::ExternalFunction> m_external_function;
+                std::shared_ptr<interpreter::INT_CallFrame> m_call_frame;
+                std::shared_ptr<Function> m_function;
             };
         }
     }

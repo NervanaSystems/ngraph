@@ -15,15 +15,17 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/log.hpp"
+#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/interpreter/int_external_function.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 shared_ptr<runtime::CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
-    const shared_ptr<ExternalFunction>& external_function)
+    const shared_ptr<runtime::ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
 }
@@ -34,4 +36,48 @@ shared_ptr<runtime::TensorView>
 {
     auto rc = make_shared<runtime::HostTensorView>(element_type, shape, "external");
     return static_pointer_cast<runtime::TensorView>(rc);
+}
+
+shared_ptr<ngraph::runtime::TensorView>
+    runtime::interpreter::INT_Backend::create_tensor(const ngraph::element::Type& element_type,
+                                                     const Shape& shape)
+{
+    auto rc = make_shared<runtime::HostTensorView>(element_type, shape, "external");
+    return static_pointer_cast<runtime::TensorView>(rc);
+}
+
+bool runtime::interpreter::INT_Backend::compile(const ngraph::Function& func)
+{
+    m_function = clone_function(func);
+    if (m_external_function)
+    {
+        throw runtime_error("Backend can only compile a single function");
+    }
+    m_external_function = make_shared<interpreter::ExternalFunction>(m_function);
+    auto cf = m_external_function->make_call_frame();
+    m_call_frame = dynamic_pointer_cast<interpreter::INT_CallFrame>(cf);
+    return true;
+}
+
+bool runtime::interpreter::INT_Backend::is_callable() const
+{
+    return false;
+}
+
+bool runtime::interpreter::INT_Backend::call(const vector<shared_ptr<runtime::TensorView>>& outputs,
+                                             const vector<shared_ptr<runtime::TensorView>>& inputs)
+{
+    bool rc = false;
+    if (m_call_frame)
+    {
+        m_call_frame->call(outputs, inputs);
+        rc = true;
+    }
+    return rc;
+}
+
+vector<size_t> runtime::interpreter::INT_Backend::get_subdevices() const
+{
+    vector<size_t> rc;
+    return rc;
 }

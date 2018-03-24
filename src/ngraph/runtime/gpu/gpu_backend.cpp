@@ -34,3 +34,20 @@ std::shared_ptr<ngraph::runtime::TensorView>
     auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
+
+bool runtime::interpreter::GPU_Backend::compile(const std::shared_ptr<ngraph::Function>& fun)
+{
+    return false;
+}
+
+bool runtime::interpreter::GPU_Backend::is_callable() const
+{
+    return false;
+}
+
+bool runtime::interpreter::GPU_Backend::call(
+    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+{
+    return false;
+}

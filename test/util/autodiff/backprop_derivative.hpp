@@ -188,15 +188,13 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
-            NodeMap nm1;
-            auto clone_fwd = clone_function(fprop_cache.fprop, nm1);
+            auto clone_fwd = clone_function(*fprop_cache.fprop);
             auto cache_fwd = manager->compile(clone_fwd);
             auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
             cache_fwd_cf->tensor_call(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
-            NodeMap nm2;
-            auto clone_bwd = clone_function(fprop_cache.bprop, nm2);
+            auto clone_bwd = clone_function(*fprop_cache.bprop);
             auto cache_dfdx =
                 get_autodiff<T>(manager, backend, clone_bwd, mod_df_input_args, indep_params);
 

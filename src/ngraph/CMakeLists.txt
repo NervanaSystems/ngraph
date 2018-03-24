@@ -119,6 +119,7 @@ set (SRC
     pass/core_fusion.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/backend.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp

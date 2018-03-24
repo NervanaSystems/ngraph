@@ -18,16 +18,12 @@
 
 #include <memory>
 
+#include "ngraph/function.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    namespace element
-    {
-        class Type;
-    }
-
     namespace runtime
     {
         class ExternalFunction;
@@ -44,20 +40,58 @@ namespace ngraph
             /// @brief Make a call frame that can support one concurrent call of an external function.
             ///
             /// If more than one concurrent execution is needed, each execution will require its own call frame.
+            /// DEPRECATED
             virtual std::shared_ptr<ngraph::runtime::CallFrame>
                 make_call_frame(const std::shared_ptr<ExternalFunction>& external_function) = 0;
 
             /// @brief Return a handle for a tensor on the backend device.
+            /// DEPRECATED
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const ngraph::element::Type& element_type,
                                          const Shape& shape) = 0;
 
+            /// DEPRECATED
             template <typename T>
             std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const Shape& shape)
             {
                 return make_primary_tensor_view(element::from<T>(), shape);
             }
+
+            /// @brief Create a new Backend object
+            /// @param type The name of a registered backend, such as "CPU" or "GPU".
+            ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
+            /// @returns shared_ptr to a new Backend or nullptr if the named backend
+            ///   does not exist.
+            static std::shared_ptr<Backend> create(const std::string& type);
+
+            /// @brief Query the list of registered devices
+            /// @returns A vector of all registered devices.
+            static std::vector<std::string> get_registered_devices();
+
+            /// @brief Query the list of available subdevices of a particular device.
+            /// @param type The name of a registered backend, such as "CPU" or "GPU"
+            /// @returns A vector of available devices of the specified type.
+            static std::vector<size_t> get_subdevices(const std::string& type);
+
+            virtual std::shared_ptr<ngraph::runtime::TensorView>
+                create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
+
+            template <typename T>
+            std::shared_ptr<ngraph::runtime::TensorView> create_tensor(const Shape& shape)
+            {
+                return create_tensor(element::from<T>(), shape);
+            }
+
+            virtual bool compile(const ngraph::Function& fun) = 0;
+
+            virtual bool is_callable() const = 0;
+
+            virtual bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+
+        protected:
+            virtual std::vector<size_t> get_subdevices() const = 0;
         };
     }
 }

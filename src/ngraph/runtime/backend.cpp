@@ -14,31 +14,27 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/manager.hpp"
 
-#include <memory>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/external_function.hpp"
-
-namespace ngraph
+std::shared_ptr<runtime::Backend> runtime::Backend::create(const std::string& type)
 {
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            class ExternalFunction : public ngraph::runtime::ExternalFunction
-            {
-            public:
-                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = true);
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+    std::shared_ptr<Manager> manager = runtime::Manager::get(type);
+    return manager->allocate_backend();
+}
 
-            protected:
-                std::shared_ptr<ngraph::Function> m_interpreter_function;
-                void compile();
-            };
-        }
-    }
+vector<string> get_registered_devices()
+{
+    vector<string> rc;
+    return rc;
+}
+
+vector<size_t> get_subdevices(const string& type)
+{
+    vector<size_t> rc;
+    return rc;
 }
