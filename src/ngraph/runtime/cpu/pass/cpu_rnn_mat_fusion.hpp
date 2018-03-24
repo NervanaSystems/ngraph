@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <thread>
+#pragma once
 
-#include "eigen_thread_pool.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -24,27 +24,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace eigen
+            namespace pass
             {
-                static int GetNumCores()
+                class CPURnnMatFusion : public ngraph::pass::FunctionPass
                 {
-                    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
-                    int count;
-
-                    if (omp_num_threads && (count = std::atoi(omp_num_threads)))
-                    {
-                        return count;
-                    }
-                    else
-                    {
-                        count = std::thread::hardware_concurrency() >> 1;
-                    }
-                    return count ? count : 1;
-                }
-
-                Eigen::ThreadPool global_thread_pool(GetNumCores());
-                Eigen::ThreadPoolDevice global_thread_pool_device(&global_thread_pool,
-                                                                  global_thread_pool.NumThreads());
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
             }
         }
     }
