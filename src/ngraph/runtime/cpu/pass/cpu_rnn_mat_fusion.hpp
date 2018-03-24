@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,39 +16,22 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    class Node;
-
-    namespace op
+    namespace runtime
     {
-        class Result;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
     }
-
-    /// \brief Zero or more nodes.
-    class NodeVector : public std::vector<std::shared_ptr<Node>>
-    {
-    public:
-        NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const std::vector<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const NodeVector& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector& operator=(const NodeVector& other) = default;
-
-        NodeVector() {}
-    };
 }
