@@ -553,7 +553,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 else if (arg_rank == 2)
                 {
                     // TODO Assert arg0_shape[0] == arg1_shape[0]?
-                    writer.indent++;
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta = 0;\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
@@ -568,7 +567,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "," << result_shape[1] << ");\n";
                     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                 }
-                // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+                // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
                     std::vector<size_t> input_strides(arg_rank);
@@ -590,8 +589,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         trans_strides[input_order[i]] = output_strides[i];
                     }
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
                     writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
                     for (int i = 1; i < arg_rank; i++)
@@ -627,8 +624,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
                     writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
                     writer << "runtime::gpu::free_gpu_buffer(trans_strides_d);\n";
-                    writer.indent--;
-                    writer << "}\n";
                 }
                 writer.block_end();
             }
