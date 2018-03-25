@@ -29,6 +29,10 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 
+#include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pattern/op/label.hpp"
+
+
 using namespace ngraph;
 
 typedef std::shared_ptr<Node> NodePtr;
@@ -49,6 +53,38 @@ struct NodeSegment : public NodeVector
 };
 typedef std::pair<NodeSegment::Type, std::vector<std::type_index>> NodeTypeSequence;
 typedef std::list<NodeTypeSequence> NodeTypeSequenceList;
+
+
+//{TI(op::Parameter), TI(op::Slice), TI(op::Reshape), TI(op::Dot), TI(op::Add)}},
+static std::shared_ptr<Node> construct_data_pattern(std::shared_ptr<pattern::op::Label> DATA_SLICE)
+{	
+	//auto slice = std::make_shared<op::Slice>(DATA, Coordinate{ 0, 0, 0 }, Coordinate{ 1, 2, 4 }, Strides{ 1, 1, 1 });
+	//auto reshape_slice = std::make_shared<op::Reshape>(slice, AxisVector{ 0, 1, 2 }, Shape{ 2, 4 });
+	auto reshape_slice = std::make_shared<op::Reshape>(DATA_SLICE, AxisVector{ 0, 1, 2 }, Shape{ 2, 4 });
+	auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{ 4, 1 });
+	auto dot = std::make_shared<op::Dot>(reshape_slice, W);
+	auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_shape());
+	return dot + broadcast;
+}
+
+//{NodeSegment::WEIGHTS, { TI(op::Parameter), TI(op::Reshape), TI(op::Dot), TI(op::Add) }},
+static std::shared_ptr<Node> construct_weights_pattern(std::shared_ptr<pattern::op::Label> WEIGHTS_RESHAPE)
+{
+	//auto reshape_weights = std::make_shared<op::Reshape>(WEIGHTS, AxisVector{ 0 }, Shape { 4, 1 });
+	auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{ 2, 4 });
+	//auto dot = std::make_shared<op::Dot>(X, reshape_weights);
+	auto dot = std::make_shared<op::Dot>(X, WEIGHTS_RESHAPE);
+	auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_shape());
+	return dot + broadcast;
+}
+
+//{NodeSegment::BIAS, {TI(op::Parameter), TI(op::Broadcast), TI(op::Add)}}};
+static std::shared_ptr<Node> construct_bias_pattern(std::shared_ptr<pattern::op::Label> BIAS_BROADCAST)
+{
+	auto dot_label = std::make_shared<pattern::op::Label>(element::i32, Shape { 2, 1 });
+	//auto broadcast = std::make_shared<op::Broadcast>(BIAS, dot_label->get_shape(), AxisSet{ 0 });
+	return dot_label + BIAS_BROADCAST;
+}
 
 // Preorder traversal to collect all valid segments in the graph
 // precondition: all valid sequences must be unique
@@ -236,31 +272,111 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
+	//============================== REFACTORED VERSION =========================================
+
+	//auto DATA = std::make_shared<pattern::op::Label>(element::f32, Shape{ 2, 2, 4 });
+	auto data_pred = [](std::shared_ptr<Node> n)
+	{
+		return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
+	};
+	auto DATA_SLICE = std::make_shared<pattern::op::Label>(element::f32, Shape{ 1, 2, 4 }, data_pred);
+	auto data_pattern = construct_data_pattern(DATA_SLICE);
+
+	//auto WEIGHTS = std::make_shared<pattern::op::Label>(element::f32, Shape{ 4 });
+	auto weights_pred = [](std::shared_ptr<Node> n)
+	{
+		return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
+	};
+	auto WEIGHTS_RESHAPE = std::make_shared<pattern::op::Label>(element::f32, Shape{ 4, 1 }, weights_pred);
+	auto weights_pattern = construct_weights_pattern(WEIGHTS_RESHAPE);
+
+	//auto BIAS = std::make_shared<pattern::op::Label>(element::f32, Shape{ 1 });
+	//we don't really need a broadcast node but 
+	//labelling a Broadcast allows us to extract
+	//parms from all 3 labels in the same fashion
+	//(i.e. via get_input_op(0))
+	auto broadcast_pred = [](std::shared_ptr<Node> n)
+	{
+		return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
+	};
+	auto BIAS_BROADCAST = std::make_shared<pattern::op::Label>(element::f32, Shape{ 1 }, broadcast_pred);
+	auto bias_pattern = construct_bias_pattern(BIAS_BROADCAST);
+
+	const size_t NUM_MMB_ARGS = 3;
+	std::shared_ptr<pattern::op::Label> labels[] = { DATA_SLICE, WEIGHTS_RESHAPE, BIAS_BROADCAST };
+	//Matchers' ordering is important! Don't change!
+	std::shared_ptr<pattern::Matcher> matchers[] =
+	{ 
+		std::make_shared<pattern::Matcher>(data_pattern),
+		std::make_shared<pattern::Matcher>(weights_pattern),
+		std::make_shared<pattern::Matcher>(bias_pattern)
+	};
+
+	std::map<std::shared_ptr<Node>, NodeVector> op_seg_map2; //add to list of parms
+	std::map<NodeVector, NodeVector> param_list2;
+	for (auto n : function->get_ordered_ops())
+	{
+		NodeVector parms;
+		NodeVector matched_nodes;
+		for (size_t i = 0; i < NUM_MMB_ARGS; i++)
+		{
+			auto matcher = matchers[i];
+			if (matcher->match(n))
+			{
+				//if we get all 3 matches they will all fall 
+				//in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
+				//if we have less than 3 matches we skip this node anyways
+				auto matched = matcher->get_pattern_map()[labels[i]];
+				parms.push_back(matched->get_input_op(0));
+				matched_nodes.push_back(matched);
+			}
+
+			if (parms.size() != NUM_MMB_ARGS)
+			{
+				continue;
+			}
+
+			//we have a full set for the current Add (n) i.e. data, weights, bias
+			op_seg_map2.insert(std::make_pair(n, matched_nodes));
+			param_list2[parms].push_back(n);
+		}
+	}
+
+	// remove params with single combo op (meaning no need to combine slicing)
+	for (auto it = param_list2.cbegin(); it != param_list2.cend();)
+	{
+		if (it->second.size() < 2)
+		{
+			it = param_list2.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
     // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
     // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
     // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
     // iterate each unique set of parameters, replace original operations
-    for (auto& p : param_list)
+    for (auto& p : param_list2)
     {
-        OrderedParams params = p.first;
+        NodeVector params = p.first;
         NodeVector& op_nodes = p.second;
 
-        auto data_node = params.get(NodeSegment::DATA);
-        auto weights_node = params.get(NodeSegment::WEIGHTS);
-        auto bias_node = params.get(NodeSegment::BIAS);
+        auto data_node = params.at(NodeSegment::DATA);
+		auto weights_node = params.at(NodeSegment::WEIGHTS);
+        auto bias_node = params.at(NodeSegment::BIAS);
 
         const auto& data_shape = data_node->get_shape();
-
-        // get the first combo op
-        auto first_op = op_nodes[0];
-        auto first_weights_segment = op_seg_map[first_op][NodeSegment::WEIGHTS];
-
         // construct new op nodes
         AxisVector data_order(data_node->get_shape().size());
         std::iota(begin(data_order), end(data_order), 0);
         auto data_reshape_node = std::make_shared<op::Reshape>(
             data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
-        auto weights_reshape_node = first_weights_segment[1]->copy_with_new_args({weights_node});
+
+		auto old_weights_reshape_node = op_seg_map2.at(op_nodes.at(0)).at(NodeSegment::WEIGHTS);
+        auto weights_reshape_node = old_weights_reshape_node->copy_with_new_args({weights_node});
         auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
         const auto& dot_shape = dot_node->get_shape();
 
@@ -272,8 +388,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         // create a slice for each user of the dot op matching the original dot op's output
         for (auto op : op_nodes)
         {
-            const auto& cur_data_segment = op_seg_map[op][NodeSegment::DATA];
-            const auto old_slice = std::dynamic_pointer_cast<op::Slice>(cur_data_segment[1]);
+            const auto old_slice = std::dynamic_pointer_cast<op::Slice>(op_seg_map2[op].at(NodeSegment::DATA));
             const auto& old_lower_bounds = old_slice->get_lower_bounds();
             // lower bound matching the current time step
             const Coordinate lower_bounds{old_lower_bounds[1], 0};

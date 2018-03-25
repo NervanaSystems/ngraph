@@ -1165,7 +1165,7 @@ std::vector<shared_ptr<runtime::TensorView>>
 
 TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
 {
-    const size_t time_steps = 4;
+    const size_t time_steps = 2;
     Shape data_shape{3, time_steps, 5};
     Shape weights_shape{6, data_shape[2]};
     Shape bias_shape{6};
