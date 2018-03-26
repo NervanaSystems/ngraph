@@ -304,8 +304,9 @@ static json write(const Function& f, bool binary_constant_data)
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user : independent_node->users())
+            for (auto sp_user : independent_node->get_users())
             {
+                Node* user = sp_user.get();
                 node_depencency_count[user] -= 1;
                 size_t count = node_depencency_count[user];
                 if (count == 0)
