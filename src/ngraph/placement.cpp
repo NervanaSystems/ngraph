@@ -91,8 +91,9 @@ static vector<unordered_set<shared_ptr<Node>>>
         previous_placement = independent_node->get_placement();
         sorted_nodes.push_back(node_map.at(independent_node));
 
-        for (Node* user_node : independent_node->users())
+        for (auto user : independent_node->get_users())
         {
+            Node* user_node = user.get();
             node_dependency_count.at(user_node) -= 1;
             if (node_dependency_count.at(user_node) == 0)
             {
