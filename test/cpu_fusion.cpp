@@ -40,6 +40,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -984,40 +985,77 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
-TEST(cpu_fusion, bn_fprop_cache)
+TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
 {
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    auto input_shape = Shape{2, 2, 2, 1};
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
     auto var_shape = Shape{2};
     auto gamma_shape = Shape{2};
-    auto beta_shape = Shape{2};
-    auto shape_r = Shape{2, 2, 2, 1};
-
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
-
+    auto shape_r = Shape{1, 2, 2, 2};
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto slice =
+        std::make_shared<op::Slice>(output_rt, Coordinate{0, 0, 0, 0}, Coordinate{1, 2, 2, 2});
+    auto output_relu = std::make_shared<op::Relu>(slice);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
-    auto output_relu = std::make_shared<op::Relu>(output_rt);
 
-    auto relu_abs = std::make_shared<op::Abs>(output_relu);
-    auto mean_abs = std::make_shared<op::Abs>(mean_rt);
-    auto variance_abs = std::make_shared<op::Abs>(variance_rt);
+    auto bn_relu = make_shared<op::BatchNormRelu>(eps, gamma, beta, input);
+    auto output_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 0);
+    auto mean_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 1);
+    auto variance_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 2);
 
-    auto f = make_shared<Function>(NodeVector{relu_abs, mean_abs, variance_abs},
-                                   op::ParameterVector{input, gamma, beta});
+    auto f = make_shared<Function>(
+        NodeVector{output_relu, mean_rt, variance_rt, output_rt_bnr, mean_rt_bnr, variance_rt_bnr},
+        op::ParameterVector{input, gamma, beta});
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_relu.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_relu.pdf");
-    pass_manager.run_passes(f);
+    // Create some tensors for input/output
+    auto _input = backend->make_primary_tensor_view(element::f32, Shape{1, 2, 2, 2});
+
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+    auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
+
+    auto bn_output_bnr = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean_bnr = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance_bnr = backend->make_primary_tensor_view(element::f32, var_shape);
+
+    cf->call({bn_output,
+              result_mean,
+              result_variance,
+              bn_output_bnr,
+              result_mean_bnr,
+              result_variance_bnr},
+             {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
+    EXPECT_TRUE(
+        test::all_close(read_vector<float>(result_mean), read_vector<float>(result_mean_bnr)));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result_variance),
+                                read_vector<float>(result_variance_bnr)));
 }
 
 TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)

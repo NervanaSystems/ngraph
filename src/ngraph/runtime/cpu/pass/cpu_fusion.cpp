@@ -705,6 +705,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
             m.match_root()->get_input_op(0)->get_inputs().at(0).get_output().get_node());
 
+        if (!m_bn->get_training_flag())
+        {
+            NGRAPH_DEBUG << " This is an inference batchnorm, so skipping fusion";
+            return false;
+        }
+
         auto bn_relu = std::make_shared<op::BatchNormRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 

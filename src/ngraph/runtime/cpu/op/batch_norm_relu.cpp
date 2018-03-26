@@ -25,6 +25,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
+    , m_training(true)
 {
     if (m_bn_input_shape.size() < 2)
     {
