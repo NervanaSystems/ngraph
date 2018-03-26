@@ -25,8 +25,8 @@ namespace ngraph
     namespace builder
     {
         std::shared_ptr<Node> tensor_mask(const std::shared_ptr<Node>& sequence_lengths,
-                                          AxisSet broadcast_axes,
-                                          Shape mask_shape,
-                                          size_t sequence_axis);
+                                          size_t sequence_axis,
+                                          size_t batch_axis,
+                                          Shape mask_shape);
     }
 }

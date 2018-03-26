@@ -148,7 +148,7 @@ TEST(builder, tensor_mask)
 
     Shape mask_shape{3, 5};
     auto f =
-        make_shared<Function>(builder::tensor_mask(sequence_lengths, AxisSet{1}, mask_shape, 1),
+        make_shared<Function>(builder::tensor_mask(sequence_lengths, 1, 0, mask_shape),
                               op::ParameterVector{sequence_lengths});
 
     auto manager = runtime::Manager::get("INTERPRETER");

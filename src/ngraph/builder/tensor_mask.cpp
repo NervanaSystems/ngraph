@@ -25,18 +25,40 @@
 using namespace ngraph;
 
 std::shared_ptr<Node> ngraph::builder::tensor_mask(const std::shared_ptr<Node>& sequence_lengths,
-                                                   AxisSet broadcast_axes,
-                                                   Shape mask_shape,
-                                                   size_t sequence_axis)
+                                                   size_t sequence_axis,
+                                                   size_t batch_axis,
+                                                   Shape mask_shape)
 {
     if (sequence_axis >= mask_shape.size())
     {
         throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
     }
 
-    // broadcast sequence lengths to mask shape along the sequence axis
+    if (batch_axis >= mask_shape.size())
+    {
+        throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
+    }
+
+    // all axes except the sequence axis
+    AxisSet non_sequence_axes;
+    // all axes except the batch axis
+    AxisSet non_batch_axes;
+
+    for (auto axis = 0; axis < mask_shape.size(); ++axis)
+    {
+        if (axis != sequence_axis)
+        {
+            non_sequence_axes.insert(axis);
+        }
+        if (axis != batch_axis)
+        {
+            non_batch_axes.insert(axis);
+        }
+    }
+
+    // broadcast sequence lengths to mask shape along all non-batch axes
     auto broadcast_sequence_lengths =
-        std::make_shared<op::Broadcast>(sequence_lengths, mask_shape, broadcast_axes);
+        std::make_shared<op::Broadcast>(sequence_lengths, mask_shape, non_batch_axes);
 
     // create sequence data [0, ..., max_sequence_length]
     auto max_sequence_length = mask_shape[sequence_axis];
@@ -50,16 +72,6 @@ std::shared_ptr<Node> ngraph::builder::tensor_mask(const std::shared_ptr<Node>& 
     // convert sequence to input type
     auto convert_sequence =
         std::make_shared<op::Convert>(sequence, sequence_lengths->get_element_type());
-
-    // all axes except the sequence axis
-    AxisSet non_sequence_axes;
-    for (auto axis = 0; axis < mask_shape.size(); ++axis)
-    {
-        if (axis != sequence_axis)
-        {
-            non_sequence_axes.insert(axis);
-        }
-    }
 
     // broadcast sequence to mask shape along all non-sequence axes
     auto broadcast_sequence =
