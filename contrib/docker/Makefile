@@ -65,6 +65,7 @@ ifeq ("$(shell echo ${OS} | grep centos)","centos74")
 else
     DOCKERFILE ?= "Dockerfile.ngraph"
     RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
