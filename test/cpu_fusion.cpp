@@ -1003,46 +1003,90 @@ TEST(cpu_fusion, fuse_conv_relu)
     ASSERT_GT(cb, 0);
 }
 
-TEST(cpu_fusion, conv_relu_n2c1h2w2)
+template <typename T>
+static std::vector<std::vector<T>>
+    execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
+{
+    auto manager = runtime::Manager::get(cbackend);
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto parms = f->get_parameters();
+
+    if (parms.size() != args.size())
+    {
+        throw ngraph_error("number of parameters and arguments don't match");
+    }
+
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        auto t = backend->make_primary_tensor_view(parms.at(i)->get_element_type(),
+                                                   parms.at(i)->get_shape());
+        copy_data(t, args.at(i));
+        arg_tensors.at(i) = t;
+    }
+
+    auto results = f->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(args.size());
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        result_tensors.at(i) = backend->make_primary_tensor_view(results.at(i)->get_element_type(),
+                                                                 results.at(i)->get_shape());
+    }
+
+    cf->call(result_tensors, arg_tensors);
+
+    std::vector<std::vector<T>> result_vectors;
+    for (auto rt : result_tensors)
+    {
+        result_vectors.push_back(read_vector<T>(rt));
+    }
+    return result_vectors;
+}
+
+TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
 {
     Shape shape_a{2, 1, 6, 6};
     Shape shape_weights{1, 1, 2, 2};
-    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
-    auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
-    auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
-    auto relu = std::make_shared<op::Relu>(conv);
-    auto conv_relu = std::make_shared<op::ConvolutionRelu>(conv);
 
-    auto manager = runtime::Manager::get("CPU");
-    auto backend = manager->allocate_backend();
+    auto make_int_function = [shape_a, shape_weights]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto relu = std::make_shared<op::Relu>(conv);
+        auto f = make_shared<Function>(NodeVector{relu}, op::ParameterVector{A, weights});
+        return f;
+    };
 
-    auto _a = backend->make_primary_tensor_view(element::f32, shape_a);
-    vector<float> va{
-        1.25f,  2.25f, 5.25f,  6.25f, -1.25f, -1.25f, 3.25f,  -4.25f, 7.25f,  8.25f, -1.25f, -1.25f,
-        1.25f,  2.25f, -3.25f, 2.25f, 4.25f,  4.25f,  1.25f,  2.25f,  -4.25f, 2.25f, 4.25f,  4.25f,
-        0.f,    0.f,   -1.f,   0.f,   2.f,    2.f,    0.f,    0.f,    0.f,    0.f,   2.f,    2.f,
-        1.25f,  2.25f, 5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,  -7.25f, 8.25f, 1.25f,  -1.25f,
-        -1.25f, 2.25f, 3.25f,  2.25f, -4.25f, -4.25f, -1.25f, -2.25f, 4.25f,  2.25f, 4.25f,  4.25f,
-        0.f,    0.f,   1.f,    0.f,   -2.f,   2.f,    0.f,    0.f,    0.f,    0.f,   -2.f,   -2.f};
+    auto int_f = make_int_function();
 
-    copy_data(_a, va);
+    auto make_cpu_function = [shape_a, shape_weights]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto conv_relu = std::make_shared<op::ConvolutionRelu>(conv);
+        auto f = make_shared<Function>(NodeVector{conv_relu}, op::ParameterVector{A, weights});
+        return f;
+    };
 
-    auto _weights = backend->make_primary_tensor_view(element::f32, shape_weights);
-    copy_data(_weights, vector<float>{2., 2., 2., 2.});
+    auto cpu_f = make_cpu_function();
 
-    auto f = make_shared<Function>(NodeVector{conv_relu, relu}, op::ParameterVector{A, weights});
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {2., 2., 2., 2.}};
 
-    auto external = manager->compile(f);
-    auto cf = backend->make_call_frame(external);
-
-    shared_ptr<runtime::TensorView> _conv_relu =
-        backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
-
-    shared_ptr<runtime::TensorView> _relu =
-        backend->make_primary_tensor_view(element::f32, relu->get_shape());
-
-    cf->call({_conv_relu, _relu}, {_a, _weights});
-    EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
 TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
@@ -1066,6 +1110,7 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
+
     // Create some tensors for input/output
     auto _input = backend->make_primary_tensor_view(element::f32, Shape{2, 2, 2, 1});
     copy_data(_input,
