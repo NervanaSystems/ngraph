@@ -111,6 +111,9 @@ endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
 
+# Enable native CPU features
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+
 # flags required for SDL-3
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fPIE -D_FORTIFY_SOURCE=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security")
