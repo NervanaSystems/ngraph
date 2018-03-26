@@ -98,7 +98,7 @@ endif()
 
 if(NGRAPH_NNP_ENABLE)
     include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
 
     # enable additional nnp backend test
     set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)

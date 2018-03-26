@@ -44,6 +44,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     }
 
     auto et = input->get_element_type();
+    Shape channel_shape{m_bn_input_shape[1]};
     const char* input_names[] = {"gamma", "beta"};
 
     for (size_t i = 0; i < 2; i++)
@@ -54,21 +55,13 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                            " isn't equal to input data's type";
             throw ngraph_error(err_msg.c_str());
         }
-    }
 
-    if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
-    {
-        throw ngraph_error("gamma and beta shoud have rank 1");
-    }
-
-    if (gamma->get_shape().size() != beta->get_shape().size())
-    {
-        throw ngraph_error("gamma and beta rank does not match");
-    }
-
-    if (gamma->get_element_type() != beta->get_element_type())
-    {
-        throw ngraph_error("gamma and beta element type does not match");
+        if (get_input_op(i)->get_shape() != channel_shape)
+        {
+            auto err_msg = std::string("The shape of ") + input_names[i] +
+                           " isn't equal to input channel's shape";
+            throw ngraph_error(err_msg.c_str());
+        }
     }
 
     add_output(input->get_element_type(), m_bn_input_shape);

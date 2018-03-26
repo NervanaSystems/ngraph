@@ -58,6 +58,89 @@ TEST(type_prop, broadcast_deduce_incorrect)
     }
 }
 
+TEST(type_prop, batchnorm_rank_less_than_2)
+{
+    auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
+    try
+    {
+        auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
+        FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("input tensor to batchnorm must have tensor of at least rank 2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_zero_channel_check)
+{
+    auto dummy = make_shared<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
+    try
+    {
+        auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
+        FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "input tensor must have at least one channel axis for batch normalization"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_et_check)
+{
+    auto dummy_f32 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto dummy_f64 = make_shared<op::Parameter>(element::f64, Shape{3});
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::BatchNorm>(0.001, dummy_f32, dummy_f64, param);
+        FAIL() << "BatchNorm c-tor should throw for different element types";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("The element type of beta isn't equal to input data's type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_shape_check)
+{
+    auto dummy_3 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto dummy_4 = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::BatchNorm>(0.001, dummy_4, dummy_3, param);
+        FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("The shape of gamma isn't equal to input channel's shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, batchnorm_backprop_4d_check)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{});

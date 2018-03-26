@@ -15,7 +15,7 @@ with the following packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
+   CentOS 7.4 64-bit, GCC 4.8, CMake 3.4.3, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
    Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
@@ -39,6 +39,14 @@ Installation Steps
 The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME`` 
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
+
+The instructions below also presume cloning the nGraph source via an SSH-enabled 
+Github account. If you don't have SSH keys set up on your GitHub account, you can 
+still follow the instructions below and clone via HTTPS.
+
+
+Ubuntu
+------
 
 The process documented here will work on Ubuntu\* 16.04 (LTS)
 
@@ -83,14 +91,60 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
    .. code-block:: console
       
-      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory 
-               # errors if too many compilation processes are used
+      $ make   # note: make -j <N> may work, but sometimes results in out-of-memory errors if too many compilation processes are used
       $ make install          
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
+
+
+CentOS
+------
+
+The process documented here will work on CentOS 7.4.
+
+#. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
+   give ownership of that directory to your user. Creating such a placeholder 
+   can be useful if you'd like to have a local reference for APIs and 
+   documentation, or if you are a developer who wants to experiment with 
+   how to :doc:`../howto/execute` using resources available through the 
+   code base.
+
+   .. code-block:: console
+
+      $ sudo mkdir -p /opt/libraries
+      $ sudo chown -R username:username /opt/libraries
+
+#. Update the system with :command:`yum` and issue the following commands: 
+   
+   .. code-block:: console
+
+      $ sudo yum update
+      $ sudo yum install zlib-devel install ncurses-libs ncurses-devel patch diffutils wget gcc-c++ make git perl-Data-Dumper
+
+
+#. Install Cmake 3.4:
+
+   .. code-block:: console
+    
+      $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
+      $ tar -xzvf cmake-3.4.3.tar.gz
+      $ cd cmake-3.4.3
+      $ ./bootstrap
+      $ make && sudo make install  
+
+#. Clone the `NervanaSystems` ``ngraph`` repo and use Cmake 3.4.3 to 
+   install the nGraph libraries to ``$HOME/ngraph_dist``.
+
+   .. code-block:: console
+
+      $ cd /opt/libraries 
+      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ cd ngraph && mkdir build && cd build
+      $ cmake ../
+      $ make && sudo make install 
 
 
 macOS\* development
