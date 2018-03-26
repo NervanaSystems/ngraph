@@ -19,13 +19,29 @@
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 
-void ngraph::op::Power::generate_adjoints(autodiff::Adjoints& adjoints,
-                                          const std::shared_ptr<Node>& delta)
+using namespace std;
+using namespace ngraph;
+
+op::Power::Power(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseArithmetic("Power", arg0, arg1)
+{
+}
+
+shared_ptr<Node> op::Power::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Power>(new_args.at(0), new_args.at(1));
+}
+
+void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
     auto y = get_input_op(1);
 
-    auto log_x = std::make_shared<op::Log>(x);
+    auto log_x = make_shared<op::Log>(x);
 
     adjoints.add_delta(x, delta * y * shared_from_this() / x);
     adjoints.add_delta(y, delta * shared_from_this() * log_x);

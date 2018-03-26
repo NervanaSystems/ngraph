@@ -347,27 +347,28 @@ big, small {
   clear: both;
 }
 
-/*!                           */
-/*  NeoSansIntel FONT         */
-/*                            */
-/* -------------------------- */
 @font-face {
   font-family: 'NeoSansIntel';
   src: url("../fonts/NeoSansIntel); src: url("../fonts/NeoSansIntel) format("ttf","svg"), webformat("svg");
   font-weight: normal;
   font-style: normal;
+
+/*!                           */
+/*  NeoSansIntel FONT         */
+/*  for main text only        */
+/* -------------------------- */
+
 }
-.fa, .rst-content .admonition-title, .rst-content h1 .headerlink, .rst-content h2 .headerlink, .rst-content h3 .headerlink, .rst-content h4 .headerlink, .rst-content h5 .headerlink, .rst-content h6 .headerlink, .rst-content dl dt .headerlink, .rst-content p.caption .headerlink, .rst-content tt.download span:first-child, .rst-content code.download span:first-child, .icon, .wy-menu-vertical li span.toctree-expand, .wy-menu-vertical li.on a span.toctree-expand, .wy-menu-vertical li.current > a span.toctree-expand {
+.rst-content .admonition-title, .rst-content h1 .headerlink, .rst-content h2 .headerlink, .rst-content h3 .headerlink, .rst-content h4 .headerlink, .rst-content h5 .headerlink, .rst-content h6 .headerlink, .rst-content dl dt .headerlink, .rst-content p.caption .headerlink, .rst-content tt.download span:first-child, .rst-content code.download span:first-child, .icon, .wy-menu-vertical li span.toctree-expand, .wy-menu-vertical li.on a span.toctree-expand, .wy-menu-vertical li.current > a span.toctree-expand {
   display: inline-block;
   font: normal normal normal 1.011em/1 NeoSansIntel;
   font-size: inherit;
-  letter-spacing: -0.05em;
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.fa-lg {
+.fa, .fa-lg {
   font-size: 1.25em;
   line-height: 0.75em;
   vertical-align: -11%;
@@ -571,15 +572,13 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
 }
 
 .wy-alert-title, .rst-content .admonition-title {
-  color: #fff;
-  font-weight: bold;
+  color: #fcfcfc;
+  text-transform: small-caps;
   display: block;
-  color: #fff;
-  background: #6ab0de;
-  margin: -12px;
-  font-family: 'NeoSansIntel', sans;
-  letter-spacing: 0.05em;
-  padding: 0.33em 0.74em;
+  background: #638470;
+  margin: -5px;
+  font-family: 'Faustina', sans;
+  padding: 0.43em 0.74em;
   margin-bottom: 0.33em;
 }
 
@@ -598,10 +597,10 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
 }
 
 .wy-alert.wy-alert-info, .rst-content .note, .rst-content .wy-alert-info.attention, .rst-content .wy-alert-info.caution, .rst-content .wy-alert-info.danger, .rst-content .wy-alert-info.error, .rst-content .wy-alert-info.hint, .rst-content .wy-alert-info.important, .rst-content .wy-alert-info.tip, .rst-content .wy-alert-info.warning, .rst-content .seealso, .rst-content .wy-alert-info.admonition-todo {
-  background: #e7f2fa;
+  background: #d2e0df;
 }
 .wy-alert.wy-alert-info .wy-alert-title, .rst-content .note .wy-alert-title, .rst-content .wy-alert-info.attention .wy-alert-title, .rst-content .wy-alert-info.caution .wy-alert-title, .rst-content .wy-alert-info.danger .wy-alert-title, .rst-content .wy-alert-info.error .wy-alert-title, .rst-content .wy-alert-info.hint .wy-alert-title, .rst-content .wy-alert-info.important .wy-alert-title, .rst-content .wy-alert-info.tip .wy-alert-title, .rst-content .wy-alert-info.warning .wy-alert-title, .rst-content .seealso .wy-alert-title, .rst-content .wy-alert-info.admonition-todo .wy-alert-title, .wy-alert.wy-alert-info .rst-content .admonition-title, .rst-content .wy-alert.wy-alert-info .admonition-title, .rst-content .note .admonition-title, .rst-content .wy-alert-info.attention .admonition-title, .rst-content .wy-alert-info.caution .admonition-title, .rst-content .wy-alert-info.danger .admonition-title, .rst-content .wy-alert-info.error .admonition-title, .rst-content .wy-alert-info.hint .admonition-title, .rst-content .wy-alert-info.important .admonition-title, .rst-content .wy-alert-info.tip .admonition-title, .rst-content .wy-alert-info.warning .admonition-title, .rst-content .seealso .admonition-title, .rst-content .wy-alert-info.admonition-todo .admonition-title {
-  background: #6ab0de;
+  background: #a3bfbd;
 }
 
 .wy-alert.wy-alert-success, .rst-content .wy-alert-success.note, .rst-content .wy-alert-success.attention, .rst-content .wy-alert-success.caution, .rst-content .wy-alert-success.danger, .rst-content .wy-alert-success.error, .rst-content .hint, .rst-content .important, .rst-content .tip, .rst-content .wy-alert-success.warning, .rst-content .wy-alert-success.seealso, .rst-content .wy-alert-success.admonition-todo {
@@ -615,7 +614,6 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   background: #f3f6f6;
 }
 .wy-alert.wy-alert-neutral .wy-alert-title, .rst-content .wy-alert-neutral.note .wy-alert-title, .rst-content .wy-alert-neutral.attention .wy-alert-title, .rst-content .wy-alert-neutral.caution .wy-alert-title, .rst-content .wy-alert-neutral.danger .wy-alert-title, .rst-content .wy-alert-neutral.error .wy-alert-title, .rst-content .wy-alert-neutral.hint .wy-alert-title, .rst-content .wy-alert-neutral.important .wy-alert-title, .rst-content .wy-alert-neutral.tip .wy-alert-title, .rst-content .wy-alert-neutral.warning .wy-alert-title, .rst-content .wy-alert-neutral.seealso .wy-alert-title, .rst-content .wy-alert-neutral.admonition-todo .wy-alert-title, .wy-alert.wy-alert-neutral .rst-content .admonition-title, .rst-content .wy-alert.wy-alert-neutral .admonition-title, .rst-content .wy-alert-neutral.note .admonition-title, .rst-content .wy-alert-neutral.attention .admonition-title, .rst-content .wy-alert-neutral.caution .admonition-title, .rst-content .wy-alert-neutral.danger .admonition-title, .rst-content .wy-alert-neutral.error .admonition-title, .rst-content .wy-alert-neutral.hint .admonition-title, .rst-content .wy-alert-neutral.important .admonition-title, .rst-content .wy-alert-neutral.tip .admonition-title, .rst-content .wy-alert-neutral.warning .admonition-title, .rst-content .wy-alert-neutral.seealso .admonition-title, .rst-content .wy-alert-neutral.admonition-todo .admonition-title {
-  color: #404040;
   background: #e1e4e5;
 }
 .wy-alert.wy-alert-neutral a, .rst-content .wy-alert-neutral.note a, .rst-content .wy-alert-neutral.attention a, .rst-content .wy-alert-neutral.caution a, .rst-content .wy-alert-neutral.danger a, .rst-content .wy-alert-neutral.error a, .rst-content .wy-alert-neutral.hint a, .rst-content .wy-alert-neutral.important a, .rst-content .wy-alert-neutral.tip a, .rst-content .wy-alert-neutral.warning a, .rst-content .wy-alert-neutral.seealso a, .rst-content .wy-alert-neutral.admonition-todo a {
@@ -711,12 +709,12 @@ button[disabled] {
   background-color: #27AE60;
   text-decoration: none;
   font-weight: normal;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
   box-shadow: 0px 1px 2px -1px rgba(255, 255, 255, 0.5) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.1) inset;
   outline-none: false;
   vertical-align: middle;
   *display: inline;
-  zoom: 1;
+  zoom: 1.3;
   -webkit-user-drag: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1149,7 +1147,7 @@ input {
 input[type="button"], input[type="reset"], input[type="submit"] {
   -webkit-appearance: button;
   cursor: pointer;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
   *overflow: visible;
 }
 input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"] {
@@ -1158,7 +1156,7 @@ input[type="text"], input[type="password"], input[type="email"], input[type="url
   display: inline-block;
   border: 1px solid #ccc;
   font-size: 80%;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
   box-shadow: inset 0 1px 3px #ddd;
   border-radius: 0;
   -webkit-transition: border 0.3s linear;
@@ -1227,7 +1225,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
   width: 100%;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "Nanum Gothic", Arial, sans;
 }
 
 select, textarea {
@@ -1612,17 +1610,17 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 a {
-  color: #456b76;
+  color: #5c8583;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #456b76;
-  background-color: #eff7f9;
+  color: #5c8583;
+  background-color: #dce7e6;
 
 }
 a:visited {
-  color: #456b76;
+  color: #5c8583;
 }
 
 html {
@@ -1631,7 +1629,7 @@ html {
 }
 
 body {
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "Nanum Gothic", Arial, sans-serif;
   font-weight: normal;
   color: #404040;
   min-height: 100%;
@@ -1676,7 +1674,8 @@ a.wy-text-warning:hover {
 }
 
 .wy-text-info {
-  color: #2980B9 !important;
+  color: #e0e0e0 !important;
+  font-size: 1.33em;
 }
 
 a.wy-text-info:hover {
@@ -1708,16 +1707,19 @@ a.wy-text-neutral:hover {
 }
 
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
-  margin-top: 0;
+  margin-top: 0.33em;
   font-weight: 700;
-  font-family: "NeoSansIntel", "RobotoSlab", "ff-tisa-web-pro", Arial, sans;
+  font-family: "NeoSansIntel", "Nanum Gothic", arial, sans;
 }
 
 p {
-  line-height: 24px;
-  margin: 0;
+  line-height: 23px;
+  padding-bottom: 0.11em;
+  padding-top: 0.11em;
   font-size: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 0.27em;
+  margin-top: 0.27em;
+
 }
 
 h1 {
@@ -1853,16 +1855,18 @@ code, p.caption {
 
 
 caption-text {
-  font-family: 'RobotoSlab', Lato, monospace;
+   font-family: 'Nanum Gothic Coding', monospace;
+   font-family: monospace;
+   font-size: 1.03em;
+   line-height: 1.43em;
 }
 
 
   .code-block-caption { 
-    font-variant: small-caps;
-    font-size: 0.88em;
-    background-color: #d0dfdf;
+    color: #5f6161;
+    background-color: #c8d5d4;
     padding-right: 0.43em;
-    padding-top: 0.23em;
+    padding-top: 0.29em;
     padding-left: 0.11em;
     padding-bottom: 0.23em;
     text-align: right; 
@@ -2219,7 +2223,7 @@ div[class^='highlight'] pre {
   color: #fcfcfc;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "NeoSansIntel", "Lato", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "Nanum Gothic", "Helvetica Neue", Arial, sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2408,7 +2412,7 @@ div[class^='highlight'] pre {
 .rst-content h1 .headerlink:after, .rst-content h2 .headerlink:after, .rst-content .toctree-wrapper p.caption .headerlink:after, .rst-content h3 .headerlink:after, .rst-content h4 .headerlink:after, .rst-content h5 .headerlink:after, .rst-content h6 .headerlink:after, .rst-content dl dt .headerlink:after, .rst-content p.caption .headerlink:after {
   visibility: visible;
   content: "";
-  font-family: "NeoSansIntel";
+  font-family: 'sans-serif';
   display: inline-block;
 }
 .rst-content h1:hover .headerlink, .rst-content h2:hover .headerlink, .rst-content .toctree-wrapper p.caption:hover .headerlink, .rst-content h3:hover .headerlink, .rst-content h4:hover .headerlink, .rst-content h5:hover .headerlink, .rst-content h6:hover .headerlink, .rst-content dl dt:hover .headerlink, .rst-content p.caption:hover .headerlink {
@@ -2431,7 +2435,7 @@ div[class^='highlight'] pre {
 }
 .rst-content .sidebar .sidebar-title {
   display: block;
-  font-family: "NeoSansIntel", "Roboto Slab", "ff-tisa-web-pro", Arial, sans;
+  font-family: "NeoSansIntel", 'Nanum Gothic', arial, sans-serif;
   font-weight: bold;
   background: #e1e4e5;
   padding: 6px 12px;
@@ -2536,7 +2540,7 @@ div[class^='highlight'] pre {
   line-height: normal;
   background: white;
   color: #84aead;
-  border-top: solid 0.31em #cad8a5;
+  border-top: solid 0.31em #6da09d;
   padding: 6px;
   position: relative;
 }
@@ -2547,17 +2551,19 @@ div[class^='highlight'] pre {
 }
 
 .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) tt, .rst-content dl:not(.docutils) code {
-  font-weight: bold;
-    line-height: 1.21em; 
+  /* font-weight: bold; */
+  line-height: 1.21em;
+  font-size: 110%; 
 }
 .rst-content dl:not(.docutils) dt:before {
   color: #d5dfb8;
 }
 
 .function {
-    border-right: dashed 0.19em #f4f2f0;
-    border-bottom: solid 0.23em #f4f2f0;
-    border-top: solid 0.31em #e2e8d0;
+    border-right: dashed 0.19em #a3bfbd;
+    border-bottom: solid 0.23em #a3bfbd;
+    border-top: solid 0.31em #a3bfbd;
+    background: #f4f2f0;
 }
 
 
@@ -2569,8 +2575,9 @@ div[class^='highlight'] pre {
   margin-bottom: 6px;
   border: none;
   border-left: solid 3px #f4f2f0;
-  background: #f4f2f0; /* #eaeee0 */
-  color: #555;
+  background: #f4f2f0;
+  color: #555; ;
+ 
 }
 .rst-content dl:not(.docutils) dl dt .headerlink {
   color: #404040;
@@ -2632,10 +2639,11 @@ div[class^='highlight'] pre {
 }
 .rst-content p.rubric {
   margin-bottom: 12px;
-  font-weight: bold;
-    font-size: 110%;
-    line-height: 0.87em;
-    color: #9d9d9c;
+  font-weight: lighter;
+  font-size: 110%;
+  line-height: 0.87em;
+  color: #9d9d9c;
+  font-family: "Neo Sans Intel", sans-serif;
 }
 .rst-content tt.download, .rst-content code.download {
   background: inherit;
@@ -2697,17 +2705,18 @@ span[id*='MathJax-Span'] {
   src: local("NeoSansIntel Bold"), local("NeoSansIntel-Bold"), url(../fonts/NeoSansIntel-Bold.ttf) format("truetype");
 }
 @font-face {
-  font-family: "Roboto Slab";
+  font-family: "Nanum Gothic";
   font-style: normal;
-  font-weight: 400;
-  src: local("Roboto Slab Regular"), local("RobotoSlab-Regular"), url(../fonts/RobotoSlab-Regular.ttf) format("truetype");
+  font-weight: 500;
+  src: local("NanumGothic Regular"), local("NanumGothic-Regular"), url(../fonts/NanumGothic-Regular.ttf) format("truetype");
 }
 @font-face {
-  font-family: "Roboto Slab";
+  font-family: "Nanum Gothic Coding";
   font-style: normal;
   font-weight: 700;
-  src: local("Roboto Slab Bold"), local("RobotoSlab-Bold"), url(../fonts/RobotoSlab-Bold.ttf) format("truetype");
+  src: local("NanumGothicCoding Bold"), local("NanumGothicCoding-Bold"), url(../fonts/NanumGothicCoding-Bold.ttf) format("truetype");
 }
+
 .wy-affix {
   position: fixed;
   top: 1.618em;
@@ -2895,7 +2904,7 @@ span[id*='MathJax-Span'] {
   color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
-  background-color: #84aead;
+  background-color: #8eb0af;
   cursor: pointer;
   color: #fff;
 }
@@ -2909,7 +2918,7 @@ span[id*='MathJax-Span'] {
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
-  background-color: #84aead;
+  background-color: #8eb0af;
   text-align: center;
   padding: 0.809em;
   display: block;
@@ -2921,14 +2930,14 @@ span[id*='MathJax-Span'] {
     line-height: 1.3em;
   border-radius: 50px;
   padding: 6px 12px;
-  border-color: #84aead;
+  border-color: #8eb0af;
 }
 .wy-side-nav-search img {
   display: block;
   margin: auto auto 0.809em auto;
   height: 45px;
   width: 45px;
-  background-color: #84aead;
+  background-color: #8eb0af;
   padding: 5px;
   border-radius: 100%;
 }
@@ -2969,7 +2978,7 @@ span[id*='MathJax-Span'] {
   color: #dadada;
 }
 .wy-nav .wy-menu-vertical a:hover {
-  background-color: #84aead;
+  background-color: #8eb0af;
   color: #fff;
 }
 

@@ -73,7 +73,8 @@ namespace ngraph
                                                  const ngraph::Strides& strides,
                                                  const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
-                                                 const ngraph::CoordinateDiff& padding_above);
+                                                 const ngraph::CoordinateDiff& padding_above,
+                                                 const mkldnn::post_ops& pops = mkldnn::post_ops());
 
                 /**
                  * Convolution + bias forward

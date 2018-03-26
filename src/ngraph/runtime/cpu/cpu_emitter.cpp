@@ -92,6 +92,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -133,8 +134,7 @@ namespace ngraph
             {
                 // TODO: Audit all uses of Add and fix this to use
                 // the right alignment instead of Eigen::Unaligned
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string()
                        << ", " << out[0].get_size() << ", 1>, Eigen::Unaligned> out("
@@ -189,14 +189,13 @@ namespace ngraph
                 {
                     writer << "#pragma omp parallel for\n";
                     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                    writer << "{\n";
-                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-                           << "[i] + " << args[1].get_name() << "[i];\n";
-                    writer << "}\n";
+                    writer.block_begin();
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
+                           << args[1].get_name() << "[i];\n";
+                    writer.block_end();
                 }
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
 #ifdef NGRAPH_DISTRIBUTED
@@ -215,13 +214,11 @@ namespace ngraph
                     data_type = "MPI_DOUBLE";
                 }
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 #endif
 
@@ -259,8 +256,7 @@ namespace ngraph
                     n = arg1_shape[0];
                 }
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 
                 const char* cbeta = "0.0f";
 
@@ -364,8 +360,7 @@ namespace ngraph
                     }
                 }
 
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -374,8 +369,7 @@ namespace ngraph
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
-                writer.indent++;
-                writer << "{\n";
+                writer.block_begin();
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
                        << ">bn_weights(2*" << args[0].get_size() << ");\n";
@@ -477,8 +471,7 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(batchnorm_index) << ");\n";
                 }
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -561,8 +554,7 @@ namespace ngraph
                 const ngraph::op::BatchNormBackprop* batchnorm =
                     static_cast<const ngraph::op::BatchNormBackprop*>(node);
 
-                writer.indent++;
-                writer << "{\n";
+                writer.block_begin();
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
                        << ">bn_weights(2*" << args[0].get_size() << ");\n";
@@ -628,8 +620,7 @@ namespace ngraph
                 writer << "memcpy(" << out[2].get_name() << ", &bn_dweights[0]+"
                        << args[0].get_size() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -644,34 +635,28 @@ namespace ngraph
                     auto& first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << "\n    = ";
                     writer << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
                          dot->get_reduction_axes_count() == 1)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " << \n"
                            << "    " << emit_vector(args[0]) << ".dot(" << emit_vector(args[1])
                            << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          dot->get_reduction_axes_count() == 1)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " = \n"
                            << "    " << emit_matrix(args[0]) << " * " << emit_vector(args[1])
                            << ";\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
                          dot->get_reduction_axes_count() == 1)
@@ -679,8 +664,7 @@ namespace ngraph
                     // Emit an MKL SGEMM call if possible
                     if (args[0].get_element_type() == element::f32)
                     {
-                        writer << "{   // " << node->get_name() << "\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << "cblas::cblas_sgemm("
                                << "cblas::Layout::RowMajor, "
                                << "cblas::Transpose::None, "
@@ -691,18 +675,15 @@ namespace ngraph
                                << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
                                << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
                                << ");\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
-                        writer << "{   // " << node->get_name() << "\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << emit_matrix(out[0]) << " = \n"
                                << "    " << emit_matrix(args[0]) << " * " << emit_matrix(args[1])
                                << ";\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
                 else
@@ -720,8 +701,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "   " << emit_array1d(args[0]) << " *\n"
@@ -729,13 +709,12 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
                        << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -743,20 +722,17 @@ namespace ngraph
             {
                 auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 writer << "memcpy(" << out[0].get_name() << ", "
                        << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n";
                 writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
@@ -767,14 +743,13 @@ namespace ngraph
 
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name()
+                writer.block_begin();
+                writer << out[0].get_name()
                        << "[i] = " << (result_element_type.is_signed() ? "std::abs" : "") << "("
                        << args[0].get_name() << "[i]);\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -785,8 +760,7 @@ namespace ngraph
 #if PREFER_EIGEN == 1
                 if (result_shape.size() == 1)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0], "out_vector") << ";\n";
 
                     size_t concat_pos = 0;
@@ -797,16 +771,14 @@ namespace ngraph
                                << ";\n";
                         concat_pos += args[i].get_shape().at(0);
                     }
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (result_shape.size() == 2)
                 {
                     auto axis =
                         (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_matrix(out[0], "out_matrix") << ";\n";
 
                     size_t concat_pos[2]{0, 0};
@@ -821,8 +793,7 @@ namespace ngraph
                         concat_pos[axis] += arg_shape.at(axis);
                     }
 
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -896,17 +867,16 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Divide)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 if (node->get_element_type().is_real() == false)
                 {
                     // Check for divide by zero for integer types only
                     size_t element_count = args[1].get_size();
                     writer << "for (size_t i=0; i<" << element_count << "; i++)\n";
-                    writer << "{\n";
-                    writer << "    if (" << args.at(1).get_name()
+                    writer.block_begin();
+                    writer << "if (" << args.at(1).get_name()
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
-                    writer << "}\n";
+                    writer.block_end();
                 }
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
@@ -915,20 +885,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
                        << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Equal)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " ==\n"
@@ -936,20 +904,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] == " << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Greater)
             {
-                writer << "{   // " << node->get_name() << " xxx\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " >\n"
@@ -957,20 +923,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
                        << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GreaterEq)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " >=\n"
@@ -978,20 +942,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] >= " << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Less)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " <\n"
@@ -999,20 +961,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
                        << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::LessEq)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " <=\n"
@@ -1020,40 +980,35 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] <= " << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Log)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = log(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "        " << emit_array1d(args[0]) << ".max(\n"
@@ -1061,21 +1016,19 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
                        << args[1].get_name() << "[i] ? " << args[0].get_name()
                        << "[i] : " << args[1].get_name() << "[i] ;\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".min(\n"
@@ -1083,41 +1036,36 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
                        << args[1].get_name() << "[i] ? " << args[0].get_name()
                        << "[i] : " << args[1].get_name() << "[i] ;\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    -" << emit_array1d(args[0]) << ";\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = -" << args[0].get_name()
-                       << "[i];\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::NotEqual)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " !=\n"
@@ -1125,20 +1073,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] != " << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Select)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "   " << emit_array1d(args[0]) << "\n"
@@ -1147,20 +1093,18 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
                        << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Subtract)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << " -\n"
@@ -1168,13 +1112,12 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
                        << args[1].get_name() << "[i];\n";
-                writer << "}\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1182,45 +1125,37 @@ namespace ngraph
             {
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
                 if (broadcast->get_broadcast_axes().empty())
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_shape.size() == 0)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_array1d(out[0]) << " =\n"
                            << "    " << emit_array1d(args[0]) << "(0, 0);\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_shape.size() == 1 && result_shape.size() == 2)
                 {
                     if (broadcast->get_broadcast_axes() == AxisSet{1})
                     {
-                        writer << "{   // " << node->get_name() << "\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << emit_matrix(out[0]) << ".colwise() =\n"
                                << "    " << emit_vector(args[0]) << ";\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else if (broadcast->get_broadcast_axes() == AxisSet{0})
                     {
-                        writer << "{   // " << node->get_name() << "\n";
-                        writer.indent++;
+                        writer.block_begin();
 
                         writer << "Eigen::Map<Eigen::Matrix<"
                                << out[0].get_element_type().c_type_string() << ", "
@@ -1237,8 +1172,7 @@ namespace ngraph
                         writer << "out = arg0.replicate<" << out[0].get_shape().at(0)
                                << ", 1>();\n";
 
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
@@ -1267,8 +1201,7 @@ namespace ngraph
                                        out[0].get_shape(),
                                        broadcast->get_broadcast_axes());
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1276,8 +1209,7 @@ namespace ngraph
             {
                 auto& result_element_type = out[0].get_element_type();
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << "\n"
@@ -1285,14 +1217,12 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = ("
-                       << result_element_type.c_type_string() << ")(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
+                       << ")(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1316,8 +1246,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
@@ -1339,12 +1268,10 @@ namespace ngraph
                 //  we can just copy.
                 if (same_layout || result_shape_product < 2)
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // If there *is* a layout change in the 2D case, we transpose the input.
                 else if (arg_rank == 2)
@@ -1352,8 +1279,7 @@ namespace ngraph
                     // Emit an MKL transpose call if possible
                     if (result_element_type == ngraph::element::f32)
                     {
-                        writer << "{   // " << node->get_name() << " 2\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0])
                                << ",\n"
                                << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
@@ -1361,17 +1287,14 @@ namespace ngraph
                                << to_string(arg_shape[1]) << ",\n"
                                << "                   " << out[0].get_name() << ", "
                                << to_string(arg_shape[0]) << ");\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
-                        writer << "{   // " << node->get_name() << " 3\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << emit_matrix(out[0]) << " =\n"
                                << "        " << emit_matrix(args[0]) << ".transpose();\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
                 // Other cases
@@ -1394,8 +1317,7 @@ namespace ngraph
                                      out[0].get_shape(),
                                      reshape->get_input_order());
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1404,8 +1326,7 @@ namespace ngraph
                 auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
                 shared_ptr<Function> function = function_call->get_functions()[0];
 
-                writer << "{   // Call " << function->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 {
                     vector<string> input_names;
                     vector<string> output_names;
@@ -1420,23 +1341,22 @@ namespace ngraph
                         output_names.push_back(output.get_name());
                     }
 
-                    writer << "void* args[] =\n{";
-                    writer.indent++;
+                    writer << "void* args[] =\n";
+                    writer.block_begin();
                     writer << "\n" << join(input_names, ",\n");
-                    writer.indent--;
-                    writer << "\n};\n";
+                    writer.block_end();
+                    writer << ";\n";
 
-                    writer << "void* out[] =\n{";
-                    writer.indent++;
+                    writer << "void* out[] =\n";
+                    writer.block_begin();
                     writer << "\n" << join(output_names, ",\n");
-                    writer.indent--;
-                    writer << "\n};\n";
+                    writer.block_end();
+                    writer << ";\n";
 
                     writer << "\n";
                     writer << function->get_name() << "(args, out, ctx);\n";
                 }
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             // TODO: This and other ops include comments/notes that
@@ -1461,12 +1381,10 @@ namespace ngraph
                 // Trivial case: no reduction axes (this includes the scalar-reductee case).
                 if (reduction_axes.empty())
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Behavior for zero-size axes bears some explanation here. XLA's reduce
                 // operator provides an "base" element (usually, but not necessarily,
@@ -1499,23 +1417,19 @@ namespace ngraph
                     if (reductee_shape.at(0) == 0 ||
                         (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
                     {
-                        writer << "{   // " << node->get_name() << " 2\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name()
                                << ", " << out[0].get_size() * out[0].get_element_type().size()
                                << ");\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
-                        writer << "{   // " << node->get_name() << " 3\n";
-                        writer.indent++;
+                        writer.block_begin();
                         string type = f_result_element_type.c_type_string();
                         writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << "\n{";
+                               << " {\n";
                         writer.indent++;
-                        writer << "\n";
                         writer << type << " result;\n";
                         writer << "void* args[] = {&x, &y};\n";
                         writer << "void* out[] = {&result};\n";
@@ -1525,30 +1439,25 @@ namespace ngraph
                         writer << "};\n";
                         writer << emit_array1d(out[0]) << " =\n"
                                << "    " << emit_array1d(args[0]) << ".redux(f);\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
                 else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
                 {
                     if (reductee_shape.at(1) == 0)
                     {
-                        writer << "{   // " << node->get_name() << " 4\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << emit_array1d(out[0]) << " =\n"
                                << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
-                        writer << "{   // " << node->get_name() << " 5\n";
-                        writer.indent++;
+                        writer.block_begin();
                         string type = f_result_element_type.c_type_string();
                         writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << "\n{";
+                               << " {\n";
                         writer.indent++;
-                        writer << "\n";
                         writer << type << " result;\n";
                         writer << "void* args[] = {&x, &y};\n";
                         writer << "void* out[] = {&result};\n";
@@ -1558,30 +1467,25 @@ namespace ngraph
                         writer << "};\n";
                         writer << emit_vector(out[0]) << " =\n"
                                << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
                 else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
                 {
                     if (reductee_shape.at(0) == 0)
                     {
-                        writer << "{   // " << node->get_name() << " 6\n";
-                        writer.indent++;
+                        writer.block_begin();
                         writer << emit_array1d(out[0]) << " =\n"
                                << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                     else
                     {
-                        writer << "{   // " << node->get_name() << " 7\n";
-                        writer.indent++;
+                        writer.block_begin();
                         string type = f_result_element_type.c_type_string();
                         writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << "\n{";
+                               << " {\n";
                         writer.indent++;
-                        writer << "\n";
                         writer << type << " result;\n";
                         writer << "void* args[] = {&x, &y};\n";
                         writer << "void* out[] = {&result};\n";
@@ -1591,20 +1495,17 @@ namespace ngraph
                         writer << "};\n";
                         writer << emit_vector(out[0]) << " =\n"
                                << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
                 else
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
 
                     string type = f_result_element_type.c_type_string();
                     writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                           << "\n{";
+                           << " {\n";
                     writer.indent++;
-                    writer << "\n";
                     writer << type << " result;\n";
                     writer << "void* args[] = {&x, &y};\n";
                     writer << "void* out[] = {&result};\n";
@@ -1622,18 +1523,15 @@ namespace ngraph
                     writer << "               {" << join(reduce->get_reduction_axes()) << "},\n";
                     writer << "               f);\n";
 
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
 #else
-                writer << "{   // " << node->get_name() << " 1\n";
-                writer.indent++;
+                writer.block_begin();
 
                 string type = f_result_element_type.c_type_string();
 
-                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
+                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << " {\n";
                 writer.indent++;
-                writer << "\n";
                 writer << type << " result;\n";
                 writer << "void* args[] = {&x, &y};\n";
                 writer << "void* out[] = {&result};\n";
@@ -1651,29 +1549,26 @@ namespace ngraph
                                     out[0].get_shape(),
                                     reduce->get_reduction_axes());
 
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
 #endif
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sign)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sign();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = (0 < " << args[0].get_name()
-                       << "[i]) - (" << args[0].get_name() << "[i] < 0);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
+                       << args[0].get_name() << "[i] < 0);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1681,8 +1576,7 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 size_t arg_rank = args[0].get_shape().size();
 
@@ -1702,36 +1596,30 @@ namespace ngraph
                 // Scalar slice is necessarily just a copy.
                 if (!strided && arg_rank == 0)
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!strided && arg_rank == 1)
                 {
-                    writer << "{   // " << node->get_name() << " 2\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_vector(args[0]) << ".segment(\n"
                            << "        " << to_string(lower_bounds[0]) << ", "
                            << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!strided && arg_rank == 2)
                 {
-                    writer << "{   // " << node->get_name() << " 3\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_matrix(out[0]) << " = \n"
                            << "        " << emit_matrix(args[0]) << ".block("
                            << to_string(lower_bounds[0]) << ", " << to_string(lower_bounds[1])
                            << ",\n"
                            << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
                            << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
                 else
@@ -1758,16 +1646,14 @@ namespace ngraph
                                    slice->get_upper_bounds(),
                                    slice->get_strides());
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sum)
             {
                 const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
@@ -1776,41 +1662,33 @@ namespace ngraph
                 // Trivial case: no reduction axes.
                 if (reduction_axes.size() == 0)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Full reduction? Then sum to scalar.
                 else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
                          (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_array1d(out[0]) << " =\n"
                            << "    " << emit_array1d(args[0]) << ".sum();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -1831,128 +1709,109 @@ namespace ngraph
                                  out[0].get_shape(),
                                  sum->get_reduction_axes());
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Exp)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".exp();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sin)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sin();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = sin(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sinh)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sinh();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = sinh(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cos)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".cos();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = cos(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cosh)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".cosh();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = cosh(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tan)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".tan();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = tan(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -1962,85 +1821,72 @@ namespace ngraph
                 // so we fall-back to tanh
                 // TODO: Implement our own internal fast/approximate tanh if this actually gets used
                 // by models
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Asin)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".asin();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = asin(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Acos)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".acos();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = acos(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".atan();\n";
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = atan(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Power)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 writer << emit_array1d(out[0]) << " = \n";
                 writer.indent++;
@@ -2050,21 +1896,19 @@ namespace ngraph
 #else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = pow(" << args[0].get_name()
-                       << "[i], " << args[1].get_name() << "[i]);\n";
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
+                       << args[1].get_name() << "[i]);\n";
+                writer.block_end();
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReplaceSlice)
             {
                 auto replace_slice = static_cast<const ngraph::op::Slice*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 size_t arg0_rank = args[0].get_shape().size();
 
@@ -2084,30 +1928,25 @@ namespace ngraph
                 // Scalar slice is necessarily just a copy.
                 if (!strided && arg0_rank == 0)
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!strided && arg0_rank == 1)
                 {
-                    writer << "{   // " << node->get_name() << " 2\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_vector(args[0]) << ";\n"
                            << emit_vector(out[0]) << ".segment(\n"
                            << "    " << to_string(lower_bounds[0]) << ", "
                            << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
                            << "    " << emit_vector(args[1]) << ";\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!strided && arg0_rank == 2)
                 {
-                    writer << "{   // " << node->get_name() << " 3\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_matrix(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ";\n"
                            << emit_matrix(out[0]) << ".block(\n"
@@ -2116,8 +1955,7 @@ namespace ngraph
                            << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
                            << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
                            << "    " << emit_matrix(args[1]) << ";\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
                 else
@@ -2147,8 +1985,7 @@ namespace ngraph
                                            replace_slice->get_upper_bounds(),
                                            replace_slice->get_strides());
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -2162,80 +1999,66 @@ namespace ngraph
 
                 if (arg_rank == 0)
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
 
                     writer << emit_vector(out[0], "out_vector") << ";\n";
 
                     writer << "out_vector.setZero();\n"
                            << ""
                            << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
-                           << "if (floor(pos_raw) != pos_raw)\n"
-                           << "{\n";
-                    writer.indent++;
+                           << "if (floor(pos_raw) != pos_raw)\n";
+                    writer.block_begin();
                     writer
                         << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n"
                            << "if (pos >= " << bounds << ")\n";
 
-                    writer << "{\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "throw(std::range_error(\"One-hot: value is out of category "
                               "range\"));\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
 
                     writer << "out_vector(pos, 0) = 1;\n";
 
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_rank == 1)
                 {
-                    writer << "{   // " << node->get_name() << " 1\n";
-                    writer.indent++;
+                    writer.block_begin();
 
                     writer << emit_vector(args[0], "arg_vector") << ";\n";
 
                     writer << emit_matrix(out[0], "out_vector") << ";\n";
                     writer << "out_vector.setZero();\n";
 
-                    writer << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n"
-                           << "{\n";
-                    writer.indent++;
+                    writer << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n";
+                    writer.block_begin();
 
                     writer << "auto pos_raw = arg_vector(i, 0);\n";
 
-                    writer << "if (floor(pos_raw) != pos_raw)\n"
-                           << "{\n";
-                    writer.indent++;
+                    writer << "if (floor(pos_raw) != pos_raw)\n";
+                    writer.block_begin();
                     writer
                         << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n";
                     writer << "bool found = false;\n";
 
-                    writer << "if (pos >= " << bounds << ")\n"
-                           << "{\n";
-                    writer.indent++;
+                    writer << "if (pos >= " << bounds << ")\n";
+                    writer.block_begin();
                     writer << "throw(std::range_error(\"One-hot: value is out of category "
                               "range\"));\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
 
                     writer << "out_vector"
                            << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
 
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
 
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Other cases are not handled yet.
                 else
@@ -2252,55 +2075,117 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Ceiling)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Floor)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
             {
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
                 size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer << "{\n";
-                writer << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name()
-                       << "[i]);\n";
-                writer << "}\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionRelu)
+            {
+                auto convolution = static_cast<const ngraph::op::ConvolutionRelu*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    // HACK to help MKLDNN pick the right implementation
+                    if (weights_format == mkldnn::memory::format::nchw)
+                    {
+                        weights_format = mkldnn::memory::format::oihw;
+                    }
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    size_t conv_index = 0;
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    ops.append_eltwise(
+                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above(),
+                        ops);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
             }
 
             template <>
@@ -2751,13 +2636,11 @@ namespace ngraph
                 auto reduction_function = reduce_window->get_functions()[0];
                 auto& f_result_element_type = out[0].get_element_type();
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 
                 string type = f_result_element_type.c_type_string();
-                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
+                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << " {\n";
                 writer.indent++;
-                writer << "\n";
                 writer << type << " result;\n";
                 writer << "void* args[] = {&x, &y};\n";
                 writer << "void* out[] = {&result};\n";
@@ -2778,8 +2661,7 @@ namespace ngraph
                 writer << "                      {"
                        << join(reduce_window->get_window_movement_strides()) << "});\n";
 
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -2793,14 +2675,12 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 
                 string type = node->get_output_element_type(0).c_type_string();
 
-                writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
+                writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char {\n";
                 writer.indent++;
-                writer << "\n";
                 writer << "char result;\n";
                 writer << "void* args[] = {&x, &y};\n";
                 writer << "void* out[] = {&result};\n";
@@ -2810,9 +2690,8 @@ namespace ngraph
                 writer << "};\n";
 
                 writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type
-                       << "\n{";
+                       << " {\n";
                 writer.indent++;
-                writer << "\n";
                 writer << type << " result;\n";
                 writer << "void* args[] = {&x, &y};\n";
                 writer << "void* out[] = {&result};\n";
@@ -2836,8 +2715,7 @@ namespace ngraph
                 writer << "                {"
                        << join(select_and_scatter->get_window_movement_strides()) << "});\n";
 
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -3060,8 +2938,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Product)
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
@@ -3070,41 +2947,33 @@ namespace ngraph
                 // Trivial case: no reduction axes.
                 if (reduction_axes.size() == 0)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Full reduction? Then reduce to scalar.
                 else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
                          (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_array1d(out[0]) << " =\n"
                            << "    " << emit_array1d(args[0]) << ".prod();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".rowwise().prod();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".colwise().prod();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -3126,16 +2995,14 @@ namespace ngraph
                 writer << "                         {" << join(product->get_reduction_axes())
                        << "});\n";
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Max)
             {
                 const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
@@ -3150,41 +3017,33 @@ namespace ngraph
                 // Trivial case: no reduction axes.
                 if (!zero_sized && reduction_axes.size() == 0)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Full reduction? Then reduce to scalar.
                 else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
                                          (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_array1d(out[0]) << " =\n"
                            << "    " << emit_array1d(args[0]) << ".maxCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".rowwise().maxCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".colwise().maxCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -3206,16 +3065,14 @@ namespace ngraph
                 writer << "                         {" << join(max->get_reduction_axes())
                        << "});\n";
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Min)
             {
                 const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
-                writer << "{   // " << node->get_name() << "\n";
-                writer.indent++;
+                writer.block_begin();
 #if PREFER_EIGEN == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
@@ -3230,41 +3087,33 @@ namespace ngraph
                 // Trivial case: no reduction axes.
                 if (!zero_sized && reduction_axes.size() == 0)
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 // Full reduction? Then reduce to scalar.
                 else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
                                          (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_array1d(out[0]) << " =\n"
                            << "    " << emit_array1d(args[0]) << ".minCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".rowwise().minCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
                 {
-                    writer << "{   // " << node->get_name() << "\n";
-                    writer.indent++;
+                    writer.block_begin();
                     writer << emit_vector(out[0]) << " =\n"
                            << "    " << emit_matrix(args[0]) << ".colwise().minCoeff();\n";
-                    writer.indent--;
-                    writer << "}\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -3286,8 +3135,7 @@ namespace ngraph
                 writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
 #endif
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
             }
 
             template <>
@@ -3361,10 +3209,10 @@ namespace ngraph
                 {
                     writer << "#pragma omp parallel for\n";
                     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                    writer << "{\n";
-                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-                           << "[i] > 0 ? " << args[1].get_name() << "[i] : 0;\n";
-                    writer << "}\n";
+                    writer.block_begin();
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[1].get_name() << "[i] : 0;\n";
+                    writer.block_end();
                 }
             }
 
@@ -3394,10 +3242,10 @@ namespace ngraph
                 {
                     writer << "#pragma omp parallel for\n";
                     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-                    writer << "{\n";
-                    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-                           << "[i] > 0 ? " << args[0].get_name() << "[i] : 0;\n";
-                    writer << "}\n";
+                    writer.block_begin();
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : 0;\n";
+                    writer.block_end();
                 }
             }
 
@@ -3521,8 +3369,7 @@ namespace ngraph
                         writer << "#pragma omp parallel for\n";
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
@@ -3535,25 +3382,21 @@ namespace ngraph
                     {
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
                 writer << "if (arg" << index << " > m)\n";
-                writer << "{\n";
-                writer.indent++;
+                writer.block_begin();
                 writer << "m = arg" << index << ";\n";
-                writer.indent--;
-                writer << "}\n";
+                writer.block_end();
 
                 // end max inner loop(s)
                 for (size_t d = 0; d < dims; ++d)
                 {
                     if (axes.find(d) != axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
 
@@ -3564,8 +3407,7 @@ namespace ngraph
                     {
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
@@ -3576,8 +3418,7 @@ namespace ngraph
                 {
                     if (axes.find(d) != axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
 
@@ -3586,8 +3427,7 @@ namespace ngraph
                 {
                     if (axes.find(d) == axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
 
@@ -3600,8 +3440,7 @@ namespace ngraph
                         writer << "#pragma omp parallel for\n";
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
@@ -3614,8 +3453,7 @@ namespace ngraph
                     {
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
@@ -3626,8 +3464,7 @@ namespace ngraph
                 {
                     if (axes.find(d) != axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
 
@@ -3640,8 +3477,7 @@ namespace ngraph
                     {
                         writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
                                << "; ++i" << d << ")\n";
-                        writer << "{\n";
-                        writer.indent++;
+                        writer.block_begin();
                     }
                 }
 
@@ -3652,8 +3488,7 @@ namespace ngraph
                 {
                     if (axes.find(d) != axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
 
@@ -3662,8 +3497,7 @@ namespace ngraph
                 {
                     if (axes.find(d) == axes.end())
                     {
-                        writer.indent--;
-                        writer << "}\n";
+                        writer.block_end();
                     }
                 }
             }
