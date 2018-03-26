@@ -28,11 +28,11 @@ template <typename T>
 string to_cpp_string(T value)
 {
     string rc;
-    if (isnan(value))
+    if (::isnan(value))
     {
         rc = "NAN";
     }
-    else if (isinf(value))
+    else if (::isinf(value))
     {
         if (value > 0)
         {
