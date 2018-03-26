@@ -399,11 +399,6 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& dst_node,
                                      const shared_ptr<Node>& new_node)
 {
-    if (src_node->get_output_size() != 1)
-    {
-        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-    }
-
     // Fix input / output
     descriptor::Input* dst_input = dst_node->get_input_from(src_node);
     descriptor::Output* src_output = src_node->get_output_to(dst_node);
