@@ -40,6 +40,11 @@ The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME``
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
 
+The instructions below also presume cloning the nGraph source via an SSH-enabled 
+Github account. If you don't have SSH keys set up on your GitHub account, you can 
+still follow the instructions below and clone via HTTPS.
+
+
 Ubuntu
 ------
 
@@ -109,37 +114,37 @@ The process documented here will work on CentOS 7.4.
 
    .. code-block:: console
 
-      # mkdir -p /opt/libraries
-      # chown -R username:username /opt/libraries
+      $ sudo mkdir -p /opt/libraries
+      $ sudo chown -R username:username /opt/libraries
 
 #. Update the system with :command:`yum` and issue the following commands: 
    
    .. code-block:: console
 
-      # yum update
-      # yum -y install zlib-devel install ncurses-libs ncurses-devel patch diffutils wget gcc-c++ make git perl-Data-Dumper
+      $ sudo yum update
+      $ sudo yum install zlib-devel install ncurses-libs ncurses-devel patch diffutils wget gcc-c++ make git perl-Data-Dumper
 
 
 #. Install Cmake 3.4:
 
    .. code-block:: console
     
-      # wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
-      # tar -xzvf cmake-3.4.3.tar.gz
-      # cd cmake-3.4.3
-      # ./bootstrap
-      # make && make install  
+      $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
+      $ tar -xzvf cmake-3.4.3.tar.gz
+      $ cd cmake-3.4.3
+      $ ./bootstrap
+      $ make && sudo make install  
 
-#. As non-root users, you can now clone the `NervanaSystems` ``ngraph`` repo 
-   and use Cmake 3.4.3 to install the nGraph libraries to ``$HOME/ngraph_dist``.
+#. Clone the `NervanaSystems` ``ngraph`` repo and use Cmake 3.4.3 to 
+   install the nGraph libraries to ``$HOME/ngraph_dist``.
 
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone git@github.com:NervanaSystems/ngraph.git
-      $ mkdir build && cd build
+      $ cd ngraph && mkdir build && cd build
       $ cmake ../
-      $ make && make install 
+      $ make && sudo make install 
 
 
 macOS\* development
