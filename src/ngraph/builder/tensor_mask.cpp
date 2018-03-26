@@ -18,6 +18,7 @@
 
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/reshape.hpp"
 
@@ -43,9 +44,12 @@ std::shared_ptr<Node> ngraph::builder::tensor_mask(const std::shared_ptr<Node>& 
     std::iota(sequence_data.begin(), sequence_data.end(), 0);
 
     // create sequence constant
-    // TODO: how to handle sequence type / enforce sequence_lengths type?
     auto sequence =
         std::make_shared<op::Constant>(element::u32, Shape{max_sequence_length}, sequence_data);
+
+    // convert sequence to input type
+    auto convert_sequence =
+        std::make_shared<op::Convert>(sequence, sequence_lengths->get_element_type());
 
     // all axes except the sequence axis
     AxisSet non_sequence_axes;
@@ -59,7 +63,7 @@ std::shared_ptr<Node> ngraph::builder::tensor_mask(const std::shared_ptr<Node>& 
 
     // broadcast sequence to mask shape along all non-sequence axes
     auto broadcast_sequence =
-        std::make_shared<op::Broadcast>(sequence, mask_shape, non_sequence_axes);
+        std::make_shared<op::Broadcast>(convert_sequence, mask_shape, non_sequence_axes);
 
     // mask = sequence_length < sequence
     return std::make_shared<op::Less>(broadcast_sequence, broadcast_sequence_lengths);
