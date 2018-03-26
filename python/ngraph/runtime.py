@@ -93,9 +93,9 @@ class Computation:
         result_arr = result_arr.reshape(result_shape)
         return result_arr
 
-    def serialize(self):  # type: () -> str
+    def serialize(self, indent=0, bin_const_data=False):  # type: (size_t, bool) -> str
         """Serialize function (compute graph) to a JSON string."""
-        return serialize(self.function)
+        return serialize(self.function, indent, bin_const_data)
 
     @staticmethod
     def _get_buffer_size(element_type, element_count):  # type: (TensorViewType, int) -> int
