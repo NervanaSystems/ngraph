@@ -298,16 +298,26 @@ def convolution(x,                      # type: Node
 
 
 @nameable_op
-def avg_pool(x,                      # type: Node
-             window_shape,           # type: TensorShape
-             strides=None,           # type: List[int]
-             padding_above=None,     # type: List[int]
-             padding_below=None,     # type: List[int]
-             zero_pad=True,          # type: bool
-             name=None,              # type: str
+def avg_pool(x,                       # type: Node
+             window_shape,            # type: TensorShape
+             strides=None,            # type: List[int]
+             padding_below=None,      # type: List[int]
+             padding_above=None,      # type: List[int]
+             include_pad=False,       # type: bool
+             name=None,               # type: str
              ):
     # type: (...) -> Node
-    """Return average pooling node."""
+    """Return average pooling node.
+
+    :param x: The input tensor.
+    :param window_shape: The pooling window shape.
+    :param strides: The window movement strides.
+    :param padding_below: The input data optional padding below filled with zeros.
+    :param padding_above: The input data optional padding below filled with zeros.
+    :param include_pad: Whether or not to include zero padding in average computations.
+    :param name: Optional name for the new output node.
+    :return: New node with AvgPool operation applied on its data.
+    """
     if strides is None:
         strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
     if padding_above is None:
@@ -315,8 +325,8 @@ def avg_pool(x,                      # type: Node
     if padding_below is None:
         padding_below = [0] * len(window_shape)
 
-    return AvgPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_below), zero_pad)
+    return AvgPool(x, Shape(window_shape), Strides(strides), Shape(padding_below),
+                   Shape(padding_above), include_pad)
 
 
 @nameable_op
