@@ -47,6 +47,8 @@ namespace ngraph
         {
         }
 
+        NodeVector& operator=(const NodeVector& other) = default;
+
         NodeVector() {}
     };
 }

@@ -39,7 +39,7 @@ static Shape infer_convolution_output_shape(const Shape& data_batch_shape,
                                             size_t output_channel_axis_filters,
                                             size_t batch_axis_result,
                                             size_t output_channel_axis_result,
-                                            std::string error_prefix)
+                                            string error_prefix)
 {
     if (batch_axis_data > 1 || input_channel_axis_data > 1 || input_channel_axis_filters > 1 ||
         output_channel_axis_filters > 1 || batch_axis_result > 1 || output_channel_axis_result > 1)
@@ -155,8 +155,7 @@ static Shape infer_convolution_output_shape(const Shape& data_batch_shape,
         size_t dim_size = data_batch_shape[1 + 1 + i];
         size_t dilated_dim_size = (dim_size - 1) * data_dilation_strides[i] + 1;
 
-        std::ptrdiff_t padded_dilated_dim_size =
-            padding_below[i] + dilated_dim_size + padding_above[i];
+        ptrdiff_t padded_dilated_dim_size = padding_below[i] + dilated_dim_size + padding_above[i];
 
         if (padded_dilated_dim_size < 0)
         {
@@ -235,8 +234,8 @@ static Shape infer_convolution_output_shape(const Shape& data_batch_shape,
     return result_shape;
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
+op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
+                             const shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
@@ -279,7 +278,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
                                                           ""));
 }
 
-Strides op::Convolution::default_strides(const std::shared_ptr<Node>& data_batch)
+Strides op::Convolution::default_strides(const shared_ptr<Node>& data_batch)
 {
     auto& data_batch_shape = data_batch->get_shape();
     if (data_batch_shape.size() < 3)
@@ -292,8 +291,8 @@ Strides op::Convolution::default_strides(const std::shared_ptr<Node>& data_batch
     return Strides(data_batch_shape.size() - 2, 1);
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
+op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
+                             const shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
@@ -308,7 +307,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-CoordinateDiff op::Convolution::default_padding(const std::shared_ptr<Node>& data_batch)
+CoordinateDiff op::Convolution::default_padding(const shared_ptr<Node>& data_batch)
 {
     auto& data_batch_shape = data_batch->get_shape();
     if (data_batch_shape.size() < 3)
@@ -321,8 +320,8 @@ CoordinateDiff op::Convolution::default_padding(const std::shared_ptr<Node>& dat
     return CoordinateDiff(data_batch_shape.size() - 2, 0);
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
+op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
+                             const shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides)
     : Convolution(data_batch,
@@ -334,8 +333,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
+op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
+                             const shared_ptr<Node>& filters,
                              const Strides& window_movement_strides)
     : Convolution(data_batch,
                   filters,
@@ -346,8 +345,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters)
+op::Convolution::Convolution(const shared_ptr<Node>& data_batch, const shared_ptr<Node>& filters)
     : Convolution(data_batch,
                   filters,
                   default_strides(data_batch),
@@ -357,23 +355,22 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-std::shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Convolution>(new_args.at(0),
-                                         new_args.at(1),
-                                         m_window_movement_strides,
-                                         m_window_dilation_strides,
-                                         m_padding_below,
-                                         m_padding_above,
-                                         m_data_dilation_strides);
+    return make_shared<Convolution>(new_args.at(0),
+                                    new_args.at(1),
+                                    m_window_movement_strides,
+                                    m_window_dilation_strides,
+                                    m_padding_below,
+                                    m_padding_above,
+                                    m_data_dilation_strides);
 }
 
-void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
     const auto x_shape = x->get_shape();
@@ -382,29 +379,29 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
     const auto f_shape = f->get_shape();
 
     adjoints.add_delta(x,
-                       std::make_shared<op::ConvolutionBackpropData>(x_shape,
-                                                                     f,
-                                                                     delta,
-                                                                     m_window_movement_strides,
-                                                                     m_window_dilation_strides,
-                                                                     m_padding_below,
-                                                                     m_padding_above,
-                                                                     m_data_dilation_strides));
+                       make_shared<op::ConvolutionBackpropData>(x_shape,
+                                                                f,
+                                                                delta,
+                                                                m_window_movement_strides,
+                                                                m_window_dilation_strides,
+                                                                m_padding_below,
+                                                                m_padding_above,
+                                                                m_data_dilation_strides));
 
     adjoints.add_delta(f,
-                       std::make_shared<op::ConvolutionBackpropFilters>(x,
-                                                                        f_shape,
-                                                                        delta,
-                                                                        m_window_movement_strides,
-                                                                        m_window_dilation_strides,
-                                                                        m_padding_below,
-                                                                        m_padding_above,
-                                                                        m_data_dilation_strides));
+                       make_shared<op::ConvolutionBackpropFilters>(x,
+                                                                   f_shape,
+                                                                   delta,
+                                                                   m_window_movement_strides,
+                                                                   m_window_dilation_strides,
+                                                                   m_padding_below,
+                                                                   m_padding_above,
+                                                                   m_data_dilation_strides));
 }
 
 op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
-                                                     const std::shared_ptr<Node>& filters,
-                                                     const std::shared_ptr<Node>& output_delta,
+                                                     const shared_ptr<Node>& filters,
+                                                     const shared_ptr<Node>& output_delta,
                                                      const Strides& window_movement_strides_forward,
                                                      const Strides& window_dilation_strides_forward,
                                                      const CoordinateDiff& padding_below_forward,
@@ -485,27 +482,26 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     set_value_type_checked(filters_et, inferred_convolution_output_shape);
 }
 
-std::shared_ptr<Node>
-    op::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<ConvolutionBackpropData>(m_data_batch_shape,
-                                                     new_args.at(0),
-                                                     new_args.at(1),
-                                                     m_window_movement_strides_forward,
-                                                     m_window_dilation_strides_forward,
-                                                     m_padding_below_forward,
-                                                     m_padding_above_forward,
-                                                     m_data_dilation_strides_forward);
+    return make_shared<ConvolutionBackpropData>(m_data_batch_shape,
+                                                new_args.at(0),
+                                                new_args.at(1),
+                                                m_window_movement_strides_forward,
+                                                m_window_dilation_strides_forward,
+                                                m_padding_below_forward,
+                                                m_padding_above_forward,
+                                                m_data_dilation_strides_forward);
 }
 
 op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
-    const std::shared_ptr<Node>& data_batch,
+    const shared_ptr<Node>& data_batch,
     const Shape& filters_shape,
-    const std::shared_ptr<Node>& output_delta,
+    const shared_ptr<Node>& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
@@ -583,19 +579,19 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     set_value_type_checked(data_batch_et, inferred_convolution_output_shape);
 }
 
-std::shared_ptr<Node>
+shared_ptr<Node>
     op::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<ConvolutionBackpropFilters>(new_args.at(0),
-                                                        m_filters_shape,
-                                                        new_args.at(1),
-                                                        m_window_movement_strides_forward,
-                                                        m_window_dilation_strides_forward,
-                                                        m_padding_below_forward,
-                                                        m_padding_above_forward,
-                                                        m_data_dilation_strides_forward);
+    return make_shared<ConvolutionBackpropFilters>(new_args.at(0),
+                                                   m_filters_shape,
+                                                   new_args.at(1),
+                                                   m_window_movement_strides_forward,
+                                                   m_window_dilation_strides_forward,
+                                                   m_padding_below_forward,
+                                                   m_padding_above_forward,
+                                                   m_data_dilation_strides_forward);
 }

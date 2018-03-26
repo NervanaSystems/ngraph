@@ -28,6 +28,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -41,9 +42,11 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -51,6 +54,7 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
+#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -982,6 +986,65 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
+TEST(cpu_fusion, fuse_conv_relu)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto weights = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto convolution = std::make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
+    auto relu = std::make_shared<op::Relu>(convolution);
+    auto abs_node =
+        std::make_shared<op::Abs>(std::make_shared<op::Abs>(std::make_shared<op::Abs>(relu)));
+    auto func = make_shared<Function>(abs_node, op::ParameterVector{A, weights});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func);
+    size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
+    ASSERT_GT(cb, 0);
+}
+
+TEST(cpu_fusion, conv_relu_n2c1h2w2)
+{
+    Shape shape_a{2, 1, 6, 6};
+    Shape shape_weights{1, 1, 2, 2};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+    auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+    auto relu = std::make_shared<op::Relu>(conv);
+    auto conv_relu = std::make_shared<op::ConvolutionRelu>(conv);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto backend = manager->allocate_backend();
+
+    auto _a = backend->make_primary_tensor_view(element::f32, shape_a);
+    vector<float> va{
+        1.25f,  2.25f, 5.25f,  6.25f, -1.25f, -1.25f, 3.25f,  -4.25f, 7.25f,  8.25f, -1.25f, -1.25f,
+        1.25f,  2.25f, -3.25f, 2.25f, 4.25f,  4.25f,  1.25f,  2.25f,  -4.25f, 2.25f, 4.25f,  4.25f,
+        0.f,    0.f,   -1.f,   0.f,   2.f,    2.f,    0.f,    0.f,    0.f,    0.f,   2.f,    2.f,
+        1.25f,  2.25f, 5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,  -7.25f, 8.25f, 1.25f,  -1.25f,
+        -1.25f, 2.25f, 3.25f,  2.25f, -4.25f, -4.25f, -1.25f, -2.25f, 4.25f,  2.25f, 4.25f,  4.25f,
+        0.f,    0.f,   1.f,    0.f,   -2.f,   2.f,    0.f,    0.f,    0.f,    0.f,   -2.f,   -2.f};
+
+    copy_data(_a, va);
+
+    auto _weights = backend->make_primary_tensor_view(element::f32, shape_weights);
+    copy_data(_weights, vector<float>{2., 2., 2., 2.});
+
+    auto f = make_shared<Function>(NodeVector{conv_relu, relu}, op::ParameterVector{A, weights});
+
+    auto external = manager->compile(f);
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> _conv_relu =
+        backend->make_primary_tensor_view(element::f32, conv_relu->get_shape());
+
+    shared_ptr<runtime::TensorView> _relu =
+        backend->make_primary_tensor_view(element::f32, relu->get_shape());
+
+    cf->call({_conv_relu, _relu}, {_a, _weights});
+    EXPECT_TRUE(test::all_close(read_vector<float>(_conv_relu), read_vector<float>(_relu)));
+}
+
 TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
@@ -1032,4 +1095,95 @@ TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
+std::vector<shared_ptr<runtime::TensorView>>
+    rnn_matrix_fusion_eval(const size_t time_steps,
+                           const Shape& data_shape,
+                           const Shape& weights_shape,
+                           const Shape& bias_shape,
+                           const vector<float>& data_val,
+                           const vector<float>& weights_val,
+                           const vector<float>& bias_val,
+                           const bool enable_pass)
+{
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    // results from each time step
+    NodeVector results;
+    for (size_t t = 0; t < time_steps; ++t)
+    {
+        auto data_slice = make_shared<op::Slice>(
+            data, Coordinate{0, t, 0}, Coordinate{data_shape[0], t + 1, data_shape[2]});
+        auto data_reshape = make_shared<op::Reshape>(
+            data_slice, AxisVector{0, 1, 2}, Shape{data_shape[0], data_shape[2]});
+        auto weights_reshape = make_shared<op::Reshape>(
+            weights, AxisVector{1, 0}, Shape{weights_shape[1], weights_shape[0]});
+        auto dot = make_shared<op::Dot>(data_reshape, weights_reshape);
+        auto bias_broadcast = make_shared<op::Broadcast>(bias, dot->get_shape(), AxisSet{0});
+        auto add = make_shared<op::Add>(dot, bias_broadcast);
+        results.push_back(add);
+    }
+    auto func = make_shared<Function>(results, op::ParameterVector{data, weights, bias});
+    if (enable_pass)
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(func);
+        // check all of our dot/add are converted to a single MatmulBias op.
+        size_t count = count_ops_of_type<op::MatmulBias>(func);
+        EXPECT_EQ(count, 1);
+    }
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> data_tensor =
+        backend->make_primary_tensor_view(element::f32, data->get_shape());
+    shared_ptr<runtime::TensorView> weights_tensor =
+        backend->make_primary_tensor_view(element::f32, weights->get_shape());
+    shared_ptr<runtime::TensorView> bias_tensor =
+        backend->make_primary_tensor_view(element::f32, bias->get_shape());
+
+    std::vector<shared_ptr<runtime::TensorView>> result_tensors;
+    for (auto r : results)
+    {
+        result_tensors.push_back(backend->make_primary_tensor_view(element::f32, r->get_shape()));
+    }
+
+    copy_data(data_tensor, data_val);
+    copy_data(weights_tensor, weights_val);
+    copy_data(bias_tensor, bias_val);
+    cf->call(result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    return result_tensors;
+}
+
+TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
+{
+    const size_t time_steps = 4;
+    Shape data_shape{3, time_steps, 5};
+    Shape weights_shape{6, data_shape[2]};
+    Shape bias_shape{6};
+
+    test::Uniform<float> rng{0, 1, 0};
+    vector<float> data_val(shape_size(data_shape));
+    vector<float> weights_val(shape_size(weights_shape));
+    vector<float> bias_val(shape_size(bias_shape));
+    rng.initialize(data_val);
+    rng.initialize(weights_val);
+    rng.initialize(bias_val);
+
+    std::vector<shared_ptr<runtime::TensorView>> result_expected = rnn_matrix_fusion_eval(
+        time_steps, data_shape, weights_shape, bias_shape, data_val, weights_val, bias_val, false);
+    std::vector<shared_ptr<runtime::TensorView>> result_fused = rnn_matrix_fusion_eval(
+        time_steps, data_shape, weights_shape, bias_shape, data_val, weights_val, bias_val, true);
+    for (size_t i = 0; i < result_expected.size(); ++i)
+    {
+        EXPECT_TRUE(test::all_close<float>(result_expected[i], result_fused[i]));
+    }
 }

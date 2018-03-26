@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -152,12 +152,12 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
     Shape result_shape(1 + 1 + spatial_dimension_count);
     result_shape[0] = batch_size;
     result_shape[1] = channel_count;
-    std::copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
+    copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
     set_value_type_checked(get_input_element_type(0), result_shape);
 }
 
-static Shape default_padding(const std::shared_ptr<Node>& arg)
+static Shape default_padding(const shared_ptr<Node>& arg)
 {
     if (arg->get_outputs().size() != 1)
     {
@@ -175,7 +175,7 @@ static Shape default_padding(const std::shared_ptr<Node>& arg)
     return Shape(arg_shape.size() - 2, 0);
 }
 
-op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(
@@ -183,7 +183,7 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
 {
 }
 
-static Strides default_strides(const std::shared_ptr<Node>& arg)
+static Strides default_strides(const shared_ptr<Node>& arg)
 {
     if (arg->get_outputs().size() != 1)
     {
@@ -201,18 +201,31 @@ static Strides default_strides(const std::shared_ptr<Node>& arg)
     return Strides(arg_shape.size() - 2, 1);
 }
 
-op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, default_strides(arg), default_padding(arg), default_padding(arg))
 {
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
-                                     const std::shared_ptr<Node>& delta,
+shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<MaxPool>(new_args.at(0),
+                                m_window_shape,
+                                m_window_movement_strides,
+                                m_padding_below,
+                                m_padding_above);
+}
+
+op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
+                                     const shared_ptr<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above,
-                                     const std::shared_ptr<op::MaxPool>& forward_op)
+                                     const shared_ptr<op::MaxPool>& forward_op)
     : RequiresTensorViewArgs("MaxPoolBackprop", {arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
@@ -350,7 +363,7 @@ op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
     Shape forward_result_shape(1 + 1 + spatial_dimension_count);
     forward_result_shape[0] = batch_size;
     forward_result_shape[1] = channel_count;
-    std::copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
+    copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
 
     if (forward_result_shape != delta_shape)
     {
@@ -360,23 +373,38 @@ op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
     set_value_type_checked(get_input_element_type(0), arg_forward_shape);
 }
 
-std::shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
+shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
 {
     return m_forward_op.lock();
 }
 
-void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
-                                    const std::shared_ptr<Node>& delta)
+shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+
+    MaxPoolBackprop* mpbp = new MaxPoolBackprop(new_args.at(0),
+                                                new_args.at(1),
+                                                m_window_shape,
+                                                m_window_movement_strides,
+                                                m_padding_below,
+                                                m_padding_above);
+    return shared_ptr<op::MaxPoolBackprop>(mpbp);
+}
+
+void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto operand = get_input_op(0);
     auto backprop =
-        std::make_shared<op::MaxPoolBackprop>(operand,
-                                              delta,
-                                              m_window_shape,
-                                              m_window_movement_strides,
-                                              m_padding_below,
-                                              m_padding_above,
-                                              static_pointer_cast<op::MaxPool>(shared_from_this()));
+        make_shared<op::MaxPoolBackprop>(operand,
+                                         delta,
+                                         m_window_shape,
+                                         m_window_movement_strides,
+                                         m_padding_below,
+                                         m_padding_above,
+                                         static_pointer_cast<op::MaxPool>(shared_from_this()));
 
     adjoints.add_delta(operand, backprop);
 }

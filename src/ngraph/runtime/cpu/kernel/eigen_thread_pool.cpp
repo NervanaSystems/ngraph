@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <thread>
+
 #include "eigen_thread_pool.hpp"
 
 namespace ngraph
@@ -24,9 +26,25 @@ namespace ngraph
         {
             namespace eigen
             {
-                Eigen::ThreadPool global_thread_pool(Eigen::nbThreads());
+                static int GetNumCores()
+                {
+                    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
+                    int count;
+
+                    if (omp_num_threads && (count = std::atoi(omp_num_threads)))
+                    {
+                        return count;
+                    }
+                    else
+                    {
+                        count = std::thread::hardware_concurrency() >> 1;
+                    }
+                    return count ? count : 1;
+                }
+
+                Eigen::ThreadPool global_thread_pool(GetNumCores());
                 Eigen::ThreadPoolDevice global_thread_pool_device(&global_thread_pool,
-                                                                  Eigen::nbThreads());
+                                                                  global_thread_pool.NumThreads());
             }
         }
     }
