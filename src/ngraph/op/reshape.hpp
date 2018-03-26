@@ -72,14 +72,7 @@ namespace ngraph
                     const Shape& output_shape);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The order in which to iterate over input axes.
             const AxisVector& get_input_order() const { return m_input_order; }

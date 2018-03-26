@@ -18,35 +18,37 @@
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const
+using namespace std;
+using namespace ngraph;
+
+shared_ptr<Node> op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2 && new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::make_shared<MatmulBias>(new_args.at(0),
-                                        new_args.at(1),
-                                        new_args.size() == 3 ? new_args.at(2) : nullptr,
-                                        m_shape_w,
-                                        m_shape_x,
-                                        m_transpose_w,
-                                        m_transpose_x,
-                                        m_broadcast_axes);
+    return make_shared<MatmulBias>(new_args.at(0),
+                                   new_args.at(1),
+                                   new_args.size() == 3 ? new_args.at(2) : nullptr,
+                                   m_shape_w,
+                                   m_shape_x,
+                                   m_transpose_w,
+                                   m_transpose_x,
+                                   m_broadcast_axes);
 }
 
-ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
-                                   std::shared_ptr<ngraph::Node> x,
-                                   std::shared_ptr<ngraph::Node> b,
-                                   Shape shape_w,
-                                   Shape shape_x,
-                                   bool transpose_w,
-                                   bool transpose_x,
-                                   AxisSet axes)
+op::MatmulBias::MatmulBias(shared_ptr<Node> W,
+                           shared_ptr<Node> x,
+                           shared_ptr<Node> b,
+                           Shape shape_w,
+                           Shape shape_x,
+                           bool transpose_w,
+                           bool transpose_x,
+                           AxisSet axes)
     : RequiresTensorViewArgs("MatMulBias",
-                             b == nullptr ? std::vector<std::shared_ptr<Node>>{W, x}
-                                          : std::vector<std::shared_ptr<Node>>{W, x, b})
+                             b == nullptr ? vector<shared_ptr<Node>>{W, x}
+                                          : vector<shared_ptr<Node>>{W, x, b})
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)

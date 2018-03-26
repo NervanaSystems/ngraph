@@ -20,7 +20,21 @@
 using namespace std;
 using namespace ngraph;
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+op::Sum::Sum(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction("Sum", arg, reduction_axes)
+{
+}
+
+shared_ptr<Node> op::Sum::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<Sum>(new_args.at(0), m_reduction_axes);
+}
+
+void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
     auto& x_shape = get_inputs().at(0).get_shape();
