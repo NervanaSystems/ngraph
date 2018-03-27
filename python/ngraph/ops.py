@@ -246,8 +246,16 @@ Node.__ge__ = greater_eq
 # Custom ops
 @nameable_op
 def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
-    """Return node which broadcasts input node values to specified shape."""
-    return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
+    """Return node which broadcasts input node values to specified shape.
+
+    :param node: The node with input tensor data.
+    :param new_shape: The new shape we want to broadcast tensor to.
+    :param axis: The axis along which we perform broadcasting.
+    :param name: Optional new name for output node.
+    :return: New node with broadcasted shape.
+    """
+    return Broadcast(node, Shape(new_shape),
+                     AxisSet(get_broadcast_axes(new_shape, node.shape, axis)))
 
 
 @nameable_op
@@ -301,8 +309,8 @@ def convolution(x,                      # type: Node
 def avg_pool(x,                       # type: Node
              window_shape,            # type: TensorShape
              strides=None,            # type: List[int]
-             padding_below=None,      # type: List[int]
-             padding_above=None,      # type: List[int]
+             padding_below=None,      # type: TensorShape
+             padding_above=None,      # type: TensorShape
              include_pad=False,       # type: bool
              name=None,               # type: str
              ):
