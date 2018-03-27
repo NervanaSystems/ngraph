@@ -18,14 +18,14 @@ from typing import Optional, List
 
 import ngraph as ng
 
-from ngraph.impl import AxisSet, Node
+from ngraph.impl import Node
 from ngraph.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
 
 log = logging.getLogger(__file__)
 
 
-def get_broadcast_axes(left_shape, right_shape, axis):
-    # type: (TensorShape, TensorShape, Optional[int]) -> AxisSet
+def get_broadcast_axes(output_shape, input_shape, axis):
+    # type: (TensorShape, TensorShape, Optional[int]) -> set
     """Generate a list of broadcast axes for ngraph++ broadcast.
 
     Informally, a broadcast "adds" axes to the input tensor,
@@ -34,15 +34,15 @@ def get_broadcast_axes(left_shape, right_shape, axis):
     For example, an output shape of `{2,5,6,2,8}` and input shape of `{2,6}` means
     that the broadcast axes must be `{1,3,4}`.
     """
-    axes_indexes = list(range(0, len(left_shape)))
+    axes_indexes = list(range(0, len(output_shape)))
     if axis is None:
-        right_begin = len(left_shape) - len(right_shape)
+        right_begin = len(output_shape) - len(input_shape)
     else:
         right_begin = axis
-    right_axes_indexes = list(range(right_begin, right_begin + len(right_shape)))
+    right_axes_indexes = list(range(right_begin, right_begin + len(input_shape)))
     for index in reversed(right_axes_indexes):
         del axes_indexes[index]
-    return AxisSet(set(axes_indexes))
+    return set(axes_indexes)
 
 
 def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
