@@ -1004,6 +1004,11 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    // Note, op::Splice is used to break Relu(BatchNorm) fusion
+    // otherwise we will be comparing two BatchNormRelus
+    // Unfortunately, we can't use INTERPRETER for
+    // verifying the results as it doesn't implement
+    // BatchNorm op.
     auto slice =
         std::make_shared<op::Slice>(output_rt, Coordinate{0, 0, 0, 0}, Coordinate{1, 2, 2, 2});
     auto output_relu = std::make_shared<op::Relu>(slice);
@@ -1024,9 +1029,9 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto _input = backend->make_primary_tensor_view(element::f32, Shape{1, 2, 2, 2});
+    auto input_t = backend->make_primary_tensor_view(element::f32, Shape{1, 2, 2, 2});
 
-    copy_data(_input,
+    copy_data(input_t,
               vector<float>{0.54881352f,
                             0.71518934f,
                             0.60276335f,
@@ -1035,10 +1040,10 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
                             0.64589411f,
                             0.4375872f,
                             0.89177299f});
-    auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
-    copy_data(_gamma, vector<float>{1.0f, 1.0f});
-    auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
-    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto gamma_t = backend->make_primary_tensor_view(element::f32, gamma_shape);
+    copy_data(gamma_t, vector<float>{1.0f, 1.0f});
+    auto beta_t = backend->make_primary_tensor_view(element::f32, beta_shape);
+    copy_data(beta_t, vector<float>{0.0f, 0.0f});
     auto bn_output = backend->make_primary_tensor_view(element::f32, shape_r);
     auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
     auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
@@ -1053,7 +1058,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
               bn_output_bnr,
               result_mean_bnr,
               result_variance_bnr},
-             {_input, _gamma, _beta});
+             {input_t, gamma_t, beta_t});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
     EXPECT_TRUE(

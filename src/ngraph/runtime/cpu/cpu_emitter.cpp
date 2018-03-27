@@ -477,6 +477,11 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormRelu)
             {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with MKLDNN kernel.");
+                }
+
                 const ngraph::op::BatchNormRelu* batchnorm =
                     static_cast<const ngraph::op::BatchNormRelu*>(node);
 
@@ -492,7 +497,7 @@ namespace ngraph
                 mkldnn::post_ops ops;
                 ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
 
-                writer.indent++;
+                writer.block_begin();
                 writer << "{\n";
                 // define weights
                 writer << "std::vector<" << args[0].get_element_type().c_type_string()
@@ -544,7 +549,7 @@ namespace ngraph
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                        << to_string(batchnorm_index) << ");\n";
 
-                writer.indent--;
+                writer.block_end();
                 writer << "}\n";
             }
 

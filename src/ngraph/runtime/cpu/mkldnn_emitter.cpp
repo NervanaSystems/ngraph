@@ -587,8 +587,8 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     size_t mean_index = build_memory_primitive(mean_desc);
     size_t variance_index = build_memory_primitive(variance_desc);
 
-    mkldnn::primitive_attr conv_attr;
-    conv_attr.set_post_ops(pops);
+    mkldnn::primitive_attr bn_attr;
+    bn_attr.set_post_ops(pops);
 
     if (bn_training_flag)
     {
@@ -597,7 +597,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift},
-             conv_attr,
+             bn_attr,
              mkldnn_utils::global_cpu_engine},
             mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
             mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
@@ -617,7 +617,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift |
                   mkldnn::batch_normalization_flag::use_global_stats},
-             conv_attr,
+             bn_attr,
              mkldnn_utils::global_cpu_engine},
             mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
             mkldnn::primitive::at(*m_mkldnn_primitives[mean_index]),
