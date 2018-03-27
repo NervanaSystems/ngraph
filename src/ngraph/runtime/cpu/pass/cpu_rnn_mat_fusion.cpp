@@ -107,8 +107,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         std::make_shared<pattern::Matcher>(weights_pattern),
         std::make_shared<pattern::Matcher>(bias_pattern)};
 
-    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map2; //add to list of parms
-    std::map<NodeVector, NodeVector> param_list2;
+    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; //add to list of parms
+    std::map<NodeVector, NodeVector> param_list;
     for (auto n : function->get_ordered_ops())
     {
         NodeVector parms;
@@ -132,17 +132,17 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             }
 
             //we have a full set for the current Add (n) i.e. data, weights, bias
-            op_seg_map2.insert(std::make_pair(n, matched_nodes));
-            param_list2[parms].push_back(n);
+            op_seg_map.insert(std::make_pair(n, matched_nodes));
+            param_list[parms].push_back(n);
         }
     }
 
     // remove params with single combo op (meaning no need to combine slicing)
-    for (auto it = param_list2.cbegin(); it != param_list2.cend();)
+    for (auto it = param_list.cbegin(); it != param_list.cend();)
     {
         if (it->second.size() < 2)
         {
-            it = param_list2.erase(it);
+            it = param_list.erase(it);
         }
         else
         {
@@ -154,7 +154,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
     // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
     // iterate each unique set of parameters, replace original operations
-    for (auto& p : param_list2)
+    for (auto& p : param_list)
     {
         NodeVector params = p.first;
         NodeVector& op_nodes = p.second;
@@ -170,7 +170,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         auto data_reshape_node = std::make_shared<op::Reshape>(
             data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
 
-        auto old_weights_reshape_node = op_seg_map2.at(op_nodes.at(0)).at(Type::WEIGHTS);
+        auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
         auto weights_reshape_node = old_weights_reshape_node->copy_with_new_args({weights_node});
         auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
         const auto& dot_shape = dot_node->get_shape();
@@ -184,7 +184,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         for (auto op : op_nodes)
         {
             const auto old_slice =
-                std::dynamic_pointer_cast<op::Slice>(op_seg_map2[op].at(Type::DATA));
+                std::dynamic_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
             const auto& old_lower_bounds = old_slice->get_lower_bounds();
             // lower bound matching the current time step
             const Coordinate lower_bounds{old_lower_bounds[1], 0};
