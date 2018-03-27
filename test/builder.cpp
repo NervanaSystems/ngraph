@@ -147,9 +147,8 @@ TEST(builder, tensor_mask)
     auto sequence_lengths = make_shared<op::Parameter>(element::u32, max_sequence_length);
 
     Shape mask_shape{3, 5};
-    auto f =
-        make_shared<Function>(builder::tensor_mask(sequence_lengths, 1, 0, mask_shape),
-                              op::ParameterVector{sequence_lengths});
+    auto f = make_shared<Function>(builder::tensor_mask(sequence_lengths, 1, 0, mask_shape),
+                                   op::ParameterVector{sequence_lengths});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
