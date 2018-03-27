@@ -25,7 +25,7 @@ mkdir build
 cd build
 
 if [[ -z "${NGRAPH_CPP_BUILD_PATH}" ]]; then
-  cmake -DNGRAPH_INSTALL_PREFIX=$NGRAPH_CPP_BUILD_PATH
+  cmake -DNGRAPH_INSTALL_PREFIX=$NGRAPH_CPP_BUILD_PATH ..
 else
   cmake ..
 fi

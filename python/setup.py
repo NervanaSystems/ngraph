@@ -34,7 +34,7 @@ def find_ngraph_dist_dir():
         ngraph_dist_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/ngraph_dist')
 
     found = os.path.exists(os.path.join(ngraph_dist_dir, 'include/ngraph'))
-    if found:
+    if not found:
         print("Cannot find nGraph library in {} make sure that "
               "NGRAPH_CPP_BUILD_PATH is set correctly".format(ngraph_dist_dir))
         sys.exit(1)
@@ -50,7 +50,7 @@ def find_pybind_headers_dir():
         pybind_headers_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/pybind11')
 
     found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
-    if found:
+    if not found:
         print("Cannot find pybind11 library in {} make sure that "
               "PYBIND_HEADERS_PATH is set correctly".format(pybind_headers_dir))
         sys.exit(1)
