@@ -282,27 +282,45 @@ def dot(left_node, right_node, name=None):
 
 # convpool ops
 @nameable_op
-def convolution(x,                      # type: Node
-                weights,                # type: Node
-                strides=None,           # type: List[int]
-                dilation=None,          # type: List[int]
-                padding_below=None,     # type: List[int]
-                padding_above=None,     # type: List[int]
-                name=None,              # type: str
+def convolution(x,                              # type: Node
+                filter_weights,                 # type: Node
+                filter_strides=None,            # type: List[int]
+                filter_dilation_strides=None,   # type: List[int]
+                padding_below=None,             # type: List[int]
+                padding_above=None,             # type: List[int]
+                img_dilation_strides=None,      # type: List[int]
+                name=None,                      # type: str
                 ):
     # type: (...) -> Node
-    """Return convolution node."""
-    if strides is None:
-        strides = [1] * (len(x.shape) - 2)  # Default to as many 1s as spatial dimensions of input.
-    if dilation is None:
-        dilation = [1] * (len(x.shape) - 2)
-    if padding_above is None:
-        padding_above = [0] * (len(x.shape) - 2)
-    if padding_below is None:
-        padding_below = [0] * (len(x.shape) - 2)
+    """Return node performing batched convolution operation.
 
-    return Convolution(x, weights, Strides(strides), Strides(dilation),
-                       CoordinateDiff(padding_below), CoordinateDiff(padding_above))
+    :param x: The node providing data batch tensor.
+    :param filter_weights: The node providing filters tensor.
+    :param filter_strides: The kernel window movement strides.
+    :param filter_dilation_strides: The filters dilation strides.
+    :param padding_below: The number of zero padding elements to add on each axis below 0
+                          coordinate.
+    :param padding_above: The number of zero padding elements to add on each axis above max
+                          coordinate.
+    :param img_dilation_strides: The data batch dilation strides.
+    :param name: The optional new name for output node.
+    :return: New node performing batched convolution operation.
+    """
+    spatial_dim_count = len(x.shape) - 2
+    if filter_strides is None:
+        filter_strides = [1] * spatial_dim_count
+    if filter_dilation_strides is None:
+        filter_dilation_strides = [1] * spatial_dim_count
+    if padding_above is None:
+        padding_above = [0] * spatial_dim_count
+    if padding_below is None:
+        padding_below = [0] * spatial_dim_count
+    if img_dilation_strides is None:
+        img_dilation_strides = [1] * spatial_dim_count
+
+    return Convolution(x, filter_weights, Strides(filter_strides), Strides(filter_dilation_strides),
+                       CoordinateDiff(padding_below), CoordinateDiff(padding_above),
+                       Strides(img_dilation_strides))
 
 
 @nameable_op
