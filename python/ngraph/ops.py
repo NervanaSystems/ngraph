@@ -431,11 +431,12 @@ def slice(node, lower_bounds, upper_bounds, strides=None, name=None):
 
 
 @nameable_op
-def concat(nodes, axis):  # type: (List[Node], int) -> Node
+def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     """Concatenate input nodes into single new node along specified axis.
 
     :param nodes: The nodes we want concatenate into single new node.
     :param axis: The axis along which we want to concatenate input nodes.
+    :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
     return Concat(NodeVector(nodes), axis)

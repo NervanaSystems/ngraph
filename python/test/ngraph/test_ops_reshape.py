@@ -55,3 +55,18 @@ def test_broadcast():
     expected = np.broadcast_to(input_data, new_shape)
     result = _run_op_node(input_data, ng.broadcast, new_shape)
     np.testing.assert_array_equal(result, expected)
+
+
+def test_concat():
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6]])
+    axis = 0
+    expected = np.concatenate((a, b), axis=0)
+
+    runtime = _get_runtime()
+    parameter_a = ng.parameter(list(a.shape), name='A', dtype=np.float32)
+    parameter_b = ng.parameter(list(b.shape), name='B', dtype=np.float32)
+    node = ng.concat([parameter_a, parameter_b], axis)
+    computation = runtime.computation(node, parameter_a, parameter_b)
+    result = computation(a, b)
+    np.testing.assert_array_equal(result, expected)
