@@ -341,19 +341,22 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
         };
 
-        Shape infer_convolution_output_shape(const Shape& data_batch_shape,
-                                             const Shape& filters_shape,
-                                             const Strides& window_movement_strides,
-                                             const Strides& window_dilation_strides,
-                                             const CoordinateDiff& padding_below,
-                                             const CoordinateDiff& padding_above,
-                                             const Strides& data_dilation_strides,
-                                             size_t batch_axis_data,
-                                             size_t input_channel_axis_data,
-                                             size_t input_channel_axis_filters,
-                                             size_t output_channel_axis_filters,
-                                             size_t batch_axis_result,
-                                             size_t output_channel_axis_result,
-                                             const std::string& error_prefix);
+        namespace util
+        {
+            Shape infer_convolution_output_shape(const Shape& data_batch_shape,
+                                                 const Shape& filters_shape,
+                                                 const Strides& window_movement_strides,
+                                                 const Strides& window_dilation_strides,
+                                                 const CoordinateDiff& padding_below,
+                                                 const CoordinateDiff& padding_above,
+                                                 const Strides& data_dilation_strides,
+                                                 size_t batch_axis_data,
+                                                 size_t input_channel_axis_data,
+                                                 size_t input_channel_axis_filters,
+                                                 size_t output_channel_axis_filters,
+                                                 size_t batch_axis_result,
+                                                 size_t output_channel_axis_result,
+                                                 const std::string& error_prefix);
+        }
     }
 }
