@@ -21,6 +21,19 @@ import json
 import ngraph as ng
 
 
+def _get_runtime():
+    manager_name = pytest.config.getoption('backend', default='CPU')
+    return ng.runtime(manager_name=manager_name)
+
+
+def _run_op_node(input_data, op_fun, *args):
+    runtime = _get_runtime()
+    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
+    node = op_fun(parameter_a, *args)
+    computation = runtime.computation(node, parameter_a)
+    return computation(input_data)
+
+
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
                                    np.int8, np.int16, np.int32, np.int64,
                                    np.uint8, np.uint16, np.uint32, np.uint64])
@@ -58,3 +71,47 @@ def test_serialization():
 
     assert serial_json[0]["name"] != ''
     assert 10 == len(serial_json[0]["ops"])
+
+
+def test_broadcast():
+    input_data = np.array([1, 2, 3])
+
+    new_shape = [3, 3]
+    expected = [[1, 2, 3],
+                [1, 2, 3],
+                [1, 2, 3]]
+    result = _run_op_node(input_data, ng.broadcast, new_shape)
+    np.testing.assert_allclose(result, expected)
+
+    axis = 0
+    expected = [[1, 1, 1],
+                [2, 2, 2],
+                [3, 3, 3]]
+
+    result = _run_op_node(input_data, ng.broadcast, new_shape, axis)
+    np.testing.assert_allclose(result, expected)
+
+    input_data = np.arange(4)
+    new_shape = [3, 4, 2, 4]
+    expected = np.broadcast_to(input_data, new_shape)
+    result = _run_op_node(input_data, ng.broadcast, new_shape)
+    np.testing.assert_allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type, value', [
+    (bool, np.zeros((2, 2), dtype=int)),
+    (np.float32, np.random.randint(-8, 8, size=(2, 2), dtype=np.int32)),
+    (np.float64, np.random.randint(-16383, 16383, size=(2, 2), dtype=np.int64)),
+    (np.int8, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
+    (np.int16, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
+    (np.int32, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
+    (np.int64, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
+    (np.uint8, np.ceil(np.random.rand(2, 3, 4) * 16)),
+    (np.uint16, np.ceil(np.random.rand(2, 3, 4) * 16)),
+    (np.uint32, np.ceil(np.random.rand(2, 3, 4) * 16)),
+    (np.uint64, np.ceil(np.random.rand(2, 3, 4) * 16)),
+])
+def test_convert(val_type, value):
+    expected = np.array(value, dtype=val_type)
+    result = _run_op_node(value, ng.convert, val_type)
+    np.testing.assert_allclose(result, expected)
