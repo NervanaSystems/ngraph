@@ -1029,7 +1029,7 @@ static std::vector<std::vector<T>>
     }
 
     auto results = f->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(args.size());
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
 
     for (size_t i = 0; i < results.size(); i++)
     {
