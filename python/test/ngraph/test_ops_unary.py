@@ -42,12 +42,18 @@ def _run_unary_op_numeric_data(input_data, unary_op):
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
     (ng.absolute, np.abs, -1 + np.random.rand(2, 3, 4) * 2),
     (ng.absolute, np.abs, np.float32(-3)),
+    (ng.abs, np.abs, -1 + np.random.rand(2, 3, 4) * 2),
+    (ng.abs, np.abs, np.float32(-3)),
     (ng.acos, np.arccos, -1 + np.random.rand(2, 3, 4) * 2),
     (ng.acos, np.arccos, np.float32(-0.5)),
     (ng.asin, np.arcsin, -1 + np.random.rand(2, 3, 4) * 2),
     (ng.asin, np.arcsin, np.float32(-0.5)),
     (ng.atan, np.arctan, -100 + np.random.rand(2, 3, 4) * 200),
     (ng.atan, np.arctan, np.float32(-0.5)),
+    (ng.ceiling, np.ceil, -100 + np.random.rand(2, 3, 4) * 200),
+    (ng.ceiling, np.ceil, np.float32(1.5)),
+    (ng.ceil, np.ceil, -100 + np.random.rand(2, 3, 4) * 200),
+    (ng.ceil, np.ceil, np.float32(1.5)),
 ])
 def test_unary_op(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
