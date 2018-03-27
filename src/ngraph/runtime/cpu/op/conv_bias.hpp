@@ -43,6 +43,15 @@ namespace ngraph
 
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const std::shared_ptr<Node>& delta) override;
+
+        protected:
+            Strides m_window_movement_strides;
+            Strides m_window_dilation_strides;
+            CoordinateDiff m_padding_below;
+            CoordinateDiff m_padding_above;
+            Strides m_data_dilation_strides;
+
+        private:
             ConvolutionBias(const std::shared_ptr<Node>& data_batch,
                             const std::shared_ptr<Node>& filters,
                             const std::shared_ptr<Node>& bias,
@@ -51,13 +60,6 @@ namespace ngraph
                             const CoordinateDiff& padding_below,
                             const CoordinateDiff& padding_above,
                             const Strides& data_dilation_strides);
-
-        protected:
-            Strides m_window_movement_strides;
-            Strides m_window_dilation_strides;
-            CoordinateDiff m_padding_below;
-            CoordinateDiff m_padding_above;
-            Strides m_data_dilation_strides;
         };
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is

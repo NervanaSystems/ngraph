@@ -95,14 +95,14 @@ shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_a
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<ConvolutionBias>(new_args.at(0),
-                                        new_args.at(1),
-                                        new_args.at(2),
-                                        get_window_movement_strides(),
-                                        get_window_dilation_strides(),
-                                        get_padding_below(),
-                                        get_padding_above(),
-                                        get_data_dilation_strides());
+    return shared_ptr<Node>(new ConvolutionBias(new_args.at(0),
+                                                new_args.at(1),
+                                                new_args.at(2),
+                                                get_window_movement_strides(),
+                                                get_window_dilation_strides(),
+                                                get_padding_below(),
+                                                get_padding_above(),
+                                                get_data_dilation_strides()));
 }
 
 void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
