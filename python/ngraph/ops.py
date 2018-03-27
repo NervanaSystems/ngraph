@@ -286,8 +286,8 @@ def convolution(x,                      # type: Node
                 weights,                # type: Node
                 strides=None,           # type: List[int]
                 dilation=None,          # type: List[int]
-                padding_above=None,     # type: List[int]
                 padding_below=None,     # type: List[int]
+                padding_above=None,     # type: List[int]
                 name=None,              # type: str
                 ):
     # type: (...) -> Node
@@ -302,7 +302,7 @@ def convolution(x,                      # type: Node
         padding_below = [0] * (len(x.shape) - 2)
 
     return Convolution(x, weights, Strides(strides), Strides(dilation),
-                       CoordinateDiff(padding_above), CoordinateDiff(padding_below))
+                       CoordinateDiff(padding_below), CoordinateDiff(padding_above))
 
 
 @nameable_op
