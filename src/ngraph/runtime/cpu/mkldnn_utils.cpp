@@ -221,3 +221,12 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format 
     }
     return false;
 }
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::format fmt)
+{
+    if (fmt == memory::format::nChw8c || fmt == memory::format::nChw16c)
+    {
+        return true;
+    }
+    return false;
+}
