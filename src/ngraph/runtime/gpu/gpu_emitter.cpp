@@ -172,7 +172,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
 
-            shape_to_cudnn_4d_tensor(std::array<size_t, 4>& dimensions, const Shape& shape)
+            void shape_to_cudnn_4d_tensor(std::array<size_t, 4>& dimensions, const Shape& shape)
             {
                 size_t pos = 0;
                 for (size_t i = shape.size(); i < 4; i++)
@@ -223,8 +223,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
-                Strides padding_below = convolution->get_padding_below();
-                Strides padding_above = convolution->get_padding_above();
+                CoordinateDiff padding_below = convolution->get_padding_below();
+                CoordinateDiff padding_above = convolution->get_padding_above();
 
                 writer << "cudnnSetConvolution2dDescriptor("
                         << "conv_descriptor, "
