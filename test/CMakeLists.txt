@@ -175,16 +175,16 @@ add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
-        COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-        )
+    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+)
 
 add_custom_target(unit-test-check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
 	DEPENDS unit-test
-        )
+)
 
 add_custom_target(check
-        DEPENDS
-        style-check
-        unit-test-check
-        )
+    DEPENDS
+    style-check
+    unit-test-check
+)
