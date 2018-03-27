@@ -111,6 +111,9 @@ endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
 
+# Enable native CPU features
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+
 # flags required for SDL-3
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fPIE -D_FORTIFY_SOURCE=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security")
@@ -144,7 +147,7 @@ find_package(CUDA 8 QUIET)
 if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
-    find_package(CUDNN 5 QUIET REQUIRED)
+    find_package(CUDNN 7 REQUIRED)
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
         NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND

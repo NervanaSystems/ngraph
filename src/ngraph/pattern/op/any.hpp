@@ -35,8 +35,6 @@ namespace ngraph
                     : Pattern("Any", NodeVector{arg}, predicate)
                 {
                     add_output(arg->get_element_type(), arg->get_shape());
-                    //m_arguments.push_back(arg);
-                    //const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
                 }
             };
         }
