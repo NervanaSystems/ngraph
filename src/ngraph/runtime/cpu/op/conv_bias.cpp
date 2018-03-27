@@ -58,7 +58,6 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
 {
-
     auto& data_batch_shape = data_batch->get_shape();
     auto& data_batch_et = data_batch->get_element_type();
     auto& filters_shape = filters->get_shape();
@@ -74,19 +73,19 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
 
     set_value_type_checked(data_batch_et,
                            op::Convolution::infer_output_shape(data_batch_shape,
-                                              filters_shape,
-                                              window_movement_strides,
-                                              window_dilation_strides,
-                                              padding_below,
-                                              padding_above,
-                                              data_dilation_strides,
-                                              0,
-                                              1,
-                                              1,
-                                              0,
-                                              0,
-                                              1,
-                                              ""));
+                                                               filters_shape,
+                                                               window_movement_strides,
+                                                               window_dilation_strides,
+                                                               padding_below,
+                                                               padding_above,
+                                                               data_dilation_strides,
+                                                               0,
+                                                               1,
+                                                               1,
+                                                               0,
+                                                               0,
+                                                               1,
+                                                               ""));
 }
 
 shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const

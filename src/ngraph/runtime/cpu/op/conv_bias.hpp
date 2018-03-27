@@ -51,14 +51,13 @@ namespace ngraph
                             const CoordinateDiff& padding_below,
                             const CoordinateDiff& padding_above,
                             const Strides& data_dilation_strides);
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-
-
         };
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
