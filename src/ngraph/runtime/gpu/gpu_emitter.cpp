@@ -171,6 +171,86 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
+
+            shape_to_cudnn_4d_tensor(std::array<size_t, 4>& dimensions, const Shape& shape)
+            {
+                size_t pos = 0;
+                for (size_t i = shape.size(); i < 4; i++)
+                {
+                    dimensions[pos++] = 1;
+                }
+                for (size_t i = 0; i < shape.size(); i++)
+                {
+                    dimensions[pos++] = shape[i];
+                }
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+
+                const std::string x_descriptor = "x_descriptor";
+                const std::string w_descriptor = "w_descriptor";
+                const std::string y_descriptor = "y_descriptor";
+                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
+                const std::string mode = "CUDNN_CONVOLUTION";
+                std::array<size_t, 4> dimensions;
+
+                auto convolution = static_cast<const ngraph::op::Convolution*>(node);
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                writer.block_begin("  // " + node->get_name());
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer << "float alpha = 1.0;\n";
+                writer << "float beta = 0.0;\n";
+
+                // construct input tensor descriptor rt impl.
+                shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
+                kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
+                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
+                kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
+                shape_to_cudnn_4d_tensor(dimensions, result_shape);
+                kernel::emit_cudnnTensor4dDescriptor(writer, y_descriptor, tensor_format, tensor_type, dimensions);
+                writer << "cudnnConvolutionDescriptor_t conv_descriptor;\n";
+                writer << "cudnnCreateConvolutionDescriptor(&conv_descriptor);\n";
+
+                Strides window_dilation_strides = convolution->get_window_dilation_strides();
+                Strides window_movement_strides = convolution->get_window_movement_strides();
+                Strides padding_below = convolution->get_padding_below();
+                Strides padding_above = convolution->get_padding_above();
+
+                writer << "cudnnSetConvolution2dDescriptor("
+                        << "conv_descriptor, "
+                        << padding_below[0] << ", "
+                        << padding_below[1] << ", "
+                        << window_movement_strides[0] << ", "
+                        << window_movement_strides[1] << ", "
+                        << window_dilation_strides[0] << ", "
+                        << window_dilation_strides[1] << ", "
+                        << mode <<", "
+                        << tensor_type
+                        << ");\n";
+
+                writer << "cudnnConvolutionForward(cudnn_handle, "
+                       << "&alpha, "
+                       << "x_descriptor, " << args[0].get_name() << ", "
+                       << "w_descriptor, " << args[1].get_name() << ", "
+                       << "conv_descriptor, "
+                       << "conv_algo, "
+                       << "workspace, "
+                       << "workSapceSizeInBytes, "
+                       << "&beta, "
+                       << "y_descriptor," << out[0].get_name() << ");\n";
+                writer.block_end();
+            }
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Dot)
             {
