@@ -16,220 +16,15 @@
 
 #include <numeric>
 
+#include "conv_bias.hpp"
+
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
-static Shape infer_convolution_output_shape(const Shape& data_batch_shape,
-                                            const Shape& filters_shape,
-                                            const Strides& window_movement_strides,
-                                            const Strides& window_dilation_strides,
-                                            const CoordinateDiff& padding_below,
-                                            const CoordinateDiff& padding_above,
-                                            const Strides& data_dilation_strides,
-                                            size_t batch_axis_data,
-                                            size_t input_channel_axis_data,
-                                            size_t input_channel_axis_filters,
-                                            size_t output_channel_axis_filters,
-                                            size_t batch_axis_result,
-                                            size_t output_channel_axis_result,
-                                            string error_prefix)
-{
-    if (batch_axis_data > 1 || input_channel_axis_data > 1 || input_channel_axis_filters > 1 ||
-        output_channel_axis_filters > 1 || batch_axis_result > 1 || output_channel_axis_result > 1)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Internal nGraph error: infer_convolution_output_shape: batch_axis_data, "
-                    "input_channel_axis_data, input_channel_axis_filters, "
-                    "output_channel_axis_filters, "
-                    "batch_axis_result, and output_channel_axis_result must all be 0 or 1.");
-    }
 
-    //
-    // Make sure data_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
-    //
-    if (data_batch_shape.size() < 3)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution data batch input must have rank of at least 3 (one batch axis, one "
-                    "input-channel axis, at least one spatial dimension).");
-    }
-
-    size_t batch_size = data_batch_shape[batch_axis_data];
-    if (batch_size == 0)
-    {
-        throw ngraph_error(error_prefix + "Convolution data batch size is zero.");
-    }
-
-    size_t input_channel_count = data_batch_shape[input_channel_axis_data];
-    if (input_channel_count == 0)
-    {
-        throw ngraph_error(error_prefix + "Convolution requires at least one input channel.");
-    }
-
-    size_t spatial_dimension_count = data_batch_shape.size() - 2;
-
-    //
-    // Make sure filters: CoCiWv for some Co>0, rank of W = rank of Di.
-    //
-    if (filters_shape.size() != 2 + spatial_dimension_count)
-    {
-        throw ngraph_error(error_prefix +
-            "Convolution filter input must have rank of 2 + n_spatial_dimensions.");
-    }
-
-    size_t output_channel_count = filters_shape[output_channel_axis_filters];
-    if (output_channel_count == 0)
-    {
-        throw ngraph_error(error_prefix + "Convolution requires at least one output channel.");
-    }
-
-    if (filters_shape[input_channel_axis_filters] != input_channel_count)
-    {
-        throw ngraph_error(error_prefix +
-            "Convolution data batch and filter input channel counts do not match.");
-    }
-
-    //
-    // Make sure window movement strides, window dilation strides, and data dilation strides
-    // have same rank as Di.
-    //
-    if (window_movement_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution window movement stride rank does not match number of spatial dimensions.");
-    }
-
-    if (window_dilation_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution window dilation stride rank does not match number of spatial dimensions.");
-    }
-
-    if (data_dilation_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution data dilation stride rank does not match number of spatial dimensions.");
-    }
-
-    //
-    // Make sure padding-below and padding-above shapes have same rank as Di.
-    //
-    if (padding_below.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution padding-below rank does not match number of spatial dimensions.");
-    }
-
-    if (padding_above.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            error_prefix +
-                "Convolution padding-above rank does not match number of spatial dimensions.");
-    }
-
-    //
-    // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and dilation.
-    //
-    Shape input_item_virtual_shape;
-
-    for (size_t i = 0; i < spatial_dimension_count; i++)
-    {
-        if (data_dilation_strides[i] == 0)
-        {
-            throw ngraph_error(error_prefix + "Convolution data dilation stride is zero.");
-        }
-
-        size_t dim_size = data_batch_shape[1 + 1 + i];
-        size_t dilated_dim_size = (dim_size - 1) * data_dilation_strides[i] + 1;
-
-        ptrdiff_t padded_dilated_dim_size = padding_below[i] + dilated_dim_size + padding_above[i];
-
-        if (padded_dilated_dim_size < 0)
-        {
-            throw ngraph_error(
-                error_prefix +
-                    "Convolution input spatial dimension after padding and dilation is negative.");
-        }
-
-        input_item_virtual_shape.push_back(padded_dilated_dim_size);
-
-        if (input_item_virtual_shape[i] == 0)
-        {
-            throw ngraph_error(
-                error_prefix +
-                    "Convolution input spatial dimension after dilation is zero even with padding.");
-        }
-    }
-
-    //
-    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the filter dimensions.
-    // At the same time, make sure window shape dimensions are all larger than 0.
-    //
-    Shape window_physical_shape;
-
-    for (size_t i = 0; i < spatial_dimension_count; i++)
-    {
-        window_physical_shape.push_back(filters_shape[1 + 1 + i]);
-        if (window_physical_shape[i] == 0)
-        {
-            throw ngraph_error(error_prefix + "Convolution window shape has a zero-length axis.");
-        }
-    }
-
-    //
-    // Compute physical shape Wp of the convolution window, *including* dilation. At the same time, make sure all
-    // window dilation strides are larger than 0, and that the dilated filter fits within the spatial dimensions.
-    //
-    Shape window_virtual_shape;
-
-    for (size_t i = 0; i < spatial_dimension_count; i++)
-    {
-        if (window_dilation_strides[i] == 0)
-        {
-            throw ngraph_error(error_prefix + "Convolution window axis dilation stride is zero.");
-        }
-
-        window_virtual_shape.push_back((window_physical_shape[i] - 1) * window_dilation_strides[i] +
-            1);
-
-        if (window_virtual_shape[i] > input_item_virtual_shape[i])
-        {
-            throw ngraph_error(error_prefix +
-                "Convolution window after dilation is larger than the spatial "
-                    "dimensions even with padding.");
-        }
-    }
-
-    //
-    // Construct result shape: NCoDo or CoNDo (depending on *_axis_result), checking at the same
-    // time that all window movement strides are larger than 0.
-    //
-    Shape result_shape(spatial_dimension_count + 2);
-    result_shape[batch_axis_result] = batch_size;
-    result_shape[output_channel_axis_result] = output_channel_count;
-
-    for (size_t i = 0; i < spatial_dimension_count; i++)
-    {
-        if (window_movement_strides[i] == 0)
-        {
-            throw ngraph_error(error_prefix + "Convolution window axis movement stride is zero.");
-        }
-        result_shape[i + 2] = ceil_div(input_item_virtual_shape[i] - window_virtual_shape[i] + 1,
-                                       window_movement_strides[i]);
-    }
-
-    return result_shape;
-}
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const shared_ptr<Node>& bias)
     : RequiresTensorViewArgs("ConvolutionBias",
@@ -278,20 +73,20 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     }
 
     set_value_type_checked(data_batch_et,
-                           infer_convolution_output_shape(data_batch_shape,
-                                                          filters_shape,
-                                                          window_movement_strides,
-                                                          window_dilation_strides,
-                                                          padding_below,
-                                                          padding_above,
-                                                          data_dilation_strides,
-                                                          0,
-                                                          1,
-                                                          1,
-                                                          0,
-                                                          0,
-                                                          1,
-                                                          ""));
+                           op::Convolution::infer_output_shape(data_batch_shape,
+                                              filters_shape,
+                                              window_movement_strides,
+                                              window_dilation_strides,
+                                              padding_below,
+                                              padding_above,
+                                              data_dilation_strides,
+                                              0,
+                                              1,
+                                              1,
+                                              0,
+                                              0,
+                                              1,
+                                              ""));
 }
 
 shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const

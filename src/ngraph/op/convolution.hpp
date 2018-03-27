@@ -139,6 +139,21 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input data dilation strides.
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+
+            static Shape infer_output_shape(const Shape &data_batch_shape,
+                                            const Shape &filters_shape,
+                                            const Strides &window_movement_strides,
+                                            const Strides &window_dilation_strides,
+                                            const CoordinateDiff &padding_below,
+                                            const CoordinateDiff &padding_above,
+                                            const Strides &data_dilation_strides,
+                                            size_t batch_axis_data,
+                                            size_t input_channel_axis_data,
+                                            size_t input_channel_axis_filters,
+                                            size_t output_channel_axis_filters,
+                                            size_t batch_axis_result,
+                                            size_t output_channel_axis_result,
+                                            const std::string& error_prefix);
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
@@ -149,6 +164,7 @@ namespace ngraph
         private:
             static Strides default_strides(const std::shared_ptr<Node>& data_batch);
             static CoordinateDiff default_padding(const std::shared_ptr<Node>& data_batch);
+
         };
 
         /// \brief Data batch backprop for batched convolution operation.
