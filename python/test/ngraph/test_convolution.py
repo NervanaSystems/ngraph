@@ -15,14 +15,13 @@
 # ******************************************************************************
 
 import numpy as np
-import pytest
 
 import ngraph as ng
+from test.ngraph.util import get_runtime
 
 
 def test_default_arguments_convolution_2d():
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = get_runtime()
     # input_x should have shape N(batch) x C x H x W
     input_x = ng.constant(np.array([
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],

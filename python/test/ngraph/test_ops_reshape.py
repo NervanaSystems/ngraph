@@ -17,26 +17,7 @@ import numpy as np
 import pytest
 
 import ngraph as ng
-
-
-def _get_runtime():
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(manager_name=manager_name)
-
-
-def _run_op_node(input_data, op_fun, *args):
-    runtime = _get_runtime()
-    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
-    node = op_fun(parameter_a, *args)
-    computation = runtime.computation(node, parameter_a)
-    return computation(input_data)
-
-
-def _run_op_numeric_data(input_data, op_fun, *args):
-    runtime = _get_runtime()
-    node = op_fun(input_data, *args)
-    computation = runtime.computation(node)
-    return computation()
+from test.ngraph.util import get_runtime, run_op_numeric_data
 
 
 def test_concat():
@@ -45,7 +26,7 @@ def test_concat():
     axis = 0
     expected = np.concatenate((a, b), axis=0)
 
-    runtime = _get_runtime()
+    runtime = get_runtime()
     parameter_a = ng.parameter(list(a.shape), name='A', dtype=np.float32)
     parameter_b = ng.parameter(list(b.shape), name='B', dtype=np.float32)
     node = ng.concat([parameter_a, parameter_b], axis)
@@ -80,5 +61,5 @@ def test_concat():
 ])
 def test_constant(val_type, value):
     expected = np.array(value, dtype=val_type)
-    result = _run_op_numeric_data(value, ng.constant, val_type)
+    result = run_op_numeric_data(value, ng.constant, val_type)
     np.testing.assert_allclose(result, expected)

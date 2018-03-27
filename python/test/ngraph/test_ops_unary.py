@@ -17,26 +17,7 @@ import numpy as np
 import pytest
 
 import ngraph as ng
-
-
-def _get_runtime():
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(manager_name=manager_name)
-
-
-def _run_unary_op_node(input_data, unary_op):
-    runtime = _get_runtime()
-    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
-    node = unary_op(parameter_a)
-    computation = runtime.computation(node, parameter_a)
-    return computation(input_data)
-
-
-def _run_unary_op_numeric_data(input_data, unary_op):
-    runtime = _get_runtime()
-    node = unary_op(input_data)
-    computation = runtime.computation(node)
-    return computation()
+from test.ngraph.util import run_op_numeric_data, run_op_node
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
@@ -58,8 +39,8 @@ def _run_unary_op_numeric_data(input_data, unary_op):
 def test_unary_op(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
 
-    result = _run_unary_op_node(input_data, ng_api_fn)
+    result = run_op_node(input_data, ng_api_fn)
     assert np.allclose(result, expected)
 
-    result = _run_unary_op_numeric_data(input_data, ng_api_fn)
+    result = run_op_numeric_data(input_data, ng_api_fn)
     assert np.allclose(result, expected)

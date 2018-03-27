@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 import ngraph as ng
+from test.ngraph.util import get_runtime
 
 
 @pytest.fixture
@@ -24,13 +25,8 @@ def _ndarray_1x1x4x4():
     return np.arange(11, 27, dtype=np.float32).reshape(1, 1, 4, 4)
 
 
-def _get_runtime():
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(manager_name=manager_name)
-
-
 def test_avg_pool_2d(_ndarray_1x1x4x4):
-    rt = _get_runtime()
+    rt = get_runtime()
     input_data = _ndarray_1x1x4x4
     param = ng.parameter(input_data.shape, name='A', dtype=np.float32)
 
@@ -78,7 +74,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
 
 
 def test_avg_pooling_3d(_ndarray_1x1x4x4):
-    rt = _get_runtime()
+    rt = get_runtime()
     data = _ndarray_1x1x4x4
     data = np.broadcast_to(data, (1, 1, 4, 4, 4))
     param = ng.parameter(list(data.shape))

@@ -17,9 +17,10 @@ import numpy as np
 import pytest
 
 import ngraph as ng
+from test.ngraph.util import run_op_node
 
 
-@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
+@pytest.mark.parametrize('ng_fun, numpy_function, reduction_axes', [
     (ng.max, np.max, None),
     (ng.min, np.min, None),
     (ng.sum, np.sum, None),
@@ -33,18 +34,10 @@ import ngraph as ng
     (ng.sum, np.sum, (0, 2)),
     (ng.prod, np.prod, (0, 2)),
 ])
-def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
-
+def test_reduction_ops(ng_fun, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
-    parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
+    input_data = np.random.randn(*shape).astype(np.float32)
 
-    model = ng_api_helper(parameter_a, reduction_axes)
-    computation = runtime.computation(model, parameter_a)
-
-    value_a = np.random.randn(*shape).astype(np.float32)
-
-    result = computation(value_a)
-    expected = numpy_function(value_a, axis=reduction_axes)
-    assert np.allclose(result, expected)
+    expected = numpy_function(input_data, axis=reduction_axes)
+    result = run_op_node(input_data, ng_fun, reduction_axes)
+    np.testing.assert_allclose(result, expected, rtol=1e-05)

@@ -19,33 +19,20 @@ import pytest
 import json
 
 import ngraph as ng
-
-
-def _get_runtime():
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(manager_name=manager_name)
-
-
-def _run_op_node(input_data, op_fun, *args):
-    runtime = _get_runtime()
-    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
-    node = op_fun(parameter_a, *args)
-    computation = runtime.computation(node, parameter_a)
-    return computation(input_data)
+from test.ngraph.util import get_runtime, run_op_node
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
                                    np.int8, np.int16, np.int32, np.int64,
                                    np.uint8, np.uint16, np.uint32, np.uint64])
 def test_simple_computation_on_ndarrays(dtype):
-    manager_name = pytest.config.getoption('backend', default='CPU')
+    runtime = get_runtime()
 
     shape = [2, 2]
     parameter_a = ng.parameter(shape, dtype=dtype, name='A')
     parameter_b = ng.parameter(shape, dtype=dtype, name='B')
     parameter_c = ng.parameter(shape, dtype=dtype, name='C')
     model = (parameter_a + parameter_b) * parameter_c
-    runtime = ng.runtime(manager_name=manager_name)
     computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=dtype)
@@ -80,7 +67,7 @@ def test_broadcast():
     expected = [[1, 2, 3],
                 [1, 2, 3],
                 [1, 2, 3]]
-    result = _run_op_node(input_data, ng.broadcast, new_shape)
+    result = run_op_node(input_data, ng.broadcast, new_shape)
     np.testing.assert_allclose(result, expected)
 
     axis = 0
@@ -88,13 +75,13 @@ def test_broadcast():
                 [2, 2, 2],
                 [3, 3, 3]]
 
-    result = _run_op_node(input_data, ng.broadcast, new_shape, axis)
+    result = run_op_node(input_data, ng.broadcast, new_shape, axis)
     np.testing.assert_allclose(result, expected)
 
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
-    result = _run_op_node(input_data, ng.broadcast, new_shape)
+    result = run_op_node(input_data, ng.broadcast, new_shape)
     np.testing.assert_allclose(result, expected)
 
 
@@ -113,5 +100,5 @@ def test_broadcast():
 ])
 def test_convert(val_type, value):
     expected = np.array(value, dtype=val_type)
-    result = _run_op_node(value, ng.convert, val_type)
+    result = run_op_node(value, ng.convert, val_type)
     np.testing.assert_allclose(result, expected)
