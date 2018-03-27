@@ -574,13 +574,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::vector<size_t> output_strides(arg_rank);
                     std::vector<size_t> trans_strides(arg_rank);
                     size_t stride = 1;
-                    for (int i = arg_rank - 1; i >= 0; i--)
+                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
                     {
                         input_strides[i] = stride;
                         stride *= arg_shape[i];
                     }
                     stride = 1;
-                    for (int i = arg_rank - 1; i >= 0; i--)
+                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
                     {
                         output_strides[i] = stride;
                         stride *= arg_shape[input_order[i]];
