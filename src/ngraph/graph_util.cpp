@@ -190,8 +190,9 @@ std::list<std::shared_ptr<ngraph::Node>>
         result_list.push_back(node_map[independent_node]);
         independent_nodes.pop_front();
 
-        for (auto user : independent_node->users())
+        for (auto user_sp : independent_node->get_users())
         {
+            Node* user = user_sp.get();
             node_dependency_count[user] -= 1;
             size_t count = node_dependency_count[user];
             if (count == 0)

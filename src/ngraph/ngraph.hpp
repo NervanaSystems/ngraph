@@ -46,6 +46,7 @@
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"
