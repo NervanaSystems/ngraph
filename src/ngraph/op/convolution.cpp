@@ -26,20 +26,20 @@
 using namespace std;
 using namespace ngraph;
 
-static Shape infer_convolution_output_shape(const Shape& data_batch_shape,
-                                            const Shape& filters_shape,
-                                            const Strides& window_movement_strides,
-                                            const Strides& window_dilation_strides,
-                                            const CoordinateDiff& padding_below,
-                                            const CoordinateDiff& padding_above,
-                                            const Strides& data_dilation_strides,
-                                            size_t batch_axis_data,
-                                            size_t input_channel_axis_data,
-                                            size_t input_channel_axis_filters,
-                                            size_t output_channel_axis_filters,
-                                            size_t batch_axis_result,
-                                            size_t output_channel_axis_result,
-                                            string error_prefix)
+Shape op::util::infer_convolution_output_shape(const Shape& data_batch_shape,
+                                               const Shape& filters_shape,
+                                               const Strides& window_movement_strides,
+                                               const Strides& window_dilation_strides,
+                                               const CoordinateDiff& padding_below,
+                                               const CoordinateDiff& padding_above,
+                                               const Strides& data_dilation_strides,
+                                               size_t batch_axis_data,
+                                               size_t input_channel_axis_data,
+                                               size_t input_channel_axis_filters,
+                                               size_t output_channel_axis_filters,
+                                               size_t batch_axis_result,
+                                               size_t output_channel_axis_result,
+                                               const string& error_prefix)
 {
     if (batch_axis_data > 1 || input_channel_axis_data > 1 || input_channel_axis_filters > 1 ||
         output_channel_axis_filters > 1 || batch_axis_result > 1 || output_channel_axis_result > 1)
@@ -262,20 +262,20 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
     }
 
     set_value_type_checked(data_batch_et,
-                           infer_convolution_output_shape(data_batch_shape,
-                                                          filters_shape,
-                                                          window_movement_strides,
-                                                          window_dilation_strides,
-                                                          padding_below,
-                                                          padding_above,
-                                                          data_dilation_strides,
-                                                          0,
-                                                          1,
-                                                          1,
-                                                          0,
-                                                          0,
-                                                          1,
-                                                          ""));
+                           util::infer_convolution_output_shape(data_batch_shape,
+                                                                filters_shape,
+                                                                window_movement_strides,
+                                                                window_dilation_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                data_dilation_strides,
+                                                                0,
+                                                                1,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                ""));
 }
 
 Strides op::Convolution::default_strides(const shared_ptr<Node>& data_batch)
@@ -455,20 +455,20 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     }
 
     Shape inferred_convolution_output_shape =
-        infer_convolution_output_shape(output_delta_shape,
-                                       filters_shape,
-                                       m_window_movement_strides_backward,
-                                       m_window_dilation_strides_backward,
-                                       m_padding_below_backward,
-                                       m_padding_above_backward,
-                                       m_data_dilation_strides_backward,
-                                       0,
-                                       1,
-                                       0,
-                                       1,
-                                       0,
-                                       1,
-                                       "In ConvolutionBackpropData: ");
+        util::infer_convolution_output_shape(output_delta_shape,
+                                             filters_shape,
+                                             m_window_movement_strides_backward,
+                                             m_window_dilation_strides_backward,
+                                             m_padding_below_backward,
+                                             m_padding_above_backward,
+                                             m_data_dilation_strides_backward,
+                                             0,
+                                             1,
+                                             0,
+                                             1,
+                                             0,
+                                             1,
+                                             "In ConvolutionBackpropData: ");
 
     // Not sure if this can ever actually happen (i.e., I think it will trip on something else
     // inside infer_convolution_output_shape before we get here) but it seems worth checking.
@@ -552,20 +552,20 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     }
 
     Shape inferred_convolution_output_shape =
-        infer_convolution_output_shape(data_batch_shape,
-                                       output_delta_shape,
-                                       m_window_movement_strides_backward,
-                                       m_window_dilation_strides_backward,
-                                       m_padding_below_backward,
-                                       m_padding_above_backward,
-                                       m_data_dilation_strides_backward,
-                                       1,
-                                       0,
-                                       0,
-                                       1,
-                                       1,
-                                       0,
-                                       "In ConvolutionBackpropFilters: ");
+        util::infer_convolution_output_shape(data_batch_shape,
+                                             output_delta_shape,
+                                             m_window_movement_strides_backward,
+                                             m_window_dilation_strides_backward,
+                                             m_padding_below_backward,
+                                             m_padding_above_backward,
+                                             m_data_dilation_strides_backward,
+                                             1,
+                                             0,
+                                             0,
+                                             1,
+                                             1,
+                                             0,
+                                             "In ConvolutionBackpropFilters: ");
 
     // Not sure if this can ever actually happen (i.e., I think it will trip on something else
     // inside infer_convolution_output_shape before we get here) but it seems worth checking.
