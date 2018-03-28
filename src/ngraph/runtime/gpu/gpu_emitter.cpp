@@ -199,6 +199,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CONVOLUTION";
+                const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
+                const size_t workSapceSizeInBytes = 100;
                 std::array<size_t, 4> dimensions;
 
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
@@ -237,17 +239,21 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         << mode <<", "
                         << tensor_type
                         << ");\n";
+                
+                writer << "void* workspace = "
+                              "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
 
                 writer << "cudnnConvolutionForward(cudnn_handle, "
                        << "&alpha, "
                        << "x_descriptor, " << args[0].get_name() << ", "
                        << "w_descriptor, " << args[1].get_name() << ", "
                        << "conv_descriptor, "
-                       << "conv_algo, "
+                       << conv_algo << ", "
                        << "workspace, "
-                       << "workSapceSizeInBytes, "
+                       << workSapceSizeInBytes << ", "
                        << "&beta, "
                        << "y_descriptor," << out[0].get_name() << ");\n";
+                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
 
