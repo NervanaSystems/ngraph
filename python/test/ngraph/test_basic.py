@@ -16,6 +16,7 @@
 
 import numpy as np
 import pytest
+import json
 
 import ngraph as ng
 
@@ -39,3 +40,21 @@ def test_simple_computation_on_ndarrays(dtype):
     value_c = np.array([[9, 10], [11, 12]], dtype=dtype)
     result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
+
+
+def test_serialization():
+    dtype = np.float32
+    manager_name = pytest.config.getoption('backend', default='CPU')
+
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, dtype=dtype, name='A')
+    parameter_b = ng.parameter(shape, dtype=dtype, name='B')
+    parameter_c = ng.parameter(shape, dtype=dtype, name='C')
+    model = (parameter_a + parameter_b) * parameter_c
+    runtime = ng.runtime(manager_name=manager_name)
+    computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
+    serialized = computation.serialize(2)
+    serial_json = json.loads(serialized)
+
+    assert serial_json[0]["name"] != ''
+    assert 10 == len(serial_json[0]["ops"])

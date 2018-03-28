@@ -988,14 +988,21 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
+                        auto kernel_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        if (!runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(
+                                kernel_layout))
+                        {
+                            // Propagate delta layout
+                            kernel_layout =
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
+                        }
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(input_layout);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
+                        prim_input_formats.push_back(kernel_layout);
+                        prim_input_formats.push_back(kernel_layout);
+                        prim_output_formats.push_back(kernel_layout);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -1051,19 +1058,27 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
+                        auto kernel_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        if (!runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(
+                                kernel_layout))
+                        {
+                            // Propagate delta layout
+                            kernel_layout =
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 5);
+                        }
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
                         prim_input_formats.push_back(memory::format::x);  // gamma
                         prim_input_formats.push_back(memory::format::x);  // beta
-                        prim_input_formats.push_back(input_layout);       // input
+                        prim_input_formats.push_back(kernel_layout);      // input
                         prim_input_formats.push_back(memory::format::x);  // mean
                         prim_input_formats.push_back(memory::format::x);  // variance
-                        prim_input_formats.push_back(input_layout);       // delta
-                        prim_output_formats.push_back(input_layout);      // dinput
+                        prim_input_formats.push_back(kernel_layout);      // delta
+                        prim_output_formats.push_back(kernel_layout);     // dinput
                         prim_output_formats.push_back(memory::format::x); // dgamma
                         prim_output_formats.push_back(memory::format::x); // dbeta
                         node =

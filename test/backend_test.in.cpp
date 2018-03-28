@@ -1709,6 +1709,16 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
+{
+    Shape shape_a{};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{4};
+    ASSERT_THROW(auto f = make_shared<Function>(
+                     make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), op::ParameterVector{A}),
+                 ngraph_error);
+}
+
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 {
     Shape shape_a{};
@@ -2340,7 +2350,6 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 
 TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
@@ -2363,7 +2372,6 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
 
 TEST(${BACKEND_NAME}, reshape_t2s_012)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
@@ -2386,7 +2394,6 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
 
 TEST(${BACKEND_NAME}, reshape_t2s_120)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
@@ -2409,7 +2416,6 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
 
 TEST(${BACKEND_NAME}, reshape_s2t)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 1, 1, 1, 1};
@@ -2476,7 +2482,6 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
 
 TEST(${BACKEND_NAME}, reshape_v2t_middle)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3, 1};
@@ -2606,7 +2611,6 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 //
 TEST(${BACKEND_NAME}, reshape_6d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 2 * 3 * 3 * 2 * 4);
     for (int i = 0; i < 2 * 2 * 3 * 3 * 2 * 4; i++)
     {
