@@ -23,7 +23,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, N
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
     Constant, Convert, Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, \
     LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter,\
-    Product, Reshape, Slice, Sqrt, Subtract, Sum, Tanh
+    Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -421,3 +421,11 @@ def concat(nodes, axis):  # type: (List[Node], int) -> Node
     :return: Return new node that is a concatenation of input nodes.
     """
     return Concat(NodeVector(nodes), axis)
+
+
+@nameable_op
+def softmax(node, axes):  # type: (Node, Iterable[int]) -> Node
+    """Softmax operation on input tensor."""
+    if type(axes) is not set:
+        axes = set(axes)
+    return Softmax(node, AxisSet(axes))
