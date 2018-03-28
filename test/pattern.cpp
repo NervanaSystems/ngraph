@@ -530,3 +530,26 @@ TEST(pattern, variance)
     ASSERT_TRUE(n.match(var_graph, variance));
     ASSERT_EQ(n.get_pattern_map()[var_graph], variance);
 }
+
+TEST(pattern, previous_matches)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+    ngraph::pattern::Matcher::PatternMap previous_matches;
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto pattern = std::make_shared<pattern::op::Label>(b);
+    auto abs = make_shared<op::Abs>(a);
+    auto add = abs + b;
+    {
+        Matcher n(pattern + b);
+        ASSERT_TRUE(n.match(add, previous_matches));
+        ASSERT_EQ(n.get_pattern_map()[pattern], abs);
+    }
+
+    {
+        Matcher n(pattern + b);
+        previous_matches.insert(std::make_pair(pattern, a));
+        ASSERT_FALSE(n.match(add, previous_matches));
+    }
+}

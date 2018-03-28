@@ -38,6 +38,48 @@ namespace ngraph
                 begin(arguments), end(arguments)); //vector is needed for generating permutations
         }
 
+        bool Matcher::match_recurring_pattern(
+            std::shared_ptr<Node> graph,
+            std::shared_ptr<Node> pattern,
+            std::shared_ptr<op::Label> rpattern,
+            RPatternMap& patterns,
+            const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
+        {
+            bool no_match = false;
+            Matcher m(pattern);
+            PatternMap previous_matches;
+
+            NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
+            while (m.match(graph, previous_matches))
+            {
+                no_match = true;
+                graph = m.m_pattern_map[rpattern]; //for the next round
+                NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
+                for (auto me : patterns)
+                {
+                    patterns[me.first].push_back(m.m_pattern_map[me.first]);
+                }
+
+                for (auto l : correlated_patterns)
+                {
+                    if (m.m_pattern_map.count(l) != 0)
+                    {
+                        if (previous_matches.count(l) != 0)
+                        {
+                            if (previous_matches[l] != m.m_pattern_map[l])
+                            {
+                                throw ngraph_error(
+                                    "previous matches and current matches aren't consistent!");
+                            }
+                        }
+                        previous_matches[l] = m.m_pattern_map[l];
+                    }
+                }
+            }
+
+            return no_match;
+        }
+
         std::shared_ptr<Node> Matcher::match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
@@ -227,6 +269,32 @@ namespace ngraph
             //clear our state
             m_match_root.reset();
             m_pattern_map.clear();
+
+            if (!m_pattern_node || !graph_node)
+            {
+                throw "m_pattern_node or graph_node are not set!";
+            }
+
+            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
+                         << " , graph_node = " << graph_node->get_name();
+
+            bool is_match = match_node(m_pattern_node, graph_node, m_pattern_map);
+            if (is_match)
+            {
+                m_match_root = graph_node;
+            }
+            return is_match;
+        }
+
+        bool Matcher::match(const std::shared_ptr<Node>& graph_node,
+                            const PatternMap& previous_matches)
+        {
+            //clear our state
+            m_match_root.reset();
+            m_pattern_map.clear();
+
+            //insert previous matches
+            m_pattern_map.insert(previous_matches.cbegin(), previous_matches.cend());
 
             if (!m_pattern_node || !graph_node)
             {
