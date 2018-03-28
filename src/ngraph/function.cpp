@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <algorithm>
 #include <list>
 #include <memory>
 
@@ -50,6 +51,14 @@ Function::Function(const NodeVector& results,
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
 {
+    if (std::any_of(results.cbegin(), results.cend(), [](std::shared_ptr<Node> n) {
+            return std::dynamic_pointer_cast<op::Result>(n);
+        }))
+    {
+        throw ngraph_error(
+            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
+    }
+
     std::transform(results.begin(), results.end(), m_results.begin(), [](std::shared_ptr<Node> n) {
         return std::make_shared<op::Result>(n);
     });

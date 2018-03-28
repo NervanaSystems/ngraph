@@ -35,7 +35,6 @@ TEST(DISABLED_include, complete)
                                     "ngraph/builder/autobroadcast.hpp",
                                     "ngraph/builder/numpy_transpose.hpp",
                                     "ngraph/builder/reduce_ops.hpp",
-                                    "ngraph/builder/xla_tuple.hpp",
                                     "ngraph/codegen/code_writer.hpp",
                                     "ngraph/codegen/compiler.hpp",
                                     "ngraph/codegen/execution_engine.hpp",

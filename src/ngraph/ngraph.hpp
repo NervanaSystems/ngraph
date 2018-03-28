@@ -43,15 +43,10 @@
 /// @brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
-/// @namespace ngraph::xla
-/// @brief Code to facilitate nGraph's support for XLA/HLO.
-
-/// @namespace ngraph::xla::op
-/// @brief Operators specific to nGraph's support for XLA/HLO.
-
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"

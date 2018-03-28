@@ -19,7 +19,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
-    builder/xla_tuple.cpp
+    builder/tensor_mask.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -33,11 +33,15 @@ set (SRC
     log.cpp
     node.cpp
     op/abs.cpp
+    op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/asin.cpp
+    op/atan.cpp
     op/avg_pool.cpp
     op/batch_norm.cpp
     op/broadcast.cpp
+    op/ceiling.cpp
     op/concat.cpp
     op/constant.cpp
     op/convert.cpp
@@ -46,30 +50,42 @@ set (SRC
     op/cosh.cpp
     op/divide.cpp
     op/dot.cpp
+    op/equal.cpp
     op/exp.cpp
+    op/floor.cpp
     op/function_call.cpp
     op/get_output_element.cpp
+    op/greater.cpp
+    op/greater_eq.cpp
+    op/less.cpp
+    op/less_eq.cpp
     op/log.cpp
-    op/max_pool.cpp
+    op/max.cpp
     op/maximum.cpp
+    op/max_pool.cpp
+    op/min.cpp
     op/minimum.cpp
     op/multiply.cpp
     op/negative.cpp
     op/not.cpp
+    op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
+    op/product.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
+    op/remainder.cpp
     op/replace_slice.cpp
     op/reshape.cpp
-    op/reverse.cpp
     op/result.cpp
-    op/select.cpp
+    op/reverse.cpp
     op/select_and_scatter.cpp
+    op/select.cpp
+    op/sign.cpp
     op/sin.cpp
     op/sinh.cpp
     op/slice.cpp
@@ -100,8 +116,8 @@ set (SRC
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
+    pass/core_fusion.cpp
     pattern/matcher.cpp
-    pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
@@ -191,6 +207,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/kernel/eigen_thread_pool.cpp
         runtime/cpu/kernel/pad.cpp
         runtime/cpu/op/conv_bias.cpp
+        runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
@@ -198,6 +215,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
+        runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory

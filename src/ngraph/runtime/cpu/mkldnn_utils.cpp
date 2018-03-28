@@ -29,6 +29,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
@@ -49,6 +50,7 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
     TI(ngraph::op::ConvolutionBias),
+    TI(ngraph::op::ConvolutionRelu),
     TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
@@ -214,6 +216,15 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format f
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
 {
     if (s_filter_formats.find(fmt) != s_filter_formats.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::format fmt)
+{
+    if (fmt == memory::format::nChw8c || fmt == memory::format::nChw16c)
     {
         return true;
     }

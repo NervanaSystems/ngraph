@@ -26,6 +26,16 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
 {
 }
 
+shared_ptr<Node>
+    runtime::cpu::op::ConvertLayout::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<ConvertLayout>(new_args.at(0), output_layout);
+}
+
 runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg,
     size_t output_index,

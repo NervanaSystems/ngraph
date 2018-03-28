@@ -17,7 +17,10 @@
 
 from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
+from ngraph.ops import acos
 from ngraph.ops import add
+from ngraph.ops import asin
+from ngraph.ops import atan
 from ngraph.ops import avg_pool
 from ngraph.ops import broadcast
 from ngraph.ops import ceiling
@@ -49,6 +52,7 @@ from ngraph.ops import parameter
 from ngraph.ops import prod
 from ngraph.ops import reshape
 from ngraph.ops import slice
+from ngraph.ops import softmax
 from ngraph.ops import sqrt
 from ngraph.ops import subtract
 from ngraph.ops import sum

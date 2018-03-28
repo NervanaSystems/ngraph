@@ -28,7 +28,6 @@ set (SRC
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
-    builder_xla.cpp
     build_graph.cpp
     copy.cpp
     core_fusion.cpp
@@ -80,7 +79,7 @@ endif()
 if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp)
+    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp cpu_test.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
@@ -99,7 +98,7 @@ endif()
 
 if(NGRAPH_NNP_ENABLE)
     include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
 
     # enable additional nnp backend test
     set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)

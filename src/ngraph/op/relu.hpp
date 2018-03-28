@@ -39,14 +39,7 @@ namespace ngraph
             Relu(std::shared_ptr<ngraph::Node> arg);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Relu>(new_args.at(0));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
@@ -63,14 +56,7 @@ namespace ngraph
             ReluBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
-            {
-                if (new_args.size() != 2)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
-            }
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

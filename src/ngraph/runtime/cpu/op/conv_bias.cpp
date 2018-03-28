@@ -16,16 +16,17 @@
 
 #include <numeric>
 
+#include "conv_bias.hpp"
+
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::ConvolutionBias::ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                                     const std::shared_ptr<Node>& bias)
+op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
+                                     const shared_ptr<Node>& bias)
     : RequiresTensorViewArgs("ConvolutionBias",
                              {conv->get_input_op(0), conv->get_input_op(1), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
@@ -42,9 +43,9 @@ op::ConvolutionBias::ConvolutionBias(const std::shared_ptr<op::Convolution>& con
     set_value_type_checked(conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionBias::ConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                                     const std::shared_ptr<Node>& filters,
-                                     const std::shared_ptr<Node>& bias,
+op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
+                                     const shared_ptr<Node>& filters,
+                                     const shared_ptr<Node>& bias,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
@@ -57,27 +58,55 @@ op::ConvolutionBias::ConvolutionBias(const std::shared_ptr<Node>& data_batch,
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
 {
+    auto& data_batch_shape = data_batch->get_shape();
+    auto& data_batch_et = data_batch->get_element_type();
+    auto& filters_shape = filters->get_shape();
+    auto& filters_et = filters->get_element_type();
+
+    //
+    // Make sure data batch and filter element types match.
+    //
+    if (data_batch_et != filters_et)
+    {
+        throw ngraph_error("Convolution data batch and filter element types do not match");
+    }
+
+    set_value_type_checked(data_batch_et,
+                           util::infer_convolution_output_shape(data_batch_shape,
+                                                                filters_shape,
+                                                                window_movement_strides,
+                                                                window_dilation_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                data_dilation_strides,
+                                                                0,
+                                                                1,
+                                                                1,
+                                                                0,
+                                                                0,
+                                                                1,
+                                                                ""));
 }
 
-std::shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::shared_ptr<Node>(new ConvolutionBias(new_args.at(0),
-                                                     new_args.at(1),
-                                                     new_args.at(2),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides()));
+    return shared_ptr<Node>(new ConvolutionBias(new_args.at(0),
+                                                new_args.at(1),
+                                                new_args.at(2),
+                                                get_window_movement_strides(),
+                                                get_window_dilation_strides(),
+                                                get_padding_below(),
+                                                get_padding_above(),
+                                                get_data_dilation_strides()));
 }
 
 void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+                                            const shared_ptr<Node>& delta)
 {
     auto data = get_input_op(0);
     const auto data_shape = data->get_shape();
@@ -90,37 +119,37 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
 
     // using regular convolution backprop for data
     adjoints.add_delta(data,
-                       std::make_shared<op::ConvolutionBackpropData>(data_shape,
-                                                                     filter,
-                                                                     delta,
-                                                                     m_window_movement_strides,
-                                                                     m_window_dilation_strides,
-                                                                     m_padding_below,
-                                                                     m_padding_above,
-                                                                     m_data_dilation_strides));
+                       make_shared<op::ConvolutionBackpropData>(data_shape,
+                                                                filter,
+                                                                delta,
+                                                                m_window_movement_strides,
+                                                                m_window_dilation_strides,
+                                                                m_padding_below,
+                                                                m_padding_above,
+                                                                m_data_dilation_strides));
 
     auto filter_bias_backprop =
-        std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
-                                                                 filter_shape,
-                                                                 bias_shape,
-                                                                 delta,
-                                                                 m_window_movement_strides,
-                                                                 m_window_dilation_strides,
-                                                                 m_padding_below,
-                                                                 m_padding_above,
-                                                                 m_data_dilation_strides);
-    auto filter_delta = std::make_shared<op::GetOutputElement>(filter_bias_backprop, 0);
-    auto bias_delta = std::make_shared<op::GetOutputElement>(filter_bias_backprop, 1);
+        make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                            filter_shape,
+                                                            bias_shape,
+                                                            delta,
+                                                            m_window_movement_strides,
+                                                            m_window_dilation_strides,
+                                                            m_padding_below,
+                                                            m_padding_above,
+                                                            m_data_dilation_strides);
+    auto filter_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 0);
+    auto bias_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 1);
 
     adjoints.add_delta(filter, filter_delta);
     adjoints.add_delta(bias, bias_delta);
 }
 
 op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
-    const std::shared_ptr<Node>& data_batch,
+    const shared_ptr<Node>& data_batch,
     const Shape& filters_shape,
     const Shape& bias_shape,
-    const std::shared_ptr<Node>& output_delta,
+    const shared_ptr<Node>& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
@@ -175,20 +204,20 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     add_output(data_batch_et, bias_shape);
 }
 
-std::shared_ptr<Node>
+shared_ptr<Node>
     op::ConvolutionBiasBackpropFiltersBias::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<ConvolutionBiasBackpropFiltersBias>(new_args.at(0),
-                                                                m_filters_shape,
-                                                                m_bias_shape,
-                                                                new_args.at(1),
-                                                                m_window_movement_strides_forward,
-                                                                m_window_dilation_strides_forward,
-                                                                m_padding_below_forward,
-                                                                m_padding_above_forward,
-                                                                m_data_dilation_strides_forward);
+    return make_shared<ConvolutionBiasBackpropFiltersBias>(new_args.at(0),
+                                                           m_filters_shape,
+                                                           m_bias_shape,
+                                                           new_args.at(1),
+                                                           m_window_movement_strides_forward,
+                                                           m_window_dilation_strides_forward,
+                                                           m_padding_below_forward,
+                                                           m_padding_above_forward,
+                                                           m_data_dilation_strides_forward);
 }
