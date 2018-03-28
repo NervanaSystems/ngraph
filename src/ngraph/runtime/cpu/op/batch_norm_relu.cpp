@@ -27,9 +27,9 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     , m_epsilon(eps)
     , m_training(true)
 {
-    if (m_bn_input_shape.size() < 2)
+    if (m_bn_input_shape.size() != 4)
     {
-        throw ngraph_error("input tensor to BatchNormRelu much have tensor of atleast rank 2");
+        throw ngraph_error("input tensor to batchnorm must have rank 4");
     }
     else
     {
@@ -40,7 +40,20 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     if (m_bn_input_shape[1] == 0)
     {
         throw ngraph_error(
-            "input tensor must have atleast one channel axis for batch normalization");
+            "input tensor must have at least one channel axis for batch normalization");
+    }
+
+    auto et = input->get_element_type();
+    const char* input_names[] = {"gamma", "beta"};
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        if (get_input_op(i)->get_element_type() != et)
+        {
+            auto err_msg = std::string("The element type of ") + input_names[i] +
+                           " isn't equal to input data's type";
+            throw ngraph_error(err_msg.c_str());
+        }
     }
 
     if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
