@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-
 import numpy as np
 import pytest
 import json
@@ -56,8 +55,8 @@ def test_serialization():
     serialized = computation.serialize(2)
     serial_json = json.loads(serialized)
 
-    assert serial_json[0]["name"] != ''
-    assert 10 == len(serial_json[0]["ops"])
+    assert serial_json[0]['name'] != ''
+    assert 10 == len(serial_json[0]['ops'])
 
 
 def test_broadcast():
