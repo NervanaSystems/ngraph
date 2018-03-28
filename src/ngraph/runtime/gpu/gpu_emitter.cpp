@@ -222,6 +222,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 shape_to_cudnn_4d_tensor(dimensions, result_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, y_descriptor, tensor_format, tensor_type, dimensions);
 
+                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
                 writer << "cudnnFilterDescriptor_t " << w_descriptor << ";\n";
                 writer << "cudnnCreateFilterDescriptor(&" << w_descriptor << ");\n";
                 writer << "cudnnSetFilter4dDescriptor(" << w_descriptor << ",\n";
