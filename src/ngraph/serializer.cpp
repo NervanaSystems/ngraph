@@ -113,6 +113,8 @@ static std::shared_ptr<ngraph::Function>
 
 static json write(const ngraph::Function&, bool binary_constant_data);
 static json write(const ngraph::Node&, bool binary_constant_data);
+static string
+    serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -160,7 +162,7 @@ void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, si
 
 void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
-    string j = serialize(func, indent, true);
+    string j = ::serialize(func, indent, true);
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
 
@@ -178,8 +180,7 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
     writer.close();
 }
 
-string
-    ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
+static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
     vector<json> functions;
@@ -201,6 +202,11 @@ string
         rc = j.dump(static_cast<int>(indent));
     }
     return rc;
+}
+
+std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+{
+    return ::serialize(func, indent, false);
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
