@@ -216,10 +216,23 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 // construct input tensor descriptor rt impl.
                 shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
-                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
+                
+                //shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
+                //kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
                 shape_to_cudnn_4d_tensor(dimensions, result_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, y_descriptor, tensor_format, tensor_type, dimensions);
+
+                writer << "cudnnFilterDescriptor_t " << w_descriptor << ";\n";
+                writer << "cudnnCreateFilterDescriptor(&" << w_descriptor << ");\n";
+                writer << "cudnnSetFilter4dDescriptor(" << w_descriptor << ",\n";
+                writer << "                 /*format=*/" << tensor_format << ",\n";
+                writer << "                 /*dataType=*/" << tensor_type;
+                for (auto const& axis : dimensions)
+                {
+                    writer << ",\n                 /*dimension_size*/" << axis;
+                }
+                writer << ");\n";
+
                 writer << "cudnnConvolutionDescriptor_t conv_descriptor;\n";
                 writer << "cudnnCreateConvolutionDescriptor(&conv_descriptor);\n";
 
