@@ -36,6 +36,15 @@ namespace ngraph
                       std::shared_ptr<Node> beta,
                       std::shared_ptr<Node> input);
 
+            // BatchNorm Training
+            BatchNorm(bool training, 
+                      double eps,
+                      std::shared_ptr<ngraph::Node> gamma,
+                      std::shared_ptr<ngraph::Node> beta,
+                      std::shared_ptr<ngraph::Node> input,
+                      std::shared_ptr<ngraph::Node> mean,
+                      std::shared_ptr<ngraph::Node> variance);
+                      
             //BatchNorm Inference
             BatchNorm(double eps,
                       std::shared_ptr<ngraph::Node> gamma,

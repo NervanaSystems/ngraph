@@ -73,8 +73,7 @@ namespace ngraph
                                                  const ngraph::Strides& strides,
                                                  const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
-                                                 const ngraph::CoordinateDiff& padding_above,
-                                                 const mkldnn::post_ops& pops = mkldnn::post_ops());
+                                                 const ngraph::CoordinateDiff& padding_above);
 
                 /**
                  * Convolution + bias forward
@@ -171,7 +170,8 @@ namespace ngraph
                                                const mkldnn::memory::desc& mean_desc,
                                                const mkldnn::memory::desc& variance_desc,
                                                const double eps,
-                                               bool bn_training_flag);
+                                               const int bn_total_inputs,
+                                               const ngraph::op::BatchNorm* bn_node);
 
                 size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& input_desc,
