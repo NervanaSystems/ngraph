@@ -31,6 +31,10 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
+        if (*i >= target_shape.size())
+        {
+            throw ngraph_error("Broadcast axis exceeds target shape rank");
+        }
         target_shape.erase(target_shape.begin() + *i);
     }
     if (Shape{target_shape} != input.get_shape())
