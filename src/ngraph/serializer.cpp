@@ -413,7 +413,8 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "BatchNorm")
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                if (node_js.at("training"))
+                bool training = get_or_default<bool>(node_js, "training", true);
+                if (training)
                 {
                     node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
                 }
