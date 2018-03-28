@@ -19,7 +19,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include "ngraph/ops/function_call.hpp"
+#include "ngraph/op/function_call.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph

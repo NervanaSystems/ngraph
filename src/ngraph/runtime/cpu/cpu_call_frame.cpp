@@ -38,8 +38,8 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 }
 
 void runtime::cpu::CPU_CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -72,8 +72,8 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
 }
 
 void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& results)
+    const std::vector<std::shared_ptr<runtime::TensorView>>& results,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments)
 {
     // TODO: Check types of args and result
     vector<shared_ptr<runtime::TensorView>> inputs;
@@ -88,7 +88,7 @@ void runtime::cpu::CPU_CallFrame::call(
         result->collect_tensor_views(outputs, result);
     }
 
-    tensor_call(inputs, outputs);
+    tensor_call(outputs, inputs);
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(

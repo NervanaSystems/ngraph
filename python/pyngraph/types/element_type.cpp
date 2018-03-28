@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "pyngraph/types/element_type.hpp"
 
 namespace py = pybind11;

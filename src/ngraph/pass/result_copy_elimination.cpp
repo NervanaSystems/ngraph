@@ -16,8 +16,8 @@
 
 #include "result_copy_elimination.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/result.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/util.hpp"
 
 bool ngraph::pass::ResultCopyElimination::run_on_function(std::shared_ptr<ngraph::Function> f)

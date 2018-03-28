@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/not.hpp"
+#include "ngraph/op/not.hpp"
 #include "pyngraph/ops/not.hpp"
 
 namespace py = pybind11;

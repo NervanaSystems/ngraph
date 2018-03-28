@@ -22,6 +22,7 @@ from ngraph.ops import avg_pool
 from ngraph.ops import broadcast
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
+from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
 from ngraph.ops import convolution
@@ -47,6 +48,7 @@ from ngraph.ops import not_equal
 from ngraph.ops import parameter
 from ngraph.ops import prod
 from ngraph.ops import reshape
+from ngraph.ops import slice
 from ngraph.ops import sqrt
 from ngraph.ops import subtract
 from ngraph.ops import sum

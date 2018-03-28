@@ -26,7 +26,7 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 
-#include "ngraph/runtime/kernel/avg_pool.hpp"
+#include "ngraph/runtime/reference/avg_pool.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -74,7 +74,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -119,7 +119,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -162,7 +162,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
@@ -202,7 +202,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -308,7 +308,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -495,7 +495,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
 TEST(${BACKEND_NAME}, backwards_concat_vector)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -522,7 +522,7 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
 TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -549,7 +549,7 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -575,7 +575,7 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
 TEST(${BACKEND_NAME}, backwards_ceiling)
 {
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -635,7 +635,7 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
 TEST(${BACKEND_NAME}, backwards_cosh)
 {
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -659,7 +659,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
 TEST(${BACKEND_NAME}, backwards_divide)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -852,7 +852,7 @@ TEST(${BACKEND_NAME}, backwards_exp)
 
 TEST(${BACKEND_NAME}, backwards_floor)
 {
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1000,7 +1000,7 @@ TEST(${BACKEND_NAME}, backwards_parameter)
 TEST(${BACKEND_NAME}, backwards_power)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1070,7 +1070,7 @@ TEST(${BACKEND_NAME}, backwards_relu)
 TEST(${BACKEND_NAME}, backwards_replace_slice)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1116,7 +1116,7 @@ TEST(${BACKEND_NAME}, backwards_reshape)
 TEST(${BACKEND_NAME}, backwards_select)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1152,7 +1152,7 @@ TEST(${BACKEND_NAME}, backwards_select)
 TEST(${BACKEND_NAME}, backwards_select_nested)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1187,7 +1187,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
 TEST(${BACKEND_NAME}, backwards_sign)
 {
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1241,7 +1241,7 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
 TEST(${BACKEND_NAME}, backwards_sinh)
 {
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1265,7 +1265,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
 TEST(${BACKEND_NAME}, backwards_slice)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1496,7 +1496,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 TEST(${BACKEND_NAME}, backwards_tan)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1533,7 +1533,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
 TEST(${BACKEND_NAME}, backwards_tanh)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("ARGON", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("NNP", "${BACKEND_NAME}");
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -1633,7 +1633,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1677,6 +1677,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     auto df = autodiff::backprop_function(f);
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
-    cf->tensor_call({input, ep}, {output});
+    cf->tensor_call({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }

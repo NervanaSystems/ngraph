@@ -20,7 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/log.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 
 namespace ngraph
 {
@@ -202,7 +202,7 @@ namespace ngraph
             return false;
         }
 
-        std::shared_ptr<Node> Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
+        bool Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
         {
             gr_callback_fn cb = m_callback;
             if (callback)

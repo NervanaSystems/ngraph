@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/ops/broadcast.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/broadcast.hpp"
 

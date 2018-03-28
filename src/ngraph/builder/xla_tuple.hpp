@@ -23,7 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -100,7 +100,7 @@ namespace ngraph
 
         /// Invoke a call frame where some arguments might be XLATuples
         void call(std::shared_ptr<runtime::CallFrame> call_frame,
-                  const ngraph::runtime::TensorViewPtrs& inputs,
-                  const ngraph::runtime::TensorViewPtrs& outputs);
+                  const ngraph::runtime::TensorViewPtrs& outputs,
+                  const ngraph::runtime::TensorViewPtrs& inputs);
     }
 }

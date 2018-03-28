@@ -96,13 +96,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
-    cf->call({x, y, z}, {result});
+    cf->call({result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    cf->call({y, x, z}, {result});
+    cf->call({result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    cf->call({x, z, y}, {result});
+    cf->call({result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 

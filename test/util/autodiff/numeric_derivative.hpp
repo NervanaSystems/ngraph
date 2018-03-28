@@ -21,7 +21,7 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -63,7 +63,7 @@ namespace ngraph
             // ref_y is the function evaluated at the args
             auto ref_y = backend->make_primary_tensor_view<T>(y_shape);
 
-            cf->tensor_call(args, std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y});
+            cf->tensor_call(std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values
@@ -88,7 +88,7 @@ namespace ngraph
                         auto old_val = vec[j];
                         vec[j] += delta;
                         write_vector(arg, vec);
-                        cf->tensor_call(args, {inc_y});
+                        cf->tensor_call({inc_y}, args);
                         auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
                         write_vector(arg, vec);

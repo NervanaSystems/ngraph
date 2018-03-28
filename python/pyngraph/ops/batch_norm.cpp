@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/batch_norm.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "pyngraph/ops/batch_norm.hpp"
 
 namespace py = pybind11;
@@ -41,7 +41,8 @@ void regclass_pyngraph_op_BatchNormBackprop(py::module m)
                std::shared_ptr<ngraph::op::BatchNormBackprop>,
                ngraph::op::util::RequiresTensorViewArgs>
         batch_norm_backprop(m, "BatchNormBackprop");
-    batch_norm_backprop.doc() = "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
+    batch_norm_backprop.doc() =
+        "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
     batch_norm_backprop.def(py::init<double,
                                      const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,

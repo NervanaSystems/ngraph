@@ -241,7 +241,7 @@ TEST (${BACKEND_NAME}, %s)
 
     vector<float> expected_result{%s};
 
-    cf->call({a, b}, {result});
+    cf->call({result}, {a, b});
     EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result)));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {

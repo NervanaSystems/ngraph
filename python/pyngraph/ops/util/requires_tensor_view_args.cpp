@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/ops/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/util/requires_tensor_view_args.hpp"
 #include "pyngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace py = pybind11;

@@ -19,7 +19,7 @@
 #include <string>
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "pyngraph/ops/parameter.hpp"
 
 namespace py = pybind11;

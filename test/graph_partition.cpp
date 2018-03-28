@@ -55,47 +55,46 @@ static shared_ptr<runtime::Backend> get_cached_backend(const string& name)
     return cached_backends.at(name);
 }
 
-// HybridCallFrame uses INT TensorView by default, do conversions to CPU TensorView as needed
 class HybridCallFrame
 {
 public:
-    HybridCallFrame(const vector<shared_ptr<Function>>& funcs,
+    HybridCallFrame(const vector<shared_ptr<Function>>& sub_functions,
                     const vector<shared_ptr<runtime::CallFrame>>& call_frames,
-                    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>>&
-                        map_parameter_to_source_node,
-                    const unordered_map<shared_ptr<op::Parameter>, size_t>& map_parameter_to_index,
-                    const unordered_map<shared_ptr<Node>, size_t>& map_result_to_index)
-        : m_funcs(funcs)
+                    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>&
+                        map_parameter_to_result,
+                    const vector<shared_ptr<op::Parameter>>& main_function_parameters,
+                    const vector<shared_ptr<op::Result>>& main_function_results)
+        : m_sub_functions(sub_functions)
         , m_call_frames(call_frames)
-        , m_map_parameter_to_source_node(map_parameter_to_source_node)
-        , m_map_parameter_to_index(map_parameter_to_index)
-        , m_map_result_to_index(map_result_to_index)
+        , m_map_parameter_to_result(map_parameter_to_result)
+        , m_main_function_parameters(main_function_parameters)
+        , m_main_function_results(main_function_results)
     {
     }
 
-    void call(const vector<shared_ptr<runtime::TensorView>>& inputs,
-              const vector<shared_ptr<runtime::TensorView>>& outputs)
+    void call(const vector<shared_ptr<runtime::TensorView>>& outputs,
+              const vector<shared_ptr<runtime::TensorView>>& inputs)
     {
-        // Each input or output of a function has a TensorView from a corresponding backend
+        // Every parameter and result node in every sub_function maps to one TensorView
         unordered_map<shared_ptr<Node>, shared_ptr<runtime::TensorView>> map_node_to_tensor_view;
 
-        // These are the global input and output TensorViews
-        for (auto it = m_map_parameter_to_index.begin(); it != m_map_parameter_to_index.end(); ++it)
+        // Main function's parameters and results
+        for (size_t i = 0; i < inputs.size(); ++i)
         {
-            map_node_to_tensor_view[it->first] = inputs[it->second];
+            map_node_to_tensor_view[m_main_function_parameters[i]] = inputs[i];
         }
-        for (auto it = m_map_result_to_index.begin(); it != m_map_result_to_index.end(); ++it)
+        for (size_t i = 0; i < outputs.size(); ++i)
         {
-            map_node_to_tensor_view[it->first] = outputs[it->second];
+            map_node_to_tensor_view[m_main_function_results[i]] = outputs[i];
         }
 
         // Call call_frames
-        for (auto func_idx = 0; func_idx < m_call_frames.size(); func_idx++)
+        for (auto idx = 0; idx < m_call_frames.size(); idx++)
         {
             // Get placement
-            auto func = m_funcs[func_idx];
-            auto call_frame = m_call_frames[func_idx];
-            Placement placement = get_colocated_function_placement(func);
+            auto sub_function = m_sub_functions[idx];
+            auto call_frame = m_call_frames[idx];
+            Placement placement = get_colocated_function_placement(sub_function);
             if (placement != Placement::CPU && placement != Placement::INTERPRETER)
             {
                 throw ngraph_error("Placement must be CPU or INTERPRETER");
@@ -106,100 +105,61 @@ public:
             auto backend = get_cached_backend(placement_to_string(placement));
 
             // Prepare input TensorViews
-            vector<shared_ptr<runtime::TensorView>> parameter_tensor_views;
-            for (auto parameter : func->get_parameters())
+            vector<shared_ptr<runtime::TensorView>> parameter_tvs;
+            for (auto parameter_node : sub_function->get_parameters())
             {
-                if (m_map_parameter_to_source_node.at(parameter) == parameter)
+                if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
                 {
-                    // This parameter node must be placed on INT to use HybridCallFrame's TensorView
-                    if (placement != Placement::INTERPRETER)
-                    {
-                        throw ngraph_error(
-                            "Must be placed on INTERPRETER to use HybridCallFrame's TensorView");
-                    }
-
-                    // Use HybridCallFrame's input TensorView directly
-                    parameter_tensor_views.push_back(
-                        inputs[m_map_parameter_to_index.at(parameter)]);
+                    parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
                 }
                 else
                 {
-                    // Copy TensorView from upstream in a different device. It could be a function's
-                    // output TensorView, or parameter placed on a different device.
-                    auto tv = backend->make_primary_tensor_view(parameter->get_element_type(),
-                                                                parameter->get_shape());
-                    auto source_node = m_map_parameter_to_source_node.at(parameter);
-                    auto source_tv = map_node_to_tensor_view.at(source_node);
-                    copy_data(tv, read_vector<float>(source_tv));
-
-                    // Store it
-                    map_node_to_tensor_view[parameter] = tv;
-                    parameter_tensor_views.push_back(tv);
+                    auto result_node = m_map_parameter_to_result.at(parameter_node);
+                    auto result_tv = map_node_to_tensor_view.at(result_node);
+                    auto parameter_tv = backend->make_primary_tensor_view(
+                        parameter_node->get_element_type(), parameter_node->get_shape());
+                    copy_data(parameter_tv, read_vector<float>(result_tv));
+                    map_node_to_tensor_view[parameter_node] = parameter_tv;
+                    parameter_tvs.push_back(parameter_tv);
                 }
             }
 
             // Prepare output TensorViews
-            vector<shared_ptr<runtime::TensorView>> result_tensor_views;
-            for (auto result : func->get_results())
+            vector<shared_ptr<runtime::TensorView>> result_tvs;
+            for (auto result_node : sub_function->get_results())
             {
-                if (placement == Placement::INTERPRETER &&
-                    m_map_result_to_index.find(result) != m_map_result_to_index.end())
+                if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
                 {
-                    // Since INTERPRETER is identical to HybridCallFrame's output TensorView,
-                    // we could use those TensorViews directly
-                    auto tv = map_node_to_tensor_view.at(result);
-                    result_tensor_views.push_back(tv);
+                    result_tvs.push_back(map_node_to_tensor_view.at(result_node));
                 }
                 else
                 {
-                    // This is an intermediate TensorView or a ouput TensorView that is not placed
-                    // on INTERPRETER
-                    auto tv = backend->make_primary_tensor_view(result->get_element_type(),
-                                                                result->get_shape());
-                    map_node_to_tensor_view[result] = tv;
-                    result_tensor_views.push_back(tv);
+                    auto result_tv = backend->make_primary_tensor_view(
+                        result_node->get_element_type(), result_node->get_shape());
+                    map_node_to_tensor_view[result_node] = result_tv;
+                    result_tvs.push_back(result_tv);
                 }
             }
 
             // Call
-            call_frame->call(parameter_tensor_views, result_tensor_views);
-        }
-
-        // Copy to HybridCallFrame's output TensorView
-        for (auto func : m_funcs)
-        {
-            Placement placement = get_colocated_function_placement(func);
-
-            for (auto result : func->get_results())
-            {
-                if (placement != Placement::INTERPRETER &&
-                    m_map_result_to_index.find(result) != m_map_result_to_index.end())
-                {
-                    auto backend_tv = map_node_to_tensor_view.at(result);
-                    auto output_idx = m_map_result_to_index.at(result);
-                    auto output_tv = outputs[output_idx];
-                    copy_data(output_tv, read_vector<float>(backend_tv));
-                }
-            }
+            call_frame->call(result_tvs, parameter_tvs);
         }
     }
 
 protected:
-    vector<shared_ptr<Function>> m_funcs;
+    vector<shared_ptr<Function>> m_sub_functions;
     vector<shared_ptr<runtime::CallFrame>> m_call_frames;
-    unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> m_map_parameter_to_source_node;
-    unordered_map<shared_ptr<op::Parameter>, size_t> m_map_parameter_to_index;
-    unordered_map<shared_ptr<Node>, size_t> m_map_result_to_index;
+    unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
+    vector<shared_ptr<op::Parameter>> m_main_function_parameters;
+    vector<shared_ptr<op::Result>> m_main_function_results;
 };
 
 // HybridCallFrame servers 2 purposes:
 // 1. HybridBackend's main use case is to test device placement and graph partition routines.
 // 2. It also shows how glued-hybrid runtime can be built by combining different runtimes.
-// 3. By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
-//    INTERPRETER tensor view). It falls back to CPU when requested by placement.
 //
-// TODO: For simplicity, currently this test HybridBackend does not handle input-output,
-//       output-output and constant-output aliasing.
+// By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
+// INTERPRETER tensor view). It falls back to CPU when requested by placement.
 class HybridBackend
 {
 public:
@@ -210,50 +170,38 @@ public:
     }
 
     // Returns CallFrame directly, simplifies calling process
-    shared_ptr<HybridCallFrame> compile(const shared_ptr<Function>& f)
+    shared_ptr<HybridCallFrame> compile(const shared_ptr<Function>& main_function)
     {
-        // Store f's parameter and outputs, used in runtime
-        unordered_map<shared_ptr<op::Parameter>, size_t> map_parameter_to_index;
-        for (size_t i = 0; i < f->get_parameters().size(); ++i)
-        {
-            map_parameter_to_index[f->get_parameters().at(i)] = i;
-        }
-
-        // Parameter's source is either itself, or the output node of the upstream function
-        unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> map_parameter_to_source_node;
+        // Store main_functions parameter and results, since main_function will be split
+        auto main_function_parameters = main_function->get_parameters();
+        auto main_function_results = main_function->get_results();
 
         // Split to functions
-        vector<shared_ptr<Function>> funcs =
-            split_function_by_placement(f, map_parameter_to_source_node);
-
-        auto main_func = funcs.back();
-        unordered_map<shared_ptr<Node>, size_t> map_result_to_index;
-        for (size_t i = 0; i < main_func->get_results().size(); ++i)
-        {
-            map_result_to_index[main_func->get_results().at(i)] = i;
-        }
+        vector<shared_ptr<Function>> sub_functions;
+        unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
+        tie(sub_functions, map_parameter_to_result) = split_function_by_placement(main_function);
 
         // Make call frames
         vector<shared_ptr<runtime::CallFrame>> call_frames;
-        for (auto func : funcs)
+        for (auto sub_function : sub_functions)
         {
-            Placement placement = get_colocated_function_placement(func);
+            Placement placement = get_colocated_function_placement(sub_function);
             auto manager = get_cached_manager(placement_to_string(placement));
             auto backend = get_cached_backend(placement_to_string(placement));
-            auto external = manager->compile(func);
+            auto external = manager->compile(sub_function);
             auto call_frame = backend->make_call_frame(external);
             call_frames.push_back(call_frame);
         }
 
-        return make_shared<HybridCallFrame>(funcs,
+        return make_shared<HybridCallFrame>(sub_functions,
                                             call_frames,
-                                            map_parameter_to_source_node,
-                                            map_parameter_to_index,
-                                            map_result_to_index);
+                                            map_parameter_to_result,
+                                            main_function_parameters,
+                                            main_function_results);
     }
 };
 
-// Perform all operations on interpreter and fallback Multiply to cpu
+// Perform all operations on INTERPRETER and fallback Multiply to CPU
 static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared_ptr<Node> node) {
     Placement placement;
     string node_op = node->description();
@@ -271,12 +219,12 @@ static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared
 TEST(graph_partition, placement_all_cpu_policy)
 {
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> AplusB = A + B;
-    std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> AplusB = A + B;
+    shared_ptr<Node> AplusBtimesC = AplusB * C;
+    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -297,12 +245,12 @@ TEST(graph_partition, placement_all_cpu_policy)
 TEST(graph_partition, placement_int_with_cpu_mul_policy)
 {
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> AplusB = A + B;
-    std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> AplusB = A + B;
+    shared_ptr<Node> AplusBtimesC = AplusB * C;
+    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -327,28 +275,47 @@ TEST(graph_partition, placement_int_with_cpu_mul_policy)
     }
 }
 
-TEST(graph_partition, parameter_insert_and_call)
+TEST(graph_partition, hybrid_abc_manual)
 {
-    //   A[INT] B[INT] C[INT]
-    //    \    /       |
-    //     +[INT]      |
-    //     ------   -----
-    //     P0[CPU]  P1[CPU]
-    //        \    /
-    //         *[CPU]
-    //         -----
-    //         f[INT]
+    // A   B   C    A   B     C
+    //  \ /   /      \ /     /
+    //   +D  /        +D    /
+    //    \ /         |    /
+    //     *E         R0  R1  f0(INT)
+    //     |       ------------------
+    //     R          P0  P1
+    //                 \ /
+    //                  *E
+    //                  |
+    //                  R2    f1(CPU)
+    //             ------------------
+    //                  P2
+    //                  |
+    //                  R     f2(INT)
+    //             ------------------
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> AplusB = A + B;
-    std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = A + B;
+    auto E = D * C;
+    auto R = make_shared<op::Result>(E);
+    auto f = make_shared<Function>(R, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
     pass_manager.run_passes(f);
+
+    // Insert parameter
+    auto RP0 = insert_result_parameter_split(D, E);
+    shared_ptr<op::Result> R0 = RP0.first;
+    shared_ptr<op::Parameter> P0 = RP0.second;
+    auto RP1 = insert_result_parameter_split(C, E);
+    shared_ptr<op::Result> R1 = RP1.first;
+    shared_ptr<op::Parameter> P1 = RP1.second;
+    auto RP2 = insert_result_parameter_split(E, R);
+    shared_ptr<op::Result> R2 = RP2.first;
+    shared_ptr<op::Parameter> P2 = RP2.second;
 
     // Backends
     auto int_manager = runtime::Manager::get(placement_to_string(Placement::INTERPRETER));
@@ -356,78 +323,76 @@ TEST(graph_partition, parameter_insert_and_call)
     auto cpu_manager = runtime::Manager::get(placement_to_string(Placement::CPU));
     auto cpu_backend = cpu_manager->allocate_backend();
 
-    // Insert parameter node P0
-    std::shared_ptr<op::Parameter> P0 =
-        make_shared<op::Parameter>(AplusB->get_output_element_type(0), AplusB->get_output_shape(0));
-    insert_parameter_split_between(AplusB, AplusBtimesC, P0);
-    std::shared_ptr<op::Parameter> P1 =
-        make_shared<op::Parameter>(C->get_output_element_type(0), AplusB->get_output_shape(0));
-    insert_parameter_split_between(C, AplusBtimesC, P1);
-
-    // Check input / ouput ports
-    EXPECT_EQ(AplusBtimesC->get_input_ops().at(0), P0);
-    EXPECT_EQ(AplusBtimesC->get_input_ops().at(1), P1);
-
-    // Create f0, f1
-    std::shared_ptr<Function> f0 = make_shared<Function>(AplusB, op::ParameterVector{A, B});
-    std::shared_ptr<Function> f1 = make_shared<Function>(AplusBtimesC, op::ParameterVector{P0, P1});
-
-    // Allocate input, output and intermediate results TensorViews on INTERPRETER
-    shared_ptr<runtime::TensorView> a = int_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = int_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = int_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> a_plus_b =
-        int_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> a_plus_b_times_c =
-        int_backend->make_primary_tensor_view(element::f32, shape);
+    // f0 on INT
+    auto a = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto b = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto c = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto r0 = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto r1 = int_backend->make_primary_tensor_view(element::f32, shape);
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    // Allocate input, output and intermediate results TensorViews on CPU
-    shared_ptr<runtime::TensorView> p0 = cpu_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> p1 = cpu_backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> p0_times_p1 =
-        cpu_backend->make_primary_tensor_view(element::f32, shape);
+    auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
+    auto f0_external = int_manager->compile(f0);
+    auto f0_call_frame = int_backend->make_call_frame(f0_external);
+    f0_call_frame->call({r0, r1}, {a, b, c});
 
-    // Run f0 on INT
-    auto int_external = int_manager->compile(f0);
-    auto int_call_frame = int_backend->make_call_frame(int_external);
-    int_call_frame->call({a, b}, {a_plus_b});
+    // f1 on CPU
+    auto p0 = cpu_backend->make_primary_tensor_view(element::f32, shape);
+    auto p1 = cpu_backend->make_primary_tensor_view(element::f32, shape);
+    auto r2 = cpu_backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(p0, read_vector<float>(r0));
+    copy_data(p1, read_vector<float>(r1));
 
-    // Copy params to CPU
-    copy_data(p0, read_vector<float>(a_plus_b));
-    copy_data(p1, read_vector<float>(c));
+    auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
+    auto f1_external = cpu_manager->compile(f1);
+    auto f1_call_frame = cpu_backend->make_call_frame(f1_external);
+    f1_call_frame->call({r2}, {p0, p1});
 
-    // Run f1 on CPU
-    auto cpu_external = cpu_manager->compile(f1);
-    auto cpu_call_frame = cpu_backend->make_call_frame(cpu_external);
-    cpu_call_frame->call({p0, p1}, {p0_times_p1});
+    // f2 on INT
+    auto p2 = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto r = int_backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(p2, read_vector<float>(r2));
 
-    // Copy results back to INT
-    copy_data(a_plus_b_times_c, read_vector<float>(p0_times_p1));
-    EXPECT_EQ(read_vector<float>(a_plus_b_times_c),
+    auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
+    auto f2_external = int_manager->compile(f2);
+    auto f2_call_frame = int_backend->make_call_frame(f2_external);
+    f2_call_frame->call({r}, {p2});
+
+    // Check final result on INT
+    EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
 
-TEST(graph_partition, hybrid_backend_abc)
+TEST(graph_partition, hybrid_abc)
 {
-    //   A[INT] B[INT] C[INT]
-    //    \    /       |
-    //     +[INT]      |
-    //     ------   -----
-    //     P0[CPU]  P1[CPU]
-    //        \    /
-    //         *[CPU]
-    //         -----
-    //         f[INT]
+    // Same as hybrid_abc_manual, but using the test hybrid transformer
+    //
+    // A   B   C    A   B     C
+    //  \ /   /      \ /     /
+    //   +D  /        +D    /
+    //    \ /         |    /
+    //     *E         R0  R1  f0(INT)
+    //     |       ------------------
+    //     R          P0  P1
+    //                 \ /
+    //                  *E
+    //                  |
+    //                  R2    f1(CPU)
+    //             ------------------
+    //                  P2
+    //                  |
+    //                  R     f2(INT)
+    //             ------------------
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> AplusB = A + B;
-    std::shared_ptr<Node> AplusBtimesC = AplusB * C;
-    std::shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = A + B;
+    auto E = D * C;
+    auto R = make_shared<op::Result>(E);
+    auto f = make_shared<Function>(R, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -445,32 +410,30 @@ TEST(graph_partition, hybrid_backend_abc)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
 
-TEST(graph_partition, hybrid_backend_abcd)
+TEST(graph_partition, hybrid_abcd)
 {
     //   A   B
     //    \ /
-    //    E*
-    //    ---
-    // C  [P]  D
+    // C  E*   D
     //  \ / \ /
     //  F+  G+
     //    \ /
     //    H+
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> D = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> E = A * B;
-    std::shared_ptr<Node> F = C + E;
-    std::shared_ptr<Node> G = E + D;
-    std::shared_ptr<Node> H = F + G;
-    std::shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> D = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> E = A * B;
+    shared_ptr<Node> F = C + E;
+    shared_ptr<Node> G = E + D;
+    shared_ptr<Node> H = F + G;
+    shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -490,27 +453,27 @@ TEST(graph_partition, hybrid_backend_abcd)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    cf->call({a, b, c, d}, {r});
+    cf->call({r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
-TEST(graph_partition, hybrid_backend_back_and_forth)
+TEST(graph_partition, hybrid_back_and_forth)
 {
-    //   A   B
-    //    \ / \
-    //    D*   |
+    // A   B
+    //  \ / \
+    //  D*   |
+    //    \ /
+    //    E+   C
     //      \ /
-    //      E+   C
-    //        \ /
-    //        F*
+    //      F*
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> D = A * B;
-    std::shared_ptr<Node> E = D + B;
-    std::shared_ptr<Node> F = E * C;
-    std::shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> D = A * B;
+    shared_ptr<Node> E = D + B;
+    shared_ptr<Node> F = E * C;
+    shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -528,30 +491,30 @@ TEST(graph_partition, hybrid_backend_back_and_forth)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
 
-TEST(graph_partition, hybrid_backend_multi_middle_nodes)
+TEST(graph_partition, hybrid_multi_middle_nodes)
 {
-    //   A   B   C        A   B   C           C
-    //    \ / \ / \        \ / \ /             \
-    //    D+  E+  |  =>    D+  E+     PD  PE   |
-    //      \ / \ /                     \ / \ /
-    //      F*  G*                       F*  G*     PF   PG
-    //        \ /                                     \ /
-    //        H+                                       H+
+    // A   B   C
+    //  \ / \ / \
+    //  D+  E+  |
+    //    \ / \ /
+    //    F*  G*
+    //      \ /
+    //      H+
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> D = A + B;
-    std::shared_ptr<Node> E = B + C;
-    std::shared_ptr<Node> F = D * E;
-    std::shared_ptr<Node> G = E * C;
-    std::shared_ptr<Node> H = F + G;
-    std::shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> D = A + B;
+    shared_ptr<Node> E = B + C;
+    shared_ptr<Node> F = D * E;
+    shared_ptr<Node> G = E * C;
+    shared_ptr<Node> H = F + G;
+    shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -569,28 +532,28 @@ TEST(graph_partition, hybrid_backend_multi_middle_nodes)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({a, b, c}, {r});
+    cf->call({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
 
-TEST(graph_partition, hybrid_backend_no_split)
+TEST(graph_partition, hybrid_no_split)
 {
-    //     A   B
-    //      \ /
-    //       +
+    // A   B
+    //  \ /
+    //   +
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<Node> C = A + B;
-    std::shared_ptr<Function> func = make_shared<Function>(C, op::ParameterVector{A, B});
+    shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    shared_ptr<Node> C = A + B;
+    shared_ptr<Function> f = make_shared<Function>(C, op::ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(func);
+    pass_manager.run_passes(f);
 
     auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(func);
+    auto cf = backend->compile(f);
 
     shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
@@ -599,6 +562,6 @@ TEST(graph_partition, hybrid_backend_no_split)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({a, b}, {c});
+    cf->call({c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }

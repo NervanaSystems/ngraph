@@ -40,61 +40,39 @@ system that already has an ``ngraph_dist`` installed.
       export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
 
       
-#. neon uses the :command:`pip` package manager during installation; install it 
-   with Python version 3.5 or higher:
+#. The neon framework uses the :command:`pip` package manager during installation; 
+   install it with Python version 3.5 or higher:
 
    .. code-block:: console
 
       $ sudo apt-get install python3-pip python3-venv
+      $ python3 -m venv frameworks
+      $ cd frameworks 
+      $ . bin/activate
+      (frameworks) ~/frameworks$ 
 
+#. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
+   previous :doc:`install`, and complete these actions: 
 
-#. Clone the ngraph-neon integration repo somewhere you can find it easily. The
-   install configuration we'll document here places it under a directory we'll 
-   create named ``frameworks``
+   .. code-block:: console
 
-   * This section is optional, but it is the configuration we'll assume for the 
-     ``ngraph-neon`` documenation:
+      (frameworks)$ cd /opt/libraries/ngraph/python
+      (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      (frameworks)$ pip install -U . 
 
-      .. code-block:: console
+#. Finally we're ready to install the `neon` integration: 
 
-         $ sudo mkdir -p /opt/frameworks   
-         $ sudo chown -R username:username /opt/frameworks
-         $ cd /opt/frameworks
+   .. code-block:: console
 
-   * This section is required:       
+      (frameworks)$ git clone git@github.com:NervanaSystems/ngraph-neon
+      (frameworks)$ cd ngraph-neon
+      (frameworks)$ make install
 
-      .. code-block:: console
-
-         $ git clone git@github.com:NervanaSystems/ngraph-neon
-         $ cd ngraph-neon
-
-#. *Optional* Activate a virtualenv if you prefer working with virtualenvs:
+#. To test a training example, you can run the following from ``ngraph-neon/examples/cifar10``
    
    .. code-block:: console
 
-      $ python3 -m venv .
-      $ . bin/activate
-
-#. Clone the ngraph-neon repo and install the neon dependencies via ``pip``
-   if you are using a ``.venv`` and pip3 otherwise:
-
-
-   * For neon via virtual env:  
-
-     .. code-block:: console 
-
-        (.venv)$ pip install -U .  
-        Running setup.py install for neon ... done
-        Successfully installed neon-3.0
-
-
-   * For a system install of neon-ngraph:  
-
-     .. code-block:: console 
-
-      $ pip3 install -U . 
-        Running setup.py install for neon ... done
-        Successfully installed neon-3.0
+      (frameworks)$ python cifar10_conv.py
 
 
 

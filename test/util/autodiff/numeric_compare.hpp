@@ -16,7 +16,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_derivative.hpp"
 #include "util/autodiff/numeric_derivative.hpp"
