@@ -254,8 +254,7 @@ def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShap
     :param name: Optional new name for output node.
     :return: New node with broadcasted shape.
     """
-    return Broadcast(node, Shape(new_shape),
-                     AxisSet(get_broadcast_axes(new_shape, node.shape, axis)))
+    return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
 @nameable_op
