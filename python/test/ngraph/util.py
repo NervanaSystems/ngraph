@@ -21,11 +21,21 @@ import ngraph as ng
 
 
 def get_runtime():
+    """Return runtime object."""
     manager_name = pytest.config.getoption('backend', default='CPU')
     return ng.runtime(manager_name=manager_name)
 
 
 def run_op_node(input_data, op_fun, *args):
+    """Run computation on node performing `op_fun`.
+
+    `op_fun` have to needs to accept a node as an argument.
+
+    :param input_data: The input data for performed computation.
+    :param op_fun: The function handler for operation we want to carry out.
+    :param args: The arguments passed to operation we want to carry out.
+    :return: The result from computations.
+    """
     runtime = get_runtime()
     parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
     node = op_fun(parameter_a, *args)
@@ -34,6 +44,15 @@ def run_op_node(input_data, op_fun, *args):
 
 
 def run_op_numeric_data(input_data, op_fun, *args):
+    """Run computation on node performing `op_fun`.
+
+    `op_fun` have to accept a scalar or an array.
+
+    :param input_data: The input data for performed computation.
+    :param op_fun: The function handler for operation we want to carry out.
+    :param args: The arguments passed to operation we want to carry out.
+    :return: The result from computations.
+    """
     runtime = get_runtime()
     node = op_fun(input_data, *args)
     computation = runtime.computation(node)

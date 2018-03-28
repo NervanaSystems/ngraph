@@ -67,7 +67,7 @@ def test_broadcast():
                 [1, 2, 3],
                 [1, 2, 3]]
     result = run_op_node(input_data, ng.broadcast, new_shape)
-    np.testing.assert_allclose(result, expected)
+    assert np.allclose(result, expected)
 
     axis = 0
     expected = [[1, 1, 1],
@@ -75,29 +75,59 @@ def test_broadcast():
                 [3, 3, 3]]
 
     result = run_op_node(input_data, ng.broadcast, new_shape, axis)
-    np.testing.assert_allclose(result, expected)
+    assert np.allclose(result, expected)
 
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
     result = run_op_node(input_data, ng.broadcast, new_shape)
-    np.testing.assert_allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('val_type, value', [
+@pytest.mark.parametrize('val_type, input_data', [
     (bool, np.zeros((2, 2), dtype=int)),
-    (np.float32, np.random.randint(-8, 8, size=(2, 2), dtype=np.int32)),
-    (np.float64, np.random.randint(-16383, 16383, size=(2, 2), dtype=np.int64)),
-    (np.int8, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
-    (np.int16, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
-    (np.int32, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
-    (np.int64, np.ceil(-8 + np.random.rand(2, 3, 4) * 16)),
-    (np.uint8, np.ceil(np.random.rand(2, 3, 4) * 16)),
-    (np.uint16, np.ceil(np.random.rand(2, 3, 4) * 16)),
-    (np.uint32, np.ceil(np.random.rand(2, 3, 4) * 16)),
-    (np.uint64, np.ceil(np.random.rand(2, 3, 4) * 16)),
 ])
-def test_convert(val_type, value):
-    expected = np.array(value, dtype=val_type)
-    result = run_op_node(value, ng.convert, val_type)
-    np.testing.assert_allclose(result, expected)
+def test_convert_to_bool(val_type, input_data):
+    expected = np.array(input_data, dtype=val_type)
+    result = run_op_node(input_data, ng.convert, val_type)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type, range_start, range_end, in_dtype', [
+    (np.float32, -8, 8, np.int32),
+    (np.float64, -16383, 16383, np.int64),
+])
+def test_convert_to_float(val_type, range_start, range_end, in_dtype):
+    np.random.seed(133391)
+    input_data = np.random.randint(range_start, range_end, size=(2, 2), dtype=in_dtype)
+    expected = np.array(input_data, dtype=val_type)
+    result = run_op_node(input_data, ng.convert, val_type)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type', [
+    np.int8,
+    np.int16,
+    np.int32,
+    np.int64,
+])
+def test_convert_to_int(val_type):
+    np.random.seed(133391)
+    input_data = np.ceil(-8 + np.random.rand(2, 3, 4) * 16)
+    expected = np.array(input_data, dtype=val_type)
+    result = run_op_node(input_data, ng.convert, val_type)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type', [
+    np.uint8,
+    np.uint16,
+    np.uint32,
+    np.uint64,
+])
+def test_convert_to_uint(val_type):
+    np.random.seed(133391)
+    input_data = np.ceil(np.random.rand(2, 3, 4) * 16)
+    expected = np.array(input_data, dtype=val_type)
+    result = run_op_node(input_data, ng.convert, val_type)
+    assert np.allclose(result, expected)

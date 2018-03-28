@@ -45,49 +45,49 @@ def test_convolution_2d():
                                                padding_above=[1, 1], padding_below=[1, 1]))
     result = model()
 
-    np.testing.assert_allclose(result,
-                               np.array([[[[0., -15., -15., 15., 15., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -20., -20., 20., 20., 0., 0., 0., 0.],
-                                           [0., -15., -15., 15., 15., 0., 0., 0., 0.]]]],
-                                        dtype=np.float32))
+    assert np.allclose(result,
+                       np.array([[[[0., -15., -15., 15., 15., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -20., -20., 20., 20., 0., 0., 0., 0.],
+                                   [0., -15., -15., 15., 15., 0., 0., 0., 0.]]]],
+                                dtype=np.float32))
 
     # convolution with padding=0 should produce 7 x 7 output:
     model = runtime.computation(ng.convolution(input_x, input_filter))
     result = model()
-    np.testing.assert_allclose(result,
-                               np.array([[[[-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0],
-                                           [-20, -20, 20, 20, 0, 0, 0]]]],
-                                        dtype=np.float32))
+    assert np.allclose(result,
+                       np.array([[[[-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0],
+                                   [-20, -20, 20, 20, 0, 0, 0]]]],
+                                dtype=np.float32))
 
     # convolution with strides=2 should produce 4 x 4 output:
     model = runtime.computation(ng.convolution(input_x, input_filter, filter_strides=[2, 2]))
     result = model()
-    np.testing.assert_allclose(result,
-                               np.array([[[[-20., 20., 0., 0.],
-                                           [-20., 20., 0., 0.],
-                                           [-20., 20., 0., 0.],
-                                           [-20., 20., 0., 0.]]]],
-                                        dtype=np.float32))
+    assert np.allclose(result,
+                       np.array([[[[-20., 20., 0., 0.],
+                                   [-20., 20., 0., 0.],
+                                   [-20., 20., 0., 0.],
+                                   [-20., 20., 0., 0.]]]],
+                                dtype=np.float32))
 
     # convolution with dilation=2 should produce 5 x 5 output:
     model = runtime.computation(ng.convolution(input_x, input_filter,
                                                filter_dilation_strides=(2, 2)))
     result = model()
-    np.testing.assert_allclose(result,
-                               np.array([[[[0, 0, 20, 20, 0],
-                                           [0, 0, 20, 20, 0],
-                                           [0, 0, 20, 20, 0],
-                                           [0, 0, 20, 20, 0],
-                                           [0, 0, 20, 20, 0]]]],
-                                        dtype=np.float32))
+    assert np.allclose(result,
+                       np.array([[[[0, 0, 20, 20, 0],
+                                   [0, 0, 20, 20, 0],
+                                   [0, 0, 20, 20, 0],
+                                   [0, 0, 20, 20, 0],
+                                   [0, 0, 20, 20, 0]]]],
+                                dtype=np.float32))

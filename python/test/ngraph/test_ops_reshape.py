@@ -32,34 +32,60 @@ def test_concat():
     node = ng.concat([parameter_a, parameter_b], axis)
     computation = runtime.computation(node, parameter_a, parameter_b)
     result = computation(a, b)
-    np.testing.assert_allclose(result, expected)
+    assert np.allclose(result, expected)
 
 
 @pytest.mark.parametrize('val_type, value', [
     (bool, False),
     (bool, np.empty((2, 2), dtype=bool)),
-    (np.float32, np.float32(0.1234)),
-    (np.float32, -1 + np.random.rand(2, 3, 4) * 2),
-    (np.float64, np.float64(0.1234)),
-    (np.float64, np.array(-1 + np.random.rand(2, 3, 4) * 2, dtype=np.float64)),
-    (np.int8, np.int8(-63)),
-    (np.int8, np.random.randint(-8, 8, size=(2, 2), dtype=np.int8)),
-    (np.int16, np.int16(-12345)),
-    (np.int16, np.random.randint(-64, 64, size=(2, 2), dtype=np.int16)),
-    (np.int32, np.int32(-123456)),
-    (np.int32, np.random.randint(-1024, 1024, size=(2, 2), dtype=np.int32)),
-    (np.int64, np.int64(-1234567)),
-    (np.int64, np.random.randint(-16383, 16383, size=(2, 2), dtype=np.int64)),
-    (np.uint8, np.uint8(63)),
-    (np.uint8, np.random.randint(0, 8, size=(2, 2), dtype=np.uint8)),
-    (np.uint16, np.uint16(12345)),
-    (np.uint16, np.random.randint(0, 64, size=(2, 2), dtype=np.uint16)),
-    (np.uint32, np.uint32(123456)),
-    (np.uint32, np.random.randint(0, 1024, size=(2, 2), dtype=np.uint32)),
-    (np.uint64, np.uint64(1234567)),
-    (np.uint64, np.random.randint(0, 16383, size=(2, 2), dtype=np.uint64)),
 ])
-def test_constant(val_type, value):
+def test_constant_from_bool(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
-    np.testing.assert_allclose(result, expected)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type, value', [
+    (np.float32, np.float32(0.1234)),
+    (np.float64, np.float64(0.1234)),
+    (np.int8, np.int8(-63)),
+    (np.int16, np.int16(-12345)),
+    (np.int32, np.int32(-123456)),
+    (np.int64, np.int64(-1234567)),
+    (np.uint8, np.uint8(63)),
+    (np.uint16, np.uint16(12345)),
+    (np.uint32, np.uint32(123456)),
+    (np.uint64, np.uint64(1234567)),
+])
+def test_constant_from_scalar(val_type, value):
+    expected = np.array(value, dtype=val_type)
+    result = run_op_numeric_data(value, ng.constant, val_type)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('val_type', [
+    np.float32,
+    np.float64,
+])
+def test_constant_from_float_array(val_type):
+    np.random.seed(133391)
+    input_data = np.array(-1 + np.random.rand(2, 3, 4) * 2, dtype=val_type)
+    result = run_op_numeric_data(input_data, ng.constant, val_type)
+    assert np.allclose(result, input_data)
+
+
+@pytest.mark.parametrize('val_type, range_start, range_end', [
+    (np.int8, -8, 8),
+    (np.int16, -64, 64),
+    (np.int32, -1024, 1024),
+    (np.int64, -16383, 16383),
+    (np.uint8, 0, 8),
+    (np.uint16, 0, 64),
+    (np.uint32, 0, 1024),
+    (np.uint64, 0, 16383),
+])
+def test_constant_from_integer_array(val_type, range_start, range_end):
+    np.random.seed(133391)
+    input_data = np.array(np.random.randint(range_start, range_end, size=(2, 2)), dtype=val_type)
+    result = run_op_numeric_data(input_data, ng.constant, val_type)
+    assert np.allclose(result, input_data)

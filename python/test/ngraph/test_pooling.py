@@ -26,7 +26,7 @@ def _ndarray_1x1x4x4():
 
 
 def test_avg_pool_2d(_ndarray_1x1x4x4):
-    rt = get_runtime()
+    runtime = get_runtime()
     input_data = _ndarray_1x1x4x4
     param = ng.parameter(input_data.shape, name='A', dtype=np.float32)
 
@@ -36,17 +36,17 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [21.5, 23.5]]]]
 
     avg_pool_node = ng.avg_pool(param, window_shape, strides)
-    computation = rt.computation(avg_pool_node, param)
+    computation = runtime.computation(avg_pool_node, param)
     result = computation(input_data)
-    np.testing.assert_allclose(result, expected, rtol=1e-5)
+    assert np.allclose(result, expected)
 
     expected = [[[[13.5, 14.5, 15.5],
                   [17.5, 18.5, 19.5],
                   [21.5, 22.5, 23.5]]]]
     avg_pool_node = ng.avg_pool(param, window_shape)
-    computation = rt.computation(avg_pool_node, param)
+    computation = runtime.computation(avg_pool_node, param)
     result = computation(input_data)
-    np.testing.assert_allclose(result, expected, rtol=1e-5)
+    assert np.allclose(result, expected)
 
     padding_below = [1, 1]
     padding_above = [1, 1]
@@ -58,9 +58,9 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [23.0, 24.5, 26.0]]]]
     avg_pool_node = ng.avg_pool(param, window_shape, strides, padding_below, padding_above,
                                 include_pad)
-    computation = rt.computation(avg_pool_node, param)
+    computation = runtime.computation(avg_pool_node, param)
     result = computation(input_data)
-    np.testing.assert_allclose(result, expected, rtol=1e-5)
+    assert np.allclose(result, expected)
 
     include_pad = True
     expected = [[[[2.75, 6.25, 3.5],
@@ -68,9 +68,9 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [5.75, 12.25, 6.5]]]]
     avg_pool_node = ng.avg_pool(param, window_shape, strides, padding_below, padding_above,
                                 include_pad)
-    computation = rt.computation(avg_pool_node, param)
+    computation = runtime.computation(avg_pool_node, param)
     result = computation(input_data)
-    np.testing.assert_allclose(result, expected, rtol=1e-5)
+    assert np.allclose(result, expected)
 
 
 def test_avg_pooling_3d(_ndarray_1x1x4x4):
@@ -89,4 +89,4 @@ def test_avg_pooling_3d(_ndarray_1x1x4x4):
 
                     [[13.5, 15.5],
                      [21.5, 23.5]]]]]
-    np.testing.assert_allclose(result, result_ref, rtol=1e-5)
+    assert np.allclose(result, result_ref)
