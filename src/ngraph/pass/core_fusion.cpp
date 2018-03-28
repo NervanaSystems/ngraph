@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-#include "ngraph/pattern/core_fusion.hpp"
+#include "ngraph/pass/core_fusion.hpp"
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
