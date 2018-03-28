@@ -124,16 +124,21 @@ namespace ngraph
                                     const Shape& padding_below,
                                     const Shape& padding_above);
 
+                void reduce_sum_all_1d_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape);
+
                 void reduce_sum_all_2d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape);
 
                 void reduce_sum_2d_1rd_float32(float* input,
-                                            float* output,
-                                            const Shape& input_shape,
-                                            const Shape& output_shape,
-                                            const AxisSet& reduction_axes);
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape,
+                                               const AxisSet& reduction_axes);
             }
         }
     }

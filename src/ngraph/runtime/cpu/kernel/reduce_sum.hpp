@@ -44,8 +44,8 @@ namespace ngraph
                         in_dims[i] = input_shape[i];
                     }
 
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, 0, Eigen::RowMajor>> out(
-                        output, out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 0, Eigen::RowMajor>> out(output,
+                                                                                         out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input,
                                                                                            in_dims);
                     out.device(eigen::global_thread_pool_device) = in.sum();
@@ -78,13 +78,13 @@ namespace ngraph
                         reduction_dims[i++] = axis;
                     }
 
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank - ReductionDims, Eigen::RowMajor>> out(
-                        output, out_dims);
+                    Eigen::TensorMap<
+                        Eigen::Tensor<ElementType, Rank - ReductionDims, Eigen::RowMajor>>
+                        out(output, out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input,
                                                                                            in_dims);
                     out.device(eigen::global_thread_pool_device) = in.sum(reduction_dims);
                 }
-
             }
         }
     }

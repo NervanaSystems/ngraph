@@ -24,6 +24,14 @@ namespace ngraph
         {
             namespace kernel
             {
+                void reduce_sum_all_1d_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape)
+                {
+                    reduce_sum_all<float, 1>(input, output, input_shape, output_shape);
+                }
+
                 void reduce_sum_all_2d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
@@ -38,9 +46,9 @@ namespace ngraph
                                                const Shape& output_shape,
                                                const AxisSet& reduction_axes)
                 {
-                    reduce_sum<float, 2, 1>(input, output, input_shape, output_shape, reduction_axes);
+                    reduce_sum<float, 2, 1>(
+                        input, output, input_shape, output_shape, reduction_axes);
                 }
-
             }
         }
     }
