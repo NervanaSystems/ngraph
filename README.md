@@ -7,6 +7,17 @@ supports a variety of backends used by Deep Learning (DL) frameworks.
 
 ![nGraph ecosystem][ngraph-ecosystem]
 
+
+|Framework   | bridge available? | ONNX support?  |
+|------------|-------------------|----------------|
+| neon       | yes               | yes            |
+| MXNet*     | yes               | yes            |
+| TensorFlow*| yes               | yes            |
+| PyTorch*   | not yet           | yes            |
+| CNTK*      | not yet           | yes            |
+| Caffe2*    | not yet           | yes            |
+
+
 ## Documentation
 
 See our [install] docs for how to get started. 
