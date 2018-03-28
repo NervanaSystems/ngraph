@@ -195,7 +195,8 @@ void codegen::StaticCompiler::initialize()
 
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
-    CGO.OptimizationLevel = 3;
+    char* opt_level = std::getenv("NGRAPH_COMPILER_OPT_LEVEL");
+    CGO.OptimizationLevel = (opt_level != nullptr) ? std::atoi(opt_level) : 3;
     CGO.RelocationModel = "static";
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
