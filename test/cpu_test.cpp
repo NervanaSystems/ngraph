@@ -332,7 +332,7 @@ TEST(cpu_test, batchnorm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-TEST(cpu_test, batchnorm_fprop_training_singleoutput_b2c2h2w1)
+TEST(cpu_test, batchnorm_fprop_singleoutput_b2c2w2h1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -348,7 +348,7 @@ TEST(cpu_test, batchnorm_fprop_training_singleoutput_b2c2h2w1)
     auto shape_r = Shape{2, 2, 2, 1};
     auto bn = make_shared<op::BatchNorm>(true, eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
+    auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -378,7 +378,7 @@ TEST(cpu_test, batchnorm_fprop_training_singleoutput_b2c2h2w1)
     auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    cf->call({bn_output}, {_input, _gamma, _beta, _mean, _var});
+    cf->call({bn_output}, {_gamma, _beta, _input, _mean, _var});
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));

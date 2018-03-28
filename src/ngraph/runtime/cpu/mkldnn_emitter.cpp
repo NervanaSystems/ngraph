@@ -578,7 +578,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
                                               const double eps,
-                                              const int bn_total_inputs,
+                                              size_t bn_total_inputs,
                                               bool bn_training_flag)
 {
     size_t input_index = build_memory_primitive(input_desc);
@@ -605,7 +605,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
             input_index, weights_index, result_index, mean_index, variance_index};
         return batchnorm_index;
     }
-    else if(bn_training_flag && bn_total_inputs == 3)
+    else if (bn_training_flag && bn_total_inputs == 5)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
             {{mkldnn::prop_kind::forward_training,

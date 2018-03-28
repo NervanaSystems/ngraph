@@ -69,7 +69,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     add_output(input->get_element_type(), m_bn_variance_shape);
 }
 
-ngraph::op::BatchNorm::BatchNorm(bool training, 
+ngraph::op::BatchNorm::BatchNorm(bool training,
                                  double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
@@ -202,23 +202,22 @@ std::shared_ptr<ngraph::Node>
         if (new_args.size() == 3)
         {
             return std::make_shared<BatchNorm>(
-            m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+                m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
         }
         else if (new_args.size() == 5)
         {
             return std::make_shared<BatchNorm>(this->m_training,
-                                    m_epsilon,
-                                    new_args.at(0),
-                                    new_args.at(1),
-                                    new_args.at(2),
-                                    new_args.at(3),
-                                    new_args.at(4));
+                                               m_epsilon,
+                                               new_args.at(0),
+                                               new_args.at(1),
+                                               new_args.at(2),
+                                               new_args.at(3),
+                                               new_args.at(4));
         }
         else
         {
             throw ngraph_error("Incorrect number of new arguments");
         }
-       
     }
     else
     {

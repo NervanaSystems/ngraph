@@ -408,6 +408,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                args.size(),
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -425,7 +426,7 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(batchnorm_index) << ");\n";
                 }
-                else if(batchnorm->get_training_flag() && args.size() == 5)
+                else if (batchnorm->get_training_flag() && args.size() == 5)
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -453,6 +454,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                args.size(),
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -469,7 +471,6 @@ namespace ngraph
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(batchnorm_index) << ");\n";
-
                 }
                 else //BatchNorm Inference
                 {
@@ -499,6 +500,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                args.size(),
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
