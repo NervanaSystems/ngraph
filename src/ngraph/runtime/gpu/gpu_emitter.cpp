@@ -225,8 +225,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "cudnnFilterDescriptor_t " << w_descriptor << ";\n";
                 writer << "cudnnCreateFilterDescriptor(&" << w_descriptor << ");\n";
                 writer << "cudnnSetFilter4dDescriptor(" << w_descriptor << ",\n";
-                writer << "                 /*format=*/" << tensor_format << ",\n";
                 writer << "                 /*dataType=*/" << tensor_type;
+                writer << "                 /*format=*/" << tensor_format << ",\n";
                 for (auto const& axis : dimensions)
                 {
                     writer << ",\n                 /*dimension_size*/" << axis;
