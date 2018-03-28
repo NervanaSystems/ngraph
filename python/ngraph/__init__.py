@@ -52,6 +52,7 @@ from ngraph.ops import parameter
 from ngraph.ops import prod
 from ngraph.ops import reshape
 from ngraph.ops import slice
+from ngraph.ops import softmax
 from ngraph.ops import sqrt
 from ngraph.ops import subtract
 from ngraph.ops import sum

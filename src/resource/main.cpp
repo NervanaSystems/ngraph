@@ -73,11 +73,12 @@ int main(int argc, char** argv)
 
     for (size_t i = 1; i < argc; i++)
     {
-        if (string(argv[i]) == "--output")
+        string arg = argv[i];
+        if (arg == "--output")
         {
             output_path = argv[++i];
         }
-        else if (string(argv[i]) == "--base_name")
+        else if (arg == "--base_name")
         {
             base_name = argv[++i];
         }
