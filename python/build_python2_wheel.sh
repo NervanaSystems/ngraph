@@ -24,14 +24,15 @@ mkdir build
 
 cd build
 
-if [[ -z "${NGRAPH_CPP_BUILD_PATH}" ]]; then
-  cmake -DNGRAPH_INSTALL_PREFIX=$NGRAPH_CPP_BUILD_PATH ..
-else
+if [ -z "${NGRAPH_CPP_BUILD_PATH+x}" ]; then
+  echo "NGRAPH_CPP_BUILD_PATH is not set"
   cmake ..
+else
+  echo "NGRAPH_CPP_BUILD_PATH set to" $NGRAPH_CPP_BUILD_PATH
+  cmake -DNGRAPH_INSTALL_PREFIX=$NGRAPH_CPP_BUILD_PATH ..
 fi
 
 make -j8
 
 cd ..
 python2 setup.py bdist_wheel
-
