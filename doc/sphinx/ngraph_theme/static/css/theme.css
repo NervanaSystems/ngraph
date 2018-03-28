@@ -577,7 +577,6 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   display: block;
   background: #638470;
   margin: -5px;
-  font-family: 'Faustina', sans;
   padding: 0.43em 0.74em;
   margin-bottom: 0.33em;
 }
@@ -709,7 +708,7 @@ button[disabled] {
   background-color: #27AE60;
   text-decoration: none;
   font-weight: normal;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", Corbel,  sans;
   box-shadow: 0px 1px 2px -1px rgba(255, 255, 255, 0.5) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.1) inset;
   outline-none: false;
   vertical-align: middle;
@@ -1147,7 +1146,7 @@ input {
 input[type="button"], input[type="reset"], input[type="submit"] {
   -webkit-appearance: button;
   cursor: pointer;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", Corbel,  sans;
   *overflow: visible;
 }
 input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"] {
@@ -1156,7 +1155,7 @@ input[type="text"], input[type="password"], input[type="email"], input[type="url
   display: inline-block;
   border: 1px solid #ccc;
   font-size: 80%;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", Corbel,  sans;
   box-shadow: inset 0 1px 3px #ddd;
   border-radius: 0;
   -webkit-transition: border 0.3s linear;
@@ -1225,7 +1224,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
   width: 100%;
-  font-family: "Nanum Gothic", Arial, sans;
+  font-family: Corbel,  sans;
 }
 
 select, textarea {
@@ -1501,7 +1500,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 .wy-table caption, .rst-content table.docutils caption, .rst-content table.field-list caption {
   color: #000;
-  font: italic 85%/1 arial, sans;
+  font: italic 85%/1 Corbel,  sans;
   padding: 1em 0;
   text-align: center;
 }
@@ -1629,7 +1628,7 @@ html {
 }
 
 body {
-  font-family: "Nanum Gothic", Arial, sans-serif;
+  font-family: Corbel,  sans-serif;
   font-weight: normal;
   color: #404040;
   min-height: 100%;
@@ -1709,7 +1708,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0.33em;
   font-weight: 700;
-  font-family: "NeoSansIntel", "Nanum Gothic", arial, sans;
+  font-family: "NeoSansIntel", Corbel,  sans;
 }
 
 p {
@@ -1855,7 +1854,7 @@ code, p.caption {
 
 
 caption-text {
-   font-family: 'Nanum Gothic Coding', monospace;
+   font-family: 'Roboto', monospace;
    font-family: monospace;
    font-size: 1.03em;
    line-height: 1.43em;
@@ -2223,7 +2222,7 @@ div[class^='highlight'] pre {
   color: #fcfcfc;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "NeoSansIntel", "Nanum Gothic", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", Corbel,  sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2412,7 +2411,6 @@ div[class^='highlight'] pre {
 .rst-content h1 .headerlink:after, .rst-content h2 .headerlink:after, .rst-content .toctree-wrapper p.caption .headerlink:after, .rst-content h3 .headerlink:after, .rst-content h4 .headerlink:after, .rst-content h5 .headerlink:after, .rst-content h6 .headerlink:after, .rst-content dl dt .headerlink:after, .rst-content p.caption .headerlink:after {
   visibility: visible;
   content: "";
-  font-family: 'sans-serif';
   display: inline-block;
 }
 .rst-content h1:hover .headerlink, .rst-content h2:hover .headerlink, .rst-content .toctree-wrapper p.caption:hover .headerlink, .rst-content h3:hover .headerlink, .rst-content h4:hover .headerlink, .rst-content h5:hover .headerlink, .rst-content h6:hover .headerlink, .rst-content dl dt:hover .headerlink, .rst-content p.caption:hover .headerlink {
@@ -2435,7 +2433,7 @@ div[class^='highlight'] pre {
 }
 .rst-content .sidebar .sidebar-title {
   display: block;
-  font-family: "NeoSansIntel", 'Nanum Gothic', arial, sans-serif;
+  font-family: "NeoSansIntel", Corbel, sans;
   font-weight: bold;
   background: #e1e4e5;
   padding: 6px 12px;
@@ -2703,18 +2701,6 @@ span[id*='MathJax-Span'] {
   font-style: normal;
   font-weight: 700;
   src: local("NeoSansIntel Bold"), local("NeoSansIntel-Bold"), url(../fonts/NeoSansIntel-Bold.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Nanum Gothic";
-  font-style: normal;
-  font-weight: 500;
-  src: local("NanumGothic Regular"), local("NanumGothic-Regular"), url(../fonts/NanumGothic-Regular.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Nanum Gothic Coding";
-  font-style: normal;
-  font-weight: 700;
-  src: local("NanumGothicCoding Bold"), local("NanumGothicCoding-Bold"), url(../fonts/NanumGothicCoding-Bold.ttf) format("truetype");
 }
 
 .wy-affix {
