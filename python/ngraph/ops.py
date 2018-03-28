@@ -281,19 +281,19 @@ def dot(left_node, right_node, name=None):
 
 # convpool ops
 @nameable_op
-def convolution(x,                              # type: Node
+def convolution(data_batch,                     # type: Node
                 filter_weights,                 # type: Node
                 filter_strides=None,            # type: List[int]
                 filter_dilation_strides=None,   # type: List[int]
                 padding_below=None,             # type: List[int]
                 padding_above=None,             # type: List[int]
-                img_dilation_strides=None,      # type: List[int]
+                data_dilation_strides=None,     # type: List[int]
                 name=None,                      # type: str
                 ):
     # type: (...) -> Node
     """Return node performing batched convolution operation.
 
-    :param x: The node providing data batch tensor.
+    :param data_batch: The node providing data batch tensor.
     :param filter_weights: The node providing filters tensor.
     :param filter_strides: The kernel window movement strides.
     :param filter_dilation_strides: The filters dilation strides.
@@ -301,11 +301,11 @@ def convolution(x,                              # type: Node
                           coordinate.
     :param padding_above: The number of zero padding elements to add on each axis above max
                           coordinate.
-    :param img_dilation_strides: The data batch dilation strides.
+    :param data_dilation_strides: The data batch dilation strides.
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-    spatial_dim_count = len(x.shape) - 2
+    spatial_dim_count = len(data_batch.shape) - 2
     if filter_strides is None:
         filter_strides = [1] * spatial_dim_count
     if filter_dilation_strides is None:
@@ -314,44 +314,45 @@ def convolution(x,                              # type: Node
         padding_above = [0] * spatial_dim_count
     if padding_below is None:
         padding_below = [0] * spatial_dim_count
-    if img_dilation_strides is None:
-        img_dilation_strides = [1] * spatial_dim_count
+    if data_dilation_strides is None:
+        data_dilation_strides = [1] * spatial_dim_count
 
-    return Convolution(x, filter_weights, Strides(filter_strides), Strides(filter_dilation_strides),
-                       CoordinateDiff(padding_below), CoordinateDiff(padding_above),
-                       Strides(img_dilation_strides))
+    return Convolution(data_batch, filter_weights, Strides(filter_strides),
+                       Strides(filter_dilation_strides), CoordinateDiff(padding_below),
+                       CoordinateDiff(padding_above), Strides(data_dilation_strides))
 
 
 @nameable_op
-def avg_pool(x,                       # type: Node
-             window_shape,            # type: TensorShape
-             strides=None,            # type: List[int]
-             padding_below=None,      # type: TensorShape
-             padding_above=None,      # type: TensorShape
-             include_pad=False,       # type: bool
-             name=None,               # type: str
+def avg_pool(data_batch,             # type: Node
+             window_shape,           # type: TensorShape
+             window_strides=None,    # type: List[int]
+             padding_below=None,     # type: TensorShape
+             padding_above=None,     # type: TensorShape
+             include_padding=False,  # type: bool
+             name=None,              # type: str
              ):
     # type: (...) -> Node
     """Return average pooling node.
 
-    :param x: The input tensor.
+    :param data_batch: The input node providing data.
     :param window_shape: The pooling window shape.
-    :param strides: The window movement strides.
+    :param window_strides: The window movement strides.
     :param padding_below: The input data optional padding below filled with zeros.
     :param padding_above: The input data optional padding below filled with zeros.
-    :param include_pad: Whether or not to include zero padding in average computations.
+    :param include_padding: Whether or not to include zero padding in average computations.
     :param name: Optional name for the new output node.
     :return: New node with AvgPool operation applied on its data.
     """
-    if strides is None:
-        strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
+    spatial_dim_count = len(window_shape)
+    if window_strides is None:
+        window_strides = [1] * spatial_dim_count
     if padding_above is None:
-        padding_above = [0] * len(window_shape)
+        padding_above = [0] * spatial_dim_count
     if padding_below is None:
-        padding_below = [0] * len(window_shape)
+        padding_below = [0] * spatial_dim_count
 
-    return AvgPool(x, Shape(window_shape), Strides(strides), Shape(padding_below),
-                   Shape(padding_above), include_pad)
+    return AvgPool(data_batch, Shape(window_shape), Strides(window_strides), Shape(padding_below),
+                   Shape(padding_above), include_padding)
 
 
 @nameable_op
