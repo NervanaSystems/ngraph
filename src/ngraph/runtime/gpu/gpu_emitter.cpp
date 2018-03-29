@@ -198,9 +198,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string y_descriptor = "y_descriptor";
                 const std::string tensor_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CONVOLUTION";
+                const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
-                const size_t workSapceSizeInBytes = 100;
+                const size_t workSapceSizeInBytes = 1024;
                 std::array<size_t, 4> dimensions;
 
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
