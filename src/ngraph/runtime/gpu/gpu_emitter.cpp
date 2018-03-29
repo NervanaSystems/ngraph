@@ -239,6 +239,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
+                Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding_below = convolution->get_padding_below();
                 CoordinateDiff padding_above = convolution->get_padding_above();
 
