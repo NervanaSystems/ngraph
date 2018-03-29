@@ -95,6 +95,7 @@
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
 using namespace std;
 namespace ngraph
