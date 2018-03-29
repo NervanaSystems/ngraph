@@ -47,7 +47,7 @@ std::shared_ptr<Node> ngraph::builder::rotate_left(const std::shared_ptr<Node>& 
         auto axis_size = shape[axis];
         while (rotation_size >= axis_size)
         {
-            // normalize over rotatation
+            // normalize rotatation to axis size
             rotation_size -= axis_size;
         }
 
