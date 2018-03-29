@@ -188,6 +188,29 @@ TEST(builder, rotate_left)
     EXPECT_EQ(expected, read_vector<uint32_t>(result));
 }
 
+TEST(builder, over_rotate_left)
+{
+    Shape shape{3};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+
+    // 5 rotations on a size 3 axis = 2 rotations
+    auto f = make_shared<Function>(builder::rotate_left(A, {5}), op::ParameterVector{A});
+
+    auto manager = runtime::Manager::get("INTERPRETER");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::u32, shape);
+    copy_data(a, vector<uint32_t>{3, 1, 2});
+    auto result = backend->make_primary_tensor_view(element::u32, shape);
+
+    cf->call({result}, {a});
+    vector<uint32_t> expected{2, 3, 1};
+
+    EXPECT_EQ(expected, read_vector<uint32_t>(result));
+}
+
 TEST(builder, rotate_left_2D)
 {
     Shape shape{2, 3};

@@ -37,24 +37,31 @@ std::shared_ptr<Node> ngraph::builder::rotate_left(const std::shared_ptr<Node>& 
 
     for (size_t axis = 0; axis < rotations.size(); ++axis)
     {
-        if (rotations[axis] == 0)
+        auto rotation_size = rotations[axis];
+        if (rotation_size == 0)
         {
+            // nothing to do
             continue;
         }
 
-        if (rotations[axis] >= shape[axis])
+        auto axis_size = shape[axis];
+        while (rotation_size >= axis_size)
         {
-            throw ngraph_error("Rotation size greater than or equal to input tensor axis size");
+            // normalize over rotatation
+            rotation_size -= axis_size;
         }
 
-        Coordinate left_bound = upper_bound;
-        left_bound[axis] = rotations[axis];
-        auto left_slice = std::make_shared<op::Slice>(concat, lower_bound, left_bound);
+        // get left_slice = [0:rotation_size)
+        Coordinate left_upper_bound = upper_bound;
+        left_upper_bound[axis] = rotation_size;
+        auto left_slice = std::make_shared<op::Slice>(concat, lower_bound, left_upper_bound);
 
-        Coordinate right_bound = lower_bound;
-        right_bound[axis] = rotations[axis];
-        auto right_slice = std::make_shared<op::Slice>(concat, right_bound, upper_bound);
+        // get right_slice = [rotation_size:axis_size)
+        Coordinate right_lower_bound = lower_bound;
+        right_lower_bound[axis] = rotation_size;
+        auto right_slice = std::make_shared<op::Slice>(concat, right_lower_bound, upper_bound);
 
+        // concatenate right_slice:left_slice
         concat = std::make_shared<op::Concat>(NodeVector{right_slice, left_slice}, axis);
     }
 
