@@ -41,7 +41,6 @@ struct Type
         DATA = 0,
         WEIGHTS,
         BIAS,
-        UNDEFINED
     };
 };
 
@@ -90,7 +89,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     //we don't really need a broadcast node but
     //labelling a Broadcast allows us to extract
-    //parms from all 3 labels in the same fashion
+    //params from all 3 labels in the same fashion
     //(i.e. via get_input_op(0))
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
@@ -107,11 +106,11 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         std::make_shared<pattern::Matcher>(weights_pattern),
         std::make_shared<pattern::Matcher>(bias_pattern)};
 
-    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; //add to list of parms
+    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; //add to list of params
     std::map<NodeVector, NodeVector> param_list;
     for (auto n : function->get_ordered_ops())
     {
-        NodeVector parms;
+        NodeVector params;
         NodeVector matched_nodes;
         for (size_t i = 0; i < NUM_MMB_ARGS; i++)
         {
@@ -122,18 +121,18 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 //in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
                 //if we have less than 3 matches we skip this node anyways
                 auto matched = matcher->get_pattern_map()[labels[i]];
-                parms.push_back(matched->get_input_op(0));
+                params.push_back(matched->get_input_op(0));
                 matched_nodes.push_back(matched);
             }
 
-            if (parms.size() != NUM_MMB_ARGS)
+            if (params.size() != NUM_MMB_ARGS)
             {
                 continue;
             }
 
             //we have a full set for the current Add (n) i.e. data, weights, bias
             op_seg_map.insert(std::make_pair(n, matched_nodes));
-            param_list[parms].push_back(n);
+            param_list[params].push_back(n);
         }
     }
 
