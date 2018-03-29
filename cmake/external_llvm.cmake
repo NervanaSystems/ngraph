@@ -20,11 +20,9 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     set(CMAKE_DISABLE_SOURCE_CHANGES ON)
     set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-    set(RELEASE_TAG release_50)
-
     ExternalProject_Add(ext_clang
         GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
-        GIT_TAG ${RELEASE_TAG}
+        GIT_TAG 26cac19a0d622afc91cd52a002921074bccc6a27
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -42,7 +40,7 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
 
     ExternalProject_Add(ext_openmp
         GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
-        GIT_TAG ${RELEASE_TAG}
+        GIT_TAG 29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -67,7 +65,7 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     ExternalProject_Add(ext_llvm
         DEPENDS ext_clang ext_openmp
         GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-        GIT_TAG ${RELEASE_TAG}
+        GIT_TAG 5ae73c34f7eca6c43e71038b06704a8f7abc7f26
         CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                    -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
