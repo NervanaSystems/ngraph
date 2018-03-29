@@ -203,7 +203,7 @@ Bridge TensorFlow/XLA to nGraph
 
 #. After TensorFlow's dependencies are installed, clone the source of the 
    `ngraph-tensorflow`_ repo to your machine; this is the required fork for 
-   this integrationt. Many users may prefer to use a Python virtual env from 
+   this integration. Many users may prefer to use a Python virtual env from 
    here forward:  
 
    .. code-block:: console
@@ -274,7 +274,7 @@ to the following directory inside the TensorFlow installation directory:
    <Python site-packages>/tensorflow/plugins
 
 Once the build and installation steps are complete, you can start experimenting with 
-nGraph backends.
+coding for nGraph. 
 
 
 Run MNIST Softmax with the activated bridge
@@ -311,8 +311,8 @@ your cloned version of `ngraph-tensorflow-bridge`_:
    $ python mnist_softmax_ngraph.py
 
 
-.. note:: The number-of-threads parameter specified in the `OMP_NUM_THREADS` is 
-   a function of number of CPU cores that are available in your system. 
+.. note:: The number-of-threads parameter specified in the `OMP_NUM_THREADS`` 
+   is a function of number of CPU cores that are available in your system. 
 
 
 .. _MXNet: http://mxnet.incubator.apache.org
