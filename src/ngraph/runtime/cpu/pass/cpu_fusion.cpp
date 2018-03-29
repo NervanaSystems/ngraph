@@ -722,9 +722,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         }
 
         std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto _input : m_bn->get_output_inputs(0))
+        for (auto bn_in : m_bn->get_output_inputs(0))
         {
-            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
+            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(bn_in->get_node());
             mgoes[mgoe->get_n()] = mgoe;
         }
 
