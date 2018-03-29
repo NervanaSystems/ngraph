@@ -106,7 +106,8 @@
 using namespace std;
 using namespace ngraph;
 
-#define PREFER_EIGEN 0
+// Enables old unoptimized Eigen code paths
+#define USE_EIGEN_CORE_INLINE 0
 
 static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
 
@@ -134,7 +135,7 @@ namespace ngraph
                 // TODO: Audit all uses of Add and fix this to use
                 // the right alignment instead of Eigen::Unaligned
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string()
                        << ", " << out[0].get_size() << ", 1>, Eigen::Unaligned> out("
                        << out[0].get_name() << ");\n";
@@ -627,7 +628,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "   " << emit_array1d(args[0]) << " *\n"
                        << "   " << emit_array1d(args[1]) << ";\n";
@@ -658,7 +659,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n";
                 writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
 #else
@@ -682,7 +683,7 @@ namespace ngraph
             {
                 auto result_shape = out[0].get_shape();
 
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 if (result_shape.size() == 1)
                 {
                     writer.block_begin();
@@ -803,7 +804,7 @@ namespace ngraph
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
                     writer.block_end();
                 }
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << " /\n"
                        << "    " << emit_array1d(args[1]) << ";\n";
@@ -822,7 +823,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Equal)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " ==\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -841,7 +842,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Greater)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " >\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -860,7 +861,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GreaterEq)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " >=\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -879,7 +880,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Less)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " <\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -898,7 +899,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::LessEq)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " <=\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -917,7 +918,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Log)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
 #else
@@ -934,7 +935,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "        " << emit_array1d(args[0]) << ".max(\n"
                        << "        " << emit_array1d(args[1]) << ");\n";
@@ -954,7 +955,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".min(\n"
                        << "    " << emit_array1d(args[1]) << ");\n";
@@ -974,7 +975,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    -" << emit_array1d(args[0]) << ";\n";
 #else
@@ -991,7 +992,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::NotEqual)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    (" << emit_array1d(args[0]) << " !=\n"
                        << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
@@ -1010,7 +1011,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Select)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "   " << emit_array1d(args[0]) << "\n"
                        << "    .select(" << emit_array1d(args[1]) << ",\n"
@@ -1030,7 +1031,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Subtract)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << " -\n"
                        << "    " << emit_array1d(args[1]) << ";\n";
@@ -1051,7 +1052,7 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
 
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
 
@@ -1135,7 +1136,7 @@ namespace ngraph
                 auto& result_element_type = out[0].get_element_type();
 
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << "\n"
                        << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
@@ -1172,7 +1173,7 @@ namespace ngraph
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -1301,7 +1302,7 @@ namespace ngraph
                 auto& f_result_element_type = out[0].get_element_type();
                 auto result_shape = out[0].get_shape();
 
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 auto& reduction_axes = reduce->get_reduction_axes();
                 // Trivial case: no reduction axes (this includes the scalar-reductee case).
                 if (reduction_axes.empty())
@@ -1482,7 +1483,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sign)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sign();\n";
 #else
@@ -1502,7 +1503,7 @@ namespace ngraph
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 size_t arg_rank = args[0].get_shape().size();
 
                 const Coordinate& lower_bounds = slice->get_lower_bounds();
@@ -1579,7 +1580,7 @@ namespace ngraph
             {
                 const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = sum->get_reduction_axes();
@@ -1641,7 +1642,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Exp)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".exp();\n";
 #else
@@ -1658,7 +1659,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sin)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sin();\n";
 #else
@@ -1675,7 +1676,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sinh)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".sinh();\n";
 #else
@@ -1692,7 +1693,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cos)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".cos();\n";
 #else
@@ -1709,7 +1710,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cosh)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".cosh();\n";
 #else
@@ -1726,7 +1727,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tan)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".tan();\n";
 #else
@@ -1747,7 +1748,7 @@ namespace ngraph
                 // TODO: Implement our own internal fast/approximate tanh if this actually gets used
                 // by models
                 writer.block_begin();
-#if PREFER_EIGEN == 0
+#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
@@ -1761,7 +1762,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Asin)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".asin();\n";
 #else
@@ -1778,7 +1779,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Acos)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".acos();\n";
 #else
@@ -1795,7 +1796,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " =\n"
                        << "    " << emit_array1d(args[0]) << ".atan();\n";
 #else
@@ -1812,7 +1813,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Power)
             {
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 writer << emit_array1d(out[0]) << " = \n";
                 writer.indent++;
                 writer << emit_array1d(args[0]) << ".pow(\n ";
@@ -1834,7 +1835,7 @@ namespace ngraph
             {
                 auto replace_slice = static_cast<const ngraph::op::Slice*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 size_t arg0_rank = args[0].get_shape().size();
 
                 auto& lower_bounds = replace_slice->get_lower_bounds();
@@ -2002,7 +2003,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if PREFER_EIGEN == 0
+#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
@@ -2017,7 +2018,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if PREFER_EIGEN == 0
+#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
@@ -2032,7 +2033,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if PREFER_EIGEN == 0
+#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
 #endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
@@ -2864,7 +2865,7 @@ namespace ngraph
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = product->get_reduction_axes();
@@ -2928,7 +2929,7 @@ namespace ngraph
             {
                 const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = max->get_reduction_axes();
@@ -2998,7 +2999,7 @@ namespace ngraph
             {
                 const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
                 writer.block_begin();
-#if PREFER_EIGEN == 1
+#if USE_EIGEN_CORE_INLINE == 1
                 const Shape& arg_shape = args[0].get_shape();
                 size_t arg_rank = arg_shape.size();
                 const AxisSet& reduction_axes = min->get_reduction_axes();
