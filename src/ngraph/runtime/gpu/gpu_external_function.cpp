@@ -407,8 +407,6 @@ using namespace std;
     {
         writer << "extern \"C\" void " << f->get_name()
                << "(void** inputs, void** outputs, "
-               << "cublasHandle_t& cublas_handle, "
-               << "cudnnHandle_t& cudnn_handle, "
                << "gpu::GPURuntimeContext* ctx);\n";
     }
 
@@ -512,8 +510,7 @@ using namespace std;
         }
 
         writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle, "
-               << "cudnnHandle_t& cudnn_handle, "
+        writer << "(void** inputs, void** outputs, "
                << "gpu::GPURuntimeContext* ctx)\n";
         writer << "{\n";
         writer.indent++;

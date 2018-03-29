@@ -161,7 +161,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
@@ -192,11 +192,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.block_begin("  // " + node->get_name());
                     writer << "int count = " << second.get_size() << ";\n";
                     writer << "cublasScopy("
-                           << "cublas_handle,"
+                           << "*ctx->cublas_handle,"
                            << "count ," << second.get_name() << ","
                            << "1," << out[0].get_name() << ", 1);\n";
                     writer << "cublasSscal("
-                           << "cublas_handle,"
+                           << "*ctx->cublas_handle,"
                            << "count ," << first.get_name() << "," << out[0].get_name()
                            << ", 1);\n";
                     writer.block_end();
@@ -228,7 +228,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                     writer.block_begin("  // " + node->get_name());
                     writer << "cublasSdot("
-                           << "cublas_handle," << args[0].get_size() << "," << args[0].get_name()
+                           << "*ctx->cublas_handle," << args[0].get_size() << "," << args[0].get_name()
                            << ","
                            << "1," << args[1].get_name() << ","
                            << "1," << out[0].get_name() << ");\n";
@@ -241,9 +241,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.block_begin("  // " + node->get_name());
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0;\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgemv("
-                           << "cublas_handle,"
+                           << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
                            << "&alpha," // Alpha
                            << args[0].get_name() << "," << arg0_shape[1] << ","
@@ -252,7 +252,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "1);\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.block_end();
                 }
                 // cases that can be treat as matrix multiply
@@ -312,9 +312,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "int m = " << m << ";\n";
                     writer << "int n = " << n << ";\n";
                     writer << "int k = " << k << ";\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgemm("
-                           << "cublas_handle,"
+                           << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_N,"
                            << "CUBLAS_OP_N,"
                            << "n,"
@@ -327,7 +327,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "n);\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.block_end();
                 }
             }
@@ -361,7 +361,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
@@ -401,7 +401,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
@@ -441,7 +441,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
@@ -556,9 +556,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     // TODO Assert arg0_shape[0] == arg1_shape[0]?
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta = 0;\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgeam("
-                           << "cublas_handle,"
+                           << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T,"
                            << "CUBLAS_OP_T," << arg_shape[0] << "," << arg_shape[1] << ","
                            << "&alpha," // Alpha
@@ -566,7 +566,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name()
                            << "," << result_shape[1] << ");\n";
-                    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
                 }
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
@@ -663,7 +663,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
@@ -734,7 +734,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_NOT_PROPAGATE_NAN);
     )";
 
-                writer << "cudnnOpTensor(cudnn_handle,"
+                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","

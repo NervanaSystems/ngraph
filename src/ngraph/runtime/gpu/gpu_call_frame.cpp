@@ -45,6 +45,8 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
 
     // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+
+    link_runtime_context();
 }
 
 runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
@@ -74,7 +76,7 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle, m_cudnn_handle, m_external_function->m_ctx.get());
+    m_compiled_function(inputs.data(), outputs.data(), m_external_function->m_ctx.get());
 }
 
 void runtime::gpu::GPU_CallFrame::call(
@@ -97,3 +99,8 @@ void runtime::gpu::GPU_CallFrame::call(
     tensor_call(outputs, inputs);
 }
 
+void runtime::gpu::GPU_CallFrame::link_runtime_context()
+{
+    m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
+    m_external_function->m_ctx->cudnn_handle = &m_cudnn_handle;
+}
