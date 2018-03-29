@@ -93,7 +93,7 @@ class Computation:
         result_arr = result_arr.reshape(result_shape)
         return result_arr
 
-    def serialize(self, indent=0):  # type: (int, bool) -> str
+    def serialize(self, indent=0):  # type: (int) -> str
         """Serialize function (compute graph) to a JSON string.
 
         :param indent: set indent of serialized output
