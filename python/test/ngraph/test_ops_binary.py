@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 
 import ngraph as ng
+from test.ngraph.util import get_runtime
 
 
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
@@ -36,8 +37,7 @@ import ngraph as ng
     (ng.less_eq, np.less_equal),
 ])
 def test_binary_op(ng_api_helper, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = get_runtime()
 
     shape = [2, 2]
     parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
@@ -69,8 +69,7 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.less_eq, np.less_equal),
 ])
 def test_binary_op_with_scalar(ng_api_helper, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = get_runtime()
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
@@ -99,8 +98,7 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     (operator.le, np.less_equal),
 ])
 def test_binary_operators(operator, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = get_runtime()
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
     value_b = np.array([[4, 5], [1, 7]], dtype=np.float32)
@@ -129,8 +127,7 @@ def test_binary_operators(operator, numpy_function):
     (operator.le, np.less_equal),
 ])
 def test_binary_operators_with_scalar(operator, numpy_function):
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = get_runtime()
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
