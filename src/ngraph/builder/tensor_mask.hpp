@@ -14,22 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/serializer.hpp"
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <string>
-#include "pyngraph/serializer.hpp"
+#pragma once
 
-namespace py = pybind11;
+#include "ngraph/axis_set.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/shape.hpp"
 
-void regclass_pyngraph_Serializer(py::module m)
+namespace ngraph
 {
-    /*
-    std::string serialize(std::shared_ptr<ngraph::Function>,
-                          size_t indent = 0);
-    */
-    m.def("serialize",
-          (std::string(*)(std::shared_ptr<ngraph::Function>, size_t)) & ngraph::serialize,
-          py::arg(),
-          py::arg("indent") = 0);
+    namespace builder
+    {
+        std::shared_ptr<Node> tensor_mask(const std::shared_ptr<Node>& sequence_lengths,
+                                          size_t sequence_axis,
+                                          size_t batch_axis,
+                                          Shape mask_shape);
+    }
 }

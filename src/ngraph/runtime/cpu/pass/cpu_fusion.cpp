@@ -122,7 +122,7 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
     return output;
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};
@@ -163,7 +163,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias_pattern()
     this->add_matcher(m);
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul_pattern()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};

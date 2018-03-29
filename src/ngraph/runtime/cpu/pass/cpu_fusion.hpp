@@ -38,8 +38,8 @@ public:
     CPUFusion()
         : GraphRewrite()
     {
-        construct_matmul_pattern();
-        construct_matmulbias_pattern();
+        construct_matmul();
+        construct_matmulbias();
         construct_fprop_bn();
         construct_zero_padded_reshaped_conv();
         construct_zero_padded_conv();
@@ -51,8 +51,8 @@ public:
     }
 
 private:
-    void construct_matmul_pattern();
-    void construct_matmulbias_pattern();
+    void construct_matmul();
+    void construct_matmulbias();
     void construct_conv_bias();
     void construct_fprop_bn();
     void construct_sigmoid();
