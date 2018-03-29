@@ -112,6 +112,7 @@
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -241,6 +242,7 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
+    , m_ctx(new GPURuntimeContext)
 {
 }
 
@@ -288,6 +290,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/runtime/aligned_buffer.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
+    #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
 )";
@@ -296,6 +299,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     writer += R"(
 using namespace ngraph;
+using namespace ngraph::runtime;
 using namespace std;
     )";
 
@@ -401,9 +405,11 @@ using namespace std;
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
-                                                           "cublasHandle_t& cublas_handle, "
-                                                           "cudnnHandle_t& cudnn_handle);\n";
+        writer << "extern \"C\" void " << f->get_name()
+               << "(void** inputs, void** outputs, "
+               << "cublasHandle_t& cublas_handle, "
+               << "cudnnHandle_t& cudnn_handle, "
+               << "gpu::GPURuntimeContext* ctx);\n";
     }
 
     writer << "\n";
@@ -507,8 +513,8 @@ using namespace std;
 
         writer << "extern \"C\" void " << current_function->get_name();
         writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle, "
-                  "cudnnHandle_t& "
-                  "cudnn_handle)\n";
+               << "cudnnHandle_t& cudnn_handle, "
+               << "gpu::GPURuntimeContext* ctx)\n";
         writer << "{\n";
         writer.indent++;
 
@@ -808,4 +814,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<GPU_TensorViewWrapper>& out)
 {
     writer << "timer_" << node->get_name() << ".stop();\n";
+}
+
+runtime::gpu::GPURuntimeContext* runtime::gpu::GPU_ExternalFunction::ctx()
+{
+    return m_ctx.get();
 }

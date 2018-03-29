@@ -26,6 +26,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 namespace ngraph
 {
@@ -41,7 +42,8 @@ namespace ngraph
             using EntryPoint_t = void(void** inputs,
                                       void** outputs,
                                       cublasHandle_t& cublas_handle,
-                                      cudnnHandle_t& cudnn_handle);
+                                      cudnnHandle_t& cudnn_handle,
+                                      GPURuntimeContext* ctx);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -64,6 +66,7 @@ namespace ngraph
                 /// tensor views.
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
                                  const std::vector<std::shared_ptr<TensorView>>& inputs) override;
+
 
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
