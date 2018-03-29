@@ -99,18 +99,8 @@ endif()
 if(NGRAPH_NNP_ENABLE)
     include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
-
-    # enable additional nnp backend test
-    set(NNP_ADDITIONAL_BACKEND_TESTS ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend)
-    message(STATUS "NNP_ADDITIONAL_BACKEND_TESTS path: ${NNP_ADDITIONAL_BACKEND_TESTS}")
-    set(ADDITIONAL_NNP_TEST
-            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
-            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
-            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
-            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
-            ${NNP_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
-
-    # ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
+    set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
+    # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
     add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
     set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
 endif()
@@ -181,20 +171,26 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
+if(NGRAPH_NNP_ENABLE)
+    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
+    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
+    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
+endif()
+
 add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
-        COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-        )
+    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+)
 
 add_custom_target(unit-test-check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
 	DEPENDS unit-test
-        )
+)
 
 add_custom_target(check
-        DEPENDS
-        style-check
-        unit-test-check
-        )
+    DEPENDS
+    style-check
+    unit-test-check
+)
