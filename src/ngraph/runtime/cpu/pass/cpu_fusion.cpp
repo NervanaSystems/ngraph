@@ -41,6 +41,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -737,5 +738,58 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
+{
+    // construct forget gate
+    auto input_slice_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
+    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto broadcast_ct_1 = std::make_shared<op::Broadcast>(ct_1, Shape{10, 100}, AxisSet{0, 1});
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, broadcast_ct_1);
+
+    // construct input gate
+    auto input_slice_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
+    auto input_slice_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
+    auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
+
+    auto add_ct_1_input_gate_tanh_1 = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+
+    // construct output gate
+    auto input_slice_3 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
+    auto tanh_2 = std::make_shared<op::Tanh>(add_ct_1_input_gate_tanh_1);
+    auto ht =  std::make_shared<op::Multiply>(output_gate, tanh_2);
+
+    //Define a call back that needs to called once the DFG matches the pattern
+    ngraph::pattern::gr_callback_fn callback = [input_slice_0, input_slice_1, input_slice_2, input_slice_3](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
+                     << m.match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        std::cout << "In LSTM fprop call back" << std::endl;
+
+        // if (m.match_root()->get_element_type() != element::f32)
+        // {
+        //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
+        //     return false;
+        // }
+
+        // if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        // {
+        //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
+        //                  << "input= " << pattern_map[input]->get_name() << "size dont match!";
+        //     return false;
+        // }
+
+        // auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
+        // ngraph::replace_node(m.match_root(), sigmoid_node);
+        return false;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(ht, callback);
     this->add_matcher(m);
 }
