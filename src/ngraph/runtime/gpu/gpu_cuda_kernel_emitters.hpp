@@ -21,9 +21,9 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 namespace ngraph
 {
@@ -35,40 +35,36 @@ namespace ngraph
             struct CudaOpMap;
 
             void emit_broadcast(const std::string& name,
+                                std::array<std::string, 2> data_types,
+                                GPURuntimeContext* ctx,
                                 CUdeviceptr in,
                                 CUdeviceptr out,
-                                const std::array<std::string, 2>& data_types,
                                 size_t repeat_size,
                                 size_t repeat_times,
                                 size_t count);
 
             void emit_onehot(const std::string& name,
+                             std::array<std::string, 2> data_types,
+                             GPURuntimeContext* ctx,
                              CUdeviceptr in,
                              CUdeviceptr out,
-                             const std::array<std::string, 2>& data_types,
                              size_t repeat_size,
                              size_t repeat_times,
                              size_t count);
 
-            void emit_reshape(const std::string& name,
-                              CUdeviceptr in,
-                              CUdeviceptr out,
-                              const std::array<std::string, 2>& data_types,
-                              CUdeviceptr input_strides,
-                              CUdeviceptr trans_strides,
-                              size_t rank,
-                              size_t count);
 
             template <typename T, typename... Inputs>
             void emit_elementwise_op(const std::string& name,
                                      const std::array<std::string, 2>& data_types,
+                                     GPURuntimeContext* ctx,
                                      size_t count,
                                      CUdeviceptr out,
                                      Inputs&&... inputs)
             {
                 std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
                 std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
-                if (CudaFunctionPool::instance().get(name + type_signature) == nullptr)
+                auto compiled_kernel = ctx->nvrtc_cache->get(name+type_signature);
+                if (compiled_kernel == nullptr)
                 {
                     codegen::CodeWriter writer;
                     CudaKernelBuilder::add_pod_typedefs(writer);
@@ -88,13 +84,13 @@ namespace ngraph
                         writer, name + type_signature, op_name, data_types, sizeof...(inputs));
 
                     std::string kernel = writer.get_code();
-                    CudaFunctionPool::instance().set(name + type_signature, kernel);
+                    compiled_kernel = ctx->nvrtc_cache->set(name+type_signature, kernel);
                 }
 
                 //convert runtime ptr to driver api ptr
                 void* args_list[] = {&inputs..., &out, &count};
                 CUDA_SAFE_CALL(
-                    cuLaunchKernel(*CudaFunctionPool::instance().get(name + type_signature).get(),
+                    cuLaunchKernel(*compiled_kernel.get(),
                                    count,
                                    1,
                                    1, // grid dim
@@ -107,6 +103,16 @@ namespace ngraph
                                    0));             // arguments
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
+
+            void emit_reshape(const std::string& name,
+                              const std::array<std::string, 2>& data_types,
+                              GPURuntimeContext* ctx,
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              CUdeviceptr input_strides,
+                              CUdeviceptr trans_strides,
+                              size_t rank,
+                              size_t count);
         }
     }
 }
