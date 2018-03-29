@@ -139,6 +139,12 @@ namespace ngraph
                                                const Shape& input_shape,
                                                const Shape& output_shape,
                                                const AxisSet& reduction_axes);
+
+                void reduce_sum_all_4d_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape);
+
             }
         }
     }
