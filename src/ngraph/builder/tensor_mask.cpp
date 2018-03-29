@@ -14,8 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/builder/tensor_mask.hpp"
+#include <numeric>
 
+#include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
