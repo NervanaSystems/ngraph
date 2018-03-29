@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-# To build ngraph with Argon transformer using pre-build Argon API
+# To build ngraph with NNP transformer using pre-build Argon API
 # ```
 # cmake -DNGRAPH_NNP_ENABLE=True -DNGRAPH_PREBUILD_ARGON_API_PATH=$HOME/dev/system/_out/debug-x86_64-Linux ..
 # make -j
