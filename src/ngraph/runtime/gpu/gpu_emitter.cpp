@@ -121,6 +121,7 @@ namespace ngraph
                 writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
                        << node->description() << ">(\"" << node->description() << "\""
                        << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", ctx"
                        << ", count"
                        << ", CUdeviceptr(" << out[0].get_name() << ")";
                 for (size_t i = 0; i < args.size(); i++)
@@ -504,12 +505,12 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     writer.block_begin("  // " + node->get_name());
                     writer << "runtime::gpu::emit_broadcast(\"" << node->description()
-                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                           << ", ctx"
+                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
-                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                           << "\"}"
-                           << ", " << repeat_size << ", " << repeat_times << ", "
-                           << out[0].get_size() << ");\n";
+                           << ", " << repeat_size << ", " << repeat_times << ", " << out[0].get_size()
+                           << ");\n";
                     writer.block_end();
                 }
                 else
@@ -615,10 +616,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
                            "sizeof(size_t) * rank);\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description()
-                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                           << ", ctx"
+                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
-                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                           << "\"}"
                            << ", "
                            << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
                            << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
@@ -695,9 +696,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
                 writer << "runtime::gpu::emit_onehot(\"" << node->description()
-                       << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                       << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", ctx"
+                       << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                        << out[0].get_name() << ")"
-                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                        << ", " << repeat_size << ", " << repeat_times << ", " << args[0].get_size()
                        << ");\n";
                 writer.block_end();
