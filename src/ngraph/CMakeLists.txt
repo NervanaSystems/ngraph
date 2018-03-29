@@ -19,6 +19,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    builder/rotate_left.cpp
     builder/tensor_mask.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
