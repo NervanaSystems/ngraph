@@ -14,4 +14,20 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+
 using namespace ngraph;
+using namespace ngraph::runtime::gpu;
+
+GPURuntimeContext::GPURuntimeContext()
+    : nvrtc_cache(new CudaFunctionPool)
+{
+    // Create context use driver API and make it current, the runtime call will pickup the context
+    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#interoperability-between-runtime-and-driver-apis
+    ngraph::runtime::gpu::CudaContextManager::instance();
+}
+
+GPURuntimeContext::~GPURuntimeContext()
+{
+    delete nvrtc_cache;
+}

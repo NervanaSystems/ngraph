@@ -32,20 +32,12 @@ namespace ngraph
             extern "C" {
             struct GPURuntimeContext
             {
-                CudaFunctionPool* nvrtc_cache;
-                //CudaContextManager* cuda_manager;
+                GPURuntimeContext();
+                ~GPURuntimeContext();
 
-                GPURuntimeContext()
-                    : nvrtc_cache(new CudaFunctionPool)
-                    {
-                        // Create context use driver API and make it current, the runtime call will pickup the context
-                        // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#interoperability-between-runtime-and-driver-apis
-                        ngraph::runtime::gpu::CudaContextManager::instance();
-                    }
-                ~GPURuntimeContext()
-                {
-                    delete nvrtc_cache;
-                }
+                cudnnHandle_t* cudnn_handle;
+                cublasHandle_t* cublas_handle;
+                CudaFunctionPool* nvrtc_cache;
             };
             }
         }
