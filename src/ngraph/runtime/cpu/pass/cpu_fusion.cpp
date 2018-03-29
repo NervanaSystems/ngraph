@@ -41,6 +41,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
@@ -49,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -743,30 +745,33 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
 {
+    auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
+
     // construct forget gate
-    auto input_slice_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto input_slice_0 = std::make_shared<op::Slice>(X,  Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto broadcast_ct_1 = std::make_shared<op::Broadcast>(ct_1, Shape{10, 100}, AxisSet{0, 1});
-    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, broadcast_ct_1);
+    auto ct_1_label = std::make_shared<pattern::op::Label>(broadcast_ct_1, nullptr, NodeVector{broadcast_ct_1});
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1_label);
 
     // construct input gate
-    auto input_slice_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto input_slice_1 = std::make_shared<op::Slice>(X,  Coordinate{0, 100}, Coordinate{10, 200});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
-    auto input_slice_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto input_slice_2 = std::make_shared<op::Slice>(X,  Coordinate{0, 200}, Coordinate{10, 300});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
     auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
 
     auto add_ct_1_input_gate_tanh_1 = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
 
     // construct output gate
-    auto input_slice_3 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto input_slice_3 = std::make_shared<op::Slice>(X,  Coordinate{0, 300}, Coordinate{10, 400});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(add_ct_1_input_gate_tanh_1);
     auto ht =  std::make_shared<op::Multiply>(output_gate, tanh_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [input_slice_0, input_slice_1, input_slice_2, input_slice_3](pattern::Matcher& m) {
+    ngraph::pattern::gr_callback_fn callback = [ct_1_label, X, input_slice_0, input_slice_1, input_slice_2, input_slice_3](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -785,9 +790,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
         //     return false;
         // }
 
-        // auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        // ngraph::replace_node(m.match_root(), sigmoid_node);
-        return false;
+        auto lstm = std::make_shared<op::LSTM>(pattern_map[ct_1_label]);
+        ngraph::replace_node(m.match_root(), lstm);
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(ht, callback);
