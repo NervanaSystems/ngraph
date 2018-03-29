@@ -53,9 +53,10 @@ namespace ngraph
             while (m.match(graph, previous_matches))
             {
                 no_match = true;
-                graph = m.m_pattern_map[rpattern]; //for the next round
+                //for the next round
+                graph = m.m_pattern_map[rpattern];
                 NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
-                for (auto me : patterns)
+                for (auto me : m.m_pattern_map)
                 {
                     patterns[me.first].push_back(m.m_pattern_map[me.first]);
                 }
@@ -76,7 +77,6 @@ namespace ngraph
                     }
                 }
             }
-
             return no_match;
         }
 
