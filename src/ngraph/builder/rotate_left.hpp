@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {

@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/builder/rotate_left.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/builder/rotate_left.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
 
