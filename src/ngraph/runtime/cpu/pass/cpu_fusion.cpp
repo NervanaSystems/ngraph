@@ -721,6 +721,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
             return false;
         }
 
+        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
+        for (auto _input : m_bn->get_output_inputs(0))
+        {
+            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
+            mgoes[mgoe->get_n()] = mgoe;
+        }
+
+        if (mgoes[0]->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
+            return false;
+        }
+
+        mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
+
         auto bn_relu = std::make_shared<op::BatchNormRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
@@ -729,15 +744,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto bn_relu_var = std::make_shared<op::GetOutputElement>(bn_relu, 2);
 
         std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
-
-        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto _input : m_bn->get_output_inputs(0))
-        {
-            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
-            mgoes[mgoe->get_n()] = mgoe;
-        }
-
-        mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
 
         for (size_t i = 0; i < mgoes.size(); i++)
         {
