@@ -118,11 +118,11 @@ namespace ngraph
                 {
                     if (node->get_input_op(2 /*input data*/)->get_shape().size() == 4)
                     {
-                        auto convolution = static_cast<op::BatchNormRelu*>(node);
+                        auto bn_relu = static_cast<op::BatchNormRelu*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        bn_relu->set_op_annotations(op_annotations);
                     }
                 }
 
