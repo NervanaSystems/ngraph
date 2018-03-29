@@ -26,12 +26,10 @@ void regclass_pyngraph_Serializer(py::module m)
 {
     /*
     std::string serialize(std::shared_ptr<ngraph::Function>,
-                          size_t indent = 0,
-                          bool binary_constant_data = false);
+                          size_t indent = 0);
     */
     m.def("serialize",
-          (std::string(*)(std::shared_ptr<ngraph::Function>, size_t, bool)) & ngraph::serialize,
+          (std::string(*)(std::shared_ptr<ngraph::Function>, size_t)) & ngraph::serialize,
           py::arg(),
-          py::arg("indent") = 0,
-          py::arg());
+          py::arg("indent") = 0);
 }

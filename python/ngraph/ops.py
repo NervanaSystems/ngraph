@@ -246,7 +246,14 @@ Node.__ge__ = greater_eq
 # Custom ops
 @nameable_op
 def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
-    """Return node which broadcasts input node values to specified shape."""
+    """Return node which broadcasts input node values to specified shape.
+
+    :param node: The node with input tensor data.
+    :param new_shape: The new shape we want to broadcast tensor to.
+    :param axis: The axis along which we perform broadcasting.
+    :param name: Optional new name for output node.
+    :return: New node with broadcasted shape.
+    """
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
@@ -274,49 +281,78 @@ def dot(left_node, right_node, name=None):
 
 # convpool ops
 @nameable_op
-def convolution(x,                      # type: Node
-                weights,                # type: Node
-                strides=None,           # type: List[int]
-                dilation=None,          # type: List[int]
-                padding_above=None,     # type: List[int]
-                padding_below=None,     # type: List[int]
-                name=None,              # type: str
+def convolution(data_batch,                     # type: Node
+                filter_weights,                 # type: Node
+                filter_strides=None,            # type: List[int]
+                filter_dilation_strides=None,   # type: List[int]
+                padding_below=None,             # type: List[int]
+                padding_above=None,             # type: List[int]
+                data_dilation_strides=None,     # type: List[int]
+                name=None,                      # type: str
                 ):
     # type: (...) -> Node
-    """Return convolution node."""
-    if strides is None:
-        strides = [1] * (len(x.shape) - 2)  # Default to as many 1s as spatial dimensions of input.
-    if dilation is None:
-        dilation = [1] * (len(x.shape) - 2)
-    if padding_above is None:
-        padding_above = [0] * (len(x.shape) - 2)
-    if padding_below is None:
-        padding_below = [0] * (len(x.shape) - 2)
+    """Return node performing batched convolution operation.
 
-    return Convolution(x, weights, Strides(strides), Strides(dilation),
-                       CoordinateDiff(padding_above), CoordinateDiff(padding_below))
+    :param data_batch: The node providing data batch tensor.
+    :param filter_weights: The node providing filters tensor.
+    :param filter_strides: The kernel window movement strides.
+    :param filter_dilation_strides: The filters dilation strides.
+    :param padding_below: The number of zero padding elements to add on each axis below 0
+                          coordinate.
+    :param padding_above: The number of zero padding elements to add on each axis above max
+                          coordinate.
+    :param data_dilation_strides: The data batch dilation strides.
+    :param name: The optional new name for output node.
+    :return: New node performing batched convolution operation.
+    """
+    spatial_dim_count = len(data_batch.shape) - 2
+    if filter_strides is None:
+        filter_strides = [1] * spatial_dim_count
+    if filter_dilation_strides is None:
+        filter_dilation_strides = [1] * spatial_dim_count
+    if padding_above is None:
+        padding_above = [0] * spatial_dim_count
+    if padding_below is None:
+        padding_below = [0] * spatial_dim_count
+    if data_dilation_strides is None:
+        data_dilation_strides = [1] * spatial_dim_count
+
+    return Convolution(data_batch, filter_weights, Strides(filter_strides),
+                       Strides(filter_dilation_strides), CoordinateDiff(padding_below),
+                       CoordinateDiff(padding_above), Strides(data_dilation_strides))
 
 
 @nameable_op
-def avg_pool(x,                      # type: Node
+def avg_pool(data_batch,             # type: Node
              window_shape,           # type: TensorShape
-             strides=None,           # type: List[int]
-             padding_above=None,     # type: List[int]
-             padding_below=None,     # type: List[int]
-             zero_pad=True,          # type: bool
+             window_strides=None,    # type: List[int]
+             padding_below=None,     # type: TensorShape
+             padding_above=None,     # type: TensorShape
+             include_padding=False,  # type: bool
              name=None,              # type: str
              ):
     # type: (...) -> Node
-    """Return average pooling node."""
-    if strides is None:
-        strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
-    if padding_above is None:
-        padding_above = [0] * len(window_shape)
-    if padding_below is None:
-        padding_below = [0] * len(window_shape)
+    """Return average pooling node.
 
-    return AvgPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_below), zero_pad)
+    :param data_batch: The input node providing data.
+    :param window_shape: The pooling window shape.
+    :param window_strides: The window movement strides.
+    :param padding_below: The input data optional padding below filled with zeros.
+    :param padding_above: The input data optional padding below filled with zeros.
+    :param include_padding: Whether or not to include zero padding in average computations.
+    :param name: Optional name for the new output node.
+    :return: New node with AvgPool operation applied on its data.
+    """
+    spatial_dim_count = len(window_shape)
+    if window_strides is None:
+        window_strides = [1] * spatial_dim_count
+    if padding_above is None:
+        padding_above = [0] * spatial_dim_count
+    if padding_below is None:
+        padding_below = [0] * spatial_dim_count
+
+    return AvgPool(data_batch, Shape(window_shape), Strides(window_strides), Shape(padding_below),
+                   Shape(padding_above), include_padding)
 
 
 @nameable_op
@@ -413,11 +449,12 @@ def slice(node, lower_bounds, upper_bounds, strides=None, name=None):
 
 
 @nameable_op
-def concat(nodes, axis):  # type: (List[Node], int) -> Node
+def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     """Concatenate input nodes into single new node along specified axis.
 
     :param nodes: The nodes we want concatenate into single new node.
     :param axis: The axis along which we want to concatenate input nodes.
+    :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
     return Concat(NodeVector(nodes), axis)
