@@ -273,6 +273,16 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
 };
 
+const runtime::cpu::OpFunction* runtime::cpu::CPU_ExternalFunction::get_emitter(const Node& node)
+{
+    auto handler = dispatcher.find(type_index(typeid(node)));
+    if (handler == dispatcher.end())
+    {
+        throw runtime_error("did not find emitter for " + node.get_name());
+    }
+    return &(handler->second);
+}
+
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
@@ -672,6 +682,22 @@ using namespace ngraph::runtime;
                 node_output_names.emplace_back(tv->get_tensor().get_name());
             }
 
+            if (node->is_constant())
+            {
+                // If an output is a constant then copy it
+                size_t output_index = 0;
+                for (shared_ptr<Node> result : get_function()->get_results())
+                {
+                    if (result == node)
+                    {
+                        const descriptor::Tensor& tensor = node->get_output_tensor(0);
+                        writer << "memcpy(outputs[" << output_index << "], " << tensor.get_name()
+                               << ", " << tensor.size() << ");\n";
+                    }
+                    output_index++;
+                }
+            }
+
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
@@ -714,7 +740,7 @@ using namespace ngraph::runtime;
             auto it = match_functions.find(node.get());
             if (it == match_functions.end())
             {
-                handler->second(this, writer, node.get(), in, out);
+                handler->second(&*get_mkldnn_emitter(), writer, node.get(), in, out);
             }
             else
             {
@@ -988,7 +1014,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer << "\n)\n";
     writer << "{\n";
     writer.indent++;
-    handler->second(this, writer, &node, in, out);
+    handler->second(&*get_mkldnn_emitter(), writer, &node, in, out);
     writer.indent--;
     writer << "}\n";
 
