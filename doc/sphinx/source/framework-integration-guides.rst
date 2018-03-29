@@ -311,7 +311,7 @@ your cloned version of `ngraph-tensorflow-bridge`_:
    $ python mnist_softmax_ngraph.py
 
 
-.. note:: The number-of-threads parameter specified in the `OMP_NUM_THREADS`` 
+.. note:: The number-of-threads parameter specified in the ``OMP_NUM_THREADS`` 
    is a function of number of CPU cores that are available in your system. 
 
 
