@@ -17,6 +17,10 @@
 #pragma once
 
 #include <functional>
+#include <vector>
+
+#include "ngraph/axis_set.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -24,14 +28,29 @@ namespace ngraph
     {
         namespace gpu
         {
+            class GPURuntimeContext;
+
+            namespace cudnn_util
+            {
+                std::vector<int> compute_strides(const std::vector<int>& dim);
+            }
+
             class CUDNNEmitter
             {
             public:
                 CUDNNEmitter() {}
                 ~CUDNNEmitter() {}
-                int build_test();
+
+                size_t build_reduce_forward(GPURuntimeContext* ctx,
+                                            const Shape& input_shape,
+                                            const AxisSet& reduction_axes,
+                                            const cudnnReduceTensorOp_t& reduce_op);
+
+                void invoke(size_t primitive_index, const std::vector<void*>& args, const std::vector<void*>& result);
+
             private:
-                std::vector<std::function<void(void)>> m_cudnn_primitives;
+                size_t register_primitive(const std::function<void(std::vector<void*>,std::vector<void*>)>& f);
+                std::vector<std::function<void(std::vector<void*>,std::vector<void*>)>> m_cudnn_primitives;
             };
         }
 

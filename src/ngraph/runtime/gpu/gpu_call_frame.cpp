@@ -23,6 +23,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -101,6 +102,7 @@ void runtime::gpu::GPU_CallFrame::call(
 
 void runtime::gpu::GPU_CallFrame::link_runtime_context()
 {
+    m_external_function->m_ctx->cudnn_emitter = m_external_function->m_cudnn_emitter.get();
     m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
     m_external_function->m_ctx->cudnn_handle = &m_cudnn_handle;
 }

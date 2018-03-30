@@ -253,6 +253,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         return;
     }
 
+    m_cudnn_emitter.reset(new CUDNNEmitter());
+
     string function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 

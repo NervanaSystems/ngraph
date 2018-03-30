@@ -29,6 +29,7 @@
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
 namespace ngraph
 {
@@ -60,6 +61,10 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
                 GPURuntimeContext* ctx();
+                const std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter() const
+                {
+                    return m_cudnn_emitter;
+                }
             protected:
                 void compile();
 
@@ -84,7 +89,9 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
                 std::shared_ptr<GPURuntimeContext> m_ctx;
+
             };
         }
     }

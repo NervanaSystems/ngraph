@@ -22,6 +22,7 @@
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
 namespace ngraph
 {
@@ -37,6 +38,7 @@ namespace ngraph
 
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
+                CUDNNEmitter* cudnn_emitter;
                 CudaFunctionPool* nvrtc_cache;
             };
             }
