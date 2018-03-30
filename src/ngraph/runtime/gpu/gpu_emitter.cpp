@@ -779,7 +779,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         {
                             auto& cudnn_emitter = external_function->get_cudnn_emitter();
                             auto sum_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx(),
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes(),
                                                                     CUDNN_REDUCE_TENSOR_ADD);
