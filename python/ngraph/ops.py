@@ -312,10 +312,23 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
 
 # matmul ops
 @nameable_op
-def dot(left_node, right_node, name=None):
-    # type: (Node, Node, str) -> Node
-    """Return node which performs matrix multiplication of two input nodes."""
-    return Dot(left_node, right_node)
+def dot(left_node, right_node, reduction_axes_count=None, name=None):
+    # type: (Node, Node, int, str) -> Node
+    """Return node which performs generalized dot product of two input nodes.
+
+    This operation is capable of performing scalar-tensor, matrix-vector product and matrix
+    multiplication.
+
+    :param left_node: The node providing left hand side data.
+    :param right_node: The node providing right hand side data.
+    :param reduction_axes_count: The number of axes to reduce during dot-product.
+    :param name: The optional name for output node.
+    :return: The new node performing dot-product on input two nodes.
+    """
+    if reduction_axes_count is None:
+        return Dot(left_node, right_node)
+    else:
+        return Dot(left_node, right_node, reduction_axes_count)
 
 
 # convpool ops
