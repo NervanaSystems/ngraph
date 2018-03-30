@@ -30,32 +30,25 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> find_node(const string& name, shared_ptr<Function> func)
-{
-    static unordered_map<string, shared_ptr<Node>> node_map;
-    if (node_map.empty())
-    {
-        vector<shared_ptr<Function>> fs;
-        traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-        for (shared_ptr<Function> f : fs)
-        {
-            for (shared_ptr<Node> node : f->get_ops())
-            {
-                node_map.insert({node->get_name(), node});
-            }
-        }
-    }
-    return node_map[name];
-}
-
 multimap<size_t, string>
     aggregate_timing_details(const vector<runtime::PerformanceCounter>& perf_data,
-                             shared_ptr<Function> f)
+                             shared_ptr<Function> func)
 {
+    unordered_map<string, shared_ptr<Node>> node_map;
+    vector<shared_ptr<Function>> fs;
+    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+    for (shared_ptr<Function> f : fs)
+    {
+        for (shared_ptr<Node> node : f->get_ops())
+        {
+            node_map.insert({node->get_name(), node});
+        }
+    }
+
     unordered_map<string, size_t> timing;
     for (const runtime::PerformanceCounter& p : perf_data)
     {
-        shared_ptr<Node> node = find_node(p.name(), f);
+        shared_ptr<Node> node = node_map.at(p.name());
         string op = p.name().substr(0, p.name().find('_'));
         string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
         timing[op + shape_name] += p.microseconds();
