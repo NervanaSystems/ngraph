@@ -143,7 +143,12 @@ def exp(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def log(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies natural logarithm to the input node elementwise."""
+    """Return node which applies natural logarithm to the input node element-wise.
+
+    :param node: The input node providing data for operation.
+    :param name: The optional new name for output node.
+    :return: The new node performing log operation element-wise.
+    """
     return Log(node)
 
 
@@ -489,7 +494,7 @@ def max(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to max-reduce.
     :param reduction_axes: The axes to eliminate through max operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Max(node, AxisSet(reduction_axes))
@@ -502,7 +507,7 @@ def min(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to max-reduce.
     :param reduction_axes: The axes to eliminate through min operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Min(node, AxisSet(reduction_axes))
@@ -515,7 +520,7 @@ def prod(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to product-reduce.
     :param reduction_axes: The axes to eliminate through product operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Product(node, AxisSet(reduction_axes))
