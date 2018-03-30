@@ -50,10 +50,6 @@ else()
     set(NGRAPH_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/ngraph_dist)
 endif()
 
-set(SETUP_PY_IN "${CMAKE_SOURCE_DIR}/setup.py.in")
-set(SETUP_PY    "${CMAKE_BINARY_DIR}/setup.py")
-configure_file(${SETUP_PY_IN} ${SETUP_PY})
-
 if(USE_EMBEDDED_NGRAPH)
     set(NGRAPH_SOURCE_DIR ${CMAKE_SOURCE_DIR}/..)
     set(NGRAPH_CMAKE_ARGS "-DNGRAPH_INSTALL_PREFIX=${NGRAPH_INSTALL_PREFIX}")
