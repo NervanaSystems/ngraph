@@ -45,7 +45,7 @@ namespace ngraph
                       std::shared_ptr<ngraph::Node> input,
                       std::shared_ptr<ngraph::Node> mean,
                       std::shared_ptr<ngraph::Node> variance,
-                      bool training);
+                      bool training = false);
 
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }

@@ -294,7 +294,7 @@ TEST(cpu_test, batchnorm_fprop_inference_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, false);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
     auto manager = runtime::Manager::get("CPU");
