@@ -132,7 +132,12 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def exp(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies exp to the input node elementwise."""
+    """Return node which applies exp to the input node element-wise.
+
+    :param node: The node providing data for operation.
+    :param name: The optional name for new output node.
+    :return: The new node performing natural exponential operation.
+    """
     return Exp(node)
 
 
@@ -223,7 +228,13 @@ def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
 # Logical ops
 @binary_op
 def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if input nodes are equal elementwise."""
+    """Return node which checks if input nodes are equal element-wise.
+
+    :param left_node: The first input node for equal operation.
+    :param right_node: The second input node for equal operation.
+    :param name: The optional name for output new node.
+    :return: The node performing element-wise equality check.
+    """
     return Equal(left_node, right_node)
 
 
