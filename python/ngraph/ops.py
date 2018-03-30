@@ -21,9 +21,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, N
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
-    Constant, Convert, Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, \
-    LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter,\
-    Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
+    Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, \
+    Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
+    Parameter, Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -47,7 +47,13 @@ def parameter(shape, dtype=np.float32, name=None):
 
 @nameable_op
 def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Constant
-    """Return an ngraph Constant object with the specified value."""
+    """Create a Constant node from provided value.
+
+    :param value: One of: array of values or scalar to initialize node with.
+    :param dtype: The data type of provided data.
+    :param name: Optional name for output node.
+    :return: The Constant node initialized with provided data.
+    """
     return make_constant_node(value, dtype)
 
 
@@ -97,6 +103,28 @@ def atan(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
+def cos(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply cosine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with cos operation applied on it.
+    """
+    return Cos(node)
+
+
+@unary_op
+def cosh(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply hyperbolic cosine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with cosh operation applied on it.
+    """
+    return Cosh(node)
+
+
+@unary_op
 def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies square root to the input node elementwise."""
     return Sqrt(node)
@@ -128,7 +156,12 @@ def floor(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies ceiling to the input node elementwise."""
+    """Return node which applies ceiling to the input node element-wise.
+
+    :param node: The node providing data to ceiling operation.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise ceiling.
+    """
     return Ceiling(node)
 
 
@@ -147,7 +180,13 @@ def reshape(node, input_order, output_shape, name=None):
 # Binary ops
 @binary_op
 def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which applies f(x) = A/B to the input nodes elementwise."""
+    """Return node which applies f(x) = A/B to the input nodes element-wise.
+
+    :param left_node: The node providing dividend data.
+    :param right_node: The node providing divisor data.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise division.
+    """
     return Divide(left_node, right_node)
 
 

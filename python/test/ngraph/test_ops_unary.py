@@ -28,6 +28,8 @@ from test.ngraph.util import run_op_numeric_data, run_op_node
     (ng.atan, np.arctan, -100, 100),
     (ng.ceiling, np.ceil, -100, 100),
     (ng.ceil, np.ceil, -100, 100),
+    (ng.cos, np.cos, -np.pi, np.pi),
+    (ng.cosh, np.cosh, -np.pi, np.pi),
 ])
 def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     np.random.seed(133391)
@@ -49,6 +51,8 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.atan, np.arctan, np.float32(-0.5)),
     (ng.ceiling, np.ceil, np.float32(1.5)),
     (ng.ceil, np.ceil, np.float32(1.5)),
+    (ng.cos, np.cos, np.float32(np.pi / 4.0)),
+    (ng.cosh, np.cosh, np.float32(np.pi / 4.0)),
 ])
 def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
