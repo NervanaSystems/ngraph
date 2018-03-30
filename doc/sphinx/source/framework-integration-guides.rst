@@ -169,35 +169,24 @@ Compile MXNet with nGraph
 TensorFlow\* 
 =============
 
-Build with an XLA plugin to ``libngraph``
-------------------------------------------
+This section describes how install TensorFlow* with the bridge code 
+needed to be able to access nGraph backends. Note that you **do not** 
+need to have already installed nGraph for this procedure to work.  
 
-.. important:: These instructions pick up where the :doc:`install` 
-   installation instructions left off, so they presume that your system already
-   has the |nGl| installed. If the |nGl| code has not yet been installed to
-   your system, please go back to complete those steps, and return here when
-   you are ready to build TensorFlow\*.
+Bridge TensorFlow/XLA to nGraph
+-------------------------------
 
-
-#. Set the ``LD_LIBRARY_PATH`` path to the location where we built the nGraph 
-   libraries:
-
-   .. code-block:: bash
-
-      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
-
-#. To prepare to build TensorFlow with an XLA plugin capable of running |nGl|, 
-   use the standard build process which is a system called "bazel". These 
-   instructions were tested with `bazel version 0.5.4`_. 
+#. Prepare your system with the TensorFlow prerequisite, a system called 
+   "bazel". These instructions were tested with `bazel version`_ 0.11.0. 
 
    .. code-block:: console
 
-      $ wget https://github.com/bazelbuild/bazel/releases/download/0.5.4/bazel-0.5.4-installer-linux-x86_64.sh
-      $ chmod +x bazel-0.5.4-installer-linux-x86_64.sh
-      $ ./bazel-0.5.4-installer-linux-x86_64.sh --user
+      $ wget https://github.com/bazelbuild/bazel/releases/download/0.11.0/bazel-0.11.0-installer-linux-x86_64.sh
+      $ chmod +x bazel-0.11.0-installer-linux-x86_64.sh
+      $ ./bazel-0.11.0-installer-linux-x86_64.sh --user
 
-#. Add and source the ``bin`` path to your ``~/.bashrc`` file in order to be 
-   able to call bazel from the user's installation we set up:
+#. Add and source the ``bin`` path that bazel just created to your ``~/.bashrc`` 
+   file in order to be able to call bazel from the user's installation we set up:
 
    .. code-block:: bash
    
@@ -207,66 +196,99 @@ Build with an XLA plugin to ``libngraph``
 
       $ source ~/.bashrc   
 
-#. Ensure that all the TensorFlow 1.3 dependencies are installed, as per the
-   TensorFlow `1.3 installation guide`_:
+#. Ensure that all the other TensorFlow dependencies are installed, as per the
+   TensorFlow `installation guide`_:
 
-   .. note:: You do not need CUDA in order to use the nGraph XLA plugin.
+   .. important:: CUDA is not needed. 
 
-#. Once TensorFlow's dependencies are installed, clone the source of the 
+#. After TensorFlow's dependencies are installed, clone the source of the 
    `ngraph-tensorflow`_ repo to your machine; this is the required fork for 
-   this integration:
+   this integration. Many users may prefer to use a Python virtual env from 
+   here forward:  
 
    .. code-block:: console
 
-      $ git clone git@github.com:NervanaSystems/ngraph-tensorflow-1.3.git
-      $ cd ngraph-tensorflow-1.3
+      $ python3 -m venv frameworks  
+      $ cd frameworks 
+      $ . bin/activate
+      $ git clone git@github.com:NervanaSystems/ngraph-tensorflow.git
+      $ cd ngraph-tensorflow
+      $ git checkout ngraph-tensorflow-preview-0
 
-#. Now run :command:`configure` and choose `y` when prompted to build TensorFlow
-   with XLA just-in-time compiler.
+#. Now run :command:`./configure` and choose `y` when prompted to build TensorFlow
+   with XLA :abbr:`Just In Time (JIT)` support.
 
    .. code-block:: console
-      :emphasize-lines: 5-6
+      :emphasize-lines: 6-7
 
       . . .
 
-      Do you wish to build TensorFlow with Hadoop File System support? [y/N]
-      No Hadoop File System support will be enabled for TensorFlow
-      Do you wish to build TensorFlow with the XLA just-in-time compiler (experimental)? [y/N] y
-      XLA JIT support will be enabled for TensorFlow
-      Do you wish to build TensorFlow with VERBS support? [y/N]
-      No VERBS support will be enabled for TensorFlow
-      Do you wish to build TensorFlow with OpenCL support? [y/N]
+      Do you wish to build TensorFlow with Apache Kafka Platform support? [y/N]: n
+      No Apache Kafka Platform support will be enabled for TensorFlow.
+
+      Do you wish to build TensorFlow with XLA JIT support? [y/N]: y
+      XLA JIT support will be enabled for TensorFlow.
+
+      Do you wish to build TensorFlow with GDR support? [y/N]: 
+      No GDR support will be enabled for TensorFlow.
 
       . . .
 
-#. Next build the pip package
+#. Build and install the pip package:
 
    .. code-block:: console
 
       $ bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
       $ bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+      $ pip install -U /tmp/tensorflow_pkg/tensorflow-1.*whl
 
-#. Finally install the pip package
+
+      .. note::  The actual name of the Python wheel file will be updated to the official 
+         version of TensorFlow as the ngraph-tensorflow repository is synchronized frequently 
+         with the original TensorFlow repository.
+
+#. Now clone the ``ngraph-tensorflow-bridge`` repo one level above -- in the 
+   parent directory of the ngraph-tensorflow repo cloned in step 4:
 
    .. code-block:: console
 
-      $ pip install /tmp/tensorflow_pkg/tensorflow-1.3.0-cp27-cp27mu-linux_x86_64.whl
+      $ cd ..
+      $ git clone https://github.com/NervanaSystems/ngraph-tensorflow-bridge.git
+      $ cd ngraph-tensorflow-bridge
+
+#. Finally, build and install ngraph-tensorflow-bridge
+
+   .. code-block:: console
+
+      $ mkdir build
+      $ cd build
+      $ cmake ../
+      $ make install
+
+This final step automatically downloads the necessary version of ngraph and the 
+dependencies. The resulting plugin `DSO`_ named ``libngraph_plugin.so`` gets copied 
+to the following directory inside the TensorFlow installation directory: 
+
+:: 
+
+   <Python site-packages>/tensorflow/plugins
+
+Once the build and installation steps are complete, you can start experimenting with 
+coding for nGraph. 
 
 
-Run MNIST MLP through the TensorFlow / XLA plugin to nGraph
-------------------------------------------------------------
+Run MNIST Softmax with the activated bridge
+----------------------------------------------
 
-To test an example through the TensorFlow / XLA plugin to nGraph, you can use the 
-the MNIST softmax regression example script named `mnist_softmax_ngraph.py` that
-is available in the `/examples/mnist`_ directory.
-
-This script was modified from the example explained in the TensorFlow\* tutorial;
-the following changes were made from the original script:
+To see everything working together, you can run MNIST Softmax example with the now-activated 
+bridge to nGraph. The script named mnist_softmax_ngraph.py can be found under the 
+ngraph-tensorflow-bridge/test directory. It was modified from the example explained 
+in the TensorFlow\* tutorial; the following changes were made from the original script:
 
 .. code-block:: python
 
    def main(_):
-   with tf.device('/device:XLA_NGRAPH:0'):
+   with tf.device('/device:NGRAPH:0'):
      run_mnist(_)
 
    def run_mnist(_):
@@ -281,20 +303,25 @@ To test everything together, set the configuration options:
    export OMP_NUM_THREADS=4 
    export KMP_AFFINITY=granularity=fine,scatter
 
-And run the script as follows from within the `/examples/mnist`_ directory of 
-your cloned version of `ngraph-tensorflow`_:
+And run the script as follows from within the `/test`_ directory of 
+your cloned version of `ngraph-tensorflow-bridge`_:
 
 .. code-block:: console   
 
    $ python mnist_softmax_ngraph.py
 
 
+.. note:: The number-of-threads parameter specified in the ``OMP_NUM_THREADS`` 
+   is a function of number of CPU cores that are available in your system. 
+
 
 .. _MXNet: http://mxnet.incubator.apache.org
-.. _bazel version 0.5.4: https://github.com/bazelbuild/bazel/releases/tag/0.5.4
-.. _1.3 installation guide: https://www.tensorflow.org/versions/r1.3/install/install_sources#prepare_environment_for_linux
+.. _bazel version: https://github.com/bazelbuild/bazel/releases/tag/0.11.0
+.. _DSO: http://csweb.cs.wfu.edu/%7Etorgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
+.. _installation guide: https://www.tensorflow.org/install/install_sources#prepare_environment_for_linux
 .. _ngraph-tensorflow: https://github.com/NervanaSystems/ngraph-tensorflow
-.. _/examples/mnist: https://github.com/NervanaSystems/ngraph-tensorflow/tree/develop/tensorflow/compiler/plugin/ngraph/examples/mnist
+.. _ngraph-tensorflow-bridge: https://github.com/NervanaSystems/ngraph-tensorflow-bridge
+.. _/test: https://github.com/NervanaSystems/ngraph-tensorflow-bridge/tree/master/test
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph-neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
 .. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc

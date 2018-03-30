@@ -38,6 +38,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -988,14 +989,21 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
+                        auto kernel_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        if (!runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(
+                                kernel_layout))
+                        {
+                            // Propagate delta layout
+                            kernel_layout =
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
+                        }
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(input_layout);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
+                        prim_input_formats.push_back(kernel_layout);
+                        prim_input_formats.push_back(kernel_layout);
+                        prim_output_formats.push_back(kernel_layout);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -1047,8 +1055,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormRelu)
                 {
+                    auto bn = static_cast<const ngraph::op::BatchNormRelu*>(node.get());
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_layout =
@@ -1057,13 +1066,54 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
+                        if (!bn->get_training_flag() || bn->get_inputs().size() != 3)
+                        {
+                            throw ngraph_error("Only training batchnorm should have been fused");
+                        }
+
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(input_layout);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        throw ngraph_error("BatchnormRelu only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormBackprop)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto kernel_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        if (!runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(
+                                kernel_layout))
+                        {
+                            // Propagate delta layout
+                            kernel_layout =
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 5);
+                        }
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+
                         prim_input_formats.push_back(memory::format::x);  // gamma
                         prim_input_formats.push_back(memory::format::x);  // beta
-                        prim_input_formats.push_back(input_layout);       // input
+                        prim_input_formats.push_back(kernel_layout);      // input
                         prim_input_formats.push_back(memory::format::x);  // mean
                         prim_input_formats.push_back(memory::format::x);  // variance
-                        prim_input_formats.push_back(input_layout);       // delta
-                        prim_output_formats.push_back(input_layout);      // dinput
+                        prim_input_formats.push_back(kernel_layout);      // delta
+                        prim_output_formats.push_back(kernel_layout);     // dinput
                         prim_output_formats.push_back(memory::format::x); // dgamma
                         prim_output_formats.push_back(memory::format::x); // dbeta
                         node =
@@ -1123,6 +1173,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BatchNormRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormRelu>},
     {TI(ngraph::op::BatchNormBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::GetOutputElement),

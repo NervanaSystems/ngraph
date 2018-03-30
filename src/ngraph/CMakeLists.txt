@@ -116,8 +116,8 @@ set (SRC
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
     pass/visualize_tree.cpp
+    pass/core_fusion.cpp
     pattern/matcher.cpp
-    pattern/core_fusion.cpp
     runtime/aligned_buffer.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
@@ -211,6 +211,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp

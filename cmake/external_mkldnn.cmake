@@ -38,6 +38,7 @@ if(NGRAPH_CPU_ENABLE)
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -57,6 +58,7 @@ if(NGRAPH_CPU_ENABLE)
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -81,7 +83,7 @@ if(NGRAPH_CPU_ENABLE)
     set(MKLDNN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include" PARENT_SCOPE)
     set(MKLDNN_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib" PARENT_SCOPE)
 
-    # Other .cmake files in current scope (e.g. Argon Transformer) needs this path as well
+    # Other .cmake files in current scope (e.g. NNP Transformer) needs this path as well
     set(MKLDNN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include")
     set(MKLDNN_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib")
 
