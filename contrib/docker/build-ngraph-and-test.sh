@@ -120,25 +120,22 @@ echo "    NGRAPH_REPO=${NGRAPH_REPO}"
 echo "    CMAKE_OPTIONS=${CMAKE_OPTIONS}"
 echo "    GTEST_OUTPUT=${GTEST_OUTPUT}"
 
+echo "Running cmake"
+cmake ${CMAKE_OPTIONS} .. 2>&1 | tee ${OUTPUT_DIR}/cmake_${TEST_SUITE}.log
+echo "Running make"
+env VERBOSE=1 make -j ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${TEST_SUITE}.log
+
 if [ -z ${CMD_TO_RUN} ] ; then
     echo "No CMD_TO_RUN specified - will run cmake, make, and style-check"
-
-    echo "Running cmake"
-    cmake ${CMAKE_OPTIONS} .. 2>&1 | tee ${OUTPUT_DIR}/cmake_${TEST_SUITE}.log
-    echo "Running make"
-    env VERBOSE=1 make -j ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${TEST_SUITE}.log
-
-    # check style before running unit tests
-    if [ -f "/usr/bin/clang-3.9" ]; then
-        echo "Running make style-check"
-        env VERBOSE=1 make -j style-check 2>&1 | tee ${OUTPUT_DIR}/make_style_check_${TEST_SUITE}.log
-    fi
-
-    if $RUN_UNIT_TESTS; then
-        echo "Running make unit-test-check"
-        env VERBOSE=1 make unit-test-check 2>&1 | tee ${OUTPUT_DIR}/make_unit_test_check_${TEST_SUITE}.log
-    fi
 else
+    if [ "${CMD_TO_RUN}" == "unit-test-check" ]; then
+    # check style before running unit tests
+        if [ -f "/usr/bin/clang-3.9" ]; then
+            echo "Running make style-check"
+            env VERBOSE=1 make -j style-check 2>&1 | tee ${OUTPUT_DIR}/make_style_check_${TEST_SUITE}.log
+        fi
+    fi
+
     echo "Running make ${CMD_TO_RUN}"
     env VERBOSE=1 make ${CMD_TO_RUN} 2>&1 | tee ${OUTPUT_DIR}/make_${CMD_TO_RUN}_${TEST_SUITE}.log
 fi
