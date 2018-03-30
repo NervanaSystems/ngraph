@@ -19,10 +19,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {

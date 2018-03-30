@@ -19,6 +19,11 @@
 #include <functional>
 #include <vector>
 
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cudnn_v7.h>
+
 #include "ngraph/axis_set.hpp"
 #include "ngraph/shape.hpp"
 
@@ -40,19 +45,21 @@ namespace ngraph
             public:
                 CUDNNEmitter() {}
                 ~CUDNNEmitter() {}
-
                 size_t build_reduce_forward(GPURuntimeContext* ctx,
                                             const Shape& input_shape,
                                             const AxisSet& reduction_axes,
                                             const cudnnReduceTensorOp_t& reduce_op);
 
-                void invoke(size_t primitive_index, const std::vector<void*>& args, const std::vector<void*>& result);
+                void invoke(size_t primitive_index,
+                            const std::vector<void*>& args,
+                            const std::vector<void*>& result);
 
             private:
-                size_t register_primitive(const std::function<void(std::vector<void*>,std::vector<void*>)>& f);
-                std::vector<std::function<void(std::vector<void*>,std::vector<void*>)>> m_cudnn_primitives;
+                size_t register_primitive(
+                    const std::function<void(std::vector<void*>, std::vector<void*>)>& f);
+                std::vector<std::function<void(std::vector<void*>, std::vector<void*>)>>
+                    m_cudnn_primitives;
             };
         }
-
     }
 }

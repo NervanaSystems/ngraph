@@ -16,27 +16,25 @@
 #include <iostream>
 #include <vector>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn_v7.h>
-
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-void CUDNNEmitter::invoke(size_t primitive_index, const std::vector<void*>& args, const std::vector<void*>& result)
+void CUDNNEmitter::invoke(size_t primitive_index,
+                          const std::vector<void*>& args,
+                          const std::vector<void*>& result)
 {
-    m_cudnn_primitives[primitive_index](args,result);
+    m_cudnn_primitives[primitive_index](args, result);
 }
 
-size_t CUDNNEmitter::register_primitive(const std::function<void(std::vector<void*>,std::vector<void*>)>& f)
+size_t CUDNNEmitter::register_primitive(
+    const std::function<void(std::vector<void*>, std::vector<void*>)>& f)
 {
     // try emplace
     m_cudnn_primitives.push_back(f);
-    return m_cudnn_primitives.size()-1;
+    return m_cudnn_primitives.size() - 1;
 }
 
 size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
@@ -96,7 +94,7 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
     else
     {
         std::vector<int> dimensions(input_shape.size());
-        for (auto i=0u; i<input_shape.size(); i++)
+        for (auto i = 0u; i < input_shape.size(); i++)
         {
             dimensions[i] = static_cast<int>(input_shape[i]);
         }
@@ -131,12 +129,8 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
         };
     }
     // emit sum reduce operation
-    auto reduce = [ctx,
-                   reduce_op,
-                   get_input_desc,
-                   get_output_desc] (
-                       std::vector<void*> inputs,
-                       std::vector<void*> outputs) {
+    auto reduce = [ctx, reduce_op, get_input_desc, get_output_desc](std::vector<void*> inputs,
+                                                                    std::vector<void*> outputs) {
         auto input_desc = get_input_desc();
         auto output_desc = get_output_desc();
         cudnnReduceTensorDescriptor_t reduceTensorDesc;
@@ -148,11 +142,8 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
                                        CUDNN_REDUCE_TENSOR_NO_INDICES,
                                        CUDNN_32BIT_INDICES);
         size_t workspace_size = 0;
-        cudnnGetReductionWorkspaceSize(*ctx->cudnn_handle,
-                                       reduceTensorDesc,
-                                       input_desc,
-                                       output_desc,
-                                       &workspace_size);
+        cudnnGetReductionWorkspaceSize(
+            *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
         auto workspace_ptr = create_gpu_buffer(workspace_size);
         float alpha = 1.0, beta = 0.0;
         cudnnReduceTensor(*ctx->cudnn_handle,
@@ -173,7 +164,8 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
     return this->register_primitive(reduce);
 }
 
-std::vector<int> cudnn_util::compute_strides(const std::vector<int>& dim) {
+std::vector<int> cudnn_util::compute_strides(const std::vector<int>& dim)
+{
     std::vector<int> strides(dim.size(), 1);
     std::copy(dim.begin() + 1, dim.end(), strides.begin());
     for (int64_t i = dim.size() - 2; i >= 0; i--)

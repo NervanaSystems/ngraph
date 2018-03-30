@@ -27,9 +27,9 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
 namespace ngraph
 {
@@ -65,6 +65,7 @@ namespace ngraph
                 {
                     return m_cudnn_emitter;
                 }
+
             protected:
                 void compile();
 
@@ -84,14 +85,12 @@ namespace ngraph
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
 
-
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
                 std::unique_ptr<GPURuntimeContext> m_ctx;
-
             };
         }
     }

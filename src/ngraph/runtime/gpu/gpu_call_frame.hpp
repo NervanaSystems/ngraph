@@ -25,8 +25,8 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -39,9 +39,7 @@ namespace ngraph
             class GPU_CallFrame;
             class GPU_ExternalFunction;
 
-            using EntryPoint_t = void(void** inputs,
-                                      void** outputs,
-                                      GPURuntimeContext* ctx);
+            using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
 
             using EntryPoint = std::function<EntryPoint_t>;
 

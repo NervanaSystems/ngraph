@@ -28,7 +28,8 @@ static const std::string s_output_dir = "gpu_codegen";
 
 using namespace ngraph;
 
-std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::set(const std::string& name, const std::string& kernel)
+std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::set(const std::string& name,
+                                                                const std::string& kernel)
 {
     const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};
     std::string filename =
