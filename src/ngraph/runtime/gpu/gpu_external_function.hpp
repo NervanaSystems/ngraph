@@ -60,7 +60,7 @@ namespace ngraph
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
-                GPURuntimeContext* ctx();
+                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter() const
                 {
                     return m_cudnn_emitter;
@@ -90,7 +90,7 @@ namespace ngraph
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
-                std::shared_ptr<GPURuntimeContext> m_ctx;
+                std::unique_ptr<GPURuntimeContext> m_ctx;
 
             };
         }
