@@ -228,8 +228,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                     writer.block_begin("  // " + node->get_name());
                     writer << "cublasSdot("
-                           << "*ctx->cublas_handle," << args[0].get_size() << "," << args[0].get_name()
-                           << ","
+                           << "*ctx->cublas_handle," << args[0].get_size() << ","
+                           << args[0].get_name() << ","
                            << "1," << args[1].get_name() << ","
                            << "1," << out[0].get_name() << ");\n";
                     writer.block_end();
@@ -241,7 +241,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.block_begin("  // " + node->get_name());
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0;\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer
+                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgemv("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
@@ -252,7 +253,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "1);\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.block_end();
                 }
                 // cases that can be treat as matrix multiply
@@ -312,7 +314,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "int m = " << m << ";\n";
                     writer << "int n = " << n << ";\n";
                     writer << "int k = " << k << ";\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer
+                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgemm("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_N,"
@@ -327,7 +330,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << out[0].get_name() << ","
                            << "n);\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE);\n";
                     writer.block_end();
                 }
             }
@@ -504,13 +508,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
 
                     writer.block_begin("  // " + node->get_name());
-                    writer << "runtime::gpu::emit_broadcast(\"" << node->description()
-                           << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                    writer << "runtime::gpu::emit_broadcast(\"" << node->description() << "\", {\""
+                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                            << ", ctx"
                            << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
-                           << ", " << repeat_size << ", " << repeat_times << ", " << out[0].get_size()
-                           << ");\n";
+                           << ", " << repeat_size << ", " << repeat_times << ", "
+                           << out[0].get_size() << ");\n";
                     writer.block_end();
                 }
                 else
@@ -556,7 +560,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     // TODO Assert arg0_shape[0] == arg1_shape[0]?
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta = 0;\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+                    writer
+                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
                     writer << "cublasSgeam("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T,"
@@ -566,7 +571,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "&beta," // beta
                            << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name()
                            << "," << result_shape[1] << ");\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE);\n";
                 }
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
@@ -615,8 +621,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer
                         << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
                            "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::emit_reshape(\"" << node->description()
-                           << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                    writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
+                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                            << ", ctx"
                            << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                            << out[0].get_name() << ")"
@@ -695,8 +701,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-                writer << "runtime::gpu::emit_onehot(\"" << node->description()
-                       << "\", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                writer << "runtime::gpu::emit_onehot(\"" << node->description() << "\", {\""
+                       << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                        << ", ctx"
                        << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
                        << out[0].get_name() << ")"

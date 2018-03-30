@@ -34,6 +34,7 @@ namespace ngraph
                 ~CudaFunctionPool() {}
                 std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
                 std::shared_ptr<CUfunction> get(const std::string& name);
+
             private:
                 std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
             };

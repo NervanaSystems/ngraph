@@ -405,8 +405,7 @@ using namespace std;
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name()
-               << "(void** inputs, void** outputs, "
+        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
                << "gpu::GPURuntimeContext* ctx);\n";
     }
 
