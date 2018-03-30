@@ -51,7 +51,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
     buffer_size = shape_size(shape) * element_type.size();
 
-    if (mem_handle)
+    if (mem_handle != nullptr)
     {
         aligned_buffer = static_cast<char*>(mem_handle);
         return;
