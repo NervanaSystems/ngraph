@@ -294,7 +294,7 @@ TEST(cpu_test, batchnorm_fprop_inference_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, false);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
     auto manager = runtime::Manager::get("CPU");
@@ -332,7 +332,7 @@ TEST(cpu_test, batchnorm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-TEST(cpu_test, batchnorm_fprop_singleoutput_b2c2w2h1)
+TEST(cpu_test, batchnorm_fprop_globalstats_b2c2w2h1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -346,7 +346,7 @@ TEST(cpu_test, batchnorm_fprop_singleoutput_b2c2w2h1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(true, eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, true);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
     auto manager = runtime::Manager::get("CPU");

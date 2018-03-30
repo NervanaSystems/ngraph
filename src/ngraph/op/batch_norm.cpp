@@ -69,13 +69,13 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     add_output(input->get_element_type(), m_bn_variance_shape);
 }
 
-ngraph::op::BatchNorm::BatchNorm(bool training,
-                                 double eps,
+ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input,
                                  std::shared_ptr<ngraph::Node> mean,
-                                 std::shared_ptr<ngraph::Node> variance)
+                                 std::shared_ptr<ngraph::Node> variance,
+                                 bool training)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
     , m_bn_input_shape(input->get_shape())
     , m_bn_variance_shape(variance->get_shape())
@@ -83,6 +83,8 @@ ngraph::op::BatchNorm::BatchNorm(bool training,
     , m_epsilon(eps)
     , m_training(training)
 {
+    const size_t INPUT_INDEX = 2;
+
     if (m_bn_input_shape.size() < 2)
     {
         throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
@@ -106,78 +108,15 @@ ngraph::op::BatchNorm::BatchNorm(bool training,
             throw ngraph_error(err_msg.c_str());
         }
     }
-
     for (size_t index = 0; index < get_input_size(); index++)
     {
-        if (index != 2 && get_input_op(index)->get_shape().size() != 1)
+        if (index != INPUT_INDEX && get_input_op(index)->get_shape().size() != 1)
         {
             auto err_msg = std::string(input_names[index]) + " should have rank of 1";
             throw ngraph_error(err_msg.c_str());
         }
 
-        if (index != 2 && get_input_op(index)->get_shape()[0] != m_bn_input_shape[1])
-        {
-            auto err_msg = std::string(input_names[index]) +
-                           " shape should match the input channel size (" +
-                           std::to_string(m_bn_input_shape[1]) + ",)";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-
-    if (variance->get_shape()[0] != mean->get_shape()[0])
-    {
-        throw ngraph_error("mean and variance should have same size");
-    }
-
-    add_output(input->get_element_type(), m_bn_input_shape);
-}
-
-ngraph::op::BatchNorm::BatchNorm(double eps,
-                                 std::shared_ptr<ngraph::Node> gamma,
-                                 std::shared_ptr<ngraph::Node> beta,
-                                 std::shared_ptr<ngraph::Node> input,
-                                 std::shared_ptr<ngraph::Node> mean,
-                                 std::shared_ptr<ngraph::Node> variance)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
-    , m_bn_input_shape(input->get_shape())
-    , m_bn_variance_shape(variance->get_shape())
-    , m_bn_mean_shape(mean->get_shape())
-    , m_epsilon(eps)
-    , m_training(false)
-{
-    if (m_bn_input_shape.size() < 2)
-    {
-        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
-    }
-
-    if (m_bn_input_shape[1] == 0)
-    {
-        throw ngraph_error(
-            "input tensor must have at least one channel axis for batch normalization");
-    }
-
-    auto et = input->get_element_type();
-    const char* input_names[] = {"gamma", "beta", "input", "mean", "variance"};
-
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        if (get_input_op(i)->get_element_type() != et)
-        {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-
-    for (size_t index = 0; index < get_input_size(); index++)
-    {
-        if (index != 2 && get_input_op(index)->get_shape().size() != 1)
-        {
-            auto err_msg = std::string(input_names[index]) + " should have rank of 1";
-            throw ngraph_error(err_msg.c_str());
-        }
-
-        if (index != 2 && get_input_op(index)->get_shape()[0] != m_bn_input_shape[1])
+        if (index != INPUT_INDEX && get_input_op(index)->get_shape()[0] != m_bn_input_shape[1])
         {
             auto err_msg = std::string(input_names[index]) +
                            " shape should match the input channel size (" +
@@ -206,13 +145,13 @@ std::shared_ptr<ngraph::Node>
         }
         else if (new_args.size() == 5)
         {
-            return std::make_shared<BatchNorm>(this->m_training,
-                                               m_epsilon,
+            return std::make_shared<BatchNorm>(m_epsilon,
                                                new_args.at(0),
                                                new_args.at(1),
                                                new_args.at(2),
                                                new_args.at(3),
-                                               new_args.at(4));
+                                               new_args.at(4),
+                                               true);
         }
         else
         {
@@ -230,7 +169,8 @@ std::shared_ptr<ngraph::Node>
                                            new_args.at(1),
                                            new_args.at(2),
                                            new_args.at(3),
-                                           new_args.at(4));
+                                           new_args.at(4),
+                                           false);
     }
 }
 
@@ -329,15 +269,15 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
     if (this->get_training_flag() && get_input_size() == 3)
     {
-        for (auto _input : get_output_inputs(0))
+        for (auto goe_input : get_output_inputs(0))
         {
-            auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(_input->get_node());
-            goes.at(goe->get_n()) = _input->get_node();
+            auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
+            goes.at(goe->get_n()) = goe_input->get_node();
         }
         mean = goes.at(1);
         var = goes.at(2);
     }
-    else // BatchNorm Training with single output
+    else // BatchNorm Training with global stats
     {
         mean = get_input_op(3);
         var = get_input_op(4);

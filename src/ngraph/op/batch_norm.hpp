@@ -30,28 +30,22 @@ namespace ngraph
         class BatchNorm : public util::RequiresTensorViewArgs
         {
         public:
-            // BatchNorm Training
+            // BatchNorm Training with scale shift. mean and variance
+            // are computed internal to MKLDNN
             BatchNorm(double eps,
                       std::shared_ptr<Node> gamma,
                       std::shared_ptr<Node> beta,
                       std::shared_ptr<Node> input);
 
-            // BatchNorm Training
-            BatchNorm(bool training,
-                      double eps,
-                      std::shared_ptr<ngraph::Node> gamma,
-                      std::shared_ptr<ngraph::Node> beta,
-                      std::shared_ptr<ngraph::Node> input,
-                      std::shared_ptr<ngraph::Node> mean,
-                      std::shared_ptr<ngraph::Node> variance);
-
-            //BatchNorm Inference
+            // bool training(true) -> BatcNorm Training using global stats
+            // bool training(false) ->  BatcNorm Inference using global stats)
             BatchNorm(double eps,
                       std::shared_ptr<ngraph::Node> gamma,
                       std::shared_ptr<ngraph::Node> beta,
                       std::shared_ptr<ngraph::Node> input,
                       std::shared_ptr<ngraph::Node> mean,
-                      std::shared_ptr<ngraph::Node> variance);
+                      std::shared_ptr<ngraph::Node> variance,
+                      bool training);
 
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }

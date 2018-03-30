@@ -427,7 +427,7 @@ static shared_ptr<ngraph::Function>
                 else
                 {
                     node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4]);
+                        epsilon, args[0], args[1], args[2], args[3], args[4], false);
                 }
             }
             else if (node_op == "BatchNormBackprop")
