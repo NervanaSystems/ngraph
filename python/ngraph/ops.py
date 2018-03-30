@@ -155,7 +155,12 @@ def negative(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def floor(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies floor to the input node elementwise."""
+    """Return node which applies floor to the input node element-wise.
+
+    :param node: The input node providing data.
+    :param name: The optional name for new output node.
+    :return: The node performing element-wise floor operation.
+    """
     return Floor(node)
 
 
@@ -246,25 +251,51 @@ def not_equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput,
 
 @binary_op
 def greater(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left input node is greater than the right node elementwise."""
+    """Return node which checks if left input node is greater than the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is greater than right_node.
+    """
     return Greater(left_node, right_node)
 
 
 @binary_op
 def greater_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left node is greater or equal to the right node elementwise."""
+    """Return node which checks if left node is greater or equal to the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is greater than or equal
+             right_node.
+    """
     return GreaterEq(left_node, right_node)
 
 
 @binary_op
 def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left input node is less than the right node elementwise."""
+    """Return node which checks if left input node is less than the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is less than the right_node.
+    """
     return Less(left_node, right_node)
 
 
 @binary_op
 def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left node is less or equal to the right node elementwise."""
+    """Return node which checks if left input node is less or equal the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is less than or equal the
+             right_node.
+    """
     return LessEq(left_node, right_node)
 
 

@@ -58,7 +58,6 @@ def test_serialization():
     assert serial_json[0]['name'] != ''
     assert 10 == len(serial_json[0]['ops'])
 
-
     input_data = np.array([1, 2, 3])
 
     new_shape = [3, 3]
