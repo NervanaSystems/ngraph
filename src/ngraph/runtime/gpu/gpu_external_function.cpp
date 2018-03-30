@@ -813,7 +813,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     writer << "timer_" << node->get_name() << ".stop();\n";
 }
 
-runtime::gpu::GPURuntimeContext* runtime::gpu::GPU_ExternalFunction::ctx()
+std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
 {
-    return m_ctx.get();
+    return m_ctx;
 }
