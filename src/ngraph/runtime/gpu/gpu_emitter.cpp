@@ -800,46 +800,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
                 return;
             }
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPool)
-            {
-                auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
-
-                auto input_shape = args[0].get_shape();
-                auto input_rank = input_shape.size();
-
-                auto result_shape = out[0].get_shape();
-
-                auto& cudnn_emitter = external_function->get_cudnn_emitter();
-                // auto index = cudnn_emitter->build_test();
-                // writer << "ctx->cudnn_emitter->invoke(" << index << ");\n";
-                // writer << "exit(0);\n";
-
-                std::array<size_t, 4> dimensions;
-                size_t pos = 0;
-                for (size_t i = input_shape.size(); i < 4; i++)
-                {
-                    dimensions[pos++] = 1;
-                }
-                for (size_t i = 0; i < input_shape.size(); i++)
-                {
-                    dimensions[pos++] = input_shape[i];
-                }
-
-                auto input_desc = [dimensions]() {
-                    cudnnTensorDescriptor_t desc;
-                    cudnnCreateTensorDescriptor(&desc);
-                    cudnnSetTensor4dDescriptor(desc,
-                                               CUDNN_TENSOR_NCHW,
-                                               CUDNN_DATA_FLOAT,
-                                               dimensions[0],
-                                               dimensions[1],
-                                               dimensions[2],
-                                               dimensions[3]);
-                    return desc;
-                };
-            }
         }
     }
 }
