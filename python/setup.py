@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
@@ -23,9 +23,49 @@ import distutils.ccompiler
 
 __version__ = '0.2.0'
 
+PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Parallel build from:
-# http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+
+def find_ngraph_dist_dir():
+    """Return location of compiled ngraph library home."""
+    if os.environ.get('NGRAPH_CPP_BUILD_PATH'):
+        ngraph_dist_dir = os.environ.get('NGRAPH_CPP_BUILD_PATH')
+    else:
+        ngraph_dist_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/ngraph_dist')
+
+    found = os.path.exists(os.path.join(ngraph_dist_dir, 'include/ngraph'))
+    if not found:
+        print("Cannot find nGraph library in {} make sure that "
+              "NGRAPH_CPP_BUILD_PATH is set correctly".format(ngraph_dist_dir))
+        sys.exit(1)
+    else:
+        print("nGraph library found in {}".format(ngraph_dist_dir))
+        return ngraph_dist_dir
+
+
+def find_pybind_headers_dir():
+    if os.environ.get('PYBIND_HEADERS_PATH'):
+        pybind_headers_dir = os.environ.get('PYBIND_HEADERS_PATH')
+    else:
+        pybind_headers_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/pybind11')
+
+    found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
+    if not found:
+        print("Cannot find pybind11 library in {} make sure that "
+              "PYBIND_HEADERS_PATH is set correctly".format(pybind_headers_dir))
+        sys.exit(1)
+    else:
+        print("pybind11 library found in {}".format(pybind_headers_dir))
+        return pybind_headers_dir
+
+
+NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
+PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + "/include"
+NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + "/include"
+NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + "/lib"
+
+
+# Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
 # monkey-patch for parallel compilation
 def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None,
                      debug=0, extra_preargs=None, extra_postargs=None, depends=None):
@@ -47,13 +87,16 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     return objects
 
 
-distutils.ccompiler.CCompiler.compile = parallelCCompile
+distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 
 # As of Python 3.6, CCompiler has a `has_flag` method.
 # cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
-    """Return a boolean indicating whether a flag name is supported on the specified compiler."""
+    """
+    Return a boolean indicating whether a flag name is supported on
+    the specified compiler.
+    """
     import tempfile
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
@@ -66,6 +109,7 @@ def has_flag(compiler, flagname):
 
 def cpp_flag(compiler):
     """Return the -std=c++[11/14] compiler flag.
+
     The c++14 is prefered over c++11 (when it is available).
     """
     if has_flag(compiler, '-std=c++14'):
@@ -77,17 +121,10 @@ def cpp_flag(compiler):
                            'is needed!')
 
 
-if 'NGRAPH_CPP_BUILD_PATH' in os.environ:
-    NGRAPH_CPP_INCLUDE_DIR = os.environ['NGRAPH_CPP_BUILD_PATH'] + '/include'
-    NGRAPH_CPP_LIBRARY_DIR = os.environ['NGRAPH_CPP_BUILD_PATH'] + '/lib'
-else:
-    raise RuntimeError('NGRAPH_CPP_BUILD_PATH must be defined')
-
-
 sources = ['pyngraph/function.cpp',
-           'pyngraph/serializer.cpp', 
+           'pyngraph/serializer.cpp',
            'pyngraph/node.cpp',
-           'pyngraph/node_vector.cpp', 
+           'pyngraph/node_vector.cpp',
            'pyngraph/shape.cpp',
            'pyngraph/strides.cpp',
            'pyngraph/coordinate_diff.cpp',
@@ -178,34 +215,36 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/types/type.cpp',
            ]
 
-include_dirs = [  # Path to pybind11 headers
-    'pybind11/include',
-    NGRAPH_CPP_INCLUDE_DIR,
-    '.',
-]
+sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]
 
-library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
+include_dirs = [PYNGRAPH_SOURCE_DIR,
+                NGRAPH_CPP_INCLUDE_DIR,
+                PYBIND11_INCLUDE_DIR,
+               ]
 
-libraries = ['ngraph']
+library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
+               ]
+
+libraries    = ["ngraph",
+               ]
 
 extra_compile_args = []
 
 extra_link_args = []
 
-data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + '/' +
-                       library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)])]
+data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + "/" + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)]),]
 
 ext_modules = [Extension(
-    '_pyngraph',
-    sources=sources,
-    include_dirs=include_dirs,
-    define_macros=[('VERSION_INFO', __version__)],
-    library_dirs=library_dirs,
-    libraries=libraries,
-    extra_link_args=extra_link_args,
-    language='c++',
-),
-]
+                   '_pyngraph',
+                   sources = sources,
+                   include_dirs = include_dirs,
+                   define_macros = [("VERSION_INFO", __version__)],
+                   library_dirs = library_dirs,
+                   libraries = libraries,
+                   extra_link_args = extra_link_args,
+                   language = "c++",
+                   )
+              ]
 
 
 class BuildExt(build_ext):
@@ -238,12 +277,12 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-with open('requirements.txt') as req:
+with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 
 setup(
-    name='pyngraph',
+    name='ngraph',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
@@ -252,9 +291,17 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    packages=find_packages(exclude=['pybind11', 'build', 'test']),
+    package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
+                 'ngraph.utils': PYNGRAPH_SOURCE_DIR + "/ngraph/utils",
+                 'ngraph.impl': PYNGRAPH_SOURCE_DIR + "/ngraph/impl",
+                 'ngraph.impl.op': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op",
+                 'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
+                 'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
+                 'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime"},
+    packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.op',
+                'ngraph.impl.op.util', 'ngraph.impl.passes', 'ngraph.impl.runtime'],
     cmdclass={'build_ext': BuildExt},
-    data_files=data_files,
-    install_requires=requirements,
+    data_files = data_files,
+    install_requires = requirements,
     zip_safe=False,
 )
