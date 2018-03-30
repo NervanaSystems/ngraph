@@ -37,6 +37,10 @@ public:
     HostTensorView(const ngraph::element::Type& element_type,
                    const Shape& shape,
                    const std::string& name = "external");
+    HostTensorView(const ngraph::element::Type& element_type,
+                   const Shape& shape,
+                   void* mem_handle,
+                   const std::string& name = "external");
     virtual ~HostTensorView() override;
 
     char* get_data_ptr();

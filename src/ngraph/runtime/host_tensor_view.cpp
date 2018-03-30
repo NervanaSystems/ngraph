@@ -26,6 +26,7 @@ using namespace std;
 
 runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
                                         const Shape& shape,
+                                        void* mem_handle,
                                         const string& name)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape), name, true, true, false))
@@ -37,6 +38,13 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
+
+    if (mem_handle != nullptr)
+    {
+        m_aligned_buffer_pool = static_cast<char*>(mem_handle);
+        return;
+    }
+
     if (m_buffer_size > 0)
     {
         size_t allocation_size = m_buffer_size + runtime::alignment;
@@ -48,6 +56,13 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
             m_aligned_buffer_pool += (alignment - mod);
         }
     }
+}
+
+runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
+                                        const Shape& shape,
+                                        const string& name)
+    : HostTensorView(element_type, shape, nullptr, name)
+{
 }
 
 runtime::HostTensorView::~HostTensorView()

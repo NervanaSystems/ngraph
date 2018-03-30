@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -33,5 +33,12 @@ shared_ptr<runtime::TensorView>
                                                                 const Shape& shape)
 {
     auto rc = make_shared<runtime::HostTensorView>(element_type, shape, "external");
+    return static_pointer_cast<runtime::TensorView>(rc);
+}
+
+shared_ptr<runtime::TensorView> runtime::interpreter::INT_Backend::make_primary_tensor_view(
+    const element::Type& element_type, const Shape& shape, void* mem_handle)
+{
+    auto rc = make_shared<runtime::HostTensorView>(element_type, shape, mem_handle, "external");
     return static_pointer_cast<runtime::TensorView>(rc);
 }

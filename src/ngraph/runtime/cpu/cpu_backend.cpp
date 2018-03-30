@@ -14,8 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
@@ -33,5 +33,12 @@ std::shared_ptr<ngraph::runtime::TensorView>
                                                         const Shape& shape)
 {
     auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
+    return dynamic_pointer_cast<runtime::TensorView>(rc);
+}
+
+std::shared_ptr<ngraph::runtime::TensorView> runtime::cpu::CPU_Backend::make_primary_tensor_view(
+    const ngraph::element::Type& element_type, const Shape& shape, void* mem_handle)
+{
+    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape, mem_handle);
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }

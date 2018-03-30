@@ -36,6 +36,7 @@ const size_t runtime::cpu::CPUTensorView::BufferAlignment = 64;
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
+                                           void* mem_handle,
                                            const string& name)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape), name, true, true, false))
@@ -49,6 +50,13 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
         *m_descriptor, runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));
 
     buffer_size = shape_size(shape) * element_type.size();
+
+    if (mem_handle)
+    {
+        aligned_buffer = static_cast<char*>(mem_handle);
+        return;
+    }
+
     if (buffer_size)
     {
         size_t allocation_size = buffer_size + BufferAlignment;
@@ -72,9 +80,17 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     }
 }
 
+runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
+                                           const Shape& shape,
+                                           const string& name)
+    : CPUTensorView(element_type, shape, nullptr, name)
+{
+}
+
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free(buffer);
+    if (buffer != nullptr)
+        free(buffer);
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
