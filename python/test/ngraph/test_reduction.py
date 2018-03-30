@@ -40,5 +40,5 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     input_data = np.random.randn(*shape).astype(np.float32)
 
     expected = numpy_function(input_data, axis=reduction_axes)
-    result = run_op_node(input_data, ng_api_helper, reduction_axes)
+    result = run_op_node([input_data], ng_api_helper, reduction_axes)
     assert np.allclose(result, expected)
