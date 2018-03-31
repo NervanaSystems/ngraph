@@ -286,7 +286,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1";
+                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_DATA_ALGO_1";
                 const size_t workSapceSizeInBytes = 1024;
                 std::array<size_t, 4> dimensions;
 
@@ -345,7 +345,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "void* workspace = "
                               "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
 
-                writer << "cudnnConvolutionForward(cudnn_handle, "
+                writer << "cudnnConvolutionBackwardData(cudnn_handle, "
                        << "&alpha, "
                        << "w_descriptor, " << args[0].get_name() << ", "
                        << "dy_descriptor, " << args[1].get_name() << ", "
@@ -373,7 +373,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
+                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1";
                 const size_t workSapceSizeInBytes = 1024;
                 std::array<size_t, 4> dimensions;
 
@@ -432,7 +432,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "void* workspace = "
                               "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
 
-                writer << "cudnnConvolutionForward(cudnn_handle, "
+                writer << "cudnnConvolutionBackwardFilter(cudnn_handle, "
                        << "&alpha, "
                        << "x_descriptor, " << args[0].get_name() << ", "
                        << "dy_descriptor, " << args[1].get_name() << ", "
