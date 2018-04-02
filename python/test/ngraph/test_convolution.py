@@ -19,7 +19,7 @@ import numpy as np
 import ngraph as ng
 from test.ngraph.util import get_runtime
 
-
+@pytest.config.gpu_skip(reason="Not implemented")
 def test_convolution_2d():
     runtime = get_runtime()
     # input_x should have shape N(batch) x C x H x W

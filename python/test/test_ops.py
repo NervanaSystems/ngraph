@@ -184,12 +184,10 @@ def test_add_op():
     binary_op_exec('Add')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sub():
     binary_op_exec('-')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sub_op():
     binary_op_exec('Sub')
 
@@ -202,17 +200,14 @@ def test_mul_op():
     binary_op_exec('Mul')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_div():
     binary_op_exec('/')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_div_op():
     binary_op_exec('Div')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_dot():
     binary_op_exec('Dot')
 
@@ -225,37 +220,30 @@ def test_minimum():
     binary_op_exec('Minimum')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_power():
     binary_op_exec('Power')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_greater():
     binary_op_comparison('Greater')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_greater_eq():
     binary_op_comparison('GreaterEq')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_less():
     binary_op_comparison('Less')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_less_eq():
     binary_op_comparison('LessEq')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_not_equal():
     binary_op_comparison('NotEqual')
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_add_with_mul():
 
     element_type = Type.f32
@@ -395,119 +383,102 @@ def unary_op_exec(op_str, input_list):
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_abs():
     input_list = [-1, 0, 1, 2]
     op_str = 'Abs'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_acos():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Acos'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_asin():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Asin'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_atan():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Atan'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_ceiling():
     input_list = [0.5, 0, 0.4, 0.5]
     op_str = 'Ceiling'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_cos():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Cos'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_cosh():
     input_list = [-1, 0., 0.5, 1]
     op_str = 'Cosh'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_floor():
     input_list = [-0.5, 0, 0.4, 0.5]
     op_str = 'Floor'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_log():
     input_list = [1, 2, 3, 4]
     op_str = 'log'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_exp():
     input_list = [-1, 0, 1, 2]
     op_str = 'exp'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_negative():
     input_list = [-1, 0, 1, 2]
     op_str = 'negative'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sign():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Sign'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sin():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Sin'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sinh():
     input_list = [-1, 0., 0.5, 1]
     op_str = 'Sinh'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sqrt():
     input_list = [0., 0.5, 1, 2]
     op_str = 'Sqrt'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_tan():
     input_list = [-np.pi / 4, 0, np.pi / 8, np.pi / 8]
     op_str = 'Tan'
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_tanh():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Tanh'
@@ -521,7 +492,6 @@ def test_reverse():
     unary_op_exec(op_str, input_list)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_not():
     element_type = Type.boolean
     shape = Shape([2])
@@ -546,7 +516,6 @@ def test_not():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_sum():
 
     element_type = Type.f32
@@ -572,7 +541,6 @@ def test_sum():
     assert np.allclose(result_arr[0], result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_reshape():
 
     element_type = Type.f32
@@ -598,7 +566,6 @@ def test_reshape():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_convert():
 
     element_type = Type.f32
@@ -642,7 +609,6 @@ def test_convert():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_broadcast():
 
     element_type = Type.f32
@@ -668,7 +634,6 @@ def test_broadcast():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_constant():
 
     element_type = Type.f32
@@ -723,7 +688,6 @@ def test_reduce():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-# @pytest.config.gpu_skip(reason="Not implemented")
 def test_onehot():
 
     element_type = Type.f32
