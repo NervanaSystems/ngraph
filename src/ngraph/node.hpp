@@ -90,10 +90,6 @@ namespace ngraph
                 input.get_output().remove_input(&input);
             }
         }
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const std::shared_ptr<Node>& delta)
-        {
-        }
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
