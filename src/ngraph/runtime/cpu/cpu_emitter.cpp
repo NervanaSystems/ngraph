@@ -534,7 +534,7 @@ namespace ngraph
                                                             mean_desc,
                                                             variance_desc,
                                                             batchnorm->get_eps_value(),
-                                                            args.size(),
+                                                            false,
                                                             batchnorm->get_training_flag(),
                                                             ops);
 
