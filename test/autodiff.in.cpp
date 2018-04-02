@@ -28,6 +28,10 @@
 
 #include "ngraph/runtime/reference/avg_pool.hpp"
 
+
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/pass/manager.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -72,6 +76,11 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bprop.pdf");
+    pass_manager.run_passes(df);
+    
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
     cf->tensor_call({output}, {input, ep});

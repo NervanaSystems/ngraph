@@ -24,6 +24,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
@@ -652,9 +653,10 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
         auto Y_out = f->get_output_op(0);
         auto Xs = f->get_parameters();
         auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        ngraph::autodiff::Adjoints adjoints(NodeVector{ Y_out }, NodeVector{ C });
         std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
-            return Y_out->backprop_node(X, C);
+        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+            return adjoints.get(X).at(0);
         });
         std::vector<std::shared_ptr<op::Parameter>> params(Xs);
         params.push_back(C);

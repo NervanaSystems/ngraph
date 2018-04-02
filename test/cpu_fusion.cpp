@@ -49,6 +49,7 @@
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
+#include "ngraph/autodiff/adjoints.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
@@ -620,9 +621,12 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    auto d_data = convolution_bias->backprop_node(conv_test.data, conv_test.delta);
-    auto d_weights = convolution_bias->backprop_node(conv_test.weights, conv_test.delta);
-    auto d_bias = convolution_bias->backprop_node(conv_test.bias, conv_test.delta);
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{convolution_bias}, NodeVector{conv_test.delta});
+
+    auto d_data = adjoints.get(conv_test.data).at(0);
+    auto d_weights = adjoints.get(conv_test.weights).at(0);
+    auto d_bias = adjoints.get(conv_test.bias).at(0);
 
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},

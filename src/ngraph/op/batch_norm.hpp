@@ -53,8 +53,8 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+			virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+				const NodeVector& deltas) override;
 
         private:
             Shape m_bn_input_shape;

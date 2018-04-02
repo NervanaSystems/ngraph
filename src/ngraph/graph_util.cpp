@@ -33,6 +33,7 @@
 #include "ngraph/op/result_vector.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/op/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -440,4 +441,19 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
         }
     });
     return function_placement;
+}
+
+std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
+{
+	std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, { 0.0 });
+	if (shape.size() > 0)
+	{
+		AxisSet axes;
+		for (size_t i = 0; i < shape.size(); i++)
+		{
+			axes.insert(i);
+		}
+		zero = std::make_shared<op::Broadcast>(zero, shape, axes);
+	}
+	return zero;
 }

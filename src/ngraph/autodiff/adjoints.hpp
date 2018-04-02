@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
 #include <unordered_map>
+#include <map>
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
@@ -37,47 +37,48 @@ namespace ngraph
 
     namespace autodiff
     {
-        class Adjoints
-        {
-        public:
-            /// @brief (dy/dx)(c) for all x used to compute y
-            ///
-            /// @param y The dependent value
-            /// @param c An expression for where to evaluate the derivatives
-            Adjoints(const NodeVector& y, const NodeVector& c);
+		class Adjoints
+		{
+		public:
+			/// @brief (dy/dx)(c) for all x used to compute y
+			///
+			/// @param y The dependent value
+			/// @param c An expression for where to evaluate the derivatives
+			Adjoints(const NodeVector& y, const NodeVector& c);
 
-            Adjoints(const Adjoints& adjoints) = default;
-            Adjoints& operator=(const Adjoints& adjoints) = default;
-            Adjoints() = default;
+			Adjoints(const Adjoints& adjoints) = default;
+			Adjoints& operator=(const Adjoints& adjoints) = default;
+			Adjoints() = default;
 
-            /// @brief (dy/dx)(c)
-            ///
-            /// @param x The node whose adjoint is desired.
-            const NodeVector& get(const std::shared_ptr<Node>& x);
+			/// @brief (dy/dx)(c)
+			///
+			/// @param x The node whose adjoint is desired.
+			const NodeVector& get(const std::shared_ptr<Node>& x);
 
-            /// @brief Add a backprop contribution to x's adjoint
-            ///
-            /// @param x The adjoint node
-            /// @param delta A backprop contribution
-            void add_delta(const std::shared_ptr<Node>& x,
-                           const std::shared_ptr<Node>& delta,
-                           size_t output_index = 0);
+			/// @brief Add a backprop contribution to x's adjoint
+			///
+			/// @param x The adjoint node
+			/// @param delta A backprop contribution
+			void add_delta(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& delta, size_t output_index = 0);
 
-            /// @brief Add a backprop contribution to a slice of x's adjoint
-            ///
-            /// @param x The adjoint node
-            /// @param delta A backprop contribution
-            /// @param lower_bounds Lower bounds of slice to add to
-            /// @param upper_bounds Upper bounds of slice to add to
-            /// @param strides Strides of slice to add to
-            void add_delta_to_slice(const std::shared_ptr<Node>& x,
-                                    const std::shared_ptr<Node>& delta,
-                                    const Coordinate& lower_bounds,
-                                    const Coordinate& upper_bounds,
-                                    const Strides& strides);
+			/// @brief Add a backprop contribution to a slice of x's adjoint
+			///
+			/// @param x The adjoint node
+			/// @param delta A backprop contribution
+			/// @param lower_bounds Lower bounds of slice to add to
+			/// @param upper_bounds Upper bounds of slice to add to
+			/// @param strides Strides of slice to add to
+			void add_delta_to_slice(const std::shared_ptr<Node>& x,
+				const std::shared_ptr<Node>& delta,
+				const Coordinate& lower_bounds,
+				const Coordinate& upper_bounds,
+				const Strides& strides);
 
-        protected:
-            std::map<Node*, NodeVector> m_adjoint_map;
-        };
+		//std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
+		//	const std::shared_ptr<Node>& c);
+
+		protected:
+			std::map<Node*, NodeVector> m_adjoint_map;
+		};
     }
 }
