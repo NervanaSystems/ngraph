@@ -380,7 +380,7 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                if (batchnorm->get_training_flag()) //BatchNorm Training
+                if (batchnorm->get_training_flag() && args.size() == 3)
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -410,6 +410,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                false,
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -427,7 +428,7 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(batchnorm_index) << ");\n";
                 }
-                else //BatchNorm Inference
+                else
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -455,6 +456,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                true,
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -532,6 +534,7 @@ namespace ngraph
                                                             mean_desc,
                                                             variance_desc,
                                                             batchnorm->get_eps_value(),
+                                                            false,
                                                             batchnorm->get_training_flag(),
                                                             ops);
 
