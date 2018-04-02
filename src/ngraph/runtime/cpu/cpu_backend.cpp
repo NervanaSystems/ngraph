@@ -60,9 +60,21 @@ bool runtime::cpu::CPU_Backend::compile(const ngraph::Function& func)
     return true;
 }
 
-bool runtime::cpu::CPU_Backend::is_callable() const
+bool runtime::cpu::CPU_Backend::call(const Function& fun,
+                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
+                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
-    throw runtime_error("Unimplemented");
+    bool rc = true;
+    try
+    {
+        compile(fun);
+        call(outputs, inputs);
+    }
+    catch (...)
+    {
+        rc = false;
+    }
+    return rc;
 }
 
 bool runtime::cpu::CPU_Backend::call(

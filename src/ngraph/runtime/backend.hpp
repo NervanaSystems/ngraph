@@ -58,6 +58,10 @@ namespace ngraph
                 return make_primary_tensor_view(element::from<T>(), shape);
             }
 
+            /// DEPRECATED
+            virtual bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+
             /// @brief Create a new Backend object
             /// @param type The name of a registered backend, such as "CPU" or "GPU".
             ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
@@ -85,9 +89,8 @@ namespace ngraph
 
             virtual bool compile(const ngraph::Function& fun) = 0;
 
-            virtual bool is_callable() const = 0;
-
-            virtual bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+            virtual bool call(const ngraph::Function& fun,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
         protected:

@@ -46,9 +46,11 @@ namespace ngraph
 
                 bool compile(const ngraph::Function& fun) override;
 
-                bool is_callable() const override;
-
                 bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+                bool call(const ngraph::Function& fun,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
             private:
