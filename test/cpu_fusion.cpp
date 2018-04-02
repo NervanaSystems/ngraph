@@ -37,6 +37,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -52,6 +53,8 @@
 #include "util/matcher.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
+
+#include "util/random.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -343,8 +346,8 @@ TEST(cpu_fusion, gemm_mlp)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
-    size_t mmb = count_ops_of_type<op::MatmulBias>(func);
-    ASSERT_EQ(mmb, 3);
+    auto mmbs = count_ops_of_type<op::MatmulBias>(func);
+    ASSERT_EQ(mmbs, 3);
 }
 
 TEST(cpu_fusion, fuse_fprop_bn)
@@ -744,6 +747,84 @@ TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
+TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
+{
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    // Note, op::Splice is used to break Relu(BatchNorm) fusion
+    // otherwise we will be comparing two BatchNormRelus
+    // Unfortunately, we can't use INTERPRETER for
+    // verifying the results as it doesn't implement
+    // BatchNorm op.
+    auto slice =
+        std::make_shared<op::Slice>(output_rt, Coordinate{0, 0, 0, 0}, Coordinate{1, 2, 2, 2});
+    auto output_relu = std::make_shared<op::Relu>(slice);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto bn_relu = make_shared<op::BatchNormRelu>(eps, gamma, beta, input);
+    auto output_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 0);
+    auto mean_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 1);
+    auto variance_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 2);
+
+    auto f = make_shared<Function>(
+        NodeVector{output_relu, mean_rt, variance_rt, output_rt_bnr, mean_rt_bnr, variance_rt_bnr},
+        op::ParameterVector{input, gamma, beta});
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto input_t = backend->make_primary_tensor_view(element::f32, Shape{1, 2, 2, 2});
+
+    copy_data(input_t,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+    auto gamma_t = backend->make_primary_tensor_view(element::f32, gamma_shape);
+    copy_data(gamma_t, vector<float>{1.0f, 1.0f});
+    auto beta_t = backend->make_primary_tensor_view(element::f32, beta_shape);
+    copy_data(beta_t, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
+
+    auto bn_output_bnr = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result_mean_bnr = backend->make_primary_tensor_view(element::f32, mean_shape);
+    auto result_variance_bnr = backend->make_primary_tensor_view(element::f32, var_shape);
+
+    cf->call({bn_output,
+              result_mean,
+              result_variance,
+              bn_output_bnr,
+              result_mean_bnr,
+              result_variance_bnr},
+             {input_t, gamma_t, beta_t});
+
+    EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
+    EXPECT_TRUE(
+        test::all_close(read_vector<float>(result_mean), read_vector<float>(result_mean_bnr)));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result_variance),
+                                read_vector<float>(result_variance_bnr)));
+}
+
 TEST(cpu_fusion, fuse_conv_relu)
 {
     auto A = std::make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
@@ -989,4 +1070,29 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     {
         EXPECT_TRUE(test::all_close<float>(result_expected[i], result_fused[i]));
     }
+}
+
+TEST(cpu_fusion, rnn_fusion_from_json_model)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/rnn-10-step-fusion-test.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+
+    const size_t NUM_STEPS = 10;
+    auto mmb_predicate = [NUM_STEPS](std::shared_ptr<Node> node) {
+        auto users = node->get_users();
+        return users.size() == NUM_STEPS &&
+               std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
+                   return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
+               });
+    };
+
+    auto mmbs = get_ops_of_type<op::MatmulBias>(func);
+    ASSERT_TRUE(std::any_of(begin(mmbs), end(mmbs), mmb_predicate));
 }
