@@ -8,20 +8,26 @@
 Follow the [steps](http://ngraph.nervanasys.com/docs/latest/install.html) to build and install ngraph.
 ```
 
+Clone the pybind repository
+
+```
+cd ngraph/python
+git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+```
+
 Set the environment variables
 
 ```
-export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
-export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib (Only needed on MacOS)
+export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
+export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
+export PYBIND_HEADERS_PATH=pybind11
 ```
 
 Install Wrapper (python binding)
 
 ```
-cd ngraph/python
-git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-pip install -U .
+python setup.py install
 ```
 
 To run unit tests, first install additional required packages.
@@ -34,7 +40,7 @@ Then run a test.
 
 ```
 pytest test/test_ops.py
-pytest test/ngraph/*
+pytest test/ngraph/
 ```
 
 ## Running tests with tox
@@ -100,5 +106,5 @@ pip install -U <full path to the bdist wheel>
 For example, On MacOS you would run a command like,
 
 ```
-pip install -U build/dist/ngraph-0.0.1-cp35-cp35m-linux_x86_64.whl
+pip install -U dist/ngraph-0.0.1-cp35-cp35m-linux_x86_64.whl
 ```
