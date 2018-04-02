@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,31 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/manager.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-std::shared_ptr<runtime::Backend> runtime::Backend::create(const std::string& type)
+TEST(backend_api, registered_devices)
 {
-    std::shared_ptr<Manager> manager = runtime::Manager::get(type);
-    return manager->allocate_backend();
-}
+    vector<string> devices = runtime::Backend::get_registered_devices();
+    EXPECT_GE(devices.size(), 1);
 
-vector<string> runtime::Backend::get_registered_devices()
-{
-    vector<string> rc;
-    for (const pair<string, runtime::Manager::Factory>& p : runtime::Manager::get_factory_map())
-    {
-        rc.push_back(p.first);
-    }
-    return rc;
-}
-
-vector<size_t> runtime::Backend::get_subdevices(const string& type)
-{
-    vector<size_t> rc;
-    return rc;
+    EXPECT_TRUE(contains(devices, "INTERPRETER"));
 }

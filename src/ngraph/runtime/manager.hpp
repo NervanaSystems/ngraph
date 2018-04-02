@@ -36,6 +36,8 @@ namespace ngraph
         /// a backed for execution and allocation.
         class Manager
         {
+            friend class runtime::Backend;
+
         public:
             virtual ~Manager() {}
             /// @brief Allocate a backend for this transformer.
