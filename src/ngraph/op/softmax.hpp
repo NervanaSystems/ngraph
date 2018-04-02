@@ -43,7 +43,7 @@ namespace ngraph
             const AxisSet& get_axes() const { return m_axes; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
         private:
             AxisSet m_axes;

@@ -58,8 +58,10 @@ shared_ptr<Node> op::ReluBackprop::copy_with_new_args(const NodeVector& new_args
     return make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
 }
 
-void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto backprop = make_shared<op::ReluBackprop>(get_input_op(0), delta);
     adjoints.add_delta(get_input_op(0), backprop);
 }

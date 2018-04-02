@@ -23,6 +23,7 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -32,7 +33,6 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/type.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
@@ -53,109 +53,97 @@ std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& 
 
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
-	NodeVector zeros;
-	for (auto& output : x->get_outputs())
-	{
-		zeros.push_back(make_zero(output.get_element_type(), output.get_shape()));
-	}
-	return zeros;
+    NodeVector zeros;
+    for (auto& output : x->get_outputs())
+    {
+        zeros.push_back(make_zero(output.get_element_type(), output.get_shape()));
+    }
+    return zeros;
 }
 
 autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
 {
-	if (ys.size() != cs.size())
-	{
-		throw ngraph_error("ys and cs must be equal size");
-	}
+    if (ys.size() != cs.size())
+    {
+        throw ngraph_error("ys and cs must be equal size");
+    }
 
-	for (size_t i = 0; i < ys.size(); i++)
-	{
+    for (size_t i = 0; i < ys.size(); i++)
+    {
+        if (ys.at(i)->get_outputs().size() > 1 || cs.at(i)->get_outputs().size() > 1)
+        {
+            throw ngraph_error("Adjoitns for multi-output ops aren't supported directly");
+        }
 
-		if (ys.at(i)->get_outputs().size() > 1 || cs.at(i)->get_outputs().size() > 1)
-		{
-			throw ngraph_error("Adjoitns for multi-output ops aren't supported directly");
-		}
+        if (ys.at(i)->get_shape() != cs.at(i)->get_shape() ||
+            ys.at(i)->get_element_type() != cs.at(i)->get_element_type())
+        {
+            throw ngraph_error("delta and node shape or element type must match");
+        }
+    }
 
-		if (ys.at(i)->get_shape() != cs.at(i)->get_shape() ||
-			ys.at(i)->get_element_type() != cs.at(i)->get_element_type())
-		{
-			throw ngraph_error("delta and node shape or element type must match");
-		}
-	}
+    // Pass 1 determines which nodes contribute to y as well as setting up a reverse
+    // topological sort.
 
-	// Pass 1 determines which nodes contribute to y as well as setting up a reverse
-	// topological sort.
+    // Number of nodes that use the node's value
+    std::unordered_map<std::shared_ptr<Node>, size_t> parent_counts;
 
-	// Number of nodes that use the node's value
-	std::unordered_map<std::shared_ptr<Node>, size_t> parent_counts;
+    // Nodes that have been processed
+    std::unordered_set<std::shared_ptr<Node>> visited_nodes;
 
-	// Nodes that have been processed
-	std::unordered_set<std::shared_ptr<Node>> visited_nodes;
+    // Nodes we should check
+    std::list<std::shared_ptr<Node>> nodes_to_check(ys.cbegin(), ys.cend());
+    while (nodes_to_check.size() > 0)
+    {
+        auto node = nodes_to_check.front();
+        nodes_to_check.pop_front();
+        if (visited_nodes.count(node) != 0)
+        {
+            continue;
+        }
+        for (auto arg : node->get_input_ops())
+        {
+            auto count_it = parent_counts.find(arg);
+            if (count_it == parent_counts.end())
+            {
+                parent_counts[arg] = 1;
+                nodes_to_check.push_front(arg);
+            }
+            else
+            {
+                parent_counts[arg]++;
+            }
+        }
+        visited_nodes.insert(node);
+    }
 
-	// Nodes we should check
-	std::list<std::shared_ptr<Node>> nodes_to_check(ys.cbegin(), ys.cend());
-	while (nodes_to_check.size() > 0)
-	{
-		auto node = nodes_to_check.front();
-		NGRAPH_DEBUG << "Processing node " << node->get_name();
-		nodes_to_check.pop_front();
-		if (visited_nodes.count(node) != 0)
-		{
-			continue;
-		}
-		for (auto arg : node->get_input_ops())
-		{
-			auto count_it = parent_counts.find(arg);
-			if (count_it == parent_counts.end())
-			{
-				parent_counts[arg] = 1;
-				nodes_to_check.push_front(arg);
-			}
-			else
-			{
-				parent_counts[arg]++;
-			}
-		}
-		visited_nodes.insert(node);
-	}
+    // Second pass visits the nodes so that all users of a node's value are visited
+    // before a node is visited.
+    for (size_t i = 0; i < ys.size(); i++)
+    {
+        Node* n = ys.at(i).get();
+        NodeVector t{cs.at(i)};
+        std::pair<Node*, NodeVector> pair = std::make_pair(n, t);
+        m_adjoint_map.insert(std::make_pair(ys.at(i).get(), NodeVector{cs.at(i)}));
+    }
 
-	// Second pass visits the nodes so that all users of a node's value are visited
-	// before a node is visited.
-	for (size_t i = 0; i < ys.size(); i++)
-	{
-		Node* n = ys.at(i).get();
-		NodeVector t{ cs.at(i) };
-		std::pair<Node*, NodeVector> pair = std::make_pair(n, t);
-		m_adjoint_map.insert(std::make_pair(ys.at(i).get(), NodeVector{ cs.at(i) }));
-	}
-
-	nodes_to_check.assign(ys.cbegin(), ys.cend());
-	while (nodes_to_check.size() > 0)
-	{
-		auto node = nodes_to_check.front();
-		nodes_to_check.pop_front();
-		// Look for nodes that will be available when this node is done
-		for (auto arg : node->get_input_ops())
-		{
-			auto count_it = parent_counts.find(arg);
-			count_it->second--;
-			if (0 == count_it->second)
-			{
-				nodes_to_check.push_front(arg);
-			}
-		}
-		auto deltas = get(node);
-		if (node->get_outputs().size() > 1)
-		{
-			NGRAPH_DEBUG << "Generating adjoints for " << node->get_name() << " (one output)";
-			node->generate_adjoints(*this, deltas);
-		}
-		else
-		{
-			NGRAPH_DEBUG << "Generating adjoints for " << node->get_name() << " (multiple outputs)";
-			node->generate_adjoints(*this, deltas.at(0));
-		}
-	}
+    nodes_to_check.assign(ys.cbegin(), ys.cend());
+    while (nodes_to_check.size() > 0)
+    {
+        auto node = nodes_to_check.front();
+        nodes_to_check.pop_front();
+        // Look for nodes that will be available when this node is done
+        for (auto arg : node->get_input_ops())
+        {
+            auto count_it = parent_counts.find(arg);
+            count_it->second--;
+            if (0 == count_it->second)
+            {
+                nodes_to_check.push_front(arg);
+            }
+        }
+        node->generate_adjoints(*this, get(node));
+    }
 }
 
 const NodeVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
@@ -163,32 +151,32 @@ const NodeVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        adjoint_it = m_adjoint_map.insert({x.get(), make_zeros(x) }).first;
+        adjoint_it = m_adjoint_map.insert({x.get(), make_zeros(x)}).first;
     }
     return adjoint_it->second;
 }
 
 void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
                                    const std::shared_ptr<Node>& delta,
-								   size_t output_index)
+                                   size_t output_index)
 {
-	if (x->get_outputs().at(output_index).get_element_type() != delta->get_element_type() ||
-		x->get_outputs().at(output_index).get_shape() != delta->get_shape())
+    if (x->get_outputs().at(output_index).get_element_type() != delta->get_element_type() ||
+        x->get_outputs().at(output_index).get_shape() != delta->get_shape())
     {
         throw ngraph_error("Autodiff internal error: Mismatch on backprop and op in add_delta.");
     }
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-		auto zeros = make_zeros(x);
-		zeros.at(output_index) = delta;
-		m_adjoint_map.insert({ x.get(), zeros });
+        auto zeros = make_zeros(x);
+        zeros.at(output_index) = delta;
+        m_adjoint_map.insert({x.get(), zeros});
     }
     else
     {
-		auto& deltas = adjoint_it->second;
-		deltas.at(output_index) = std::make_shared<op::Add>(deltas.at(output_index), delta);
-		adjoint_it->second = deltas;
+        auto& deltas = adjoint_it->second;
+        deltas.at(output_index) = std::make_shared<op::Add>(deltas.at(output_index), delta);
+        adjoint_it->second = deltas;
     }
 }
 
@@ -210,32 +198,29 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     if (m_adjoint_map.end() == adjoint_it)
     {
         auto& output = x->get_outputs().at(0);
-		auto zero = make_zero(output.get_element_type(), output.get_shape());
-		NodeVector zeros{std::make_shared<op::ReplaceSlice>(
-			zero, delta, lower_bounds, upper_bounds, strides) };
+        auto zero = make_zero(output.get_element_type(), output.get_shape());
+        NodeVector zeros{
+            std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
         m_adjoint_map.insert({x.get(), zeros});
     }
     else
     {
-		auto& deltas = adjoint_it->second;
-         deltas.at(0) = std::make_shared<op::ReplaceSlice>(
-			 deltas.at(0),
-            std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides) +
-                delta,
+        auto& deltas = adjoint_it->second;
+        deltas.at(0) = std::make_shared<op::ReplaceSlice>(
+            deltas.at(0),
+            std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides) + delta,
             lower_bounds,
             upper_bounds,
             strides);
     }
 }
 
-//std::shared_ptr<Node> Adjoints::backprop_node(const std::shared_ptr<Node>& x,
-//	const std::shared_ptr<Node>& c)
-//{
-//	auto adjoints_it = m_adjoint_map.find(c.get());
-//	if (adjoints_it == m_adjoint_map.end())
-//	{
-//		adjoints_it =
-//			m_adjoint_map.insert({ c.get(), autodiff::Adjoints(shared_from_this(), c) }).first;
-//	}
-//	return adjoints_it->second.get(x);
-//}
+std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const std::shared_ptr<Node>& x)
+{
+    auto deltas = get(x);
+    if (deltas.size() > 1)
+    {
+        throw ngraph_error("backprop_node is called for multi-output node");
+    }
+    return deltas.at(0);
+}

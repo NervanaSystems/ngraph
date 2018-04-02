@@ -35,7 +35,7 @@ shared_ptr<Node> op::Add::copy_with_new_args(const NodeVector& new_args) const
 
 void op::Add::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-  auto delta = deltas.at(0);
+    auto delta = deltas.at(0);
 
     auto x = get_input_op(0);
     auto y = get_input_op(1);

@@ -118,5 +118,5 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-	std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
+    std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
 }

@@ -47,8 +47,9 @@ NodeVector op::GetOutputElement::get_input_ops()
     return NodeVector{get_inputs().at(0).get_output().get_node()};
 }
 
-void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
-                                             const shared_ptr<Node>& delta)
+void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-	adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta, get_n());
+    auto delta = deltas.at(0);
+
+    adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta, get_n());
 }

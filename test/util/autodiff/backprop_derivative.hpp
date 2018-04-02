@@ -18,14 +18,13 @@
 
 #include <memory>
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"
-
 
 namespace ngraph
 {
@@ -146,14 +145,14 @@ namespace ngraph
             // df/dX*
             std::vector<std::shared_ptr<Node>> df_output_params;
 
-			Adjoints adjoints(NodeVector{ f->get_output_op(0) }, NodeVector{ c_param });
+            Adjoints adjoints(NodeVector{f->get_output_op(0)}, NodeVector{c_param});
 
             // for each x "of interest"
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
                 auto x_shape = x->get_shape();
-                df_output_params.push_back(adjoints.get(x).at(0));
+                df_output_params.push_back(adjoints.backprop_node(x));
             }
 
             // (c, X)

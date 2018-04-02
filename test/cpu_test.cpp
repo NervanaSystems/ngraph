@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -31,7 +32,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
-#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
@@ -233,18 +233,18 @@ TEST(cpu_test, bn_bprop_n4c3h2w2)
     vector<float> deltaData(shape_size(shape_r), 20.0f);
     copy_data(_delta, deltaData);
 
-
     auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
                                    op::ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
-    
+
     auto zero = ngraph::make_zero(bn_dgamma->get_element_type(), bn_dgamma->get_shape());
-    ngraph::autodiff::Adjoints adjoints(NodeVector{bn_dx, bn_dgamma, bn_dbeta}, NodeVector{C, zero, zero});
-    
-    auto dinput = adjoints.get(input).at(0);
-    auto dgamma = adjoints.get(gamma).at(0);
-    auto dbeta = adjoints.get(beta).at(0);
+    ngraph::autodiff::Adjoints adjoints(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
+                                        NodeVector{C, zero, zero});
+
+    auto dinput = adjoints.backprop_node(input);
+    auto dgamma = adjoints.backprop_node(gamma);
+    auto dbeta = adjoints.backprop_node(beta);
 
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});
