@@ -18,7 +18,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "mnist.hpp"
+#include "mnist_loader.hpp"
 
 MNistLoader::MNistLoader(const std::string& filename, uint32_t magic)
     : m_filename(filename)

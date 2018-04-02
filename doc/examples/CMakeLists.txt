@@ -56,7 +56,7 @@ if (NGRAPH_CPU_ENABLE)
 
     # mnist_mlp
     set(MNIST_SRC
-        ${PROJECT_SOURCE_DIR}/doc/examples/mnist.cpp 
+        ${PROJECT_SOURCE_DIR}/doc/examples/mnist_loader.cpp 
         ${PROJECT_SOURCE_DIR}/doc/examples/mnist_mlp.cpp
     )
 

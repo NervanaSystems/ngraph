@@ -43,10 +43,11 @@ int main()
     auto external = manager->compile(f);
     auto cf = backend->make_call_frame(external);
 
-    // Allocate tensors
+    // Allocate tensors for arguments a, b, c
     auto t_a = backend->make_primary_tensor_view(element::f32, s);
     auto t_b = backend->make_primary_tensor_view(element::f32, s);
     auto t_c = backend->make_primary_tensor_view(element::f32, s);
+    // Allocate tensor for the result
     auto t_result = backend->make_primary_tensor_view(element::f32, s);
 
     // Initialize tensors

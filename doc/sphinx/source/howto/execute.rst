@@ -177,7 +177,7 @@ the three parameters and the return value as follows:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 47-50
+   :lines: 46-51
 
 Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
 backends implement for tensor use. When there are no more references to the 
@@ -192,7 +192,7 @@ Next we need to copy some data into the tensors.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 53-59
+   :lines: 53-60
 
 The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
@@ -207,7 +207,7 @@ call frame:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 62
+   :lines: 63
 
 
 .. _access_outputs:
@@ -219,7 +219,7 @@ We can use the ``read`` method to access the result:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 65-66
+   :lines: 65-67
 
 .. _all_together:
 

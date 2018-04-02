@@ -28,32 +28,33 @@
 #include <ngraph/graph_util.hpp>
 #include <ngraph/ngraph.hpp>
 
-#include "mnist.hpp"
+#include "mnist_loader.hpp"
 #include "tensor_utils.hpp"
 
 using namespace ngraph;
 
-size_t accuracy_count(const std::shared_ptr<runtime::TensorView>& t_sm,
-                      const std::shared_ptr<runtime::TensorView>& t_Y)
+size_t
+    accuracy_count(const std::shared_ptr<runtime::TensorView>& t_softmax,
+                   const std::shared_ptr<runtime::TensorView>& t_Y)
 {
-    const Shape& sm_shape = t_sm->get_shape();
-    size_t batch_size = sm_shape.at(0);
-    size_t label_size = sm_shape.at(1);
+    const Shape& softmax_shape = t_softmax->get_shape();
+    size_t batch_size = softmax_shape.at(0);
+    size_t label_size = softmax_shape.at(1);
     const Shape& Y_shape = t_Y->get_shape();
     if (Y_shape.size() != 1 || Y_shape.at(0) != batch_size)
     {
         throw std::invalid_argument(
-            "Y and softmax shapes are incomptible");
+            "Y and softmax shapes are incompatible");
     }
-    size_t sm_pos = 0;
+    size_t softmax_pos = 0;
     size_t count = 0;
     for (size_t i = 0; i < batch_size; ++i)
     {
-        float max_value = get_scalar<float>(t_sm, sm_pos++);
+        float max_value = get_scalar<float>(t_softmax, softmax_pos++);
         size_t max_idx = 0;
         for (size_t j = 1; j < label_size; ++j)
         {
-            float value = get_scalar<float>(t_sm, sm_pos++);
+            float value = get_scalar<float>(t_softmax, softmax_pos++);
             if (value > max_value)
             {
                 max_value = value;
@@ -74,7 +75,7 @@ float test_accuracy(MNistDataLoader& loader,
                     std::shared_ptr<runtime::CallFrame> cf,
                     const std::shared_ptr<runtime::TensorView>& t_X,
                     const std::shared_ptr<runtime::TensorView>& t_Y,
-                    const std::shared_ptr<runtime::TensorView>& t_sm,
+                    const std::shared_ptr<runtime::TensorView>& t_softmax,
                     const std::shared_ptr<runtime::TensorView>& t_W0,
                     const std::shared_ptr<runtime::TensorView>& t_b0,
                     const std::shared_ptr<runtime::TensorView>& t_W1,
@@ -93,8 +94,8 @@ float test_accuracy(MNistDataLoader& loader,
         t_Y->write(loader.get_label_floats(),
                    0,
                    loader.get_label_batch_size() * sizeof(float));
-        cf->call({t_sm}, {t_X, t_W0, t_b0, t_W1, t_b1});
-        size_t acc = accuracy_count(t_sm, t_Y);
+        cf->call({t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
+        size_t acc = accuracy_count(t_softmax, t_Y);
         acc_count += acc;
         sample_count += batch_size;
     }
@@ -145,20 +146,21 @@ int main(int argc, const char* argv[])
     auto l1 = std::make_shared<op::Relu>(l1_dot + b1_broadcast);
 
     // Softmax
-    auto sm = std::make_shared<op::Softmax>(l1, AxisSet{1});
+    auto softmax = std::make_shared<op::Softmax>(l1, AxisSet{1});
 
     // Loss computation
     auto Y =
         std::make_shared<op::Parameter>(element::f32, Shape{batch_size});
     auto labels =
         std::make_shared<op::OneHot>(Y, Shape{batch_size, output_size}, 1);
-    auto sm_clip_value = std::make_shared<op::Constant>(
+    auto softmax_clip_value = std::make_shared<op::Constant>(
         element::f32, Shape{}, std::vector<float>{log_min});
-    auto sm_clip_broadcast = std::make_shared<op::Broadcast>(
-        sm_clip_value, Shape{batch_size, output_size}, AxisSet{0, 1});
-    auto sm_clip = std::make_shared<op::Maximum>(sm, sm_clip_broadcast);
-    auto sm_log = std::make_shared<op::Log>(sm_clip);
-    auto prod = std::make_shared<op::Multiply>(sm_log, labels);
+    auto softmax_clip_broadcast = std::make_shared<op::Broadcast>(
+        softmax_clip_value, Shape{batch_size, output_size}, AxisSet{0, 1});
+    auto softmax_clip =
+        std::make_shared<op::Maximum>(softmax, softmax_clip_broadcast);
+    auto softmax_log = std::make_shared<op::Log>(softmax_clip);
+    auto prod = std::make_shared<op::Multiply>(softmax_log, labels);
     auto N = std::make_shared<op::Parameter>(element::f32, Shape{});
     auto loss = std::make_shared<op::Divide>(
         std::make_shared<op::Sum>(prod, AxisSet{0, 1}), N);
@@ -208,24 +210,24 @@ int main(int argc, const char* argv[])
     auto t_b1_next = make_output_tensor(backend, b1_next, 0);
 
     auto t_loss = make_output_tensor(backend, loss, 0);
-    auto t_sm = make_output_tensor(backend, sm, 0);
+    auto t_softmax = make_output_tensor(backend, softmax, 0);
 
     // Train
-    // X, Y, learning_rate, W0, b0, W1, b1 -> loss, sm, W0_next, b0_next, W1_next, b1_next
+    // X, Y, learning_rate, W0, b0, W1, b1 -> loss, softmax, W0_next, b0_next, W1_next, b1_next
     NodeMap train_node_map;
     auto train_function = clone_function(
         std::make_shared<Function>(
-            NodeVector{loss, sm, W0_next, b0_next, W1_next, b1_next},
+            NodeVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
             op::ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
     auto train_ext = manager->compile(train_function);
     auto train_cf = backend->make_call_frame(train_ext);
 
     // Plain inference
-    // X, W0, b0, W1, b1 -> sm
+    // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
     auto inference_function = clone_function(
-        std::make_shared<Function>(NodeVector{sm},
+        std::make_shared<Function>(NodeVector{softmax},
                                    op::ParameterVector{X, W0, b0, W1, b1}),
         inference_node_map);
     auto inference_ext = manager->compile(inference_function);
@@ -244,7 +246,12 @@ int main(int argc, const char* argv[])
                    0,
                    train_loader.get_label_batch_size() * sizeof(float));
         train_cf->call(
-            {t_loss, t_sm, t_W0_next, t_b0_next, t_W1_next, t_b1_next},
+            {t_loss,
+             t_softmax,
+             t_W0_next,
+             t_b0_next,
+             t_W1_next,
+             t_b1_next},
             {t_X, t_Y, t_N, t_learning_rate, t_W0, t_b0, t_W1, t_b1});
 
         t_W0.swap(t_W0_next);
@@ -259,7 +266,7 @@ int main(int argc, const char* argv[])
                                                             inference_cf,
                                                             t_X,
                                                             t_Y,
-                                                            t_sm,
+                                                            t_softmax,
                                                             t_W0,
                                                             t_b0,
                                                             t_W1,
