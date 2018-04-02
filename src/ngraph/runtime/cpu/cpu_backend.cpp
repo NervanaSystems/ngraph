@@ -35,16 +35,14 @@ std::shared_ptr<ngraph::runtime::TensorView>
     runtime::cpu::CPU_Backend::make_primary_tensor_view(const ngraph::element::Type& element_type,
                                                         const Shape& shape)
 {
-    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
 }
 
 std::shared_ptr<ngraph::runtime::TensorView>
     runtime::cpu::CPU_Backend::create_tensor(const ngraph::element::Type& element_type,
                                              const Shape& shape)
 {
-    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
 }
 
 bool runtime::cpu::CPU_Backend::compile(const ngraph::Function& func)
