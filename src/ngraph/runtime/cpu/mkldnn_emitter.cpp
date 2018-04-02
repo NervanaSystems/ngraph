@@ -578,7 +578,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
                                               const double eps,
-                                              size_t bn_total_inputs,
+                                              bool use_global_stats,
                                               bool bn_training_flag,
                                               const mkldnn::post_ops& pops)
 {
@@ -591,7 +591,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     mkldnn::primitive_attr bn_attr;
     bn_attr.set_post_ops(pops);
 
-    if (bn_training_flag && bn_total_inputs == 3)
+    if (bn_training_flag && !use_global_stats)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
             {{mkldnn::prop_kind::forward_training,
@@ -610,29 +610,10 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
             input_index, weights_index, result_index, mean_index, variance_index};
         return batchnorm_index;
     }
-    else if (bn_training_flag && bn_total_inputs == 5)
-    {
-        size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_training,
-              input_desc,
-              eps,
-              mkldnn::batch_normalization_flag::use_scale_shift |
-                  mkldnn::batch_normalization_flag::use_global_stats},
-             mkldnn_utils::global_cpu_engine},
-            mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[mean_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[variance_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
-            static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index])));
-
-        m_primitive_deps[batchnorm_index] = {
-            input_index, mean_index, variance_index, weights_index, result_index};
-        return batchnorm_index;
-    }
     else
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_inference,
+            {{mkldnn::prop_kind::forward_training,
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift |

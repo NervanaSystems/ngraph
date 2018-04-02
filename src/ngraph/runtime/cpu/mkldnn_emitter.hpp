@@ -171,7 +171,7 @@ namespace ngraph
                                                const mkldnn::memory::desc& mean_desc,
                                                const mkldnn::memory::desc& variance_desc,
                                                const double eps,
-                                               size_t bn_total_inputs,
+                                               bool use_global_stats,
                                                bool bn_training_flag,
                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
 
