@@ -26,7 +26,7 @@ using namespace std;
 
 runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
                                         const Shape& shape,
-                                        void* mem_handle,
+                                        void* memory_pointer,
                                         const string& name)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape), name, true, true, false))
@@ -39,13 +39,12 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
 
-    if (mem_handle != nullptr)
+    if (memory_pointer != nullptr)
     {
-        m_aligned_buffer_pool = static_cast<char*>(mem_handle);
+        m_aligned_buffer_pool = static_cast<char*>(memory_pointer);
         return;
     }
-
-    if (m_buffer_size > 0)
+    else if (m_buffer_size > 0)
     {
         size_t allocation_size = m_buffer_size + runtime::alignment;
         m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));

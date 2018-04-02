@@ -56,7 +56,7 @@ namespace ngraph
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const ngraph::element::Type& element_type,
                                          const Shape& shape,
-                                         void* mem_handle) = 0;
+                                         void* memory_pointer) = 0;
 
             template <typename T>
             std::shared_ptr<ngraph::runtime::TensorView>

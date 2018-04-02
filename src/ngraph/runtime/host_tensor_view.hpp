@@ -39,7 +39,7 @@ public:
                    const std::string& name = "external");
     HostTensorView(const ngraph::element::Type& element_type,
                    const Shape& shape,
-                   void* mem_handle,
+                   void* memory_pointer,
                    const std::string& name = "external");
     virtual ~HostTensorView() override;
 
