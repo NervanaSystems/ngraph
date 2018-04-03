@@ -139,7 +139,7 @@ build_gcc: build_docker_image
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
 	    --env TEST_SUITE=gcc \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN='' \
 	    --env RUN_UNIT_TESTS=false \
             --env RUN_UID="$(shell id -u)" \
@@ -153,7 +153,7 @@ build_clang: build_docker_image
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
 	    --env TEST_SUITE=clang \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN='' \
 	    --env RUN_UNIT_TESTS=false \
             --env RUN_UID="$(shell id -u)" \
@@ -170,7 +170,7 @@ check_gcc: build_docker_image
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
 	    --env TEST_SUITE=gcc \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN=check \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
@@ -183,7 +183,7 @@ check_clang: build_docker_image
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
 	    --env TEST_SUITE=clang \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN=check \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
@@ -196,7 +196,7 @@ unit_test_check_gcc: build_gcc
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
 	    --env TEST_SUITE=gcc \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN='' \
 	    --env RUN_UNIT_TESTS=true \
             --env RUN_UID="$(shell id -u)" \
@@ -210,7 +210,7 @@ unit_test_check_clang: build_clang
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
 	    --env TEST_SUITE=clang \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN='' \
 	    --env RUN_UNIT_TESTS=true \
             --env RUN_UID="$(shell id -u)" \
@@ -230,7 +230,7 @@ install_gcc: build_gcc
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
 	    --env TEST_SUITE=gcc \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN=install \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
@@ -243,7 +243,7 @@ install_clang: build_clang
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
 	    --env TEST_SUITE=clang \
-	    --env PARALLEL=${PARALLEL} \
+	    --env PARALLEL="${PARALLEL}" \
 	    --env CMD_TO_RUN=install \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
