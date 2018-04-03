@@ -95,7 +95,7 @@ using descriptor::layout::DenseTensorViewLayout;
 runtime::interpreter::ExternalFunction::ExternalFunction(const shared_ptr<Function>& function,
                                                          bool release_function)
     : runtime::ExternalFunction(function, release_function)
-    , m_function(function)
+    , m_interpreter_function(function)
 {
 }
 
@@ -106,14 +106,14 @@ void runtime::interpreter::ExternalFunction::compile()
         return;
     }
 
-    string function_name = m_function->get_name();
+    string function_name = m_interpreter_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(m_function);
+    pass_manager.run_passes(m_interpreter_function);
 
     m_is_compiled = true;
     if (m_release_function)
@@ -129,5 +129,6 @@ shared_ptr<runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call
         compile();
     }
 
-    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(), m_function);
+    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(),
+                                                            m_interpreter_function);
 }

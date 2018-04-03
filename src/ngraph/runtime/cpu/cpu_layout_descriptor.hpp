@@ -39,7 +39,7 @@ namespace ngraph
             public:
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                  const AxisVector& tv_axis_order);
-                ~LayoutDescriptor() {}
+                ~LayoutDescriptor() override {}
                 size_t get_size() override { return size; }
                 size_t get_offset() const { return offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
