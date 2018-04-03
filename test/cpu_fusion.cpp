@@ -991,7 +991,6 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     }
 }
 
-
 TEST(cpu_fusion, lstm_fprop_fusion)
 {
     pass::Manager pass_manager;

@@ -28,15 +28,20 @@ shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<LSTM>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), new_args.at(5));
+    return make_shared<LSTM>(new_args.at(0),
+                             new_args.at(1),
+                             new_args.at(2),
+                             new_args.at(3),
+                             new_args.at(4),
+                             new_args.at(5));
 }
 
 op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
-                std::shared_ptr<Node> param1_2,
-                std::shared_ptr<Node> param2_1,
-                std::shared_ptr<Node> param2_2,
-                std::shared_ptr<Node> bias1,
-                std::shared_ptr<Node> bias2)
+               std::shared_ptr<Node> param1_2,
+               std::shared_ptr<Node> param2_1,
+               std::shared_ptr<Node> param2_2,
+               std::shared_ptr<Node> bias1,
+               std::shared_ptr<Node> bias2)
     : RequiresTensorViewArgs("LSTM", {param1_1, param1_2, param2_1, param2_2, bias1, bias2})
     , m_shape_input(param1_1->get_shape())
 {

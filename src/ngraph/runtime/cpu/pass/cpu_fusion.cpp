@@ -38,10 +38,10 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
@@ -49,8 +49,8 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -748,25 +748,37 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
     auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
 
-    auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10,100});
+    auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
 
     auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
 
-    auto MatmulBias1 = std::make_shared<op::MatmulBias>(
-    param1_1, param1_2, bias1, param1_1->get_shape(), param1_2->get_shape(), false, true, AxisSet{0});
-    auto MatmulBias2 = std::make_shared<op::MatmulBias>(
-    param2_1, param2_2, bias2, param2_1->get_shape(), param2_2->get_shape(), false, true, AxisSet{0});
+    auto MatmulBias1 = std::make_shared<op::MatmulBias>(param1_1,
+                                                        param1_2,
+                                                        bias1,
+                                                        param1_1->get_shape(),
+                                                        param1_2->get_shape(),
+                                                        false,
+                                                        true,
+                                                        AxisSet{0});
+    auto MatmulBias2 = std::make_shared<op::MatmulBias>(param2_1,
+                                                        param2_2,
+                                                        bias2,
+                                                        param2_1->get_shape(),
+                                                        param2_2->get_shape(),
+                                                        false,
+                                                        true,
+                                                        AxisSet{0});
 
     //auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
 
     auto X = std::make_shared<op::Add>(MatmulBias1, MatmulBias2);
     // construct forget gate
-    auto input_slice_0 = std::make_shared<op::Slice>(X,  Coordinate{0, 0}, Coordinate{10, 100});
+    auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-     auto broadcast_pred = [](std::shared_ptr<Node> n) {
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
     };
 
@@ -777,49 +789,51 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, skip_ct_1);
 
     // construct input gate
-    auto input_slice_1 = std::make_shared<op::Slice>(X,  Coordinate{0, 100}, Coordinate{10, 200});
+    auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 100}, Coordinate{10, 200});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
-    auto input_slice_2 = std::make_shared<op::Slice>(X,  Coordinate{0, 200}, Coordinate{10, 300});
+    auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 200}, Coordinate{10, 300});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
     auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
 
-    auto add_ct_1_input_gate_tanh_1 = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+    auto add_ct_1_input_gate_tanh_1 =
+        std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
 
     // construct output gate
-    auto input_slice_3 = std::make_shared<op::Slice>(X,  Coordinate{0, 300}, Coordinate{10, 400});
+    auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 300}, Coordinate{10, 400});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(add_ct_1_input_gate_tanh_1);
-    auto ht =  std::make_shared<op::Multiply>(output_gate, tanh_2);
+    auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [param1_1, param1_2, param2_1, param2_2, bias1, bias2](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                     << m.match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-        std::cout << "In LSTM fprop call back" << std::endl;
+    ngraph::pattern::gr_callback_fn callback =
+        [param1_1, param1_2, param2_1, param2_2, bias1, bias2](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
+                         << m.match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+            std::cout << "In LSTM fprop call back" << std::endl;
 
-        // if (m.match_root()->get_element_type() != element::f32)
-        // {
-        //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
-        //     return false;
-        // }
+            // if (m.match_root()->get_element_type() != element::f32)
+            // {
+            //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
+            //     return false;
+            // }
 
-        // if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
-        // {
-        //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
-        //                  << "input= " << pattern_map[input]->get_name() << "size dont match!";
-        //     return false;
-        // }
+            // if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+            // {
+            //     NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
+            //                  << "input= " << pattern_map[input]->get_name() << "size dont match!";
+            //     return false;
+            // }
 
-        auto lstm = std::make_shared<op::LSTM>(pattern_map[param1_1],
-                                               pattern_map[param1_2],
-                                               pattern_map[param2_1],
-                                               pattern_map[param2_2],
-                                               pattern_map[bias1],
-                                               pattern_map[bias2]);
-        ngraph::replace_node(m.match_root(), lstm);
-        return true;
-    };
+            auto lstm = std::make_shared<op::LSTM>(pattern_map[param1_1],
+                                                   pattern_map[param1_2],
+                                                   pattern_map[param2_1],
+                                                   pattern_map[param2_2],
+                                                   pattern_map[bias1],
+                                                   pattern_map[bias2]);
+            ngraph::replace_node(m.match_root(), lstm);
+            return true;
+        };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(ht, callback);
     this->add_matcher(m);

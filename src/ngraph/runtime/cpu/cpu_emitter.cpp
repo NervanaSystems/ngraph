@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -361,6 +362,91 @@ namespace ngraph
                 }
 
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LSTM)
+            {
+                const ngraph::op::LSTM* batchnorm = static_cast<const ngraph::op::LSTM*>(node);
+
+                const int src_seq_length_max =
+                    20 // TODO: identify the sequence lengths from the fused Op
+                    const int enc_uni_n_layers =
+                        1; // TODO: 2 for bi directional , 1 for uni directional
+                const int lstm_n_gates =
+                    4; // TODO: LSTM will have 4 gates, GRU and vanilla RNN have different no. of gates
+                const int feature_size = 512; // TODO: Figure out the feature size from the fused Op
+
+                mkldnn::memory::dims enc_uni_src_layer_tz = {
+                    src_seq_length_max, batch, feature_size};
+                mkldnn::memory::dims enc_uni_weights_layer_tz = {
+                    enc_uni_n_layers, 1, feature_size, lstm_n_gates, feature_size};
+                mkldnn::memory::dims enc_uni_weights_iter_tz = {
+                    enc_uni_n_layers, 1, feature_size, lstm_n_gates, feature_size};
+                mkldnn::memory::dims enc_uni_bias_tz = {
+                    enc_uni_n_layers, 1, lstm_n_gates, feature_size};
+                mkldnn::memory::dims enc_uni_dst_layer_tz = {
+                    src_seq_length_max, batch, feature_size};
+
+                // We create the memory descriptors used by the user
+                auto user_enc_uni_src_layer_md =
+                    mkldnn::memory::desc({enc_uni_src_layer_tz},
+                                         mkldnn::memory::data_type::f32,
+                                         mkldnn::memory::format::tnc);
+
+                auto user_enc_uni_wei_layer_md =
+                    mkldnn::memory::desc({enc_uni_weights_layer_tz},
+                                         mkldnn::memory::data_type::f32,
+                                         mkldnn::memory::format::ldigo);
+
+                auto user_enc_uni_wei_iter_md = mkldnn::memory::desc({enc_uni_weights_iter_tz},
+                                                                     mkldnn::memory::data_type::f32,
+                                                                     mkldnn::memory::format::ldigo);
+
+                auto user_enc_uni_bias_md = mkldnn::memory::desc({enc_uni_bias_tz},
+                                                                 mkldnn::memory::data_type::f32,
+                                                                 mkldnn::memory::format::ldgo);
+
+                auto enc_uni_dst_layer_md = mkldnn::memory::desc({enc_uni_dst_layer_tz},
+                                                                 mkldnn::memory::data_type::f32,
+                                                                 mkldnn::memory::format::tnc);
+
+                /* We create memories */
+                auto user_enc_uni_src_layer_memory =
+                    mkldnn::memory({user_enc_uni_src_layer_md, cpu_engine}, net_src.data());
+                auto user_enc_uni_wei_layer_memory = mkldnn::memory(
+                    {user_enc_uni_wei_layer_md, cpu_engine}, user_enc_uni_wei_layer.data());
+                auto user_enc_uni_wei_iter_memory = mkldnn::memory(
+                    {user_enc_uni_wei_iter_md, cpu_engine}, user_enc_uni_wei_iter.data());
+                auto user_enc_uni_bias_memory =
+                    mkldnn::memory({user_enc_uni_bias_md, cpu_engine}, user_enc_uni_bias.data());
+
+                mkldnn::rnn_cell::desc enc_uni_cell(algorithm::vanilla_lstm);
+                mkldnn::rnn_forward::desc enc_uni_layer_desc(prop_kind::forward_inference,
+                                                             enc_uni_cell,
+                                                             rnn_direction::uniectional_left2right,
+                                                             user_enc_uni_src_layer_md,
+                                                             zero_md(),
+                                                             user_enc_uni_wei_layer_md,
+                                                             user_enc_uni_wei_iter_md,
+                                                             user_enc_uni_bias_md,
+                                                             enc_uni_dst_layer_md,
+                                                             zero_md());
+                auto enc_uni_prim_desc =
+                    mkldnn::rnn_forward::primitive_desc(enc_uni_layer_desc, cpu_engine);
+                auto enc_dst_layer_memory =
+                    mkldnn::memory(enc_uni_prim_desc.dst_layer_primitive_desc());
+
+                // TODO: pass the memory address captured in the fused Op
+                mkldnn::rnn_forward(enc_uni_prim_desc,
+                                    enc_bidir_dst_layer_memory,
+                                    null_memory_,
+                                    user_enc_uni_wei_layer_memory,
+                                    user_enc_uni_wei_iter_memory,
+                                    user_enc_uni_bias_memory,
+                                    enc_dst_layer_memory,
+                                    null_memory_,
+                                    null_memory_)
             }
 
             template <>
