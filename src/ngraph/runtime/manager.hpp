@@ -45,6 +45,8 @@ namespace ngraph
             /// Specific transformers may provide addtional methods for allocating customized backends.
             virtual std::shared_ptr<Backend> allocate_backend() = 0;
 
+            virtual std::vector<size_t> get_subdevices() const = 0;
+
             /// @brief Convert a function to a form that can be run on a backend.
             virtual std::shared_ptr<ExternalFunction>
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;

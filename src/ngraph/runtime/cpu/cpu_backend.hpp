@@ -55,8 +55,6 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
             private:
-                std::vector<size_t> get_subdevices() const override;
-
                 std::shared_ptr<cpu::CPU_ExternalFunction> m_external_function;
                 std::shared_ptr<cpu::CPU_CallFrame> m_call_frame;
                 std::shared_ptr<Function> m_function;

@@ -87,9 +87,3 @@ bool runtime::interpreter::INT_Backend::call(const vector<shared_ptr<runtime::Te
     }
     return rc;
 }
-
-vector<size_t> runtime::interpreter::INT_Backend::get_subdevices() const
-{
-    vector<size_t> rc;
-    return rc;
-}

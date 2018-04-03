@@ -87,9 +87,3 @@ bool runtime::cpu::CPU_Backend::call(
     }
     return rc;
 }
-
-vector<size_t> runtime::cpu::CPU_Backend::get_subdevices() const
-{
-    vector<size_t> rc;
-    return rc;
-}

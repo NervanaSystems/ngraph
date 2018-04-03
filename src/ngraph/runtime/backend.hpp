@@ -92,9 +92,6 @@ namespace ngraph
             virtual bool call(const ngraph::Function& fun,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
-
-        protected:
-            virtual std::vector<size_t> get_subdevices() const = 0;
         };
     }
 }

@@ -39,6 +39,6 @@ vector<string> runtime::Backend::get_registered_devices()
 
 vector<size_t> runtime::Backend::get_subdevices(const string& type)
 {
-    vector<size_t> rc;
-    return rc;
+    std::shared_ptr<Manager> manager = runtime::Manager::get(type);
+    return manager->get_subdevices();
 }
