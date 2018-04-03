@@ -101,7 +101,7 @@ Once the graph is built, we need to package it in a ``Function``:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 35
+   :lines: 35-36
 
 The first argument to the constuctor specifies the nodes that the function will 
 return; in this case, the product. A ``NodeVector`` is a vector of shared 
@@ -136,7 +136,7 @@ To select the ``"CPU"`` backend,
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 38-39
+   :lines: 39-40
 
 
 .. _compile_cmp:
@@ -153,7 +153,7 @@ thread needs to execute the function at the same time, create multiple
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 42-43
+   :lines: 43-44
 
 
 .. _allocate_bkd_storage:
@@ -173,11 +173,11 @@ you switch between odd/even generations of variables on each update.
 
 Backends are responsible for managing storage. If the storage is off-CPU, caches 
 are used to minimize copying between device and CPU. We can allocate storage for 
-the three parameters and return value as follows:
+the three parameters and the return value as follows:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 30-33
+   :lines: 46-51
 
 Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
 backends implement for tensor use. When there are no more references to the 
@@ -192,7 +192,7 @@ Next we need to copy some data into the tensors.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 45-58
+   :lines: 53-60
 
 The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
@@ -207,7 +207,7 @@ call frame:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 61
+   :lines: 63
 
 
 .. _access_outputs:
@@ -219,7 +219,7 @@ We can use the ``read`` method to access the result:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 64-65
+   :lines: 65-67
 
 .. _all_together:
 

@@ -16,8 +16,13 @@
 
 import numpy as np
 import pytest
-
 import ngraph as ng
+
+from string import ascii_uppercase
+
+
+def _get_numpy_dtype(scalar):
+    return np.array([scalar]).dtype
 
 
 def get_runtime():
@@ -37,10 +42,21 @@ def run_op_node(input_data, op_fun, *args):
     :return: The result from computations.
     """
     runtime = get_runtime()
-    parameter_a = ng.parameter(input_data.shape, name='A', dtype=np.float32)
-    node = op_fun(parameter_a, *args)
-    computation = runtime.computation(node, parameter_a)
-    return computation(input_data)
+    comp_args = []
+    op_fun_args = []
+    comp_inputs = []
+    for idx, data in enumerate(input_data):
+        if np.isscalar(data):
+            op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
+        else:
+            node = ng.parameter(data.shape, name=ascii_uppercase[idx], dtype=data.dtype)
+            op_fun_args.append(node)
+            comp_args.append(node)
+            comp_inputs.append(data)
+    op_fun_args.extend(args)
+    node = op_fun(*op_fun_args)
+    computation = runtime.computation(node, *comp_args)
+    return computation(*comp_inputs)
 
 
 def run_op_numeric_data(input_data, op_fun, *args):
