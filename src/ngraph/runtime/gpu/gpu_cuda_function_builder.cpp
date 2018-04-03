@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <string>
+#include <iostream>
 
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"

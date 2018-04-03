@@ -111,6 +111,43 @@ namespace ngraph
                               CUdeviceptr trans_strides,
                               size_t rank,
                               size_t count);
+
+            template <typename... Args>
+            void emit_1d_max_pool(GPURuntimeContext* ctx,
+                                  const std::string& name,
+                                  const std::string& kernel,
+                                  const std::array<std::string, 2>& data_types,
+                                  size_t count,
+                                  Args&&... args)
+            {
+                std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
+                std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
+                auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
+                if (compiled_kernel == nullptr)
+                {
+                    if (kernel == "")
+                    {
+                        std::runtime_error("Error: request to compile empty CUDA kernel.");
+                    }
+                    compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
+                }
+
+                if (sizeof...(args)) {
+                    std::vector<void*> args_list = {&args..., &count};
+                    CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                                  static_cast<unsigned int>(count),
+                                                  1,
+                                                  1, // grid dim
+                                                  1,
+                                                  1,
+                                                  1, // block dim
+                                                  0,
+                                                  NULL, // shared mem and stream
+                                                  &args_list[0],
+                                                  0));  // arguments
+                    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                }
+            }
         }
     }
 }

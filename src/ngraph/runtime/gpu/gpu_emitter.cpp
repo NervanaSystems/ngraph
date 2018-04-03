@@ -785,10 +785,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         {
                             auto& cudnn_emitter = external_function->get_cudnn_emitter();
                             auto sum_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
+                                                                    external_function->ctx().get(),
                                                                     args[0].get_shape(),
-                                                                    sum->get_reduction_axes(),
-                                                                    CUDNN_REDUCE_TENSOR_ADD);
+                                                                    sum->get_reduction_axes());
 
                             writer << "ctx->cudnn_emitter->invoke(" << sum_index << ", ";
                             writer << "{" << args[0].get_name() << "}, ";
@@ -805,40 +805,56 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPool)
             {
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
-
-                auto input_shape = args[0].get_shape();
-                auto input_rank = input_shape.size();
-
-                auto result_shape = out[0].get_shape();
-
-                auto& cudnn_emitter = external_function->get_cudnn_emitter();
-                // auto index = cudnn_emitter->build_test();
-                // writer << "ctx->cudnn_emitter->invoke(" << index << ");\n";
-                // writer << "exit(0);\n";
-
-                std::array<size_t, 4> dimensions;
-                size_t pos = 0;
-                for (size_t i = input_shape.size(); i < 4; i++)
+                writer.block_begin("  // " + node->get_name());
                 {
-                    dimensions[pos++] = 1;
-                }
-                for (size_t i = 0; i < input_shape.size(); i++)
-                {
-                    dimensions[pos++] = input_shape[i];
-                }
+                    auto input_shape = args[0].get_shape();
+                    auto input_rank = input_shape.size();
+                    auto result_shape = out[0].get_shape();
+                    auto& cudnn_emitter = external_function->get_cudnn_emitter();
 
-                auto input_desc = [dimensions]() {
-                    cudnnTensorDescriptor_t desc;
-                    cudnnCreateTensorDescriptor(&desc);
-                    cudnnSetTensor4dDescriptor(desc,
-                                               CUDNN_TENSOR_NCHW,
-                                               CUDNN_DATA_FLOAT,
-                                               dimensions[0],
-                                               dimensions[1],
-                                               dimensions[2],
-                                               dimensions[3]);
-                    return desc;
-                };
+                    if (input_shape.size() == 3)
+                    {
+                        std::array<std::string, 2> types = {args[0].get_type(),out[0].get_type()};
+                        auto kernel = CudaKernelBuilder::get_1d_max_pool(max_pool->description(), types);
+                        runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
+                                                       max_pool->description(),
+                                                       kernel,
+                                                       types,
+                                                       0);
+                        writer << "runtime::gpu::emit_1d_max_pool("
+                               << "ctx, "
+                               << "\"" << max_pool->description() << "\", "
+                               << "\"\", "
+                               << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type() <<  "\"}, "
+                               << out[0].get_size() << ", "
+                               << args[0].get_name() << ", "
+                               << out[0].get_name() << ", "
+                               << max_pool->get_window_shape()[0] << ", "
+                               << max_pool->get_window_movement_strides()[0] << ", "
+                               << input_shape[2] << ", "
+                               << result_shape[2] << ");\n";
+                    }
+                    if (input_shape.size() >= 4)
+                    {
+                        auto max_pool_index =
+                            cudnn_emitter->build_pooling_forward(CUDNN_POOLING_MAX,
+                                                                 external_function->ctx().get(),
+                                                                 input_shape,
+                                                                 result_shape,
+                                                                 max_pool->get_window_movement_strides(),
+                                                                 max_pool->get_window_shape(),
+                                                                 max_pool->get_padding_below(),
+                                                                 max_pool->get_padding_above());
+
+                        writer << "ctx->cudnn_emitter->invoke(" << max_pool_index << ", ";
+                        writer << "{" << args[0].get_name() << "}, ";
+                        writer << "{" << out[0].get_name() << "}";
+                        writer << ");\n";
+
+                    }
+                }
+                writer.block_end();
+
             }
         }
     }
