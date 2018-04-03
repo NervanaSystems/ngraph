@@ -72,7 +72,7 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         if (ys.at(i)->get_outputs().size() > 1 || cs.at(i)->get_outputs().size() > 1)
         {
             throw ngraph_error(
-                "Adjoitns for multi-output ops aren't supported directly.\nProvide deltas for "
+                "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "
                 "corresponding GetOutputElements instead");
         }
 
