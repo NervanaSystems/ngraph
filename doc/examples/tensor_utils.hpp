@@ -32,7 +32,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_output_tensor(
         node->get_output_shape(output_pos));
 }
 
-// Initializer a tensor from a random generator
+// Initialize a tensor from a random generator
 template <typename T>
 void randomize(std::function<T()> rand,
                const std::shared_ptr<ngraph::runtime::TensorView>& t)

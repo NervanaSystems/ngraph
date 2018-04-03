@@ -7,9 +7,8 @@ Build a graph with operators
 This section illustrates the use of C++ operators to simplify the
 building of graphs.
 
-Several C++ operators have been overloaded so that when given nodes as
-arguments they construct a node that performs the operation on the
-nodes. For example, the following:
+Several C++ operators are overloaded to simplify graph construction.
+For example, the following:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp

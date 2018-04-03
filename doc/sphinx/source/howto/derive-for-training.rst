@@ -17,6 +17,7 @@ MNIST data.
 
 * :ref:`model_overview`
 * :ref:`code_structure`
+
   - :ref:`inference`
   - :ref:`loss`
   - :ref:`backprop`
@@ -87,23 +88,17 @@ to prevent underflow.
 Backprop
 --------
 
-To compute the updates, we need a computation that computes an
-adjustment for the weights from an adjustment to the loss. In nGraph,
-``loss`` is the computation that computes the loss; it is equivalent
-to what some descriptions of the autodiff algorithm call "the tape."
-If each step of a computation between a weight and the loss has a
-derivative, we can use the reverse mode autodiff to compute an update
-for the weight from an update for the loss; in fact, we can compute
-updates for all the weights, sharing much of the update computation,
-and this is what some frameworks do. But it is just as easy for us to
-instead create the update computations for all of the weights, which
-lets compilation optimize across steps in the computation.
+We want to reduce the loss by adjusting the weights. We compute the
+asjustments using the reverse mode autodiff algorithm, commonly
+referred to as "backprop" because of the way it is implemented in
+interpreted frameworks. In nGraph, we augment the loss computation
+with computations for the weight adjustments. This allows the
+calculations for the adjustments to be further optimized.
 
-We'll call the adjustment to the loss
+.. literalinclude:: ../../../examples/mnist_mlp.cpp
+   :language: cpp
+   :lines: 172
 
-.. code-block:: cpp
-
-   auto delta = -learning_rate * loss;
 
 For any node ``N``, if the update for ``loss`` is ``delta``, the
 update computation for ``N`` will be given by the node

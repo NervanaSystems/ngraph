@@ -1,7 +1,7 @@
 .. update.rst
 
 ###########################
-Make a Stateful Computation
+Make a stateful computation
 ###########################
 
 In this section, we show how to make a stateful computation from
@@ -19,7 +19,7 @@ returns how many times it has already been called:
    :language: cpp
    :lines: 20-24
 
-This function has state kept in the static variable ``counter``. The
+The static variable ``counter`` provides state for this function. The
 state is initialized to 0. Every time ``count`` is called, the current
 value of ``counter`` is returned and ``counter`` is incremented. To
 convert this to use a stateless function, we make a function that
