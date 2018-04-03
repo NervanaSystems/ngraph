@@ -812,19 +812,18 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto result_shape = out[0].get_shape();
                     auto& cudnn_emitter = external_function->get_cudnn_emitter();
 
+                    // 1d max pool
                     if (input_shape.size() == 3)
                     {
-                        std::array<std::string, 2> types = {args[0].get_type(),out[0].get_type()};
-                        auto kernel = CudaKernelBuilder::get_1d_max_pool(max_pool->description(), types);
+                        // pre-compile cuda kernel
                         runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
                                                        max_pool->description(),
-                                                       kernel,
-                                                       types,
+                                                       {args[0].get_type(),out[0].get_type()},
                                                        0);
+                        // emit invocation of kernel
                         writer << "runtime::gpu::emit_1d_max_pool("
                                << "ctx, "
                                << "\"" << max_pool->description() << "\", "
-                               << "\"\", "
                                << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type() <<  "\"}, "
                                << out[0].get_size() << ", "
                                << args[0].get_name() << ", "
@@ -834,10 +833,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                << input_shape[2] << ", "
                                << result_shape[2] << ");\n";
                     }
-                    if (input_shape.size() >= 4)
+                    // 2d max pool without padding (NCHW)
+                    else if (input_shape.size() >= 4)
                     {
                         auto max_pool_index =
-                            cudnn_emitter->build_pooling_forward(CUDNN_POOLING_MAX,
+                            cudnn_emitter->build_pooling_forward(CUDNN_POOLING_MAX, // non-deterministic
                                                                  external_function->ctx().get(),
                                                                  input_shape,
                                                                  result_shape,
@@ -854,7 +854,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
                 writer.block_end();
-
             }
         }
     }

@@ -136,13 +136,12 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
     writer.block_end();
 }
 
-std::string runtime::gpu::CudaKernelBuilder::get_1d_max_pool(const std::string& name,
+void runtime::gpu::CudaKernelBuilder::get_1d_max_pool(codegen::CodeWriter& writer,
+                                                             const std::string& name,
                                                              const std::array<std::string, 2>& data_types)
 {
-    codegen::CodeWriter writer;
-    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
-    writer << "extern \"C\" __global__ void cuda_" << name_signature << "("
+    // assumes data is in NCW format
+    writer << "extern \"C\" __global__ void cuda_" << name << "("
            << data_types[0] << "* in, "
            << data_types[1] << "* out, "
            << "int width, "
@@ -158,7 +157,7 @@ std::string runtime::gpu::CudaKernelBuilder::get_1d_max_pool(const std::string& 
         writer.block_begin();
         {
             // index into input tensor
-            writer << "size_t start = tid / output_size * input_size + (tid % output_size) * stride;\n";
+            writer << "size_t start = (tid / output_size) * input_size + (tid % output_size) * stride;\n";
             writer << data_types[0] << " max_val = 0;\n";
             writer << "for (size_t i = start; i < start+width; i++)\n";
             writer.block_begin();
@@ -179,7 +178,6 @@ std::string runtime::gpu::CudaKernelBuilder::get_1d_max_pool(const std::string& 
 
     }
     writer.block_end();
-    return writer.get_code();
 }
 
 

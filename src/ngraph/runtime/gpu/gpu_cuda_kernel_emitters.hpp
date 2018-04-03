@@ -115,7 +115,6 @@ namespace ngraph
             template <typename... Args>
             void emit_1d_max_pool(GPURuntimeContext* ctx,
                                   const std::string& name,
-                                  const std::string& kernel,
                                   const std::array<std::string, 2>& data_types,
                                   size_t count,
                                   Args&&... args)
@@ -125,10 +124,9 @@ namespace ngraph
                 auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
                 if (compiled_kernel == nullptr)
                 {
-                    if (kernel == "")
-                    {
-                        std::runtime_error("Error: request to compile empty CUDA kernel.");
-                    }
+                    codegen::CodeWriter writer;
+                    CudaKernelBuilder::get_1d_max_pool(writer, name_signature, data_types);
+                    std::string kernel = writer.get_code();
                     compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
                 }
 
