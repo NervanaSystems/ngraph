@@ -3331,6 +3331,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
+                writer.block_begin();
                 const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
                 auto type = out[0].get_type();
                 auto shape = out[0].get_shape();
@@ -3509,6 +3510,7 @@ namespace ngraph
                         writer.block_end();
                     }
                 }
+                writer.block_end();
             }
 
             template <>
