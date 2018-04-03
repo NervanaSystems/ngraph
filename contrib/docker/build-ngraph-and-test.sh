@@ -53,11 +53,13 @@ if [ -z ${OUTPUT_DIR} ]; then
     OUTPUT_DIR="${NGRAPH_REPO}/${BUILD_SUBDIR}"
 fi
 
-# Remove old OUTPUT_DIR directory if present
-( test -d ${OUTPUT_DIR} && rm -fr ${OUTPUT_DIR} && echo "Removed old ${OUTPUT_DIR} directory" ) || echo "Previous ${OUTPUT_DIR} directory not found"
-# Make OUTPUT_DIR directory as user
-mkdir -p ${OUTPUT_DIR}
-chmod ug+rwx ${OUTPUT_DIR}
+# Remove old OUTPUT_DIR directory if present for build_* targets
+if [ "$(echo ${CMD_TO_RUN} | grep build | wc -l)" != "0" ] ; then
+    ( test -d ${OUTPUT_DIR} && rm -fr ${OUTPUT_DIR} && echo "Removed old ${OUTPUT_DIR} directory" ) || echo "Previous ${OUTPUT_DIR} directory not found"
+    # Make OUTPUT_DIR directory as user
+    mkdir -p ${OUTPUT_DIR}
+    chmod ug+rwx ${OUTPUT_DIR}
+fi
 
 #if [ -z ${NGRAPH_DISTRIBUTED_ENABLE} ] ; then
 #  NGRAPH_DISTRIBUTED_ENABLE=false
@@ -116,23 +118,29 @@ echo "    NGRAPH_REPO=${NGRAPH_REPO}"
 echo "    CMAKE_OPTIONS=${CMAKE_OPTIONS}"
 echo "    GTEST_OUTPUT=${GTEST_OUTPUT}"
 
-echo "Running cmake"
-cmake ${CMAKE_OPTIONS} .. 2>&1 | tee ${OUTPUT_DIR}/cmake_${TEST_SUITE}.log
-echo "Running make"
-env VERBOSE=1 make ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${TEST_SUITE}.log
-
-if [ -z ${CMD_TO_RUN} ] ; then
-    echo "No CMD_TO_RUN specified - will run cmake, make, and style-check"
+# only run cmake/make steps for build_* make targets
+if [ "$(echo ${CMD_TO_RUN} | grep build | wc -l)" != "0" ] ; then
+    # always run cmake/make steps
+    echo "Running cmake"
+    cmake ${CMAKE_OPTIONS} .. 2>&1 | tee ${OUTPUT_DIR}/cmake_${CMD_TO_RUN}.log
+    echo "Running make"
+    env VERBOSE=1 make -j ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${CMD_TO_RUN}.log
+    echo "CMD_TO_RUN=${CMD_TO_RUN} finished - cmake/make steps completed"
 else
-    if [ "${CMD_TO_RUN}" == "unit-test-check" ]; then
+    # strip off _* from CMD_TO_RUN to pass to the ngraph make targets 
+    MAKE_CMD_TO_RUN=`echo ${CMD_TO_RUN} | sed 's/_.*//g'`
+    COMPILER=`echo ${CMD_TO_RUN} | sed 's/.*_//g'`
+
+    if [ "${MAKE_CMD_TO_RUN}" == "unit-test-check" ]; then
     # check style before running unit tests
         if [ -f "/usr/bin/clang-3.9" ]; then
             echo "Running make style-check"
-            env VERBOSE=1 make -j style-check 2>&1 | tee ${OUTPUT_DIR}/make_style_check_${TEST_SUITE}.log
+            env VERBOSE=1 make -j style-check 2>&1 | tee ${OUTPUT_DIR}/make_style_check_${CMD_TO_RUN}.log
         fi
     fi
 
-    echo "Running make ${CMD_TO_RUN}"
-    env VERBOSE=1 make ${CMD_TO_RUN} 2>&1 | tee ${OUTPUT_DIR}/make_${CMD_TO_RUN}_${TEST_SUITE}.log
+    echo "Running make ${MAKE_CMD_TO_RUN}"
+    env VERBOSE=1 make ${MAKE_CMD_TO_RUN} 2>&1 | tee ${OUTPUT_DIR}/make_${CMD_TO_RUN}.log
+
 fi
 
