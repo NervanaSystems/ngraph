@@ -142,5 +142,11 @@ else
     echo "Running make ${MAKE_CMD_TO_RUN}"
     env VERBOSE=1 make ${MAKE_CMD_TO_RUN} 2>&1 | tee ${OUTPUT_DIR}/make_${CMD_TO_RUN}.log
 
+    # create the ngraph_dist_gcc.tgz file to align with existing make install behavior
+    if [ "${MAKE_CMD_TO_RUN}" == "install" ] ; then
+        echo "Building ngraph_dist_${COMPILER}.tgz"
+        tar czf ngraph_dist_${COMPILER}.tgz ngraph_dist 2>&1 | tee make_tarball_${COMPILER}.log
+        ls -l ngraph_dist_*.tgz
+    fi
 fi
 
