@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = true);
+                                 bool release_function = false);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:
