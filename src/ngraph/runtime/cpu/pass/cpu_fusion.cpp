@@ -745,15 +745,36 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
 {
-    auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
+    auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
 
+    auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10,100});
+    auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+
+    auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
+    auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
+
+    auto MatmulBias1 = std::make_shared<op::MatmulBias>(
+    param1_1, param1_2, bias1, param1_1->get_shape(), param1_2->get_shape(), false, true, AxisSet{0});
+    auto MatmulBias2 = std::make_shared<op::MatmulBias>(
+    param2_1, param2_2, bias2, param2_1->get_shape(), param2_2->get_shape(), false, true, AxisSet{0});
+
+    //auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
+
+    auto X = std::make_shared<op::Add>(MatmulBias1, MatmulBias2);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X,  Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
-    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto broadcast_ct_1 = std::make_shared<op::Broadcast>(ct_1, Shape{10, 100}, AxisSet{0, 1});
-    auto ct_1_label = std::make_shared<pattern::op::Label>(broadcast_ct_1, nullptr, NodeVector{broadcast_ct_1});
-    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1_label);
+
+     auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
+    };
+
+    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto skip_ct_1 = std::make_shared<pattern::op::Any>(ct_1, broadcast_pred);
+    // auto broadcast_ct_1 = std::make_shared<op::Broadcast>(ct_1, Shape{10, 100}, AxisSet{0, 1});
+    // auto ct_1_label = std::make_shared<pattern::op::Label>(broadcast_ct_1, nullptr, NodeVector{broadcast_ct_1});
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, skip_ct_1);
 
     // construct input gate
     auto input_slice_1 = std::make_shared<op::Slice>(X,  Coordinate{0, 100}, Coordinate{10, 200});
@@ -771,7 +792,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
     auto ht =  std::make_shared<op::Multiply>(output_gate, tanh_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [ct_1_label, X, input_slice_0, input_slice_1, input_slice_2, input_slice_3](pattern::Matcher& m) {
+    ngraph::pattern::gr_callback_fn callback = [param1_1, param1_2, param2_1, param2_2, bias1, bias2](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -790,7 +811,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
         //     return false;
         // }
 
-        auto lstm = std::make_shared<op::LSTM>(pattern_map[ct_1_label]);
+        auto lstm = std::make_shared<op::LSTM>(pattern_map[param1_1],
+                                               pattern_map[param1_2],
+                                               pattern_map[param2_1],
+                                               pattern_map[param2_2],
+                                               pattern_map[bias1],
+                                               pattern_map[bias2]);
         ngraph::replace_node(m.match_root(), lstm);
         return true;
     };
