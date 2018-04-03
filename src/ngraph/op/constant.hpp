@@ -104,7 +104,7 @@ namespace ngraph
                 set_value_type_checked(vt);
             }
 
-            virtual ~Constant();
+            virtual ~Constant() override;
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
