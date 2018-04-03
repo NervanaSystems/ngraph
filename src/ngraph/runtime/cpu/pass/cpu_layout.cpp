@@ -40,6 +40,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
@@ -336,6 +337,25 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         ConvolutionLayout<ngraph::op::ConvolutionBias, true>(
+                            node, prim_input_formats, prim_output_formats);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionRelu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1170,6 +1190,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
     {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
+    {TI(ngraph::op::ConvolutionRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
