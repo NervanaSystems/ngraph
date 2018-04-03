@@ -1,4 +1,4 @@
-# nGraph library
+# nGraph library [![Build Status](https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master)](https://travis-ci.org/NervanaSystems/ngraph/branches)
 
 Welcome to Intel® nGraph™, an open source C++ library, compiler and
 runtime. This project enables modern compute platforms to run and
