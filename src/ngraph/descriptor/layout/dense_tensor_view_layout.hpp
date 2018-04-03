@@ -35,7 +35,7 @@ namespace ngraph
             class DenseTensorViewLayout : public TensorViewLayout
             {
             public:
-                ~DenseTensorViewLayout() {}
+                ~DenseTensorViewLayout() override {}
                 DenseTensorViewLayout(const TensorView& tensor_view);
 
                 virtual size_t get_size() override { return m_size; }
