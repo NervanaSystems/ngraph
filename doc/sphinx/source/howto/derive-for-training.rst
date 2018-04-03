@@ -12,7 +12,7 @@ weight-based updates. For this example named ``mnist_mlp.cpp``, we start with a 
 with nGraph. 
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
-"trainable" model, our example includes the use of a simple data loader for the 
+trainable model, our example includes the use of a simple data loader for the 
 MNIST data.
 
 * :ref:`model_overview`
@@ -34,11 +34,12 @@ a framework. Without a framework, the process is somewhat tedious, so the exampl
 selected is a relatively simple model: a fully-connected topology with one hidden 
 layer followed by ``Softmax``.
 
-Since the graph is stateless, parameters for the input and the variables must be
-derived from something; in this case, they will be derived from the "original"
-weights. The training function will then return the tensors for the updated 
-variables. Note that this is not the same as *constructing* the training model 
-directly, which would be significantly more work.   
+Since the graph is stateless there are parameters for both the inputs
+and the weights. We will construct the graph for inference and use
+nGraph to create a graph for training.  The training function will
+return tensors for the updated weights. Note that this is not the same
+as *constructing* the training model directly, which would be
+significantly more work.
 
 
 .. _code_structure:

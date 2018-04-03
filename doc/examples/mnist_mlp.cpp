@@ -39,7 +39,7 @@ size_t
 {
     const Shape& softmax_shape = t_softmax->get_shape();
     size_t batch_size = softmax_shape.at(0);
-    size_t label_size = softmax_shape.at(1);
+    size_t label_count = softmax_shape.at(1);
     const Shape& Y_shape = t_Y->get_shape();
     if (Y_shape.size() != 1 || Y_shape.at(0) != batch_size)
     {
@@ -52,7 +52,7 @@ size_t
     {
         float max_value = get_scalar<float>(t_softmax, softmax_pos++);
         size_t max_idx = 0;
-        for (size_t j = 1; j < label_size; ++j)
+        for (size_t j = 1; j < label_count; ++j)
         {
             float value = get_scalar<float>(t_softmax, softmax_pos++);
             if (value > max_value)
