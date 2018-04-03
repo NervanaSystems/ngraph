@@ -54,10 +54,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     if (memory_pointer != nullptr)
     {
         aligned_buffer = static_cast<char*>(memory_pointer);
-        return;
     }
-
-    if (buffer_size)
+    else if (buffer_size > 0)
     {
         size_t allocation_size = buffer_size + BufferAlignment;
         auto ptr = malloc(allocation_size);

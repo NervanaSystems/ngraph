@@ -42,7 +42,6 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
     if (memory_pointer != nullptr)
     {
         m_aligned_buffer_pool = static_cast<char*>(memory_pointer);
-        return;
     }
     else if (m_buffer_size > 0)
     {
