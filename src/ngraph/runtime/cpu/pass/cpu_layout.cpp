@@ -1026,7 +1026,7 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
-                        if (bn->get_training_flag())
+                        if (bn->get_training_flag() && node->get_input_size() == 3)
                         {
                             prim_input_formats.push_back(memory::format::x);
                             prim_input_formats.push_back(memory::format::x);
