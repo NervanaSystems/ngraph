@@ -806,6 +806,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
             return false;
         }
 
+        if (conv->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
         auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionRelu(conv));
         ngraph::replace_node(m.match_root(), conv_relu);
         return true;
