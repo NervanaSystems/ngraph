@@ -26,10 +26,6 @@ echo ' '
 
 export CMAKE_OPTIONS_EXTRA=""
 
-if [ -z ${PARALLEL} ] ; then
-    PARALLEL=22
-fi
-
 if [ -z ${BUILD_SUBDIR} ] ; then
     BUILD_SUBDIR=BUILD
 fi
@@ -123,7 +119,7 @@ echo "    GTEST_OUTPUT=${GTEST_OUTPUT}"
 echo "Running cmake"
 cmake ${CMAKE_OPTIONS} .. 2>&1 | tee ${OUTPUT_DIR}/cmake_${TEST_SUITE}.log
 echo "Running make"
-env VERBOSE=1 make -j ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${TEST_SUITE}.log
+env VERBOSE=1 make ${PARALLEL} 2>&1 | tee ${OUTPUT_DIR}/make_${TEST_SUITE}.log
 
 if [ -z ${CMD_TO_RUN} ] ; then
     echo "No CMD_TO_RUN specified - will run cmake, make, and style-check"

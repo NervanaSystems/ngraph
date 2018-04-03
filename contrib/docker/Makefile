@@ -25,7 +25,7 @@
 # Override with make PARALLEL="-j <num_parallel_processes>" where
 #    <num_parallel_processes> = the number of make processes to run in parallel
 # Turn off with make PARALLEL=
-PARALLEL=22 
+PARALLEL=-j 22 
 
 # DIR is an internal variable that serves as an anchor to this cloned git
 # repository.  DIR is mounted into the docker container, so that builds
