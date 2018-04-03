@@ -855,6 +855,39 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer.block_end();
             }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolBackprop)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
+                    auto fp_input_shape = args[0].get_shape();
+                    auto delta_shape = args[1].get_shape();
+                    auto out_shape = out[0].get_shape();
+
+                    auto& cudnn_emitter = external_function->get_cudnn_emitter();
+
+                    // if (input_shape.size() >= 4)
+                    // {
+                    //     auto max_pool_bp_index =
+                    //         cudnn_emitter->build_pooling_backward(CUDNN_POOLING_MAX,
+                    //                                               external_function->ctx().get(),
+                    //                                               input_shape,
+                    //                                               result_shape,
+                    //                                               max_pool->get_window_movement_strides(),
+                    //                                               max_pool->get_window_shape(),
+                    //                                               max_pool->get_padding_below(),
+                    //                                               max_pool->get_padding_above());
+
+                    //     writer << "ctx->cudnn_emitter->invoke(" << max_pool_index << ", ";
+                    //     writer << "{" << args[0].get_name() << "}, ";
+                    //     writer << "{" << out[0].get_name() << "}";
+                    //     writer << ");\n";
+                    // }
+                }
+                writer.block_end();
+            }
         }
     }
 }

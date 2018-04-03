@@ -89,7 +89,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto reshape = make_shared<op::Reshape>(
-        A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to CNHW
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to NCHW
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
