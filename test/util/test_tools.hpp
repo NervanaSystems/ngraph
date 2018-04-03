@@ -77,6 +77,21 @@ void write_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::ve
 }
 
 template <typename T>
+std::vector<std::shared_ptr<T>> get_ops_of_type(std::shared_ptr<ngraph::Function> f)
+{
+    std::vector<std::shared_ptr<T>> ops;
+    for (auto op : f->get_ops())
+    {
+        if (auto cop = std::dynamic_pointer_cast<T>(op))
+        {
+            ops.push_back(cop);
+        }
+    }
+
+    return ops;
+}
+
+template <typename T>
 size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 {
     size_t count = 0;

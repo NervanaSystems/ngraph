@@ -123,13 +123,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    if (target->get_outputs().size() > 1)
-    {
-        throw ngraph_error(
-            "Multi-output nodes should not be replaced directly. The corresponding "
-            "GetOutputElements should be replaced instead");
-    }
-
     // Fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
 

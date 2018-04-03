@@ -8,11 +8,13 @@ How to
    :caption: How to 
 
    execute.rst
-   import.rst
-    
+   operator.rst
+   update.rst
+   derive-for-training.rst
+   import.rst    
 
-The "How to" articles in this section explain how to do specific tasks with the 
-Intel nGraph++ library. The recipes are all framework agnostic; in other words, 
+The "How to" articles in this section explain how to do specific tasks with 
+nGraph components. The recipes are all framework agnostic; in other words, 
 if an entity (framework or user) wishes to make use of target-based computational 
 resources, it can either:
 
@@ -38,8 +40,10 @@ devices, or it might mean programatically adjusting a model or the compute
 resources it requires, at an unknown or arbitray time after it has been deemed 
 to be trained well enough.
 
-To get started, we've provided a basic example for how to :doc:`execute` with 
-an nGraph backend; this is analogous to a framework bridge.
+To get started, we've provided a basic example for how to execute a
+computation that can run on an nGraph backend; this is analogous to a
+framework bridge.  We also provide a larger example for training and
+evaluating a simple MNIST MLP model.
 
 For data scientists or algorithm developers who are trying to extract specifics 
 about the state of a model at a certain node, or who want to optimize a model 
