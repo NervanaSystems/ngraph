@@ -29,12 +29,20 @@ namespace ngraph
 {
     namespace builder
     {
+        // batch_size = mask_shape on the batch_axis
+        // max_sequence_length = mask_shape on the sequence_axis
+        // sequence_lengths = list of lengths < max_sequence_length of shape batch_size
+        // a mask is created by...
+        // 1. creating a sequence starting at sequence_begin of shape max_sequence_length
+        // 2. broadcasting that sequence along all non-sequence axes to mask_shape
+        // 3. broadcasting sequence_lengths along all non-batch axes to mask_shape
+        // 4. returning the specified binary element-wise operation T #2 and #3
         template <class T>
         std::shared_ptr<Node> tensor_mask(const std::shared_ptr<Node>& sequence_lengths,
                                           size_t sequence_axis,
                                           size_t batch_axis,
                                           ngraph::Shape mask_shape,
-                                          uint32_t sequnece_begin)
+                                          uint32_t sequence_begin)
         {
             if (sequence_axis >= mask_shape.size())
             {
@@ -70,7 +78,7 @@ namespace ngraph
             // create sequence data [0, ..., max_sequence_length]
             auto max_sequence_length = mask_shape[sequence_axis];
             std::vector<uint32_t> sequence_data(max_sequence_length);
-            std::iota(sequence_data.begin(), sequence_data.end(), sequnece_begin);
+            std::iota(sequence_data.begin(), sequence_data.end(), sequence_begin);
 
             // create sequence constant
             auto sequence = std::make_shared<ngraph::op::Constant>(
