@@ -1710,7 +1710,8 @@ namespace ngraph
                            << "});\n";
                 }
 #else
-                if (args[0].get_shape().size() == 1 && sum->get_reduction_axes().size() == 1)
+                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 1 &&
+                    sum->get_reduction_axes().size() == 1)
                 {
                     writer << "cpu::kernel::reduce_sum_all_1d_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
@@ -1718,7 +1719,8 @@ namespace ngraph
                            << "{" << join(out[0].get_shape()) << "}"
                            << ");\n";
                 }
-                else if (args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
                 {
                     writer << "cpu::kernel::reduce_sum_all_2d_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
@@ -1726,7 +1728,8 @@ namespace ngraph
                            << "{" << join(out[0].get_shape()) << "}"
                            << ");\n";
                 }
-                else if (args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
                 {
                     writer << "cpu::kernel::reduce_sum_2d_1rd_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
@@ -1735,7 +1738,8 @@ namespace ngraph
                            << "{" << join(sum->get_reduction_axes()) << "}"
                            << ");\n";
                 }
-                else if (args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
                 {
                     writer << "cpu::kernel::reduce_sum_all_4d_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
