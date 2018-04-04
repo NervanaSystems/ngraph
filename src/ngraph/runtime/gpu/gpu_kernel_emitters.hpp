@@ -37,6 +37,26 @@ namespace ngraph
                                     const GPU_TensorViewWrapper& dst,
                                     const GPU_TensorViewWrapper& src);
 
+                void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
+                                    const std::string& name,
+                                    const std::string& data_type,
+                                    const std::string& mode,
+                                    const std::string& conv_algo,
+                                    const ngraph::op::Convolution* convolution);
+
+                void emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
+                                    const std::string& name,
+                                    const std::string& format,
+                                    const std::string& data_type,
+                                    const Shape& shape);
+
+                void emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
+                                    const std::string& name,
+                                    const std::string& format,
+                                    const std::string& data_type,
+                                    const Shape& shape);
+
+
                 void emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
                                                   const std::string& name,
                                                   const std::string& format,

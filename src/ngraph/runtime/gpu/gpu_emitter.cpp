@@ -171,19 +171,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
-            void shape_to_cudnn_4d_tensor(std::array<size_t, 4>& dimensions, const Shape& shape)
-            {
-                size_t pos = 0;
-                for (size_t i = shape.size(); i < 4; i++)
-                {
-                    dimensions[pos++] = 1;
-                }
-                for (size_t i = 0; i < shape.size(); i++)
-                {
-                    dimensions[pos++] = shape[i];
-                }
-            }
-
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
             {
@@ -192,78 +179,43 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string x_descriptor = "x_descriptor";
-                const std::string w_descriptor = "w_descriptor";
-                const std::string y_descriptor = "y_descriptor";
-                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string args0 = "x_descriptor";
+                const std::string args1 = "w_descriptor";
+                const std::string out0 = "y_descriptor";
+                const std::string conv_descriptor = "conv_descriptor";
+                const std::string data_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
+                const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
                 const size_t workSapceSizeInBytes = 1024;
-                std::array<size_t, 4> dimensions;
-
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
+                Strides window_dilation_strides = convolution->get_window_dilation_strides();
+                Strides window_movement_strides = convolution->get_window_movement_strides();
+                Strides data_dilation_strides = convolution->get_data_dilation_strides();
+                CoordinateDiff padding = convolution->get_padding_below();
 
                 writer.block_begin("  // " + node->get_name());
-                writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "float alpha = 1.0;\n";
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
-                shape_to_cudnn_4d_tensor(dimensions, result_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, y_descriptor, tensor_format, tensor_type, dimensions);
-
-                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                writer << "cudnnFilterDescriptor_t " << w_descriptor << ";\n";
-                writer << "cudnnCreateFilterDescriptor(&" << w_descriptor << ");\n";
-                writer << "cudnnSetFilter4dDescriptor(" << w_descriptor << ",\n";
-                writer << "                 /*dataType=*/" << tensor_type << ",\n";
-                writer << "                 /*format=*/" << tensor_format;
-                for (auto const& axis : dimensions)
-                {
-                    writer << ",\n                 /*dimension_size*/" << axis;
-                }
-                writer << ");\n";
-
-                writer << "cudnnConvolutionDescriptor_t conv_descriptor;\n";
-                writer << "cudnnCreateConvolutionDescriptor(&conv_descriptor);\n";
-
-                Strides window_dilation_strides = convolution->get_window_dilation_strides();
-                Strides window_movement_strides = convolution->get_window_movement_strides();
-                Strides data_dilation_strides = convolution->get_data_dilation_strides();
-                CoordinateDiff padding_below = convolution->get_padding_below();
-                CoordinateDiff padding_above = convolution->get_padding_above();
-
-                writer << "cudnnSetConvolution2dDescriptor("
-                        << "conv_descriptor, "
-                        << padding_below[0] << ", "
-                        << padding_below[1] << ", "
-                        << window_movement_strides[0] << ", "
-                        << window_movement_strides[1] << ", "
-                        << window_dilation_strides[0] << ", "
-                        << window_dilation_strides[1] << ", "
-                        << mode <<", "
-                        << tensor_type
-                        << ");\n";
+                kernel::emit_cudnnTensorDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnFilterDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnTensorDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
                 
                 writer << "void* workspace = "
                               "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
-
                 writer << "cudnnConvolutionForward(cudnn_handle, "
                        << "&alpha, "
-                       << "x_descriptor, " << args[0].get_name() << ", "
-                       << "w_descriptor, " << args[1].get_name() << ", "
-                       << "conv_descriptor, "
+                       << args0 << ", " << args[0].get_name() << ", "
+                       << args1 << ", " << args[1].get_name() << ", "
+                       << conv_descriptor << ", "
                        << conv_algo << ", "
                        << "workspace, "
                        << workSapceSizeInBytes << ", "
                        << "&beta, "
-                       << "y_descriptor," << out[0].get_name() << ");\n";
+                       << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
@@ -276,98 +228,45 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string dx_descriptor = "dx_descriptor";
-                const std::string w_descriptor = "w_descriptor";
-                const std::string dy_descriptor = "dy_descriptor";
-                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string arg0 = "w_descriptor";
+                const std::string arg1 = "dy_descriptor";
+                const std::string out0 = "dx_descriptor";
+                const std::string conv_descriptor = "conv_descriptor";
+                const std::string data_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
+                const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0";
                 const size_t workSapceSizeInBytes = 2048;
-                std::array<size_t, 4> dimensions;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
+                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
+                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
+                Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
+                CoordinateDiff padding = convolution->get_padding_below_forward();
 
                 writer.block_begin("  // " + node->get_name());
-                writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "float alpha = 1.0;\n";
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                shape_to_cudnn_4d_tensor(dimensions, result_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, dx_descriptor, tensor_format, tensor_type, dimensions);
-                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, dy_descriptor, tensor_format, tensor_type, dimensions);
-
-                shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
-                writer << "cudnnFilterDescriptor_t " << w_descriptor << ";\n";
-                writer << "cudnnCreateFilterDescriptor(&" << w_descriptor << ");\n";
-                writer << "cudnnSetFilter4dDescriptor(" << w_descriptor << ",\n";
-                writer << "                 /*dataType=*/" << tensor_type << ",\n";
-                writer << "                 /*format=*/" << tensor_format;
-                for (auto const& axis : dimensions)
-                {
-                    writer << ",\n                 /*dimension_size*/" << axis;
-                }
-                writer << ");\n";
-
-                writer << "cudnnConvolutionDescriptor_t conv_descriptor;\n";
-                writer << "cudnnCreateConvolutionDescriptor(&conv_descriptor);\n";
-
-                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
-                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
-                Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding_below = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
-
-                std::cout << "window_dilation_strides: ";
-                for(auto a:window_dilation_strides) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "window_movement_strides: ";
-                for(auto a:window_movement_strides) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "data_dilation_strides: ";
-                for(auto a:data_dilation_strides) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "padding_below ";
-                for(auto a:padding_below) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "padding_above ";
-                for(auto a:padding_above) std::cout << a << ", "; 
-                std::cout << std::endl;
-
-                writer << "cudnnSetConvolution2dDescriptor("
-                        << "conv_descriptor, "
-                        << padding_above[0] << ", "
-                        << padding_above[1] << ", "
-                        << window_movement_strides[0] << ", "
-                        << window_movement_strides[1] << ", "
-                        << window_dilation_strides[0] << ", "
-                        << window_dilation_strides[1] << ", "
-                        << mode <<", "
-                        << tensor_type
-                        << ");\n";
+                kernel::emit_cudnnFilterDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnTensorDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnTensorDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
 
                 writer << "void* workspace = "
                               "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << out[0].get_name() << ", " << out[0].get_size() << ", 4);\n";
 
                 writer << "cudnnConvolutionBackwardData(cudnn_handle, "
                        << "&alpha, "
-                       << "w_descriptor, " << args[0].get_name() << ", "
-                       << "dy_descriptor, " << args[1].get_name() << ", "
-                       << "conv_descriptor, "
+                       << args0 << ", " << args[0].get_name() << ", "
+                       << args1 << ", " << args[1].get_name() << ", "
+                       << conv_descriptor << ", "
                        << conv_algo << ", "
                        << "workspace, "
                        << workSapceSizeInBytes << ", "
                        << "&beta, "
-                       << "dx_descriptor," << out[0].get_name() << ");\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << args[0].get_name() << ", " << args[0].get_size() << ", 4);\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << args[1].get_name() << ", " << args[1].get_size() << ", 4);\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << out[0].get_name() << ", " << out[0].get_size() << ", 4);\n";
+                       << out0 << ", " << out[0].get_name() << ");\n";
 
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
@@ -381,29 +280,22 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string x_descriptor = "x_descriptor";
-                const std::string dw_descriptor = "dw_descriptor";
-                const std::string dy_descriptor = "dy_descriptor";
-                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string args0 = "x_descriptor";
+                const std::string args1 = "dy_descriptor";
+                const std::string out0 = "dw_descriptor";
+                const std::string conv_descriptor = "conv_descriptor";
+                const std::string data_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
                 const size_t workSapceSizeInBytes = 2048;
-                std::array<size_t, 4> dimensions;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
-                std::cout << "arg0_shape: ";
-                for(auto a:arg0_shape) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "arg1_shape: ";
-                for(auto a:arg1_shape) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "result_shape: ";
-                for(auto a:result_shape) std::cout << a << ", "; 
-                std::cout << std::endl;
+                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
+                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
+                Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
+                CoordinateDiff padding = convolution->get_padding_below_forward();
+
 
                 writer.block_begin("  //data_dilation_ " + node->get_name());
                 writer << "int count = " << out[0].get_size() << ";\n";
@@ -411,55 +303,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
-                shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                kernel::emit_cudnnTensor4dDescriptor(writer, dy_descriptor, tensor_format, tensor_type, dimensions);
-
-                shape_to_cudnn_4d_tensor(dimensions, result_shape);
-                writer << "cudnnFilterDescriptor_t " << dw_descriptor << ";\n";
-                writer << "cudnnCreateFilterDescriptor(&" << dw_descriptor << ");\n";
-                writer << "cudnnSetFilter4dDescriptor(" << dw_descriptor << ",\n";
-                writer << "                 /*dataType=*/" << tensor_type << ",\n";
-                writer << "                 /*format=*/" << tensor_format;
-                for (auto const& axis : dimensions)
-                {
-                    writer << ",\n                 /*dimension_size*/" << axis;
-                }
-                writer << ");\n";
-
-                writer << "cudnnConvolutionDescriptor_t conv_descriptor;\n";
-                writer << "cudnnCreateConvolutionDescriptor(&conv_descriptor);\n";
-
-                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
-                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
-                Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding_below = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
-                std::cout << "window_dilation_strides: ";
-                for(auto a:window_dilation_strides) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "window_movement_strides: ";
-                for(auto a:window_movement_strides) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "padding_below ";
-                for(auto a:padding_below) std::cout << a << ", "; 
-                std::cout << std::endl;
-                std::cout << "padding_above: ";
-                for(auto a:padding_above) std::cout << a << ", "; 
-                std::cout << std::endl;
-
-                writer << "cudnnSetConvolution2dDescriptor("
-                        << "conv_descriptor, "
-                        << padding_above[0] << ", "
-                        << padding_above[1] << ", "
-                        << window_movement_strides[0] << ", "
-                        << window_movement_strides[1] << ", "
-                        << window_dilation_strides[0] << ", "
-                        << window_dilation_strides[1] << ", "
-                        << mode <<", "
-                        << tensor_type
-                        << ");\n";
+                kernel::emit_cudnnTensorDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnTensorDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnFilterDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
 
                 writer << "void* workspace = "
                               "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
@@ -467,14 +314,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "runtime::gpu::print_gpu_f32_tensor(" << out[0].get_name() << ", " << out[0].get_size() << ", 4);\n";
                 writer << "cudnnConvolutionBackwardFilter(cudnn_handle, "
                        << "&alpha, "
-                       << "x_descriptor, " << args[0].get_name() << ", "
-                       << "dy_descriptor, " << args[1].get_name() << ", "
-                       << "conv_descriptor, "
+                       << args0 << ", " << args[0].get_name() << ", "
+                       << args1 << ", " << args[1].get_name() << ", "
+                       << conv_descriptor << ", "
                        << conv_algo << ", "
                        << "workspace, "
                        << workSapceSizeInBytes << ", "
                        << "&beta, "
-                       << "dw_descriptor," << out[0].get_name() << ");\n";
+                       << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer << "runtime::gpu::print_gpu_f32_tensor(" << args[0].get_name() << ", " << args[0].get_size() << ", 4);\n";
                 writer << "runtime::gpu::print_gpu_f32_tensor(" << args[1].get_name() << ", " << args[1].get_size() << ", 4);\n";
@@ -1071,7 +918,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto& input_shape = args[0].get_shape();
                 const std::string input_desc = "input_descriptor";
                 const std::string output_desc = "output_descriptor";
-                const std::string tensor_type = "CUDNN_DATA_FLOAT";
+                const std::string data_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
 
                 writer.block_begin("  // " + node->get_name());
@@ -1104,7 +951,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             }
 
                             kernel::emit_cudnnTensor4dDescriptor(
-                                writer, input_desc, tensor_format, tensor_type, dimensions);
+                                writer, input_desc, tensor_format, data_type, dimensions);
 
                             // mark reduced axes of input tensor for output tensor descriptor
                             for (auto const& idx_dim : reduction_axes)
@@ -1112,14 +959,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                 dimensions[(4 - input_shape.size()) + idx_dim] = 1;
                             }
                             kernel::emit_cudnnTensor4dDescriptor(
-                                writer, output_desc, tensor_format, tensor_type, dimensions);
+                                writer, output_desc, tensor_format, data_type, dimensions);
 
                             // emit sum reduce operation
                             kernel::emit_cudnnReduceTensor(writer,
                                                            args[0],
                                                            out[0],
                                                            "CUDNN_REDUCE_TENSOR_ADD",
-                                                           tensor_type,
+                                                           data_type,
                                                            "CUDNN_NOT_PROPAGATE_NAN",
                                                            input_desc,
                                                            output_desc,
@@ -1142,7 +989,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                             kernel::emit_cudnnTensorNdDescriptor(writer,
                                                                  input_desc,
-                                                                 tensor_type,
+                                                                 data_type,
                                                                  dimensions.size(),
                                                                  dimensions,
                                                                  compute_strides(dimensions));
@@ -1154,7 +1001,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             }
                             kernel::emit_cudnnTensorNdDescriptor(writer,
                                                                  output_desc,
-                                                                 tensor_type,
+                                                                 data_type,
                                                                  dimensions.size(),
                                                                  dimensions,
                                                                  compute_strides(dimensions));
@@ -1163,7 +1010,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                            args[0],
                                                            out[0],
                                                            "CUDNN_REDUCE_TENSOR_ADD",
-                                                           tensor_type,
+                                                           data_type,
                                                            "CUDNN_NOT_PROPAGATE_NAN",
                                                            input_desc,
                                                            output_desc,
