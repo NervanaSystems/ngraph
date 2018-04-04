@@ -171,7 +171,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
-
             void shape_to_cudnn_4d_tensor(std::array<size_t, 4>& dimensions, const Shape& shape)
             {
                 size_t pos = 0;
@@ -213,12 +212,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float alpha = 1.0;\n";
                 writer << "float beta = 0.0;\n";
 
-                // construct input tensor descriptor rt impl.
+                // construct input and output tensor descriptor
                 shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
-
-                //shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                //kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
                 shape_to_cudnn_4d_tensor(dimensions, result_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, y_descriptor, tensor_format, tensor_type, dimensions);
 
@@ -300,12 +296,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float alpha = 1.0;\n";
                 writer << "float beta = 0.0;\n";
 
-                // construct input tensor descriptor rt impl.
+                // construct input and output tensor descriptor
                 shape_to_cudnn_4d_tensor(dimensions, result_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, dx_descriptor, tensor_format, tensor_type, dimensions);
-
-                //shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                //kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
                 shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, dy_descriptor, tensor_format, tensor_type, dimensions);
 
@@ -393,7 +386,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string dy_descriptor = "dy_descriptor";
                 const std::string tensor_type = "CUDNN_DATA_FLOAT";
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION"; //"CUDNN_CONVOLUTION";
+                const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
                 const size_t workSapceSizeInBytes = 2048;
                 std::array<size_t, 4> dimensions;
@@ -417,12 +410,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float alpha = 1.0;\n";
                 writer << "float beta = 0.0;\n";
 
-                // construct input tensor descriptor rt impl.
+                // construct input and output tensor descriptor
                 shape_to_cudnn_4d_tensor(dimensions, arg0_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, x_descriptor, tensor_format, tensor_type, dimensions);
-
-                //shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
-                //kernel::emit_cudnnTensor4dDescriptor(writer, w_descriptor, tensor_format, tensor_type, dimensions);
                 shape_to_cudnn_4d_tensor(dimensions, arg1_shape);
                 kernel::emit_cudnnTensor4dDescriptor(writer, dy_descriptor, tensor_format, tensor_type, dimensions);
 
