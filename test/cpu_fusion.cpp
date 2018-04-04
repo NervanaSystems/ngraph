@@ -1032,7 +1032,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     pass_manager.run_passes(func);
 
     const size_t NUM_STEPS = 10;
-    auto mmb_predicate = [NUM_STEPS](std::shared_ptr<Node> node) {
+    auto mmb_predicate = [](std::shared_ptr<Node> node) {
         auto users = node->get_users();
         return users.size() == NUM_STEPS &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
