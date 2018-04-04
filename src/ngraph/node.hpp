@@ -79,17 +79,8 @@ namespace ngraph
 
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
-        virtual ~Node()
-        {
-            for (auto arg : m_arguments)
-            {
-                arg->m_users.erase(this);
-            }
-            for (auto& input : m_inputs)
-            {
-                input.get_output().remove_input(&input);
-            }
-        }
+        virtual ~Node();
+
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
         {
@@ -101,8 +92,6 @@ namespace ngraph
         const std::string& get_friendly_name() const;
         const std::string& get_name() const;
         void set_name(const std::string& name);
-        void clear_arguments() { m_arguments.clear(); }
-        const std::multiset<Node*>& users() const { return m_users; }
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
@@ -213,7 +202,6 @@ namespace ngraph
         void add_output(const element::Type& element_type, const Shape& shape);
 
         std::string m_node_type;
-        std::multiset<Node*> m_users;
         size_t m_instance_id;
         std::string m_name;
         const std::string m_unique_name;
@@ -222,13 +210,5 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-
-    private:
-        NodeVector m_arguments;
-        //m_arguments still needs to be kept in sync with i/o since get_input_ops
-        //is pretty ubiquitous and might be called after the original graph was modified.
-        //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
-        //is correct.
-        NodeVector& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }
