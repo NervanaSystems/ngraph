@@ -37,11 +37,17 @@ namespace ngraph
                     make_primary_tensor_view(const ngraph::element::Type& element_type,
                                              const Shape& shape) override;
 
-                bool compile(const std::shared_ptr<ngraph::Function>& fun) override;
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    create_tensor(const ngraph::element::Type& element_type,
+                                  const Shape& shape) override;
 
-                bool is_callable() const override;
+                bool compile(const ngraph::Function& fun) override;
 
                 bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+                bool call(const ngraph::Function& fun,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
             };
         }

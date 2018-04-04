@@ -35,19 +35,29 @@ std::shared_ptr<ngraph::runtime::TensorView>
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
 
-bool runtime::interpreter::GPU_Backend::compile(const std::shared_ptr<ngraph::Function>& fun)
+std::shared_ptr<ngraph::runtime::TensorView>
+    create_tensor(const ngraph::element::Type& element_type, const Shape& shape)
 {
-    return false;
+    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
+    return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
 
-bool runtime::interpreter::GPU_Backend::is_callable() const
+bool runtime::interpreter::GPU_Backend::compile(const ngraph::Function& fun)
 {
-    return false;
+    throw runtime_error("unimplemented method");
 }
 
 bool runtime::interpreter::GPU_Backend::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
     const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
 {
-    return false;
+    throw runtime_error("unimplemented method");
+}
+
+bool runtime::interpreter::GPU_Backend::call(
+    const ngraph::Function& fun,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+{
+    throw runtime_error("unimplemented method");
 }
