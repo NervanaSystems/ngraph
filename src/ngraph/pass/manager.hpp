@@ -18,6 +18,7 @@
 
 #include <list>
 #include <memory>
+#include <typeinfo>
 #include <vector>
 
 #include "ngraph/pass/manager_state.hpp"
@@ -48,6 +49,10 @@ public:
         auto pass = std::make_shared<T>(args...);
         auto pass_base = std::static_pointer_cast<PassBase>(pass);
         m_pass_list.push_back(pass_base);
+        if (visualize)
+        {
+            m_pass_names.push_back(typeid(T).name());
+        }
     }
 
     void run_passes(std::shared_ptr<Function>);
@@ -55,6 +60,8 @@ public:
     ManagerState& get_state();
 
 private:
+    std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
+    bool visualize = false;
 };
