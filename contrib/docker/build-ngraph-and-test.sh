@@ -73,8 +73,12 @@ fi
 
 GCC_VERSION=` gcc --version | grep gcc | cut -f 2 -d ')' | cut -f 2 -d ' ' | cut -f 1,2 -d '.'`
 
+# Set the -DNGRAPH_USE_PREBUILT_LLVM=TRUE for appropriate build environments
+#     if it is not set
 if [ "${GCC_VERSION}" != "4.8" ] ; then
-    export CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA} -DNGRAPH_USE_PREBUILT_LLVM=TRUE"
+    if [ "$(echo ${CMAKE_OPTIONS_EXTRA} | grep PREBUILT_LLVM | wc -l)" == "0" ]; then
+        export CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA} -DNGRAPH_USE_PREBUILT_LLVM=TRUE"
+    fi
 fi
 
 # Print the environment, for debugging
