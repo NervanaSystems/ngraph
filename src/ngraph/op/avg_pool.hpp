@@ -73,7 +73,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
