@@ -64,30 +64,6 @@ if [ "$(echo ${CMD_TO_RUN} | grep build | wc -l)" != "0" ] ; then
     # Make OUTPUT_DIR directory as user
     mkdir -p ${OUTPUT_DIR}
     chmod ug+rwx ${OUTPUT_DIR}
-
-    # Use a third-party cache if it is present
-    # If THIRD_PARTY_CACHE_DIR is set in the environment,
-    #    if the directory exists,
-    #        set up a symbolic link to the 'third-party' directory from the OUTPUT_DIR
-    #        so the cmake/make process will not download and rebuild the third-party dependencies
-    #        if they match the criteria set in the cmake files
-    #    else
-    #        record a message to the log that although the variable was set, the directory was not
-    #        found in the build environment
-    #
-    # TODO: This is a workaround during testing of the EXTERNAL_PROJECTS_ROOT cmake setting
-    #
-    if [ -z ${THIRD_PARTY_CACHE_DIR} ]; then
-        echo "No THIRD_PARTY_CACHE_DIR specified - will download and build third-party dependencies"
-    else
-        if [ -d ${THIRD_PARTY_CACHE_DIR} ]; then
-            cd ${OUTPUT_DIR}
-            ln -s "${THIRD_PARTY_CACHE_DIR}/third-party" "third-party"
-        else
-            echo "THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} defined, but not found -"
-            echo "will download and build third-party dependencies"
-        fi
-    fi
 fi
 
 #TODO: add openmpi dependency to enable building with -DNGRAPH_DISTRIBUTED_ENABLE=TRUE
