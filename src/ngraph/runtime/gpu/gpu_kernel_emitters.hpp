@@ -39,10 +39,11 @@ namespace ngraph
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
                                     const std::string& name,
-                                    const std::string& data_type,
+                                    const CoordinateDiff& padding,
+                                    const Strides& window_movement_strides,
+                                    const Strides& window_dilation_strides,
                                     const std::string& mode,
-                                    const std::string& conv_algo,
-                                    const ngraph::op::Convolution* convolution);
+                                    const std::string& data_type);
 
                 void emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
                                     const std::string& name,

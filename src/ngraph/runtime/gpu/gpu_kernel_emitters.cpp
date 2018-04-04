@@ -91,7 +91,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
                                                         const std::string& data_type,
                                                         const Shape& shape)
 {
-    std::vector<size_t> dimentions;
+    std::vector<size_t> dimensions;
     for (size_t i = shape.size(); i < 4; i++)
     {
         dimensions.push_back(1);
@@ -127,11 +127,11 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
             return strides;
         };
         std::vector<size_t> strides = compute_strides(dimensions);
-        writer << "const int " << name << "_axes[] = {" << join(dimentions) << "};\n";
+        writer << "const int " << name << "_axes[] = {" << join(dimensions) << "};\n";
         writer << "const int " << name << "_strides[] = {" << join(strides) << "};\n";
         writer << "cudnnSetTensorNdDescriptor(" << name << ",\n";
         writer << "                 /*dataType=*/" << data_type << ",\n";
-        writer << "                 /*num_dimensions=*/" << dimentions.size() << ",\n";
+        writer << "                 /*num_dimensions=*/" << dimensions.size() << ",\n";
         writer << "                 /*dimensions*/" << name << "_axes,\n";
         writer << "                 /*strides*/" << name << "_strides);\n";
     }
@@ -143,7 +143,7 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
                                                         const std::string& data_type,
                                                         const Shape& shape)
 {
-    std::vector<size_t> dimentions;
+    std::vector<size_t> dimensions;
     for (size_t i = shape.size(); i < 4; i++)
     {
         dimensions.push_back(1);
@@ -169,11 +169,11 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
     }
     else
     {
-        writer << "const int " << name << "_axes[] = {" << join(dimentions) << "};\n";
+        writer << "const int " << name << "_axes[] = {" << join(dimensions) << "};\n";
         writer << "cudnnSetFilterNdDescriptor(" << name << ",\n";
         writer << "                 /*dataType=*/" << data_type << ",\n";
         writer << "                 /*format=*/" << format << ",\n";
-        writer << "                 /*num_dimensions=*/" << dimentions.size() << ",\n";
+        writer << "                 /*num_dimensions=*/" << dimensions.size() << ",\n";
         writer << "                 /*dimensions*/" << name << "_axes);\n";
     }
 }

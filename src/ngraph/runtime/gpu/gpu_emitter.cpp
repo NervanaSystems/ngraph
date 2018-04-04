@@ -228,8 +228,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string arg0 = "w_descriptor";
-                const std::string arg1 = "dy_descriptor";
+                const std::string args0 = "w_descriptor";
+                const std::string args1 = "dy_descriptor";
                 const std::string out0 = "dx_descriptor";
                 const std::string conv_descriptor = "conv_descriptor";
                 const std::string data_type = "CUDNN_DATA_FLOAT";
