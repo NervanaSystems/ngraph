@@ -37,7 +37,7 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:
-                std::shared_ptr<ngraph::Function> m_function;
+                std::shared_ptr<ngraph::Function> m_interpreter_function;
                 void compile();
             };
         }
