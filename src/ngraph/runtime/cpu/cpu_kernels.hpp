@@ -144,7 +144,6 @@ namespace ngraph
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape);
-
             }
         }
     }

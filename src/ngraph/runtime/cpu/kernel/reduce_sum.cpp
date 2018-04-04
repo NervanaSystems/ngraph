@@ -55,8 +55,7 @@ namespace ngraph
                                                const Shape& input_shape,
                                                const Shape& output_shape)
                 {
-                    reduce_sum_all<float, 4>(
-                        input, output, input_shape, output_shape);
+                    reduce_sum_all<float, 4>(input, output, input_shape, output_shape);
                 }
             }
         }
