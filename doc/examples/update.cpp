@@ -35,13 +35,13 @@ int main()
     std::cout << "Stateless: ";
     int counter = 0;
     {
-        auto r{stateless_count(counter)};
+        auto r(stateless_count(counter));
         counter = std::get<1>(r);
         std::cout << std::get<0>(r);
     }
     std::cout << ", ";
     {
-        auto r{stateless_count(counter)};
+        auto r(stateless_count(counter));
         counter = std::get<1>(r);
         std::cout << std::get<0>(r);
     }

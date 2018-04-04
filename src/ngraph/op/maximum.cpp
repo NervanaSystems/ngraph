@@ -39,8 +39,10 @@ shared_ptr<Node> op::Maximum::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Maximum>(new_args.at(0), new_args.at(1));
 }
 
-void op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x = get_input_op(0);
     auto y = get_input_op(1);
     adjoints.add_delta(
