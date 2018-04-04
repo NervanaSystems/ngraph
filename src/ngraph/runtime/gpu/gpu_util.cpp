@@ -32,14 +32,15 @@ using namespace std;
 
 void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
 {
-    float* local;
+    float* local = new float[element_count];
     size_t size_in_bytes = element_size * element_count;
-    local = static_cast<float*>(malloc(size_in_bytes));
     cudaMemcpy(local, p, size_in_bytes, cudaMemcpyDeviceToHost);
     for (size_t i = 0; i < element_count; i++)
     {
-        std::cout << local[i] << "\n";
+        std::cout << local[i] << ", ";
     }
+    std::cout << "end" << std::endl;
+    delete[] local; 
 }
 
 void runtime::gpu::check_cuda_errors(CUresult err)
