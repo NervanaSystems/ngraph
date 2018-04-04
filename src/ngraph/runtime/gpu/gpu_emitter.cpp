@@ -342,8 +342,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 std::cout << "padding_below ";
                 for(auto a:padding_below) std::cout << a << ", "; 
                 std::cout << std::endl;
-                std::cout << "padding_above: ";
-                for(auto a:window_dilation_strides) std::cout << a << ", "; 
+                std::cout << "padding_above ";
+                for(auto a:padding_above) std::cout << a << ", "; 
                 std::cout << std::endl;
 
                 writer << "cudnnSetConvolution2dDescriptor("
@@ -456,7 +456,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 for(auto a:padding_below) std::cout << a << ", "; 
                 std::cout << std::endl;
                 std::cout << "padding_above: ";
-                for(auto a:window_dilation_strides) std::cout << a << ", "; 
+                for(auto a:padding_above) std::cout << a << ", "; 
                 std::cout << std::endl;
 
                 writer << "cudnnSetConvolution2dDescriptor("
