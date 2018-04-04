@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "ngraph/util.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
@@ -250,56 +251,59 @@ size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
                                             const ngraph::Shape& padding_below,
                                             const ngraph::Shape& padding_above)
 {
-//     if (input_shape.size() != 4)
-//     {
-//         // cudnn impl. currently only supportind 2d pooling
-//         // 3d impl. needed
-//         throw std::runtime_error("Unsupported tensor encountered "
-//                                  "in CUDNNEmitter::build_pooling_backward.");
-//     }
+    if (input_shape.size() != 4)
+    {
+        // cudnn impl. currently only supportind 2d pooling
+        // 3d impl. needed
+        throw std::runtime_error("Unsupported tensor encountered "
+                                 "in CUDNNEmitter::build_pooling_backward.");
+    }
 
-//     auto get_tensor_desc = [](const Shape& dimensions) {
-//         cudnnTensorDescriptor_t desc;
-//         cudnnCreateTensorDescriptor(&desc);
-//         cudnnSetTensor4dDescriptor(desc,
-//                                    CUDNN_TENSOR_CHWN,
-//                                    CUDNN_DATA_FLOAT,
-//                                    dimensions[0],
-//                                    dimensions[1],
-//                                    dimensions[2],
-//                                    dimensions[3]);
-//         return desc;
-//     };
+    auto get_tensor_desc = [](const Shape& dimensions) {
+        cudnnTensorDescriptor_t desc;
+        cudnnCreateTensorDescriptor(&desc);
+        cudnnSetTensor4dDescriptor(desc,
+                                   CUDNN_TENSOR_NCHW,
+                                   CUDNN_DATA_FLOAT,
+                                   dimensions[0],
+                                   dimensions[1],
+                                   dimensions[2],
+                                   dimensions[3]);
+        return desc;
+    };
 
-//     auto bpool = [=](std::vector<void*> inputs,
-//                    std::vector<void*> outputs)
-//         {
-//             auto input_desc = get_tensor_desc(input_shape);
-//             auto output_desc = get_tensor_desc(output_shape);
-//             cudnnPoolingDescriptor_t desc;
-//             cudnnCreatePoolingDescriptor(&desc);
-//             cudnnSetPooling2dDescriptor(desc,
-//                                         pool_op,
-//                                         CUDNN_NOT_PROPAGATE_NAN,
-//                                         window_shape[0],
-//                                         window_shape[1],
-//                                         0,
-//                                         0,
-//                                         window_strides[0],
-//                                         window_strides[1]);
+    auto bpool = [=](std::vector<void*> inputs,
+                   std::vector<void*> outputs)
+        {
+            auto input_desc = get_tensor_desc(input_shape);
+            auto output_desc = get_tensor_desc(output_shape);
+            cudnnPoolingDescriptor_t desc;
+            cudnnCreatePoolingDescriptor(&desc);
+            cudnnSetPooling2dDescriptor(desc,
+                                        pool_op,
+                                        CUDNN_NOT_PROPAGATE_NAN,
+                                        window_shape[0],
+                                        window_shape[1],
+                                        0,
+                                        0,
+                                        window_strides[0],
+                                        window_strides[1]);
 
-//             float alpha = 1.0, beta = 0.0;
-//             cudnnPoolingForward(
-//                 *ctx->cudnn_handle,
-//                 desc,
-//                 &alpha,
-//                 input_desc,
-//                 inputs[0],
-//                 &beta,
-//                 output_desc,
-//                 outputs[0]);
+            float alpha = 1.0, beta = 0.0;
+            CUDNN_SAFE_CALL(cudnnPoolingBackward(
+                *ctx->cudnn_handle,
+                desc,
+                &alpha,
+                output_desc,  // output (wrt maxpool) tensor
+                inputs[1],    // not mathematically required
+                output_desc,  // adjoint of output
+                inputs[1],
+                input_desc,   // input (wrt maxpool) tensor
+                inputs[0],
+                &beta,
+                input_desc,   // adjoint of input
+                outputs[0]));
+    };
 
-//     };
-
-//     return this->register_primitive(bpool);
+    return this->register_primitive(bpool);
 }

@@ -862,29 +862,29 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 {
                     auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
-                    auto fp_input_shape = args[0].get_shape();
-                    auto delta_shape = args[1].get_shape();
-                    auto out_shape = out[0].get_shape();
+                    auto fp_input_shape = out[0].get_shape();
+                    auto fp_output_shape = args[1].get_shape();
+
 
                     auto& cudnn_emitter = external_function->get_cudnn_emitter();
 
-                    // if (input_shape.size() >= 4)
-                    // {
-                    //     auto max_pool_bp_index =
-                    //         cudnn_emitter->build_pooling_backward(CUDNN_POOLING_MAX,
-                    //                                               external_function->ctx().get(),
-                    //                                               input_shape,
-                    //                                               result_shape,
-                    //                                               max_pool->get_window_movement_strides(),
-                    //                                               max_pool->get_window_shape(),
-                    //                                               max_pool->get_padding_below(),
-                    //                                               max_pool->get_padding_above());
+                    if (fp_input_shape.size() >= 4)
+                    {
+                        auto max_pool_bp_index =
+                            cudnn_emitter->build_pooling_backward(CUDNN_POOLING_MAX,
+                                                                  external_function->ctx().get(),
+                                                                  fp_input_shape,
+                                                                  fp_output_shape,
+                                                                  mpb->get_window_movement_strides(),
+                                                                  mpb->get_window_shape(),
+                                                                  mpb->get_padding_below(),
+                                                                  mpb->get_padding_above());
 
-                    //     writer << "ctx->cudnn_emitter->invoke(" << max_pool_index << ", ";
-                    //     writer << "{" << args[0].get_name() << "}, ";
-                    //     writer << "{" << out[0].get_name() << "}";
-                    //     writer << ");\n";
-                    // }
+                        writer << "ctx->cudnn_emitter->invoke(" << max_pool_bp_index << ", ";
+                        writer << "{" << args[0].get_name() << ", " << args[1].get_name() << "}, ";
+                        writer << "{" << out[0].get_name() << "}";
+                        writer << ");\n";
+                    }
                 }
                 writer.block_end();
             }
