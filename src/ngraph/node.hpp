@@ -90,11 +90,8 @@ namespace ngraph
                 input.get_output().remove_input(&input);
             }
         }
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const std::shared_ptr<Node>& delta)
-        {
-        }
 
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
@@ -179,9 +176,6 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
-
-        std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
-                                            const std::shared_ptr<Node>& c);
 
         virtual NodeVector get_input_ops(); //const;
 
