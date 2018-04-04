@@ -8,7 +8,8 @@ Documentation in this section describes one of the ways to derive a trainable
 model from an inference model.
 
 We can derive a trainable model from any graph that has been constructed with 
-weight-based updates. For this example named ``mnist_mlp.cpp``, we start with a hand-designed inference model and convert it to a model that can be trained 
+weight-based updates. For this example named ``mnist_mlp.cpp``, we start with 
+a hand-designed inference model and convert it to a model that can be trained 
 with nGraph. 
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
@@ -24,27 +25,61 @@ MNIST data.
   - :ref:`update`
 
 
+.. _understanding_ml_ecosystem:
+
+Understanding the ML ecosystem
+===============================
+
+In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to take advantage 
+of automatable tasks as much as possible. As such, nGraph was designed to use 
+all available "automatic" graph construction endpoints handed down to it from a 
+framework. Our graph-construction API, therefore, needs to operate at a 
+fundamentally lower level than a typical framework's API. And, due to the fact
+that the nGraph :abbr:`Intermediate Representation (IR)` layer is what handles 
+the translation from the framework's endpoints to an optimized (optimizable) ML 
+environment, writing a model directly in nGraph would be somewhat akin to 
+programming in assembly language: not impossible, but not exactly the easiest
+thing for people to do. 
+
+Yet, when choosing among topologies for development, it's important to not 
+lose sight of the ultimate deployability and machine-runtime demands of a model 
+that you ultimately want trained. Likeise, when developing a new *genre* for ML/DL 
+modeling, it may be especially beneficial to consider ahead of time how portable
+and mobile you want that model to be within a rapidly-changing ecosystem. Even 
+doing a ``cost::benefit`` analysis among all of your options -- frontend and 
+backend -- can itself be a costly venture with no guarantee of success when 
+choosing among alternatives.    
+
+The value we're offering to the developer community is empowerment: we are
+confident that Intel® Architecture already provides the best computational 
+resources available for the breadth of ML/DL tasks. 
+
+.. TO add more about what Naveen talked about RE: computation and how AI is about that.  
+
+
 .. _model_overview:
 
-Model overview
-==============
+Model overview 
+===============
 
-The nGraph API was designed for automatic graph construction under direction of 
-a framework. Without a framework, the process is somewhat tedious, so the example 
-selected is a relatively simple model: a fully-connected topology with one hidden 
-layer followed by ``Softmax``.
+Due to the lower-level nature of the graph-construction API, the example we've 
+selected to document here is a relatively simple model: a fully-connected 
+topology with one hidden layer followed by ``Softmax``.
 
-Since the graph is stateless there are parameters for both the inputs
-and the weights. We will construct the graph for inference and use
-nGraph to create a graph for training.  The training function will
-return tensors for the updated weights. Note that this is not the same
-as *constructing* the training model directly, which would be
-significantly more work.
+Remember that in nGraph, the graph is stateless; the framework's endpoints are 
+treated as stateless nodes. There are parameters for both the inputs and the 
+weights. Using those data points, we will construct the graph for inference and 
+then use create a graph for training. The training function will return tensors 
+for the updated weights. 
+
+.. note:: This example illustrates what happens when bridge code for an nGraph
+   constructs a model for training.  It is not the same as *constructing* the 
+   training model directly, which would be significantly more work.
 
 
 .. _code_structure:
 
-Code Structure
+Code structure
 ==============
 
 
