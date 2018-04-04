@@ -216,7 +216,7 @@ int main(int argc, const char* argv[])
     // X, Y, learning_rate, W0, b0, W1, b1 -> loss, softmax, W0_next, b0_next, W1_next, b1_next
     NodeMap train_node_map;
     auto train_function = clone_function(
-        std::make_shared<Function>(
+        Function(
             NodeVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
             op::ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
@@ -226,10 +226,10 @@ int main(int argc, const char* argv[])
     // Plain inference
     // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
-    auto inference_function = clone_function(
-        std::make_shared<Function>(NodeVector{softmax},
-                                   op::ParameterVector{X, W0, b0, W1, b1}),
-        inference_node_map);
+    auto inference_function =
+        clone_function(Function(NodeVector{softmax},
+                                op::ParameterVector{X, W0, b0, W1, b1}),
+                       inference_node_map);
     auto inference_ext = manager->compile(inference_function);
     auto inference_cf = backend->make_call_frame(inference_ext);
 
