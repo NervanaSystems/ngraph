@@ -57,6 +57,13 @@ ifndef THIRD_PARTY_CACHE_DIR
     THIRD_PARTY_CACHE_DIR=
 endif
 
+# Build GPU backend by default
+# To suppress GPU backend builds, set NGRAPH_GPU_ENABLE to any value but
+# 'TRUE' or 'true' in the environment or on the command line (see below)
+ifndef NGRAPH_GPU_ENABLE
+    NGRAPH_GPU_ENABLE=TRUE
+endif
+
 # OS set to 'ubuntu1604' by default
 # can be overridden on the command line with 'make <target> OS=centos74"
 ifndef OS
@@ -65,11 +72,31 @@ endif
 
 ifeq ("$(shell echo ${OS} | grep centos)","centos74")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_centos_user.sh
-    DOCKERFILE=Dockerfile.ngraph.centos74
+    CPU_DOCKERFILE=Dockerfile.ngraph.centos74
 else
-    DOCKERFILE ?= "Dockerfile.ngraph"
+    CPU_DOCKERFILE ?= "Dockerfile.ngraph.ubuntu1604"
     RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
+endif
+
+# Build GPU backend if NGRAPH_GPU_ENABLE variable = 'TRUE' or 'true'
+ifeq ("$(shell echo ${NGRAPH_GPU_ENABLE} | grep TRUE)","TRUE")
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
+    GPU_DOCKERFILE=${CPU_DOCKERFILE}_gpu
+endif
+
+ifeq ("$(shell echo ${NGRAPH_GPU_ENABLE} | grep true)","true")
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
+    GPU_DOCKERFILE=${CPU_DOCKERFILE}_gpu
+endif
+
+# The nvidia-docker command must be used for any targets that actually utilize GPU devices
+ifndef GPU_DOCKERFILE
+    DOCKERFILE=${CPU_DOCKERFILE}
+    DOCKER_CMD=docker
+else
+    DOCKERFILE=${GPU_DOCKERFILE}
+    DOCKER_CMD=nvidia-docker
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -142,6 +169,7 @@ build_gcc: build_docker_image
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='build_gcc' \
@@ -155,6 +183,7 @@ build_clang: build_docker_image
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='build_clang' \
@@ -166,11 +195,12 @@ build_clang: build_docker_image
 # Check (run unit-tests)
 check_all: check_gcc check_clang
 
-check_gcc: build_docker_image
-	docker run --rm --tty \
+check_gcc: build_gcc
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=check_gcc \
@@ -179,11 +209,12 @@ check_gcc: build_docker_image
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-check_clang: build_docker_image
-	docker run --rm --tty \
+check_clang: build_clang
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=check_clang \
@@ -193,10 +224,11 @@ check_clang: build_docker_image
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 unit_test_check_gcc: build_gcc
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='unit-test-check_gcc' \
@@ -206,10 +238,11 @@ unit_test_check_gcc: build_gcc
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 unit_test_check_clang: build_clang
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='unit-test-check_clang' \
@@ -229,6 +262,7 @@ install_gcc: build_gcc
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=install_gcc \
@@ -242,6 +276,7 @@ install_clang: build_clang
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=install_clang \
@@ -254,7 +289,7 @@ install_clang: build_clang
 
 shell: build_docker_image
 	# "make shell" runs an interactive shell in the docker image, for debugging
-	docker run --rm --tty --interactive \
+	${DOCKER_CMD} run --rm --tty --interactive \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \

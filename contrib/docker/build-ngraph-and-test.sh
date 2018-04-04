@@ -24,7 +24,9 @@ echo 'Contents of /home/dockuser:'
 ls -la /home/dockuser
 echo ' '
 
-export CMAKE_OPTIONS_EXTRA=""
+if [ -z ${CMAKE_OPTIONS_EXTRA} ]; then
+    export CMAKE_OPTIONS_EXTRA=''
+fi
 
 # setting for make -j
 if [ -z ${PARALLEL} ] ; then
@@ -41,17 +43,7 @@ if [ -z ${BUILD_SUBDIR} ] ; then
     BUILD_SUBDIR=BUILD
 fi
 
-# Option to build with GPU backend
-# default builds with CPU only
-if [ -z ${NGRAPH_GPU_ENABLE} ] ; then
-    NGRAPH_GPU_ENABLE=false
-fi
-
 # Set up the environment
-if $NGRAPH_GPU_ENABLE; then
-    export CMAKE_OPTIONS_EXTRA="-DNGRAPH_GPU_ENABLE=TRUE"
-fi
-
 export NGRAPH_REPO=/home/dockuser/ngraph-test
 
 if [ -z ${OUTPUT_DIR} ]; then
