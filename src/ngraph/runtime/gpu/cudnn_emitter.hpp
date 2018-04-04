@@ -48,7 +48,6 @@ namespace ngraph
             public:
                 CUDNNEmitter() {}
                 ~CUDNNEmitter() {}
-
                 size_t build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
                                             const GPURuntimeContext* ctx,
                                             const Shape& input_shape,

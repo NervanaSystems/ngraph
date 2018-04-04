@@ -15,8 +15,8 @@
 *******************************************************************************/
 #include <algorithm>
 
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 
 using namespace ngraph;
 
@@ -137,12 +137,11 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
 }
 
 void runtime::gpu::CudaKernelBuilder::get_1d_max_pool(codegen::CodeWriter& writer,
-                                                             const std::string& name,
-                                                             const std::array<std::string, 2>& data_types)
+                                                      const std::string& name,
+                                                      const std::array<std::string, 2>& data_types)
 {
     // assumes data is in NCW format
-    writer << "extern \"C\" __global__ void cuda_" << name << "("
-           << data_types[0] << "* in, "
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out, "
            << "int width, "
            << "int stride, "
@@ -157,7 +156,8 @@ void runtime::gpu::CudaKernelBuilder::get_1d_max_pool(codegen::CodeWriter& write
         writer.block_begin();
         {
             // index into input tensor
-            writer << "size_t start = (tid / output_size) * input_size + (tid % output_size) * stride;\n";
+            writer << "size_t start = (tid / output_size) * input_size + (tid % output_size) * "
+                      "stride;\n";
             writer << data_types[0] << " max_val = 0;\n";
             writer << "for (size_t i = start; i < start+width; i++)\n";
             writer.block_begin();
@@ -174,12 +174,9 @@ void runtime::gpu::CudaKernelBuilder::get_1d_max_pool(codegen::CodeWriter& write
             writer << "out[tid] = max_val;\n";
         }
         writer.block_end();
-
-
     }
     writer.block_end();
 }
-
 
 void runtime::gpu::CudaKernelBuilder::get_device_helper(
     codegen::CodeWriter& writer,

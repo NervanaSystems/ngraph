@@ -818,39 +818,35 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         // pre-compile cuda kernel
                         runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
                                                        max_pool->description(),
-                                                       {args[0].get_type(),out[0].get_type()},
+                                                       {args[0].get_type(), out[0].get_type()},
                                                        0);
                         // emit invocation of kernel
                         writer << "runtime::gpu::emit_1d_max_pool("
                                << "ctx, "
                                << "\"" << max_pool->description() << "\", "
-                               << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type() <<  "\"}, "
-                               << out[0].get_size() << ", "
-                               << args[0].get_name() << ", "
-                               << out[0].get_name() << ", "
-                               << max_pool->get_window_shape()[0] << ", "
-                               << max_pool->get_window_movement_strides()[0] << ", "
-                               << input_shape[2] << ", "
-                               << result_shape[2] << ");\n";
+                               << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                               << "\"}, " << out[0].get_size() << ", " << args[0].get_name() << ", "
+                               << out[0].get_name() << ", " << max_pool->get_window_shape()[0]
+                               << ", " << max_pool->get_window_movement_strides()[0] << ", "
+                               << input_shape[2] << ", " << result_shape[2] << ");\n";
                     }
                     // 2d max pool without padding (NCHW)
                     else if (input_shape.size() >= 4)
                     {
-                        auto max_pool_index =
-                            cudnn_emitter->build_pooling_forward(CUDNN_POOLING_MAX, // non-deterministic
-                                                                 external_function->ctx().get(),
-                                                                 input_shape,
-                                                                 result_shape,
-                                                                 max_pool->get_window_movement_strides(),
-                                                                 max_pool->get_window_shape(),
-                                                                 max_pool->get_padding_below(),
-                                                                 max_pool->get_padding_above());
+                        auto max_pool_index = cudnn_emitter->build_pooling_forward(
+                            CUDNN_POOLING_MAX, // non-deterministic
+                            external_function->ctx().get(),
+                            input_shape,
+                            result_shape,
+                            max_pool->get_window_movement_strides(),
+                            max_pool->get_window_shape(),
+                            max_pool->get_padding_below(),
+                            max_pool->get_padding_above());
 
                         writer << "ctx->cudnn_emitter->invoke(" << max_pool_index << ", ";
                         writer << "{" << args[0].get_name() << "}, ";
                         writer << "{" << out[0].get_name() << "}";
                         writer << ");\n";
-
                     }
                 }
                 writer.block_end();
@@ -865,20 +861,19 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto fp_input_shape = out[0].get_shape();
                     auto fp_output_shape = args[1].get_shape();
 
-
                     auto& cudnn_emitter = external_function->get_cudnn_emitter();
 
                     if (fp_input_shape.size() >= 4)
                     {
-                        auto max_pool_bp_index =
-                            cudnn_emitter->build_pooling_backward(CUDNN_POOLING_MAX,
-                                                                  external_function->ctx().get(),
-                                                                  fp_input_shape,
-                                                                  fp_output_shape,
-                                                                  mpb->get_window_movement_strides(),
-                                                                  mpb->get_window_shape(),
-                                                                  mpb->get_padding_below(),
-                                                                  mpb->get_padding_above());
+                        auto max_pool_bp_index = cudnn_emitter->build_pooling_backward(
+                            CUDNN_POOLING_MAX,
+                            external_function->ctx().get(),
+                            fp_input_shape,
+                            fp_output_shape,
+                            mpb->get_window_movement_strides(),
+                            mpb->get_window_shape(),
+                            mpb->get_padding_below(),
+                            mpb->get_padding_above());
 
                         writer << "ctx->cudnn_emitter->invoke(" << max_pool_bp_index << ", ";
                         writer << "{" << args[0].get_name() << ", " << args[1].get_name() << "}, ";

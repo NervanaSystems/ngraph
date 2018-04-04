@@ -130,7 +130,8 @@ namespace ngraph
                     compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
                 }
 
-                if (sizeof...(args)) {
+                if (sizeof...(args))
+                {
                     std::vector<void*> args_list = {&args..., &count};
                     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                                   static_cast<unsigned int>(count),
