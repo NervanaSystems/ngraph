@@ -47,6 +47,8 @@ VOLUME = -v "${DIR}:${DOCKUSER_HOME}/ngraph-test"
 GIT_COMMIT = $(shell git rev-parse HEAD)
 DBUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
+# Look for evidence GPU is supported
+NVIDIA_SMI = $(shell which nvidia-smi)
 
 # Enable additional options to be added on the command line
 ifndef CMAKE_OPTIONS_EXTRA
@@ -57,11 +59,13 @@ ifndef THIRD_PARTY_CACHE_DIR
     THIRD_PARTY_CACHE_DIR=
 endif
 
-# Build GPU backend by default
-# To suppress GPU backend builds, set NGRAPH_GPU_ENABLE to any value but
-# 'TRUE' or 'true' in the environment or on the command line (see below)
-ifndef NGRAPH_GPU_ENABLE
+# Build GPU backend if NVIDIA_SMI command is found
+ifneq ("$(shell echo ${NVIDIA_SMI} | grep nvidia-smi)","")
     NGRAPH_GPU_ENABLE=TRUE
+    DOCKER_CMD_MESG=GPU appears to be supported on this platform.  Building for GPU and CPU backend support.
+else
+    NGRAPH_GPU_ENABLE=FALSE
+    DOCKER_CMD_MESG=GPU does not appear to be supported on this platform.  Building for CPU backend support only.
 endif
 
 # OS set to 'ubuntu1604' by default
@@ -79,13 +83,8 @@ else
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
 endif
 
-# Build GPU backend if NGRAPH_GPU_ENABLE variable = 'TRUE' or 'true'
-ifeq ("$(shell echo ${NGRAPH_GPU_ENABLE} | grep TRUE)","TRUE")
-    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
-    GPU_DOCKERFILE=${CPU_DOCKERFILE}_gpu
-endif
-
-ifeq ("$(shell echo ${NGRAPH_GPU_ENABLE} | grep true)","true")
+# Build GPU backend if NVIDIA_SMI command is found
+ifneq ("$(shell echo ${NVIDIA_SMI} | grep nvidia-smi)","")
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
     GPU_DOCKERFILE=${CPU_DOCKERFILE}_gpu
 endif
@@ -94,9 +93,11 @@ endif
 ifndef GPU_DOCKERFILE
     DOCKERFILE=${CPU_DOCKERFILE}
     DOCKER_CMD=docker
+    DOCKER_CMD_MESG=GPU does not appear to be supported on this platform.  Building for CPU backend support only.
 else
     DOCKERFILE=${GPU_DOCKERFILE}
     DOCKER_CMD=nvidia-docker
+    DOCKER_CMD_MESG=GPU appears to be supported on this platform.  Building for GPU and CPU backend support.
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -165,6 +166,9 @@ sphinx_doc: build_docker_image
 build_all: build_gcc build_clang
 
 build_gcc: build_docker_image
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
@@ -179,6 +183,9 @@ build_gcc: build_docker_image
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 build_clang: build_docker_image
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
@@ -289,6 +296,7 @@ install_clang: build_clang
 
 shell: build_docker_image
 	# "make shell" runs an interactive shell in the docker image, for debugging
+	@echo "${DOCKER_CMD_MESG}"
 	${DOCKER_CMD} run --rm --tty --interactive \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
