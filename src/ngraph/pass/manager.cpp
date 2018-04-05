@@ -35,7 +35,7 @@ ngraph::pass::Manager::Manager()
     static const auto nevt = std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING");
     if (nevt)
     {
-        visualize = true;
+        m_visualize = true;
     }
 }
 
@@ -97,11 +97,15 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
             }
         }
 
-        if (visualize)
+        if (m_visualize)
         {
             //visualizations will be named after the outermost function
-            auto fname = fs.at(0)->get_name() + std::string("_") + m_pass_names.at(index) +
-                         std::string(".") + pass::VisualizeTree::get_file_ext();
+            const size_t num_digits_in_pass_index = 3;
+            std::string index_str = std::to_string(index);
+            index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
+            auto fname = fs.at(0)->get_name() + std::string("_") + index_str + std::string("_") +
+                         m_pass_names.at(index) + std::string(".") +
+                         pass::VisualizeTree::get_file_ext();
             pass::VisualizeTree vt(fname);
             vt.run_on_module(fs);
         }
