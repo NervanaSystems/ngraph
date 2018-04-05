@@ -78,15 +78,9 @@ bool runtime::interpreter::INT_Backend::call(const Function& fun,
         throw runtime_error("Error constructing backend.");
     }
 
-    try
-    {
-        FunctionInstance& instance = it->second;
-        instance.m_call_frame->call(outputs, inputs);
-    }
-    catch (...)
-    {
-        rc = false;
-    }
+    FunctionInstance& instance = it->second;
+    instance.m_call_frame->call(outputs, inputs);
+
     return rc;
 }
 

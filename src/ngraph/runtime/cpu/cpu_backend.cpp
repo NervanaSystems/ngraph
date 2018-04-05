@@ -21,6 +21,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/external_function.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -47,14 +48,15 @@ std::shared_ptr<ngraph::runtime::TensorView>
 
 bool runtime::cpu::CPU_Backend::compile(const ngraph::Function& func)
 {
-    m_function = clone_function(func);
-    if (m_external_function)
+    if (!contains_key(m_function_map, &func))
     {
-        throw runtime_error("Backend can only compile a single function");
+        FunctionInstance instance;
+        instance.m_function = clone_function(func);
+        instance.m_external_function = make_shared<CPU_ExternalFunction>(instance.m_function);
+        auto cf = instance.m_external_function->make_call_frame();
+        instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+        m_function_map.insert({&func, instance});
     }
-    m_external_function = make_shared<cpu::CPU_ExternalFunction>(m_function);
-    auto cf = m_external_function->make_call_frame();
-    m_call_frame = dynamic_pointer_cast<cpu::CPU_CallFrame>(cf);
     return true;
 }
 
@@ -63,15 +65,21 @@ bool runtime::cpu::CPU_Backend::call(const Function& fun,
                                      const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
-    try
+    auto it = m_function_map.find(&fun);
+    if (it == m_function_map.end())
     {
         compile(fun);
-        call(outputs, inputs);
+        it = m_function_map.find(&fun);
     }
-    catch (...)
+
+    if (it == m_function_map.end())
     {
-        rc = false;
+        throw runtime_error("Error constructing backend.");
     }
+
+    FunctionInstance& instance = it->second;
+    instance.m_call_frame->call(outputs, inputs);
+
     return rc;
 }
 
@@ -79,11 +87,11 @@ bool runtime::cpu::CPU_Backend::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
     const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
 {
-    bool rc = false;
-    if (m_call_frame)
+    if (m_function_map.size() != 1)
     {
-        m_call_frame->call(outputs, inputs);
-        rc = true;
+        throw runtime_error("This call method only works if a single function is compiled");
     }
-    return rc;
+    FunctionInstance& instance = m_function_map.begin()->second;
+    instance.m_call_frame->call(outputs, inputs);
+    return true;
 }

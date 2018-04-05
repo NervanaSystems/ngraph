@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 
 #include "ngraph/runtime/backend.hpp"
@@ -55,9 +56,15 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
             private:
-                std::shared_ptr<cpu::CPU_ExternalFunction> m_external_function;
-                std::shared_ptr<cpu::CPU_CallFrame> m_call_frame;
-                std::shared_ptr<Function> m_function;
+                class FunctionInstance
+                {
+                public:
+                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                    std::shared_ptr<CPU_CallFrame> m_call_frame;
+                    std::shared_ptr<Function> m_function;
+                };
+
+                std::map<const Function*, FunctionInstance> m_function_map;
             };
         }
     }
