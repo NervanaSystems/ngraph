@@ -29,11 +29,16 @@ namespace ngraph
     {
         namespace gpu
         {
+            namespace cudnn
+            {
+                typedef std::function<void(void**, void**)> primitive;
+            }
             extern "C" {
             struct GPURuntimeContext
             {
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
+                cudnn::primitive* const* cudnn_primitives;
                 CudaFunctionPool* compiled_kernel_pool;
             };
             }
