@@ -21,9 +21,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, N
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
-    Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, \
+    Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq,\
     Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
-    Parameter, Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
+    Pad, Parameter, Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -565,3 +565,33 @@ def softmax(node, axes):  # type: (Node, Iterable[int]) -> Node
     if type(axes) is not set:
         axes = set(axes)
     return Softmax(node, AxisSet(axes))
+
+
+@nameable_op
+def pad(data_batch,          # type: Node
+        value,               # type: Node
+        padding_below=None,  # type: TensorShape
+        padding_above=None,  # type: TensorShape
+        padding_in=None,     # type: TensorShape
+        name=None,           # type: str
+        ):
+    # type: (...) -> Node
+    """Return padding node.
+
+    :param data_batch: The input node providing data.
+    :param value: The node producing the scalar value to be inserted for padding.
+    :param padding_below: The padding-below widths.
+    :param padding_above: The padding-above widths.
+    :param padding_in: The interior-padding widths.
+    :param name: The optional new name for output node.
+    :return: Return node that represents a padding of input nodes data.
+    """
+    dim_count = len(data_batch.shape)
+    if padding_above is None:
+        padding_above = [0] * dim_count
+    if padding_below is None:
+        padding_below = [0] * dim_count
+    if padding_in is None:
+        padding_in = [0] * dim_count
+
+    return Pad(data_batch, value, Shape(padding_below), Shape(padding_above), Shape(padding_in))
