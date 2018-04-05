@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/coordinate_transform.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
@@ -38,25 +39,24 @@ namespace ngraph
                                     const GPU_TensorViewWrapper& src);
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
-                                    const std::string& name,
-                                    const CoordinateDiff& padding,
-                                    const Strides& window_movement_strides,
-                                    const Strides& window_dilation_strides,
-                                    const std::string& mode,
-                                    const std::string& data_type);
+                                                     const std::string& name,
+                                                     const CoordinateDiff& padding,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     const std::string& mode,
+                                                     const std::string& data_type);
 
                 void emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
-                                    const std::string& name,
-                                    const std::string& format,
-                                    const std::string& data_type,
-                                    const Shape& shape);
+                                                const std::string& name,
+                                                const std::string& format,
+                                                const std::string& data_type,
+                                                const Shape& shape);
 
                 void emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
-                                    const std::string& name,
-                                    const std::string& format,
-                                    const std::string& data_type,
-                                    const Shape& shape);
-
+                                                const std::string& name,
+                                                const std::string& format,
+                                                const std::string& data_type,
+                                                const Shape& shape);
 
                 void emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
                                                   const std::string& name,

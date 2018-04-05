@@ -199,23 +199,28 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                kernel::emit_cudnnTensorDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnFilterDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
-                
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnFilterDescriptor(
+                    writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer,
+                                                        conv_descriptor,
+                                                        padding,
+                                                        window_movement_strides,
+                                                        window_dilation_strides,
+                                                        mode,
+                                                        data_type);
+
                 writer << "void* workspace = "
-                              "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer("
+                       << workSapceSizeInBytes << ");\n";
                 writer << "cudnnConvolutionForward(cudnn_handle, "
-                       << "&alpha, "
-                       << args0 << ", " << args[0].get_name() << ", "
-                       << args1 << ", " << args[1].get_name() << ", "
-                       << conv_descriptor << ", "
-                       << conv_algo << ", "
-                       << "workspace, "
-                       << workSapceSizeInBytes << ", "
-                       << "&beta, "
-                       << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
+                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
+                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
@@ -236,11 +241,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0";
-                const size_t workSapceSizeInBytes = 2048;
+                const size_t workSapceSizeInBytes = 1024 * 1024;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
-                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
-                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
+                Strides window_dilation_strides =
+                    convolution->get_window_dilation_strides_forward();
+                Strides window_movement_strides =
+                    convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
 
@@ -249,24 +256,29 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                kernel::emit_cudnnFilterDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnTensorDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
+                kernel::emit_cudnnFilterDescriptor(
+                    writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer,
+                                                        conv_descriptor,
+                                                        padding,
+                                                        window_movement_strides,
+                                                        window_dilation_strides,
+                                                        mode,
+                                                        data_type);
 
                 writer << "void* workspace = "
-                              "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer("
+                       << workSapceSizeInBytes << ");\n";
 
                 writer << "cudnnConvolutionBackwardData(cudnn_handle, "
-                       << "&alpha, "
-                       << args0 << ", " << args[0].get_name() << ", "
-                       << args1 << ", " << args[1].get_name() << ", "
-                       << conv_descriptor << ", "
-                       << conv_algo << ", "
-                       << "workspace, "
-                       << workSapceSizeInBytes << ", "
-                       << "&beta, "
-                       << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
+                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
+                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
 
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
@@ -288,14 +300,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
-                const size_t workSapceSizeInBytes = 2048;
+                const size_t workSapceSizeInBytes = 1024 * 1024;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
-                Strides window_dilation_strides = convolution->get_window_dilation_strides_forward();
-                Strides window_movement_strides = convolution->get_window_movement_strides_forward();
+                Strides window_dilation_strides =
+                    convolution->get_window_dilation_strides_forward();
+                Strides window_movement_strides =
+                    convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
-
 
                 writer.block_begin("  //data_dilation_ " + node->get_name());
                 writer << "int count = " << out[0].get_size() << ";\n";
@@ -303,29 +316,30 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "float beta = 0.0;\n";
 
                 // construct input and output tensor descriptor
-                kernel::emit_cudnnTensorDescriptor(writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnTensorDescriptor(writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnFilterDescriptor(writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer, conv_descriptor, padding, window_movement_strides, window_dilation_strides, mode, data_type);
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, args0, tensor_format, data_type, args[0].get_shape());
+                kernel::emit_cudnnTensorDescriptor(
+                    writer, args1, tensor_format, data_type, args[1].get_shape());
+                kernel::emit_cudnnFilterDescriptor(
+                    writer, out0, tensor_format, data_type, out[0].get_shape());
+                kernel::emit_cudnnConvolutionDescriptor(writer,
+                                                        conv_descriptor,
+                                                        padding,
+                                                        window_movement_strides,
+                                                        window_dilation_strides,
+                                                        mode,
+                                                        data_type);
 
                 writer << "void* workspace = "
-                              "runtime::gpu::create_gpu_buffer(" << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer("
+                       << workSapceSizeInBytes << ");\n";
 
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << out[0].get_name() << ", " << out[0].get_size() << ", 4);\n";
                 writer << "cudnnConvolutionBackwardFilter(cudnn_handle, "
-                       << "&alpha, "
-                       << args0 << ", " << args[0].get_name() << ", "
-                       << args1 << ", " << args[1].get_name() << ", "
-                       << conv_descriptor << ", "
-                       << conv_algo << ", "
-                       << "workspace, "
-                       << workSapceSizeInBytes << ", "
-                       << "&beta, "
-                       << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
+                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
+                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << args[0].get_name() << ", " << args[0].get_size() << ", 4);\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << args[1].get_name() << ", " << args[1].get_size() << ", 4);\n";
-                writer << "runtime::gpu::print_gpu_f32_tensor(" << out[0].get_name() << ", " << out[0].get_size() << ", 4);\n";
                 writer.block_end();
             }
 

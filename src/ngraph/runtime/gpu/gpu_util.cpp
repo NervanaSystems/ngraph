@@ -40,7 +40,7 @@ void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t el
         std::cout << local[i] << ", ";
     }
     std::cout << "end" << std::endl;
-    delete[] local; 
+    delete[] local;
 }
 
 void runtime::gpu::check_cuda_errors(CUresult err)

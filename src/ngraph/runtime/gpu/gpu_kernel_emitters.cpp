@@ -45,51 +45,84 @@ void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
     return;
 }
 
-void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
-                                    const std::string& name,
-                                    const CoordinateDiff& padding,
-                                    const Strides& window_movement_strides,
-                                    const Strides& window_dilation_strides,
-                                    const std::string& mode,
-                                    const std::string& data_type);
+void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
+                                                           const std::string& name,
+                                                           const CoordinateDiff& padding,
+                                                           const Strides& window_movement_strides,
+                                                           const Strides& window_dilation_strides,
+                                                           const std::string& mode,
+                                                           const std::string& data_type)
 {
     writer << "cudnnConvolutionDescriptor_t " << name << ";\n";
     writer << "cudnnCreateConvolutionDescriptor(&" << name << ");\n";
 
-    if(padding.size() == 2)
+    if (padding.size() == 2)
     {
-        writer << "cudnnSetConvolution2dDescriptor("
-                << name << ", "
-                << padding[0] << ", "
-                << padding[1] << ", "
-                << window_movement_strides[0] << ", "
-                << window_movement_strides[1] << ", "
-                << window_dilation_strides[0] << ", "
-                << window_dilation_strides[1] << ", "
-                << mode <<", "
-                << data_type
-                << ");\n";
+        writer << "cudnnSetConvolution2dDescriptor(" << name << ", " << padding[0] << ", "
+               << padding[1] << ", " << window_movement_strides[0] << ", "
+               << window_movement_strides[1] << ", " << window_dilation_strides[0] << ", "
+               << window_dilation_strides[1] << ", " << mode << ", " << data_type << ");\n";
     }
     else
     {
-        writer << "cudnnSetConvolutionNdDescriptor("
-                << name << ", "
-                << padding.size() << ", "
-                << "{" << join(padding) << "}, "
-                << "{" << join(window_movement_strides) << "}, "
-                << "{" << join(window_dilation_strides) << "}, "
-                << mode <<", "
-                << data_type
-                << ");\n";
+        writer << "const int " << name << "_padding[] = {" << join(padding) << "};\n";
+        writer << "const int " << name << "_window_movement_strides[] = {"
+               << join(window_movement_strides) << "};\n";
+        writer << "const int " << name << "_window_dilation_strides[] = {"
+               << join(window_dilation_strides) << "};\n";
+
+        writer << "cudnnSetConvolutionNdDescriptor(" << name << ", " << padding.size() << ", "
+               << name << "_padding, " << name << "_window_movement_strides, " << name
+               << "_window_dilation_strides, " << mode << ", " << data_type << ");\n";
+    }
+}
+
+void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      const std::string& format,
+                                                      const std::string& data_type,
+                                                      const Shape& shape)
+{
+    std::vector<size_t> dimensions;
+    for (size_t i = shape.size(); i < 4; i++)
+    {
+        dimensions.push_back(1);
+    }
+    for (size_t i = 0; i < shape.size(); i++)
+    {
+        dimensions.push_back(shape[i]);
     }
 
+    writer << "cudnnFilterDescriptor_t " << name << ";\n";
+    writer << "cudnnCreateFilterDescriptor(&" << name << ");\n";
+
+    if (dimensions.size() <= 4)
+    {
+        writer << "cudnnSetFilter4dDescriptor(" << name << ",\n";
+        writer << "                 /*dataType=*/" << data_type << ",\n";
+        writer << "                 /*format=*/" << format;
+        writer << ",\n                 /*dimension_size*/" << dimensions[0];
+        writer << ",\n                 /*dimension_size*/" << dimensions[1];
+        writer << ",\n                 /*dimension_size*/" << dimensions[2];
+        writer << ",\n                 /*dimension_size*/" << dimensions[3];
+        writer << ");\n";
+    }
+    else
+    {
+        writer << "const int " << name << "_axes[] = {" << join(dimensions) << "};\n";
+        writer << "cudnnSetFilterNdDescriptor(" << name << ",\n";
+        writer << "                 /*dataType=*/" << data_type << ",\n";
+        writer << "                 /*format=*/" << format << ",\n";
+        writer << "                 /*num_dimensions=*/" << dimensions.size() << ",\n";
+        writer << "                 /*dimensions*/" << name << "_axes);\n";
+    }
 }
 
 void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        const std::string& format,
-                                                        const std::string& data_type,
-                                                        const Shape& shape)
+                                                      const std::string& name,
+                                                      const std::string& format,
+                                                      const std::string& data_type,
+                                                      const Shape& shape)
 {
     std::vector<size_t> dimensions;
     for (size_t i = shape.size(); i < 4; i++)
@@ -104,7 +137,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
     writer << "cudnnTensorDescriptor_t " << name << ";\n";
     writer << "cudnnCreateTensorDescriptor(&" << name << ");\n";
 
-    if(dimensions.size() < 4)
+    if (dimensions.size() <= 4)
     {
         writer << "cudnnSetTensor4dDescriptor(" << name << ",\n";
         writer << "                 /*format=*/" << format << ",\n";
@@ -136,48 +169,6 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
         writer << "                 /*strides*/" << name << "_strides);\n";
     }
 }
-
-void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        const std::string& format,
-                                                        const std::string& data_type,
-                                                        const Shape& shape)
-{
-    std::vector<size_t> dimensions;
-    for (size_t i = shape.size(); i < 4; i++)
-    {
-        dimensions.push_back(1);
-    }
-    for (size_t i = 0; i < shape.size(); i++)
-    {
-        dimensions.push_back(shape[i]);
-    }
-
-    writer << "cudnnFilterDescriptor_t " << name << ";\n";
-    writer << "cudnnCreateFilterDescriptor(&" << name << ");\n";
-
-    if(dimensions.size() < 4)
-    {
-        writer << "cudnnSetFilter4dDescriptor(" << name << ",\n";
-        writer << "                 /*dataType=*/" << data_type << ",\n";
-        writer << "                 /*format=*/" << format;
-        writer << ",\n                 /*dimension_size*/" << dimensions[0];
-        writer << ",\n                 /*dimension_size*/" << dimensions[1];
-        writer << ",\n                 /*dimension_size*/" << dimensions[2];
-        writer << ",\n                 /*dimension_size*/" << dimensions[3];
-        writer << ");\n";
-    }
-    else
-    {
-        writer << "const int " << name << "_axes[] = {" << join(dimensions) << "};\n";
-        writer << "cudnnSetFilterNdDescriptor(" << name << ",\n";
-        writer << "                 /*dataType=*/" << data_type << ",\n";
-        writer << "                 /*format=*/" << format << ",\n";
-        writer << "                 /*num_dimensions=*/" << dimensions.size() << ",\n";
-        writer << "                 /*dimensions*/" << name << "_axes);\n";
-    }
-}
-
 
 void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
                                                         const std::string& name,
