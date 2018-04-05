@@ -18,7 +18,6 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
@@ -103,7 +102,6 @@ void runtime::gpu::GPU_CallFrame::setup_runtime_context()
     // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 
-    m_external_function->m_ctx->compiled_kernel_pool = &m_compiled_cuda_kernels;
     const auto& cudnn_emitter = m_external_function->get_cudnn_emitter();
     m_external_function->m_ctx->cudnn_primitives = cudnn_emitter->get_cudnn_primitives().data();
 
