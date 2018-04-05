@@ -33,27 +33,14 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
-    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuBLAS create handle failed");
-    }
-    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuDnn create handle failed");
-    }
-
-    // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
-
-    link_runtime_context();
+    setup_runtime_context();
 }
 
 runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
 {
     cublasDestroy(m_cublas_handle);
     cudnnDestroy(m_cudnn_handle);
+    cleanup_runtime_context();
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -100,9 +87,31 @@ void runtime::gpu::GPU_CallFrame::call(
     tensor_call(outputs, inputs);
 }
 
-void runtime::gpu::GPU_CallFrame::link_runtime_context()
+void runtime::gpu::GPU_CallFrame::setup_runtime_context()
 {
-    m_external_function->m_ctx->cudnn_emitter = m_external_function->m_cudnn_emitter.get();
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuBLAS create handle failed");
+    }
+    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuDnn create handle failed");
+    }
+
+    // Pass scalars as reference on the Device
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+
+    m_external_function->m_ctx->compiled_kernel_pool = &m_compiled_cuda_kernels;
+    const auto& cudnn_emitter = m_external_function->get_cudnn_emitter();
+    m_external_function->m_ctx->cudnn_primitives = cudnn_emitter->get_cudnn_primitives().data();
+
+    // register with c-api runtime context
     m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
     m_external_function->m_ctx->cudnn_handle = &m_cudnn_handle;
+}
+
+void runtime::gpu::GPU_CallFrame::cleanup_runtime_context()
+{
 }

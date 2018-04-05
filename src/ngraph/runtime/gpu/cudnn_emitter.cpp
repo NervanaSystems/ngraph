@@ -24,18 +24,10 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-void CUDNNEmitter::invoke(size_t primitive_index,
-                          const std::vector<void*>& args,
-                          const std::vector<void*>& result)
-{
-    m_cudnn_primitives[primitive_index](args, result);
-}
-
-size_t CUDNNEmitter::register_primitive(
-    const std::function<void(std::vector<void*>, std::vector<void*>)>& f)
+size_t CUDNNEmitter::register_primitive(cudnn::primitive* f)
 {
     // try emplace
-    m_cudnn_primitives.push_back(f);
+    m_cudnn_primitives.emplace_back(std::move(f));
     return m_cudnn_primitives.size() - 1;
 }
 
@@ -131,37 +123,37 @@ size_t CUDNNEmitter::build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
         };
     }
     // emit sum reduce operation
-    auto reduce = [ctx, reduce_op, get_input_desc, get_output_desc](std::vector<void*> inputs,
-                                                                    std::vector<void*> outputs) {
-        auto input_desc = get_input_desc();
-        auto output_desc = get_output_desc();
-        cudnnReduceTensorDescriptor_t reduceTensorDesc;
-        cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
-        cudnnSetReduceTensorDescriptor(reduceTensorDesc,
-                                       reduce_op,
-                                       CUDNN_DATA_FLOAT,
-                                       CUDNN_NOT_PROPAGATE_NAN,
-                                       CUDNN_REDUCE_TENSOR_NO_INDICES,
-                                       CUDNN_32BIT_INDICES);
-        size_t workspace_size = 0;
-        cudnnGetReductionWorkspaceSize(
-            *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
-        auto workspace_ptr = create_gpu_buffer(workspace_size);
-        float alpha = 1.0, beta = 0.0;
-        cudnnReduceTensor(*ctx->cudnn_handle,
-                          reduceTensorDesc,
-                          nullptr,
-                          0,
-                          workspace_ptr,
-                          workspace_size,
-                          &alpha,
-                          input_desc,
-                          inputs[0],
-                          &beta,
-                          output_desc,
-                          outputs[0]);
-        free_gpu_buffer(workspace_ptr);
-    };
+    auto* reduce = new cudnn::primitive{
+        [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
+            auto input_desc = get_input_desc();
+            auto output_desc = get_output_desc();
+            cudnnReduceTensorDescriptor_t reduceTensorDesc;
+            cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
+            cudnnSetReduceTensorDescriptor(reduceTensorDesc,
+                                           reduce_op,
+                                           CUDNN_DATA_FLOAT,
+                                           CUDNN_NOT_PROPAGATE_NAN,
+                                           CUDNN_REDUCE_TENSOR_NO_INDICES,
+                                           CUDNN_32BIT_INDICES);
+            size_t workspace_size = 0;
+            cudnnGetReductionWorkspaceSize(
+                *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
+            auto workspace_ptr = create_gpu_buffer(workspace_size);
+            float alpha = 1.0, beta = 0.0;
+            cudnnReduceTensor(*ctx->cudnn_handle,
+                              reduceTensorDesc,
+                              nullptr,
+                              0,
+                              workspace_ptr,
+                              workspace_size,
+                              &alpha,
+                              input_desc,
+                              inputs[0],
+                              &beta,
+                              output_desc,
+                              outputs[0]);
+            free_gpu_buffer(workspace_ptr);
+        }};
 
     return this->register_primitive(reduce);
 }
@@ -210,32 +202,33 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
         return desc;
     };
 
-    auto fpool = [=](std::vector<void*> inputs, std::vector<void*> outputs) {
-        auto input_desc = get_tensor_desc(input_shape);
-        auto output_desc = get_tensor_desc(output_shape);
-        cudnnPoolingDescriptor_t desc;
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPooling2dDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    window_shape[0],
-                                    window_shape[1],
-                                    0,
-                                    0,
-                                    window_strides[0],
-                                    window_strides[1]);
+    auto* fpool = new cudnn::primitive{
+        [=](void** inputs, void** outputs) {
+            auto input_desc = get_tensor_desc(input_shape);
+            auto output_desc = get_tensor_desc(output_shape);
+            cudnnPoolingDescriptor_t desc;
+            cudnnCreatePoolingDescriptor(&desc);
+            cudnnSetPooling2dDescriptor(desc,
+                                        pool_op,
+                                        CUDNN_NOT_PROPAGATE_NAN,
+                                        window_shape[0],
+                                        window_shape[1],
+                                        0,
+                                        0,
+                                        window_strides[0],
+                                        window_strides[1]);
 
-        float alpha = 1.0, beta = 0.0;
-        cudnnPoolingForward(*ctx->cudnn_handle,
-                            desc,
-                            &alpha,
-                            input_desc,
-                            inputs[0],
-                            &beta,
-                            output_desc,
-                            outputs[0]);
+            float alpha = 1.0, beta = 0.0;
+            cudnnPoolingForward(*ctx->cudnn_handle,
+                                desc,
+                                &alpha,
+                                input_desc,
+                                inputs[0],
+                                &beta,
+                                output_desc,
+                                outputs[0]);
 
-    };
+        }};
 
     return this->register_primitive(fpool);
 }
@@ -271,42 +264,43 @@ size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
         return desc;
     };
 
-    auto bpool = [=](std::vector<void*> inputs, std::vector<void*> outputs) {
-        auto input_desc = get_tensor_desc(input_shape);
-        auto output_desc = get_tensor_desc(output_shape);
-        cudnnPoolingDescriptor_t desc;
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPooling2dDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    window_shape[0],
-                                    window_shape[1],
-                                    0,
-                                    0,
-                                    window_strides[0],
-                                    window_strides[1]);
+    auto* bpool = new cudnn::primitive{
+        [=](void** inputs, void** outputs) {
+            auto input_desc = get_tensor_desc(input_shape);
+            auto output_desc = get_tensor_desc(output_shape);
+            cudnnPoolingDescriptor_t desc;
+            cudnnCreatePoolingDescriptor(&desc);
+            cudnnSetPooling2dDescriptor(desc,
+                                        pool_op,
+                                        CUDNN_NOT_PROPAGATE_NAN,
+                                        window_shape[0],
+                                        window_shape[1],
+                                        0,
+                                        0,
+                                        window_strides[0],
+                                        window_strides[1]);
 
-        float alpha = 1.0, beta = 0.0;
-        // cuDNN requires the output tensor of the maxpool fprop to be passed even though
-        // it is not mathematically necessary. It appears, however, that it is not actually
-        // used as the adjoints are passed in place and the correct result is achieved.
-        CUDNN_SAFE_CALL(cudnnPoolingBackward(*ctx->cudnn_handle,
-                                             desc,
-                                             &alpha,
-                                             // output (wrt maxpool) tensor
-                                             output_desc,
-                                             inputs[1],
-                                             // adjoint of output
-                                             output_desc,
-                                             inputs[1],
-                                             // input (wrt maxpool) tensor
-                                             input_desc,
-                                             inputs[0],
-                                             &beta,
-                                             // adjoint of input
-                                             input_desc,
-                                             outputs[0]));
-    };
+            float alpha = 1.0, beta = 0.0;
+            // cuDNN requires the output tensor of the maxpool fprop to be passed even though
+            // it is not mathematically necessary. It appears, however, that it is not actually
+            // used as the adjoints are passed in place and the correct result is achieved.
+            CUDNN_SAFE_CALL(cudnnPoolingBackward(*ctx->cudnn_handle,
+                                                 desc,
+                                                 &alpha,
+                                                 // output (wrt maxpool) tensor
+                                                 output_desc,
+                                                 inputs[1],
+                                                 // adjoint of output
+                                                 output_desc,
+                                                 inputs[1],
+                                                 // input (wrt maxpool) tensor
+                                                 input_desc,
+                                                 inputs[0],
+                                                 &beta,
+                                                 // adjoint of input
+                                                 input_desc,
+                                                 outputs[0]));
+        }};
 
     return this->register_primitive(bpool);
 }

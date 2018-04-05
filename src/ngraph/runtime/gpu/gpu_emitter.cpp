@@ -790,9 +790,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes());
 
-                            writer << "ctx->cudnn_emitter->invoke(" << sum_index << ", ";
-                            writer << "{" << args[0].get_name() << "}, ";
-                            writer << "{" << out[0].get_name() << "}";
+                            writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, " << sum_index
+                                   << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                             writer << ");\n";
                         }
                     }

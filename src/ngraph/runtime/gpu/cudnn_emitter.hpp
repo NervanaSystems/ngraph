@@ -25,6 +25,7 @@
 #include <cudnn_v7.h>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -33,8 +34,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPURuntimeContext;
-
             namespace cudnn_util
             {
                 std::vector<int> compute_strides(const std::vector<int>& dim);
@@ -42,7 +41,6 @@ namespace ngraph
                 //                                                     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW,
                 //                                                     cudnnDataType_t type = CUDNN_DATA_TYPE);
             }
-
             class CUDNNEmitter
             {
             public:
@@ -71,15 +69,14 @@ namespace ngraph
                                               const ngraph::Shape& padding_below,
                                               const ngraph::Shape& padding_above);
 
-                void invoke(size_t primitive_index,
-                            const std::vector<void*>& args,
-                            const std::vector<void*>& result);
+                std::vector<cudnn::primitive*>& get_cudnn_primitives()
+                {
+                    return m_cudnn_primitives;
+                }
 
             private:
-                size_t register_primitive(
-                    const std::function<void(std::vector<void*>, std::vector<void*>)>& f);
-                std::vector<std::function<void(std::vector<void*>, std::vector<void*>)>>
-                    m_cudnn_primitives;
+                size_t register_primitive(cudnn::primitive* f);
+                std::vector<cudnn::primitive*> m_cudnn_primitives;
             };
         }
     }
