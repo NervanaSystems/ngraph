@@ -29,6 +29,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -43,7 +44,6 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
-#include "ngraph/op/concat.hpp"
 
 using namespace std;
 using namespace mkldnn;
@@ -1169,19 +1169,23 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
- 
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        auto concat = static_cast<const ngraph::op::Concat*>(node.get());
                         auto input0_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        size_t num_inputs = node->get_input_size();
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(input0_layout);
-                        prim_input_formats.push_back(input0_layout);
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            prim_input_formats.push_back(input0_layout);
+                        }
                         prim_output_formats.push_back(input0_layout);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1191,7 +1195,6 @@ namespace ngraph
                     {
                         set_default_layouts(external_function, node);
                     }
-
                 }
             }
         }

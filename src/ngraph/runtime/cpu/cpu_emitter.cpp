@@ -855,42 +855,52 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+                    std::vector<mkldnn::memory::format> inputs_format;
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
 
-                    auto input0_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto input1_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_format.push_back(
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, i));
+                    }
+
                     auto result_format =
                         runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input0_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
-                    auto input1_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_data_desc.push_back(
+                            mkldnn_emitter->build_memory_descriptor(args[i], inputs_format[i]));
+                    }
+
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], result_format);
-                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
-                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                            inputs_data_desc[i], runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    }
 
                     size_t concat_index = 0;
-                    int concat_dims = 0;
+                    size_t concat_dims =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
                     concat_index = mkldnn_emitter->build_concat(
-                        input0_data_desc, input1_data_desc, result_desc, concat_dims, inputs_pd);
+                        inputs_data_desc, result_desc, concat_dims, inputs_pd);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                    size_t i;
+                    for (i = 0; i < args.size(); i++)
+                    {
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                               << ", " << args[i].get_name() << ");\n";
+                    }
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
                            << ", " << out[0].get_name() << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(concat_index) << ");\n";
                 }
                 else
-                {  
+                {
                     auto axis =
                         (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 

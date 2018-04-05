@@ -679,30 +679,35 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
     return batchnorm_index;
 }
 
-size_t MKLDNNEmitter::build_concat(
-    const mkldnn::memory::desc& input0_data_desc,
-    const mkldnn::memory::desc& input1_data_desc,
-    const mkldnn::memory::desc& result_desc,
-    int concat_dims,
-    const std::vector<mkldnn::memory::primitive_desc>& inputs_pd)
+size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                                   const mkldnn::memory::desc& result_desc,
+                                   const size_t concat_dims,
+                                   const std::vector<mkldnn::memory::primitive_desc>& inputs_pd)
 
 {
     std::vector<mkldnn::memory::primitive::at> inputs_primitive;
+    std::vector<size_t> inputs_data_index;
+    std::vector<size_t> in_out_index;
 
-    size_t input0_data_index = build_memory_primitive(input0_data_desc);
-    size_t input1_data_index = build_memory_primitive(input1_data_desc);
+    for (size_t i = 0; i < inputs_data_desc.size(); i++)
+    {
+        inputs_data_index.push_back(build_memory_primitive(inputs_data_desc[i]));
+        inputs_primitive.push_back(*m_mkldnn_primitives[inputs_data_index[i]]);
+    }
     size_t result_index = build_memory_primitive(result_desc);
-
-    inputs_primitive.push_back(*m_mkldnn_primitives[input0_data_index]);
-    inputs_primitive.push_back(*m_mkldnn_primitives[input1_data_index]);
 
     // concat primtive descriptor
     mkldnn::concat::primitive_desc concat_pd =
-        mkldnn::concat::primitive_desc(result_desc, concat_dims, inputs_pd);
+        mkldnn::concat::primitive_desc(result_desc, (int)concat_dims, inputs_pd);
     // concat primitive
     size_t concat_index = insert_primitive(
         new mkldnn::concat(concat_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));
 
-    m_primitive_deps[concat_index] = {input0_data_index, input1_data_index, result_index};
+    for (size_t i = 0; i < inputs_data_index.size(); i++)
+    {
+        in_out_index.push_back(inputs_data_index[i]);
+    }
+    in_out_index.push_back(result_index);
+    m_primitive_deps[concat_index] = in_out_index;
     return concat_index;
 }

@@ -28,6 +28,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
@@ -37,7 +38,6 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
-#include "ngraph/op/concat.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -81,19 +81,19 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
                     auto concat = static_cast<op::Concat*>(node);
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
+                    size_t num_inputs = node->get_input_size();
+                    bool flag = true;
 
-                    auto src_size = 1;
-                    for (size_t i = 0; i < node->get_input_shape(0).size(); i++)
+                    for (size_t i = 0; i < num_inputs; i++)
                     {
-                        src_size *= arg0_shape[0];
+                        if (node->get_input_element_type(i) == element::f32 &&
+                            (node->get_input_shape(i)).size() == 4)
+                            continue;
+                        else
+                            flag = false;
                     }
-                    if (node->get_input_element_type(0) == element::f32 &&
-                        node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&
-                        arg1_rank == 4)
+
+                    if (flag)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();

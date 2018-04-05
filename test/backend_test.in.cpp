@@ -483,6 +483,35 @@ TEST(${BACKEND_NAME}, concat_vector)
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, concat_mkldnn)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape{1, 1, 1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1, 1, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
 // from numpy import *
 // a=linspace(1,2*3*4*3*2,2*3*4*3*2)
 // b=linspace(1000+1,1000+2*3*3*3*2,2*3*3*3*2)
