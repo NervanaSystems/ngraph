@@ -19,6 +19,7 @@
 #include <cmath>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 #include "ngraph/type/element_type.hpp"
 #include "test_tools.hpp"
@@ -42,6 +43,7 @@ namespace ngraph
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
+//                std::cout << a[i] << " , " << b[i] << std::endl;
                 if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
                 {
                     return false;
