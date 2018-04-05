@@ -851,25 +851,66 @@ namespace ngraph
                     }
                 }
 #else
-                auto axis =
-                    (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
-                std::vector<std::string> arg_names;
-                std::vector<Shape> arg_shapes;
-
-                for (auto arg : args)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    arg_names.push_back(arg.get_name());
-                    arg_shapes.push_back(arg.get_shape());
-                }
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
 
-                kernel::emit_concat(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    arg_names,
-                                    out[0].get_name(),
-                                    arg_shapes,
-                                    result_shape,
-                                    axis);
+                    auto input0_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto input1_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input0_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input0_format);
+                    auto input1_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], input1_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                    inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+
+                    size_t concat_index = 0;
+                    int concat_dims = 0;
+                    concat_index = mkldnn_emitter->build_concat(
+                        input0_data_desc, input1_data_desc, result_desc, concat_dims, inputs_pd);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(concat_index) << ");\n";
+                }
+                else
+                {  
+                    auto axis =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+
+                    std::vector<std::string> arg_names;
+                    std::vector<Shape> arg_shapes;
+
+                    for (auto arg : args)
+                    {
+                        arg_names.push_back(arg.get_name());
+                        arg_shapes.push_back(arg.get_shape());
+                    }
+
+                    kernel::emit_concat(writer,
+                                        args[0].get_element_type().c_type_string(),
+                                        arg_names,
+                                        out[0].get_name(),
+                                        arg_shapes,
+                                        result_shape,
+                                        axis);
+                }
 #endif
             }
 
