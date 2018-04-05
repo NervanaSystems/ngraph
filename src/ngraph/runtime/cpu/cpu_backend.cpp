@@ -14,8 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/log.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/external_function.hpp"
 

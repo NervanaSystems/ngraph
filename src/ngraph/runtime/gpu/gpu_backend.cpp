@@ -14,8 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
 using namespace ngraph;

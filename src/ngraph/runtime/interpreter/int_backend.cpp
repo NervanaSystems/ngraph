@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 using namespace ngraph;
 using namespace std;
