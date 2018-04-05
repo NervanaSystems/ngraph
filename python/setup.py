@@ -272,7 +272,7 @@ class BuildExt(build_ext):
                 ext.extra_link_args += ['-z', 'noexecstack']
                 ext.extra_link_args += ['-z', 'relro']
                 ext.extra_link_args += ['-z', 'now']
-            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+            ext.extra_compile_args += ['-Wformat', '-Wformat-security', '-Wno-comment']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
