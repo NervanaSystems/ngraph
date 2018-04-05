@@ -35,14 +35,14 @@ void runtime::gpu::emit_broadcast(const std::string& name,
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
     // Create an instance of nvrtcProgram with the code string.
-    auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(name_signature);
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_broadcast_op(writer, name_signature, data_types);
         std::string kernel = writer.get_code();
-        compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
+        compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
     }
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
@@ -72,14 +72,14 @@ void runtime::gpu::emit_onehot(const std::string& name,
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
     // Create an instance of nvrtcProgram with the code string.
-    auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(name_signature);
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_onehot_op(writer, name_signature, data_types);
         std::string kernel = writer.get_code();
-        compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
+        compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
     }
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
@@ -109,14 +109,14 @@ void runtime::gpu::emit_reshape(const std::string& name,
 {
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
-    auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(name_signature);
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reshape_op(writer, name_signature, data_types);
         std::string kernel = writer.get_code();
-        compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
+        compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
     }
 
     void* args_list[] = {&in, &out, &input_strides, &trans_strides, &rank, &count};

@@ -32,12 +32,9 @@ namespace ngraph
             extern "C" {
             struct GPURuntimeContext
             {
-                GPURuntimeContext();
-                ~GPURuntimeContext();
-
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
-                CudaFunctionPool* nvrtc_cache;
+                CudaFunctionPool* compiled_kernel_pool;
             };
             }
         }

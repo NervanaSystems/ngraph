@@ -62,7 +62,7 @@ namespace ngraph
             {
                 std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
                 std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
-                auto compiled_kernel = ctx->nvrtc_cache->get(name + type_signature);
+                auto compiled_kernel = ctx->compiled_kernel_pool->get(name + type_signature);
                 if (compiled_kernel == nullptr)
                 {
                     codegen::CodeWriter writer;
@@ -83,7 +83,7 @@ namespace ngraph
                         writer, name + type_signature, op_name, data_types, sizeof...(inputs));
 
                     std::string kernel = writer.get_code();
-                    compiled_kernel = ctx->nvrtc_cache->set(name + type_signature, kernel);
+                    compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
                 }
 
                 //convert runtime ptr to driver api ptr
