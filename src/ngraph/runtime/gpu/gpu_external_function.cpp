@@ -244,6 +244,10 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
     , m_ctx(new GPURuntimeContext)
 {
+    // Create context use driver API and make it current, the runtime call will pickup the context
+    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
+    // #interoperability-between-runtime-and-driver-apis
+    ngraph::runtime::gpu::CudaContextManager::instance();
     m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
