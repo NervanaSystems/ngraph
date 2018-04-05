@@ -844,9 +844,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             max_pool->get_padding_below(),
                             max_pool->get_padding_above());
 
-                        writer << "ctx->cudnn_emitter->invoke(" << max_pool_index << ", ";
-                        writer << "{" << args[0].get_name() << "}, ";
-                        writer << "{" << out[0].get_name() << "}";
+                        writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, " << max_pool_index
+                               << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
                 }
@@ -876,9 +877,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             mpb->get_padding_below(),
                             mpb->get_padding_above());
 
-                        writer << "ctx->cudnn_emitter->invoke(" << max_pool_bp_index << ", ";
-                        writer << "{" << args[0].get_name() << ", " << args[1].get_name() << "}, ";
-                        writer << "{" << out[0].get_name() << "}";
+                        writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, "
+                               << max_pool_bp_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[1].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
                 }

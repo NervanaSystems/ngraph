@@ -88,6 +88,7 @@ void runtime::gpu::GPU_CallFrame::call(
 
 void runtime::gpu::GPU_CallFrame::setup_runtime_context()
 {
+
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
