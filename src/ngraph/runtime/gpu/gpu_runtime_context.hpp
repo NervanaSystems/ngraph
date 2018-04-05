@@ -33,7 +33,6 @@ namespace ngraph
             {
                 typedef std::function<void(void**, void**)> primitive;
             }
-
             extern "C" {
             struct GPURuntimeContext
             {

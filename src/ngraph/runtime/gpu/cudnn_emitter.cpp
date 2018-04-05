@@ -22,7 +22,7 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-size_t CUDNNEmitter::register_primitive(std::function<void(void**, void**)>* f)
+size_t CUDNNEmitter::register_primitive(cudnn::primitive* f)
 {
     // try emplace
     m_cudnn_primitives.emplace_back(std::move(f));
@@ -121,7 +121,7 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
         };
     }
     // emit sum reduce operation
-    auto* reduce = new std::function<void(void**, void**)>{
+    auto* reduce = new cudnn::primitive{
         [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
             auto input_desc = get_input_desc();
             auto output_desc = get_output_desc();

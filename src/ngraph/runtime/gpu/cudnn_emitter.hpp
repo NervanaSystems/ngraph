@@ -25,6 +25,7 @@
 #include <cudnn_v7.h>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -33,13 +34,10 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPURuntimeContext;
-
             namespace cudnn_util
             {
                 std::vector<int> compute_strides(const std::vector<int>& dim);
             }
-
             class CUDNNEmitter
             {
             public:
@@ -50,14 +48,14 @@ namespace ngraph
                                             const AxisSet& reduction_axes,
                                             const cudnnReduceTensorOp_t& reduce_op);
 
-                std::vector<std::function<void(void**, void**)>*>& get_cudnn_primitives()
+                std::vector<cudnn::primitive*>& get_cudnn_primitives()
                 {
                     return m_cudnn_primitives;
                 }
 
             private:
-                size_t register_primitive(std::function<void(void**, void**)>* f);
-                std::vector<std::function<void(void**, void**)>*> m_cudnn_primitives;
+                size_t register_primitive(cudnn::primitive* f);
+                std::vector<cudnn::primitive*> m_cudnn_primitives;
             };
         }
     }
