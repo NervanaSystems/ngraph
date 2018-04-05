@@ -16,10 +16,12 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -42,7 +44,7 @@ namespace ngraph
             ///
             /// @param y The dependent value
             /// @param c An expression for where to evaluate the derivatives
-            Adjoints(const std::shared_ptr<Node>& y, const std::shared_ptr<Node>& c);
+            Adjoints(const NodeVector& y, const NodeVector& c);
 
             Adjoints(const Adjoints& adjoints) = default;
             Adjoints& operator=(const Adjoints& adjoints) = default;
@@ -51,13 +53,15 @@ namespace ngraph
             /// @brief (dy/dx)(c)
             ///
             /// @param x The node whose adjoint is desired.
-            std::shared_ptr<Node> get(const std::shared_ptr<Node>& x);
+            const NodeVector& get(const std::shared_ptr<Node>& x);
 
             /// @brief Add a backprop contribution to x's adjoint
             ///
             /// @param x The adjoint node
             /// @param delta A backprop contribution
-            void add_delta(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& delta);
+            void add_delta(const std::shared_ptr<Node>& x,
+                           const std::shared_ptr<Node>& delta,
+                           size_t output_index = 0);
 
             /// @brief Add a backprop contribution to a slice of x's adjoint
             ///
@@ -72,8 +76,10 @@ namespace ngraph
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
 
+            std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x);
+
         protected:
-            std::unordered_map<Node*, std::shared_ptr<Node>> m_adjoint_map;
+            std::map<Node*, NodeVector> m_adjoint_map;
         };
     }
 }

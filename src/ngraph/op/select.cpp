@@ -60,8 +60,10 @@ shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) cons
     return make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
-void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto p = get_inputs().at(0).get_output().get_node();
     auto x = get_inputs().at(1).get_output().get_node();
     auto y = get_inputs().at(2).get_output().get_node();

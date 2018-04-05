@@ -85,7 +85,7 @@ namespace ngraph
             const Shape& get_padding_above() const { return m_padding_above; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
             Shape m_window_shape;
             Strides m_window_movement_strides;
