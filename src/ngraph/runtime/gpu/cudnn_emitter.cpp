@@ -17,16 +17,15 @@
 #include <vector>
 
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-size_t CUDNNEmitter::register_primitive(cudnn::primitive* f)
+CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
+    : m_primitive_emitter(emitter)
 {
-    // try emplace
-    m_cudnn_primitives.emplace_back(std::move(f));
-    return m_cudnn_primitives.size() - 1;
 }
 
 size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
@@ -121,7 +120,7 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
         };
     }
     // emit sum reduce operation
-    auto* reduce = new cudnn::primitive{
+    auto* reduce = new gpu::primitive{
         [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
             auto input_desc = get_input_desc();
             auto output_desc = get_output_desc();
@@ -153,7 +152,7 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
             free_gpu_buffer(workspace_ptr);
         }};
 
-    return this->register_primitive(reduce);
+    return this->m_primitive_emitter->insert(reduce);
 }
 
 std::vector<int> cudnn_util::compute_strides(const std::vector<int>& dim)

@@ -15,18 +15,11 @@
 *******************************************************************************/
 
 #pragma once
-
 #include <functional>
-#include <vector>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn_v7.h>
-
-#include "ngraph/axis_set.hpp"
+#include "ngraph/runtime/gpu/cuda_emitter.hpp"
+#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -34,26 +27,23 @@ namespace ngraph
     {
         namespace gpu
         {
-            namespace cudnn_util
-            {
-                std::vector<int> compute_strides(const std::vector<int>& dim);
-            }
-            class GPUPrimitiveEmitter;
+            class CUDAEmitter;
+            class CUDNNEmitter;
 
-            class CUDNNEmitter
+            class GPUPrimitiveEmitter
             {
-                friend class GPUPrimitiveEmitter;
-
             public:
-                size_t build_reduce_forward(GPURuntimeContext* ctx,
-                                            const Shape& input_shape,
-                                            const AxisSet& reduction_axes,
-                                            const cudnnReduceTensorOp_t& reduce_op);
+                GPUPrimitiveEmitter();
+                ~GPUPrimitiveEmitter() {}
+                std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
+                std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
+                std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
+                size_t insert(gpu::primitive* f);
 
             private:
-                CUDNNEmitter(GPUPrimitiveEmitter* emitter);
-
-                GPUPrimitiveEmitter* m_primitive_emitter;
+                std::unique_ptr<CUDAEmitter> m_cuda_emitter;
+                std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
+                std::vector<gpu::primitive*> m_gpu_primitives;
             };
         }
     }

@@ -91,10 +91,10 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
 
@@ -783,15 +783,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         // descriptors for tensors  with <= 4 dimensions
                         else
                         {
-                            auto& cudnn_emitter = external_function->get_cudnn_emitter();
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto sum_index =
                                 cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes(),
                                                                     CUDNN_REDUCE_TENSOR_ADD);
 
-                            writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, " << sum_index
-                                   << ", ";
+                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                             writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                             writer << ");\n";
