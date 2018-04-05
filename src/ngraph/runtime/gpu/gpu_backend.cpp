@@ -15,8 +15,11 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -43,22 +46,54 @@ std::shared_ptr<ngraph::runtime::TensorView>
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
 
-bool runtime::gpu::GPU_Backend::compile(const ngraph::Function& fun)
+bool runtime::gpu::GPU_Backend::compile(const ngraph::Function& func)
 {
-    throw runtime_error("unimplemented method");
+    if (!contains_key(m_function_map, &func))
+    {
+        FunctionInstance instance;
+        instance.m_function = clone_function(func);
+        instance.m_external_function =
+            make_shared<GPU_ExternalFunction>(instance.m_function);
+        auto cf = instance.m_external_function->make_call_frame();
+        instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
+        m_function_map.insert({&func, instance});
+    }
+    return true;
+}
+
+bool runtime::gpu::GPU_Backend::call(
+    const ngraph::Function& func,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+{
+    bool rc = true;
+    auto it = m_function_map.find(&func);
+    if (it == m_function_map.end())
+    {
+        compile(func);
+        it = m_function_map.find(&func);
+    }
+
+    if (it == m_function_map.end())
+    {
+        throw runtime_error("Error constructing backend.");
+    }
+
+    FunctionInstance& instance = it->second;
+    instance.m_call_frame->call(outputs, inputs);
+
+    return rc;
 }
 
 bool runtime::gpu::GPU_Backend::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
     const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
 {
-    throw runtime_error("unimplemented method");
-}
-
-bool runtime::gpu::GPU_Backend::call(
-    const ngraph::Function& fun,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
-{
-    throw runtime_error("unimplemented method");
+    if (m_function_map.size() != 1)
+    {
+        throw runtime_error("This call method only works if a single function is compiled");
+    }
+    FunctionInstance& instance = m_function_map.begin()->second;
+    instance.m_call_frame->call(outputs, inputs);
+    return true;
 }
