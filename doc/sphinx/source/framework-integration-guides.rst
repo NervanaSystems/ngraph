@@ -209,8 +209,8 @@ Bridge TensorFlow/XLA to nGraph
 
    .. code-block:: console
 
-      $ python3 -m venv frameworks  
-      $ cd frameworks 
+      $ virtualenv --system-site-packages -p python3 _your_venv_dir_
+      $ cd _your_venv_dir_
       $ . bin/activate
       $ git clone git@github.com:NervanaSystems/ngraph-tensorflow.git
       $ cd ngraph-tensorflow
