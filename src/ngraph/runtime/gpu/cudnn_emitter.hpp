@@ -50,15 +50,14 @@ namespace ngraph
                                             const AxisSet& reduction_axes,
                                             const cudnnReduceTensorOp_t& reduce_op);
 
-                void invoke(size_t primitive_index,
-                            const std::vector<void*>& args,
-                            const std::vector<void*>& result);
+                std::vector<std::function<void(void**, void**)>*>& get_cudnn_primitives()
+                {
+                    return m_cudnn_primitives;
+                }
 
             private:
-                size_t register_primitive(
-                    const std::function<void(std::vector<void*>, std::vector<void*>)>& f);
-                std::vector<std::function<void(std::vector<void*>, std::vector<void*>)>>
-                    m_cudnn_primitives;
+                size_t register_primitive(std::function<void(void**, void**)>* f);
+                std::vector<std::function<void(void**, void**)>*> m_cudnn_primitives;
             };
         }
     }

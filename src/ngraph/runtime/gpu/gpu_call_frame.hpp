@@ -63,13 +63,15 @@ namespace ngraph
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
                                  const std::vector<std::shared_ptr<TensorView>>& inputs) override;
 
-                void link_runtime_context();
+                void setup_runtime_context();
+                void cleanup_runtime_context();
 
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
                 cublasHandle_t m_cublas_handle;
                 cudnnHandle_t m_cudnn_handle;
+                CudaFunctionPool m_compiled_cuda_kernels;
             };
         }
     }

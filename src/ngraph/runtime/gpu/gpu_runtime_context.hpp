@@ -19,7 +19,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -30,16 +29,18 @@ namespace ngraph
     {
         namespace gpu
         {
+            namespace cudnn
+            {
+                typedef std::function<void(void**, void**)> primitive;
+            }
+
             extern "C" {
             struct GPURuntimeContext
             {
-                GPURuntimeContext();
-                ~GPURuntimeContext();
-
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
-                CUDNNEmitter* cudnn_emitter;
-                CudaFunctionPool* nvrtc_cache;
+                cudnn::primitive* const* cudnn_primitives;
+                CudaFunctionPool* compiled_kernel_pool;
             };
             }
         }

@@ -346,8 +346,8 @@ TEST(cpu_fusion, gemm_mlp)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
-    size_t mmb = count_ops_of_type<op::MatmulBias>(func);
-    ASSERT_EQ(mmb, 3);
+    auto mmbs = count_ops_of_type<op::MatmulBias>(func);
+    ASSERT_EQ(mmbs, 3);
 }
 
 TEST(cpu_fusion, fuse_fprop_bn)
@@ -1070,4 +1070,29 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
     {
         EXPECT_TRUE(test::all_close<float>(result_expected[i], result_fused[i]));
     }
+}
+
+TEST(cpu_fusion, rnn_fusion_from_json_model)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/rnn-10-step-fusion-test.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+
+    const size_t NUM_STEPS = 10;
+    auto mmb_predicate = [NUM_STEPS](std::shared_ptr<Node> node) {
+        auto users = node->get_users();
+        return users.size() == NUM_STEPS &&
+               std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
+                   return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
+               });
+    };
+
+    auto mmbs = get_ops_of_type<op::MatmulBias>(func);
+    ASSERT_TRUE(std::any_of(begin(mmbs), end(mmbs), mmb_predicate));
 }

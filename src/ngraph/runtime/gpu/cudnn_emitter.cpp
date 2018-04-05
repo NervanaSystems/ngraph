@@ -22,18 +22,10 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-void CUDNNEmitter::invoke(size_t primitive_index,
-                          const std::vector<void*>& args,
-                          const std::vector<void*>& result)
-{
-    m_cudnn_primitives[primitive_index](args, result);
-}
-
-size_t CUDNNEmitter::register_primitive(
-    const std::function<void(std::vector<void*>, std::vector<void*>)>& f)
+size_t CUDNNEmitter::register_primitive(std::function<void(void**, void**)>* f)
 {
     // try emplace
-    m_cudnn_primitives.push_back(f);
+    m_cudnn_primitives.emplace_back(std::move(f));
     return m_cudnn_primitives.size() - 1;
 }
 
@@ -129,37 +121,37 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
         };
     }
     // emit sum reduce operation
-    auto reduce = [ctx, reduce_op, get_input_desc, get_output_desc](std::vector<void*> inputs,
-                                                                    std::vector<void*> outputs) {
-        auto input_desc = get_input_desc();
-        auto output_desc = get_output_desc();
-        cudnnReduceTensorDescriptor_t reduceTensorDesc;
-        cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
-        cudnnSetReduceTensorDescriptor(reduceTensorDesc,
-                                       reduce_op,
-                                       CUDNN_DATA_FLOAT,
-                                       CUDNN_NOT_PROPAGATE_NAN,
-                                       CUDNN_REDUCE_TENSOR_NO_INDICES,
-                                       CUDNN_32BIT_INDICES);
-        size_t workspace_size = 0;
-        cudnnGetReductionWorkspaceSize(
-            *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
-        auto workspace_ptr = create_gpu_buffer(workspace_size);
-        float alpha = 1.0, beta = 0.0;
-        cudnnReduceTensor(*ctx->cudnn_handle,
-                          reduceTensorDesc,
-                          nullptr,
-                          0,
-                          workspace_ptr,
-                          workspace_size,
-                          &alpha,
-                          input_desc,
-                          inputs[0],
-                          &beta,
-                          output_desc,
-                          outputs[0]);
-        free_gpu_buffer(workspace_ptr);
-    };
+    auto* reduce = new std::function<void(void**, void**)>{
+        [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
+            auto input_desc = get_input_desc();
+            auto output_desc = get_output_desc();
+            cudnnReduceTensorDescriptor_t reduceTensorDesc;
+            cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
+            cudnnSetReduceTensorDescriptor(reduceTensorDesc,
+                                           reduce_op,
+                                           CUDNN_DATA_FLOAT,
+                                           CUDNN_NOT_PROPAGATE_NAN,
+                                           CUDNN_REDUCE_TENSOR_NO_INDICES,
+                                           CUDNN_32BIT_INDICES);
+            size_t workspace_size = 0;
+            cudnnGetReductionWorkspaceSize(
+                *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
+            auto workspace_ptr = create_gpu_buffer(workspace_size);
+            float alpha = 1.0, beta = 0.0;
+            cudnnReduceTensor(*ctx->cudnn_handle,
+                              reduceTensorDesc,
+                              nullptr,
+                              0,
+                              workspace_ptr,
+                              workspace_size,
+                              &alpha,
+                              input_desc,
+                              inputs[0],
+                              &beta,
+                              output_desc,
+                              outputs[0]);
+            free_gpu_buffer(workspace_ptr);
+        }};
 
     return this->register_primitive(reduce);
 }
