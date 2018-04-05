@@ -25,6 +25,9 @@ RUN apt-get update && apt-get install -y \
         wget patch diffutils zlib1g-dev libtinfo-dev \
         doxygen python-pip
 
+# create a symbolic link for gmake command
+RUN ln -s /usr/bin/make /usr/bin/gmake
+
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
 RUN pip install --upgrade pip
