@@ -5488,11 +5488,7 @@ void make_unary_empty_test(const string& backend_name)
     }
 
     auto f = make_shared<Function>(result_list, params);
-
-    auto manager = runtime::Manager::get(backend_name);
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create(backend_name);
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
@@ -5502,7 +5498,7 @@ void make_unary_empty_test(const string& backend_name)
         outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
     }
 
-    backend->call(outputs, inputs);
+    backend->call(*f, outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
@@ -5544,11 +5540,7 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
     }
 
     auto f = make_shared<Function>(result_list, A);
-
-    auto manager = runtime::Manager::get(backend_name);
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create(backend_name);
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
@@ -5565,7 +5557,7 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
         }
     }
 
-    backend->call(outputs, inputs);
+    backend->call(*f, outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
