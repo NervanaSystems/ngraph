@@ -79,8 +79,10 @@ shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
 }
 
-void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x_shape = get_inputs().at(0).get_shape();
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);

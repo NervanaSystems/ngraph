@@ -80,7 +80,7 @@ namespace ngraph
             const Shape& get_output_shape() const { return m_output_shape; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
             const AxisVector m_input_order;
             const Shape m_output_shape;

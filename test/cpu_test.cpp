@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -236,9 +237,14 @@ TEST(cpu_test, bn_bprop_n4c3h2w2)
                                    op::ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
-    auto dinput = bn->backprop_node(input, C);
-    auto dgamma = bn->backprop_node(gamma, C);
-    auto dbeta = bn->backprop_node(beta, C);
+
+    auto zero = ngraph::make_zero(bn_dgamma->get_element_type(), bn_dgamma->get_shape());
+    ngraph::autodiff::Adjoints adjoints(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
+                                        NodeVector{C, zero, zero});
+
+    auto dinput = adjoints.backprop_node(input);
+    auto dgamma = adjoints.backprop_node(gamma);
+    auto dbeta = adjoints.backprop_node(beta);
 
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});

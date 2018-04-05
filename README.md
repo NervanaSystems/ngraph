@@ -1,4 +1,4 @@
-# nGraph library
+# nGraph library [![Build Status][build-status-badge]][build-status]
 
 Welcome to Intel® nGraph™, an open source C++ library, compiler and
 runtime. This project enables modern compute platforms to run and
@@ -20,7 +20,7 @@ supports a variety of backends used by Deep Learning (DL) frameworks.
 
 ## Documentation
 
-See our [install] docs for how to get started. 
+See our [install] docs for how to get started.
 
 For this early release, we provide [framework integration guides] to
 compile MXNet and TensorFlow-based projects. If you already have a
@@ -42,6 +42,9 @@ to improve the library:
 * Ensure you can build the product and run all the examples with your patch.
 * In the case of a larger feature, create a test.
 * Submit a [pull request].
+* Make sure your PR passes all CI tests. Note: our [Travis-CI][build-status] service
+  runs only on a CPU backend on Linux. We will run additional tests
+  in other environments.
 * We will review your contribution and, if any additional fixes or
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
@@ -52,3 +55,5 @@ to improve the library:
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
+[build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
+[build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master

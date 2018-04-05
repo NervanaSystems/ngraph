@@ -41,7 +41,7 @@ namespace ngraph
             size_t get_concatenation_axis() const { return m_concatenation_axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
             const size_t m_concatenation_axis;
         };
     }
