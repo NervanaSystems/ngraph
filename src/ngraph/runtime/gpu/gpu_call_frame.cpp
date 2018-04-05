@@ -102,8 +102,6 @@ void runtime::gpu::GPU_CallFrame::setup_runtime_context()
     // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 
-    m_external_function->m_ctx->compiled_kernel_pool = &m_compiled_cuda_kernels;
-
     // register with c-api runtime context
     m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
     m_external_function->m_ctx->cudnn_handle = &m_cudnn_handle;

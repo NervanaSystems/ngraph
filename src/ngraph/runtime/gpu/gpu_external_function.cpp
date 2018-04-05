@@ -244,6 +244,12 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
     , m_ctx(new GPURuntimeContext)
 {
+    m_ctx->compiled_kernel_pool = new CudaFunctionPool;
+}
+
+runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
+{
+    delete m_ctx->compiled_kernel_pool;
 }
 
 void runtime::gpu::GPU_ExternalFunction::compile()
