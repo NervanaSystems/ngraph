@@ -50,6 +50,7 @@ from ngraph.ops import minimum
 from ngraph.ops import multiply
 from ngraph.ops import negative
 from ngraph.ops import not_equal
+from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import prod
 from ngraph.ops import reshape
