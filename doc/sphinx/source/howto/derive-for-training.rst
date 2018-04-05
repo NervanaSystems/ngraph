@@ -72,9 +72,12 @@ weights. Using those data points, we will construct the graph for inference and
 then use create a graph for training. The training function will return tensors 
 for the updated weights. 
 
-.. note:: This example illustrates what happens when bridge code for an nGraph
-   constructs a model for training.  It is not the same as *constructing* the 
-   training model directly, which would be significantly more work.
+.. note:: This example illustrates how to convert an inference model into one 
+   that can be trained. Depending on the framework, bridge code may do something 
+   similar, or the framework might do this operation itself. Here we do the 
+   conversion with nGraph because the computation for training a model is 
+   significantly larger than one for inference, and doing the conversion manually 
+   is tedious and error-prone.
 
 
 .. _code_structure:
