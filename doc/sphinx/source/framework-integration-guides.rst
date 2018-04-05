@@ -58,6 +58,7 @@ system that already has an ``ngraph_dist`` installed.
 
       (frameworks)$ cd /opt/libraries/ngraph/python
       (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      (frameworks)$ export PYBIND_HEADERS_PATH=/opt/libraries/ngraph/python/pybind11
       (frameworks)$ pip install -U . 
 
 #. Finally we're ready to install the `neon` integration: 
