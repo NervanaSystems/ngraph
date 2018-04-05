@@ -13,32 +13,87 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-###############
-nGraph library
-###############
+
+.. This documentation is available online at 
+.. http://ngraph.nervanasys.com/docs/latest/
 
 
-Welcome to nGraph™, an open-source C++ compiler library for running and 
-training :abbr:`Deep Neural Network (DNN)` models. This project is 
-framework-neutral and can target a variety of modern devices or platforms. 
+########
+nGraph™ 
+########
+
+Welcome to the documentation site for nGraph™, an open-source C++ library and 
+command-line suite for the :abbr:`Deep Learning (DL)` ecosystem. Our goal with 
+this project is to empower algorithm designers, data scientists, framework 
+architects, software engineers, and others with the means to make their work 
+:ref:`portable`, :ref:`adaptable`, and :ref:`deployable` across the most modern 
+:abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
+compute devices.
 
 .. figure:: graphics/ngraph-ecosystem.png
-   :width: 585px   
+   :width: 650px   
   
-nGraph currently supports :doc:`three popular <framework-integration-guides>` 
-frameworks for :abbr:`Deep Learning (DL)` models through what we call 
-a :term:`bridge` that can be integrated during the framework's build time. 
-For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`How to Guide <howto/index>` so you can learn how to create 
-custom bridge code that can be used to :doc:`compile and run <howto/execute>` 
-a training model.
 
-We've recently added initial support for the ONNX format. Developers who 
-already have a "trained" model can use nGraph to bypass a lot of the 
-framework-based complexity and :doc:`howto/import` to test or run it 
-on targeted and efficient backends with our user-friendly ``ngraph_api``. 
-With nGraph, data scientists can focus on data science rather than worrying 
-about how to adapt models to train and run efficiently on different devices.
+.. _portable:
+
+Portable
+========
+
+One of nGraph's key features is **framework neutrality**. While we currently 
+support :doc:`three popular <framework-integration-guides>` frameworks with 
+pre-optimized deployment runtimes for training :abbr:`Deep Neural Network (DNN)`, 
+models, you are not limited to these when choosing among frontends. Architects 
+of any framework (even those not listed above) can use our How-to 
+:doc:`compile and run <howto/execute>` a training model documentation to learn 
+how to design or tweak a framework to bridge directly to the nGraph compiler. 
+Note that when the framework is enabled for this direct optimization 
+:term:`bridge`, the framework itself provides the developer-facing API and 
+nGraph's optimizing compiler work happens automatically.    
+
+
+.. _adaptable: 
+
+Adaptable
+=========
+
+We've recently added initial support for the `ONNX`_ format. Developers who 
+already have a "trained" :abbr: `DNN (Deep Neural Network)` model can use 
+nGraph to bypass a lot of the framework-based complexity and :doc:`howto/import` 
+to test or run it on targeted and efficient backends with our user-friendly 
+Python-based API, ``ngraph_api``.  See the `ngraph onnx companion tool`_ to 
+get started with it. 
+
+
+.. csv-table::
+   :header: "Framework", "Bridge Code Available?", "ONNX Support?"
+   :widths: 27, 10, 10
+
+   TensorFlow, Yes, Yes
+   MXNet, Yes, Yes
+   neon, none needed, Yes
+   PyTorch, Not yet, Yes
+   CNTK, Not yet, Yes
+   Other, Not yet, Doable
+
+
+.. _deployable:
+
+Deployable
+==========
+
+It's no secret that the :abbr:`DL (Deep Learning)` ecosystem is evolving 
+rapidly. Benchmarking comparisons can be blown steeply out of proportion by 
+subtle tweaks to batch or latency numbers here and there. Where traditional 
+GPU-based training excels, inference can lag and vice versa. Sometimes it's not 
+so much about "speed at training a large dataset" as it is about latency in 
+getting a little bit of data back to the edge network, where it can be analyzed
+by an already-trained model. 
+
+Indeed, when choosing among "deployable" options, important to not lose sight of 
+the ultimate deployability and machine-runtime demands. Sometimes you don't need 
+a backhoe to plant a flower bulb. If, for example, you are developing a new 
+*genre* for ML/DL modeling, it may be especially beneficial to map out or  
+forecast the compute demands you need, and see where investment makes sense.  
 
 
 Supported platforms
@@ -91,3 +146,5 @@ Indices and tables
    * :ref:`genindex`
 
      
+.. _ONNX:  http://onnx.ai
+.. _ngraph onnx companion tool: https://github.com/NervanaSystems/ngraph-onnx
