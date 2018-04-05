@@ -59,6 +59,7 @@ namespace ngraph
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                ~GPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter() const

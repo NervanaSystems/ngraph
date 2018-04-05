@@ -71,7 +71,6 @@ namespace ngraph
                 EntryPoint m_compiled_function;
                 cublasHandle_t m_cublas_handle;
                 cudnnHandle_t m_cudnn_handle;
-                CudaFunctionPool m_compiled_cuda_kernels;
             };
         }
     }
