@@ -31,6 +31,10 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
+        if (*i >= target_shape.size())
+        {
+            throw ngraph_error("Broadcast axis exceeds target shape rank");
+        }
         target_shape.erase(target_shape.begin() + *i);
     }
     if (Shape{target_shape} != input.get_shape())
@@ -49,8 +53,10 @@ shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
 }
 
-void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x = get_input_op(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));

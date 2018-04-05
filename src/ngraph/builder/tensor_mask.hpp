@@ -16,17 +16,86 @@
 
 #pragma once
 
+#include <numeric>
+
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     namespace builder
     {
+        // batch_size = mask_shape on the batch_axis
+        // max_sequence_length = mask_shape on the sequence_axis
+        // sequence_lengths = list of lengths < max_sequence_length of shape batch_size
+        // a mask is created by...
+        // 1. creating a sequence starting at sequence_begin of shape max_sequence_length
+        // 2. broadcasting that sequence along all non-sequence axes to mask_shape
+        // 3. broadcasting sequence_lengths along all non-batch axes to mask_shape
+        // 4. returning the specified binary element-wise operation T #2 and #3
+        template <class T>
         std::shared_ptr<Node> tensor_mask(const std::shared_ptr<Node>& sequence_lengths,
                                           size_t sequence_axis,
                                           size_t batch_axis,
-                                          Shape mask_shape);
+                                          ngraph::Shape mask_shape,
+                                          uint32_t sequence_begin)
+        {
+            if (sequence_axis >= mask_shape.size())
+            {
+                throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
+            }
+
+            if (batch_axis >= mask_shape.size())
+            {
+                throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
+            }
+
+            // all axes except the sequence axis
+            ngraph::AxisSet non_sequence_axes;
+            // all axes except the batch axis
+            ngraph::AxisSet non_batch_axes;
+
+            for (size_t axis = 0; axis < mask_shape.size(); ++axis)
+            {
+                if (axis != sequence_axis)
+                {
+                    non_sequence_axes.insert(axis);
+                }
+                if (axis != batch_axis)
+                {
+                    non_batch_axes.insert(axis);
+                }
+            }
+
+            // broadcast sequence lengths to mask shape along all non-batch axes
+            auto broadcast_sequence_lengths = std::make_shared<ngraph::op::Broadcast>(
+                sequence_lengths, mask_shape, non_batch_axes);
+
+            // create sequence data [0, ..., max_sequence_length]
+            auto max_sequence_length = mask_shape[sequence_axis];
+            std::vector<uint32_t> sequence_data(max_sequence_length);
+            std::iota(sequence_data.begin(), sequence_data.end(), sequence_begin);
+
+            // create sequence constant
+            auto sequence = std::make_shared<ngraph::op::Constant>(
+                element::u32, Shape{max_sequence_length}, sequence_data);
+
+            // convert sequence to input type
+            auto convert_sequence = std::make_shared<ngraph::op::Convert>(
+                sequence, sequence_lengths->get_element_type());
+
+            // broadcast sequence to mask shape along all non-sequence axes
+            auto broadcast_sequence = std::make_shared<ngraph::op::Broadcast>(
+                convert_sequence, mask_shape, non_sequence_axes);
+
+            // mask = sequence_length < sequence
+            return std::make_shared<T>(broadcast_sequence, broadcast_sequence_lengths);
+        }
     }
 }

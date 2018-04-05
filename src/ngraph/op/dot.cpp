@@ -118,8 +118,10 @@ shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
-void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x = get_inputs().at(0).get_output().get_node();
     auto y = get_inputs().at(1).get_output().get_node();
 

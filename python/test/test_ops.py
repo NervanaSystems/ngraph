@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 # flake8: noqa
+from __future__ import absolute_import
+
 import pytest
 import numpy as np
 

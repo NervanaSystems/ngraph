@@ -578,7 +578,9 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
                                               const double eps,
-                                              bool bn_training_flag)
+                                              bool use_global_stats,
+                                              bool bn_training_flag,
+                                              const mkldnn::post_ops& pops)
 {
     size_t input_index = build_memory_primitive(input_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -586,13 +588,17 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     size_t mean_index = build_memory_primitive(mean_desc);
     size_t variance_index = build_memory_primitive(variance_desc);
 
-    if (bn_training_flag)
+    mkldnn::primitive_attr bn_attr;
+    bn_attr.set_post_ops(pops);
+
+    if (bn_training_flag && !use_global_stats)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
             {{mkldnn::prop_kind::forward_training,
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift},
+             bn_attr,
              mkldnn_utils::global_cpu_engine},
             mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
             mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
@@ -607,11 +613,12 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     else
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_inference,
+            {{mkldnn::prop_kind::forward_training,
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift |
                   mkldnn::batch_normalization_flag::use_global_stats},
+             bn_attr,
              mkldnn_utils::global_cpu_engine},
             mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
             mkldnn::primitive::at(*m_mkldnn_primitives[mean_index]),

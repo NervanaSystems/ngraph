@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -652,10 +653,12 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
         auto Y_out = f->get_output_op(0);
         auto Xs = f->get_parameters();
         auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        ngraph::autodiff::Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
         std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
-            return Y_out->backprop_node(X, C);
-        });
+        transform(
+            Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+                return adjoints.backprop_node(X);
+            });
         std::vector<std::shared_ptr<op::Parameter>> params(Xs);
         params.push_back(C);
 
@@ -1707,6 +1710,16 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 
     cf->call({result}, {a});
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
+{
+    Shape shape_a{};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{4};
+    ASSERT_THROW(auto f = make_shared<Function>(
+                     make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), op::ParameterVector{A}),
+                 ngraph_error);
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
