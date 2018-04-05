@@ -52,7 +52,7 @@ public:
 
     std::vector<std::shared_ptr<ngraph::op::FunctionCall>>
         create_inlining_plan(std::shared_ptr<ngraph::Function> f, size_t depth) override;
-    virtual ~InlineSmallCalls() {}
+    virtual ~InlineSmallCalls() override {}
 private:
     size_t m_call_size_limit;
     size_t m_depth;

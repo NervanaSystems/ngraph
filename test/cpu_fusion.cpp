@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -620,9 +621,11 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    auto d_data = convolution_bias->backprop_node(conv_test.data, conv_test.delta);
-    auto d_weights = convolution_bias->backprop_node(conv_test.weights, conv_test.delta);
-    auto d_bias = convolution_bias->backprop_node(conv_test.bias, conv_test.delta);
+    ngraph::autodiff::Adjoints adjoints(NodeVector{convolution_bias}, NodeVector{conv_test.delta});
+
+    auto d_data = adjoints.backprop_node(conv_test.data);
+    auto d_weights = adjoints.backprop_node(conv_test.weights);
+    auto d_bias = adjoints.backprop_node(conv_test.bias);
 
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},
@@ -928,59 +931,6 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-TEST(cpu_fusion, batchnorm_fprop_inference_b2c2h2w1)
-{
-    auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
-    auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
-    auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
-    auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
-    auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
-    double eps = 0.001;
-    auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
-
-    auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
-    auto manager = runtime::Manager::get("CPU");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto _input = backend->make_primary_tensor_view(element::f32, Shape{2, 2, 2, 1});
-    copy_data(_input,
-              vector<float>{0.54881352f,
-                            0.71518934f,
-                            0.60276335f,
-                            0.54488319f,
-                            0.42365479f,
-                            0.64589411f,
-                            0.4375872f,
-                            0.89177299f});
-
-    auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
-    copy_data(_gamma, vector<float>{1.0f, 1.0f});
-    auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
-    copy_data(_beta, vector<float>{0.0f, 0.0f});
-    auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.583388f, 0.619252f});
-    auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
-    auto bn_output = backend->make_primary_tensor_view(element::f32, shape_r);
-    auto result_mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    auto result_variance = backend->make_primary_tensor_view(element::f32, var_shape);
-    vector<float> expected_result{
-        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    cf->call({bn_output}, {_input, _gamma, _beta, _mean, _var});
-
-    ASSERT_TRUE(
-        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
-}
-
 std::vector<shared_ptr<runtime::TensorView>>
     rnn_matrix_fusion_eval(const size_t time_steps,
                            const Shape& data_shape,
@@ -1085,7 +1035,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     pass_manager.run_passes(func);
 
     const size_t NUM_STEPS = 10;
-    auto mmb_predicate = [NUM_STEPS](std::shared_ptr<Node> node) {
+    auto mmb_predicate = [](std::shared_ptr<Node> node) {
         auto users = node->get_users();
         return users.size() == NUM_STEPS &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {

@@ -420,9 +420,14 @@ static shared_ptr<ngraph::Function>
             {
                 auto epsilon = node_js.at("eps").get<double>();
                 bool training = get_or_default<bool>(node_js, "training", true);
-                if (training)
+                if (training && args.size() == 3)
                 {
                     node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
+                }
+                else if (training && args.size() == 5)
+                {
+                    node = make_shared<op::BatchNorm>(
+                        epsilon, args[0], args[1], args[2], args[3], args[4], true);
                 }
                 else
                 {

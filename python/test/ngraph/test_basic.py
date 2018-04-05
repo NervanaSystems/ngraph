@@ -41,6 +41,12 @@ def test_simple_computation_on_ndarrays(dtype):
     result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
 
+    value_a = np.array([[13, 14], [15, 16]], dtype=dtype)
+    value_b = np.array([[17, 18], [19, 20]], dtype=dtype)
+    value_c = np.array([[21, 22], [23, 24]], dtype=dtype)
+    result = computation(value_a, value_b, value_c)
+    assert np.allclose(result, np.array([[630, 704], [782, 864]], dtype=dtype))
+
 
 def test_serialization():
     dtype = np.float32

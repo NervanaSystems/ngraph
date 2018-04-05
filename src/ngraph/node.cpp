@@ -172,18 +172,6 @@ NodeVector Node::get_input_ops() //const
     return result;
 }
 
-std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
-                                          const std::shared_ptr<Node>& c)
-{
-    auto adjoints_it = m_adjoint_map.find(c.get());
-    if (adjoints_it == m_adjoint_map.end())
-    {
-        adjoints_it =
-            m_adjoint_map.insert({c.get(), autodiff::Adjoints(shared_from_this(), c)}).first;
-    }
-    return adjoints_it->second.get(x);
-}
-
 std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
     return std::vector<std::shared_ptr<Function>>{};

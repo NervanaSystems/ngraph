@@ -66,9 +66,21 @@ make check_gcc OS=centos74 DOCKERFILE=Dockerfile.ngraph.centos74_cmake3
 
 These helper scripts are included for use in the `Makefile` and automated (Jenkins) jobs.  **These scripts should _not_ be called directly unless you understand what they do.**
 
+#### `build-ngraph-docs.sh`
+
+A helper script to simplify implentation of the make_docs target using docker images.
+
+#### `build-ngraph-and-test.sh`
+
+A helper script to simplify implementation of make targets with multiple reference OS environments with different compilers using docker images.
+
 #### `docker_cleanup.sh`
 
 A helper script for Jenkins jobs to clean up old exited docker containers and `ngraph_*` docker images.
+
+#### `make-dimage.sh`
+
+A helper script to simplify building of docker images for multiple reference OS environments.
 
 #### `run_as_user.sh`
 

@@ -19,7 +19,6 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
-    builder/tensor_mask.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -206,6 +205,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/kernel/eigen_thread_pool.cpp
         runtime/cpu/kernel/pad.cpp
+        runtime/cpu/kernel/reduce_sum.cpp
         runtime/cpu/op/conv_bias.cpp
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp

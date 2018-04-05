@@ -118,7 +118,9 @@ shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 
    and push that back.
 */
-void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     throw invalid_argument("Autodiff is not yet implemented for Pad");
 }
