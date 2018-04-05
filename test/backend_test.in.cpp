@@ -8582,3 +8582,37 @@ TEST(${BACKEND_NAME}, softmax_underflow)
         expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
+
+TEST(${BACKEND_NAME}, tensorview_custom_mem)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    vector<float> av{2, 4, 8, 16};
+    vector<float> bv{1, 2, 4, 8};
+    // use custom mem with tensorview, no need to copy data
+    auto a = backend->make_primary_tensor_view(element::f32, shape, av.data());
+    auto b = backend->make_primary_tensor_view(element::f32, shape, bv.data());
+
+    // use custom mem with result tensorview
+    vector<float> rv{0, 0, 0, 0};
+    auto result = backend->make_primary_tensor_view(element::f32, shape, rv.data());
+
+    // result should be in memory without needing explict read
+    cf->call({result}, {a, b});
+    EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
+}
