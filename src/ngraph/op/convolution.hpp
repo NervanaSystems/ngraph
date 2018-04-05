@@ -126,8 +126,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            void generate_adjoints(autodiff::Adjoints& adjoints,
-                                   const std::shared_ptr<Node>& delta) override;
+            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

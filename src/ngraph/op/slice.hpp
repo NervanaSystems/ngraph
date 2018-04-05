@@ -85,7 +85,7 @@ namespace ngraph
             const Strides& get_strides() const { return m_strides; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
             void check_args();
 
             const Coordinate m_lower_bounds;
