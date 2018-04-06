@@ -586,12 +586,14 @@ def max_pool(x,                      # type: Node
 @nameable_op
 def sum(node, reduction_axes=None, name=None):
     # type: (Node, Iterable[int], str) -> Node
-    """Element-wise sums the input tensor, eliminating the specified reduction axes.
+    """Perform element-wise sums of the input tensor, eliminating the specified reduction axes.
 
+    :param node: The node providing data for operation.
     :param reduction_axes: The axes to eliminate through summation.
+    :param name: The optional new name for ouptut node.
+    :return: The new node performing summation along `reduction_axes` element-wise.
     """
-    reduction_axes = get_reduction_axes(node, reduction_axes)
-    return Sum(node, AxisSet(reduction_axes))
+    return Sum(node, AxisSet(get_reduction_axes(node, reduction_axes)))
 
 
 @nameable_op
@@ -603,8 +605,7 @@ def max(node, reduction_axes=None, name=None):
     :param reduction_axes: The axes to eliminate through max operation.
     :param name: Optional name for output node.
     """
-    reduction_axes = get_reduction_axes(node, reduction_axes)
-    return Max(node, AxisSet(reduction_axes))
+    return Max(node, AxisSet(get_reduction_axes(node, reduction_axes)))
 
 
 @nameable_op
@@ -616,8 +617,7 @@ def min(node, reduction_axes=None, name=None):
     :param reduction_axes: The axes to eliminate through min operation.
     :param name: Optional name for output node.
     """
-    reduction_axes = get_reduction_axes(node, reduction_axes)
-    return Min(node, AxisSet(reduction_axes))
+    return Min(node, AxisSet(get_reduction_axes(node, reduction_axes)))
 
 
 @nameable_op
@@ -628,9 +628,9 @@ def prod(node, reduction_axes=None, name=None):
     :param node: The tensor we want to product-reduce.
     :param reduction_axes: The axes to eliminate through product operation.
     :param name: Optional name for output node.
+    :return: The new node performing product-reduction operation.
     """
-    reduction_axes = get_reduction_axes(node, reduction_axes)
-    return Product(node, AxisSet(reduction_axes))
+    return Product(node, AxisSet(get_reduction_axes(node, reduction_axes)))
 
 
 # reshape ops
