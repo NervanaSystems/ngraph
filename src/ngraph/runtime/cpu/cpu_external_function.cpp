@@ -110,6 +110,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -261,6 +262,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
+    {TI(ngraph::op::BatchNormRelu), &runtime::cpu::CPU_Emitter::emit<op::BatchNormRelu>},
     {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::emit<op::BatchNormBackprop>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
     {TI(ngraph::op::Product), &runtime::cpu::CPU_Emitter::emit<op::Product>},
@@ -310,6 +312,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
     pass_manager.run_passes(m_function);
+
+    unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+    }
 
     codegen::CodeWriter writer;
 
@@ -378,7 +386,7 @@ using namespace ngraph::runtime;
         size_t index = 0;
         for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
         {
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
             {
                 if (!node->is_parameter() && !node->is_constant())
                 {
@@ -428,7 +436,7 @@ using namespace ngraph::runtime;
     writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
         {
             const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
@@ -457,7 +465,7 @@ using namespace ngraph::runtime;
     unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
-        const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        list<shared_ptr<Node>> tmp = function_ordered_ops.at(current_function);
         if (tmp.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
@@ -516,6 +524,7 @@ using namespace ngraph::runtime;
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
+        auto ordered_ops = function_ordered_ops.at(current_function);
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
@@ -523,7 +532,7 @@ using namespace ngraph::runtime;
             output_names.insert(tv->get_tensor().get_name());
         }
         set<descriptor::TensorView*> constants;
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
@@ -552,7 +561,7 @@ using namespace ngraph::runtime;
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             if (node->liveness_new_list.size() > 0)
             {
@@ -575,7 +584,7 @@ using namespace ngraph::runtime;
             writer << "\n";
 
             // Add temporaries to the variable name map
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            for (shared_ptr<Node> node : ordered_ops)
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
@@ -643,7 +652,7 @@ using namespace ngraph::runtime;
             }
         }
 
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
             // with shared pointers, which is fine here but clang doesn't like it.)

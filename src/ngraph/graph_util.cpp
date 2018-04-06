@@ -27,6 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -104,18 +105,6 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
     }
 }
 
-void ngraph::free_nodes(shared_ptr<Function> p)
-{
-    std::deque<Node*> sorted_list;
-
-    traverse_nodes(p, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
-
-    for (Node* n : sorted_list)
-    {
-        n->clear_arguments();
-    }
-}
-
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
@@ -139,24 +128,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
-
-    // Fix users and arguments
-    replace_node_users_arguments(target, replacement);
-}
-
-void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
-                                          std::shared_ptr<Node> replacement)
-{
-    for (auto user : target->users())
-    {
-        auto& args = const_cast<ngraph::NodeVector&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-        auto it = std::find(begin(args), end(args), target);
-        assert(it != end(args));
-        it = args.erase(it);
-        args.insert(it, replacement);
-        const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);
-    }
-    const_cast<std::multiset<Node*>&>(target->users()).clear();
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
@@ -337,18 +308,6 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
 
-    // Fix user / argument among src, dst and par
-    const_cast<multiset<Node*>&>(src_node->users()).erase(dst_node.get());  // Remove [2]
-    const_cast<multiset<Node*>&>(par_node->users()).insert(dst_node.get()); // Add [10]
-    auto& dst_args = const_cast<NodeVector&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-    auto it = find(dst_args.begin(), dst_args.end(), src_node);
-    if (it == dst_args.end())
-    {
-        throw ngraph_error("src_node is not an input to dst_node");
-    }
-    it = dst_args.erase(it);       // Remove [3]
-    dst_args.insert(it, par_node); // Add [11]
-
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
     res_node->set_placement(src_node->get_placement());
@@ -405,18 +364,6 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     descriptor::Output* src_output = src_node->get_output_to(dst_node);
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Fix user / argument
-    const_cast<multiset<Node*>&>(src_node->users()).erase(dst_node.get());  // Remove [2]
-    const_cast<multiset<Node*>&>(new_node->users()).insert(dst_node.get()); // Add [10]
-    auto& dst_args = const_cast<NodeVector&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-    auto it = find(dst_args.begin(), dst_args.end(), src_node);
-    if (it == dst_args.end())
-    {
-        throw ngraph_error("src_node is not an input to dst_node");
-    }
-    it = dst_args.erase(it);       // Remove [3]
-    dst_args.insert(it, new_node); // Add [11]
 }
 
 // Assert that nodes in the function is colocated and return that placement
@@ -440,4 +387,19 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
         }
     });
     return function_placement;
+}
+
+std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
+{
+    std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
+    if (shape.size() > 0)
+    {
+        AxisSet axes;
+        for (size_t i = 0; i < shape.size(); i++)
+        {
+            axes.insert(i);
+        }
+        zero = std::make_shared<op::Broadcast>(zero, shape, axes);
+    }
+    return zero;
 }

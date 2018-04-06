@@ -47,12 +47,7 @@ namespace ngraph
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
-    void free_nodes(std::shared_ptr<Function>);
-
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
 
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
@@ -71,6 +66,12 @@ namespace ngraph
         // get replacement node from original node
         // throws ngrah_error if key does not exist
         std::shared_ptr<ngraph::Node> get(std::shared_ptr<ngraph::Node> orig) const;
+
+        template <typename T>
+        T dynamic_get(const T& orig)
+        {
+            return std::dynamic_pointer_cast<typename T::element_type>(get(orig));
+        }
 
         // returns true if original node is already mapped
         bool exists(std::shared_ptr<ngraph::Node> orig) const
@@ -117,4 +118,6 @@ namespace ngraph
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
+
+    std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
 }
