@@ -30,19 +30,55 @@ namespace ngraph
         class BatchNorm : public util::RequiresTensorViewArgs
         {
         public:
-            // BatchNorm Training
+            // In this version of BatchNorm:
+            //
+            // MEAN AND VARIANCE: computed directly from the content of 'input'.
+            //
+            // OUTPUT VALUE: A tuple with the following structure:
+            //   [0] - The normalization of 'input'.
+            //   [1] - The per-channel means of (pre-normalized) 'input'.
+            //   [2] - The per-channel variances of (pre-normalized) 'input'.
+            //
+            // AUTODIFF SUPPORT: yes: 'generate_adjoints(...)' works as expected.
+            //
+            // SHAPE DETAILS:
+            //   gamma:     must have rank 1, with the same span as input's channel axis.
+            //   beta:      must have rank 1, with the same span as input's channel axis.
+            //   input:     must have rank >= 2.  The second dimension represents the channel axis
+            //              and must have a span of at least 1.
+            //   output[0]: shall have the same shape as 'input'.
+            //   output[1]: shall have rank 1, with the same span as input's channel axis.
+            //   output[2]: shall have rank 1, with the same span as input's channel axis.
             BatchNorm(double eps,
                       std::shared_ptr<Node> gamma,
                       std::shared_ptr<Node> beta,
                       std::shared_ptr<Node> input);
 
-            //BatchNorm Inference
+            // In this version of BatchNorm:
+            //
+            // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
+            //
+            // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
+            //
+            // AUTODIFF SUPPORT:
+            //   - when 'training' is true, yes: 'generate_adjoints(...)' works as expected.
+            //   - when 'training' is false, no: 'generate_adjoints(...) may throw an exception.
+            //
+            // SHAPE DETAILS:
+            //   gamma:    must have rank 1, with the same span as input's channel axis.
+            //   beta:     must have rank 1, with the same span as input's channel axis.
+            //   input:    must have rank >= 2. The second dimension represents the channel axis and
+            //             must have a span of at least 1.
+            //   mean:     must have rank 1, with the same span as input's channel axis.
+            //   variance: must have rank 1, with the same span as input's channel axis.
+            //   output:   shall have the same shape as 'input'.
             BatchNorm(double eps,
                       std::shared_ptr<ngraph::Node> gamma,
                       std::shared_ptr<ngraph::Node> beta,
                       std::shared_ptr<ngraph::Node> input,
                       std::shared_ptr<ngraph::Node> mean,
-                      std::shared_ptr<ngraph::Node> variance);
+                      std::shared_ptr<ngraph::Node> variance,
+                      bool training = false);
 
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
@@ -54,7 +90,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
         private:
             Shape m_bn_input_shape;

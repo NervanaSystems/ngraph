@@ -38,7 +38,9 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
@@ -335,6 +337,25 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         ConvolutionLayout<ngraph::op::ConvolutionBias, true>(
+                            node, prim_input_formats, prim_output_formats);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionRelu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1025,7 +1046,7 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
-                        if (bn->get_training_flag())
+                        if (bn->get_training_flag() && node->get_input_size() == 3)
                         {
                             prim_input_formats.push_back(memory::format::x);
                             prim_input_formats.push_back(memory::format::x);
@@ -1050,6 +1071,40 @@ namespace ngraph
                     else
                     {
                         throw ngraph_error("Batchnorm only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormRelu)
+                {
+                    auto bn = static_cast<const ngraph::op::BatchNormRelu*>(node.get());
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+
+                        if (!bn->get_training_flag() || bn->get_inputs().size() != 3)
+                        {
+                            throw ngraph_error("Only training batchnorm should have been fused");
+                        }
+
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(input_layout);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        throw ngraph_error("BatchnormRelu only supported in MKLDNN for now");
                     }
                 }
 
@@ -1135,9 +1190,13 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
     {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
+    {TI(ngraph::op::ConvolutionRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BatchNormRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormRelu>},
     {TI(ngraph::op::BatchNormBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::GetOutputElement),

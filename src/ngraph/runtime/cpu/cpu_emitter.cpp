@@ -90,6 +90,7 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -460,7 +461,7 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                if (batchnorm->get_training_flag()) //BatchNorm Training
+                if (batchnorm->get_training_flag() && args.size() == 3)
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -490,6 +491,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                false,
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -507,7 +509,7 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(batchnorm_index) << ");\n";
                 }
-                else //BatchNorm Inference
+                else
                 {
                     auto input_format =
                         runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
@@ -535,6 +537,7 @@ namespace ngraph
                                                                 mean_desc,
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
+                                                                true,
                                                                 batchnorm->get_training_flag());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -553,6 +556,86 @@ namespace ngraph
                            << to_string(batchnorm_index) << ");\n";
                 }
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with MKLDNN kernel.");
+                }
+
+                const ngraph::op::BatchNormRelu* batchnorm =
+                    static_cast<const ngraph::op::BatchNormRelu*>(node);
+
+                if (!batchnorm->get_training_flag() || batchnorm->get_inputs().size() != 3)
+                {
+                    throw ngraph_error("Only training batchnorm should have been fused");
+                }
+
+                const float ops_scale = 1.f;
+                const float ops_alpha = -0.f; // relu negative slope
+                const float ops_beta = 0.f;
+
+                mkldnn::post_ops ops;
+                ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+
+                writer.block_begin();
+                writer << "{\n";
+                // define weights
+                writer << "std::vector<" << args[0].get_element_type().c_type_string()
+                       << ">bn_weights(2*" << args[0].get_size() << ");\n";
+                writer << "memcpy(&bn_weights[0], " << args[0].get_name() << ", "
+                       << args[0].get_size() * args[0].get_element_type().size() << ");\n";
+                writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
+                       << args[1].get_name() << ", "
+                       << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
+                auto result_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                auto mean_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
+                auto variance_format =
+                    runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto weights_shape = Shape{2, args[0].get_size()};
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                auto weights_desc = mkldnn_emitter->build_memory_descriptor(
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                auto results_desc = mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
+                auto variance_desc =
+                    mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
+
+                auto batchnorm_index =
+                    mkldnn_emitter->build_batchnorm_forward(input_desc,
+                                                            weights_desc,
+                                                            results_desc,
+                                                            mean_desc,
+                                                            variance_desc,
+                                                            batchnorm->get_eps_value(),
+                                                            false,
+                                                            batchnorm->get_training_flag(),
+                                                            ops);
+
+                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                       << ", bn_weights.data());\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << out[2].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(batchnorm_index) << ");\n";
+
+                writer.block_end();
+                writer << "}\n";
             }
 
             template <>
@@ -1708,13 +1791,53 @@ namespace ngraph
                            << "});\n";
                 }
 #else
-                kernel::emit_sum(writer,
-                                 args[0].get_element_type().c_type_string(),
-                                 args[0].get_name(),
-                                 out[0].get_name(),
-                                 args[0].get_shape(),
-                                 out[0].get_shape(),
-                                 sum->get_reduction_axes());
+                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 1 &&
+                    sum->get_reduction_axes().size() == 1)
+                {
+                    writer << "cpu::kernel::reduce_sum_all_1d_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}"
+                           << ");\n";
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
+                {
+                    writer << "cpu::kernel::reduce_sum_all_2d_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}"
+                           << ");\n";
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
+                {
+                    writer << "cpu::kernel::reduce_sum_2d_1rd_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}, "
+                           << "{" << join(sum->get_reduction_axes()) << "}"
+                           << ");\n";
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
+                {
+                    writer << "cpu::kernel::reduce_sum_all_4d_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}"
+                           << ");\n";
+                }
+                else
+                {
+                    kernel::emit_sum(writer,
+                                     args[0].get_element_type().c_type_string(),
+                                     args[0].get_name(),
+                                     out[0].get_name(),
+                                     args[0].get_shape(),
+                                     out[0].get_shape(),
+                                     sum->get_reduction_axes());
+                }
 #endif
                 writer.block_end();
             }
@@ -3329,6 +3452,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
+                writer.block_begin();
                 const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
                 auto type = out[0].get_type();
                 auto shape = out[0].get_shape();
@@ -3507,6 +3631,7 @@ namespace ngraph
                         writer.block_end();
                     }
                 }
+                writer.block_end();
             }
 
             template <>

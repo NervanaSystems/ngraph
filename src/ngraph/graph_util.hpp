@@ -72,6 +72,12 @@ namespace ngraph
         // throws ngrah_error if key does not exist
         std::shared_ptr<ngraph::Node> get(std::shared_ptr<ngraph::Node> orig) const;
 
+        template <typename T>
+        T dynamic_get(const T& orig)
+        {
+            return std::dynamic_pointer_cast<typename T::element_type>(get(orig));
+        }
+
         // returns true if original node is already mapped
         bool exists(std::shared_ptr<ngraph::Node> orig) const
         {
@@ -117,4 +123,6 @@ namespace ngraph
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
+
+    std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
 }

@@ -27,6 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -121,13 +122,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
-    }
-
-    if (target->get_outputs().size() > 1)
-    {
-        throw ngraph_error(
-            "Multi-output nodes should not be replaced directly. The corresponding "
-            "GetOutputElements should be replaced instead");
     }
 
     // Fix input/output descriptors
@@ -447,4 +441,19 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
         }
     });
     return function_placement;
+}
+
+std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
+{
+    std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
+    if (shape.size() > 0)
+    {
+        AxisSet axes;
+        for (size_t i = 0; i < shape.size(); i++)
+        {
+            axes.insert(i);
+        }
+        zero = std::make_shared<op::Broadcast>(zero, shape, axes);
+    }
+    return zero;
 }

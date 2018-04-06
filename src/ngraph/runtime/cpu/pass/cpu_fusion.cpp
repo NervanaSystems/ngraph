@@ -46,6 +46,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -684,6 +685,80 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
+{
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto prelu = std::make_shared<op::Relu>(goe);
+
+    ngraph::pattern::gr_callback_fn callback = [input, gamma, beta](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
+                     << m.match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
+            m.match_root()->get_input_op(0)->get_inputs().at(0).get_output().get_node());
+
+        if (!m_bn->get_training_flag())
+        {
+            NGRAPH_DEBUG << " This is an inference batchnorm, so skipping fusion";
+            return false;
+        }
+
+        //as of now, only MKLDNN supports this fusion
+        //and it requires input data's rank to be equal to 4
+        if (pattern_map[input]->get_shape().size() != 4)
+        {
+            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
+                         << pattern_map[input]->get_shape().size();
+            return false;
+        }
+
+        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
+        for (auto bn_in : m_bn->get_output_inputs(0))
+        {
+            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(bn_in->get_node());
+            mgoes[mgoe->get_n()] = mgoe;
+        }
+
+        if (mgoes[0]->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
+            return false;
+        }
+
+        mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
+
+        auto bn_relu = std::make_shared<op::BatchNormRelu>(
+            m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
+
+        auto bn_relu_output = std::make_shared<op::GetOutputElement>(bn_relu, 0);
+        auto bn_relu_mean = std::make_shared<op::GetOutputElement>(bn_relu, 1);
+        auto bn_relu_var = std::make_shared<op::GetOutputElement>(bn_relu, 2);
+
+        std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
+
+        for (size_t i = 0; i < mgoes.size(); i++)
+        {
+            ngraph::replace_node(mgoes.at(i), new_nodes[i]);
+        }
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 {
     Shape shape{2, 2, 1, 1};
@@ -731,6 +806,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         if (arg0_rank != 4 || arg1_rank != 4)
         {
             NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
+        if (conv->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
         }
 
