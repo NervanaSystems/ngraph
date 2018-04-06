@@ -103,6 +103,8 @@ namespace ngraph
             /// \param pattern is a recurring pattern
             /// \param rpattern specifies a node to recur from next
             /// \param patterns a map from labels to matches
+            /// \param correlated_patterns specify labels whose bound nodes should be
+            /// the same across all cells
             static bool match_recurring_pattern(
                 std::shared_ptr<Node> graph,
                 std::shared_ptr<Node> pattern,
