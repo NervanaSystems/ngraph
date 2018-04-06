@@ -73,38 +73,3 @@ rm -rf .tox
 tox
 ```
 
-
-## Alternate Installation Method (If you haven't build nGraph yet.)
-
-Checkout nGraph and python wrapper code and build bdist wheel.
-
-```
-git clone https://github.com/NervanaSystems/ngraph.git
-cd ngraph/python
-```
-
-```
-pip install wheel
-```
-
-To build python2 bdist wheel type
-```
-./build_python2_wheel.sh
-```
-To build python3 bdist wheel type
-```
-./build_python3_wheel.sh
-```
-
-The bdist wheel will be placed in ngraph/python/build/dist
-Activate your virtual environment and install the bdist wheel
-
-```
-pip install -U <full path to the bdist wheel>
-```
-
-For example, On MacOS you would run a command like,
-
-```
-pip install -U dist/ngraph-0.0.1-cp35-cp35m-linux_x86_64.whl
-```
