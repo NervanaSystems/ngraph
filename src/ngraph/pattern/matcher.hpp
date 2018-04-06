@@ -137,6 +137,7 @@ namespace ngraph
 
         class RecurrentMatcher
         {
+        public:
             //static bool match_recurring_pattern(std::shared_ptr<Node> graph, std::shared_ptr<Node> pattern, std::shared_ptr<op::Label> rpattern, RPatternMap& patterns, const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
 
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
@@ -159,27 +160,39 @@ namespace ngraph
 
             /// \brief Returns a vector of bound nodes for a given label (used in a pattern
             /// describing an individual cell
-            NodeVector get_bound_nodes_for_pattern(std::shared_ptr<op::Label> pattern)
+            NodeVector get_bound_nodes_for_pattern(std::shared_ptr<op::Label> pattern) const
             {
                 if (m_matches.count(pattern) == 0)
                 {
                     throw ngraph_error("No bound nodes for a given label");
                 }
 
-                return NodeVector{m_matches[pattern]};
+                return NodeVector{m_matches.at(pattern)};
             }
 
+            size_t get_number_of_recurrent_matches() const
+            {
+                if (m_matches.size() == 0)
+                {
+                    return 0;
+                }
+
+                return (*m_matches.begin()).second.size();
+            }
+
+            size_t get_number_of_bound_labels() const { return m_matches.size(); }
             /// \brief Tries to match a pattern for an individual cell to a given \p graph
             bool match(std::shared_ptr<Node> graph);
 
             /// \brief Invoked by a pass to process a successful match
             bool process_match();
 
-            std::shared_ptr<op::Label> m_recurrent_pattern;
+        private:
             std::shared_ptr<Node> m_pattern;
+            std::shared_ptr<op::Label> m_recurrent_pattern;
+            const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
             recurrent_gr_callback_fn m_callback;
-            const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
         };
     }
 }
