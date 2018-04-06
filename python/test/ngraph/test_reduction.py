@@ -42,3 +42,30 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     expected = numpy_function(input_data, axis=reduction_axes)
     result = run_op_node([input_data], ng_api_helper, reduction_axes)
     assert np.allclose(result, expected)
+
+
+def test_reduce():
+    from functools import reduce
+    np.random.seed(133391)
+
+    reduction_axes = (0, 2)
+    init_val = np.float32(0.)
+    input_data = np.random.randn(3, 4, 5).astype(np.float32)
+    expected = np.sum(input_data, axis=reduction_axes)
+    result = run_op_node([input_data], ng.reduce, init_val, ng.impl.op.Add,
+                         list(reduction_axes))
+    assert np.allclose(result, expected)
+
+    reduction_axes = (0, )
+    input_data = np.random.randn(100).astype(np.float32)
+    expected = reduce(lambda x, y: x - y, input_data, np.float32(0.))
+    result = run_op_node([input_data], ng.reduce, init_val, ng.impl.op.Subtract,
+                         list(reduction_axes))
+    assert np.allclose(result, expected)
+
+    reduction_axes = (0, )
+    input_data = np.random.randn(100).astype(np.float32)
+    expected = reduce(lambda x, y: x + y * y, input_data, np.float32(0.))
+    result = run_op_node([input_data], ng.reduce, init_val, lambda x, y: x + y * y,
+                         list(reduction_axes))
+    assert np.allclose(result, expected)

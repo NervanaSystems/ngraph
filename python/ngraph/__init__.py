@@ -57,6 +57,7 @@ from ngraph.ops import power
 from ngraph.ops import prod
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
+from ngraph.ops import reduce
 from ngraph.ops import reshape
 from ngraph.ops import reverse
 from ngraph.ops import select

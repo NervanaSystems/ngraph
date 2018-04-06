@@ -17,13 +17,13 @@
 """Factory functions for all ngraph ops."""
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
-    Shape, Strides
+from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
+    NodeVector, Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
     Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq,\
     Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
-    OneHot, Pad, Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, \
+    OneHot, Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, \
     Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Iterable, List
@@ -33,7 +33,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput
+    NodeInput, ScalarData
 from ngraph.utils.types import get_element_type
 
 
@@ -631,6 +631,33 @@ def prod(node, reduction_axes=None, name=None):
     :return: The new node performing product-reduction operation.
     """
     return Product(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+
+
+@nameable_op
+def reduce(node,                # type: Node
+           initial_value,       # type: ScalarData
+           reduction_function,  # type: Node
+           reduce_axes,         # type: List[int]
+           name=None,           # type: str
+           ):
+    # type: (...) -> Node
+    """Perform general tensor reduction operation.
+
+    :param node: The node providing data for reduction operation.
+    :param initial_value: The initial value for reduction operation.
+    :param reduction_function: The node providing binary reduction operation. The function must
+                               accept two scalar values and return one scalar value.
+    :param reduce_axes: The list of axes indices to be reduced.
+    :param name: The optional new name for output node.
+    :return: The node performing reduction operation with provided reduction function.
+    """
+    param1 = Parameter(node.get_element_type(), Shape([]))
+    param2 = Parameter(node.get_element_type(), Shape([]))
+    reduce_result_nodes = NodeVector([reduction_function(param1, param2)])
+    reduce_fun_params = [param1, param2]
+    reduce_function = Function(reduce_result_nodes, reduce_fun_params, 'reduce_fun')
+    init_val_node = constant(initial_value)
+    return Reduce(node, init_val_node, reduce_function, AxisSet(set(reduce_axes)))
 
 
 # reshape ops
