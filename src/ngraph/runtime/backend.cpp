@@ -42,3 +42,7 @@ vector<size_t> runtime::Backend::get_subdevices(const string& type)
     std::shared_ptr<Manager> manager = runtime::Manager::get(type);
     return manager->get_subdevices();
 }
+
+void runtime::Backend::remove_compiled_function(const Function& func)
+{
+}

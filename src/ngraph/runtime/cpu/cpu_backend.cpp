@@ -60,16 +60,16 @@ bool runtime::cpu::CPU_Backend::compile(const ngraph::Function& func)
     return true;
 }
 
-bool runtime::cpu::CPU_Backend::call(const Function& fun,
+bool runtime::cpu::CPU_Backend::call(const Function& func,
                                      const vector<shared_ptr<runtime::TensorView>>& outputs,
                                      const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
-    auto it = m_function_map.find(&fun);
+    auto it = m_function_map.find(&func);
     if (it == m_function_map.end())
     {
-        compile(fun);
-        it = m_function_map.find(&fun);
+        compile(func);
+        it = m_function_map.find(&func);
     }
 
     if (it == m_function_map.end())
@@ -94,4 +94,9 @@ bool runtime::cpu::CPU_Backend::call(
     FunctionInstance& instance = m_function_map.begin()->second;
     instance.m_call_frame->call(outputs, inputs);
     return true;
+}
+
+void runtime::cpu::CPU_Backend::remove_compiled_function(const Function& func)
+{
+    m_function_map.erase(&func);
 }

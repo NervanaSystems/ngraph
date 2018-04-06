@@ -87,11 +87,13 @@ namespace ngraph
                 return create_tensor(element::from<T>(), shape);
             }
 
-            virtual bool compile(const ngraph::Function& fun) = 0;
+            virtual bool compile(const ngraph::Function& func) = 0;
 
-            virtual bool call(const ngraph::Function& fun,
+            virtual bool call(const ngraph::Function& func,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+
+            virtual void remove_compiled_function(const ngraph::Function& func);
         };
     }
 }

@@ -15,10 +15,10 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -52,8 +52,7 @@ bool runtime::gpu::GPU_Backend::compile(const ngraph::Function& func)
     {
         FunctionInstance instance;
         instance.m_function = clone_function(func);
-        instance.m_external_function =
-            make_shared<GPU_ExternalFunction>(instance.m_function);
+        instance.m_external_function = make_shared<GPU_ExternalFunction>(instance.m_function);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
         m_function_map.insert({&func, instance});

@@ -55,6 +55,8 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
+                void remove_compiled_function(const Function& func) override;
+
             private:
                 class FunctionInstance
                 {
