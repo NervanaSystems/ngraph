@@ -187,12 +187,14 @@ namespace ngraph
             /// \brief Invoked by a pass to process a successful match
             bool process_match();
 
+            std::shared_ptr<Node> match_root() { return m_match_root; }
         private:
             std::shared_ptr<Node> m_pattern;
             std::shared_ptr<op::Label> m_recurrent_pattern;
             const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
             recurrent_gr_callback_fn m_callback;
+            std::shared_ptr<Node> m_match_root;
         };
     }
 }
