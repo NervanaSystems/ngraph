@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,30 +16,23 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace gpu
         {
-            typedef std::function<void(void**, void**)> primitive;
+            class GPUPrimitiveEmitter;
 
-            extern "C" {
-            struct GPURuntimeContext
+            class CUDAEmitter
             {
-                cudnnHandle_t* cudnn_handle;
-                cublasHandle_t* cublas_handle;
-                gpu::primitive* const* gpu_primitives;
-                CudaFunctionPool* compiled_kernel_pool;
+                friend class GPUPrimitiveEmitter;
+            public:
+            private:
+                CUDAEmitter(GPUPrimitiveEmitter* emitter);
+
+                GPUPrimitiveEmitter* m_primitive_emitter;
             };
-            }
         }
     }
 }

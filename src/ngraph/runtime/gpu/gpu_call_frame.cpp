@@ -103,8 +103,8 @@ void runtime::gpu::GPU_CallFrame::setup_runtime_context()
     // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 
-    const auto& cudnn_emitter = m_external_function->get_cudnn_emitter();
-    m_external_function->m_ctx->cudnn_primitives = cudnn_emitter->get_cudnn_primitives().data();
+    const auto& primitive_emitter = m_external_function->get_primitive_emitter();
+    m_external_function->m_ctx->gpu_primitives = primitive_emitter->get_primitives().data();
 
     // register with c-api runtime context
     m_external_function->m_ctx->cublas_handle = &m_cublas_handle;

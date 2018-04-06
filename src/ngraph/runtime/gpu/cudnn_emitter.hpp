@@ -37,15 +37,14 @@ namespace ngraph
             namespace cudnn_util
             {
                 std::vector<int> compute_strides(const std::vector<int>& dim);
-                // std::function<void(void)> emit_4d_tensor_descriptor(const Shape& shape,
-                //                                                     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW,
-                //                                                     cudnnDataType_t type = CUDNN_DATA_TYPE);
             }
+            class GPUPrimitiveEmitter;
+
             class CUDNNEmitter
             {
+                friend class GPUPrimitiveEmitter;
+
             public:
-                CUDNNEmitter() {}
-                ~CUDNNEmitter() {}
                 size_t build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
                                             const GPURuntimeContext* ctx,
                                             const Shape& input_shape,
@@ -69,14 +68,9 @@ namespace ngraph
                                               const ngraph::Shape& padding_below,
                                               const ngraph::Shape& padding_above);
 
-                std::vector<cudnn::primitive*>& get_cudnn_primitives()
-                {
-                    return m_cudnn_primitives;
-                }
-
             private:
-                size_t register_primitive(cudnn::primitive* f);
-                std::vector<cudnn::primitive*> m_cudnn_primitives;
+                CUDNNEmitter(GPUPrimitiveEmitter* emitter);
+                GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }
     }

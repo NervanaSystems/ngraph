@@ -91,10 +91,10 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
 
@@ -783,15 +783,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         // descriptors for tensors  with <= 4 dimensions
                         else
                         {
-                            auto& cudnn_emitter = external_function->get_cudnn_emitter();
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto sum_index =
                                 cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
                                                                     external_function->ctx().get(),
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes());
 
-                            writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, " << sum_index
-                                   << ", ";
+                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                             writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                             writer << ");\n";
@@ -811,7 +811,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto input_shape = args[0].get_shape();
                     auto input_rank = input_shape.size();
                     auto result_shape = out[0].get_shape();
-                    auto& cudnn_emitter = external_function->get_cudnn_emitter();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                     // 1d max pool
                     if (input_shape.size() == 3)
@@ -844,7 +846,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             max_pool->get_padding_below(),
                             max_pool->get_padding_above());
 
-                        writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, " << max_pool_index
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index
                                << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
@@ -863,7 +865,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto fp_input_shape = out[0].get_shape();
                     auto fp_output_shape = args[1].get_shape();
 
-                    auto& cudnn_emitter = external_function->get_cudnn_emitter();
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                     if (fp_input_shape.size() >= 4)
                     {
@@ -877,8 +880,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             mpb->get_padding_below(),
                             mpb->get_padding_above());
 
-                        writer << "gpu::cudnn_utils::cudnn_invoke_primitive(ctx, "
-                               << max_pool_bp_index << ", ";
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_bp_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << ", "
                                << args[1].get_name() << "}.data(), ";
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";

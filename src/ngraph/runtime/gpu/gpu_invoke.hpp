@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,12 +16,7 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include <cstddef>
 
 namespace ngraph
 {
@@ -29,17 +24,11 @@ namespace ngraph
     {
         namespace gpu
         {
-            typedef std::function<void(void**, void**)> primitive;
-
-            extern "C" {
-            struct GPURuntimeContext
-            {
-                cudnnHandle_t* cudnn_handle;
-                cublasHandle_t* cublas_handle;
-                gpu::primitive* const* gpu_primitives;
-                CudaFunctionPool* compiled_kernel_pool;
-            };
-            }
+            struct GPURuntimeContext;
+            extern "C" void invoke_primitive(GPURuntimeContext* ctx,
+                                             size_t primitive_index,
+                                             void** args,
+                                             void** result);
         }
     }
 }

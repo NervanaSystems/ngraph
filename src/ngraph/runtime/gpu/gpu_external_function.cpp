@@ -263,7 +263,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         return;
     }
 
-    m_cudnn_emitter.reset(new CUDNNEmitter());
+    m_primitive_emitter.reset(new GPUPrimitiveEmitter());
 
     string function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
@@ -300,9 +300,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/pass/manager.hpp"
     #include "ngraph/pass/memory_layout.hpp"
     #include "ngraph/runtime/aligned_buffer.hpp"
-    #include "ngraph/runtime/gpu/cudnn_invoke.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
+    #include "ngraph/runtime/gpu/gpu_invoke.hpp"
     #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"

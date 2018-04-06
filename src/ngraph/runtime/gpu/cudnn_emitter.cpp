@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
@@ -24,11 +25,9 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-size_t CUDNNEmitter::register_primitive(cudnn::primitive* f)
+CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
+    : m_primitive_emitter(emitter)
 {
-    // try emplace
-    m_cudnn_primitives.emplace_back(std::move(f));
-    return m_cudnn_primitives.size() - 1;
 }
 
 size_t CUDNNEmitter::build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
@@ -123,7 +122,7 @@ size_t CUDNNEmitter::build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
         };
     }
     // emit sum reduce operation
-    auto* reduce = new cudnn::primitive{
+    auto* reduce = new gpu::primitive{
         [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
             auto input_desc = get_input_desc();
             auto output_desc = get_output_desc();
@@ -155,7 +154,7 @@ size_t CUDNNEmitter::build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
             free_gpu_buffer(workspace_ptr);
         }};
 
-    return this->register_primitive(reduce);
+    return this->m_primitive_emitter->insert(reduce);
 }
 
 std::vector<int> cudnn_util::compute_strides(const std::vector<int>& dim)
@@ -202,7 +201,7 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
         return desc;
     };
 
-    auto* fpool = new cudnn::primitive{[=](void** inputs, void** outputs) {
+    auto* fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
         auto input_desc = get_tensor_desc(input_shape);
         auto output_desc = get_tensor_desc(output_shape);
         cudnnPoolingDescriptor_t desc;
@@ -229,7 +228,7 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
 
     }};
 
-    return this->register_primitive(fpool);
+    return this->m_primitive_emitter->insert(fpool);
 }
 
 size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
@@ -263,7 +262,7 @@ size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
         return desc;
     };
 
-    auto* bpool = new cudnn::primitive{[=](void** inputs, void** outputs) {
+    auto* bpool = new gpu::primitive{[=](void** inputs, void** outputs) {
         auto input_desc = get_tensor_desc(input_shape);
         auto output_desc = get_tensor_desc(output_shape);
         cudnnPoolingDescriptor_t desc;
@@ -300,5 +299,5 @@ size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
                                              outputs[0]));
     }};
 
-    return this->register_primitive(bpool);
+    return this->m_primitive_emitter->insert(bpool);
 }
