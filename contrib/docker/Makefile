@@ -325,17 +325,3 @@ clean:
 	rm -fr "${DIR}"/BUILD-GCC
 	rm -fr "${DIR}"/BUILD-CLANG
 	rm -fr "${DIR}"/BUILD-DOCS
-
-#
-# DEPRECATED TARGETS -- These WILL BE REMOVED in a future revision.
-#                       They exist here to maintain compatibility in Jenkins
-#                       jobs on older development branches.
-#
-
-check_cpu: check_all
-	echo 'WARNING: "make check_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make check_cpu" runs "make check_all" now, building with all compilers (gcc and clang)'
-
-build_ngraph_cpu: build_docker_image
-	echo 'WARNING: "make build_ngraph_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make build_ngraph_cpu" runs "make build_docker_image" now'
