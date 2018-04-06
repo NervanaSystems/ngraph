@@ -31,30 +31,13 @@ Understanding the ML ecosystem
 ===============================
 
 In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to take advantage 
-of automatable tasks as much as possible. As such, nGraph was designed to use 
-all available "automatic" graph construction endpoints handed down to it from a 
-framework. Our graph-construction API, therefore, needs to operate at a 
-fundamentally lower level than a typical framework's API. And, due to the fact
-that the nGraph :abbr:`Intermediate Representation (IR)` layer is what handles 
-the translation from the framework's endpoints to an optimized (optimizable) ML 
-environment, writing a model directly in nGraph would be somewhat akin to 
-programming in assembly language: not impossible, but not exactly the easiest
-thing for people to do. 
-
-Yet, when choosing among topologies for development, it's important to not 
-lose sight of the ultimate deployability and machine-runtime demands of a model 
-that you ultimately want trained. Likeise, when developing a new *genre* for ML/DL 
-modeling, it may be especially beneficial to consider ahead of time how portable
-and mobile you want that model to be within a rapidly-changing ecosystem. Even 
-doing a ``cost::benefit`` analysis among all of your options -- frontend and 
-backend -- can itself be a costly venture with no guarantee of success when 
-choosing among alternatives.    
-
-The value we're offering to the developer community is empowerment: we are
-confident that Intel® Architecture already provides the best computational 
-resources available for the breadth of ML/DL tasks. 
-
-.. TO add more about what Naveen talked about RE: computation and how AI is about that.  
+of automation and abstraction as much as possible. As such, nGraph was designed 
+to integrate wtih graph construction endpoints (AKA *ops*) handed down to it 
+from a framework. Our graph-construction API, therefore, needs to operate at a 
+fundamentally lower level than a typical framework's API. For this reason, 
+writing a model directly in nGraph would be somewhat akin to programming in 
+assembly language: not impossible, but not exactly the easiest thing for humans 
+to do. 
 
 
 .. _model_overview:

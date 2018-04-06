@@ -176,7 +176,7 @@ nGraph-TensorFlow bridge.
 
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _DSO: http://csweb.cs.wfu.edu/%7Etorgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
-.. _ngraph neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
+.. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
 .. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc
 .. _being the fastest: https://github.com/soumith/convnet-benchmarks/

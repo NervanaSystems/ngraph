@@ -23,12 +23,12 @@ nGraph™
 ########
 
 Welcome to the documentation site for nGraph™, an open-source C++ library and 
-command-line suite for the :abbr:`Deep Learning (DL)` ecosystem. Our goal with 
-this project is to empower algorithm designers, data scientists, framework 
+runtime / compiler suite for the :abbr:`Deep Learning (DL)` ecosystem. Our goal 
+with this project is to empower algorithm designers, data scientists, framework 
 architects, software engineers, and others with the means to make their work 
 :ref:`portable`, :ref:`adaptable`, and :ref:`deployable` across the most modern 
 :abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
-compute devices.
+computation devices.
 
 .. figure:: graphics/ngraph-ecosystem.png
    :width: 650px   
@@ -46,9 +46,6 @@ models, you are not limited to these when choosing among frontends. Architects
 of any framework (even those not listed above) can use our How-to 
 :doc:`compile and run <howto/execute>` a training model documentation to learn 
 how to design or tweak a framework to bridge directly to the nGraph compiler. 
-Note that when the framework is enabled for this direct optimization 
-:term:`bridge`, the framework itself provides the developer-facing API and 
-nGraph's optimizing compiler work happens automatically.    
 
 
 .. _adaptable: 
@@ -57,11 +54,10 @@ Adaptable
 =========
 
 We've recently added initial support for the `ONNX`_ format. Developers who 
-already have a "trained" :abbr: `DNN (Deep Neural Network)` model can use 
-nGraph to bypass a lot of the framework-based complexity and :doc:`howto/import` 
+already have a "trained" :abbr:`DNN (Deep Neural Network)` model can use 
+nGraph to bypass significant framework-based complexity and :doc:`howto/import` 
 to test or run it on targeted and efficient backends with our user-friendly 
-Python-based API, ``ngraph_api``.  See the `ngraph onnx companion tool`_ to 
-get started with it. 
+Python-based API.  See the `ngraph onnx companion tool`_ to get started. 
 
 
 .. csv-table::
@@ -84,41 +80,47 @@ Deployable
 It's no secret that the :abbr:`DL (Deep Learning)` ecosystem is evolving 
 rapidly. Benchmarking comparisons can be blown steeply out of proportion by 
 subtle tweaks to batch or latency numbers here and there. Where traditional 
-GPU-based training excels, inference can lag and vice versa. Sometimes it's not 
-so much about "speed at training a large dataset" as it is about latency in 
-getting a little bit of data back to the edge network, where it can be analyzed
-by an already-trained model. 
+GPU-based training excels, inference can lag and vice versa. Sometimes what we
+care about is not "speed at training a large dataset" but rather latency 
+compiling a complex multi-layer algorithm locally, and then outputting back to 
+an edge network, where it can be analyzed by an already-trained model. 
 
-Indeed, when choosing among "deployable" options, important to not lose sight of 
-the ultimate deployability and machine-runtime demands. Sometimes you don't need 
-a backhoe to plant a flower bulb. If, for example, you are developing a new 
-*genre* for ML/DL modeling, it may be especially beneficial to map out or  
-forecast the compute demands you need, and see where investment makes sense.  
+Indeed, when choosing among topologies, it is important to not lose sight of 
+the ultimate deployability and machine-runtime demands of your component in
+the larger ecosystem. It doesn't make sense to use a heavy-duty backhoe to 
+plant a flower bulb. Furthermore, if you are trying to develop an entirely 
+new genre of modeling for a :abbr:`DNN (Deep Neural Network)` component, it 
+may be especially beneficial to consider ahead of time how portable and 
+mobile you want that model to be within the rapidly-changing ecosystem.  
+With nGraph, any modern CPU can be used to design, write, test, and deploy 
+a training or inference model. You can then adapt and update that same core 
+model to run on a variety of backends:  
 
 
-Supported platforms
---------------------
+.. csv-table::
+   :header: "Backend", "Current nGraph support", "Future nGraph support"
+   :widths: 35, 10, 10
 
-Initially-supported backends include:
+   Intel® Architecture Processors (CPUs), Yes, Yes
+   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
+   NVIDIA\* CUDA (GPUs), Yes, Some 
+   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
+   `Movidius`_, Not yet, Yes
+   Other, Not yet, Ask
 
-* Intel® Architecture Processors (CPUs), 
-* Intel® Nervana™ Neural Network Processor™ (NNPs), and 
-* NVIDIA\* CUDA (GPUs). 
-
-Tentatively in the pipeline, we plan to add support for more backends,
-including:
-
-* :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
-* Movidius 
-
-.. note:: The library code is under active development as we're continually 
-   adding support for more kinds of DL models and ops, framework compiler 
-   optimizations, and backends. 
+The value we're offering to the developer community is empowerment: we are
+confident that Intel® Architecture already provides the best computational 
+resources available for the breadth of ML/DL tasks.  We welcome ideas and 
+`contributions`_ from the community.  
 
 
 Further project details can be found on our :doc:`project/about` page, or see 
 our :doc:`install` guide for how to get started.   
 
+
+.. note:: The library code is under active development as we're continually 
+   adding support for more kinds of DL models and ops, framework compiler 
+   optimizations, and backends. 
 
 
 =======
@@ -148,3 +150,5 @@ Indices and tables
      
 .. _ONNX:  http://onnx.ai
 .. _ngraph onnx companion tool: https://github.com/NervanaSystems/ngraph-onnx
+.. _Movidius: https://www.movidius.com/
+.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
