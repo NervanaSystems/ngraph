@@ -182,6 +182,14 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
 
+                size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                         const mkldnn::memory::desc& src_iter_desc,
+                                         const mkldnn::memory::desc& weights_layer_desc,
+                                         const mkldnn::memory::desc& weights_iter_desc,
+                                         const mkldnn::memory::desc& bias_desc,
+                                         const mkldnn::memory::desc& dst_layer_desc,
+                                         const mkldnn::memory::desc& dst_iter_desc);
+
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
