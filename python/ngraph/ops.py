@@ -21,9 +21,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, N
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
-    Constant, Convert, Convolution, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq, Less, \
-    LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, Parameter,\
-    Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
+    Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq,\
+    Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
+    Pad, Parameter, Product, Reshape, Slice, Softmax, Sqrt, Subtract, Sum, Tanh
 
 from typing import Iterable, List
 
@@ -47,7 +47,13 @@ def parameter(shape, dtype=np.float32, name=None):
 
 @nameable_op
 def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Constant
-    """Return an ngraph Constant object with the specified value."""
+    """Create a Constant node from provided value.
+
+    :param value: One of: array of values or scalar to initialize node with.
+    :param dtype: The data type of provided data.
+    :param name: Optional name for output node.
+    :return: The Constant node initialized with provided data.
+    """
     return make_constant_node(value, dtype)
 
 
@@ -97,6 +103,28 @@ def atan(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
+def cos(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply cosine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with cos operation applied on it.
+    """
+    return Cos(node)
+
+
+@unary_op
+def cosh(node, name=None):  # type: (NodeInput, str) -> Node
+    """Apply hyperbolic cosine function on the input node element-wise.
+
+    :param node: One of: input node, array or scalar.
+    :param name: Optional new name for output node.
+    :return: New node with cosh operation applied on it.
+    """
+    return Cosh(node)
+
+
+@unary_op
 def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies square root to the input node elementwise."""
     return Sqrt(node)
@@ -104,13 +132,23 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def exp(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies exp to the input node elementwise."""
+    """Return node which applies exp to the input node element-wise.
+
+    :param node: The node providing data for operation.
+    :param name: The optional name for new output node.
+    :return: The new node performing natural exponential operation.
+    """
     return Exp(node)
 
 
 @unary_op
 def log(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies natural logarithm to the input node elementwise."""
+    """Return node which applies natural logarithm to the input node element-wise.
+
+    :param node: The input node providing data for operation.
+    :param name: The optional new name for output node.
+    :return: The new node performing log operation element-wise.
+    """
     return Log(node)
 
 
@@ -122,13 +160,23 @@ def negative(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def floor(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies floor to the input node elementwise."""
+    """Return node which applies floor to the input node element-wise.
+
+    :param node: The input node providing data.
+    :param name: The optional name for new output node.
+    :return: The node performing element-wise floor operation.
+    """
     return Floor(node)
 
 
 @unary_op
 def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies ceiling to the input node elementwise."""
+    """Return node which applies ceiling to the input node element-wise.
+
+    :param node: The node providing data to ceiling operation.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise ceiling.
+    """
     return Ceiling(node)
 
 
@@ -147,7 +195,13 @@ def reshape(node, input_order, output_shape, name=None):
 # Binary ops
 @binary_op
 def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which applies f(x) = A/B to the input nodes elementwise."""
+    """Return node which applies f(x) = A/B to the input nodes element-wise.
+
+    :param left_node: The node providing dividend data.
+    :param right_node: The node providing divisor data.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise division.
+    """
     return Divide(left_node, right_node)
 
 
@@ -184,7 +238,13 @@ def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
 # Logical ops
 @binary_op
 def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if input nodes are equal elementwise."""
+    """Return node which checks if input nodes are equal element-wise.
+
+    :param left_node: The first input node for equal operation.
+    :param right_node: The second input node for equal operation.
+    :param name: The optional name for output new node.
+    :return: The node performing element-wise equality check.
+    """
     return Equal(left_node, right_node)
 
 
@@ -196,25 +256,51 @@ def not_equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput,
 
 @binary_op
 def greater(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left input node is greater than the right node elementwise."""
+    """Return node which checks if left input node is greater than the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is greater than right_node.
+    """
     return Greater(left_node, right_node)
 
 
 @binary_op
 def greater_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left node is greater or equal to the right node elementwise."""
+    """Return node which checks if left node is greater or equal to the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is greater than or equal
+             right_node.
+    """
     return GreaterEq(left_node, right_node)
 
 
 @binary_op
 def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left input node is less than the right node elementwise."""
+    """Return node which checks if left input node is less than the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is less than the right_node.
+    """
     return Less(left_node, right_node)
 
 
 @binary_op
 def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if left node is less or equal to the right node elementwise."""
+    """Return node which checks if left input node is less or equal the right node element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise check whether left_node is less than or equal the
+             right_node.
+    """
     return LessEq(left_node, right_node)
 
 
@@ -273,10 +359,23 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
 
 # matmul ops
 @nameable_op
-def dot(left_node, right_node, name=None):
-    # type: (Node, Node, str) -> Node
-    """Return node which performs matrix multiplication of two input nodes."""
-    return Dot(left_node, right_node)
+def dot(left_node, right_node, reduction_axes_count=None, name=None):
+    # type: (Node, Node, int, str) -> Node
+    """Return node which performs generalized dot product of two input nodes.
+
+    This operation is capable of performing scalar-tensor, matrix-vector product and matrix
+    multiplication.
+
+    :param left_node: The node providing left hand side data.
+    :param right_node: The node providing right hand side data.
+    :param reduction_axes_count: The number of axes to reduce during dot-product.
+    :param name: The optional name for output node.
+    :return: The new node performing dot-product on input two nodes.
+    """
+    if reduction_axes_count is None:
+        return Dot(left_node, right_node)
+    else:
+        return Dot(left_node, right_node, reduction_axes_count)
 
 
 # convpool ops
@@ -395,7 +494,7 @@ def max(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to max-reduce.
     :param reduction_axes: The axes to eliminate through max operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Max(node, AxisSet(reduction_axes))
@@ -408,7 +507,7 @@ def min(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to max-reduce.
     :param reduction_axes: The axes to eliminate through min operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Min(node, AxisSet(reduction_axes))
@@ -421,7 +520,7 @@ def prod(node, reduction_axes=None, name=None):
 
     :param node: The tensor we want to product-reduce.
     :param reduction_axes: The axes to eliminate through product operation.
-    :param name: Optional name for input node.
+    :param name: Optional name for output node.
     """
     reduction_axes = get_reduction_axes(node, reduction_axes)
     return Product(node, AxisSet(reduction_axes))
@@ -466,3 +565,33 @@ def softmax(node, axes):  # type: (Node, Iterable[int]) -> Node
     if type(axes) is not set:
         axes = set(axes)
     return Softmax(node, AxisSet(axes))
+
+
+@nameable_op
+def pad(data_batch,          # type: Node
+        value,               # type: Node
+        padding_below=None,  # type: TensorShape
+        padding_above=None,  # type: TensorShape
+        padding_in=None,     # type: TensorShape
+        name=None,           # type: str
+        ):
+    # type: (...) -> Node
+    """Return padding node.
+
+    :param data_batch: The input node providing data.
+    :param value: The node producing the scalar value to be inserted for padding.
+    :param padding_below: The padding-below widths.
+    :param padding_above: The padding-above widths.
+    :param padding_in: The interior-padding widths.
+    :param name: The optional new name for output node.
+    :return: Return node that represents a padding of input nodes data.
+    """
+    dim_count = len(data_batch.shape)
+    if padding_above is None:
+        padding_above = [0] * dim_count
+    if padding_below is None:
+        padding_below = [0] * dim_count
+    if padding_in is None:
+        padding_in = [0] * dim_count
+
+    return Pad(data_batch, value, Shape(padding_below), Shape(padding_above), Shape(padding_in))

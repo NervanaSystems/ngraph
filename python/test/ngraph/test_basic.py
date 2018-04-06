@@ -40,6 +40,12 @@ def test_simple_computation_on_ndarrays(dtype):
     result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
 
+    value_a = np.array([[13, 14], [15, 16]], dtype=dtype)
+    value_b = np.array([[17, 18], [19, 20]], dtype=dtype)
+    value_c = np.array([[21, 22], [23, 24]], dtype=dtype)
+    result = computation(value_a, value_b, value_c)
+    assert np.allclose(result, np.array([[630, 704], [782, 864]], dtype=dtype))
+
 
 def test_serialization():
     dtype = np.float32
@@ -58,15 +64,13 @@ def test_serialization():
     assert serial_json[0]['name'] != ''
     assert 10 == len(serial_json[0]['ops'])
 
-
-def test_broadcast():
     input_data = np.array([1, 2, 3])
 
     new_shape = [3, 3]
     expected = [[1, 2, 3],
                 [1, 2, 3],
                 [1, 2, 3]]
-    result = run_op_node(input_data, ng.broadcast, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
     axis = 0
@@ -74,13 +78,13 @@ def test_broadcast():
                 [2, 2, 2],
                 [3, 3, 3]]
 
-    result = run_op_node(input_data, ng.broadcast, new_shape, axis)
+    result = run_op_node([input_data], ng.broadcast, new_shape, axis)
     assert np.allclose(result, expected)
 
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
-    result = run_op_node(input_data, ng.broadcast, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
 
@@ -89,7 +93,7 @@ def test_broadcast():
 ])
 def test_convert_to_bool(val_type, input_data):
     expected = np.array(input_data, dtype=val_type)
-    result = run_op_node(input_data, ng.convert, val_type)
+    result = run_op_node([input_data], ng.convert, val_type)
     assert np.allclose(result, expected)
 
 
@@ -101,7 +105,7 @@ def test_convert_to_float(val_type, range_start, range_end, in_dtype):
     np.random.seed(133391)
     input_data = np.random.randint(range_start, range_end, size=(2, 2), dtype=in_dtype)
     expected = np.array(input_data, dtype=val_type)
-    result = run_op_node(input_data, ng.convert, val_type)
+    result = run_op_node([input_data], ng.convert, val_type)
     assert np.allclose(result, expected)
 
 
@@ -115,7 +119,7 @@ def test_convert_to_int(val_type):
     np.random.seed(133391)
     input_data = np.ceil(-8 + np.random.rand(2, 3, 4) * 16)
     expected = np.array(input_data, dtype=val_type)
-    result = run_op_node(input_data, ng.convert, val_type)
+    result = run_op_node([input_data], ng.convert, val_type)
     assert np.allclose(result, expected)
 
 
@@ -129,5 +133,5 @@ def test_convert_to_uint(val_type):
     np.random.seed(133391)
     input_data = np.ceil(np.random.rand(2, 3, 4) * 16)
     expected = np.array(input_data, dtype=val_type)
-    result = run_op_node(input_data, ng.convert, val_type)
+    result = run_op_node([input_data], ng.convert, val_type)
     assert np.allclose(result, expected)

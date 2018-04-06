@@ -29,6 +29,8 @@ from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
 from ngraph.ops import convolution
+from ngraph.ops import cos
+from ngraph.ops import cosh
 from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import equal
@@ -48,6 +50,7 @@ from ngraph.ops import minimum
 from ngraph.ops import multiply
 from ngraph.ops import negative
 from ngraph.ops import not_equal
+from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import prod
 from ngraph.ops import reshape

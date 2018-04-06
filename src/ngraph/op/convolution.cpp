@@ -370,8 +370,10 @@ shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args)
                                     m_data_dilation_strides);
 }
 
-void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x = get_input_op(0);
     const auto x_shape = x->get_shape();
 
