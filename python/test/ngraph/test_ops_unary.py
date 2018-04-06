@@ -25,14 +25,21 @@ from test.ngraph.util import run_op_numeric_data, run_op_node
     (ng.abs, np.abs, -1, 1),
     (ng.acos, np.arccos, -1, 1),
     (ng.asin, np.arcsin, -1, 1),
-    (ng.atan, np.arctan, -100, 100),
-    (ng.ceiling, np.ceil, -100, 100),
-    (ng.ceil, np.ceil, -100, 100),
-    (ng.cos, np.cos, -np.pi, np.pi),
-    (ng.cosh, np.cosh, -np.pi, np.pi),
-    (ng.exp, np.exp, -100, 100),
-    (ng.floor, np.floor, -100, 100),
-    (ng.log, np.log, 0, 100),
+    (ng.atan, np.arctan, -100., 100.),
+    (ng.ceiling, np.ceil, -100., 100.),
+    (ng.ceil, np.ceil, -100., 100.),
+    (ng.cos, np.cos, -np.pi * 2., np.pi * 2.),
+    (ng.cosh, np.cosh, -100., 100.),
+    (ng.exp, np.exp, -100., 100.),
+    (ng.floor, np.floor, -100., 100.),
+    (ng.log, np.log, 0, 100.),
+    (ng.relu, lambda x: np.maximum(0, x), -100., 100.),
+    (ng.sign, np.sign, -100., 100.),
+    (ng.sin, np.sin, -np.pi * 2., np.pi * 2.),
+    (ng.sinh, np.sinh, -100., 100.),
+    (ng.sqrt, np.sqrt, 0., 100.),
+    (ng.tan, np.tan, -1., 1.),
+    (ng.tanh, np.tanh, -100., 100.),
 ])
 def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     np.random.seed(133391)
@@ -59,6 +66,13 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.exp, np.exp, np.float32(1.5)),
     (ng.floor, np.floor, np.float32(1.5)),
     (ng.log, np.log, np.float32(1.5)),
+    (ng.relu, lambda x: np.maximum(0, x), np.float32(-0.125)),
+    (ng.sign, np.sign, np.float32(0.)),
+    (ng.sin, np.sin, np.float32(np.pi / 4.0)),
+    (ng.sinh, np.sinh, np.float32(0.)),
+    (ng.sqrt, np.sqrt, np.float32(3.5)),
+    (ng.tan, np.tan, np.float32(np.pi / 4.0)),
+    (ng.tanh, np.tanh, np.float32(0.1234)),
 ])
 def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)

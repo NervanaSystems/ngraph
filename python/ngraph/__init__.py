@@ -50,15 +50,25 @@ from ngraph.ops import minimum
 from ngraph.ops import multiply
 from ngraph.ops import negative
 from ngraph.ops import not_equal
+from ngraph.ops import one_hot
 from ngraph.ops import pad
 from ngraph.ops import parameter
+from ngraph.ops import power
 from ngraph.ops import prod
+from ngraph.ops import relu
+from ngraph.ops import replace_slice
 from ngraph.ops import reshape
+from ngraph.ops import reverse
+from ngraph.ops import select
+from ngraph.ops import sign
+from ngraph.ops import sin
+from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import sqrt
 from ngraph.ops import subtract
 from ngraph.ops import sum
+from ngraph.ops import tan
 from ngraph.ops import tanh
 
 from ngraph.runtime import runtime
