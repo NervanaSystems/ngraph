@@ -77,7 +77,7 @@ namespace ngraph
 
         protected:
             //owner of an argument node (in lieu of m_arguments)
-            std::shared_ptr<Node> src_node;
+            std::shared_ptr<Node> m_src_node;
             Node* m_node;   // The node we are an input for
             size_t m_index; // Index into all input tensors
             Output* m_output;

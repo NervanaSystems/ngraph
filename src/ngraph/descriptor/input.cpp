@@ -27,7 +27,7 @@ Input::Input(Node* node, size_t index, Output& output)
     , m_index(index)
     , m_output(&output)
 {
-    src_node = std::shared_ptr<Node>(output.get_node());
+    m_src_node = std::shared_ptr<Node>(output.get_node());
     output.add_input(this);
 }
 
@@ -36,7 +36,7 @@ void Input::replace_output(Output& new_output)
     m_output->remove_input(this);
     new_output.add_input(this);
     m_output = &new_output;
-    src_node = std::shared_ptr<Node>(new_output.get_node());
+    m_src_node = std::shared_ptr<Node>(new_output.get_node());
 }
 
 void Input::replace_output(std::shared_ptr<Node> node, size_t i)
