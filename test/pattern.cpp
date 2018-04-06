@@ -530,3 +530,92 @@ TEST(pattern, variance)
     ASSERT_TRUE(n.match(var_graph, variance));
     ASSERT_EQ(n.get_pattern_map()[var_graph], variance);
 }
+
+TEST(pattern, previous_matches)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+    Matcher::PatternMap previous_matches;
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto pattern = std::make_shared<pattern::op::Label>(b);
+    auto abs = make_shared<op::Abs>(a);
+    auto add = abs + b;
+    {
+        Matcher n(pattern + b);
+        ASSERT_TRUE(n.match(add, previous_matches));
+        ASSERT_EQ(n.get_pattern_map()[pattern], abs);
+    }
+
+    {
+        Matcher n(pattern + b);
+        previous_matches.insert(std::make_pair(pattern, a));
+        ASSERT_FALSE(n.match(add, previous_matches));
+    }
+}
+
+TEST(pattern, recurrent_pattern)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+    ngraph::pattern::Matcher::PatternMap previous_matches;
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto rpattern = std::make_shared<pattern::op::Label>(b);
+    auto iconst0 = construct_constant_node(0);
+    auto abs = make_shared<op::Abs>(a);
+    auto add1 = iconst0 + b;
+    auto add2 = iconst0 + add1;
+    auto add3 = iconst0 + add2;
+    auto padd = iconst0 + rpattern;
+    ngraph::pattern::RPatternMap matches;
+    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
+    Matcher::match_recurring_pattern(add3, padd, rpattern, matches, empty_correlated_matches);
+    ASSERT_EQ(matches.size(), 1);
+    ASSERT_EQ(matches.count(rpattern), 1);
+    auto recurrent_matches = matches[rpattern];
+    ASSERT_EQ(recurrent_matches.at(0), add2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+
+    //Multiple labels in a reccuring pattern
+    auto iconst1 = construct_constant_node(1);
+    auto iconst_label = std::make_shared<pattern::op::Label>(iconst1, nullptr, NodeVector{iconst1});
+    auto add2_2 = iconst1 + add1;
+    auto add3_2 = iconst0 + add2_2;
+    auto padd2 = iconst_label + rpattern;
+    matches.clear();
+    Matcher::match_recurring_pattern(add3_2, padd2, rpattern, matches, empty_correlated_matches);
+    ASSERT_EQ(matches.size(), 2);
+    recurrent_matches = matches[rpattern];
+    ASSERT_EQ(recurrent_matches.at(0), add2_2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+    auto iconst_matches = matches[iconst_label];
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+    ASSERT_EQ(iconst_matches.at(1), iconst1);
+    ASSERT_EQ(iconst_matches.at(2), iconst0);
+
+    //Non-matching correlated labels
+    matches.clear();
+    std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
+    correlated_matches.insert(iconst_label);
+    Matcher::match_recurring_pattern(add3_2, padd2, rpattern, matches, correlated_matches);
+    ASSERT_EQ(matches.size(), 2);
+    iconst_matches = matches[iconst_label];
+    ASSERT_EQ(iconst_matches.size(), 1);
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+
+    //Matching correlated labels
+    matches.clear();
+    Matcher::match_recurring_pattern(add3, padd2, rpattern, matches, correlated_matches);
+    ASSERT_EQ(matches.size(), 2);
+    recurrent_matches = matches[rpattern];
+    ASSERT_EQ(recurrent_matches.at(0), add2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+    iconst_matches = matches[iconst_label];
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+    ASSERT_EQ(iconst_matches.at(1), iconst0);
+    ASSERT_EQ(iconst_matches.at(2), iconst0);
+}
