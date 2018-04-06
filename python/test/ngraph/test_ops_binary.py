@@ -36,7 +36,7 @@ from test.ngraph.util import get_runtime
     (ng.less, np.less),
     (ng.less_eq, np.less_equal),
 ])
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_binary_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
 

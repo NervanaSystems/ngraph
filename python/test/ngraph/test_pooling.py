@@ -24,7 +24,8 @@ from test.ngraph.util import get_runtime
 def _ndarray_1x1x4x4():
     return np.arange(11, 27, dtype=np.float32).reshape(1, 1, 4, 4)
 
-@pytest.config.gpu_skip(reason="Not implemented")
+
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_avg_pool_2d(_ndarray_1x1x4x4):
     runtime = get_runtime()
     input_data = _ndarray_1x1x4x4
@@ -73,7 +74,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
     assert np.allclose(result, expected)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_avg_pooling_3d(_ndarray_1x1x4x4):
     rt = get_runtime()
     data = _ndarray_1x1x4x4

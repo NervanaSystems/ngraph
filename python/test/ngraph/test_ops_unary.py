@@ -34,7 +34,7 @@ from test.ngraph.util import run_op_numeric_data, run_op_node
     (ng.floor, np.floor, -100, 100),
     (ng.log, np.log, 0, 100),
 ])
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     np.random.seed(133391)
     input_data = range_start + np.random.rand(2, 3, 4) * (range_end - range_start)
@@ -61,7 +61,7 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.floor, np.floor, np.float32(1.5)),
     (ng.log, np.log, np.float32(1.5)),
 ])
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
 
