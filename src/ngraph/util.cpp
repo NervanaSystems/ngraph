@@ -32,6 +32,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace ngraph;
 
 std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
 {
@@ -278,6 +279,63 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     fprop_cache.bprop = std::make_shared<Function>(cloned_results, bprop_input_params);
 
     return fprop_cache;
+}
+
+size_t stopwatch::get_call_count() const
+{
+    return m_total_count;
+}
+
+size_t stopwatch::get_seconds() const
+{
+    return chrono::duration_cast<chrono::seconds>(get_timer_value()).count();
+}
+
+size_t stopwatch::get_milliseconds() const
+{
+    return chrono::duration_cast<chrono::milliseconds>(get_timer_value()).count();
+}
+
+size_t stopwatch::get_microseconds() const
+{
+    return chrono::duration_cast<chrono::microseconds>(get_timer_value()).count();
+}
+
+size_t stopwatch::get_nanoseconds() const
+{
+    return get_timer_value().count();
+}
+
+chrono::nanoseconds stopwatch::get_timer_value() const
+{
+    if (m_active)
+    {
+        return (m_clock.now() - m_start_time);
+    }
+    else
+    {
+        return m_last_time;
+    }
+}
+
+size_t stopwatch::get_total_seconds() const
+{
+    return chrono::duration_cast<chrono::seconds>(m_total_time).count();
+}
+
+size_t stopwatch::get_total_milliseconds() const
+{
+    return chrono::duration_cast<chrono::milliseconds>(m_total_time).count();
+}
+
+size_t stopwatch::get_total_microseconds() const
+{
+    return chrono::duration_cast<chrono::microseconds>(m_total_time).count();
+}
+
+size_t stopwatch::get_total_nanoseconds() const
+{
+    return m_total_time.count();
 }
 
 namespace ngraph
