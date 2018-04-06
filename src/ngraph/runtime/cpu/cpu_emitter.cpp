@@ -3105,14 +3105,26 @@ namespace ngraph
                            << "});\n";
                 }
 #else
-                // TODO: add an emitter akin to the emit_sum
-                writer << "reference::max<" << out[0].get_type() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                         " << out[0].get_name() << ",\n";
-                writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                writer << "                         {" << join(max->get_reduction_axes())
-                       << "});\n";
+                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 2 &&
+                    max->get_reduction_axes().size() == 1)
+                {
+                    writer << "cpu::kernel::reduce_max_2d_1rd_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}, "
+                           << "{" << join(max->get_reduction_axes()) << "}"
+                           << ");\n";
+                }
+                else
+                {
+                    writer << "reference::max<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(max->get_reduction_axes())
+                           << "});\n";
+                }
 #endif
                 writer.block_end();
             }
