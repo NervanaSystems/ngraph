@@ -80,8 +80,10 @@ shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) cons
     return make_shared<Concat>(new_args, m_concatenation_axis);
 }
 
-void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto concat_result_shape = get_outputs().at(0).get_shape();
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);

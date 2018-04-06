@@ -118,4 +118,6 @@ namespace ngraph
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
+
+    std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
 }

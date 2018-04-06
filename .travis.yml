@@ -1,0 +1,23 @@
+sudo: required
+
+language: cpp
+
+services:
+  - docker
+
+env:
+  - TASK=cpp_test
+  - TASK=python2_test
+  - TASK=python3_test
+
+before_install:
+  - docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+
+install: true
+
+script:
+  - .ci/travis/ubuntu/run_test.sh
+
+branches:
+  only:
+    - "master"

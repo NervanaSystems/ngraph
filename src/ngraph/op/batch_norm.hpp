@@ -90,7 +90,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
         private:
             Shape m_bn_input_shape;

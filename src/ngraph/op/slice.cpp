@@ -102,8 +102,10 @@ shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto x = get_inputs().at(0).get_output().get_node();
 
     adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
