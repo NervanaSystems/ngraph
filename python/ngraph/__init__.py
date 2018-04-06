@@ -38,13 +38,13 @@ from ngraph.ops import exp
 from ngraph.ops import floor
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
-from ngraph.ops import log
 from ngraph.ops import less
 from ngraph.ops import less_eq
+from ngraph.ops import log
 from ngraph.ops import logical_not
 from ngraph.ops import max
-from ngraph.ops import maximum
 from ngraph.ops import max_pool
+from ngraph.ops import maximum
 from ngraph.ops import min
 from ngraph.ops import minimum
 from ngraph.ops import multiply
