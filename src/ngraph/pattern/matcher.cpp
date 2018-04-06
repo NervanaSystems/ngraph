@@ -45,39 +45,48 @@ namespace ngraph
             RPatternMap& patterns,
             const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
         {
-            bool no_match = false;
+            bool matched = false;
             Matcher m(pattern);
             PatternMap previous_matches;
 
             NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
+            //try to match one cell (i.e. pattern)
             while (m.match(graph, previous_matches))
             {
-                no_match = true;
-                //for the next round
+                matched = true;
+                //move to the next cell
                 graph = m.m_pattern_map[rpattern];
                 NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
-                for (auto me : m.m_pattern_map)
+
+                //copy bound nodes for the current pattern graph into a global matches map
+                for (auto cur_match : m.m_pattern_map)
                 {
-                    patterns[me.first].push_back(m.m_pattern_map[me.first]);
+                    patterns[cur_match.first].push_back(cur_match.second);
                 }
 
-                for (auto l : correlated_patterns)
+                //pre-populate the pattern map for the next cell with the bound nodes
+                //from the current match. Only bound nodes whose labels are in
+                //correlated_patterns are pre-populated. Any other labels are
+                //unbounded by default
+                for (auto cor_pat : correlated_patterns)
                 {
-                    if (m.m_pattern_map.count(l) != 0)
+                    if (m.m_pattern_map.count(cor_pat) != 0)
                     {
-                        if (previous_matches.count(l) != 0)
+                        //assert that bound nodes from the previous and current matches are the same
+                        if (previous_matches.count(cor_pat) != 0)
                         {
-                            if (previous_matches[l] != m.m_pattern_map[l])
+                            if (previous_matches[cor_pat] != m.m_pattern_map[cor_pat])
                             {
                                 throw ngraph_error(
                                     "previous matches and current matches aren't consistent!");
                             }
                         }
-                        previous_matches[l] = m.m_pattern_map[l];
+
+                        previous_matches[cor_pat] = m.m_pattern_map[cor_pat];
                     }
                 }
             }
-            return no_match;
+            return matched;
         }
 
         std::shared_ptr<Node> Matcher::match_root() { return m_match_root; }
@@ -272,7 +281,7 @@ namespace ngraph
 
             if (!m_pattern_node || !graph_node)
             {
-                throw "m_pattern_node or graph_node are not set!";
+                throw ngraph_error("m_pattern_node or graph_node are not set");
             }
 
             NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
@@ -298,7 +307,7 @@ namespace ngraph
 
             if (!m_pattern_node || !graph_node)
             {
-                throw "m_pattern_node or graph_node are not set!";
+                throw ngraph_error("m_pattern_node or graph_node are not set");
             }
 
             NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
