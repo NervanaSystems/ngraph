@@ -33,6 +33,7 @@ namespace ngraph
     namespace pattern
     {
         using gr_callback_fn = std::function<bool(class Matcher& m)>;
+        using recurrent_gr_callback_fn = std::function<bool(class RecurrentMatcher& m)>;
         using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
 
         namespace op
@@ -103,14 +104,6 @@ namespace ngraph
             /// \param pattern is a recurring pattern
             /// \param rpattern specifies a node to recur from next
             /// \param patterns a map from labels to matches
-            /// \param correlated_patterns specify labels whose bound nodes should be
-            /// the same across all cells
-            static bool match_recurring_pattern(
-                std::shared_ptr<Node> graph,
-                std::shared_ptr<Node> pattern,
-                std::shared_ptr<op::Label> rpattern,
-                RPatternMap& patterns,
-                const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
             friend op::Label; //TODO: refine to match_class
 
         protected:
@@ -140,6 +133,53 @@ namespace ngraph
 
             gr_callback_fn m_callback;
             size_t m_depth;
+        };
+
+        class RecurrentMatcher
+        {
+            //static bool match_recurring_pattern(std::shared_ptr<Node> graph, std::shared_ptr<Node> pattern, std::shared_ptr<op::Label> rpattern, RPatternMap& patterns, const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
+
+            /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
+            /// repeating patterns (e.g. RNN, LSTM, GRU cells)
+            ///
+            /// \param pattern is a pattern sub graph describing an individual cell
+            /// \param rpattern is a (recurring) label to denote which node the next match should start at
+            /// \param correlated_patterns is a set of labels whose bound nodes must remain the same across all cells
+            // \param is a callback function that will be called on a successful match
+            RecurrentMatcher(std::shared_ptr<Node> pattern,
+                             std::shared_ptr<op::Label> rpattern,
+                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns,
+                             recurrent_gr_callback_fn callback)
+                : m_pattern(pattern)
+                , m_recurrent_pattern(rpattern)
+                , m_correlated_patterns(correlated_patterns)
+                , m_callback(callback)
+            {
+            }
+
+            /// \brief Returns a vector of bound nodes for a given label (used in a pattern
+            /// describing an individual cell
+            NodeVector get_bound_nodes_for_pattern(std::shared_ptr<op::Label> pattern)
+            {
+                if (m_matches.count(pattern) == 0)
+                {
+                    throw ngraph_error("No bound nodes for a given label");
+                }
+
+                return NodeVector{m_matches[pattern]};
+            }
+
+            /// \brief Tries to match a pattern for an individual cell to a given \p graph
+            bool match(std::shared_ptr<Node> graph);
+
+            /// \brief Invoked by a pass to process a successful match
+            bool process_match();
+
+            std::shared_ptr<op::Label> m_recurrent_pattern;
+            std::shared_ptr<Node> m_pattern;
+            RPatternMap m_matches;
+            recurrent_gr_callback_fn m_callback;
+            const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
         };
     }
 }
