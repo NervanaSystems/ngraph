@@ -65,13 +65,6 @@ cd contrib/docker
 make check_gcc OS=centos74
 ```
 
-* To build an Ubuntu 16.04 docker container and compile with gcc 5.4 using a custom dockerfile:
-
-```
-cd contrib/docker
-make build_gcc DOCKERFILE=<custom_dockerfile_name>
-```
-
 ## Helper Scripts
 
 These helper scripts are included for use in the `Makefile` and automated (Jenkins) jobs.  **These scripts should _not_ be called directly unless you understand what they do.**
