@@ -72,8 +72,8 @@ ifeq ("$(shell echo ${OS} | grep centos)","centos74")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_centos_user.sh
     CPU_DOCKERFILE=Dockerfile.ngraph.centos74
 else
-    CPU_DOCKERFILE ?= "Dockerfile.ngraph.ubuntu1604"
-    RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
+    CPU_DOCKERFILE="Dockerfile.ngraph.ubuntu1604"
+    RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
 endif
 
