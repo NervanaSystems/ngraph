@@ -114,6 +114,7 @@ set (SRC
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
+    pass/validate_graph.cpp
     pass/visualize_tree.cpp
     pass/core_fusion.cpp
     pattern/matcher.cpp
