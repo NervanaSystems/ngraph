@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <limits>
+
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 
@@ -24,13 +26,28 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter()
     : m_cuda_emitter(new CUDAEmitter(this)), m_cudnn_emitter(new CUDNNEmitter(this))
 {
 }
+std::unique_ptr<CUDAEmitter>& GPUPrimitiveEmitter::get_cuda_emitter()
+{
+    return m_cuda_emitter;
+}
 std::unique_ptr<CUDNNEmitter>& GPUPrimitiveEmitter::get_cudnn_emitter()
 {
     return m_cudnn_emitter;
 }
 size_t GPUPrimitiveEmitter::insert(gpu::primitive* f)
 {
-    // try emplace
     m_gpu_primitives.emplace_back(std::move(f));
     return m_gpu_primitives.size() - 1;
+}
+size_t GPUPrimitiveEmitter::lookup(std::string hash)
+{
+    if (m_primitive_map.count(hash) > 0)
+    {
+        return m_primitive_map[hash];
+    }
+    return std::numeric_limits<size_t>::max();
+}
+size_t GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
+{
+    m_primitive_map.insert({hash,index});
 }
