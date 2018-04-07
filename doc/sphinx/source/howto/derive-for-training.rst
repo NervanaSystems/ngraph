@@ -4,8 +4,8 @@
 Derive a trainable model 
 #########################
 
-Documentation in this section describes one of the ways to derive a trainable 
-model from an inference model.
+Documentation in this section describes one of the ways to derive and run a
+trainable model from an inference model.
 
 We can derive a trainable model from any graph that has been constructed with 
 weight-based updates. For this example named ``mnist_mlp.cpp``, we start with 
@@ -13,7 +13,7 @@ a hand-designed inference model and convert it to a model that can be trained
 with nGraph. 
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
-trainable model, our example includes the use of a simple data loader for the 
+model, our example includes the use of a simple data loader foruncompressed
 MNIST data.
 
 * :ref:`model_overview`
@@ -49,11 +49,10 @@ Due to the lower-level nature of the graph-construction API, the example we've
 selected to document here is a relatively simple model: a fully-connected 
 topology with one hidden layer followed by ``Softmax``.
 
-Remember that in nGraph, the graph is stateless; the framework's endpoints are 
-treated as stateless nodes. There are parameters for both the inputs and the 
-weights. Using those data points, we will construct the graph for inference and 
-then use create a graph for training. The training function will return tensors 
-for the updated weights. 
+Remember that in nGraph, the graph is stateless; values for the weights must
+provided as parameters along with the normal inputs. Starting with the graph
+for inference, we will use it to create a graph for training. The training
+function will return tensors for the updated weights. 
 
 .. note:: This example illustrates how to convert an inference model into one 
    that can be trained. Depending on the framework, bridge code may do something 

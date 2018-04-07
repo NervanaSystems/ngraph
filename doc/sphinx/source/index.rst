@@ -22,9 +22,9 @@
 nGraph™ 
 ########
 
-Welcome to the documentation site for nGraph™, an open-source C++ library and 
-runtime / compiler suite for the :abbr:`Deep Learning (DL)` ecosystem. Our goal 
-with this project is to empower algorithm designers, data scientists, framework 
+Welcome to the nGraph™ documentation site, an open-source C++ library and 
+runtime / compiler suite for :abbr:`Deep Learning (DL)` ecosystems. Our goal 
+is to empower algorithm designers, data scientists, framework 
 architects, software engineers, and others with the means to make their work 
 :ref:`portable`, :ref:`adaptable`, and :ref:`deployable` across the most modern 
 :abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
@@ -53,7 +53,7 @@ how to design or tweak a framework to bridge directly to the nGraph compiler.
 Adaptable
 =========
 
-We've recently added initial support for the `ONNX`_ format. Developers who 
+We've recently begun support for the `ONNX`_ format. Developers who 
 already have a "trained" :abbr:`DNN (Deep Neural Network)` model can use 
 nGraph to bypass significant framework-based complexity and :doc:`howto/import` 
 to test or run it on targeted and efficient backends with our user-friendly 
