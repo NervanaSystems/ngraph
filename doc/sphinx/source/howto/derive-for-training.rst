@@ -50,7 +50,7 @@ selected to document here is a relatively simple model: a fully-connected
 topology with one hidden layer followed by ``Softmax``.
 
 Remember that in nGraph, the graph is stateless; values for the weights must
-provided as parameters along with the normal inputs. Starting with the graph
+be provided as parameters along with the normal inputs. Starting with the graph
 for inference, we will use it to create a graph for training. The training
 function will return tensors for the updated weights. 
 
@@ -58,7 +58,7 @@ function will return tensors for the updated weights.
    that can be trained. Depending on the framework, bridge code may do something 
    similar, or the framework might do this operation itself. Here we do the 
    conversion with nGraph because the computation for training a model is 
-   significantly larger than one for inference, and doing the conversion manually 
+   significantly larger than for inference, and doing the conversion manually 
    is tedious and error-prone.
 
 
