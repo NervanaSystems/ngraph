@@ -309,7 +309,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         auto output_vars = open_for_loops(writer, out_shape);
 
         writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
-        writer << "residual" << emit_bracketed_string(output_vars) << " = 1e-8;\n";
+        writer << "residual" << emit_bracketed_string(output_vars) << " = 0;\n";
 
         close_for_loops(writer, output_vars);
     }
