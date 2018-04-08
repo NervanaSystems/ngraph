@@ -836,6 +836,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPool)
             {
+                // assumes NC{d1,d2,...} format
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
                 writer.block_begin("  // " + node->get_name());
                 {
@@ -885,11 +886,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << ");\n";
                     }
 
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+                    int num_nontrivial_dims = 0;
+                    for (int i = shape_to_pool.size()-1; i>1; i--)
+                    {
+                        if (shape_to_pool[i] > 1) { num_nontrivial_dims++; }
+                    }
 
                     // 1d max pool
-                    if (input_shape.size() == 3)
+                    if (input_shape.size() == 3 || num_nontrivial_dims == 1)
                     {
                         // pre-compile cuda kernel
                         runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
@@ -904,11 +908,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                << "\"}, " << out[0].get_size() << ", " << args[0].get_name() << ", "
                                << out[0].get_name() << ", " << max_pool->get_window_shape()[0]
                                << ", " << max_pool->get_window_movement_strides()[0] << ", "
-                               << input_shape[2] << ", " << result_shape[2] << ");\n";
+                               << input_shape.back() << ", " << result_shape.back() << ");\n";
                     }
                     // 2d max pool without padding (NCHW)
                     else if (input_shape.size() >= 4)
                     {
+                        auto& cudnn_emitter =
+                            external_function->get_primitive_emitter()->get_cudnn_emitter();
+
                         auto max_pool_index = cudnn_emitter->build_pooling_forward(
                             CUDNN_POOLING_MAX, // non-deterministic
                             external_function->ctx().get(),
