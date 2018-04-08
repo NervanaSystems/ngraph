@@ -41,13 +41,17 @@ namespace ngraph
 
         public:
             virtual ~Manager() {}
+            /// DEPRECATED
             /// @brief Allocate a backend for this transformer.
             ///
             /// Specific transformers may provide addtional methods for allocating customized backends.
             virtual std::shared_ptr<Backend> allocate_backend() = 0;
 
+            /// @brief Query the list of available subdevices of this device.
+            /// @returns A vector of available devices of the specified type.
             virtual std::vector<size_t> get_subdevices() const = 0;
 
+            /// DEPRECATED
             /// @brief Convert a function to a form that can be run on a backend.
             virtual std::shared_ptr<ExternalFunction>
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;
