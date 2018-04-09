@@ -59,34 +59,30 @@ static std::shared_ptr<Node> return_broadcast(std::shared_ptr<Node> n)
     return std::make_shared<op::Broadcast>(n->get_input_op(1), n->get_shape(), axes);
 }
 
-std::unique_ptr<std::unordered_map<std::type_index,
-                                   std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>>
-    make_const_values_to_ops()
+static std::unordered_map<std::type_index,
+                          std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>
+    initialize_const_values_to_ops()
 {
-    return std::unique_ptr<
-        std::unordered_map<std::type_index,
-                           std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>>(
-        new std::unordered_map<std::type_index,
-                               std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>{
-            {TI(ngraph::op::AvgPool), return_zero_const},
-            {TI(ngraph::op::MaxPool), return_zero_const},
-            {TI(ngraph::op::Convolution), return_zero_const},
-            {TI(ngraph::op::Sum), return_zero_const},
-            {TI(ngraph::op::Product), return_one_const},
-            {TI(ngraph::op::Pad), return_broadcast},
-        });
+    return std::unordered_map<std::type_index,
+                              std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>({
+        {TI(ngraph::op::AvgPool), return_zero_const},
+        {TI(ngraph::op::MaxPool), return_zero_const},
+        {TI(ngraph::op::Convolution), return_zero_const},
+        {TI(ngraph::op::Sum), return_zero_const},
+        {TI(ngraph::op::Product), return_one_const},
+        {TI(ngraph::op::Pad), return_broadcast},
+    });
 }
 
-static std::unique_ptr<
-    std::unordered_map<std::type_index,
-                       std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>>
-    ops_to_const_values = make_const_values_to_ops();
+static std::unordered_map<std::type_index,
+                          std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>
+    ops_to_const_values = initialize_const_values_to_ops();
 
 static std::shared_ptr<Node> get_const_value_for_op(std::shared_ptr<Node> n)
 {
     const Node& node = *n;
-    auto entry = ops_to_const_values->find(TI(node));
-    return entry == ops_to_const_values->end() ? nullptr : entry->second(n);
+    auto entry = ops_to_const_values.find(TI(node));
+    return entry == ops_to_const_values.end() ? nullptr : entry->second(n);
 }
 
 static bool has_zero_dim(std::shared_ptr<Node> node)
