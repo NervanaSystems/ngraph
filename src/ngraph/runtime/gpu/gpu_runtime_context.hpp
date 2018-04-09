@@ -19,6 +19,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
@@ -27,17 +29,14 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CudaFunctionPool
+            extern "C" {
+            struct GPURuntimeContext
             {
-            public:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
-
-            private:
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
+                cudnnHandle_t* cudnn_handle;
+                cublasHandle_t* cublas_handle;
+                CudaFunctionPool* compiled_kernel_pool;
             };
+            }
         }
     }
 }

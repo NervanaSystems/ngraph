@@ -39,6 +39,7 @@ namespace ngraph
             class GPU_ExternalFunction;
             class GPU_Emitter;
             class GPU_CallFrame;
+            struct GPURuntimeContext;
 
             using OpFunction =
                 std::function<void(GPU_ExternalFunction* external_function,
@@ -57,7 +58,9 @@ namespace ngraph
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                ~GPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
 
             protected:
                 void compile();
@@ -82,6 +85,7 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unique_ptr<GPURuntimeContext> m_ctx;
             };
         }
     }
