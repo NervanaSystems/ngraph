@@ -16,22 +16,22 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/shape.hpp"
+#include <array>
 
 namespace ngraph
 {
+    class Shape;
+
     namespace runtime
     {
         namespace gpu
         {
+            class GPURuntimeContext;
             class GPUPrimitiveEmitter;
 
             class CUDAEmitter
             {
                 friend class GPUPrimitiveEmitter;
-
             public:
                 size_t build_pad(const GPURuntimeContext* ctx,
                                  const std::array<std::string, 2>& dtypes,
