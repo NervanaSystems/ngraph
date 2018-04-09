@@ -194,18 +194,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding = convolution->get_padding_below();
                 CoordinateDiff padding_above = convolution->get_padding_above_forward();
-                for(auto a:data_dilation_strides)
+                for (auto a : data_dilation_strides)
                 {
-                    if(a != 1)
+                    if (a != 1)
                     {
-                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with data dilation is not implemented.");
                     }
                 }
-                for(int i = 0; i < padding.size(); i++)
+                for (int i = 0; i < padding.size(); i++)
                 {
-                    if(padding[i] != padding_above[i])
+                    if (padding[i] != padding_above[i])
                     {
-                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with asymmetric padding is not implemented.");
                     }
                 }
 
@@ -266,18 +268,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above = convolution->get_padding_above_forward();
-                for(auto a:data_dilation_strides)
+                for (auto a : data_dilation_strides)
                 {
-                    if(a != 1)
+                    if (a != 1)
                     {
-                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with data dilation is not implemented.");
                     }
                 }
-                for(int i = 0; i < padding.size(); i++)
+                for (int i = 0; i < padding.size(); i++)
                 {
-                    if(padding[i] != padding_above[i])
+                    if (padding[i] != padding_above[i])
                     {
-                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with asymmetric padding is not implemented.");
                     }
                 }
 
@@ -340,18 +344,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above = convolution->get_padding_above_forward();
-                for(auto a:data_dilation_strides)
+                for (auto a : data_dilation_strides)
                 {
-                    if(a != 1)
+                    if (a != 1)
                     {
-                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with data dilation is not implemented.");
                     }
                 }
-                for(int i = 0; i < padding.size(); i++)
+                for (int i = 0; i < padding.size(); i++)
                 {
-                    if(padding[i] != padding_above[i])
+                    if (padding[i] != padding_above[i])
                     {
-                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                        throw std::runtime_error(node->get_name() +
+                                                 "with asymmetric padding is not implemented.");
                     }
                 }
 
