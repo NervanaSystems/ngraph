@@ -634,30 +634,33 @@ def prod(node, reduction_axes=None, name=None):
 
 
 @nameable_op
-def reduce(node,                # type: Node
-           initial_value,       # type: ScalarData
-           reduction_function,  # type: Node
-           reduce_axes,         # type: List[int]
-           name=None,           # type: str
+def reduce(node,                 # type: Node
+           initial_value,        # type: ScalarData
+           reduction_node,       # type: Node
+           reduction_axes=None,  # type: List[int]
+           name=None,            # type: str
            ):
     # type: (...) -> Node
     """Perform general tensor reduction operation.
 
     :param node: The node providing data for reduction operation.
     :param initial_value: The initial value for reduction operation.
-    :param reduction_function: The node providing binary reduction operation. The function must
-                               accept two scalar values and return one scalar value.
-    :param reduce_axes: The list of axes indices to be reduced.
-    :param name: The optional new name for output node.
-    :return: The node performing reduction operation with provided reduction function.
+    :param reduction_node: The node providing binary reduction operation. The operation must
+                           accept two nodes providing scalar operands and return a node which
+                           produces a scalar result.
+    :param reduction_axes: The list of axes indices to be reduced. Default to reduce all axes.
+    :param name: The new name for output node.
+    :return: The node performing reduction operation with provided reduction node.
     """
+    if reduction_axes is None:
+        reduction_axes = list(range(len(node.shape)))
+    init_val_node = constant(initial_value)
+    # wrap reduction node into Function object
     param1 = Parameter(node.get_element_type(), Shape([]))
     param2 = Parameter(node.get_element_type(), Shape([]))
-    reduce_result_nodes = NodeVector([reduction_function(param1, param2)])
-    reduce_fun_params = [param1, param2]
-    reduce_function = Function(reduce_result_nodes, reduce_fun_params, 'reduce_fun')
-    init_val_node = constant(initial_value)
-    return Reduce(node, init_val_node, reduce_function, AxisSet(set(reduce_axes)))
+    reduction_operation = Function(NodeVector([reduction_node(param1, param2)]), [param1, param2],
+                                   'reduction_operation')
+    return Reduce(node, init_val_node, reduction_operation, AxisSet(set(reduction_axes)))
 
 
 # reshape ops
