@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -76,6 +76,8 @@ namespace ngraph
             const element::Type& get_element_type() const;
 
         protected:
+            //owner of an argument node (in lieu of m_arguments)
+            std::shared_ptr<Node> m_src_node;
             Node* m_node;   // The node we are an input for
             size_t m_index; // Index into all input tensors
             Output* m_output;

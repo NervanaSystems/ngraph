@@ -23,7 +23,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
 
@@ -108,11 +108,15 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
                                                 const ngraph::Strides& strides,
                                                 const ngraph::Strides& dilation_strides,
                                                 const ngraph::CoordinateDiff& padding_below,
-                                                const ngraph::CoordinateDiff& padding_above)
+                                                const ngraph::CoordinateDiff& padding_above,
+                                                const mkldnn::post_ops& pops)
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
     size_t result_index = build_memory_primitive(result_desc);
+
+    mkldnn::primitive_attr conv_attr;
+    conv_attr.set_post_ops(pops);
 
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
@@ -125,6 +129,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
           mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
           mkldnn::padding_kind::zero},
+         conv_attr,
          mkldnn_utils::global_cpu_engine},
         *m_mkldnn_primitives[input_data_index],
         *m_mkldnn_primitives[weights_index],
@@ -572,7 +577,10 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& result_desc,
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
-                                              const double eps)
+                                              const double eps,
+                                              bool use_global_stats,
+                                              bool bn_training_flag,
+                                              const mkldnn::post_ops& pops)
 {
     size_t input_index = build_memory_primitive(input_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -580,21 +588,48 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     size_t mean_index = build_memory_primitive(mean_desc);
     size_t variance_index = build_memory_primitive(variance_desc);
 
-    size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-        {{mkldnn::prop_kind::forward_training,
-          input_desc,
-          eps,
-          mkldnn::batch_normalization_flag::use_scale_shift},
-         mkldnn_utils::global_cpu_engine},
-        mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
-        mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
-        static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index]),
-        *m_mkldnn_primitives[mean_index],
-        *m_mkldnn_primitives[variance_index]));
+    mkldnn::primitive_attr bn_attr;
+    bn_attr.set_post_ops(pops);
 
-    m_primitive_deps[batchnorm_index] = {
-        input_index, weights_index, result_index, mean_index, variance_index};
-    return batchnorm_index;
+    if (bn_training_flag && !use_global_stats)
+    {
+        size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
+            {{mkldnn::prop_kind::forward_training,
+              input_desc,
+              eps,
+              mkldnn::batch_normalization_flag::use_scale_shift},
+             bn_attr,
+             mkldnn_utils::global_cpu_engine},
+            mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
+            mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
+            static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index]),
+            *m_mkldnn_primitives[mean_index],
+            *m_mkldnn_primitives[variance_index]));
+
+        m_primitive_deps[batchnorm_index] = {
+            input_index, weights_index, result_index, mean_index, variance_index};
+        return batchnorm_index;
+    }
+    else
+    {
+        size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
+            {{mkldnn::prop_kind::forward_training,
+              input_desc,
+              eps,
+              mkldnn::batch_normalization_flag::use_scale_shift |
+                  mkldnn::batch_normalization_flag::use_global_stats},
+             bn_attr,
+             mkldnn_utils::global_cpu_engine},
+            mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
+            mkldnn::primitive::at(*m_mkldnn_primitives[mean_index]),
+            mkldnn::primitive::at(*m_mkldnn_primitives[variance_index]),
+            mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
+            static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index])));
+
+        m_primitive_deps[batchnorm_index] = {
+            input_index, mean_index, variance_index, weights_index, result_index};
+        return batchnorm_index;
+    }
 }
 
 size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,

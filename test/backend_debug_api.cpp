@@ -51,7 +51,7 @@ TEST(INTERPRETER, nan_check_input)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     icf->set_nan_check(true);
-    EXPECT_ANY_THROW(icf->call({a, b}, {result}));
+    EXPECT_ANY_THROW(icf->call({result}, {a, b}));
 }
 
 TEST(INTERPRETER, nan_check_output)
@@ -77,5 +77,5 @@ TEST(INTERPRETER, nan_check_output)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     icf->set_nan_check(true);
-    EXPECT_ANY_THROW(icf->call({a, b}, {result}));
+    EXPECT_ANY_THROW(icf->call({result}, {a, b}));
 }

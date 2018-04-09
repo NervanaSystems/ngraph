@@ -24,11 +24,11 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 
@@ -37,9 +37,10 @@ std::shared_ptr<Function> autodiff::backprop_function(const std::shared_ptr<Func
     auto Y_out = f->get_output_op(0);
     auto Xs = f->get_parameters();
     auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+    Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
     std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
-        return Y_out->backprop_node(X, C);
+    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+        return adjoints.backprop_node(X);
     });
     std::vector<std::shared_ptr<op::Parameter>> params(Xs);
     params.push_back(C);

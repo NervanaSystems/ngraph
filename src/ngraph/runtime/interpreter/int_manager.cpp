@@ -28,6 +28,12 @@ shared_ptr<runtime::Backend> runtime::interpreter::INT_Manager::allocate_backend
     return make_shared<INT_Backend>();
 }
 
+std::vector<size_t> runtime::interpreter::INT_Manager::get_subdevices() const
+{
+    vector<size_t> rc;
+    return rc;
+}
+
 shared_ptr<runtime::ExternalFunction>
     runtime::interpreter::INT_Manager::compile(const shared_ptr<Function>& fun)
 {

@@ -19,7 +19,7 @@
 #include <cassert>
 #include <memory.h>
 #include "ngraph/node.hpp"
-#include "ngraph/ops/constant.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
@@ -32,7 +32,8 @@ namespace ngraph
 
     namespace pattern
     {
-        using gr_callback_fn = std::function<std::shared_ptr<Node>(class Matcher& m)>;
+        using gr_callback_fn = std::function<bool(class Matcher& m)>;
+        using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
 
         namespace op
         {
@@ -63,12 +64,53 @@ namespace ngraph
             /// \param graph_node is an input graph to be matched against
             bool match(const std::shared_ptr<Node>& graph_node);
 
-            std::shared_ptr<Node> process_match(gr_callback_fn callback = nullptr);
+            /// \brief Matches a pattern to \p graph_node
+            ///
+            /// \param graph_node is an input graph to be matched against
+            /// \param previous_matches contains previous mappings from labels to nodes to use
+            bool match(const std::shared_ptr<Node>& graph_node, const PatternMap& previous_matches);
+
+            template <typename T>
+            static std::shared_ptr<T> unique_match(std::shared_ptr<Node> node)
+            {
+                std::shared_ptr<T> matched;
+                for (auto arg : node->get_input_ops())
+                {
+                    if (auto t_casted = std::dynamic_pointer_cast<T>(arg))
+                    {
+                        if (matched)
+                        {
+                            throw ngraph_error("There's more than two arguments of the same type");
+                        }
+                        else
+                        {
+                            matched = t_casted;
+                        }
+                    }
+                }
+                return matched;
+            }
+
+            bool process_match(gr_callback_fn callback = nullptr);
 
             void reset() {}
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
             std::shared_ptr<Node> match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
+            /// \brief Low-level helper to match recurring patterns
+            ///
+            /// \param graph is a graph to be matched against
+            /// \param pattern is a recurring pattern
+            /// \param rpattern specifies a node to recur from next
+            /// \param patterns a map from labels to matches
+            /// \param correlated_patterns specify labels whose bound nodes should be
+            /// the same across all cells
+            static bool match_recurring_pattern(
+                std::shared_ptr<Node> graph,
+                std::shared_ptr<Node> pattern,
+                std::shared_ptr<op::Label> rpattern,
+                RPatternMap& patterns,
+                const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
             friend op::Label; //TODO: refine to match_class
 
         protected:

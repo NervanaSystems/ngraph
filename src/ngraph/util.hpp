@@ -17,6 +17,8 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -28,6 +30,7 @@ namespace ngraph
 {
     class Node;
     class Function;
+    class NodeMap;
     class stopwatch;
 
     namespace runtime
@@ -54,7 +57,7 @@ namespace ngraph
     }
 
     template <typename T>
-    static std::string vector_to_string(const T& v)
+    std::string vector_to_string(const T& v)
     {
         std::ostringstream os;
         os << "[ " << ngraph::join(v) << " ]";
@@ -132,33 +135,25 @@ namespace ngraph
             }
         }
 
-        size_t get_call_count() const { return m_total_count; }
-        size_t get_seconds() const { return get_nanoseconds() / 1e9; }
-        size_t get_milliseconds() const { return get_nanoseconds() / 1e6; }
-        size_t get_microseconds() const { return get_nanoseconds() / 1e3; }
-        size_t get_nanoseconds() const
-        {
-            if (m_active)
-            {
-                return (m_clock.now() - m_start_time).count();
-            }
-            else
-            {
-                return m_last_time.count();
-            }
-        }
+        size_t get_call_count() const;
+        size_t get_seconds() const;
+        size_t get_milliseconds() const;
+        size_t get_microseconds() const;
+        std::chrono::nanoseconds get_timer_value() const;
+        size_t get_nanoseconds() const;
 
-        size_t get_total_seconds() const { return get_total_nanoseconds() / 1e9; }
-        size_t get_total_milliseconds() const { return get_total_nanoseconds() / 1e6; }
-        size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
-        size_t get_total_nanoseconds() const { return m_total_time.count(); }
+        size_t get_total_seconds() const;
+        size_t get_total_milliseconds() const;
+        size_t get_total_microseconds() const;
+        size_t get_total_nanoseconds() const;
+
     private:
         std::chrono::high_resolution_clock m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
         bool m_active = false;
         std::chrono::nanoseconds m_total_time =
             std::chrono::high_resolution_clock::duration::zero();
-        std::chrono::nanoseconds m_last_time;
+        std::chrono::nanoseconds m_last_time = std::chrono::high_resolution_clock::duration::zero();
         size_t m_total_count = 0;
     };
 
@@ -214,6 +209,30 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
+    template <typename T, bool (*func)(T)>
+    void check_fp_values(const char* name, const T* array, size_t n)
+    {
+        bool (*fPtr)(T) = &std::isinf;
+        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
+        for (size_t i = 0; i < n; i++)
+        {
+            if (func(array[i]))
+            {
+                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
+                                         "'");
+            }
+        }
+    }
+
+    template void
+        check_fp_values<float, std::isinf>(const char* name, const float* array, size_t n);
+    template void
+        check_fp_values<float, std::isnan>(const char* name, const float* array, size_t n);
+    template void
+        check_fp_values<double, std::isinf>(const char* name, const double* array, size_t n);
+    template void
+        check_fp_values<double, std::isnan>(const char* name, const double* array, size_t n);
+
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
@@ -229,10 +248,11 @@ namespace ngraph
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
         std::vector<std::shared_ptr<Node>> fprop_output_nodes;
+        std::shared_ptr<NodeMap> node_param_map;
     };
 
     /**
-    * This utility takes forward-propogation and back-propogation XLAunctions
+    * This utility takes forward-propogation and back-propagation functions
     * and turns them into clone functions where the intermediate values of
     * the forward prop are added to the output of fprop and the input of the bprop
     * to avoid repeat calcualtions.

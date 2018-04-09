@@ -278,7 +278,7 @@ TEST_F(CloneTest, clone_nodes_partial)
 
 TEST_F(CloneTest, clone_function_full)
 {
-    auto cloned_func = clone_function(func, node_map);
+    auto cloned_func = clone_function(*func, node_map);
     ASSERT_TRUE(CompareNodeVector(func->get_ops(), cloned_func->get_ops(), node_map));
 }
 
@@ -294,8 +294,7 @@ TEST(graph_util, clone_multiple_results)
     auto f =
         make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
 
-    NodeMap node_map;
-    auto copy = clone_function(f, node_map);
+    auto copy = clone_function(*f);
 }
 
 TEST(util, round_up)

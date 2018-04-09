@@ -27,15 +27,14 @@ namespace ngraph
 {
     namespace pass
     {
-        class AssignPlacement : public CallGraphPass
+        class AssignPlacement : public NodePass
         {
         public:
             // TODO: make policy a class
             AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-            virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
         private:
-            bool run_on_node(std::shared_ptr<Node> node);
+            bool run_on_node(std::shared_ptr<Node> node) override;
             std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
         };
     }

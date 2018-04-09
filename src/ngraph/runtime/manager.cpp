@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
@@ -30,9 +31,9 @@ using namespace std;
 
 // Put all runtime plugin here. Plugins are statically linked, and a known function need to be
 // called to register the backend.
-#ifdef NGRAPH_ARGON_ENABLE
-bool REGISTER_ARGON_RUNTIME();
-static bool argon_runtime_initialized = REGISTER_ARGON_RUNTIME();
+#ifdef NGRAPH_NNP_ENABLE
+bool REGISTER_NNP_RUNTIME();
+static bool nnp_runtime_initialized = REGISTER_NNP_RUNTIME();
 #endif
 
 runtime::Manager::FactoryMap& runtime::Manager::get_factory_map()

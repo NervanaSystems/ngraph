@@ -25,13 +25,14 @@ include_directories(
     )
 
 set (SRC
+    backend_api.cpp
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
-    builder_xla.cpp
     build_graph.cpp
     copy.cpp
     core_fusion.cpp
+    cpio.cpp
     eigen.cpp
     element_type.cpp
     file_util.cpp
@@ -60,6 +61,7 @@ set (SRC
 )
 
 add_subdirectory(models)
+add_subdirectory(files)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this
@@ -79,7 +81,7 @@ endif()
 if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp)
+    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp cpu_test.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
@@ -96,24 +98,13 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
-if(NGRAPH_ARGON_ENABLE)
-    include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
-    set(SRC ${SRC} argon_fusion.cpp)
-
-    # enable additional Argon backend test
-    set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
-    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
-    set(ADDITIONAL_ARGON_TEST
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
-            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
-
-    # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
-    set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
+if(NGRAPH_NNP_ENABLE)
+    include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
+    set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
+    # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
+    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
+    set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
@@ -182,20 +173,26 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
+if(NGRAPH_NNP_ENABLE)
+    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
+    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
+    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
+endif()
+
 add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
-        COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-        )
+    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+)
 
 add_custom_target(unit-test-check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
 	DEPENDS unit-test
-        )
+)
 
 add_custom_target(check
-        DEPENDS
-        style-check
-        unit-test-check
-        )
+    DEPENDS
+    style-check
+    unit-test-check
+)

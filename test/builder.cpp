@@ -37,7 +37,7 @@ shared_ptr<runtime::TensorView>
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
@@ -57,7 +57,7 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
@@ -77,7 +77,7 @@ shared_ptr<runtime::TensorView> make_reduce_result_false(
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({a}, {result});
+    cf->call({result}, {a});
 
     return result;
 }
@@ -139,4 +139,30 @@ TEST(builder, numpy_transpose)
         dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
     EXPECT_ANY_THROW(
         dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
+}
+
+TEST(builder, tensor_mask)
+{
+    Shape max_sequence_length{3};
+    auto sequence_lengths = make_shared<op::Parameter>(element::u32, max_sequence_length);
+
+    Shape mask_shape{3, 5};
+    auto f =
+        make_shared<Function>(builder::tensor_mask<op::Less>(sequence_lengths, 1, 0, mask_shape, 0),
+                              op::ParameterVector{sequence_lengths});
+
+    auto manager = runtime::Manager::get("INTERPRETER");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto sequence_lengths_data =
+        backend->make_primary_tensor_view(element::u32, max_sequence_length);
+    copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
+    auto result = backend->make_primary_tensor_view(element::boolean, mask_shape);
+
+    cf->call({result}, {sequence_lengths_data});
+    vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
+
+    EXPECT_EQ(expected, read_vector<char>(result));
 }

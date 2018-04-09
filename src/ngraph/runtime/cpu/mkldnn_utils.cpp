@@ -20,16 +20,17 @@
 #include <unordered_set>
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batch_norm.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/relu.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/ops/conv_bias.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/type/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
 
@@ -49,6 +50,7 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
     TI(ngraph::op::ConvolutionBias),
+    TI(ngraph::op::ConvolutionRelu),
     TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
@@ -214,6 +216,15 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format f
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
 {
     if (s_filter_formats.find(fmt) != s_filter_formats.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::format fmt)
+{
+    if (fmt == memory::format::nChw8c || fmt == memory::format::nChw16c)
     {
         return true;
     }

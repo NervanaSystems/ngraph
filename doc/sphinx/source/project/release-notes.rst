@@ -3,5 +3,5 @@
 Release Notes
 #############
 
-This is the |release| release.  
+This is the |version| of release.  
 

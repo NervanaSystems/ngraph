@@ -96,13 +96,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
-    cf->call({x, y, z}, {result});
+    cf->call({result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    cf->call({y, x, z}, {result});
+    cf->call({result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    cf->call({x, z, y}, {result});
+    cf->call({result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 
@@ -131,6 +131,31 @@ TEST(serialize, default_value)
     EXPECT_EQ(x2, 2);
     int x3 = get_or_default<int>(j, "test3", 3);
     EXPECT_EQ(x3, 3);
+}
+
+TEST(serialize, constant)
+{
+    const string tmp_file = "serialize_constant.cpio";
+    Shape shape{2, 2, 2};
+    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
+
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
+    serialize(tmp_file, f);
+    auto g = deserialize(tmp_file);
+    file_util::remove_file(tmp_file);
+    bool found = false;
+    for (shared_ptr<Node> node : g->get_ops())
+    {
+        shared_ptr<op::Constant> c = dynamic_pointer_cast<op::Constant>(node);
+        if (c)
+        {
+            found = true;
+            EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), c->get_vector<float>());
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
 }
 
 TEST(benchmark, serialize)

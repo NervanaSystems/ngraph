@@ -17,7 +17,7 @@
 #include "inliner.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/function_call.hpp"
+#include "ngraph/op/function_call.hpp"
 
 std::vector<std::shared_ptr<ngraph::op::FunctionCall>>
     ngraph::pass::InlineSmallCalls::create_inlining_plan(std::shared_ptr<ngraph::Function> f,
@@ -68,7 +68,7 @@ bool ngraph::pass::Inliner::inline_function_call(std::shared_ptr<ngraph::Node> i
         nm.add(callee->get_parameters().at(i), callsite->get_input_op(i));
     }
 
-    ngraph::clone_function(callee, nm);
+    ngraph::clone_function(*callee, nm);
 
     auto callee_graph = nm.get(callee->get_result());
     caller->replace_node(callsite, callee_graph);

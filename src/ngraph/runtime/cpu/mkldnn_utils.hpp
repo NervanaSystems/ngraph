@@ -20,7 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -45,6 +45,7 @@ namespace ngraph
                 bool compare_mkldnn_formats(mkldnn::memory::format fmt1,
                                             mkldnn::memory::format fmt2);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
+                bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
             }
         }
     }

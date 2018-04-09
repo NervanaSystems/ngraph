@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"

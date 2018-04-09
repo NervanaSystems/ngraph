@@ -18,8 +18,10 @@
 
 #include <memory>
 
+#include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/test_tools.hpp"
@@ -98,7 +100,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                cf->tensor_call(df_input_args, df_output_args);
+                cf->tensor_call(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -143,12 +145,14 @@ namespace ngraph
             // df/dX*
             std::vector<std::shared_ptr<Node>> df_output_params;
 
+            Adjoints adjoints(NodeVector{f->get_output_op(0)}, NodeVector{c_param});
+
             // for each x "of interest"
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
                 auto x_shape = x->get_shape();
-                df_output_params.push_back(f->get_output_op(0)->backprop_node(x, c_param));
+                df_output_params.push_back(adjoints.backprop_node(x));
             }
 
             // (c, X)
@@ -187,13 +191,15 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
-            auto cache_fwd = manager->compile(fprop_cache.fprop);
+            auto clone_fwd = clone_function(*fprop_cache.fprop);
+            auto cache_fwd = manager->compile(clone_fwd);
             auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
-            cache_fwd_cf->tensor_call(f_input_args, mod_f_output_args);
+            cache_fwd_cf->tensor_call(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
-            auto cache_dfdx = get_autodiff<T>(
-                manager, backend, fprop_cache.bprop, mod_df_input_args, indep_params);
+            auto clone_bwd = clone_function(*fprop_cache.bprop);
+            auto cache_dfdx =
+                get_autodiff<T>(manager, backend, clone_bwd, mod_df_input_args, indep_params);
 
             const auto numpy_atol = 1e-5f;
             const auto numpy_rtol = 1e-8f;

@@ -34,17 +34,40 @@ namespace ngraph
             template <typename T>
             struct CudaOpMap;
 
-            void emit_broadcast(
-                void* in, void* out, size_t repeat_size, size_t repeat_times, size_t count);
+            void emit_broadcast(const std::string& name,
+                                CUdeviceptr in,
+                                CUdeviceptr out,
+                                const std::array<std::string, 2>& data_types,
+                                size_t repeat_size,
+                                size_t repeat_times,
+                                size_t count);
+
+            void emit_onehot(const std::string& name,
+                             CUdeviceptr in,
+                             CUdeviceptr out,
+                             const std::array<std::string, 2>& data_types,
+                             size_t repeat_size,
+                             size_t repeat_times,
+                             size_t count);
+
+            void emit_reshape(const std::string& name,
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              const std::array<std::string, 2>& data_types,
+                              CUdeviceptr input_strides,
+                              CUdeviceptr trans_strides,
+                              size_t rank,
+                              size_t count);
 
             template <typename T, typename... Inputs>
-            void emit_elementwise_op(std::string name,
-                                     std::array<std::string, 2> data_types,
+            void emit_elementwise_op(const std::string& name,
+                                     const std::array<std::string, 2>& data_types,
                                      size_t count,
                                      CUdeviceptr out,
                                      Inputs&&... inputs)
             {
                 std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
+                std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
                 if (CudaFunctionPool::instance().get(name + type_signature) == nullptr)
                 {
                     codegen::CodeWriter writer;

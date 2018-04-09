@@ -18,7 +18,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 

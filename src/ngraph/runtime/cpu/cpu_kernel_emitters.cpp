@@ -124,7 +124,7 @@ void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
 }
 
 //
-// For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
+// For the reference kernel this is based on, see ngraph/runtime/reference/concat.hpp.
 //
 void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
                                                const string& element_type,
@@ -309,7 +309,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         auto output_vars = open_for_loops(writer, out_shape);
 
         writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
-        writer << "residual" << emit_bracketed_string(output_vars) << " = 1e-8;\n";
+        writer << "residual" << emit_bracketed_string(output_vars) << " = 0;\n";
 
         close_for_loops(writer, output_vars);
     }

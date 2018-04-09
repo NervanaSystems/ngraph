@@ -95,5 +95,10 @@ Glossary
    model description
 
       A description of a program's fundamental operations that are 
-      used by a framework to generate inputs for computation.   
+      used by a framework to generate inputs for computation. 
+
+   export
+   
+      The serialized version of a trained model that can be passed to
+      one of the nGraph backends for computation.      
 

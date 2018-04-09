@@ -17,8 +17,8 @@
 #include "ngraph/builder/autobroadcast.hpp"
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/reshape.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
 #include <cassert>
