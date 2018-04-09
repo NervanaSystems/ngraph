@@ -24,13 +24,13 @@ namespace ngraph
         {
             namespace kernel
             {
-                void reshape_2d_2d_float32(float* input,
+                void reshape_3d_3d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
                                            const AxisSet& input_axis_order,
                                            const Shape& output_shape)
                 {
-                    reshape<float, 2, 2>(
+                    reshape<float, 3, 3>(
                         input, output, input_shape, input_axis_order, output_shape);
                 }
 

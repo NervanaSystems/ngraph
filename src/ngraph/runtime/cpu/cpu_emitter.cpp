@@ -1318,8 +1318,18 @@ namespace ngraph
                     writer << "               );\n";
                 }
 #else
-                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 4 &&
-                    out[0].get_shape().size() == 4)
+                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 3 &&
+                    out[0].get_shape().size() == 3)
+                {
+                    writer << "cpu::kernel::reshape_3d_3d_float32(" << args[0].get_name() << ", "
+                           << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(reshape->get_input_order()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}"
+                           << ");\n";
+                }
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
                 {
                     writer << "cpu::kernel::reshape_4d_4d_float32(" << args[0].get_name() << ", "
                            << out[0].get_name() << ", "
