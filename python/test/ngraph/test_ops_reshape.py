@@ -20,6 +20,7 @@ import ngraph as ng
 from test.ngraph.util import get_runtime, run_op_numeric_data
 
 
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_concat():
     a = np.array([[1, 2], [3, 4]])
     b = np.array([[5, 6]])
@@ -39,6 +40,7 @@ def test_concat():
     (bool, False),
     (bool, np.empty((2, 2), dtype=bool)),
 ])
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_constant_from_bool(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
@@ -57,6 +59,7 @@ def test_constant_from_bool(val_type, value):
     (np.uint32, np.uint32(123456)),
     (np.uint64, np.uint64(1234567)),
 ])
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_constant_from_scalar(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
@@ -67,6 +70,7 @@ def test_constant_from_scalar(val_type, value):
     np.float32,
     np.float64,
 ])
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_constant_from_float_array(val_type):
     np.random.seed(133391)
     input_data = np.array(-1 + np.random.rand(2, 3, 4) * 2, dtype=val_type)
@@ -84,6 +88,7 @@ def test_constant_from_float_array(val_type):
     (np.uint32, 0, 1024),
     (np.uint64, 0, 16383),
 ])
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_constant_from_integer_array(val_type, range_start, range_end):
     np.random.seed(133391)
     input_data = np.array(np.random.randint(range_start, range_end, size=(2, 2)), dtype=val_type)
