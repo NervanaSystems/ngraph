@@ -636,7 +636,7 @@ public:
         ngraph::pattern::recurrent_gr_callback_fn callback = [iconst_label, rpattern](
             pattern::RecurrentMatcher& rm) {
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
-                         << rm.match_root()->get_name();
+                         << rm.get_match_root()->get_name();
 
             auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
 
