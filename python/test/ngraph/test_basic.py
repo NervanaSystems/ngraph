@@ -24,6 +24,7 @@ from test.ngraph.util import get_runtime, run_op_node
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
                                    np.int8, np.int16, np.int32, np.int64,
                                    np.uint8, np.uint16, np.uint32, np.uint64])
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_simple_computation_on_ndarrays(dtype):
     runtime = get_runtime()
 
