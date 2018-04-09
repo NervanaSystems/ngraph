@@ -40,6 +40,8 @@ namespace ngraph
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
 
+                virtual std::vector<size_t> get_subdevices() const override;
+
                 virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
                     compile(const std::shared_ptr<ngraph::Function>& fun) override;
 

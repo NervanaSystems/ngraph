@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,30 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/util.hpp"
 
-#include <memory>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/runtime/manager.hpp"
-
-namespace ngraph
+TEST(backend_api, registered_devices)
 {
-    namespace runtime
-    {
-        namespace gpu
-        {
-            class GPU_Manager : public Manager
-            {
-            public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
+    vector<string> devices = runtime::Backend::get_registered_devices();
+    EXPECT_GE(devices.size(), 1);
 
-                virtual std::vector<size_t> get_subdevices() const override;
-
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
-
-                static Factory factory;
-            };
-        };
-    }
+    EXPECT_TRUE(contains(devices, "INTERPRETER"));
 }
