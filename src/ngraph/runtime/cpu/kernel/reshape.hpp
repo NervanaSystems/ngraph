@@ -50,12 +50,7 @@ namespace ngraph
                     for (int i = 0; i < InRank; i++)
                     {
                         in_dims[i] = input_shape[i];
-                    }
-
-                    int i = 0;
-                    for (auto axis : input_axis_order)
-                    {
-                        axis_order[i++] = axis;
+                        axis_order[i] = input_axis_order[i];
                     }
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, OutRank, Eigen::RowMajor>> out(
