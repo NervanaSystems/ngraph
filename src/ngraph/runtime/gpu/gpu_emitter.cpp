@@ -193,6 +193,21 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides window_movement_strides = convolution->get_window_movement_strides();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding = convolution->get_padding_below();
+                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                for(auto a:data_dilation_strides)
+                {
+                    if(a != 1)
+                    {
+                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                    }
+                }
+                for(int i = 0; i < padding.size(); i++)
+                {
+                    if(padding[i] != padding_above[i])
+                    {
+                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                    }
+                }
 
                 writer.block_begin("  // " + node->get_name());
                 writer << "float alpha = 1.0;\n";
@@ -250,6 +265,21 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
+                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                for(auto a:data_dilation_strides)
+                {
+                    if(a != 1)
+                    {
+                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                    }
+                }
+                for(int i = 0; i < padding.size(); i++)
+                {
+                    if(padding[i] != padding_above[i])
+                    {
+                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                    }
+                }
 
                 writer.block_begin("  // " + node->get_name());
                 writer << "float alpha = 1.0;\n";
@@ -309,6 +339,21 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
+                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                for(auto a:data_dilation_strides)
+                {
+                    if(a != 1)
+                    {
+                        throw std::runtime_error(node->get_name() + "with data dilation is not implemented.");
+                    }
+                }
+                for(int i = 0; i < padding.size(); i++)
+                {
+                    if(padding[i] != padding_above[i])
+                    {
+                        throw std::runtime_error(node->get_name() + "with asymmetric padding is not implemented.");
+                    }
+                }
 
                 writer.block_begin("  //data_dilation_ " + node->get_name());
                 writer << "int count = " << out[0].get_size() << ";\n";
