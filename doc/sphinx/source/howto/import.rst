@@ -6,15 +6,10 @@ Import a model
 
 :ref:`from_onnx`
 
-.. That can be the first page data scientists find when they are simply trying 
-.. to run a trained model; they DO NOT need to do a system install of the Intel
-.. nGraph++ bridges; they can use our Python APIs to run a trained model.
-..  
+nGraph APIs can be used to run inference on a model that has been *exported* 
+from a Deep Learning framework. An export produces a file with a serialized 
+model that can be loaded and passed to one of the nGraph backends.  
 
-The Intel nGraph APIs can be used to run inference on a model that has been 
-*exported* from a Deep Learning framework. An export produces a file with 
-a serialized model that can be loaded and passed to one of the nGraph 
-backends.  
 
 .. _from_onnx:
 
@@ -40,60 +35,59 @@ to build an nGraph representation of the model, execute it, and produce some
 outputs.
 
 
-Installing ``ngraph_onnx``
-==========================
+Installing ``ngraph_onnx`` with nGraph from scratch
+====================================================
 
-To use ONNX models with ngraph, you will also need the companion tool 
-``ngraph_onnx``. ``ngraph_onnx`` requires Python 3.4 or higher.
-
-This code assumes that you already followed the default instructions from the 
-:doc:`../install` guide; ``ngraph_dist`` was installed to ``$HOME/ngraph_dist``
-and the `ngraph` repo was cloned to ``/opt/libraries/``
-
-#. First set the environment variables to where we built the nGraph++ libraries:
-
-   .. code-block:: bash
-
-      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
-      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
-      export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib  # On MacOS
-
-#. Now add *Protocol Buffers* and Python3 PIP dependencies to your system. ONNX 
-   requires Protocol Buffers version 2.6.1 or higher. For example, on Ubuntu:
-
-   .. code-block:: console
-
-      $ sudo apt install protobuf-compiler libprotobuf-dev python3-pip
-
-#. Checkout the branch named `python_binding`: 
-
-   .. code-block:: console
-
-      $ cd /opt/libraries/ngraph
-      $ git checkout python_binding
-        Switched to branch 'python_binding'
-
-#. Recursively update the submodule and install the Python dependencies: 
-
-   .. code-block:: console
-
-      $ git submodule update --init --recursive
-      $ cd python
-      $ pip3 install -r requirements.txt
-      $ pip3 install .
-
-#. Finally, clone the ``ngraph-onnx`` repo and use :command:`pip` to install the 
-   Python dependencies for this tool; if you set up your original nGraph library 
-   installation under a ``libraries`` directory    as recommended, it's a good 
-   idea to clone this repo there, as well.
+To use ONNX models with nGraph, you will also need the companion tool 
+``ngraph_onnx``, which requires Python 3.4 or higher. If nGraph has not 
+yet been installed to your system, you can follow these steps to install 
+everything at once; if an `ngraph_dist` is already installed on your system, 
+skip ahead to the next section, :ref:`install_ngonnx`.
    
+
+#. Prepare to install the nGraph library by building a Python3 wheel.
+  
    .. code-block:: console
 
-      $ cd /opt/libraries
-      $ git clone git@github.com:NervanaSystems/ngraph-onnx
-      $ cd ngnraph-onnx
-      $ pip3 install -r requirements.txt
-      $ pip3 install .
+      # apt update
+      # apt install python3 python3-pip python3-dev
+      # apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
+      $ git clone https://github.com/NervanaSystems/ngraph.git
+      $ cd ngraph/python
+      $ ./build_python3_wheel.sh
+
+#. After the Python3 binary wheel file (``ngraph-*.whl``) is prepared, install  
+   with :command:`pip3`, or :command:`pip` in a virtual environment.
+
+   .. code-block:: console
+
+      (your_venv) $ pip install -U build/dist/ngraph-0.1.0-cp35-cp35m-linux_x86_64.whl
+
+#. Confirm ngraph is properly installed through a Python interpreter:
+
+   .. code-block:: console
+
+      (your_venv) $ python3
+
+   .. code-block:: python
+      
+      import ngraph as ng
+      ng.abs([[1, 2, 3], [4, 5, 6]])
+      <Abs: 'Abs_1' ([2, 3])>
+
+   If you don't see any errors, ngraph should be installed correctly.
+
+
+.. _install_ngonnx:
+
+Installing ngraph-onnx
+-----------------------
+
+Install the ``ngraph-onnx`` companion tool using pip:
+
+.. code-block:: console
+
+   (your_venv) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
  
 
 Importing a serialized model
@@ -111,7 +105,7 @@ ONNX.
 
 
 Enable ONNX and load an ONNX file from disk
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -119,15 +113,34 @@ Enable ONNX and load an ONNX file from disk
 
  
 Convert an ONNX model to an ngraph model 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
    :lines: 22-23
 
+
+The importer returns a list of ngraph models for every ONNX graph 
+output:
+
+
+.. code-block:: python
+
+   print(ng_models)
+   [{
+       'name': 'Plus5475_Output_0',
+       'output': <Add: 'Add_1972' ([1, 10])>,
+       'inputs': [<Parameter: 'Parameter_1104' ([1, 3, 32, 32], float)>]
+    }]
+
+The ``output`` field contains the ngraph node corrsponding to the output node 
+in the imported ONNX computational graph. The ``inputs`` list contains all 
+input parameters for the computation which generates the output.
+
+
  
 Using ngraph_api, create a callable computation object
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -135,14 +148,14 @@ Using ngraph_api, create a callable computation object
 
 
 Load or create an image
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
    :lines: 32-33
 
 Run ResNet inference on picture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 .. literalinclude:: ../../../examples/onnx_example.py
    :language: python
@@ -173,7 +186,7 @@ demonstration purposes, the code will look something like:
 .. Importing models from NNVM
    ---------------------------
 
-.. if you work on NNVM you can add this instuction here. 
+.. if you work on NNVM you can add this instruction here. 
 
 
 
@@ -186,7 +199,7 @@ demonstration purposes, the code will look something like:
 .. etc, eof 
 
 
-
+.. _ngraph-onnx: https://github.com/NervanaSystems/ngraph-onnx#ngraph
 .. _ONNX: http://onnx.ai
 .. _tutorials from ONNX: https://github.com/onnx/tutorials
 .. _CNTK: https://www.microsoft.com/en-us/cognitive-toolkit/features/model-gallery/
