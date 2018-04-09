@@ -14,28 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <pybind11/pybind11.h>
 
-#include <exception>
-#include <functional>
-#include <sstream>
+#include "ngraph/op/pad.hpp"
+#include "ngraph/shape.hpp"
+#include "pyngraph/ops/pad.hpp"
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
+namespace py = pybind11;
 
-namespace ngraph
+void regclass_pyngraph_op_Pad(py::module m)
 {
-    namespace pass
-    {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
-    }
+    py::class_<ngraph::op::Pad,
+               std::shared_ptr<ngraph::op::Pad>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        pad(m, "Pad");
+    pad.doc() = "ngraph.impl.op.Pad wraps ngraph::op::Pad";
+    pad.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                     const std::shared_ptr<ngraph::Node>&,
+                     const ngraph::Shape&,
+                     const ngraph::Shape&,
+                     const ngraph::Shape&>());
 }

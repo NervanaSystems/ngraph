@@ -37,6 +37,9 @@ class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::TensorView
 {
 public:
     GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
+    GPU_TensorView(const ngraph::element::Type& element_type,
+                   const Shape& shape,
+                   void* memory_pointer);
     virtual ~GPU_TensorView();
 
     /// @brief Write bytes directly into the tensor
@@ -53,4 +56,5 @@ public:
 
     void* m_allocated_buffer_pool;
     size_t m_buffer_size;
+    bool m_custom_memory;
 };

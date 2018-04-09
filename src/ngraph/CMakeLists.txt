@@ -118,6 +118,7 @@ set (SRC
     pass/core_fusion.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/backend.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
@@ -205,6 +206,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/kernel/eigen_thread_pool.cpp
         runtime/cpu/kernel/pad.cpp
+        runtime/cpu/kernel/reduce_max.cpp
         runtime/cpu/kernel/reduce_sum.cpp
         runtime/cpu/op/conv_bias.cpp
         runtime/cpu/op/conv_relu.cpp

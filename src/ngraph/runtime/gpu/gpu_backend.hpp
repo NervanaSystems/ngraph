@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <map>
+#include <memory>
+
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
@@ -25,6 +28,9 @@ namespace ngraph
         namespace gpu
         {
             static size_t alignment = 64;
+
+            class GPU_ExternalFunction;
+            class GPU_CallFrame;
 
             class GPU_Backend : public Backend
             {
@@ -36,6 +42,35 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::TensorView>
                     make_primary_tensor_view(const ngraph::element::Type& element_type,
                                              const Shape& shape) override;
+
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                             const Shape& shape,
+                                             void* memory_pointer) override;
+
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    create_tensor(const ngraph::element::Type& element_type,
+                                  const Shape& shape) override;
+
+                bool compile(const ngraph::Function& fun) override;
+
+                bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+                bool call(const ngraph::Function& fun,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+            private:
+                class FunctionInstance
+                {
+                public:
+                    std::shared_ptr<GPU_ExternalFunction> m_external_function;
+                    std::shared_ptr<GPU_CallFrame> m_call_frame;
+                    std::shared_ptr<Function> m_function;
+                };
+
+                std::map<const Function*, FunctionInstance> m_function_map;
             };
         }
     }

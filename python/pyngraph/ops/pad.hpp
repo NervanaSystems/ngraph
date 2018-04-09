@@ -16,26 +16,8 @@
 
 #pragma once
 
-#include <exception>
-#include <functional>
-#include <sstream>
+#include <pybind11/pybind11.h>
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace pass
-    {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
-    }
-}
+void regclass_pyngraph_op_Pad(py::module m);
