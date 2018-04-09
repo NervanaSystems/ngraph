@@ -193,7 +193,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides window_movement_strides = convolution->get_window_movement_strides();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding = convolution->get_padding_below();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                CoordinateDiff padding_above = convolution->get_padding_above();
+
+                if (padding.size() > 3)
+                {
+                    throw std::runtime_error(node->get_name() +
+                                             "with more than 3D still not working.");
+                }
                 for (auto a : data_dilation_strides)
                 {
                     if (a != 1)
@@ -268,6 +274,12 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above = convolution->get_padding_above_forward();
+
+                if (padding.size() > 3)
+                {
+                    throw std::runtime_error(node->get_name() +
+                                             "with more than 3D still not working.");
+                }
                 for (auto a : data_dilation_strides)
                 {
                     if (a != 1)
@@ -344,6 +356,12 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above = convolution->get_padding_above_forward();
+
+                if (padding.size() > 3)
+                {
+                    throw std::runtime_error(node->get_name() +
+                                             "with more than 3D still not working.");
+                }
                 for (auto a : data_dilation_strides)
                 {
                     if (a != 1)
