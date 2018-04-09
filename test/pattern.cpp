@@ -633,7 +633,7 @@ public:
 
         auto sum_pattern = construct_sum_pattern();
 
-        ngraph::pattern::recurrent_gr_callback_fn callback = [iconst_label, rpattern](
+        ngraph::pattern::recurrent_graph_rewrite_callback callback = [iconst_label, rpattern](
             pattern::RecurrentMatcher& rm) {
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
                          << rm.get_match_root()->get_name();
@@ -658,7 +658,7 @@ public:
             //replace the topmost add with the seed (i.e. the first parameter to add)
             //matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
-            ngraph::replace_node(rm.match_root(), arg);
+            ngraph::replace_node(rm.get_match_root(), arg);
             return true;
         };
 
