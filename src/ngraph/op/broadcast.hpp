@@ -45,7 +45,7 @@ namespace ngraph
             const Shape& get_broadcast_shape() const { return m_shape; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
             Shape m_shape;
             AxisSet m_broadcast_axes;

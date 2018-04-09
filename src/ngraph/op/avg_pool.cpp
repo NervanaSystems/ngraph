@@ -478,8 +478,10 @@ shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_a
     return shared_ptr<op::AvgPoolBackprop>(avpn);
 }
 
-void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto operand = get_input_op(0);
     auto& operand_shape = get_input_shape(0);
     auto backprop = make_shared<op::AvgPoolBackprop>(operand_shape,

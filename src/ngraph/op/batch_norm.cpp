@@ -247,7 +247,7 @@ std::shared_ptr<ngraph::Node>
 }
 
 void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const std::shared_ptr<Node>& delta)
+                                              const NodeVector& deltas)
 {
     auto gamma = get_input_op(0);
     auto beta = get_input_op(1);
@@ -283,7 +283,7 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
         var = get_input_op(4);
     }
     auto bbn = std::make_shared<op::BatchNormBackprop>(
-        get_eps_value(), gamma, beta, input, mean, var, delta);
+        get_eps_value(), gamma, beta, input, mean, var, deltas.at(0));
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
     auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
     auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);

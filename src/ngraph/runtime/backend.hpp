@@ -58,6 +58,12 @@ namespace ngraph
                 return make_primary_tensor_view(element::from<T>(), shape);
             }
 
+            /// @brief Return a handle for a tensor for given mem on backend device
+            virtual std::shared_ptr<ngraph::runtime::TensorView>
+                make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                         const Shape& shape,
+                                         void* memory_pointer) = 0;
+
             /// DEPRECATED
             virtual bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;

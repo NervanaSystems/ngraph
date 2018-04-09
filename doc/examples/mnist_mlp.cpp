@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <ngraph/autodiff/adjoints.hpp>
 #include <ngraph/graph_util.hpp>
 #include <ngraph/ngraph.hpp>
 
@@ -172,10 +173,12 @@ int main(int argc, const char* argv[])
     auto delta = -learning_rate * loss;
 
     // Updates
-    auto W0_next = W0 + loss->backprop_node(W0, delta);
-    auto b0_next = b0 + loss->backprop_node(b0, delta);
-    auto W1_next = W1 + loss->backprop_node(W1, delta);
-    auto b1_next = b1 + loss->backprop_node(b1, delta);
+    ngraph::autodiff::Adjoints adjoints(NodeVector{loss},
+                                        NodeVector{delta});
+    auto W0_next = W0 + adjoints.backprop_node(W0);
+    auto b0_next = b0 + adjoints.backprop_node(b0);
+    auto W1_next = W1 + adjoints.backprop_node(W1);
+    auto b1_next = b1 + adjoints.backprop_node(b1);
 
     // Get the backend
     auto manager = runtime::Manager::get("CPU");

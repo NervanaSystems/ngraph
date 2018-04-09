@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -562,38 +563,48 @@ TEST(${BACKEND_NAME}, divide)
 TEST(${BACKEND_NAME}, divide_adjoint_stability)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
 
     Shape shape{2, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-    auto Y_out = f->get_output_op(0);
-    auto Xs = f->get_parameters();
-    auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
-    std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
-        return Y_out->backprop_node(X, C);
-    });
-    std::vector<std::shared_ptr<op::Parameter>> params(Xs);
-    params.push_back(C);
+        auto Y_out = f->get_output_op(0);
+        auto Xs = f->get_parameters();
+        auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        ngraph::autodiff::Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
+        std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
+        transform(
+            Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+                return adjoints.backprop_node(X);
+            });
+        std::vector<std::shared_ptr<op::Parameter>> params(Xs);
+        params.push_back(C);
 
-    auto bf = std::make_shared<Function>(dYdXs, params);
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+        auto bf = std::make_shared<Function>(dYdXs, params);
+        auto external = manager->compile(bf);
+
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape);
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(a, vector<float>{0, 0, 1, 1});
-    auto b = backend->create_tensor(element::f32, shape);
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(b, vector<float>{2, 2, 2, 2});
-    auto c = backend->create_tensor(element::f32, shape);
+    auto c = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(c, vector<float>{1, 1, 1, 1});
 
-    auto resulta = backend->create_tensor(element::f32, shape);
-    auto resultb = backend->create_tensor(element::f32, shape);
+    auto resulta = backend->make_primary_tensor_view(element::f32, shape);
+    auto resultb = backend->make_primary_tensor_view(element::f32, shape);
 
-    backend->call(*bf, {resulta, resultb}, {a, b, c});
+    cf->call({resulta, resultb}, {a, b, c});
     EXPECT_EQ((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta));
     EXPECT_EQ((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb));
 }
@@ -7773,4 +7784,38 @@ TEST(${BACKEND_NAME}, multiple_backends)
     backend2->call(*g, {result2}, {a2, b2});
     EXPECT_EQ(read_vector<float>(result2),
               (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, tensorview_custom_mem)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    vector<float> av{2, 4, 8, 16};
+    vector<float> bv{1, 2, 4, 8};
+    // use custom mem with tensorview, no need to copy data
+    auto a = backend->make_primary_tensor_view(element::f32, shape, av.data());
+    auto b = backend->make_primary_tensor_view(element::f32, shape, bv.data());
+
+    // use custom mem with result tensorview
+    vector<float> rv{0, 0, 0, 0};
+    auto result = backend->make_primary_tensor_view(element::f32, shape, rv.data());
+
+    // result should be in memory without needing explict read
+    cf->call({result}, {a, b});
+    EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
 }

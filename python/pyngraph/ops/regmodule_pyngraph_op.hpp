@@ -56,6 +56,7 @@
 #include "pyngraph/ops/max.hpp"
 #include "pyngraph/ops/min.hpp"
 #include "pyngraph/ops/one_hot.hpp"
+#include "pyngraph/ops/pad.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter_vector.hpp"
 #include "pyngraph/ops/power.hpp"

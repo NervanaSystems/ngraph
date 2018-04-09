@@ -100,3 +100,10 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(const Function& func)
 {
     m_function_map.erase(&func);
 }
+
+std::shared_ptr<ngraph::runtime::TensorView> runtime::cpu::CPU_Backend::make_primary_tensor_view(
+    const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
+{
+    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
+    return dynamic_pointer_cast<runtime::TensorView>(rc);
+}
