@@ -45,10 +45,10 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
 
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));

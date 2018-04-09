@@ -115,8 +115,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-
         namespace interpreter
         {
             class INT_CallFrame;

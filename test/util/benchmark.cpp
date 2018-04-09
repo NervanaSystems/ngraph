@@ -200,11 +200,8 @@ void run_benchmark(shared_ptr<Function> f,
 {
     stopwatch timer;
     timer.start();
-    auto manager = runtime::Manager::get(backend_name);
-    auto external = manager->compile(f);
-    external->set_emit_timing(timing_detail);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->enable_performance_data(f, timing_detail);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
@@ -212,15 +209,14 @@ void run_benchmark(shared_ptr<Function> f,
     vector<shared_ptr<runtime::TensorView>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto tensor =
-            backend->make_primary_tensor_view(param->get_element_type(), param->get_shape());
+        auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
     }
     vector<shared_ptr<runtime::TensorView>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
-        auto result = backend->make_primary_tensor_view(out->get_element_type(), out->get_shape());
+        auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
         results.push_back(result);
     }
 
@@ -228,13 +224,13 @@ void run_benchmark(shared_ptr<Function> f,
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
     {
-        cf->tensor_call(results, args);
+        backend->call(f, results, args);
     }
     t1.stop();
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::PerformanceCounter> perf_data = cf->get_performance_data();
+    vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(f);
     sort(perf_data.begin(),
          perf_data.end(),
          [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {

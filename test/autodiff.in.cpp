@@ -48,13 +48,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+        backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                           13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -95,13 +95,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+        backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                           30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -141,14 +141,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+        backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{4, 8, 12, 16};
 
@@ -181,14 +181,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+        backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{1, 3, 1, 3, 1, 3, 1, 3, 3, 5, 3, 5, 3, 5, 3, 5};
 
@@ -221,14 +221,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+        backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 12);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+        backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{//i1c1
                           1,
@@ -330,7 +330,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
 }
@@ -354,7 +354,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
 }
@@ -380,7 +380,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
 }
@@ -404,12 +404,12 @@ TEST(${BACKEND_NAME}, backwards_abs)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
@@ -423,8 +423,8 @@ TEST(${BACKEND_NAME}, backwards_add)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -442,8 +442,8 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -463,7 +463,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast0)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -481,7 +481,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -501,11 +501,11 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -528,11 +528,11 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{3, 2};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{1, 2};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -555,11 +555,11 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{2, 1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -594,17 +594,17 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_minusone = rng_minusone.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(
             manager, backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone = rng_plusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plusone = rng_plusone.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo = rng_plustwo.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plustwo = rng_plustwo.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plustwo}, .01f, .01f));
@@ -626,7 +626,7 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -649,7 +649,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -667,9 +667,9 @@ TEST(${BACKEND_NAME}, backwards_divide)
     test::Uniform<float> rng1(1.0f, 2.0f);
     test::Uniform<float> rng2(-2.0f, -1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng1.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x2 = rng2.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng1.initialize(backend->create_tensor<float>(shape));
+    auto x2 = rng2.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -690,8 +690,8 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{};
     Shape shape1{};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -711,8 +711,8 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{};
     Shape shape1{3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -732,8 +732,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{3, 4};
     Shape shape1{};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -753,8 +753,8 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{3};
     Shape shape1{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -775,8 +775,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{4, 3};
     Shape shape1{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -797,8 +797,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{4, 3};
     Shape shape1{3, 5};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -819,8 +819,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{2, 4, 3};
     Shape shape1{4, 3, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -839,7 +839,7 @@ TEST(${BACKEND_NAME}, backwards_exp)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -871,17 +871,17 @@ TEST(${BACKEND_NAME}, backwards_floor)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_minusone = rng_minusone.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(
             manager, backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone = rng_plusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plusone = rng_plusone.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo = rng_plustwo.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plustwo = rng_plustwo.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plustwo}, .01f, .01f));
@@ -896,7 +896,7 @@ TEST(${BACKEND_NAME}, backwards_log)
 
     test::Uniform<float> rng(1.0f, 2.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -913,8 +913,8 @@ TEST(${BACKEND_NAME}, backwards_maximum)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -933,8 +933,8 @@ TEST(${BACKEND_NAME}, backwards_minimum)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -953,8 +953,8 @@ TEST(${BACKEND_NAME}, backwards_multiply)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -972,7 +972,7 @@ TEST(${BACKEND_NAME}, backwards_negative)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -988,7 +988,7 @@ TEST(${BACKEND_NAME}, backwards_parameter)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
@@ -1015,20 +1015,20 @@ TEST(${BACKEND_NAME}, backwards_power)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
-    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
 
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -1043,8 +1043,8 @@ TEST(${BACKEND_NAME}, backwards_relu)
     test::Uniform<float> rng_neg(-1.0f, -0.01f);
     test::Uniform<float> rng_pos(0.01f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1054,12 +1054,12 @@ TEST(${BACKEND_NAME}, backwards_relu)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
@@ -1087,8 +1087,8 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
-        auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
+        auto x = rng.initialize(backend->create_tensor<float>(shape_x));
+        auto y = rng.initialize(backend->create_tensor<float>(shape_y));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x, y}, .01f, .01f));
@@ -1102,7 +1102,7 @@ TEST(${BACKEND_NAME}, backwards_reshape)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1132,10 +1132,10 @@ TEST(${BACKEND_NAME}, backwards_select)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
+        auto x0 = backend->create_tensor(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
-        auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-        auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+        auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare_selective<float>(manager,
@@ -1168,10 +1168,10 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
+        auto x0 = backend->create_tensor(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
-        auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-        auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+        auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare_selective<float>(manager,
@@ -1205,12 +1205,12 @@ TEST(${BACKEND_NAME}, backwards_sign)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
@@ -1232,7 +1232,7 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -1255,7 +1255,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -1278,7 +1278,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -1292,7 +1292,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_all)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1310,7 +1310,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_axis)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1329,7 +1329,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_underflow)
     auto low = std::numeric_limits<float>::lowest();
 
     Shape shape{2, 3};
-    auto x0 = backend->make_primary_tensor_view(element::f32, shape);
+    auto x0 = backend->create_tensor(element::f32, shape);
     copy_data(x0, vector<float>{low, 1, 2, 3, 4, 5});
 
     auto make_graph = [shape]() {
@@ -1348,7 +1348,7 @@ TEST(${BACKEND_NAME}, backwards_softmax_3d)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph0 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1408,8 +1408,8 @@ TEST(${BACKEND_NAME}, backwards_subtract)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1428,7 +1428,7 @@ TEST(${BACKEND_NAME}, backwards_sum_v2s)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1446,7 +1446,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2s)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1464,7 +1464,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1482,7 +1482,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1517,12 +1517,12 @@ TEST(${BACKEND_NAME}, backwards_tan)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_r = rng_r.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_r = rng_r.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_r}, .01f, .01f));
 
-        auto x_l = rng_l.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_l = rng_l.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(
             autodiff_numeric_compare<float>(manager, backend, make_graph, {x_l}, .01f, .01f));
@@ -1547,7 +1547,7 @@ TEST(${BACKEND_NAME}, backwards_tanh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -1560,9 +1560,9 @@ TEST(${BACKEND_NAME}, backwards_abc)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1583,7 +1583,7 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 4, 5};
-    auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape));
+    auto x = rng.initialize(backend->create_tensor(element::f32, shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1607,13 +1607,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+        backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+        backend->create_tensor(element::f32, shape_a);
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+        backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                             13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -1652,13 +1652,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
     shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+        backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
     shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+        backend->create_tensor(element::f32, shape_a);
     shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+        backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                             30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,

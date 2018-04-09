@@ -19,34 +19,13 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-        class Value;
-
-        class PerformanceCounter
-        {
-        public:
-            PerformanceCounter(const char* n, size_t us, size_t calls)
-                : m_name(n)
-                , m_total_microseconds(us)
-                , m_call_count(calls)
-            {
-            }
-            const std::string& name() const { return m_name; }
-            size_t total_microseconds() const { return m_total_microseconds; }
-            size_t microseconds() const { return m_total_microseconds / m_call_count; }
-            size_t call_count() const { return m_call_count; }
-        private:
-            std::string m_name;
-            size_t m_total_microseconds;
-            size_t m_call_count;
-        };
-
         // A VM for executing lightly-compiled graph functions.
         class CallFrame
         {

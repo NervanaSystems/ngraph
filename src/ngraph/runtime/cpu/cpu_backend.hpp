@@ -35,17 +35,12 @@ namespace ngraph
             {
             public:
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
+                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
 
                 std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
-
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape,
-                                             void* memory_pointer) override;
+                    create_tensor(const ngraph::element::Type& element_type,
+                                  const Shape& shape,
+                                  void* memory_pointer) override;
 
                 std::shared_ptr<ngraph::runtime::TensorView>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -53,14 +48,14 @@ namespace ngraph
 
                 bool compile(std::shared_ptr<Function> func) override;
 
-                bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
-
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
                 void remove_compiled_function(std::shared_ptr<Function> func) override;
+                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
+                std::vector<PerformanceCounter>
+                    get_performance_data(std::shared_ptr<Function> func) const override;
 
             private:
                 class FunctionInstance
@@ -68,7 +63,7 @@ namespace ngraph
                 public:
                     std::shared_ptr<CPU_ExternalFunction> m_external_function;
                     std::shared_ptr<CPU_CallFrame> m_call_frame;
-                    std::shared_ptr<Function> m_function;
+                    bool m_performance_counters_enabled = false;
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;

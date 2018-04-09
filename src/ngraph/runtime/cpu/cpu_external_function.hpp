@@ -71,7 +71,7 @@ namespace ngraph
             class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
                                          public std::enable_shared_from_this<CPU_ExternalFunction>
             {
-                friend class CPU_CallFrame;
+                friend class CPU_Backend;
 
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,

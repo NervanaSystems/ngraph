@@ -227,25 +227,23 @@ TEST (${BACKEND_NAME}, %s)
                                      op::ParameterVector{A, B});
     };
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(make_graph());
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto function = make_graph();
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{%s});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{%s});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     vector<float> expected_result{%s};
 
-    cf->call({result}, {a, b});
+    backend->call(function, {result}, {a, b});
     EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result)));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {a, b}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {a, b}, .01f, .01f));
     }
 }
 '''

@@ -35,5 +35,5 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.def("make_primary_tensor_view",
                 (std::shared_ptr<ngraph::runtime::TensorView>(ngraph::runtime::Backend::*)(
                     const ngraph::element::Type&, const ngraph::Shape&)) &
-                    ngraph::runtime::Backend::make_primary_tensor_view);
+                    ngraph::runtime::Backend::create_tensor);
 }

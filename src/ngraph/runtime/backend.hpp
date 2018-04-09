@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -37,36 +38,12 @@ namespace ngraph
         {
         public:
             virtual ~Backend() {}
-            /// @brief Make a call frame that can support one concurrent call of an external function.
-            ///
-            /// If more than one concurrent execution is needed, each execution will require its own call frame.
-            /// DEPRECATED
-            virtual std::shared_ptr<ngraph::runtime::CallFrame>
-                make_call_frame(const std::shared_ptr<ExternalFunction>& external_function) = 0;
-
-            /// @brief Return a handle for a tensor on the backend device.
-            /// DEPRECATED
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                         const Shape& shape) = 0;
-
-            /// DEPRECATED
-            template <typename T>
-            std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const Shape& shape)
-            {
-                return make_primary_tensor_view(element::from<T>(), shape);
-            }
-
-            /// @brief Return a handle for a tensor for given mem on backend device
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                         const Shape& shape,
-                                         void* memory_pointer) = 0;
-
-            /// DEPRECATED
-            virtual bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+            // /// @brief Make a call frame that can support one concurrent call of an external function.
+            // ///
+            // /// If more than one concurrent execution is needed, each execution will require its own call frame.
+            // /// DEPRECATED
+            // virtual std::shared_ptr<ngraph::runtime::CallFrame>
+            //     make_call_frame(const std::shared_ptr<ExternalFunction>& external_function) = 0;
 
             /// @brief Create a new Backend object
             /// @param type The name of a registered backend, such as "CPU" or "GPU".
@@ -87,6 +64,12 @@ namespace ngraph
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
 
+            /// @brief Return a handle for a tensor for given mem on backend device
+            virtual std::shared_ptr<ngraph::runtime::TensorView>
+                create_tensor(const ngraph::element::Type& element_type,
+                              const Shape& shape,
+                              void* memory_pointer) = 0;
+
             template <typename T>
             std::shared_ptr<ngraph::runtime::TensorView> create_tensor(const Shape& shape)
             {
@@ -100,6 +83,13 @@ namespace ngraph
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
             virtual void remove_compiled_function(std::shared_ptr<Function> func);
+
+            virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
+            virtual std::vector<PerformanceCounter>
+                get_performance_data(std::shared_ptr<Function> func) const
+            {
+                return std::vector<PerformanceCounter>();
+            }
         };
     }
 }

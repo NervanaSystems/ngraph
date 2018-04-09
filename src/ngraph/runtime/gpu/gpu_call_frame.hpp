@@ -31,8 +31,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-
         namespace gpu
         {
             class GPU_CallFrame;

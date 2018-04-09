@@ -30,8 +30,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-
         namespace cpu
         {
             class CPU_CallFrame;
@@ -62,9 +60,6 @@ namespace ngraph
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
-
-                std::vector<ngraph::runtime::PerformanceCounter>
-                    get_performance_data() const override;
 
                 void setup_runtime_context();
                 void cleanup_runtime_context();

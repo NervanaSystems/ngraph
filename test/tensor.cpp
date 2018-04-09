@@ -82,7 +82,7 @@ void test_read_write(const vector<T>& x)
     auto manager = runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
-    auto a = backend->make_primary_tensor_view(element::from<T>(), Shape{2, x.size()});
+    auto a = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
 
     vector<T> result(2 * x.size());
 
