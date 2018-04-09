@@ -155,7 +155,7 @@ public:
         auto iconst1 = construct_constant_node(1);
         auto pattern = std::make_shared<pattern::op::Label>(iconst1);
 
-        ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.match_root()->get_name();
             assert(m.match_root()->get_input_ops().size() == 2);
@@ -243,7 +243,7 @@ public:
     {
         auto sum_pattern = construct_sum_pattern();
 
-        ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_sum_pattern against "
                          << m.match_root()->get_name();
             auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());
@@ -556,7 +556,7 @@ TEST(pattern, previous_matches)
 
 TEST(pattern, recurrent_pattern)
 {
-    using ngraph::pattern::Matcher;
+    using ngraph::pattern::RecurrentMatcher;
     Shape shape{};
     ngraph::pattern::Matcher::PatternMap previous_matches;
     auto a = make_shared<op::Parameter>(element::i32, shape);
@@ -568,12 +568,11 @@ TEST(pattern, recurrent_pattern)
     auto add2 = iconst0 + add1;
     auto add3 = iconst0 + add2;
     auto padd = iconst0 + rpattern;
-    ngraph::pattern::RPatternMap matches;
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    Matcher::match_recurring_pattern(add3, padd, rpattern, matches, empty_correlated_matches);
-    ASSERT_EQ(matches.size(), 1);
-    ASSERT_EQ(matches.count(rpattern), 1);
-    auto recurrent_matches = matches[rpattern];
+    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
+    ASSERT_TRUE(rm.match(add3));
+    ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
+    auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
@@ -584,37 +583,37 @@ TEST(pattern, recurrent_pattern)
     auto add2_2 = iconst1 + add1;
     auto add3_2 = iconst0 + add2_2;
     auto padd2 = iconst_label + rpattern;
-    matches.clear();
-    Matcher::match_recurring_pattern(add3_2, padd2, rpattern, matches, empty_correlated_matches);
-    ASSERT_EQ(matches.size(), 2);
-    recurrent_matches = matches[rpattern];
+    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches, nullptr);
+    ASSERT_TRUE(rm2.match(add3_2));
+    ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
+    recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2_2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    auto iconst_matches = matches[iconst_label];
+    auto iconst_matches = rm2.get_bound_nodes_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst1);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
 
     //Non-matching correlated labels
-    matches.clear();
     std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
     correlated_matches.insert(iconst_label);
-    Matcher::match_recurring_pattern(add3_2, padd2, rpattern, matches, correlated_matches);
-    ASSERT_EQ(matches.size(), 2);
-    iconst_matches = matches[iconst_label];
+    RecurrentMatcher rm3(padd2, rpattern, correlated_matches, nullptr);
+    ASSERT_TRUE(rm3.match(add3_2));
+    ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
+    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.size(), 1);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
 
-    //Matching correlated labels
-    matches.clear();
-    Matcher::match_recurring_pattern(add3, padd2, rpattern, matches, correlated_matches);
-    ASSERT_EQ(matches.size(), 2);
-    recurrent_matches = matches[rpattern];
+    //Matching correlated labels and
+    //testing if RecurrentMatcher can be reused for different nodes
+    ASSERT_TRUE(rm3.match(add3));
+    ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
+    recurrent_matches = rm3.get_bound_nodes_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    iconst_matches = matches[iconst_label];
+    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst0);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
