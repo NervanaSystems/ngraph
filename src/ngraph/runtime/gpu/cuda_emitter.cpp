@@ -13,15 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <iostream>
 #include <limits>
+#include <vector>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -44,10 +44,8 @@ size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
     {
         throw std::runtime_error("Interior padding is not yet supported in the GPU transformer.");
     }
-    std::string hash = "pad_i" + join(input_shape)
-        + "_pb" + join(padding_below)
-        + "_pa" + join(padding_above)
-        + "_pi" + join(padding_interior);
+    std::string hash = "pad_i" + join(input_shape) + "_pb" + join(padding_below) + "_pa" +
+                       join(padding_above) + "_pi" + join(padding_interior);
     std::replace(hash.begin(), hash.end(), ' ', '_');
     std::replace(hash.begin(), hash.end(), ',', '_');
 
@@ -70,16 +68,15 @@ size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
     auto nthreads = shape_size(input_shape);
     if (compiled_kernel == nullptr)
     {
-
         // normalize pad dimensions to shape dimensions
         Shape pad_below(input_shape.size(), 0);
         Shape pad_above(input_shape.size(), 0);
         if (padding_below.size() != input_shape.size())
         {
-            for (int i=padding_below.size()-1; i>=0; i--)
+            for (int i = padding_below.size() - 1; i >= 0; i--)
             {
-                pad_below[i+input_shape.size()-padding_below.size()] = padding_below[i];
-                pad_above[i+input_shape.size()-padding_above.size()] = padding_above[i];
+                pad_below[i + input_shape.size() - padding_below.size()] = padding_below[i];
+                pad_above[i + input_shape.size() - padding_above.size()] = padding_above[i];
             }
         }
         else
@@ -92,14 +89,13 @@ size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
         auto output_strides = row_major_strides(output_shape);
 
         int offset = 0;
-        for (size_t i = 0; i<output_strides.size(); i++)
+        for (size_t i = 0; i < output_strides.size(); i++)
         {
             offset += (output_strides[i] * pad_below[i]);
         }
 
         codegen::CodeWriter writer;
-        writer << "extern \"C\" __global__ void cuda_" << hash << "("
-               << dtypes[0] << "* in, "
+        writer << "extern \"C\" __global__ void cuda_" << hash << "(" << dtypes[0] << "* in, "
                << dtypes[1] << "* out)\n";
         writer.block_begin();
         {
@@ -109,10 +105,11 @@ size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
             {
                 writer << "size_t idx = ";
                 writer << offset << " + tid % " << input_shape.back();
-                int last = input_strides.size()-1;
-                for (int i = last-1; i >0; i--)
+                int last = input_strides.size() - 1;
+                for (int i = last - 1; i > 0; i--)
                 {
-                    writer << " + ((tid / " << input_strides[i] << ") % " << input_shape[i+1] << ") * " << output_strides[i];
+                    writer << " + ((tid / " << input_strides[i] << ") % " << input_shape[i + 1]
+                           << ") * " << output_strides[i];
                 }
                 writer << ";\n";
                 writer << "out[idx] = in[tid];\n";
@@ -123,31 +120,31 @@ size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
 
-    auto pad = new gpu::primitive{
-        [=](void** inputs, void** outputs)
-        {
+    auto pad = new gpu::primitive{[=](void** inputs, void** outputs) {
 
-            void* args_list[] = {&inputs[0], &outputs[0]};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
-                                          1,
-                                          1, // grid dim
-                                          1,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }};
+        void* args_list[] = {&inputs[0], &outputs[0]};
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      static_cast<unsigned int>(nthreads),
+                                      1,
+                                      1, // grid dim
+                                      1,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list,
+                                      0));  // arguments
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }};
 
     primitive_index = this->m_primitive_emitter->insert(pad);
-    m_primitive_emitter->cache(hash,primitive_index);
+    m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
 
-void print_tensor_from_gpu(codegen::CodeWriter& writer, const std::string& tensor_name, const Shape& shape)
+void print_tensor_from_gpu(codegen::CodeWriter& writer,
+                           const std::string& tensor_name,
+                           const Shape& shape)
 {
     auto strides = row_major_strides(shape);
     writer << "__syncthreads();\n";
@@ -155,16 +152,16 @@ void print_tensor_from_gpu(codegen::CodeWriter& writer, const std::string& tenso
     writer.block_begin();
     {
         std::string element = tensor_name + "[i]";
-        writer << "for (int i=0; i<"<<shape_size(shape) <<"; i++)\n";
+        writer << "for (int i=0; i<" << shape_size(shape) << "; i++)\n";
         writer.block_begin();
         {
-            for (int i = strides.size()-1; i>=0; i--)
+            for (int i = strides.size() - 1; i >= 0; i--)
             {
                 writer << "if (i % " << strides[i] << " == 0)\n";
                 writer.block_begin();
                 {
                     writer << "printf(\"";
-                    for (int j=0; j<strides.size()-1-i; j++)
+                    for (int j = 0; j < strides.size() - 1 - i; j++)
                     {
                         writer << "\\n";
                     }

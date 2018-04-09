@@ -4712,6 +4712,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 5, 5};
@@ -4803,6 +4804,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 // values still "win" versus out-of-bounds values), which is good.
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 {
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     auto shape_a = Shape{

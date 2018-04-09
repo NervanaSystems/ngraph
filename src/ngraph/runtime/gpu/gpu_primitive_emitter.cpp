@@ -16,14 +16,15 @@
 
 #include <limits>
 
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
 GPUPrimitiveEmitter::GPUPrimitiveEmitter()
-    : m_cuda_emitter(new CUDAEmitter(this)), m_cudnn_emitter(new CUDNNEmitter(this))
+    : m_cuda_emitter(new CUDAEmitter(this))
+    , m_cudnn_emitter(new CUDNNEmitter(this))
 {
 }
 GPUPrimitiveEmitter::~GPUPrimitiveEmitter()
@@ -56,5 +57,5 @@ size_t GPUPrimitiveEmitter::lookup(std::string hash)
 }
 size_t GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
 {
-    m_primitive_map.insert({hash,index});
+    m_primitive_map.insert({hash, index});
 }

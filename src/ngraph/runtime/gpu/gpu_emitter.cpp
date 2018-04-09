@@ -816,15 +816,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                    auto pad_index = cuda_emitter->build_pad(external_function->ctx().get(),
-                                                             {args[0].get_type(), out[0].get_type()},
-                                                             input_shape,
-                                                             output_shape,
-                                                             padding_below,
-                                                             padding_above,
-                                                             {});
-                    writer << "gpu::invoke_primitive(ctx, " << pad_index
-                           << ", ";
+                    auto pad_index =
+                        cuda_emitter->build_pad(external_function->ctx().get(),
+                                                {args[0].get_type(), out[0].get_type()},
+                                                input_shape,
+                                                output_shape,
+                                                padding_below,
+                                                padding_above,
+                                                {});
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data() ";
                     writer << ");\n";
@@ -840,55 +840,59 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 {
                     auto& input_shape = args[0].get_shape();
-                    auto  input_rank = input_shape.size();
+                    auto input_rank = input_shape.size();
                     auto& result_shape = out[0].get_shape();
                     auto& padding_below = max_pool->get_padding_below();
                     auto& padding_above = max_pool->get_padding_above();
                     if (padding_below.size() != padding_above.size())
                     {
-                        throw std::runtime_error("Padding below and above are of different dimension.");
+                        throw std::runtime_error(
+                            "Padding below and above are of different dimension.");
                     }
 
                     bool pad_required = false;
-                    auto shape_to_pool = get_padded_shape(input_shape, padding_below, padding_above, {});
+                    auto shape_to_pool =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
                     if (shape_to_pool != input_shape)
                     {
                         pad_required = true;
                     }
 
-                    if(pad_required)
+                    if (pad_required)
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
                         // auto temp_buffer = create_gpu_buffer(shape_size(output_shape)*type_size);
-                        auto temp_size = shape_size(shape_to_pool)*args[0].get_element_type().size();
+                        auto temp_size =
+                            shape_size(shape_to_pool) * args[0].get_element_type().size();
                         writer << "void* pad_buffer = "
-                               << "runtime::gpu::create_gpu_buffer("
-                               << temp_size
+                               << "runtime::gpu::create_gpu_buffer(" << temp_size << ");\n";
+                        writer << "runtime::gpu::cuda_memset(pad_buffer, 0, " << temp_size
                                << ");\n";
-                        writer << "runtime::gpu::cuda_memset(pad_buffer, 0, " << temp_size << ");\n";
 
+                        auto pad_index =
+                            cuda_emitter->build_pad(external_function->ctx().get(),
+                                                    {args[0].get_type(), out[0].get_type()},
+                                                    input_shape,
+                                                    shape_to_pool,
+                                                    padding_below,
+                                                    padding_above,
+                                                    {});
 
-                        auto pad_index = cuda_emitter->build_pad(external_function->ctx().get(),
-                                                                 {args[0].get_type(), out[0].get_type()},
-                                                                 input_shape,
-                                                                 shape_to_pool,
-                                                                 padding_below,
-                                                                 padding_above,
-                                                                 {});
-
-                        writer << "gpu::invoke_primitive(ctx, " << pad_index
-                               << ", ";
+                        writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                         writer << "std::vector<void*>{pad_buffer}.data()";
                         writer << ");\n";
                     }
 
                     int num_nontrivial_dims = 0;
-                    for (int i = shape_to_pool.size()-1; i>1; i--)
+                    for (int i = shape_to_pool.size() - 1; i > 1; i--)
                     {
-                        if (shape_to_pool[i] > 1) { num_nontrivial_dims++; }
+                        if (shape_to_pool[i] > 1)
+                        {
+                            num_nontrivial_dims++;
+                        }
                     }
 
                     // 1d max pool
@@ -925,8 +929,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             padding_below,
                             padding_above);
 
-                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index
-                               << ", ";
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
                         if (pad_required)
                         {
                             writer << "std::vector<void*>{pad_buffer}.data(), ";
@@ -989,12 +992,18 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 if (padding_interior.size())
                 {
-                    throw std::runtime_error("Interior padding support is not yet available on GPU.");
+                    throw std::runtime_error(
+                        "Interior padding support is not yet available on GPU.");
                 }
 
-                enum class padtype { None, Symmetric, Asymmetric};
+                enum class padtype
+                {
+                    None,
+                    Symmetric,
+                    Asymmetric
+                };
                 auto type = padtype::None;
-                for (int i=0; i < padding_below.size(); i++)
+                for (int i = 0; i < padding_below.size(); i++)
                 {
                     if (padding_below[i] != 0 || padding_above[i] != 0)
                     {
@@ -1014,10 +1023,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 Shape padded_shape = input_shape;
                 for (int i = 0; i < padding_below.size(); i++)
                 {
-                    padded_shape[padded_shape.size()-1-i] +=
-                        (padding_below[padding_below.size()-1-i] + padding_above[padding_above.size()-1-i]);
+                    padded_shape[padded_shape.size() - 1 - i] +=
+                        (padding_below[padding_below.size() - 1 - i] +
+                         padding_above[padding_above.size() - 1 - i]);
                 }
-
 
                 return padded_shape;
             }
