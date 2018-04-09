@@ -18,14 +18,14 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/convolution.hpp"
-#include "ngraph/ops/max_pool.hpp"
-#include "ngraph/ops/pad.hpp"
-#include "ngraph/ops/product.hpp"
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/sum.hpp"
 #include "zero_dim_tensor_elimination.hpp"
 
 using namespace ngraph;
