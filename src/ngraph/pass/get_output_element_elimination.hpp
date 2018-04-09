@@ -26,13 +26,8 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::GetOutputElementElimination : public FunctionPass
+class ngraph::pass::GetOutputElementElimination : public NodePass
 {
 public:
-    GetOutputElementElimination()
-        : FunctionPass()
-    {
-    }
-
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+    bool run_on_node(std::shared_ptr<Node> node) override;
 };
