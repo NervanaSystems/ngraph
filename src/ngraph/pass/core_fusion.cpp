@@ -58,7 +58,7 @@ void pass::CoreFusion::construct_relu_pattern()
     auto skip_broadcast = std::make_shared<pattern::op::Any>(zero, broadcast_pred);
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
-    pattern::gr_callback_fn callback = [val, zero](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
                      << m.match_root()->get_name();
 

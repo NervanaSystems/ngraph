@@ -202,9 +202,9 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
+        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
         {
-            gr_callback_fn cb = m_callback;
+            graph_rewrite_callback cb = m_callback;
             if (callback)
             {
                 cb = callback;

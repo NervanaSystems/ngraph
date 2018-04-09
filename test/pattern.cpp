@@ -155,7 +155,7 @@ public:
         auto iconst1 = construct_constant_node(1);
         auto pattern = std::make_shared<pattern::op::Label>(iconst1);
 
-        ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.match_root()->get_name();
             assert(m.match_root()->get_input_ops().size() == 2);
@@ -243,7 +243,7 @@ public:
     {
         auto sum_pattern = construct_sum_pattern();
 
-        ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_sum_pattern against "
                          << m.match_root()->get_name();
             auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());

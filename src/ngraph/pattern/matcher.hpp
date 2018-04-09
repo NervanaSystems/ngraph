@@ -32,8 +32,8 @@ namespace ngraph
 
     namespace pattern
     {
-        using gr_callback_fn = std::function<bool(class Matcher& m)>;
-        using recurrent_gr_callback_fn = std::function<bool(class RecurrentMatcher& m)>;
+        using graph_rewrite_callback = std::function<bool(class Matcher& m)>;
+        using recurrent_graph_rewrite_callback = std::function<bool(class RecurrentMatcher& m)>;
         using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
 
         namespace op
@@ -53,7 +53,7 @@ namespace ngraph
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param callback is a callback function that will be called on a successful match
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    gr_callback_fn callback = nullptr)
+                    graph_rewrite_callback callback = nullptr)
                 : m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
@@ -92,7 +92,7 @@ namespace ngraph
                 return matched;
             }
 
-            bool process_match(gr_callback_fn callback = nullptr);
+            bool process_match(graph_rewrite_callback callback = nullptr);
 
             void reset() {}
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
@@ -131,15 +131,13 @@ namespace ngraph
                            const std::shared_ptr<Node>& graph_node,
                            PatternMap& pattern_map);
 
-            gr_callback_fn m_callback;
+            graph_rewrite_callback m_callback;
             size_t m_depth;
         };
 
         class RecurrentMatcher
         {
         public:
-            //static bool match_recurring_pattern(std::shared_ptr<Node> graph, std::shared_ptr<Node> pattern, std::shared_ptr<op::Label> rpattern, RPatternMap& patterns, const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
-
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
             /// repeating patterns (e.g. RNN, LSTM, GRU cells)
             ///
@@ -150,7 +148,7 @@ namespace ngraph
             RecurrentMatcher(std::shared_ptr<Node> pattern,
                              std::shared_ptr<op::Label> rpattern,
                              const std::set<std::shared_ptr<op::Label>>& correlated_patterns,
-                             recurrent_gr_callback_fn callback)
+                             recurrent_graph_rewrite_callback callback)
                 : m_pattern(pattern)
                 , m_recurrent_pattern(rpattern)
                 , m_correlated_patterns(correlated_patterns)
@@ -193,7 +191,7 @@ namespace ngraph
             std::shared_ptr<op::Label> m_recurrent_pattern;
             const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
-            recurrent_gr_callback_fn m_callback;
+            recurrent_graph_rewrite_callback m_callback;
             std::shared_ptr<Node> m_match_root;
         };
     }
