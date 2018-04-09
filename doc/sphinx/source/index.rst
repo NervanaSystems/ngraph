@@ -22,11 +22,11 @@
 nGraph™ 
 ########
 
-Welcome to the nGraph™ documentation site, an open-source C++ library and 
-runtime / compiler suite for :abbr:`Deep Learning (DL)` ecosystems. Our goal 
-is to empower algorithm designers, data scientists, framework 
-architects, software engineers, and others with the means to make their work 
-:ref:`portable`, :ref:`adaptable`, and :ref:`deployable` across the most modern 
+Welcome to the nGraph™ documentation site. nGraph is an open-source C++ library 
+and runtime / compiler suite for :abbr:`Deep Learning (DL)` ecosystems. Our goal 
+is to empower algorithm designers, data scientists, framework architects, 
+software engineers, and others with the means to make their work :ref:`portable`, 
+:ref:`adaptable`, and :ref:`deployable` across the most modern 
 :abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
 computation devices.
 
@@ -43,9 +43,14 @@ One of nGraph's key features is **framework neutrality**. While we currently
 support :doc:`three popular <framework-integration-guides>` frameworks with 
 pre-optimized deployment runtimes for training :abbr:`Deep Neural Network (DNN)`, 
 models, you are not limited to these when choosing among frontends. Architects 
-of any framework (even those not listed above) can use our How-to 
-:doc:`compile and run <howto/execute>` a training model documentation to learn 
-how to design or tweak a framework to bridge directly to the nGraph compiler. 
+of any framework (even those not listed above) can use our documentation for how
+to :doc:`compile and run <howto/execute>` a training model and design or tweak 
+a framework to bridge directly to the nGraph compiler. With a *portable* model 
+at the core of your :abbr:`DL (Deep Learning)` ecosystem, it's no longer 
+necessary to bring large datasets to the model for training; you can take your 
+model -- in whole, or in part -- to where the data lives and save potentially 
+significant or quantifiable machine resources.  
+
 
 
 .. _adaptable: 
@@ -53,11 +58,11 @@ how to design or tweak a framework to bridge directly to the nGraph compiler.
 Adaptable
 =========
 
-We've recently begun support for the `ONNX`_ format. Developers who 
-already have a "trained" :abbr:`DNN (Deep Neural Network)` model can use 
-nGraph to bypass significant framework-based complexity and :doc:`howto/import` 
-to test or run it on targeted and efficient backends with our user-friendly 
-Python-based API.  See the `ngraph onnx companion tool`_ to get started. 
+We've recently begun support for the `ONNX`_ format. Developers who already have 
+a "trained" :abbr:`DNN (Deep Neural Network)` model can use nGraph to bypass 
+significant framework-based complexity and :doc:`import it <howto/import>` 
+to test or run on targeted and efficient backends with our user-friendly 
+Python-based API. See the `ngraph onnx companion tool`_ to get started. 
 
 
 .. csv-table::

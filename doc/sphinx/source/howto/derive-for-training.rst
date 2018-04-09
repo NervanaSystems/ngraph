@@ -13,7 +13,7 @@ a hand-designed inference model and convert it to a model that can be trained
 with nGraph. 
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
-model, our example includes the use of a simple data loader foruncompressed
+model, our example includes the use of a simple data loader for uncompressed
 MNIST data.
 
 * :ref:`model_overview`
