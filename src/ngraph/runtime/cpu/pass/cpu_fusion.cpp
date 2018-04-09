@@ -337,7 +337,8 @@ static bool
                                        const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
                                        const std::shared_ptr<ngraph::Node>& pad_input,
                                        const std::shared_ptr<ngraph::op::Pad>& matched_pad,
-                                       const std::shared_ptr<ngraph::op::Convolution>& matched_conv,
+                                       const ngraph::CoordinateDiff& padding_below,
+                                       const ngraph::CoordinateDiff& padding_above,
                                        size_t batch_index,
                                        size_t channel_index)
 {
@@ -366,8 +367,7 @@ static bool
     }
 
     // Only match convolutions with no padding specification
-    if (matched_conv->get_padding_below() != ngraph::CoordinateDiff(2) ||
-        matched_conv->get_padding_above() != ngraph::CoordinateDiff(2))
+    if (padding_below != ngraph::CoordinateDiff(2) || padding_above != ngraph::CoordinateDiff(2))
     {
         return false;
     }
@@ -437,7 +437,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                                     pad_value_op,
                                                     pattern_map[pad_input],
                                                     matched_pad,
-                                                    matched_conv,
+                                                    matched_conv->get_padding_below(),
+                                                    matched_conv->get_padding_above(),
                                                     input_order[0],
                                                     input_order[1]))
             {
@@ -502,7 +503,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                     pad_value_op,
                                                     pattern_map[pad_input],
                                                     matched_pad,
-                                                    matched_conv,
+                                                    matched_conv->get_padding_below(),
+                                                    matched_conv->get_padding_above(),
                                                     0,
                                                     1))
             {
@@ -526,6 +528,73 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                   matched_conv->get_data_dilation_strides());
 
             ngraph::replace_node(m.match_root(), zero_padded_conv);
+            return true;
+        };
+
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_filters()
+{
+    auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+    auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto pad = std::make_shared<op::Pad>(
+        pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+
+    auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+
+    auto conv = std::make_shared<op::ConvolutionBackpropFilters>(pad_label,
+                                                                 Shape{1, 1, 3, 3},
+                                                                 output_delta,
+                                                                 Strides{1, 1},
+                                                                 Strides{1, 1},
+                                                                 CoordinateDiff{1, 1},
+                                                                 CoordinateDiff{1, 1},
+                                                                 Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    ngraph::pattern::gr_callback_fn callback =
+        [pad_input, pad_value, pad_label, output_delta, conv_label](pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
+
+            auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+
+            const auto& matched_conv =
+                std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(pattern_map[conv_label]);
+            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+
+            if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                    pad_value_op,
+                                                    pattern_map[pad_input],
+                                                    matched_pad,
+                                                    matched_conv->get_padding_below_forward(),
+                                                    matched_conv->get_padding_above_forward(),
+                                                    0,
+                                                    1))
+            {
+                return false;
+            }
+
+            CoordinateDiff padding_below{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(3))};
+            CoordinateDiff padding_above{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
+
+            auto zero_padded_conv_backprop_filters =
+                std::make_shared<op::ConvolutionBackpropFilters>(
+                    pattern_map[pad_input],
+                    matched_conv->get_filters_shape(),
+                    pattern_map[output_delta],
+                    matched_conv->get_window_movement_strides_forward(),
+                    matched_conv->get_window_dilation_strides_forward(),
+                    padding_below,
+                    padding_above,
+                    matched_conv->get_data_dilation_strides_forward());
+
+            ngraph::replace_node(m.match_root(), zero_padded_conv_backprop_filters);
             return true;
         };
 

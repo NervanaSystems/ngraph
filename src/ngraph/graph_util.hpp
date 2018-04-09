@@ -105,8 +105,11 @@ namespace ngraph
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned function ops
-    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
+    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func,
                                                      NodeMap& node_map);
+
+    // input function is cloned and returned
+    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
 
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);

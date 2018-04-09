@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,28 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/util.hpp"
 
-#include <exception>
-#include <functional>
-#include <sstream>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
-
-namespace ngraph
+TEST(backend_api, registered_devices)
 {
-    namespace pass
-    {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
+    vector<string> devices = runtime::Backend::get_registered_devices();
+    EXPECT_GE(devices.size(), 1);
 
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
-    }
+    EXPECT_TRUE(contains(devices, "INTERPRETER"));
 }
