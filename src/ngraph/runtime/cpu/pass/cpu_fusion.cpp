@@ -136,7 +136,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     auto pbroadcast = std::make_shared<op::Broadcast>(b, pmmb->get_shape(), AxisSet{0});
     auto padd = pmmb + pbroadcast;
 
-    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmulbias_pattern against node = "
                      << m.match_root()->get_name();
 
@@ -182,7 +182,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
     auto pdot = std::make_shared<op::Dot>(skip_w, skip_x);
 
-    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -285,7 +285,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     // This completes fprop bn pattern
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
             pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
@@ -411,7 +411,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                                   Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
             pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
@@ -489,7 +489,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                   Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [pad_input, pad_value, pad_label, conv_filter, conv_label](pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
 
@@ -554,7 +554,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
                                                                  Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [pad_input, pad_value, pad_label, output_delta, conv_label](pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
 
@@ -616,7 +616,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [input](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -668,7 +668,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
     auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [input, delta](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -712,7 +712,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                                                     Strides{1, 1});
     auto p_conv_bias = pbroadcast + pconv1;
 
-    ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -767,7 +767,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
     auto prelu = std::make_shared<op::Relu>(goe);
 
-    ngraph::pattern::gr_callback_fn callback = [input, gamma, beta](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
                      << m.match_root()->get_name();
 
@@ -841,7 +841,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
     auto prelu = std::make_shared<op::Relu>(pconv);
 
-    pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.match_root()->get_name();
 
