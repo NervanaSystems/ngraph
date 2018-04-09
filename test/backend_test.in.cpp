@@ -483,7 +483,7 @@ TEST(${BACKEND_NAME}, concat_vector)
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, concat_mkldnn)
+TEST(${BACKEND_NAME}, concat_4d_tensor)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1, 1, 1};

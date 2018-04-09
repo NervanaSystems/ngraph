@@ -81,19 +81,9 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
                     auto concat = static_cast<op::Concat*>(node);
-                    size_t num_inputs = node->get_input_size();
-                    bool flag = true;
 
-                    for (size_t i = 0; i < num_inputs; i++)
-                    {
-                        if (node->get_input_element_type(i) == element::f32 &&
-                            (node->get_input_shape(i)).size() == 4)
-                            continue;
-                        else
-                            flag = false;
-                    }
-
-                    if (flag)
+                    if (node->get_input_element_type(0) == element::f32 &&
+                        (node->get_input_shape(0)).size() == 4)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();

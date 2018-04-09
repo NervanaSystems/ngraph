@@ -854,7 +854,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
                     std::vector<mkldnn::memory::format> inputs_format;
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
 
@@ -875,17 +874,12 @@ namespace ngraph
 
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], result_format);
-                    for (size_t i = 0; i < args.size(); i++)
-                    {
-                        inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                            inputs_data_desc[i], runtime::cpu::mkldnn_utils::global_cpu_engine));
-                    }
 
                     size_t concat_index = 0;
                     size_t concat_dims =
                         (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-                    concat_index = mkldnn_emitter->build_concat(
-                        inputs_data_desc, result_desc, concat_dims, inputs_pd);
+                    concat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dims);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
                     size_t i;
                     for (i = 0; i < args.size(); i++)
