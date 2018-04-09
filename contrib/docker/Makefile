@@ -48,11 +48,15 @@ GIT_COMMIT = $(shell git rev-parse HEAD)
 DBUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
 
+# Look for evidence if GPU backend is supported on the platform
+NVIDIA_SMI = $(shell which nvidia-smi)
+
 # Enable additional options to be added on the command line
 ifndef CMAKE_OPTIONS_EXTRA
     CMAKE_OPTIONS_EXTRA=
 endif
 
+# Allow linking pre-built third-party cache files (future)
 ifndef THIRD_PARTY_CACHE_DIR
     THIRD_PARTY_CACHE_DIR=
 endif
@@ -63,13 +67,29 @@ ifndef OS
     OS="ubuntu1604"
 endif
 
+# Configuration for specific reference OS in Dockerfiles
 ifeq ("$(shell echo ${OS} | grep centos)","centos74")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_centos_user.sh
-    DOCKERFILE=Dockerfile.ngraph.centos74
+    CPU_DOCKERFILE=Dockerfile.ngraph.centos74
 else
-    DOCKERFILE ?= "Dockerfile.ngraph"
-    RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
+    CPU_DOCKERFILE="Dockerfile.ngraph.ubuntu1604"
+    RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
+endif
+
+# Build GPU backend if NVIDIA_SMI command is found
+# Sets CMAKE_OPTIONS_EXTRA to introduce GPU build configuration to cmake
+# Configuration for GPU backend in Dockerfiles with "_gpu" suffix
+# The nvidia-docker command must be used for any targets that actually utilize GPU devices
+ifneq ("$(shell echo ${NVIDIA_SMI} | grep nvidia-smi)","")
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
+    DOCKERFILE=${CPU_DOCKERFILE}_gpu
+    DOCKER_CMD=nvidia-docker
+    DOCKER_CMD_MESG=GPU appears to be supported on this platform.  Building for GPU and CPU backend support.
+else
+    DOCKERFILE=${CPU_DOCKERFILE}
+    DOCKER_CMD=docker
+    DOCKER_CMD_MESG=GPU does not appear to be supported on this platform.  Building for CPU backend support only.
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -106,6 +126,7 @@ all: check_gcc check_clang
 
 # Docker actions
 
+# Isolate specific dockerfiles in a .build_* subdirectory
 expand_dockerfile_templates:
 	@echo "OS=${OS}"
 	@echo "DOCKERFILE=${DOCKERFILE}"
@@ -124,6 +145,7 @@ build_docker: build_docker_image
 # Build docs
 docs: sphinx_doc
 
+# Docs build does not depend on GPU dependencies
 sphinx_doc: build_docker_image
 	# sphinx html docs build
 	docker run --rm --tty \
@@ -137,11 +159,18 @@ sphinx_doc: build_docker_image
 # Build
 build_all: build_gcc build_clang
 
+# Build targets ALWAYS clean build directories (BUILD-GCC, BUILD-CLANG) prior to building
+# Always use docker command to build docker images
+# nvidia-docker command is not appropriate
 build_gcc: build_docker_image
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='build_gcc' \
@@ -150,11 +179,18 @@ build_gcc: build_docker_image
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# Build targets ALWAYS clean build directories (BUILD-GCC, BUILD-CLANG) prior to building
+# Always use docker command to build docker images
+# nvidia-docker command is not appropriate
 build_clang: build_docker_image
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='build_clang' \
@@ -166,11 +202,14 @@ build_clang: build_docker_image
 # Check (run unit-tests)
 check_all: check_gcc check_clang
 
-check_gcc: build_docker_image
-	docker run --rm --tty \
+# Always use the platform-specific docker command to run unit tests
+# ngraph make check target executes unit-test-check and style-check
+check_gcc: build_gcc
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=check_gcc \
@@ -179,11 +218,14 @@ check_gcc: build_docker_image
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-check_clang: build_docker_image
-	docker run --rm --tty \
+# Always use the platform-specific docker command to run unit tests
+# ngraph make check target executes unit-test-check and style-check
+check_clang: build_clang
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=check_clang \
@@ -192,11 +234,13 @@ check_clang: build_docker_image
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# Always use the platform-specific docker command to run unit tests
 unit_test_check_gcc: build_gcc
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='unit-test-check_gcc' \
@@ -205,11 +249,13 @@ unit_test_check_gcc: build_gcc
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# Always use the platform-specific docker command to run unit tests
 unit_test_check_clang: build_clang
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN='unit-test-check_clang' \
@@ -224,11 +270,15 @@ style_check_clang: build_clang
 
 install_all: install_gcc install_clang
 
+# install targets do not depend on GPU dependencies
+# no unit tests are executed
+# build prerequisites include GPU dependencies in the docker image automatically
 install_gcc: build_gcc
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=install_gcc \
@@ -237,11 +287,15 @@ install_gcc: build_gcc
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# install targets do not depend on GPU dependencies
+# no unit tests are executed
+# build prerequisites include GPU dependencies in the docker image automatically
 install_clang: build_clang
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
 	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
 	    --env PARALLEL=${PARALLEL} \
 	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
 	    --env CMD_TO_RUN=install_clang \
@@ -252,9 +306,11 @@ install_clang: build_clang
 
 # Interactive shell
 
+# Always use the platform-specific docker command for the interactive shell 
 shell: build_docker_image
 	# "make shell" runs an interactive shell in the docker image, for debugging
-	docker run --rm --tty --interactive \
+	@echo "${DOCKER_CMD_MESG}"
+	${DOCKER_CMD} run --rm --tty --interactive \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
@@ -269,17 +325,3 @@ clean:
 	rm -fr "${DIR}"/BUILD-GCC
 	rm -fr "${DIR}"/BUILD-CLANG
 	rm -fr "${DIR}"/BUILD-DOCS
-
-#
-# DEPRECATED TARGETS -- These WILL BE REMOVED in a future revision.
-#                       They exist here to maintain compatibility in Jenkins
-#                       jobs on older development branches.
-#
-
-check_cpu: check_all
-	echo 'WARNING: "make check_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make check_cpu" runs "make check_all" now, building with all compilers (gcc and clang)'
-
-build_ngraph_cpu: build_docker_image
-	echo 'WARNING: "make build_ngraph_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make build_ngraph_cpu" runs "make build_docker_image" now'
