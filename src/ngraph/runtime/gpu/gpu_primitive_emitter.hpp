@@ -37,10 +37,10 @@ namespace ngraph
             {
             public:
                 GPUPrimitiveEmitter();
-                ~GPUPrimitiveEmitter() {}
-                std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
+                ~GPUPrimitiveEmitter();
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
+                std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
                 size_t insert(gpu::primitive* f);
                 size_t lookup(std::string hash);
                 size_t cache(const std::string& hash, const size_t& index);

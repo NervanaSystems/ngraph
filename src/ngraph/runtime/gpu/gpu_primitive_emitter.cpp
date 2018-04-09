@@ -26,6 +26,13 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter()
     : m_cuda_emitter(new CUDAEmitter(this)), m_cudnn_emitter(new CUDNNEmitter(this))
 {
 }
+GPUPrimitiveEmitter::~GPUPrimitiveEmitter()
+{
+    for (auto& primitive : m_gpu_primitives)
+    {
+        delete primitive;
+    }
+}
 std::unique_ptr<CUDAEmitter>& GPUPrimitiveEmitter::get_cuda_emitter()
 {
     return m_cuda_emitter;
@@ -36,7 +43,7 @@ std::unique_ptr<CUDNNEmitter>& GPUPrimitiveEmitter::get_cudnn_emitter()
 }
 size_t GPUPrimitiveEmitter::insert(gpu::primitive* f)
 {
-    m_gpu_primitives.emplace_back(std::move(f));
+    m_gpu_primitives.push_back(f);
     return m_gpu_primitives.size() - 1;
 }
 size_t GPUPrimitiveEmitter::lookup(std::string hash)
