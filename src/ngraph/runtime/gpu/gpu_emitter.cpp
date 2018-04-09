@@ -775,7 +775,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         {
                             kernel::emit_memset(writer, out[0], 0);
                         }
-                        // no change in dimensions, reduction not necessary
                         else if (args[0].get_shape().size() == out[0].get_shape().size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
