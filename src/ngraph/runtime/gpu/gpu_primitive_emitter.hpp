@@ -22,8 +22,6 @@
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-
-
 namespace ngraph
 {
     namespace runtime
@@ -44,11 +42,12 @@ namespace ngraph
                 size_t insert(gpu::primitive* f);
                 size_t lookup(std::string hash);
                 size_t cache(const std::string& hash, const size_t& index);
+
             private:
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
                 std::vector<gpu::primitive*> m_gpu_primitives;
-                std::unordered_map<std::string,size_t> m_primitive_map;
+                std::unordered_map<std::string, size_t> m_primitive_map;
             };
         }
     }

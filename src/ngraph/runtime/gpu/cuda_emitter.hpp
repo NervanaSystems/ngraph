@@ -27,8 +27,10 @@ namespace ngraph
             class CUDAEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
             public:
                 size_t build_pad();
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
 

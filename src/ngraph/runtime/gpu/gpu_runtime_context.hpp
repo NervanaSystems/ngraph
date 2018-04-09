@@ -32,19 +32,19 @@ namespace ngraph
             typedef std::function<void(void**, void**)> primitive;
 
             extern "C" {
-                struct GPURuntimeContext
-                {
-                    cudnnHandle_t* cudnn_handle;
-                    cublasHandle_t* cublas_handle;
-                    gpu::primitive* const* gpu_primitives;
-                    CudaFunctionPool* compiled_kernel_pool;
-                    // Note that in it's current state, calling methods of CudaFunctionPool
-                    // or other native compiled C++ functions in ngraph from the JIT code is
-                    // unsafe and will fail if the GLIBCXX versions are diffent for the
-                    // native compiler and clang. If all of the emitted CUDA ops are refactored
-                    // to use the GPUPrimitiveEmitter, the above pointer can be removed. It is left now
-                    // for backward compatability.
-                };
+            struct GPURuntimeContext
+            {
+                cudnnHandle_t* cudnn_handle;
+                cublasHandle_t* cublas_handle;
+                gpu::primitive* const* gpu_primitives;
+                CudaFunctionPool* compiled_kernel_pool;
+                // Note that in it's current state, calling methods of CudaFunctionPool
+                // or other native compiled C++ functions in ngraph from the JIT code is
+                // unsafe and will fail if the GLIBCXX versions are diffent for the
+                // native compiler and clang. If all of the emitted CUDA ops are refactored
+                // to use the GPUPrimitiveEmitter, the above pointer can be removed. It is left now
+                // for backward compatability.
+            };
             }
         }
     }
