@@ -150,6 +150,18 @@ namespace ngraph
                                                const Shape& input_shape,
                                                const Shape& output_shape,
                                                const AxisSet& reduction_axes);
+
+                void reshape_2d_2d_float32(float* input,
+                                           float* output,
+                                           const Shape& input_shape,
+                                           const AxisSet& input_axis_order,
+                                           const Shape& output_shape);
+
+                void reshape_4d_4d_float32(float* input,
+                                           float* output,
+                                           const Shape& input_shape,
+                                           const AxisSet& input_axis_order,
+                                           const Shape& output_shape);
             }
         }
     }
