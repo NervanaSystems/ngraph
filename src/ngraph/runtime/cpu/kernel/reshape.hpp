@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/axis_set.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 #include "ngraph/shape.hpp"
 
@@ -35,7 +35,7 @@ namespace ngraph
                 void reshape(ElementType* input,
                              ElementType* output,
                              const Shape& input_shape,
-                             const AxisSet& input_axis_order,
+                             const AxisVector& input_axis_order,
                              const Shape& output_shape)
                 {
                     Eigen::array<Eigen::Index, OutRank> out_dims;

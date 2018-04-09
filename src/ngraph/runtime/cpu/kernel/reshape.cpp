@@ -27,7 +27,7 @@ namespace ngraph
                 void reshape_3d_3d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
-                                           const AxisSet& input_axis_order,
+                                           const AxisVector& input_axis_order,
                                            const Shape& output_shape)
                 {
                     reshape<float, 3, 3>(
@@ -37,7 +37,7 @@ namespace ngraph
                 void reshape_4d_4d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
-                                           const AxisSet& input_axis_order,
+                                           const AxisVector& input_axis_order,
                                            const Shape& output_shape)
                 {
                     reshape<float, 4, 4>(
