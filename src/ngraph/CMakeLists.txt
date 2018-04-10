@@ -209,6 +209,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/kernel/pad.cpp
         runtime/cpu/kernel/reduce_max.cpp
         runtime/cpu/kernel/reduce_sum.cpp
+        runtime/cpu/kernel/reshape.cpp
         runtime/cpu/op/conv_bias.cpp
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
