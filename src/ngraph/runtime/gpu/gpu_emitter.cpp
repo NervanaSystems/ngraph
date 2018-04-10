@@ -234,14 +234,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         window_dilation_strides,
                                                         mode,
                                                         data_type);
-                
+
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle, "
-                       << args0 << ", "
-                       << args1 << ", "
-                       << conv_descriptor << ", "
-                       << out0 << ", "
-                       << conv_algo << ", "
+                writer << "cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle, " << args0 << ", "
+                       << args1 << ", " << conv_descriptor << ", " << out0 << ", " << conv_algo
+                       << ", "
                        << "&workSpaceSizeInBytes);\n";
 
                 writer << "void* workspace = "
@@ -323,11 +320,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn_handle, "
-                       << args0 << ", "
-                       << args1 << ", "
-                       << conv_descriptor << ", "
-                       << out0 << ", "
+                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn_handle, " << args0
+                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
 
@@ -413,11 +407,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn_handle, "
-                       << args0 << ", "
-                       << args1 << ", "
-                       << conv_descriptor << ", "
-                       << out0 << ", "
+                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn_handle, " << args0
+                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
 
