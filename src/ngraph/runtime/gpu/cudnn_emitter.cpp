@@ -178,55 +178,107 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
                                            const ngraph::Shape& padding_below,
                                            const ngraph::Shape& padding_above)
 {
-    if (input_shape.size() != 4)
+    gpu::primitive* fpool = nullptr;
+
+    if (input_shape.size() == 4)
     {
-        // cudnn impl. currently only supportind 2d pooling
-        // 1d must be added via cuda kernel
-        // 3d can be added via cudnn
-        throw std::runtime_error(
-            "Unsupported tensor encountered "
-            "in CUDNNEmitter::build_pooling_forward.");
+
+        auto get_tensor_desc = [](const Shape& dimensions) {
+            cudnnTensorDescriptor_t desc;
+            cudnnCreateTensorDescriptor(&desc);
+            cudnnSetTensor4dDescriptor(desc,
+                                       CUDNN_TENSOR_NCHW,
+                                       CUDNN_DATA_FLOAT,
+                                       dimensions[0],
+                                       dimensions[1],
+                                       dimensions[2],
+                                       dimensions[3]);
+            return desc;
+        };
+
+        fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
+                auto input_desc = get_tensor_desc(input_shape);
+                auto output_desc = get_tensor_desc(output_shape);
+                cudnnPoolingDescriptor_t desc;
+                cudnnCreatePoolingDescriptor(&desc);
+                cudnnSetPooling2dDescriptor(desc,
+                                            pool_op,
+                                            CUDNN_NOT_PROPAGATE_NAN,
+                                            window_shape[0],
+                                            window_shape[1],
+                                            0,
+                                            0,
+                                            window_strides[0],
+                                            window_strides[1]);
+
+                float alpha = 1.0, beta = 0.0;
+                cudnnPoolingForward(*ctx->cudnn_handle,
+                                    desc,
+                                    &alpha,
+                                    input_desc,
+                                    inputs[0],
+                                    &beta,
+                                    output_desc,
+                                    outputs[0]);
+            }};
     }
+    else if (input_shape.size() == 5)
+    {
+        if (window_shape.size() != 3 || window_strides.size() != 3 || padding_below.size() != 3)
+        {
+            throw std::runtime_error("3d pooling requested but window properties are not 3 dimensional.");
+        }
+        auto get_tensor_desc = [](const Shape& shape) {
+            std::vector<int> dimensions(shape.size());
+            for (auto i = 0u; i < shape.size(); i++)
+            {
+                dimensions[i] = static_cast<int>(shape[i]);
+            }
+            cudnnTensorDescriptor_t desc;
+            cudnnCreateTensorDescriptor(&desc);
+            cudnnSetTensorNdDescriptor(desc,
+                                       CUDNN_DATA_FLOAT,
+                                       dimensions.size(),
+                                       dimensions.data(),
+                                       cudnn_util::compute_strides(dimensions).data());
+            return desc;
+        };
 
-    auto get_tensor_desc = [](const Shape& dimensions) {
-        cudnnTensorDescriptor_t desc;
-        cudnnCreateTensorDescriptor(&desc);
-        cudnnSetTensor4dDescriptor(desc,
-                                   CUDNN_TENSOR_NCHW,
-                                   CUDNN_DATA_FLOAT,
-                                   dimensions[0],
-                                   dimensions[1],
-                                   dimensions[2],
-                                   dimensions[3]);
-        return desc;
-    };
+        std::vector<int> w_strides(window_strides.size());
+        std::vector<int> w_shape(window_shape.size());
+        std::vector<int> w_padding(padding_below.size());
+        for (int i=0; i<window_shape.size(); i++)
+        {
+            w_shape[i] = static_cast<int>(window_shape[i]);
+            w_strides[i] = static_cast<int>(window_strides[i]);
+            w_padding[i] = static_cast<int>(padding_below[i]);
+        }
 
-    auto* fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
-        auto input_desc = get_tensor_desc(input_shape);
-        auto output_desc = get_tensor_desc(output_shape);
-        cudnnPoolingDescriptor_t desc;
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPooling2dDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    window_shape[0],
-                                    window_shape[1],
-                                    0,
-                                    0,
-                                    window_strides[0],
-                                    window_strides[1]);
+        fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
+                auto input_desc = get_tensor_desc(input_shape);
+                auto output_desc = get_tensor_desc(output_shape);
+                cudnnPoolingDescriptor_t desc;
+                cudnnCreatePoolingDescriptor(&desc);
 
-        float alpha = 1.0, beta = 0.0;
-        cudnnPoolingForward(*ctx->cudnn_handle,
-                            desc,
-                            &alpha,
-                            input_desc,
-                            inputs[0],
-                            &beta,
-                            output_desc,
-                            outputs[0]);
+                cudnnSetPoolingNdDescriptor(desc,
+                                            pool_op,
+                                            CUDNN_NOT_PROPAGATE_NAN,
+                                            3,
+                                            w_shape.data(),
+                                            w_padding.data(),
+                                            w_strides.data());
 
-    }};
+                float alpha = 1.0, beta = 0.0;
+                cudnnPoolingForward(*ctx->cudnn_handle,
+                                    desc,
+                                    &alpha,
+                                    input_desc,
+                                    inputs[0],
+                                    &beta,
+                                    output_desc,
+                                    outputs[0]);
+            }};
+    }
 
     return this->m_primitive_emitter->insert(fpool);
 }

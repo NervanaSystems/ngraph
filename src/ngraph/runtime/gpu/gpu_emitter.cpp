@@ -842,8 +842,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& input_shape = args[0].get_shape();
                     auto input_rank = input_shape.size();
                     auto& result_shape = out[0].get_shape();
-                    auto& padding_below = max_pool->get_padding_below();
-                    auto& padding_above = max_pool->get_padding_above();
+                    auto padding_below = max_pool->get_padding_below();
+                    auto padding_above = max_pool->get_padding_above();
                     if (padding_below.size() != padding_above.size())
                     {
                         throw std::runtime_error(
@@ -858,7 +858,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         pad_required = true;
                     }
 
-                    if (pad_required)
+                    if (pad_required && padding_below != padding_above)
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
@@ -878,12 +878,17 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                     shape_to_pool,
                                                     padding_below,
                                                     padding_above,
-                                                    {});
+                                                    /*padding_interior*/{});
 
                         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                         writer << "std::vector<void*>{pad_buffer}.data()";
                         writer << ");\n";
+
+                        // asymetric padding has been applied, zero out padding vectors to
+                        // ensure cudnn does not assume padding during pooling
+                        std::fill(padding_below.begin(), padding_below.end(), 0);
+                        std::fill(padding_above.begin(), padding_above.end(), 0);
                     }
 
                     int num_nontrivial_dims = 0;
@@ -932,6 +937,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
                         if (pad_required)
                         {
+                            // this would be much cleaner if gpu::memory_primitive's were implemented
+                            // and could be bound to callable primitives.
                             writer << "std::vector<void*>{pad_buffer}.data(), ";
                         }
                         else
