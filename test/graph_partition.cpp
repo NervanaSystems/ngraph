@@ -71,13 +71,13 @@ public:
         return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
     }
 
-    bool compile(const Function& func)
+    bool compile(const shared_ptr<Function>& func)
     {
-        if (!contains_key(m_function_map, &func))
+        if (!contains_key(m_function_map, func))
         {
             // Clone function
             FunctionInstance instance;
-            instance.m_function = clone_function(func);
+            instance.m_function = clone_function(*func);
 
             // Run placement pass
             pass::Manager pass_manager;
@@ -87,30 +87,30 @@ public:
             // Split function to sub_functions
             tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
                 split_function_by_placement(instance.m_function);
-            m_function_map.insert({&func, instance});
+            m_function_map.insert({func, instance});
 
             // Compile subfunctions in corresponding backends
             for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
             {
                 Placement placement = get_colocated_function_placement(sub_function);
                 auto backend = get_cached_backend(placement);
-                backend->compile(*sub_function);
+                backend->compile(sub_function);
             }
         }
         return true;
     }
 
-    bool call(const Function& func,
+    bool call(const shared_ptr<Function>& func,
               const vector<shared_ptr<runtime::TensorView>>& outputs,
               const vector<shared_ptr<runtime::TensorView>>& inputs)
     {
         // Get FunctionInstance
         bool rc = true;
-        auto it = m_function_map.find(&func);
+        auto it = m_function_map.find(func);
         if (it == m_function_map.end())
         {
             compile(func);
-            it = m_function_map.find(&func);
+            it = m_function_map.find(func);
         }
         if (it == m_function_map.end())
         {
@@ -174,7 +174,7 @@ public:
             }
 
             // Call
-            backend->call(*sub_function, result_tvs, parameter_tvs);
+            backend->call(sub_function, result_tvs, parameter_tvs);
         }
         return rc;
     }
@@ -198,7 +198,7 @@ protected:
     }
 
     map<Placement, shared_ptr<runtime::Backend>> m_cached_backends;
-    map<const Function*, FunctionInstance> m_function_map;
+    map<shared_ptr<Function>, FunctionInstance> m_function_map;
     function<Placement(shared_ptr<Node>)> m_placement_policy;
 };
 
@@ -318,8 +318,8 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
-    int_backend->compile(*f0);
-    int_backend->call(*f0, {r0, r1}, {a, b, c});
+    int_backend->compile(f0);
+    int_backend->call(f0, {r0, r1}, {a, b, c});
 
     // f1 on CPU
     auto p0 = cpu_backend->create_tensor(element::f32, shape);
@@ -329,8 +329,8 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(p1, read_vector<float>(r1));
 
     auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
-    cpu_backend->compile(*f1);
-    cpu_backend->call(*f1, {r2}, {p0, p1});
+    cpu_backend->compile(f1);
+    cpu_backend->call(f1, {r2}, {p0, p1});
 
     // f2 on INT
     auto p2 = int_backend->create_tensor(element::f32, shape);
@@ -338,8 +338,8 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(p2, read_vector<float>(r2));
 
     auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
-    int_backend->compile(*f2);
-    int_backend->call(*f2, {r}, {p2});
+    int_backend->compile(f2);
+    int_backend->call(f2, {r}, {p2});
 
     // Check final result on INT
     EXPECT_EQ(read_vector<float>(r),
@@ -385,7 +385,7 @@ TEST(graph_partition, hybrid_abc)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call(*f, {r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
@@ -411,7 +411,7 @@ TEST(graph_partition, hybrid_abcd)
     shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
-    backend->compile(*f);
+    backend->compile(f);
 
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
@@ -424,7 +424,7 @@ TEST(graph_partition, hybrid_abcd)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    backend->call(*f, {r}, {a, b, c, d});
+    backend->call(f, {r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
@@ -447,7 +447,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
-    backend->compile(*f);
+    backend->compile(f);
 
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
@@ -458,7 +458,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call(*f, {r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
@@ -484,7 +484,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
-    backend->compile(*f);
+    backend->compile(f);
 
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
@@ -495,7 +495,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call(*f, {r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
@@ -512,7 +512,7 @@ TEST(graph_partition, hybrid_no_split)
     shared_ptr<Function> f = make_shared<Function>(C, op::ParameterVector{A, B});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
-    backend->compile(*f);
+    backend->compile(f);
 
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
@@ -521,6 +521,6 @@ TEST(graph_partition, hybrid_no_split)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    backend->call(*f, {c}, {a, b});
+    backend->call(f, {c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
