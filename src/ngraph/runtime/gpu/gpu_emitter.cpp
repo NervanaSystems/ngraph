@@ -278,7 +278,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 if (padding.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
-                                             "with more than 3D still not working.");
+                                             "with more than 3D is not implemented.");
                 }
                 for (auto a : data_dilation_strides)
                 {
@@ -360,7 +360,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 if (padding.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
-                                             "with more than 3D still not working.");
+                                             "with more than 3D is not implemented.");
                 }
                 for (auto a : data_dilation_strides)
                 {
