@@ -90,9 +90,13 @@ else
 
     if [ -z "${RUN_CMD+x}" ] ; then  # Launch a shell as dockuser
       echo 'Running interactive shell (/bin/bash) as dockuser'
+      ps -U ${DOCK_USER} | wc -l
+      lsof | grep ${DOCK_USER} | wc -l
       su -m "${DOCK_USER}" -c "/bin/bash"
     else                         # Run command as dockuser
       echo "Running command [${RUN_CMD}] as dockuser"
+      ps -U ${DOCK_USER} | wc -l
+      lsof | grep ${DOCK_USER} | wc -l
       su -m "${DOCK_USER}" -c "${RUN_CMD}"
     fi
 
