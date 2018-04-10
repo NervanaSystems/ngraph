@@ -182,7 +182,6 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
 
     if (input_shape.size() == 4)
     {
-
         auto get_tensor_desc = [](const Shape& dimensions) {
             cudnnTensorDescriptor_t desc;
             cudnnCreateTensorDescriptor(&desc);
@@ -197,36 +196,37 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
         };
 
         fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
-                auto input_desc = get_tensor_desc(input_shape);
-                auto output_desc = get_tensor_desc(output_shape);
-                cudnnPoolingDescriptor_t desc;
-                cudnnCreatePoolingDescriptor(&desc);
-                cudnnSetPooling2dDescriptor(desc,
-                                            pool_op,
-                                            CUDNN_NOT_PROPAGATE_NAN,
-                                            window_shape[0],
-                                            window_shape[1],
-                                            0,
-                                            0,
-                                            window_strides[0],
-                                            window_strides[1]);
+            auto input_desc = get_tensor_desc(input_shape);
+            auto output_desc = get_tensor_desc(output_shape);
+            cudnnPoolingDescriptor_t desc;
+            cudnnCreatePoolingDescriptor(&desc);
+            cudnnSetPooling2dDescriptor(desc,
+                                        pool_op,
+                                        CUDNN_NOT_PROPAGATE_NAN,
+                                        window_shape[0],
+                                        window_shape[1],
+                                        0,
+                                        0,
+                                        window_strides[0],
+                                        window_strides[1]);
 
-                float alpha = 1.0, beta = 0.0;
-                cudnnPoolingForward(*ctx->cudnn_handle,
-                                    desc,
-                                    &alpha,
-                                    input_desc,
-                                    inputs[0],
-                                    &beta,
-                                    output_desc,
-                                    outputs[0]);
-            }};
+            float alpha = 1.0, beta = 0.0;
+            cudnnPoolingForward(*ctx->cudnn_handle,
+                                desc,
+                                &alpha,
+                                input_desc,
+                                inputs[0],
+                                &beta,
+                                output_desc,
+                                outputs[0]);
+        }};
     }
     else if (input_shape.size() == 5)
     {
         if (window_shape.size() != 3 || window_strides.size() != 3 || padding_below.size() != 3)
         {
-            throw std::runtime_error("3d pooling requested but window properties are not 3 dimensional.");
+            throw std::runtime_error(
+                "3d pooling requested but window properties are not 3 dimensional.");
         }
         auto get_tensor_desc = [](const Shape& shape) {
             std::vector<int> dimensions(shape.size());
@@ -247,7 +247,7 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
         std::vector<int> w_strides(window_strides.size());
         std::vector<int> w_shape(window_shape.size());
         std::vector<int> w_padding(padding_below.size());
-        for (int i=0; i<window_shape.size(); i++)
+        for (int i = 0; i < window_shape.size(); i++)
         {
             w_shape[i] = static_cast<int>(window_shape[i]);
             w_strides[i] = static_cast<int>(window_strides[i]);
@@ -255,29 +255,29 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
         }
 
         fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
-                auto input_desc = get_tensor_desc(input_shape);
-                auto output_desc = get_tensor_desc(output_shape);
-                cudnnPoolingDescriptor_t desc;
-                cudnnCreatePoolingDescriptor(&desc);
+            auto input_desc = get_tensor_desc(input_shape);
+            auto output_desc = get_tensor_desc(output_shape);
+            cudnnPoolingDescriptor_t desc;
+            cudnnCreatePoolingDescriptor(&desc);
 
-                cudnnSetPoolingNdDescriptor(desc,
-                                            pool_op,
-                                            CUDNN_NOT_PROPAGATE_NAN,
-                                            3,
-                                            w_shape.data(),
-                                            w_padding.data(),
-                                            w_strides.data());
+            cudnnSetPoolingNdDescriptor(desc,
+                                        pool_op,
+                                        CUDNN_NOT_PROPAGATE_NAN,
+                                        3,
+                                        w_shape.data(),
+                                        w_padding.data(),
+                                        w_strides.data());
 
-                float alpha = 1.0, beta = 0.0;
-                cudnnPoolingForward(*ctx->cudnn_handle,
-                                    desc,
-                                    &alpha,
-                                    input_desc,
-                                    inputs[0],
-                                    &beta,
-                                    output_desc,
-                                    outputs[0]);
-            }};
+            float alpha = 1.0, beta = 0.0;
+            cudnnPoolingForward(*ctx->cudnn_handle,
+                                desc,
+                                &alpha,
+                                input_desc,
+                                inputs[0],
+                                &beta,
+                                output_desc,
+                                outputs[0]);
+        }};
     }
 
     return this->m_primitive_emitter->insert(fpool);

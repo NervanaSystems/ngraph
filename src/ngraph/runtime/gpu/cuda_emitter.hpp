@@ -32,6 +32,7 @@ namespace ngraph
             class CUDAEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
             public:
                 size_t build_pad(const GPURuntimeContext* ctx,
                                  const std::array<std::string, 2>& dtypes,
