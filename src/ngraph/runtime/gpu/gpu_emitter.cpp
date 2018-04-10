@@ -187,7 +187,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
-                const size_t workSapceSizeInBytes = 1024;
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
@@ -235,14 +234,22 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         window_dilation_strides,
                                                         mode,
                                                         data_type);
+                
+                writer << "size_t workSpaceSizeInBytes = 0;\n";
+                writer << "cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle, "
+                       << args0 << ", "
+                       << args1 << ", "
+                       << conv_descriptor << ", "
+                       << out0 << ", "
+                       << conv_algo << ", "
+                       << "&workSpaceSizeInBytes);\n";
 
                 writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer("
-                       << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
                 writer << "cudnnConvolutionForward(cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "workspace, workSpaceSizeInBytes, "
                        << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
@@ -264,7 +271,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0";
-                const size_t workSapceSizeInBytes = 1024 * 1024;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
                 Strides window_dilation_strides =
@@ -316,14 +322,22 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         mode,
                                                         data_type);
 
+                writer << "size_t workSpaceSizeInBytes = 0;\n";
+                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn_handle, "
+                       << args0 << ", "
+                       << args1 << ", "
+                       << conv_descriptor << ", "
+                       << out0 << ", "
+                       << conv_algo << ", "
+                       << "&workSpaceSizeInBytes);\n";
+
                 writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer("
-                       << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
                 writer << "cudnnConvolutionBackwardData(cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "workspace, workSpaceSizeInBytes, "
                        << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
 
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
@@ -346,7 +360,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 const std::string tensor_format = "CUDNN_TENSOR_NCHW";
                 const std::string mode = "CUDNN_CROSS_CORRELATION";
                 const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
-                const size_t workSapceSizeInBytes = 1024 * 1024;
 
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
                 Strides window_dilation_strides =
@@ -399,14 +412,22 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         mode,
                                                         data_type);
 
+                writer << "size_t workSpaceSizeInBytes = 0;\n";
+                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn_handle, "
+                       << args0 << ", "
+                       << args1 << ", "
+                       << conv_descriptor << ", "
+                       << out0 << ", "
+                       << conv_algo << ", "
+                       << "&workSpaceSizeInBytes);\n";
+
                 writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer("
-                       << workSapceSizeInBytes << ");\n";
+                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
                 writer << "cudnnConvolutionBackwardFilter(cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, " << workSapceSizeInBytes << ", "
+                       << "workspace, workSpaceSizeInBytes, "
                        << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
