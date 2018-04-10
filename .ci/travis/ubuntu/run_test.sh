@@ -11,5 +11,5 @@ if [ ${TASK} == "python2_test" ]; then
 fi
 
 if [ ${TASK} == "python3_test" ]; then
-    docker run -w '/root/ngraph/python' test_ngraph tox -e py35
+    docker run -w '/root/ngraph/python' test_ngraph tox -e py3
 fi

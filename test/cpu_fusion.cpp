@@ -458,6 +458,38 @@ TEST(cpu_fusion, non_zero_padded_conv)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 }
+
+TEST(cpu_fusion, zero_padded_conv_backprop_filters)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+
+    auto conv = make_shared<op::ConvolutionBackpropFilters>(pad,
+                                                            Shape{1, 1, 2, 2},
+                                                            F,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, op::ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(func);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
 TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
