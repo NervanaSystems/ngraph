@@ -46,12 +46,12 @@ std::shared_ptr<ngraph::runtime::TensorView>
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
 
-bool runtime::gpu::GPU_Backend::compile(const ngraph::Function& func)
+bool runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func)
 {
     if (!contains_key(m_function_map, &func))
     {
         FunctionInstance instance;
-        instance.m_function = clone_function(func);
+        instance.m_function = func;
         instance.m_external_function = make_shared<GPU_ExternalFunction>(instance.m_function);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
@@ -61,7 +61,7 @@ bool runtime::gpu::GPU_Backend::compile(const ngraph::Function& func)
 }
 
 bool runtime::gpu::GPU_Backend::call(
-    const ngraph::Function& func,
+    std::shared_ptr<Function> func,
     const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
     const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
 {
