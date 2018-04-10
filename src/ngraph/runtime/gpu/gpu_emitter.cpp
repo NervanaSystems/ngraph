@@ -628,6 +628,106 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
+           template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Slice)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto slice = static_cast<const op::Slice*>(node);
+
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+                auto result_shape = out[0].get_shape();
+                const Coordinate& lower_bounds = slice->get_lower_bounds();
+                const Coordinate& upper_bounds = slice->get_upper_bounds();
+                const Strides slice_strides = slice->get_strides();
+                std::vector<size_t> input_strides(arg_rank);
+                std::vector<size_t> output_strides(arg_rank);
+                size_t stride = 1;
+                for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
+                {
+                    input_strides[i] = stride;
+                    stride *= arg_shape[i];
+                }
+                stride = 1;
+                for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
+                {
+                    output_strides[i] = stride;
+                    stride *= arg_shape[input_order[i]];
+                }
+
+                writer.block_begin("  // " + node->get_name());
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+                auto result_shape = out[0].get_shape();
+                auto input_order = reshape->get_input_order();
+
+                writer << "size_t rank = " << arg_rank << ";\n";
+                writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
+                for (int i = 1; i < arg_rank; i++)
+                {
+                    writer << ", " << input_strides[i] << "UL";
+                }
+                writer << "};\n";
+
+                writer << "std::vector<size_t> output_strides_h = {" << output_strides[0] << "UL";
+                for (int i = 1; i < arg_rank; i++)
+                {
+                    writer << ", " << output_strides[i] << "UL";
+                }
+                writer << "};\n";
+                writer << "std::vector<size_t> slice_strides_h = {" << slice_strides[0] << "UL";
+                for (int i = 1; i < arg_rank; i++)
+                {
+                    writer << ", " << slice_strides[i] << "UL";
+                }
+                writer << "};\n";
+                writer << "std::vector<size_t> lower_bounds_h = {" << lower_bounds[0] << "UL";
+                for (int i = 1; i < arg_rank; i++)
+                {
+                    writer << ", " << lower_bounds[i] << "UL";
+                }
+                writer << "};\n";
+
+                writer << "void* input_strides_d = "
+                            "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                writer << "void* output_strides_d = "
+                            "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                writer << "void* slice_strides_d = "
+                            "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                writer << "void* lower_bounds_d = "
+                            "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                writer
+                    << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
+                        "sizeof(size_t) * rank);\n";
+                writer
+                    << "runtime::gpu::cuda_memcpyHtD(output_strides_d, output_strides_h.data(), "
+                        "sizeof(size_t) * rank);\n";
+                writer
+                    << "runtime::gpu::cuda_memcpyHtD(slice_strides_d, slice_strides_h.data(), "
+                        "sizeof(size_t) * rank);\n";
+                writer
+                    << "runtime::gpu::cuda_memcpyHtD(lower_bounds_d, lower_bounds_h.data(), "
+                        "sizeof(size_t) * rank);\n";
+
+                writer << "runtime::gpu::emit_slice(\"" << node->description()
+                        << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                        << out[0].get_name() << ")"
+                        << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                        << "\"}"
+                        << ", "
+                        << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
+                        << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
+                writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
+                writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
+                writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
+                writer << "runtime::gpu::free_gpu_buffer(lower_bounds_d);\n";
+                }
+                writer.block_end();
+            }
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
             {
