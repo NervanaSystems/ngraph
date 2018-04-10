@@ -27,32 +27,29 @@ namespace ngraph
     namespace pass
     {
         template <typename LT>
-        class AssignLayout : public CallGraphPass
+        class AssignLayout : public NodePass
         {
         public:
-            virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override
+            virtual bool run_on_node(std::shared_ptr<Node> node) override
             {
-                for (const std::shared_ptr<Node>& node : nodes)
+                try
                 {
-                    try
+                    for (size_t i = 0; i < node->get_output_size(); ++i)
                     {
-                        for (size_t i = 0; i < node->get_output_size(); ++i)
+                        auto tv = node->get_output_tensor_view(i);
+                        if (nullptr == tv->get_tensor_view_layout())
                         {
-                            auto tv = node->get_output_tensor_view(i);
-                            if (nullptr == tv->get_tensor_view_layout())
-                            {
-                                auto layout = std::make_shared<LT>(*tv);
-                                tv->set_tensor_view_layout(layout);
-                            }
+                            auto layout = std::make_shared<LT>(*tv);
+                            tv->set_tensor_view_layout(layout);
                         }
                     }
-                    catch (const std::exception& e)
-                    {
-                        std::stringstream ss;
-                        ss << "Error with node " << *node << ": ";
-                        ss << e.what();
-                        throw std::invalid_argument(ss.str());
-                    }
+                }
+                catch (const std::exception& e)
+                {
+                    std::stringstream ss;
+                    ss << "Error with node " << *node << ": ";
+                    ss << e.what();
+                    throw std::invalid_argument(ss.str());
                 }
                 return false;
             }

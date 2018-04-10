@@ -16,7 +16,8 @@ The _make_ targets are designed to handle all aspects of building the _reference
 
 In order to use the _make_ targets, you will need to do the following:
 
-* Have docker installed on your computer with the docker daemon running.
+* Have *docker* installed on your computer with the docker daemon running.
+* For GPU support, also install *nvidia-docker* and start the nvidia-docker daemon.
 * These scripts assume that you are able to run the `docker` command without using `sudo`.  You will need to add your account to the `docker` group so this is possible.
 * If your computer (running docker) sits behind a firewall, you will need to have the docker daemon properly configured to use proxies to get through the firewall, so that public docker registries and git repositories can be accessed.
 * You should _not_ run `make check_*` targets from a directory in an NFS filesystem, if that NFS filesystem uses _root squash_ (see **Notes** section below).  Instead, run `make check_*` targets from a cloned repo in a local filesystem.
@@ -24,6 +25,8 @@ In order to use the _make_ targets, you will need to do the following:
 ## Make Targets
 
 The _make_ targets are designed to provide easy commands to run actions using the docker image.  All _make_ targets should be issued on the host OS, and _not_ in a docker image.
+
+GPU support will automatically be included for _make_ targets if the path of the `nvidia-smi` command is returned in response to `which nvidia-smi` on the host OS.
 
 Most _make_ targets are structured in the form `<action>_<compiler>`.  The `<action>` indicates what you want to do (e.g. build, check, install), while the `<compiler>` indicates what you want to build with (i.e. gcc or clang).
 
@@ -59,16 +62,28 @@ make check_clang
 
 ```
 cd contrib/docker
-make check_gcc OS=centos74 DOCKERFILE=Dockerfile.ngraph.centos74_cmake3
+make check_gcc OS=centos74
 ```
 
 ## Helper Scripts
 
 These helper scripts are included for use in the `Makefile` and automated (Jenkins) jobs.  **These scripts should _not_ be called directly unless you understand what they do.**
 
+#### `build-ngraph-docs.sh`
+
+A helper script to simplify implentation of the make_docs target using docker images.
+
+#### `build-ngraph-and-test.sh`
+
+A helper script to simplify implementation of make targets with multiple reference OS environments with different compilers using docker images.
+
 #### `docker_cleanup.sh`
 
 A helper script for Jenkins jobs to clean up old exited docker containers and `ngraph_*` docker images.
+
+#### `make-dimage.sh`
+
+A helper script to simplify building of docker images for multiple reference OS environments.
 
 #### `run_as_user.sh`
 
@@ -93,29 +108,39 @@ A helper script to run as a normal user within a CentOS 7.4 docker container.
 #### Ubuntu 16.04 (default)
 
 ```
-Dockerfile: Dockerfile.ngraph
+Dockerfile: Dockerfile.ngraph.ubuntu1604_gpu
 Reference-OS: Ubuntu 16.04
+GPU Support: Yes
+BUILD-GCC: gcc 5.4
+BUILD-CLANG: clang 3.9
+pre-built LLVM
+```
+```
+Dockerfile: Dockerfile.ngraph.ubuntu1604
+Reference-OS: Ubuntu 16.04
+GPU Support: No
 BUILD-GCC: gcc 5.4
 BUILD-CLANG: clang 3.9
 pre-built LLVM
 ```
 
-#### Ubuntu 16.04
-
-```
-Dockerfile: Dockerfile.ngraph.ubuntu1604
-(same as above)
-separate Dockerfile for ease of reference
-```
-
 #### CentOS 7.4 
 
 ```
-Dockerfile: Dockerfile.ngraph.centos74_cmake3
+Dockerfile: Dockerfile.ngraph.centos74_gpu
 Reference-OS: Centos 7.4.1708
-BUILD-GCC: gcc 4.8.5
+GPU Support: Yes
+BUILD-GCC: gcc 4.8
 BUILD-CLANG: not supported
 pre-built cmake3
 LLVM built from source
 ```
-
+```
+Dockerfile: Dockerfile.ngraph.centos74
+Reference-OS: Centos 7.4.1708
+GPU Support: No
+BUILD-GCC: gcc 4.8
+BUILD-CLANG: not supported
+pre-built cmake3
+LLVM built from source
+```

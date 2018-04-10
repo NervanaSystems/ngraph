@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -73,7 +74,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
@@ -86,6 +87,11 @@ namespace ngraph
             bool get_include_padding_in_avg_computation() const
             {
                 return m_include_padding_in_avg_computation;
+            }
+            /// \return The default value for AvgPool.
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
             }
 
         protected:

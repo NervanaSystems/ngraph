@@ -578,6 +578,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
                                               const mkldnn::memory::desc& mean_desc,
                                               const mkldnn::memory::desc& variance_desc,
                                               const double eps,
+                                              bool use_global_stats,
                                               bool bn_training_flag,
                                               const mkldnn::post_ops& pops)
 {
@@ -590,7 +591,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     mkldnn::primitive_attr bn_attr;
     bn_attr.set_post_ops(pops);
 
-    if (bn_training_flag)
+    if (bn_training_flag && !use_global_stats)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
             {{mkldnn::prop_kind::forward_training,
@@ -612,7 +613,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     else
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_inference,
+            {{mkldnn::prop_kind::forward_training,
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift |

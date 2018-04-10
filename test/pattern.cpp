@@ -155,7 +155,7 @@ public:
         auto iconst1 = construct_constant_node(1);
         auto pattern = std::make_shared<pattern::op::Label>(iconst1);
 
-        ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.match_root()->get_name();
             assert(m.match_root()->get_input_ops().size() == 2);
@@ -243,7 +243,7 @@ public:
     {
         auto sum_pattern = construct_sum_pattern();
 
-        ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_sum_pattern against "
                          << m.match_root()->get_name();
             auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());
@@ -529,4 +529,92 @@ TEST(pattern, variance)
     auto var_graph = construct_variance_graph();
     ASSERT_TRUE(n.match(var_graph, variance));
     ASSERT_EQ(n.get_pattern_map()[var_graph], variance);
+}
+
+TEST(pattern, previous_matches)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+    Matcher::PatternMap previous_matches;
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto pattern = std::make_shared<pattern::op::Label>(b);
+    auto abs = make_shared<op::Abs>(a);
+    auto add = abs + b;
+    {
+        Matcher n(pattern + b);
+        ASSERT_TRUE(n.match(add, previous_matches));
+        ASSERT_EQ(n.get_pattern_map()[pattern], abs);
+    }
+
+    {
+        Matcher n(pattern + b);
+        previous_matches.insert(std::make_pair(pattern, a));
+        ASSERT_FALSE(n.match(add, previous_matches));
+    }
+}
+
+TEST(pattern, recurrent_pattern)
+{
+    using ngraph::pattern::RecurrentMatcher;
+    Shape shape{};
+    ngraph::pattern::Matcher::PatternMap previous_matches;
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto rpattern = std::make_shared<pattern::op::Label>(b);
+    auto iconst0 = construct_constant_node(0);
+    auto abs = make_shared<op::Abs>(a);
+    auto add1 = iconst0 + b;
+    auto add2 = iconst0 + add1;
+    auto add3 = iconst0 + add2;
+    auto padd = iconst0 + rpattern;
+    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
+    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
+    ASSERT_TRUE(rm.match(add3));
+    ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
+    auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
+    ASSERT_EQ(recurrent_matches.at(0), add2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+
+    //Multiple labels in a reccuring pattern
+    auto iconst1 = construct_constant_node(1);
+    auto iconst_label = std::make_shared<pattern::op::Label>(iconst1, nullptr, NodeVector{iconst1});
+    auto add2_2 = iconst1 + add1;
+    auto add3_2 = iconst0 + add2_2;
+    auto padd2 = iconst_label + rpattern;
+    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches, nullptr);
+    ASSERT_TRUE(rm2.match(add3_2));
+    ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
+    recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
+    ASSERT_EQ(recurrent_matches.at(0), add2_2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+    auto iconst_matches = rm2.get_bound_nodes_for_pattern(iconst_label);
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+    ASSERT_EQ(iconst_matches.at(1), iconst1);
+    ASSERT_EQ(iconst_matches.at(2), iconst0);
+
+    //Non-matching correlated labels
+    std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
+    correlated_matches.insert(iconst_label);
+    RecurrentMatcher rm3(padd2, rpattern, correlated_matches, nullptr);
+    ASSERT_TRUE(rm3.match(add3_2));
+    ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
+    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    ASSERT_EQ(iconst_matches.size(), 1);
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+
+    //Matching correlated labels and
+    //testing if RecurrentMatcher can be reused for different nodes
+    ASSERT_TRUE(rm3.match(add3));
+    ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
+    recurrent_matches = rm3.get_bound_nodes_for_pattern(rpattern);
+    ASSERT_EQ(recurrent_matches.at(0), add2);
+    ASSERT_EQ(recurrent_matches.at(1), add1);
+    ASSERT_EQ(recurrent_matches.at(2), b);
+    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    ASSERT_EQ(iconst_matches.at(0), iconst0);
+    ASSERT_EQ(iconst_matches.at(1), iconst0);
+    ASSERT_EQ(iconst_matches.at(2), iconst0);
 }

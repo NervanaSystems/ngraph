@@ -202,9 +202,9 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
+        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
         {
-            gr_callback_fn cb = m_callback;
+            graph_rewrite_callback cb = m_callback;
             if (callback)
             {
                 cb = callback;
@@ -230,7 +230,7 @@ namespace ngraph
 
             if (!m_pattern_node || !graph_node)
             {
-                throw "m_pattern_node or graph_node are not set!";
+                throw ngraph_error("m_pattern_node or graph_node are not set");
             }
 
             NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
@@ -243,5 +243,81 @@ namespace ngraph
             }
             return is_match;
         }
+
+        bool Matcher::match(const std::shared_ptr<Node>& graph_node,
+                            const PatternMap& previous_matches)
+        {
+            //clear our state
+            m_match_root.reset();
+            m_pattern_map.clear();
+
+            //insert previous matches
+            m_pattern_map.insert(previous_matches.cbegin(), previous_matches.cend());
+
+            if (!m_pattern_node || !graph_node)
+            {
+                throw ngraph_error("m_pattern_node or graph_node are not set");
+            }
+
+            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
+                         << " , graph_node = " << graph_node->get_name();
+
+            bool is_match = match_node(m_pattern_node, graph_node, m_pattern_map);
+            if (is_match)
+            {
+                m_match_root = graph_node;
+            }
+            return is_match;
+        }
+
+        bool RecurrentMatcher::match(std::shared_ptr<Node> graph)
+        {
+            bool matched = false;
+            Matcher m(m_pattern);
+            Matcher::PatternMap previous_matches;
+            m_matches.clear();
+            m_match_root.reset();
+
+            NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
+            //try to match one cell (i.e. pattern)
+            while (m.match(graph, previous_matches))
+            {
+                matched = true;
+                //move to the next cell
+                graph = m.get_pattern_map()[m_recurrent_pattern];
+                NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
+
+                //copy bound nodes for the current pattern graph into a global matches map
+                for (auto cur_match : m.get_pattern_map())
+                {
+                    m_matches[cur_match.first].push_back(cur_match.second);
+                }
+
+                //pre-populate the pattern map for the next cell with the bound nodes
+                //from the current match. Only bound nodes whose labels are in
+                //correlated_patterns are pre-populated. Any other labels are
+                //unbounded by default
+                for (auto cor_pat : m_correlated_patterns)
+                {
+                    if (m.get_pattern_map().count(cor_pat) != 0)
+                    {
+                        //assert that bound nodes from the previous and current matches are the same
+                        if (previous_matches.count(cor_pat) != 0)
+                        {
+                            if (previous_matches[cor_pat] != m.get_pattern_map()[cor_pat])
+                            {
+                                throw ngraph_error(
+                                    "previous matches and current matches aren't consistent!");
+                            }
+                        }
+
+                        previous_matches[cor_pat] = m.get_pattern_map()[cor_pat];
+                    }
+                }
+            }
+            return matched;
+        }
+
+        bool RecurrentMatcher::process_match() { return m_callback(*this); }
     }
 }

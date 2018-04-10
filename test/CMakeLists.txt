@@ -25,6 +25,7 @@ include_directories(
     )
 
 set (SRC
+    backend_api.cpp
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
@@ -56,6 +57,7 @@ set (SRC
     util/benchmark.cpp
     util.cpp
     uuid.cpp
+    zero_dim_tensor_elimination.cpp
 )
 
 add_subdirectory(models)

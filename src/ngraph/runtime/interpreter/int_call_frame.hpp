@@ -119,7 +119,6 @@ namespace ngraph
 
         namespace interpreter
         {
-            class ExternalFunction;
             class INT_CallFrame;
         }
     }
@@ -129,8 +128,7 @@ namespace ngraph
 class ngraph::runtime::interpreter::INT_CallFrame : public runtime::CallFrame
 {
 public:
-    INT_CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                  std::shared_ptr<Function> func);
+    INT_CallFrame(std::shared_ptr<Function> func);
 
     /// @brief Invoke the function with values matching the signature of the function.
     ///
@@ -155,7 +153,6 @@ private:
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
 
-    std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
     bool m_emit_timing;
     bool m_nan_check;

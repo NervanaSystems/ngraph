@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -50,20 +51,17 @@ TEST(${BACKEND_NAME}, function_name)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(A + B, op::ParameterVector{A, B}, "funky func name");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor<float>(shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor<float>(shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor<float>(shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
@@ -77,46 +75,19 @@ TEST(${BACKEND_NAME}, node_name)
     C->set_name("a node name");
     auto f = make_shared<Function>(C, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
-}
-
-TEST(${BACKEND_NAME}, component_cleanup)
-{
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-    shared_ptr<runtime::Backend> backend;
-    shared_ptr<runtime::ExternalFunction> external;
-    shared_ptr<runtime::CallFrame> cf;
-    {
-        Shape shape{2, 2};
-        auto A = make_shared<op::Parameter>(element::f32, shape);
-        auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
-
-        auto manager = runtime::Manager::get("${BACKEND_NAME}");
-        external = manager->compile(f);
-        backend = manager->allocate_backend();
-        cf = backend->make_call_frame(external);
-    }
-    EXPECT_EQ(cf.use_count(), 1);
-    cf = nullptr;
-    EXPECT_EQ(backend.use_count(), 1);
-    backend = nullptr;
-    EXPECT_EQ(external.use_count(), 1);
 }
 
 TEST(${BACKEND_NAME}, aliased_output)
@@ -130,21 +101,18 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
     auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out1 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out2 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out3 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out4 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out5 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out6 = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out7 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out1 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out2 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out3 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out4 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out5 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out6 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> out7 = backend->create_tensor(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
@@ -152,7 +120,7 @@ TEST(${BACKEND_NAME}, aliased_output)
     vector<float> expectedD{0, 2, 6, 12};
     vector<float> expectedE{1, 2, 3, 4};
 
-    cf->call({out1, out2, out3, out4, out5, out6, out7}, {a, b});
+    backend->call(f, {out1, out2, out3, out4, out5, out6, out7}, {a, b});
     EXPECT_EQ(expectedC, read_vector<float>(out1));
     EXPECT_EQ(expectedC, read_vector<float>(out2));
     EXPECT_EQ(expectedD, read_vector<float>(out3));
@@ -170,20 +138,17 @@ TEST(${BACKEND_NAME}, parameter_as_output)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(A, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
 
     vector<float> expected{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
     vector<float> zero(shape_size(shape), 0);
     copy_data(a, expected);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -194,20 +159,17 @@ TEST(${BACKEND_NAME}, ab)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
@@ -220,30 +182,27 @@ TEST(${BACKEND_NAME}, abc)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    shared_ptr<runtime::ExternalFunction> external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    cf->call({result}, {b, a, c});
+    backend->call(f, {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    cf->call({result}, {a, c, b});
+    backend->call(f, {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
@@ -257,27 +216,24 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto C = make_shared<op::Parameter>(element::i64, shape);
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i64, shape);
+    auto a = backend->create_tensor(element::i64, shape);
     copy_data(a, vector<int64_t>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::i64, shape);
+    auto b = backend->create_tensor(element::i64, shape);
     copy_data(b, vector<int64_t>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::i64, shape);
+    auto c = backend->create_tensor(element::i64, shape);
     copy_data(c, vector<int64_t>{9, 10, 11, 12});
-    auto result = backend->make_primary_tensor_view(element::i64, shape);
+    auto result = backend->create_tensor(element::i64, shape);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
-    cf->call({result}, {b, a, c});
+    backend->call(f, {result}, {b, a, c});
     EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
-    cf->call({result}, {a, c, b});
+    backend->call(f, {result}, {a, c, b});
     EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), read_vector<int64_t>(result));
 }
 
@@ -294,22 +250,19 @@ TEST(${BACKEND_NAME}, multiple_result)
     auto f =
         make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    auto c = backend->create_tensor(element::f32, shape);
     copy_data(c, vector<float>{9, 10, 11, 12});
 
-    auto r0 = backend->make_primary_tensor_view(element::f32, shape);
-    auto r1 = backend->make_primary_tensor_view(element::f32, shape);
+    auto r0 = backend->create_tensor(element::f32, shape);
+    auto r1 = backend->create_tensor(element::f32, shape);
 
-    cf->call({r0, r1}, {a, b, c});
+    backend->call(f, {r0, r1}, {a, b, c});
 
     EXPECT_EQ((vector<float>{6, 8, 10, 12}), read_vector<float>(r0));
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
@@ -321,17 +274,14 @@ TEST(${BACKEND_NAME}, abs)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, -2, 0, -4.75f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result));
 }
 
@@ -341,17 +291,14 @@ TEST(${BACKEND_NAME}, ceiling)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result));
 }
 
@@ -368,21 +315,18 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 1),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
               read_vector<float>(result));
 }
@@ -400,21 +344,18 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               read_vector<float>(result));
 }
@@ -432,21 +373,18 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i64, shape_a);
+    auto a = backend->create_tensor(element::i64, shape_a);
     copy_data(a, vector<int64_t>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::i64, shape_b);
+    auto b = backend->create_tensor(element::i64, shape_b);
     copy_data(b, vector<int64_t>{1, 2, 4, 8, 16, 32});
-    auto c = backend->make_primary_tensor_view(element::i64, shape_c);
+    auto c = backend->create_tensor(element::i64, shape_c);
     copy_data(c, vector<int64_t>{2, 3, 5, 7, 11, 13});
-    auto result = backend->make_primary_tensor_view(element::i64, shape_r);
+    auto result = backend->create_tensor(element::i64, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<int64_t>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               read_vector<int64_t>(result));
 }
@@ -464,21 +402,18 @@ TEST(${BACKEND_NAME}, concat_vector)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{18, 19});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
@@ -559,22 +494,19 @@ TEST(${BACKEND_NAME}, concat_5d)
     auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, b_data);
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, c_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ(
         (vector<float>{
             1.,    2.,    3.,    4.,    5.,    6.,    7.,    8.,    9.,    10.,   11.,   12.,
@@ -609,30 +541,22 @@ TEST(${BACKEND_NAME}, concat_5d)
 
 TEST(${BACKEND_NAME}, divide)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
-
     Shape shape{2, 2};
 
-    auto make_external = [&]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape);
-        auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-        auto external = manager->compile(f);
-        return external;
-    };
-
-    auto cf = backend->make_call_frame(make_external());
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
@@ -652,10 +576,12 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
         auto Y_out = f->get_output_op(0);
         auto Xs = f->get_parameters();
         auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        ngraph::autodiff::Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
         std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-        transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
-            return Y_out->backprop_node(X, C);
-        });
+        transform(
+            Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+                return adjoints.backprop_node(X);
+            });
         std::vector<std::shared_ptr<op::Parameter>> params(Xs);
         params.push_back(C);
 
@@ -688,30 +614,22 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
-
     Shape shape{2, 2};
 
-    auto make_external = [&]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape);
-        auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-        auto external = manager->compile(f);
-        return external;
-    };
-
-    auto cf = backend->make_call_frame(make_external());
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{0, 0, 0, 0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity(),
@@ -724,30 +642,22 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
-
     Shape shape{2, 2};
 
-    auto make_external = [&]() {
-        auto A = make_shared<op::Parameter>(element::i32, shape);
-        auto B = make_shared<op::Parameter>(element::i32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-        auto external = manager->compile(f);
-        return external;
-    };
-
-    auto cf = backend->make_call_frame(make_external());
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape);
+    auto a = backend->create_tensor(element::i32, shape);
     copy_data(a, vector<int>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::i32, shape);
+    auto b = backend->create_tensor(element::i32, shape);
     copy_data(b, vector<int>{0, 0, 0, 0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape);
+    auto result = backend->create_tensor(element::i32, shape);
 
-    EXPECT_ANY_THROW({ cf->call({result}, {a, b}); });
+    EXPECT_ANY_THROW({ backend->call(f, {result}, {a, b}); });
 }
 
 TEST(${BACKEND_NAME}, equal)
@@ -757,19 +667,16 @@ TEST(${BACKEND_NAME}, equal)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -779,17 +686,14 @@ TEST(${BACKEND_NAME}, floor)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Floor>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result));
 }
 
@@ -803,22 +707,19 @@ TEST(${BACKEND_NAME}, dot_0_0)
     Shape shape_r{};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112});
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 }
 
@@ -830,31 +731,23 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     Shape shape_b{0, 2};
     Shape shape_r{2, 2};
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto make_external = [&]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
-
-        auto external = manager->compile(f);
-        return external;
-    };
-
-    auto cf = backend->make_call_frame(make_external());
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112});
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{0, 0, 0, 0}), read_vector<float>(result));
 }
 
@@ -870,19 +763,16 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     Shape shape_r{0, 0};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -898,19 +788,16 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     Shape shape_r{3, 0};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -925,19 +812,16 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     Shape shape_r{0, 2};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -952,22 +836,19 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     Shape shape_r{2};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112});
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 }
 
@@ -979,19 +860,16 @@ TEST(${BACKEND_NAME}, dot1d)
     Shape shape_r{};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }
 
@@ -1003,19 +881,16 @@ TEST(${BACKEND_NAME}, dot2d)
     Shape shape_r{2, 2};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{19, 22, 43, 50}), read_vector<float>(result));
 }
 
@@ -1050,19 +925,16 @@ TEST(${BACKEND_NAME}, dot3d_3d)
     Shape shape_r{2, 2, 2, 2};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
               read_vector<float>(result));
 }
@@ -1099,20 +971,17 @@ TEST(${BACKEND_NAME}, dot3d_2d)
     Shape shape_r{4, 2, 4};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
                                12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
                              155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
                              296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
@@ -1127,19 +996,16 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto result = backend->create_tensor(element::f32, shape_b);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
@@ -1151,19 +1017,16 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto result = backend->create_tensor(element::f32, shape_a);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
@@ -1174,19 +1037,16 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{8});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
@@ -1199,19 +1059,16 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
     Shape shape_r{4};
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{17, 18, 19, 20});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{190, 486, 782, 1078}), read_vector<float>(result));
 }
 
@@ -1225,19 +1082,16 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
     Shape shape_r{4};
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i64, shape_a);
+    auto a = backend->create_tensor(element::i64, shape_a);
     copy_data(a, vector<int64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-    auto b = backend->make_primary_tensor_view(element::i64, shape_b);
+    auto b = backend->create_tensor(element::i64, shape_b);
     copy_data(b, vector<int64_t>{17, 18, 19, 20});
-    auto result = backend->make_primary_tensor_view(element::i64, shape_r);
+    auto result = backend->create_tensor(element::i64, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), read_vector<int64_t>(result));
 }
 
@@ -1248,19 +1102,16 @@ TEST(${BACKEND_NAME}, greater)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Greater>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -1271,19 +1122,16 @@ TEST(${BACKEND_NAME}, greatereq)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -1294,19 +1142,16 @@ TEST(${BACKEND_NAME}, less)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Less>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -1317,19 +1162,16 @@ TEST(${BACKEND_NAME}, lesseq)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
@@ -1340,22 +1182,19 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     auto B = make_shared<op::Parameter>(element::boolean, shape);
     auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    auto a = backend->create_tensor(element::boolean, shape);
     copy_data(a, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
-    auto b = backend->make_primary_tensor_view(element::boolean, shape);
+    auto b = backend->create_tensor(element::boolean, shape);
     copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }
 
@@ -1365,13 +1204,10 @@ TEST(${BACKEND_NAME}, log)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Log>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(
         a, vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)});
     vector<float> loga;
@@ -1379,9 +1215,9 @@ TEST(${BACKEND_NAME}, log)
     {
         loga.push_back(logf(elt));
     }
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(loga, read_vector<float>(result)));
 }
 
@@ -1392,19 +1228,16 @@ TEST(${BACKEND_NAME}, maximum)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), read_vector<float>(result));
 }
 
@@ -1415,19 +1248,16 @@ TEST(${BACKEND_NAME}, minimum)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), read_vector<float>(result));
 }
 
@@ -1438,17 +1268,14 @@ TEST(${BACKEND_NAME}, negative)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, -2, 0, -4.75f, 8.75f, -8.75f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
 }
 
@@ -1459,19 +1286,16 @@ TEST(${BACKEND_NAME}, notequal)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -1484,21 +1308,18 @@ TEST(${BACKEND_NAME}, select)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    auto a = backend->create_tensor(element::boolean, shape);
     copy_data(a, vector<char>{0, 1, 1, 0, 0, 1, 0, 1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    auto c = backend->create_tensor(element::f32, shape);
     copy_data(c, vector<float>{11, 12, 13, 14, 15, 16, 17, 18});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), read_vector<float>(result));
 }
 
@@ -1509,19 +1330,16 @@ TEST(${BACKEND_NAME}, subtract)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
 }
 
@@ -1532,15 +1350,12 @@ TEST(${BACKEND_NAME}, tensor_constant)
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto f = make_shared<Function>(A, op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
@@ -1551,15 +1366,12 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
     auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
@@ -1636,10 +1448,7 @@ TEST(${BACKEND_NAME}, constant_broadcast)
     shared_ptr<Function> f = ngraph::deserialize(ss);
 
     // max(x,broadcast(Constant(0)))
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // If this compiles it works
 }
@@ -1664,26 +1473,23 @@ TEST(${BACKEND_NAME}, function_call)
                               op::ParameterVector{X, Y, Z});
 
     // Now call g on some test vectors.
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto x = backend->make_primary_tensor_view(element::f32, shape);
+    auto x = backend->create_tensor(element::f32, shape);
     copy_data(x, vector<float>{1, 2, 3, 4});
-    auto y = backend->make_primary_tensor_view(element::f32, shape);
+    auto y = backend->create_tensor(element::f32, shape);
     copy_data(y, vector<float>{5, 6, 7, 8});
-    auto z = backend->make_primary_tensor_view(element::f32, shape);
+    auto z = backend->create_tensor(element::f32, shape);
     copy_data(z, vector<float>{9, 10, 11, 12});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {x, y, z});
+    backend->call(g, {result}, {x, y, z});
     EXPECT_EQ((vector<float>{254, 368, 502, 656}), read_vector<float>(result));
 
-    cf->call({result}, {y, x, z});
+    backend->call(g, {result}, {y, x, z});
     EXPECT_EQ((vector<float>{278, 400, 542, 704}), read_vector<float>(result));
 
-    cf->call({result}, {x, z, y});
+    backend->call(g, {result}, {x, z, y});
     EXPECT_EQ((vector<float>{194, 296, 418, 560}), read_vector<float>(result));
 }
 
@@ -1695,17 +1501,14 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
@@ -1727,17 +1530,14 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
@@ -1749,17 +1549,14 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result));
 }
 
@@ -1770,17 +1567,14 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 6, 8, 16, 32, 64, 128});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result));
 }
 
@@ -1792,17 +1586,14 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result));
 }
 
@@ -1814,17 +1605,14 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -1840,17 +1628,14 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
     auto reverse = make_shared<op::Reverse>(broadcast, AxisSet{1});
     auto f = make_shared<Function>(reverse, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
 }
 
@@ -1863,17 +1648,14 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i64, shape_a);
+    auto a = backend->create_tensor(element::i64, shape_a);
     copy_data(a, vector<int64_t>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::i64, shape_r);
+    auto result = backend->create_tensor(element::i64, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
 }
 
@@ -1885,17 +1667,14 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -1907,17 +1686,14 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result));
 }
 
@@ -1929,17 +1705,14 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{2}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result));
 }
 
@@ -1950,17 +1723,14 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape);
+    auto a = backend->create_tensor(element::i32, shape);
     copy_data(a, vector<int32_t>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -1971,17 +1741,14 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape);
+    auto a = backend->create_tensor(element::i32, shape);
     copy_data(a, vector<int32_t>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
@@ -1992,17 +1759,14 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
@@ -2024,19 +1788,16 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{0, 0, 0, 0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -2055,19 +1816,16 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{10}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2094,19 +1852,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{9, 12}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2132,19 +1887,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{3, 7, 11}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2171,19 +1923,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{66});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{66, 66, 66}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2210,19 +1959,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{77});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{77, 77}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2249,19 +1995,16 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{88});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{88}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2288,19 +2031,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
                                    op::ParameterVector{g_A, g_B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto b = backend->create_tensor(element::f32, Shape{});
     copy_data(b, vector<float>{99});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{99}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2328,20 +2068,17 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     auto g = make_shared<Function>(make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}),
                                    op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(g);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a, b});
+    backend->call(g, {result}, {a, b});
     EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
                              2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
                              3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
@@ -2356,17 +2093,14 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), read_vector<float>(result));
 }
 
@@ -2378,17 +2112,14 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
@@ -2400,17 +2131,14 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
@@ -2422,17 +2150,14 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{42});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{42}), read_vector<float>(result));
 }
 
@@ -2444,17 +2169,14 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -2466,17 +2188,14 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -2488,17 +2207,14 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -2510,17 +2226,14 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
@@ -2532,17 +2245,14 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), read_vector<float>(result));
 }
 
@@ -2554,17 +2264,14 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), read_vector<float>(result));
 }
 
@@ -2624,18 +2331,15 @@ TEST(${BACKEND_NAME}, reshape_6d)
     auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (vector<float>{
             1.,   73.,  9.,   81.,  17.,  89.,  2.,   74.,  10.,  82.,  18.,  90.,  3.,   75.,
@@ -2668,22 +2372,19 @@ TEST(${BACKEND_NAME}, sin)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2693,22 +2394,19 @@ TEST(${BACKEND_NAME}, cos)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2718,22 +2416,19 @@ TEST(${BACKEND_NAME}, tan)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
@@ -2743,21 +2438,18 @@ TEST(${BACKEND_NAME}, asin)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Asin>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2767,21 +2459,18 @@ TEST(${BACKEND_NAME}, acos)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2791,21 +2480,18 @@ TEST(${BACKEND_NAME}, atan)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Atan>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2815,21 +2501,18 @@ TEST(${BACKEND_NAME}, sinh)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
@@ -2839,21 +2522,18 @@ TEST(${BACKEND_NAME}, cosh)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
@@ -2863,21 +2543,18 @@ TEST(${BACKEND_NAME}, tanh)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
     copy_data(a, input);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
@@ -2887,17 +2564,14 @@ TEST(${BACKEND_NAME}, exp)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Exp>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
         read_vector<float>(result));
@@ -2912,17 +2586,14 @@ TEST(${BACKEND_NAME}, slice_scalar)
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{312});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{312}), read_vector<float>(result));
 }
 
@@ -2935,17 +2606,14 @@ TEST(${BACKEND_NAME}, slice_matrix)
     auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
 }
 
@@ -2958,17 +2626,14 @@ TEST(${BACKEND_NAME}, slice_vector)
     auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), read_vector<float>(result));
 }
 
@@ -2983,17 +2648,14 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
     auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{4, 7, 12, 15}), read_vector<float>(result));
 }
 
@@ -3006,13 +2668,10 @@ TEST(${BACKEND_NAME}, slice_3d)
     auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -3020,9 +2679,9 @@ TEST(${BACKEND_NAME}, slice_3d)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), read_vector<float>(result));
 }
 
@@ -3037,13 +2696,10 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -3051,9 +2707,9 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), read_vector<float>(result));
 }
 
@@ -3068,13 +2724,10 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -3082,9 +2735,9 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
 }
 
@@ -3094,15 +2747,12 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto r = op::Constant::create(element::f32, Shape{}, {4.75});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ(vector<float>{4.75f}, read_vector<float>(result));
 }
 
@@ -3112,15 +2762,12 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::i64, Shape{});
+    auto result = backend->create_tensor(element::i64, Shape{});
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
 }
 
@@ -3131,15 +2778,12 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto r = op::Constant::create(element::f32, shape, {4.75, 4.7, -5.3, 0.0});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<float>{4.75f, 4.7f, -5.3f, 0.0f}), read_vector<float>(result));
 }
 
@@ -3150,15 +2794,12 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::i64, shape);
+    auto result = backend->create_tensor(element::i64, shape);
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), read_vector<int64_t>(result));
 }
 
@@ -3169,17 +2810,14 @@ TEST(${BACKEND_NAME}, sum_trivial)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -3190,18 +2828,15 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -3213,17 +2848,14 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{10}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3238,17 +2870,14 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{9, 12}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3263,17 +2892,14 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{3, 7, 11}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3290,18 +2916,15 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3318,18 +2941,15 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3346,18 +2966,15 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3374,18 +2991,15 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3400,18 +3014,15 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19,
                              2 + 11 + 20,
                              3 + 12 + 21,
@@ -3431,18 +3042,15 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 + 2 + 3,
                              4 + 5 + 6,
                              7 + 8 + 9,
@@ -3462,18 +3070,15 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25,
                              2 + 11 + 20 + 5 + 14 + 23 + 8 + 17 + 26,
                              3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
@@ -3488,18 +3093,15 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     auto f =
         make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
                              8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
               read_vector<float>(result));
@@ -3514,20 +3116,17 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     Shape shape_rt{3, 2};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
@@ -3539,17 +3138,14 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1e-6f, -1, 0, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6f}, 5e-2f));
     // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
 }
@@ -3563,18 +3159,15 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4f, 1e-5f, 1e-6f, 1,  1,  1,  1, 1,
                                1, -1, -1, -1, -1, -1, -1,    -1,    -1,    -1, -1, -1, -1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(
         test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
 }
@@ -3587,17 +3180,14 @@ TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2, 3, 4}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, std::vector<float>(std::pow(3, 5), 1));
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
@@ -3607,17 +3197,14 @@ TEST(${BACKEND_NAME}, sign)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sign>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result));
 }
 
@@ -3628,19 +3215,16 @@ TEST(${BACKEND_NAME}, power)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Power>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 5});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{2, 0, 6, 3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
 }
 
@@ -3656,15 +3240,12 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     auto B = op::Constant::create(element::boolean, shape, {true, true, true, true});
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {});
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<char>{true, false, true, false}), read_vector<char>(result));
 }
 
@@ -3674,17 +3255,14 @@ TEST(${BACKEND_NAME}, sqrt)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sqrt>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{16, 4, 81, 100, 10000, 0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), read_vector<float>(result));
 }
 
@@ -3699,19 +3277,16 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{}, Coordinate{});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{312});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{808});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
 }
 
@@ -3726,19 +3301,16 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{102, 103, 106, 107, 110, 111});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
               read_vector<float>(result));
 }
@@ -3754,19 +3326,16 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{2}, Coordinate{14});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(
         (vector<float>{0, 1, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 14, 15}),
         read_vector<float>(result));
@@ -3780,17 +3349,14 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{2});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 0, 1}), read_vector<int32_t>(result));
 }
 
@@ -3802,17 +3368,14 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{1});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 1, 0}), read_vector<int32_t>(result));
 }
 
@@ -3824,17 +3387,14 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
@@ -3847,19 +3407,16 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1.1f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     try
     {
-        cf->call({result}, {a});
+        backend->call(f, {result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -3882,19 +3439,16 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{3000000});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
     try
     {
-        cf->call({result}, {a});
+        backend->call(f, {result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -3914,17 +3468,14 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
     auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -3938,17 +3489,14 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -3963,19 +3511,16 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
     try
     {
-        cf->call({result}, {a});
+        backend->call(f, {result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -3998,19 +3543,16 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
     try
     {
-        cf->call({result}, {a});
+        backend->call(f, {result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -4030,20 +3572,17 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
     auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i32, shape_a);
+    auto a = backend->create_tensor(element::i32, shape_a);
     copy_data(a,
               vector<int32_t>{
                   0, 1, 1, 2, 1, 0, 0, 2, 1,
               });
-    auto result = backend->make_primary_tensor_view(element::i32, shape_r);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0, 0, 0, 1, 1, 0, 0,
 
                                0, 1, 1, 0, 1, 0, 0, 0, 1,
@@ -4060,17 +3599,14 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1, 0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<float>(result));
@@ -4085,19 +3621,16 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1.01f, 0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     try
     {
-        cf->call({result}, {a});
+        backend->call(f, {result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -4120,13 +3653,10 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -4134,11 +3664,11 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{921, 922, 925, 926, 937, 938, 941, 942});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{0,  1,  2,  3,  4,  5,   6,   7,  8,  9,   10,  11, 12, 13, 14, 15,
 
                              16, 17, 18, 19, 20, 921, 922, 23, 24, 925, 926, 27, 28, 29, 30, 31,
@@ -4161,13 +3691,10 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -4175,11 +3702,11 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{900, 902, 908, 910, 932, 934, 940, 942});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{900, 1,  902, 3,  4,  5,  6,  7,  908, 9,  910, 11, 12, 13, 14, 15,
 
                              16,  17, 18,  19, 20, 21, 22, 23, 24,  25, 26,  27, 28, 29, 30, 31,
@@ -4202,13 +3729,10 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 
                                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -4216,11 +3740,11 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
                                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
                                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{900, 903, 908, 911, 932, 935, 940, 943});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{900, 1,  2,  903, 4,  5,  6,  7,  908, 9,  10, 911, 12, 13, 14, 15,
 
                              16,  17, 18, 19,  20, 21, 22, 23, 24,  25, 26, 27,  28, 29, 30, 31,
@@ -4271,20 +3795,17 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
     auto r = make_shared<op::Dot>(A, B, 2);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, b_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}),
               read_vector<float>(result));
 }
@@ -4326,20 +3847,17 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
     auto r = make_shared<op::Dot>(A, B);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, b_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{483,  189, 331, 86,  85,  1262, 2155, 354, 83,  18,   58,   543,  77,
                              241,  325, 286, 859, 144, 438,  1025, 317, 973, 1041, 2930, 163,  69,
                              117,  50,  29,  472, 819, 62,   785,  236, 476, 235,  175,  1521, 2387,
@@ -4398,20 +3916,17 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
     auto r = make_shared<op::Dot>(A, B, 2);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, b_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(
         (vector<float>{6942.,  7020.,  7098.,  7176.,  7254.,  7332.,  7410.,  7488.,  7566.,
                        7644.,  7722.,  7800.,  16590., 16812., 17034., 17256., 17478., 17700.,
@@ -4463,20 +3978,17 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     auto r = make_shared<op::Dot>(A, B, 4);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, b_data);
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{251412., 254040.}), read_vector<float>(result));
 }
 
@@ -4529,20 +4041,17 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     auto r = make_shared<op::Dot>(A, B, 4);
     auto f = make_shared<Function>(r, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
+    auto a = backend->create_tensor(element::f64, shape_a);
     copy_data(a, a_data);
-    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
+    auto b = backend->create_tensor(element::f64, shape_b);
     copy_data(b, b_data);
 
-    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
+    auto result = backend->create_tensor(element::f64, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_TRUE(test::all_close(
         vector<double>{
             2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18,
@@ -4565,18 +4074,15 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
     auto f =
         make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
               read_vector<float>(result));
 }
@@ -4591,20 +4097,17 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
                    .get_vector()),
@@ -4621,13 +4124,10 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
                                         {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
@@ -4635,9 +4135,9 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
                                         {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
 
@@ -4656,13 +4156,10 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
                                          {0, 3, 2, 0, 0},
@@ -4688,9 +4185,9 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                                          {1, 1, 1, 0, 1},
                                          {1, 0, 0, 0, 2}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
                                           {3, 3, 2},
                                           {2, 1, 2},
@@ -4731,13 +4228,10 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
             A, window_shape, window_movement_strides, padding_below, padding_above),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1},
                                          {0, 3, 2, 0, 0},
@@ -4745,9 +4239,9 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
                                          {2, 0, 1, 1, 2},
                                          {0, 2, 1, 0, 0}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     auto min = std::numeric_limits<float>::lowest();
     EXPECT_EQ((test::NDArray<float, 4>({{{{min, min, min, min, min},
                                           {1, 2, 2, 2, 1},
@@ -4777,13 +4271,10 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
             A, window_shape, window_movement_strides, padding_below, padding_above),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1},
                                          {0, 3, 2, 0, 0},
@@ -4791,9 +4282,9 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
                                          {2, 0, 1, 1, 2},
                                          {0, 2, 1, 0, 0}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{1, 2, 2, 2, 1},
                                           {3, 3, 2, 2, 1},
                                           {3, 3, 2, 1, 1},
@@ -4828,19 +4319,16 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
             A, window_shape, window_movement_strides, padding_below, padding_above),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>{{{{-1, -2, -3, -3, -2, -1, -3, -2, -2, -2, -2, -3, -4, -5}}}}
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 4>({{{{-1, -1, -2, -2, -1, -1, -1, -2, -2, -2, -2, -2, -3, -4, -5}}}})
              .get_vector()),
@@ -4858,13 +4346,10 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
     auto f = make_shared<Function>(
         make_shared<op::MaxPool>(A, window_shape, window_movement_strides), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
                                          {0, 3, 2, 0, 0, 0, 1, 0},
@@ -4875,9 +4360,9 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
                                          {1, 2, 0, 0, 0, 1, 2, 0},
                                          {1, 0, 2, 0, 0, 0, 1, 0}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
               read_vector<float>(result));
 }
@@ -4889,17 +4374,14 @@ TEST(${BACKEND_NAME}, not)
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    auto a = backend->create_tensor(element::boolean, shape);
     copy_data(a, vector<char>{1, 0, 2, 0});
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->create_tensor(element::boolean, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
 }
 
@@ -4910,17 +4392,14 @@ TEST(${BACKEND_NAME}, reverse_0d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
@@ -4931,17 +4410,14 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), read_vector<float>(result));
 }
 
@@ -4952,17 +4428,14 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), read_vector<float>(result));
 }
 
@@ -4973,18 +4446,15 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector()),
         read_vector<float>(result));
@@ -4997,18 +4467,15 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}).get_vector()),
         read_vector<float>(result));
@@ -5021,18 +4488,15 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}).get_vector()),
         read_vector<float>(result));
@@ -5046,18 +4510,15 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
     auto f =
         make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}).get_vector()),
         read_vector<float>(result));
@@ -5070,20 +4531,17 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                         {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                    .get_vector()),
@@ -5097,20 +4555,17 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
                                         {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
                    .get_vector()),
@@ -5124,20 +4579,17 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
                                         {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
                    .get_vector()),
@@ -5151,20 +4603,17 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
                                         {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
                    .get_vector()),
@@ -5179,20 +4628,17 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
     auto f =
         make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
                                         {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
                    .get_vector()),
@@ -5207,20 +4653,17 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
     auto f =
         make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
                                         {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
                    .get_vector()),
@@ -5235,20 +4678,17 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
     auto f =
         make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
                                         {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
                    .get_vector()),
@@ -5263,20 +4703,17 @@ TEST(${BACKEND_NAME}, reverse_3d_012)
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
                                         {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
                    .get_vector()),
@@ -5293,14 +4730,11 @@ TEST(${BACKEND_NAME}, numeric_float_nan)
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
-    cf->call({result}, {});
+    auto result = backend->create_tensor(element::boolean, shape);
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -5314,14 +4748,11 @@ TEST(${BACKEND_NAME}, numeric_double_nan)
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
-    cf->call({result}, {});
+    auto result = backend->create_tensor(element::boolean, shape);
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -5335,14 +4766,11 @@ TEST(${BACKEND_NAME}, numeric_float_inf)
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
-    cf->call({result}, {});
+    auto result = backend->create_tensor(element::boolean, shape);
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -5356,14 +4784,11 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
-    cf->call({result}, {});
+    auto result = backend->create_tensor(element::boolean, shape);
+    backend->call(f, {result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -5385,30 +4810,27 @@ TEST(${BACKEND_NAME}, abc_tbb)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    cf->call({result}, {b, a, c});
+    backend->call(f, {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    cf->call({result}, {a, c, b});
+    backend->call(f, {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
@@ -5443,23 +4865,20 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(
         b,
         vector<float>{
             -1}); // Really should use -inf but since we know the values in the test vector this should work
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
               read_vector<float>(result));
 }
@@ -5486,25 +4905,22 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(
         b,
         vector<float>{
             -1}); // Really should use -inf but since we know the values in the test vector this should work
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
                    .get_vector()),
@@ -5533,13 +4949,10 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
                                         {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
@@ -5547,14 +4960,14 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
                                         {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(
         b,
         vector<float>{
             -1}); // Really should use -inf but since we know the values in the test vector this should work
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
 
@@ -5585,13 +4998,10 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
                                          {0, 3, 2, 0, 0},
@@ -5617,14 +5027,14 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
                                          {1, 1, 1, 0, 1},
                                          {1, 0, 0, 0, 2}}}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(
         b,
         vector<float>{
             -1}); // Really should use -inf but since we know the values in the test vector this should work
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
                                           {3, 3, 2},
                                           {2, 1, 2},
@@ -5670,13 +5080,10 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
                                          {0, 3, 2, 0, 0, 0, 1, 0},
@@ -5687,14 +5094,14 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
                                          {1, 2, 0, 0, 0, 1, 2, 0},
                                          {1, 0, 2, 0, 0, 0, 1, 0}}}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(
         b,
         vector<float>{
             -1}); // Really should use -inf but since we know the values in the test vector this should work
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
               read_vector<float>(result));
 }
@@ -5732,24 +5139,21 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
         op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 2>(
                   {{7, 2, 5, 3, 8}, {3, 8, 9, 3, 4}, {1, 5, 7, 5, 6}, {0, 6, 2, 10, 2}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((test::NDArray<float, 2>(
                    {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
                    .get_vector()),
@@ -5789,24 +5193,21 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
         op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 2>(
                   {{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}})
                   .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((test::NDArray<float, 2>(
                    {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
                    .get_vector()),
@@ -5846,26 +5247,23 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
         op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(
         a,
         test::NDArray<float, 3>(
             {{{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}},
              {{2, 5, 8, 3, 4, 2}, {1, 2, 8, 4, 5, 2}, {10, 2, 3, 4, 1, 0}, {4, 1, 2, 4, 5, 7}}})
             .get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, test::NDArray<float, 3>({{{2, 6}, {3, 1}}}).get_vector());
-    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    auto c = backend->create_tensor(element::f32, shape_c);
     copy_data(c, vector<float>{0});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ(
         (test::NDArray<float, 3>(
              {{{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
@@ -5889,21 +5287,17 @@ void make_unary_empty_test(const string& backend_name)
     }
 
     auto f = make_shared<Function>(result_list, params);
-
-    auto manager = runtime::Manager::get(backend_name);
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create(backend_name);
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
-        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
-        outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+        outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
     }
 
-    cf->call(outputs, inputs);
+    backend->call(f, outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
@@ -5945,28 +5339,24 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
     }
 
     auto f = make_shared<Function>(result_list, A);
-
-    auto manager = runtime::Manager::get(backend_name);
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create(backend_name);
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
-        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
         if (is_comparison)
         {
-            outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
+            outputs.push_back(backend->create_tensor(element::from<char>(), shape));
         }
         else
         {
-            outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+            outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
         }
     }
 
-    cf->call(outputs, inputs);
+    backend->call(f, outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
@@ -6057,15 +5447,12 @@ TEST(${BACKEND_NAME}, zero_sized_not)
     auto A = make_shared<op::Parameter>(element::from<char>(), shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::from<char>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<char>(), shape);
+    auto a = backend->create_tensor(element::from<char>(), shape);
+    auto result = backend->create_tensor(element::from<char>(), shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
 
     auto in_vec = read_vector<char>(a);
     auto out_vec = read_vector<char>(result);
@@ -6261,21 +5648,18 @@ TEST(${BACKEND_NAME}, convolution_outlining)
                                               Strides{1, 1});
     auto f = make_shared<Function>(conv2, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     vector<float> expected_result{4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
@@ -6299,23 +5683,20 @@ TEST(${BACKEND_NAME}, mkldnn_layouts)
     auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
     auto f = make_shared<Function>(pool1, op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     vector<float> input(64, 1.0f);
     copy_data(a, input);
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     vector<float> weights(512, 1.0f);
     copy_data(b, weights);
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     vector<float> expected_result(128, 16.0f);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
@@ -6329,20 +5710,17 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
     auto f =
         make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     float denom = 3.0;
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
                                           3 / denom,
                                           3 / denom,
@@ -6369,22 +5747,19 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     float denom = 3.0;
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
                                           3 / denom,
                                           3 / denom,
@@ -6423,13 +5798,10 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
                                         {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
@@ -6437,11 +5809,11 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
                                        {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
                                         {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     float denom = 3.0;
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
                                           3 / denom,
                                           3 / denom,
@@ -6505,13 +5877,10 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
     auto f =
         make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
                                          {0, 3, 2, 0, 0},
@@ -6537,11 +5906,11 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
                                          {1, 1, 1, 0, 1},
                                          {1, 0, 0, 0, 2}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     float denom = 2 * 3;
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
                                           {7 / denom, 5 / denom, 3 / denom},
                                           {5 / denom, 2 / denom, 5 / denom},
@@ -6576,13 +5945,10 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
     auto f = make_shared<Function>(
         make_shared<op::AvgPool>(A, window_shape, window_movement_strides), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
                                          {0, 3, 2, 0, 0, 0, 1, 0},
@@ -6593,11 +5959,11 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
                                          {1, 2, 0, 0, 0, 1, 2, 0},
                                          {1, 0, 2, 0, 0, 0, 1, 0}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     float denom = 2 * 3;
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
                                           {6 / denom, 5 / denom, 8 / denom},
                                           {6 / denom, 2 / denom, 4 / denom}}}})
@@ -6620,17 +5986,14 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, test::NDArray<float, 4>({{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}}}).get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
                                           {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
                                           {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
@@ -6654,20 +6017,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
                                           {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
                                           {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
@@ -6695,20 +6055,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
                                           {0.0f / 2, 4.0f / 4, 6.0f / 4},
                                           {2.0f / 2, 5.0f / 4, 5.0f / 4}},
@@ -6734,20 +6091,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
                                           {5.0f / 4, 5.0f / 4, 2.0f / 2},
                                           {2.0f / 2, 0.0f / 2, 0.0f / 1}},
@@ -6773,20 +6127,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
                                           {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
                                           {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
@@ -6816,20 +6167,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
                                           {2.0f / 3, 8.0f / 9, 2.0f / 3},
                                           {2.0f / 1, 2.0f / 3, 0.0f / 1}},
@@ -6855,20 +6203,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a,
               test::NDArray<float, 4>(
                   {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
                   .get_vector());
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((test::NDArray<float, 4>(
                    {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
                      {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
@@ -6891,19 +6236,16 @@ TEST(${BACKEND_NAME}, pad_interior_1d)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>(
                    {1, 2112, 2112, 2, 2112, 2112, 3, 2112, 2112, 4, 2112, 2112, 5, 2112, 2112, 6})
                    .get_vector()),
@@ -6925,19 +6267,16 @@ TEST(${BACKEND_NAME}, pad_exterior_1d)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>(
                    {2112, 2112, 2112, 2112, 1, 2, 3, 4, 5, 6, 2112, 2112, 2112, 2112, 2112})
                    .get_vector()),
@@ -6959,19 +6298,16 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112, 2112, 1,    2112, 2112, 2, 2112,
                                         2112, 3,    2112, 2112, 4,    2112, 2112, 5, 2112,
                                         2112, 6,    2112, 2112, 2112, 2112, 2112})
@@ -6994,19 +6330,16 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{9});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{9, 9, 9, 9, 9, 9},
                                         {1, 9, 2, 9, 3, 9},
                                         {9, 9, 9, 9, 9, 9},
@@ -7035,19 +6368,16 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     //copy_data(a, test::NDArray<float, 2>({{}}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -7074,19 +6404,16 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     //copy_data(a, test::NDArray<float, 2>({}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -7113,19 +6440,16 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     //copy_data(a, test::NDArray<float, 2>({}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -7152,13 +6476,10 @@ TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     // clang-format off
     copy_data(a, test::NDArray<float, 4>(
         {
@@ -7175,12 +6496,12 @@ TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
         }).get_vector());
     // clang-format on
 
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{42});
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     // clang-format off
     EXPECT_EQ((test::NDArray<float, 4>(
         {
@@ -7225,21 +6546,18 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     //copy_data(a, test::NDArray<float, 2>({}).get_vector());
-    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
     vector<float> expected(5 * 2 * 3 * 2, 2112);
 
-    cf->call({result}, {a, b});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(expected, read_vector<float>(result));
 }
 
@@ -7251,17 +6569,14 @@ TEST(${BACKEND_NAME}, product_trivial)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -7273,18 +6588,15 @@ TEST(${BACKEND_NAME}, product_trivial_5d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -7298,17 +6610,14 @@ TEST(${BACKEND_NAME}, product_to_scalar)
     auto f =
         make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{24}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7324,17 +6633,14 @@ TEST(${BACKEND_NAME}, product_matrix_columns)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{15, 48}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7350,17 +6656,14 @@ TEST(${BACKEND_NAME}, product_matrix_rows)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{2, 12, 30}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7378,18 +6681,15 @@ TEST(${BACKEND_NAME}, product_matrix_rows_zero)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7408,18 +6708,15 @@ TEST(${BACKEND_NAME}, product_matrix_cols_zero)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7437,18 +6734,15 @@ TEST(${BACKEND_NAME}, product_vector_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7467,18 +6761,15 @@ TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
     auto f =
         make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7494,18 +6785,15 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 * 10 * 19,
                              2 * 11 * 20,
                              3 * 12 * 21,
@@ -7526,18 +6814,15 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 * 2 * 3,
                              4 * 5 * 6,
                              7 * 8 * 9,
@@ -7561,18 +6846,15 @@ TEST(${BACKEND_NAME}, product_3d_to_vector)
     auto f =
         make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
                              2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
                              3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
@@ -7590,18 +6872,15 @@ TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1, 2}),
                                    op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                                13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f * 12.0f * 3.0f *
                              2.0f * 11.0f * 8.0f * 5.0f * 14.0f * 5.0f * 8.0f * 11.0f * 2.0f *
                              3.0f * 12.0f * 7.0f * 6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f}),
@@ -7618,20 +6897,17 @@ TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
     Shape shape_rt{3, 2};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
 }
 
@@ -7643,17 +6919,14 @@ TEST(${BACKEND_NAME}, max_trivial)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -7665,18 +6938,15 @@ TEST(${BACKEND_NAME}, max_trivial_5d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -7689,17 +6959,14 @@ TEST(${BACKEND_NAME}, max_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{4}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7715,17 +6982,14 @@ TEST(${BACKEND_NAME}, max_matrix_columns)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{5, 6}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7741,17 +7005,14 @@ TEST(${BACKEND_NAME}, max_matrix_rows)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{2, 4, 6}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7769,18 +7030,15 @@ TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity()}),
@@ -7802,18 +7060,15 @@ TEST(${BACKEND_NAME}, max_matrix_cols_zero)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
@@ -7833,18 +7088,15 @@ TEST(${BACKEND_NAME}, max_vector_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7862,18 +7114,15 @@ TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -7889,18 +7138,15 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
 }
 
@@ -7912,18 +7158,15 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
 }
 
@@ -7935,18 +7178,15 @@ TEST(${BACKEND_NAME}, max_3d_to_vector)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
 }
 
@@ -7959,18 +7199,15 @@ TEST(${BACKEND_NAME}, max_3d_to_scalar)
     auto f =
         make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                                13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
 }
 
@@ -7984,22 +7221,19 @@ TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
     Shape shape_rt{3, 2};
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     float mi = -std::numeric_limits<float>::infinity();
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{mi, mi, mi, mi, mi, mi}), read_vector<float>(result));
 }
 
@@ -8011,17 +7245,14 @@ TEST(${BACKEND_NAME}, min_trivial)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -8033,18 +7264,15 @@ TEST(${BACKEND_NAME}, min_trivial_5d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -8057,17 +7285,14 @@ TEST(${BACKEND_NAME}, min_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{});
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -8083,17 +7308,14 @@ TEST(${BACKEND_NAME}, min_matrix_columns)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -8109,17 +7331,14 @@ TEST(${BACKEND_NAME}, min_matrix_rows)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 3, 5}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -8137,18 +7356,15 @@ TEST(${BACKEND_NAME}, min_matrix_rows_zero)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity()}),
@@ -8170,18 +7386,15 @@ TEST(${BACKEND_NAME}, min_matrix_cols_zero)
     Shape shape_rt{2};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3, 3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
@@ -8201,18 +7414,15 @@ TEST(${BACKEND_NAME}, min_vector_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -8230,18 +7440,15 @@ TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     copy_data(result, vector<float>({3}));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -8257,18 +7464,15 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
@@ -8280,18 +7484,15 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
     Shape shape_rt{3, 3};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
 }
 
@@ -8303,18 +7504,15 @@ TEST(${BACKEND_NAME}, min_3d_to_vector)
     Shape shape_rt{3};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
                                15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -8327,18 +7525,15 @@ TEST(${BACKEND_NAME}, min_3d_to_scalar)
     auto f =
         make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                                13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 }
 
@@ -8352,22 +7547,19 @@ TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     Shape shape_rt{3, 2};
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
 
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     float inf = std::numeric_limits<float>::infinity();
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
@@ -8379,17 +7571,14 @@ TEST(${BACKEND_NAME}, relu_2Dfprop)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -8401,17 +7590,14 @@ TEST(${BACKEND_NAME}, relu_4Dfprop)
     auto shape_rt = Shape{2, 2, 2, 2};
     auto f = make_shared<Function>(relu, op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -8424,17 +7610,14 @@ TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(max, op::ParameterVector{B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_a);
     copy_data(b, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
 
-    cf->call({result}, {b});
+    backend->call(f, {result}, {b});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -8447,19 +7630,16 @@ TEST(${BACKEND_NAME}, relu_2Dbackprop)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
-    auto delta = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto delta = backend->create_tensor(element::f32, shape_a);
     copy_data(delta, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{1, 2, 0, 4, 0, 6, 7, 0, 9, 0};
 
-    cf->call({result}, {a, delta});
+    backend->call(f, {result}, {a, delta});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -8472,19 +7652,16 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
     auto shape_rt = Shape{2, 2, 2, 2};
     auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
-    auto delta = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto delta = backend->create_tensor(element::f32, shape_a);
     copy_data(delta, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5, 1});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
 
-    cf->call({result}, {a, delta});
+    backend->call(f, {result}, {a, delta});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -8496,28 +7673,24 @@ TEST(${BACKEND_NAME}, softmax_all)
     auto f =
         make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-3, -2, -1, 0, 1, 2});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     auto d = expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     vector<float> expected{
         expf(-3) / d, expf(-2) / d, expf(-1) / d, expf(0) / d, expf(1) / d, expf(2) / d};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 
     // empty AxisSet is the same as "full" AxisSet
     f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::ParameterVector{A});
-    external = manager->compile(f);
-    cf = backend->make_call_frame(external);
+    backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
@@ -8528,19 +7701,16 @@ TEST(${BACKEND_NAME}, softmax_axis)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     auto d0 = expf(-10) + expf(-20) + expf(-30);
     auto d1 = expf(-40) + expf(-50) + expf(-60);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     vector<float> expected{expf(-10) / d0,
                            expf(-20) / d0,
                            expf(-30) / d0,
@@ -8559,23 +7729,93 @@ TEST(${BACKEND_NAME}, softmax_underflow)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto low = std::numeric_limits<float>::lowest();
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{low, 1, 2, 3, 4, 5});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     auto d0 = expf(low) + expf(3);
     auto d1 = expf(1) + expf(4);
     auto d2 = expf(2) + expf(5);
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     vector<float> expected{
         expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+TEST(${BACKEND_NAME}, multiple_backends)
+{
+    Shape shape{2, 2};
+    auto A1 = make_shared<op::Parameter>(element::f32, shape);
+    auto B1 = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A1 + B1, op::ParameterVector{A1, B1});
+
+    auto A2 = make_shared<op::Parameter>(element::f32, shape);
+    auto B2 = make_shared<op::Parameter>(element::f32, shape);
+    auto g = make_shared<Function>(A2 * B2, op::ParameterVector{A2, B2});
+
+    auto backend1 = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto backend2 = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a1 = backend1->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b1 = backend1->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result1 = backend1->create_tensor(element::f32, shape);
+
+    shared_ptr<runtime::TensorView> a2 = backend2->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b2 = backend2->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result2 = backend2->create_tensor(element::f32, shape);
+
+    copy_data(a1, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b1, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    copy_data(a2, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b2, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    backend1->call(f, {result1}, {a1, b1});
+    EXPECT_EQ(read_vector<float>(result1),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+
+    backend2->call(g, {result2}, {a2, b2});
+    EXPECT_EQ(read_vector<float>(result2),
+              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+}
+
+TEST(${BACKEND_NAME}, tensorview_custom_mem)
+{
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    vector<float> av{2, 4, 8, 16};
+    vector<float> bv{1, 2, 4, 8};
+    // use custom mem with tensorview, no need to copy data
+    auto a = backend->make_primary_tensor_view(element::f32, shape, av.data());
+    auto b = backend->make_primary_tensor_view(element::f32, shape, bv.data());
+
+    // use custom mem with result tensorview
+    vector<float> rv{0, 0, 0, 0};
+    auto result = backend->make_primary_tensor_view(element::f32, shape, rv.data());
+
+    // result should be in memory without needing explict read
+    cf->call({result}, {a, b});
+    EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
 }

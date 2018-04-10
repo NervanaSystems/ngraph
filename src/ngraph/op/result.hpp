@@ -40,7 +40,7 @@ namespace ngraph
             bool needs_copy() const { return m_needs_copy; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
 
         private:
             bool m_needs_copy{true};

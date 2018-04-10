@@ -16,6 +16,7 @@
 
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -136,9 +137,11 @@ shared_ptr<Node> op::ReduceWindow::copy_with_new_args(const NodeVector& new_args
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<ReduceWindow>(new_args.at(0),
-                                     new_args.at(1),
-                                     m_reduction_function,
-                                     m_window_shape,
-                                     m_window_movement_strides);
+    auto node = make_shared<ReduceWindow>(new_args.at(0),
+                                          new_args.at(1),
+                                          m_reduction_function,
+                                          m_window_shape,
+                                          m_window_movement_strides);
+    node->m_reduction_function = clone_function(*m_reduction_function);
+    return node;
 }

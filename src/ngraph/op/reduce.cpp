@@ -16,6 +16,7 @@
 
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -99,6 +100,8 @@ shared_ptr<Node> op::Reduce::copy_with_new_args(const NodeVector& new_args) cons
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<Reduce>(
-        new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
+    shared_ptr<Reduce> fc =
+        make_shared<Reduce>(new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
+    fc->m_reduction_function = clone_function(*m_reduction_function);
+    return fc;
 }

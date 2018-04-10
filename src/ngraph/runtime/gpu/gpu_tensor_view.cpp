@@ -27,27 +27,43 @@ using namespace ngraph;
 using namespace std;
 
 runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
-                                             const Shape& shape)
+                                             const Shape& shape,
+                                             void* memory_pointer)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
           "external",
           true,
           true,
           false))
+    , m_custom_memory(false)
 {
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = shape_size(shape) * element_type.size();
-    if (m_buffer_size > 0)
+    if (memory_pointer != nullptr)
+    {
+        m_allocated_buffer_pool = memory_pointer;
+        m_custom_memory = true;
+    }
+    else if (m_buffer_size > 0)
     {
         cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size);
     }
 }
 
+runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
+                                             const Shape& shape)
+    : GPU_TensorView(element_type, shape, nullptr)
+{
+}
+
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    cudaFree(m_allocated_buffer_pool);
+    if (!m_custom_memory)
+    {
+        cudaFree(m_allocated_buffer_pool);
+    }
 }
 
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)

@@ -135,33 +135,25 @@ namespace ngraph
             }
         }
 
-        size_t get_call_count() const { return m_total_count; }
-        size_t get_seconds() const { return get_nanoseconds() / 1e9; }
-        size_t get_milliseconds() const { return get_nanoseconds() / 1e6; }
-        size_t get_microseconds() const { return get_nanoseconds() / 1e3; }
-        size_t get_nanoseconds() const
-        {
-            if (m_active)
-            {
-                return (m_clock.now() - m_start_time).count();
-            }
-            else
-            {
-                return m_last_time.count();
-            }
-        }
+        size_t get_call_count() const;
+        size_t get_seconds() const;
+        size_t get_milliseconds() const;
+        size_t get_microseconds() const;
+        std::chrono::nanoseconds get_timer_value() const;
+        size_t get_nanoseconds() const;
 
-        size_t get_total_seconds() const { return get_total_nanoseconds() / 1e9; }
-        size_t get_total_milliseconds() const { return get_total_nanoseconds() / 1e6; }
-        size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
-        size_t get_total_nanoseconds() const { return m_total_time.count(); }
+        size_t get_total_seconds() const;
+        size_t get_total_milliseconds() const;
+        size_t get_total_microseconds() const;
+        size_t get_total_nanoseconds() const;
+
     private:
         std::chrono::high_resolution_clock m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
         bool m_active = false;
         std::chrono::nanoseconds m_total_time =
             std::chrono::high_resolution_clock::duration::zero();
-        std::chrono::nanoseconds m_last_time;
+        std::chrono::nanoseconds m_last_time = std::chrono::high_resolution_clock::duration::zero();
         size_t m_total_count = 0;
     };
 
