@@ -655,15 +655,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
                 {
                     output_strides[i] = stride;
-                    stride *= arg_shape[input_order[i]];
+                    stride *= result_shape[i];
                 }
 
                 writer.block_begin("  // " + node->get_name());
-                auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
-                auto result_shape = out[0].get_shape();
-                auto input_order = reshape->get_input_order();
-
                 writer << "size_t rank = " << arg_rank << ";\n";
                 writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
                 for (int i = 1; i < arg_rank; i++)
@@ -724,7 +719,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
                 writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
                 writer << "runtime::gpu::free_gpu_buffer(lower_bounds_d);\n";
-                }
                 writer.block_end();
             }
 
