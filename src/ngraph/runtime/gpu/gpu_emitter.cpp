@@ -652,10 +652,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 else
                 {
                     writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {" << join(input_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> output_strides_h = {" << join(output_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> slice_strides_h = {" << join(slice_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> input_strides_h = {"
+                           << join(input_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> output_strides_h = {"
+                           << join(output_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,")
+                           << "UL};\n";
+                    writer << "std::vector<size_t> slice_strides_h = {"
+                           << join(slice_strides, "UL,") << "UL};\n";
 
                     writer << "void* input_strides_d = "
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
