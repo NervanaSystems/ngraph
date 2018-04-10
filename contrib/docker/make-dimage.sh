@@ -22,11 +22,11 @@ set -e
 #set -u
 set -o pipefail
 
-if [ -n $DOCKER_TAG ]; then
+if [ -z $DOCKER_TAG ]; then
     DOCKER_TAG=build_ngraph
 fi
 
-if [ -n $DOCKER_IMAGE_NAME ]; then
+if [ -z $DOCKER_IMAGE_NAME ]; then
     DOCKER_IMAGE_NAME=${DOCKER_TAG}
 fi
 
