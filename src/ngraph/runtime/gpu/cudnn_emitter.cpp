@@ -30,8 +30,8 @@ CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
 {
 }
 
-size_t CUDNNEmitter::build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
-                                          const GPURuntimeContext* ctx,
+size_t CUDNNEmitter::build_reduce_forward(const GPURuntimeContext* ctx,
+                                          const cudnnReduceTensorOp_t& reduce_op,
                                           const ngraph::Shape& input_shape,
                                           const ngraph::AxisSet& reduction_axes)
 {
@@ -173,13 +173,8 @@ cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_4d_from_shape(const Shape&
 {
     cudnnTensorDescriptor_t desc;
     cudnnCreateTensorDescriptor(&desc);
-    cudnnSetTensor4dDescriptor(desc,
-                               CUDNN_TENSOR_NCHW,
-                               CUDNN_DATA_FLOAT,
-                               shape[0],
-                               shape[1],
-                               shape[2],
-                               shape[3]);
+    cudnnSetTensor4dDescriptor(
+        desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1], shape[2], shape[3]);
     return desc;
 }
 
@@ -200,14 +195,15 @@ cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_Nd_from_shape(const Shape&
     return desc;
 }
 
-size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
-                                           const GPURuntimeContext* ctx,
-                                           const ngraph::Shape& input_shape,
-                                           const ngraph::Shape& output_shape,
-                                           const ngraph::Strides& window_strides,
-                                           const ngraph::Shape& window_shape,
-                                           const ngraph::Shape& padding_below,
-                                           const ngraph::Shape& padding_above)
+size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
+                                   const cudnnPoolingMode_t& pool_op,
+                                   const Prop& direction,
+                                   const ngraph::Shape& input_shape,
+                                   const ngraph::Shape& output_shape,
+                                   const ngraph::Strides& window_strides,
+                                   const ngraph::Shape& window_shape,
+                                   const ngraph::Shape& padding_below,
+                                   const ngraph::Shape& padding_above)
 {
     cudnnPoolingDescriptor_t desc;
     cudnnTensorDescriptor_t input_desc;
@@ -254,10 +250,11 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
                                     w_shape.data(),
                                     w_padding.data(),
                                     w_strides.data());
-
     }
-
-    auto fpool = new gpu::primitive{[=](void** inputs, void** outputs) {
+    gpu::primitive* pool = nullptr;
+    if (direction == Prop::Forward)
+    {
+        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
             cudnnPoolingForward(*ctx->cudnn_handle,
                                 desc,
@@ -268,69 +265,10 @@ size_t CUDNNEmitter::build_pooling_forward(cudnnPoolingMode_t pool_op,
                                 output_desc,
                                 outputs[0]);
         }};
-
-
-    return this->m_primitive_emitter->insert(fpool);
-}
-
-size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
-                                            const GPURuntimeContext* ctx,
-                                            const ngraph::Shape& input_shape,
-                                            const ngraph::Shape& output_shape,
-                                            const ngraph::Strides& window_strides,
-                                            const ngraph::Shape& window_shape,
-                                            const ngraph::Shape& padding_below,
-                                            const ngraph::Shape& padding_above)
-{
-    cudnnPoolingDescriptor_t desc;
-    cudnnTensorDescriptor_t input_desc;
-    cudnnTensorDescriptor_t output_desc;
-    if (input_shape.size() == 4)
-    {
-        input_desc = cudnn_util::tensor_descriptor_4d_from_shape(input_shape);
-        output_desc = cudnn_util::tensor_descriptor_4d_from_shape(output_shape);
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPooling2dDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    window_shape[0],
-                                    window_shape[1],
-                                    0,
-                                    0,
-                                    window_strides[0],
-                                    window_strides[1]);
     }
-    else if (input_shape.size() == 5)
+    else if (direction == Prop::Backward)
     {
-        if (window_shape.size() != 3 || window_strides.size() != 3 || padding_below.size() != 3)
-        {
-            throw std::runtime_error(
-                "3d pooling requested but window properties are not 3 dimensional.");
-        }
-        input_desc = cudnn_util::tensor_descriptor_Nd_from_shape(input_shape);
-        output_desc = cudnn_util::tensor_descriptor_Nd_from_shape(output_shape);
-
-        std::vector<int> w_strides(window_strides.size());
-        std::vector<int> w_shape(window_shape.size());
-        std::vector<int> w_padding(padding_below.size());
-        for (int i = 0; i < window_shape.size(); i++)
-        {
-            w_shape[i] = static_cast<int>(window_shape[i]);
-            w_strides[i] = static_cast<int>(window_strides[i]);
-            w_padding[i] = static_cast<int>(padding_below[i]);
-        }
-
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPoolingNdDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    3,
-                                    w_shape.data(),
-                                    w_padding.data(),
-                                    w_strides.data());
-    }
-
-    auto bpool = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
             // cuDNN requires the output tensor of the maxpool fprop to be passed even though
             // it is not mathematically necessary. It appears, however, that it is not actually
@@ -352,6 +290,7 @@ size_t CUDNNEmitter::build_pooling_backward(cudnnPoolingMode_t pool_op,
                                  input_desc,
                                  outputs[0]);
         }};
+    }
 
-    return this->m_primitive_emitter->insert(bpool);
+    return this->m_primitive_emitter->insert(pool);
 }

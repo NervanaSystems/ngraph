@@ -785,8 +785,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto sum_index =
-                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
-                                                                    external_function->ctx().get(),
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_ADD,
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes());
 
@@ -924,15 +924,16 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         auto& cudnn_emitter =
                             external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                        auto max_pool_index = cudnn_emitter->build_pooling_forward(
-                            CUDNN_POOLING_MAX, // non-deterministic
-                            external_function->ctx().get(),
-                            shape_to_pool,
-                            result_shape,
-                            max_pool->get_window_movement_strides(),
-                            max_pool->get_window_shape(),
-                            padding_below,
-                            padding_above);
+                        auto max_pool_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         CUDNN_POOLING_MAX,
+                                                         CUDNNEmitter::Prop::Forward,
+                                                         shape_to_pool,
+                                                         result_shape,
+                                                         max_pool->get_window_movement_strides(),
+                                                         max_pool->get_window_shape(),
+                                                         padding_below,
+                                                         padding_above);
 
                         writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
                         if (pad_required)
@@ -971,15 +972,16 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     if (fp_input_shape.size() >= 4)
                     {
-                        auto max_pool_bp_index = cudnn_emitter->build_pooling_backward(
-                            CUDNN_POOLING_MAX,
-                            external_function->ctx().get(),
-                            fp_input_shape,
-                            fp_output_shape,
-                            mpb->get_window_movement_strides(),
-                            mpb->get_window_shape(),
-                            mpb->get_padding_below(),
-                            mpb->get_padding_above());
+                        auto max_pool_bp_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         CUDNN_POOLING_MAX,
+                                                         CUDNNEmitter::Prop::Backward,
+                                                         fp_input_shape,
+                                                         fp_output_shape,
+                                                         mpb->get_window_movement_strides(),
+                                                         mpb->get_window_shape(),
+                                                         mpb->get_padding_below(),
+                                                         mpb->get_padding_above());
 
                         writer << "gpu::invoke_primitive(ctx, " << max_pool_bp_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << ", "

@@ -47,28 +47,26 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_reduce_forward(cudnnReduceTensorOp_t reduce_op,
-                                            const GPURuntimeContext* ctx,
+                enum class Prop
+                {
+                    Forward,
+                    Backward
+                };
+
+                size_t build_reduce_forward(const GPURuntimeContext* ctx,
+                                            const cudnnReduceTensorOp_t& reduce_op,
                                             const Shape& input_shape,
                                             const AxisSet& reduction_axes);
 
-                size_t build_pooling_forward(cudnnPoolingMode_t pool_op,
-                                             const GPURuntimeContext* ctx,
-                                             const ngraph::Shape& input_shape,
-                                             const ngraph::Shape& output_shape,
-                                             const ngraph::Strides& window_strides,
-                                             const ngraph::Shape& window_shape,
-                                             const ngraph::Shape& padding_below,
-                                             const ngraph::Shape& padding_above);
-
-                size_t build_pooling_backward(cudnnPoolingMode_t pool_op,
-                                              const GPURuntimeContext* ctx,
-                                              const ngraph::Shape& input_shape,
-                                              const ngraph::Shape& output_shape,
-                                              const ngraph::Strides& window_strides,
-                                              const ngraph::Shape& window_shape,
-                                              const ngraph::Shape& padding_below,
-                                              const ngraph::Shape& padding_above);
+                size_t build_pooling(const GPURuntimeContext* ctx,
+                                     const cudnnPoolingMode_t& pool_op,
+                                     const Prop& direction,
+                                     const ngraph::Shape& input_shape,
+                                     const ngraph::Shape& output_shape,
+                                     const ngraph::Strides& window_strides,
+                                     const ngraph::Shape& window_shape,
+                                     const ngraph::Shape& padding_below,
+                                     const ngraph::Shape& padding_above);
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
