@@ -658,6 +658,8 @@ public:
             //replace the topmost add with the seed (i.e. the first parameter to add)
             //matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
+            NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
+                         << arg->get_name();
             ngraph::replace_node(rm.get_match_root(), arg);
             return true;
         };
@@ -703,7 +705,7 @@ TEST(pattern, recurrent_graph_rewrite)
         auto add_a = left_abs->get_input_op(0);
         ASSERT_EQ(add_a, a);
 
-        auto right_abs = graph->get_input_op(0);
+        auto right_abs = graph->get_input_op(1);
         auto add_b = right_abs->get_input_op(0);
         ASSERT_EQ(add_b, b);
     }
