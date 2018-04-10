@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -138,6 +139,12 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input data dilation strides.
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+            /// \return The default value for Convolution.
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+            }
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
