@@ -237,8 +237,8 @@ size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
                                     CUDNN_NOT_PROPAGATE_NAN,
                                     window_shape[0],
                                     window_shape[1],
-                                    0,
-                                    0,
+                                    padding_below[0],
+                                    padding_below[1],
                                     window_strides[0],
                                     window_strides[1]);
     }
