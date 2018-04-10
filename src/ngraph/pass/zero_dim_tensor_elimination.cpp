@@ -31,60 +31,6 @@
 
 using namespace ngraph;
 
-#define TI(x) std::type_index(typeid(x))
-
-static std::shared_ptr<Node> build_scalar_constant(std::string val, std::shared_ptr<Node> n)
-{
-    auto cvals = std::vector<std::string>(shape_size(n->get_shape()), val);
-    return std::make_shared<op::Constant>(n->get_element_type(), n->get_shape(), cvals);
-}
-
-static std::shared_ptr<Node> return_zero_const(std::shared_ptr<Node> n)
-{
-    return build_scalar_constant(std::string("0"), n);
-}
-
-static std::shared_ptr<Node> return_one_const(std::shared_ptr<Node> n)
-{
-    return build_scalar_constant(std::string("1"), n);
-}
-
-static std::shared_ptr<Node> return_broadcast(std::shared_ptr<Node> n)
-{
-    AxisSet axes{};
-    for (size_t i = 0; i < n->get_shape().size(); i++)
-    {
-        axes.insert(i);
-    }
-    return std::make_shared<op::Broadcast>(n->get_input_op(1), n->get_shape(), axes);
-}
-
-static std::unordered_map<std::type_index,
-                          std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>
-    initialize_const_values_to_ops()
-{
-    return std::unordered_map<std::type_index,
-                              std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>({
-        {TI(ngraph::op::AvgPool), return_zero_const},
-        {TI(ngraph::op::MaxPool), return_zero_const},
-        {TI(ngraph::op::Convolution), return_zero_const},
-        {TI(ngraph::op::Sum), return_zero_const},
-        {TI(ngraph::op::Product), return_one_const},
-        {TI(ngraph::op::Pad), return_broadcast},
-    });
-}
-
-static std::unordered_map<std::type_index,
-                          std::function<std::shared_ptr<Node>(std::shared_ptr<Node>)>>
-    ops_to_const_values = initialize_const_values_to_ops();
-
-static std::shared_ptr<Node> get_const_value_for_op(std::shared_ptr<Node> n)
-{
-    const Node& node = *n;
-    auto entry = ops_to_const_values.find(TI(node));
-    return entry == ops_to_const_values.end() ? nullptr : entry->second(n);
-}
-
 static bool has_zero_dim(std::shared_ptr<Node> node)
 {
     if (node->get_output_size() != 1)
@@ -156,7 +102,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
             continue;
         }
 
-        auto new_node = get_const_value_for_op(n);
+        auto new_node = n->get_default_value();
         if (!new_node || !has_zero_dim(n->get_input_op(0)))
         {
             continue;
