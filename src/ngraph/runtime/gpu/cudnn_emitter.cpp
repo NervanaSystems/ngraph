@@ -13,7 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+#include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
@@ -205,6 +207,23 @@ size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
                                    const ngraph::Shape& padding_below,
                                    const ngraph::Shape& padding_above)
 {
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "pool_op" << pool_op << "_dir" << static_cast<int>(direction) << "_i" << join(input_shape)
+       << "_o" << join(output_shape) << "_ws" << join(window_shape) << "_wst"
+       << join(window_strides) << "_pb" << join(padding_below) << "_pb" << join(padding_above);
+    std::string hash = ss.str();
+    std::replace(hash.begin(), hash.end(), ' ', '_');
+    std::replace(hash.begin(), hash.end(), ',', '_');
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
     cudnnPoolingDescriptor_t desc;
     cudnnTensorDescriptor_t input_desc;
     cudnnTensorDescriptor_t output_desc;
@@ -292,5 +311,7 @@ size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
         }};
     }
 
-    return this->m_primitive_emitter->insert(pool);
+    primitive_index = this->m_primitive_emitter->insert(pool);
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
 }
