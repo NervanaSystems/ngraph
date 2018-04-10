@@ -1175,7 +1175,6 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto concat = static_cast<const ngraph::op::Concat*>(node.get());
                         auto input0_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
                         size_t num_inputs = node->get_input_size();
