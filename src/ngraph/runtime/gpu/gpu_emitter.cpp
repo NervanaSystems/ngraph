@@ -1,6 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
+* Copyright 2017-2018 Intel Corporation *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -637,25 +636,13 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto slice = static_cast<const op::Slice*>(node);
 
-                auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
-                auto result_shape = out[0].get_shape();
+                const auto arg_shape = args[0].get_shape();
+                const auto arg_rank = arg_shape.size();
+                const auto result_shape = out[0].get_shape();
                 const Coordinate& lower_bounds = slice->get_lower_bounds();
                 const Strides slice_strides = slice->get_strides();
-                std::vector<size_t> input_strides(arg_rank);
-                std::vector<size_t> output_strides(arg_rank);
-                size_t stride = 1;
-                for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                {
-                    input_strides[i] = stride;
-                    stride *= arg_shape[i];
-                }
-                stride = 1;
-                for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                {
-                    output_strides[i] = stride;
-                    stride *= result_shape[i];
-                }
+                const auto input_strides = row_major_strides(arg_shape);
+                const auto output_strides = row_major_strides(result_shape);
 
                 writer.block_begin("  // " + node->get_name());
                 if (args[0].get_size() == out[0].get_size())
@@ -665,32 +652,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 else
                 {
                     writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << input_strides[i] << "UL";
-                    }
-                    writer << "};\n";
-
-                    writer << "std::vector<size_t> output_strides_h = {" << output_strides[0]
-                           << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << output_strides[i] << "UL";
-                    }
-                    writer << "};\n";
-                    writer << "std::vector<size_t> slice_strides_h = {" << slice_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << slice_strides[i] << "UL";
-                    }
-                    writer << "};\n";
-                    writer << "std::vector<size_t> lower_bounds_h = {" << lower_bounds[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << lower_bounds[i] << "UL";
-                    }
-                    writer << "};\n";
+                    writer << "std::vector<size_t> input_strides_h = {" << join(input_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> output_strides_h = {" << join(output_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> slice_strides_h = {" << join(slice_strides, "UL,") << "UL};\n";
 
                     writer << "void* input_strides_d = "
                               "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
