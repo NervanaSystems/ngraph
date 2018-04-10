@@ -100,12 +100,11 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
     {
         writer << "cudnnSetFilter4dDescriptor(" << name << ",\n";
         writer << "                 /*dataType=*/" << data_type << ",\n";
-        writer << "                 /*format=*/" << format;
-        writer << ",\n                 /*dimension_size*/" << dimensions[0];
-        writer << ",\n                 /*dimension_size*/" << dimensions[1];
-        writer << ",\n                 /*dimension_size*/" << dimensions[2];
-        writer << ",\n                 /*dimension_size*/" << dimensions[3];
-        writer << ");\n";
+        writer << "                 /*format=*/" << format << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[0] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[1] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[2] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[3] << ");\n";
     }
     else
     {
@@ -141,12 +140,11 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
     {
         writer << "cudnnSetTensor4dDescriptor(" << name << ",\n";
         writer << "                 /*format=*/" << format << ",\n";
-        writer << "                 /*dataType=*/" << data_type;
-        writer << ",\n                 /*dimension_size*/" << dimensions[0];
-        writer << ",\n                 /*dimension_size*/" << dimensions[1];
-        writer << ",\n                 /*dimension_size*/" << dimensions[2];
-        writer << ",\n                 /*dimension_size*/" << dimensions[3];
-        writer << ");\n";
+        writer << "                 /*dataType=*/" << data_type << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[0] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[1] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[2] << ",\n";
+        writer << "                 /*dimension_size*/" << dimensions[3] << ");\n";
     }
     else
     {
