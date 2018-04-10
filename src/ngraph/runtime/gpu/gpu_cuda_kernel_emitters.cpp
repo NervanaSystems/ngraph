@@ -130,15 +130,15 @@ void runtime::gpu::emit_reshape(const std::string& name,
 }
 
 void runtime::gpu::emit_slice(const std::string& name,
-                                CUdeviceptr in,
-                                CUdeviceptr out,
-                                const std::array<std::string, 2>& data_types,
-                                CUdeviceptr input_strides,
-                                CUdeviceptr lower_bounds,
-                                CUdeviceptr slice_strides,
-                                CUdeviceptr output_strides,
-                                size_t rank,
-                                size_t count)
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              const std::array<std::string, 2>& data_types,
+                              CUdeviceptr input_strides,
+                              CUdeviceptr lower_bounds,
+                              CUdeviceptr slice_strides,
+                              CUdeviceptr output_strides,
+                              size_t rank,
+                              size_t count)
 {
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
@@ -152,7 +152,8 @@ void runtime::gpu::emit_slice(const std::string& name,
         CudaFunctionPool::instance().set(name_signature, kernel);
     }
 
-    void* args_list[] = {&in, &out, &input_strides, &slice_stride, &output_strides, &rank, &count};
+    void* args_list[] = {
+        &in, &out, &input_strides, &lower_bounds, &slice_strides, &output_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*CudaFunctionPool::instance().get(name_signature).get(),
                                   static_cast<unsigned int>(count),
                                   1,
