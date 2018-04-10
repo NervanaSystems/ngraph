@@ -719,7 +719,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         << "\"}"
                         << ", "
                         << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
-                        << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
+                        << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
                 writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
                 writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
                 writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
