@@ -16,26 +16,23 @@
 
 #pragma once
 
-#include <exception>
-#include <functional>
-#include <sstream>
+#include <memory>
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
+        class ValidateGraph;
     }
 }
+
+class ngraph::pass::ValidateGraph : public ModulePass
+{
+public:
+    bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+
+private:
+    void validate_parameters(const Function&);
+};

@@ -106,9 +106,6 @@ void runtime::interpreter::ExternalFunction::compile()
         return;
     }
 
-    string function_name = m_interpreter_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
-
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
@@ -129,6 +126,5 @@ shared_ptr<runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call
         compile();
     }
 
-    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(),
-                                                            m_interpreter_function);
+    return make_shared<runtime::interpreter::INT_CallFrame>(m_function);
 }

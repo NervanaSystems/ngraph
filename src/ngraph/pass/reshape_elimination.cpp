@@ -161,7 +161,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
     auto pdot = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = std::make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
 
-    ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.match_root()->get_name();
 

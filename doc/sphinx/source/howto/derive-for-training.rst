@@ -4,15 +4,16 @@
 Derive a trainable model 
 #########################
 
-Documentation in this section describes one of the ways to derive a trainable 
-model from an inference model.
+Documentation in this section describes one of the ways to derive and run a
+trainable model from an inference model.
 
 We can derive a trainable model from any graph that has been constructed with 
-weight-based updates. For this example named ``mnist_mlp.cpp``, we start with a hand-designed inference model and convert it to a model that can be trained 
+weight-based updates. For this example named ``mnist_mlp.cpp``, we start with 
+a hand-designed inference model and convert it to a model that can be trained 
 with nGraph. 
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
-trainable model, our example includes the use of a simple data loader for the 
+model, our example includes the use of a simple data loader for uncompressed
 MNIST data.
 
 * :ref:`model_overview`
@@ -24,27 +25,46 @@ MNIST data.
   - :ref:`update`
 
 
+.. _understanding_ml_ecosystem:
+
+Understanding the ML ecosystem
+===============================
+
+In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to take advantage 
+of automation and abstraction as much as possible. As such, nGraph was designed 
+to integrate wtih graph construction endpoints (AKA *ops*) handed down to it 
+from a framework. Our graph-construction API, therefore, needs to operate at a 
+fundamentally lower level than a typical framework's API. For this reason, 
+writing a model directly in nGraph would be somewhat akin to programming in 
+assembly language: not impossible, but not exactly the easiest thing for humans 
+to do. 
+
+
 .. _model_overview:
 
-Model overview
-==============
+Model overview 
+===============
 
-The nGraph API was designed for automatic graph construction under direction of 
-a framework. Without a framework, the process is somewhat tedious, so the example 
-selected is a relatively simple model: a fully-connected topology with one hidden 
-layer followed by ``Softmax``.
+Due to the lower-level nature of the graph-construction API, the example we've 
+selected to document here is a relatively simple model: a fully-connected 
+topology with one hidden layer followed by ``Softmax``.
 
-Since the graph is stateless there are parameters for both the inputs
-and the weights. We will construct the graph for inference and use
-nGraph to create a graph for training.  The training function will
-return tensors for the updated weights. Note that this is not the same
-as *constructing* the training model directly, which would be
-significantly more work.
+Remember that in nGraph, the graph is stateless; values for the weights must
+be provided as parameters along with the normal inputs. Starting with the graph
+for inference, we will use it to create a graph for training. The training
+function will return tensors for the updated weights. 
+
+.. note:: This example illustrates how to convert an inference model into one 
+   that can be trained. Depending on the framework, bridge code may do something 
+   similar, or the framework might do this operation itself. Here we do the 
+   conversion with nGraph because the computation for training a model is 
+   significantly larger than for inference, and doing the conversion manually 
+   is tedious and error-prone.
 
 
 .. _code_structure:
 
-Code Structure
+Code structure
 ==============
 
 

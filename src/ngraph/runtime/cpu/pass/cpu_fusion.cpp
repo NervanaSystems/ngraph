@@ -139,7 +139,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     auto pbroadcast = std::make_shared<op::Broadcast>(b, pmmb->get_shape(), AxisSet{0});
     auto padd = pmmb + pbroadcast;
 
-    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmulbias_pattern against node = "
                      << m.match_root()->get_name();
 
@@ -185,7 +185,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
     auto pdot = std::make_shared<op::Dot>(skip_w, skip_x);
 
-    ngraph::pattern::gr_callback_fn callback = [W, x](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -288,7 +288,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     // This completes fprop bn pattern
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
             pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
@@ -340,7 +340,8 @@ static bool
                                        const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
                                        const std::shared_ptr<ngraph::Node>& pad_input,
                                        const std::shared_ptr<ngraph::op::Pad>& matched_pad,
-                                       const std::shared_ptr<ngraph::op::Convolution>& matched_conv,
+                                       const ngraph::CoordinateDiff& padding_below,
+                                       const ngraph::CoordinateDiff& padding_above,
                                        size_t batch_index,
                                        size_t channel_index)
 {
@@ -369,8 +370,7 @@ static bool
     }
 
     // Only match convolutions with no padding specification
-    if (matched_conv->get_padding_below() != ngraph::CoordinateDiff(2) ||
-        matched_conv->get_padding_above() != ngraph::CoordinateDiff(2))
+    if (padding_below != ngraph::CoordinateDiff(2) || padding_above != ngraph::CoordinateDiff(2))
     {
         return false;
     }
@@ -414,7 +414,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                                   Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
             pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
@@ -440,7 +440,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                                     pad_value_op,
                                                     pattern_map[pad_input],
                                                     matched_pad,
-                                                    matched_conv,
+                                                    matched_conv->get_padding_below(),
+                                                    matched_conv->get_padding_above(),
                                                     input_order[0],
                                                     input_order[1]))
             {
@@ -491,7 +492,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                   Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    ngraph::pattern::gr_callback_fn callback =
+    ngraph::pattern::graph_rewrite_callback callback =
         [pad_input, pad_value, pad_label, conv_filter, conv_label](pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
 
@@ -505,7 +506,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                     pad_value_op,
                                                     pattern_map[pad_input],
                                                     matched_pad,
-                                                    matched_conv,
+                                                    matched_conv->get_padding_below(),
+                                                    matched_conv->get_padding_above(),
                                                     0,
                                                     1))
             {
@@ -535,6 +537,73 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
     this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_filters()
+{
+    auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+    auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto pad = std::make_shared<op::Pad>(
+        pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+
+    auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+
+    auto conv = std::make_shared<op::ConvolutionBackpropFilters>(pad_label,
+                                                                 Shape{1, 1, 3, 3},
+                                                                 output_delta,
+                                                                 Strides{1, 1},
+                                                                 Strides{1, 1},
+                                                                 CoordinateDiff{1, 1},
+                                                                 CoordinateDiff{1, 1},
+                                                                 Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [pad_input, pad_value, pad_label, output_delta, conv_label](pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
+
+            auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+
+            const auto& matched_conv =
+                std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(pattern_map[conv_label]);
+            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+
+            if (!zero_padded_conv_consistency_check(m.match_root(),
+                                                    pad_value_op,
+                                                    pattern_map[pad_input],
+                                                    matched_pad,
+                                                    matched_conv->get_padding_below_forward(),
+                                                    matched_conv->get_padding_above_forward(),
+                                                    0,
+                                                    1))
+            {
+                return false;
+            }
+
+            CoordinateDiff padding_below{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_below().at(3))};
+            CoordinateDiff padding_above{
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(2)),
+                static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
+
+            auto zero_padded_conv_backprop_filters =
+                std::make_shared<op::ConvolutionBackpropFilters>(
+                    pattern_map[pad_input],
+                    matched_conv->get_filters_shape(),
+                    pattern_map[output_delta],
+                    matched_conv->get_window_movement_strides_forward(),
+                    matched_conv->get_window_dilation_strides_forward(),
+                    padding_below,
+                    padding_above,
+                    matched_conv->get_data_dilation_strides_forward());
+
+            ngraph::replace_node(m.match_root(), zero_padded_conv_backprop_filters);
+            return true;
+        };
+
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
 {
     //construct variance
@@ -550,7 +619,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [input](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -602,7 +671,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
     auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::gr_callback_fn callback = [input, delta](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -646,7 +715,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                                                     Strides{1, 1});
     auto p_conv_bias = pbroadcast + pconv1;
 
-    ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -701,7 +770,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
     auto prelu = std::make_shared<op::Relu>(goe);
 
-    ngraph::pattern::gr_callback_fn callback = [input, gamma, beta](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
                      << m.match_root()->get_name();
 
@@ -775,7 +844,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
     auto prelu = std::make_shared<op::Relu>(pconv);
 
-    pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.match_root()->get_name();
 
