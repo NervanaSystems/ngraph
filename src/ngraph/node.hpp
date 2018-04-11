@@ -17,7 +17,6 @@
 #pragma once
 
 #include <atomic>
-#include <deque>
 #include <iostream>
 #include <memory>
 #include <set>
@@ -112,15 +111,15 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
         // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
+        std::vector<descriptor::Input>& get_inputs() { return m_inputs; }
         // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
+        const std::vector<descriptor::Input>& get_inputs() const { return m_inputs; }
         // Deprecated
         // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs();
+        std::vector<descriptor::Output>& get_outputs();
         // Deprecated
         // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const;
+        const std::vector<descriptor::Output>& get_outputs() const;
 
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
@@ -200,8 +199,8 @@ namespace ngraph
         std::string m_name;
         const std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
-        std::deque<descriptor::Input> m_inputs;
-        std::deque<descriptor::Output> m_outputs;
+        std::vector<descriptor::Input> m_inputs;
+        std::vector<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
     };
