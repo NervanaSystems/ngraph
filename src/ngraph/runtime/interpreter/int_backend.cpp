@@ -15,8 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
@@ -24,8 +22,8 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
-    const shared_ptr<runtime::ExternalFunction>& external_function)
+shared_ptr<runtime::interpreter::INT_CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
+    const shared_ptr<runtime::interpreter::ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
 }

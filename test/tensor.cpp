@@ -79,8 +79,7 @@ TEST(tensor, size)
 template <typename T>
 void test_read_write(const vector<T>& x)
 {
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("INTERPRETER");
 
     auto a = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
 

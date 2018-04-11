@@ -149,7 +149,6 @@ TEST(DISABLED_include, complete)
                                     "ngraph/placement.hpp",
                                     "ngraph/runtime/aligned_buffer.hpp",
                                     "ngraph/runtime/backend.hpp",
-                                    "ngraph/runtime/call_frame.hpp",
                                     "ngraph/runtime/cpu/cpu_backend.hpp",
                                     "ngraph/runtime/cpu/cpu_call_frame.hpp",
                                     "ngraph/runtime/cpu/cpu_eigen_utils.hpp",

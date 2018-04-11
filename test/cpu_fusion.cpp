@@ -376,6 +376,7 @@ TEST(cpu_fusion, zero_padded_reshaped_conv)
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
     auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
 }
@@ -403,6 +404,7 @@ TEST(cpu_fusion, zero_padded_conv)
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
     auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
 }
@@ -430,6 +432,7 @@ TEST(cpu_fusion, non_zero_padded_conv)
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
     auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 }
@@ -458,6 +461,7 @@ TEST(cpu_fusion, zero_padded_conv_backprop_filters)
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
     auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
 }
@@ -632,7 +636,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
         op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
 
     backend->call(
-        f,
+        df,
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
         {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
@@ -705,6 +709,7 @@ TEST(cpu_fusion, sigmoid_bprop_fusion)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     auto df = autodiff::backprop_function(func);
     auto backend = runtime::Backend::create("CPU");
+    backend->compile(df);
     size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
     ASSERT_EQ(ccg, 1);
 }

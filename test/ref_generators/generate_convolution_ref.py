@@ -180,7 +180,7 @@ def scalar_str(x):
     if "." not in result and "e" not in result:
         result = result + ".0f"
     else:
-        result = result + "f"
+        result = "%.8ff" % float(result)
     return result
 
 def data_str(data):
@@ -256,8 +256,8 @@ TEST (${BACKEND_NAME}, %s)
                          shape_str(below_pads),
                          shape_str(above_pads),
                          shape_str(data_dilation),
-                         ",".join(map(lambda s: s + "f",input_batch_literals)),
-                         ",".join(map(lambda s: s + "f",filters_literals)),
+                         ",".join(map(lambda s: "%.8ff" % float(s),input_batch_literals)),
+                         ",".join(map(lambda s: "%.8ff" % float(s),filters_literals)),
                          data_str(output_batch_data),
                          bprop));
 

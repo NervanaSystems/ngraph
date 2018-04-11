@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
@@ -24,8 +23,8 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
-    const shared_ptr<ExternalFunction>& external_function)
+shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
+    const shared_ptr<GPU_ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
 }

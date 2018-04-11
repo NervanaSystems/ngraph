@@ -238,9 +238,12 @@ static const runtime::gpu::OpMap dispatcher{
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
-    , m_compiled_function(nullptr)
+    : m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
+    , m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
+    , m_timing(false)
 {
 }
 

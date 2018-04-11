@@ -35,12 +35,7 @@ int main()
                                         op::ParameterVector{a, b, c});
 
     // Get the backend
-    auto manager = runtime::Manager::get("CPU");
-    auto backend = manager->allocate_backend();
-
-    // Compile the function
-    auto external = manager->compile(f);
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("CPU");
 
     // Allocate tensors for arguments a, b, c
     auto t_a = backend->create_tensor(element::f32, s);
@@ -59,7 +54,7 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    cf->call({t_result}, {t_a, t_b, t_c});
+    backend->call(f, {t_result}, {t_a, t_b, t_c});
 
     // Get the result
     float r[2][3];

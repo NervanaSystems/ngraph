@@ -145,8 +145,7 @@ TEST(util, contains)
 
 TEST(util, all_close)
 {
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("INTERPRETER");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, Shape{2, 3});

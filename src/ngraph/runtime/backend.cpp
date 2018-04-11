@@ -21,9 +21,13 @@
 using namespace std;
 using namespace ngraph;
 
-std::shared_ptr<runtime::Backend> runtime::Backend::create(const std::string& type)
+runtime::Backend::~Backend()
 {
-    std::shared_ptr<Manager> manager = runtime::Manager::get(type);
+}
+
+shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
+{
+    shared_ptr<Manager> manager = runtime::Manager::get(type);
     return manager->allocate_backend();
 }
 
@@ -39,10 +43,16 @@ vector<string> runtime::Backend::get_registered_devices()
 
 vector<size_t> runtime::Backend::get_subdevices(const string& type)
 {
-    std::shared_ptr<Manager> manager = runtime::Manager::get(type);
+    shared_ptr<Manager> manager = runtime::Manager::get(type);
     return manager->get_subdevices();
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Function> func)
+void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
 {
+}
+
+vector<ngraph::runtime::PerformanceCounter>
+    runtime::Backend::get_performance_data(shared_ptr<Function> func) const
+{
+    return vector<PerformanceCounter>();
 }

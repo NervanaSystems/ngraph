@@ -97,7 +97,7 @@ float test_accuracy(MNistDataLoader& loader,
                    0,
                    loader.get_label_batch_size() * sizeof(float));
         backend->call(
-            *function, {t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
+            function, {t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
         size_t acc = accuracy_count(t_softmax, t_Y);
         acc_count += acc;
         sample_count += batch_size;
@@ -246,7 +246,7 @@ int main(int argc, const char* argv[])
                    0,
                    train_loader.get_label_batch_size() * sizeof(float));
         backend->call(
-            *train_function,
+            train_function,
             {t_loss,
              t_softmax,
              t_W0_next,

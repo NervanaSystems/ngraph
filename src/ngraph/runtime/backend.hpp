@@ -28,7 +28,6 @@ namespace ngraph
     namespace runtime
     {
         class ExternalFunction;
-        class CallFrame;
         class TensorView;
 
         /// @brief Interface to a generic backend.
@@ -37,14 +36,7 @@ namespace ngraph
         class Backend
         {
         public:
-            virtual ~Backend() {}
-            // /// @brief Make a call frame that can support one concurrent call of an external function.
-            // ///
-            // /// If more than one concurrent execution is needed, each execution will require its own call frame.
-            // /// DEPRECATED
-            // virtual std::shared_ptr<ngraph::runtime::CallFrame>
-            //     make_call_frame(const std::shared_ptr<ExternalFunction>& external_function) = 0;
-
+            virtual ~Backend();
             /// @brief Create a new Backend object
             /// @param type The name of a registered backend, such as "CPU" or "GPU".
             ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
@@ -86,10 +78,7 @@ namespace ngraph
 
             virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
             virtual std::vector<PerformanceCounter>
-                get_performance_data(std::shared_ptr<Function> func) const
-            {
-                return std::vector<PerformanceCounter>();
-            }
+                get_performance_data(std::shared_ptr<Function> func) const;
         };
     }
 }

@@ -25,8 +25,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class CallFrame;
-
         namespace interpreter
         {
             class ExternalFunction;
@@ -35,8 +33,9 @@ namespace ngraph
             class INT_Backend : public runtime::Backend
             {
             public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
+                std::shared_ptr<INT_CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::interpreter::ExternalFunction>&
+                        external_function);
 
                 std::shared_ptr<ngraph::runtime::TensorView>
                     create_tensor(const ngraph::element::Type& element_type,
