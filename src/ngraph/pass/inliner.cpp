@@ -68,7 +68,7 @@ bool ngraph::pass::Inliner::inline_function_call(std::shared_ptr<ngraph::Node> i
         nm.add(callee->get_parameters().at(i), callsite->get_input_op(i));
     }
 
-    ngraph::clone_function(callee, nm);
+    ngraph::clone_function(*callee, nm);
 
     auto callee_graph = nm.get(callee->get_result());
     caller->replace_node(callsite, callee_graph);

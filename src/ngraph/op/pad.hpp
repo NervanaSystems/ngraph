@@ -80,9 +80,12 @@ namespace ngraph
             const Shape& get_padding_above() const { return m_padding_above; }
             /// \return The interior padding sizes.
             const Shape& get_padding_interior() const { return m_padding_interior; }
+            /// \return The default value for Pad.
+            virtual std::shared_ptr<Node> get_default_value() const override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
+                                           const NodeVector& deltas) override;
             Shape m_padding_below;
             Shape m_padding_above;
             Shape m_padding_interior;

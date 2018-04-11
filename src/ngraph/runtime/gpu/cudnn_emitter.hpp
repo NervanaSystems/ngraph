@@ -36,7 +36,9 @@ namespace ngraph
         {
             namespace cudnn_util
             {
-                std::vector<int> compute_strides(const std::vector<int>& dim);
+                std::vector<int> compute_strides(const Shape&);
+                std::vector<int> compute_strides(const std::vector<int>&);
+                std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
                 cudnnTensorDescriptor_t tensor_descriptor_4d_from_shape(const Shape& shape);
                 cudnnTensorDescriptor_t tensor_descriptor_Nd_from_shape(const Shape& shape);
             }

@@ -106,9 +106,10 @@ shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_a
                                                 get_data_dilation_strides()));
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const shared_ptr<Node>& delta)
+void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto data = get_input_op(0);
     const auto data_shape = data->get_shape();
 

@@ -61,8 +61,10 @@ shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_a
     return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
 }
 
-void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto backprop = make_shared<op::SigmoidBackprop>(get_input_op(0), delta);
     adjoints.add_delta(get_input_op(0), backprop);
 }

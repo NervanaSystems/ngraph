@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"

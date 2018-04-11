@@ -39,13 +39,11 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
-    , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
     size_t i = 0;
-    for (auto arg : m_arguments)
+    for (auto arg : arguments)
     {
-        arg->m_users.insert(this);
         for (descriptor::Output& output : arg->get_outputs())
         {
             m_inputs.emplace_back(this, i++, output);
@@ -146,9 +144,9 @@ void Node::set_placement(Placement placement)
 
 std::shared_ptr<Node> Node::get_input_op(size_t index)
 {
-    for (auto arg : m_arguments)
+    for (auto& i : get_inputs())
     {
-        if (arg->get_outputs().size() != 1)
+        if (i.get_output().get_node()->get_outputs().size() != 1)
         {
             throw "get_input_op called on an argument w/ multiple outputs";
         }
@@ -156,7 +154,15 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
     return m_inputs.at(index).get_output().get_node();
 }
 
-NodeVector Node::get_input_ops() //const
+Node::~Node()
+{
+    for (auto& input : m_inputs)
+    {
+        input.get_output().remove_input(&input);
+    }
+}
+
+NodeVector Node::get_input_ops()
 {
     NodeVector result;
     for (auto& i : get_inputs())
@@ -165,23 +171,7 @@ NodeVector Node::get_input_ops() //const
             result.push_back(i.get_output().get_node());
         }
     }
-    if (m_arguments != result)
-    {
-        throw ngraph_error("Arguments aren't equal: different values");
-    }
     return result;
-}
-
-std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
-                                          const std::shared_ptr<Node>& c)
-{
-    auto adjoints_it = m_adjoint_map.find(c.get());
-    if (adjoints_it == m_adjoint_map.end())
-    {
-        adjoints_it =
-            m_adjoint_map.insert({c.get(), autodiff::Adjoints(shared_from_this(), c)}).first;
-    }
-    return adjoints_it->second.get(x);
 }
 
 std::vector<std::shared_ptr<Function>> Node::get_functions() const

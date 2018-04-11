@@ -16,6 +16,7 @@
 
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/util.hpp"
 
@@ -223,11 +224,14 @@ shared_ptr<Node> op::SelectAndScatter::copy_with_new_args(const NodeVector& new_
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SelectAndScatter>(new_args.at(0),
-                                         new_args.at(1),
-                                         new_args.at(2),
-                                         m_selection_function,
-                                         m_scatter_function,
-                                         m_window_shape,
-                                         m_window_movement_strides);
+    auto node = make_shared<SelectAndScatter>(new_args.at(0),
+                                              new_args.at(1),
+                                              new_args.at(2),
+                                              m_selection_function,
+                                              m_scatter_function,
+                                              m_window_shape,
+                                              m_window_movement_strides);
+    node->m_selection_function = clone_function(*m_selection_function);
+    node->m_scatter_function = clone_function(*m_scatter_function);
+    return node;
 }

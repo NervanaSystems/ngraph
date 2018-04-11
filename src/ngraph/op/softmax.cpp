@@ -59,8 +59,10 @@ shared_ptr<Node> op::Softmax::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Softmax>(new_args.at(0), m_axes);
 }
 
-void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
+
     auto z = delta * shared_from_this();
     auto zsum = make_shared<op::Sum>(z, m_axes);
 

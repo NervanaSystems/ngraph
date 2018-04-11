@@ -18,20 +18,26 @@
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 
-using namespace ngraph::runtime::gpu;
+using namespace ngraph;
 
-std::shared_ptr<ngraph::runtime::Backend> GPU_Manager::allocate_backend()
+std::shared_ptr<ngraph::runtime::Backend> runtime::gpu::GPU_Manager::allocate_backend()
 {
     return std::make_shared<GPU_Backend>();
 }
 
+std::vector<size_t> runtime::gpu::GPU_Manager::get_subdevices() const
+{
+    throw std::runtime_error("Unimplemented method");
+}
+
 std::shared_ptr<ngraph::runtime::ExternalFunction>
-    GPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
+    runtime::gpu::GPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
     return std::make_shared<GPU_ExternalFunction>(fun);
 }
 
-ngraph::runtime::Manager::Factory GPU_Manager::factory = ngraph::runtime::Manager::register_factory(
-    "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-        return std::make_shared<GPU_Manager>();
-    });
+ngraph::runtime::Manager::Factory runtime::gpu::GPU_Manager::factory =
+    ngraph::runtime::Manager::register_factory(
+        "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
+            return std::make_shared<GPU_Manager>();
+        });

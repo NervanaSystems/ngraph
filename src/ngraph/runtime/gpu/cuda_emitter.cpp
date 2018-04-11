@@ -25,20 +25,19 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::gpu;
 
-CUDAEmitter::CUDAEmitter(GPUPrimitiveEmitter* emitter)
+runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter)
     : m_primitive_emitter(emitter)
 {
 }
 
-size_t CUDAEmitter::build_pad(const GPURuntimeContext* ctx,
-                              const std::array<std::string, 2>& dtypes,
-                              const ngraph::Shape& input_shape,
-                              const ngraph::Shape& output_shape,
-                              const ngraph::Shape& padding_below,
-                              const ngraph::Shape& padding_above,
-                              const ngraph::Shape& padding_interior)
+size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContext* ctx,
+                                            const std::array<std::string, 2>& dtypes,
+                                            const ngraph::Shape& input_shape,
+                                            const ngraph::Shape& output_shape,
+                                            const ngraph::Shape& padding_below,
+                                            const ngraph::Shape& padding_above,
+                                            const ngraph::Shape& padding_interior)
 {
     if (padding_interior.size())
     {

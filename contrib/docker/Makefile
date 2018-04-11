@@ -25,7 +25,7 @@
 # Override with make PARALLEL="-j <num_parallel_processes>" where
 #    <num_parallel_processes> = the number of make processes to run in parallel
 # Turn off with make PARALLEL=
-PARALLEL=-j 22 
+PARALLEL=22 
 
 # DIR is an internal variable that serves as an anchor to this cloned git
 # repository.  DIR is mounted into the docker container, so that builds
@@ -48,9 +48,17 @@ GIT_COMMIT = $(shell git rev-parse HEAD)
 DBUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
 
+# Look for evidence if GPU backend is supported on the platform
+NVIDIA_SMI = $(shell which nvidia-smi)
+
 # Enable additional options to be added on the command line
 ifndef CMAKE_OPTIONS_EXTRA
     CMAKE_OPTIONS_EXTRA=
+endif
+
+# Allow linking pre-built third-party cache files (future)
+ifndef THIRD_PARTY_CACHE_DIR
+    THIRD_PARTY_CACHE_DIR=
 endif
 
 # OS set to 'ubuntu1604' by default
@@ -59,13 +67,29 @@ ifndef OS
     OS="ubuntu1604"
 endif
 
+# Configuration for specific reference OS in Dockerfiles
 ifeq ("$(shell echo ${OS} | grep centos)","centos74")
     RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_centos_user.sh
-    DOCKERFILE=Dockerfile.ngraph.centos74_cmake3
+    CPU_DOCKERFILE=Dockerfile.ngraph.centos74
 else
-    DOCKERFILE ?= "Dockerfile.ngraph"
-    RUN_AS_USER_SCRIPT ?= ${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
+    CPU_DOCKERFILE="Dockerfile.ngraph.ubuntu1604"
+    RUN_AS_USER_SCRIPT=${DOCKUSER_HOME}/ngraph-test/contrib/docker/run_as_ubuntu_user.sh
     CMAKE_OPTIONS_EXTRA+=-DNGRAPH_USE_PREBUILT_LLVM=TRUE
+endif
+
+# Build GPU backend if NVIDIA_SMI command is found
+# Sets CMAKE_OPTIONS_EXTRA to introduce GPU build configuration to cmake
+# Configuration for GPU backend in Dockerfiles with "_gpu" suffix
+# The nvidia-docker command must be used for any targets that actually utilize GPU devices
+ifneq ("$(shell echo ${NVIDIA_SMI} | grep nvidia-smi)","")
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
+    DOCKERFILE=${CPU_DOCKERFILE}_gpu
+    DOCKER_CMD=nvidia-docker
+    DOCKER_CMD_MESG=GPU appears to be supported on this platform.  Building for GPU and CPU backend support.
+else
+    DOCKERFILE=${CPU_DOCKERFILE}
+    DOCKER_CMD=docker
+    DOCKER_CMD_MESG=GPU does not appear to be supported on this platform.  Building for CPU backend support only.
 endif
 
 # For gcc builds, we do NOT regard warnings as errors
@@ -102,6 +126,7 @@ all: check_gcc check_clang
 
 # Docker actions
 
+# Isolate specific dockerfiles in a .build_* subdirectory
 expand_dockerfile_templates:
 	@echo "OS=${OS}"
 	@echo "DOCKERFILE=${DOCKERFILE}"
@@ -111,122 +136,181 @@ expand_dockerfile_templates:
 	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' ${DOCKERFILE} > "${DBUILD_DIR}"/Dockerfile.build_ngraph
 
 build_docker_image: expand_dockerfile_templates
-	$(DOCKER_BUILD) -f="${DBUILD_DIR}"/Dockerfile.build_ngraph --build-arg python_version="${PYTHON_VERSION}" -t=build_ngraph:"${DBUILD_VERSION}" .
-	# remove the tag for the previous latest image
-	docker rmi build_ngraph:latest || echo "keep going if docker rmi command fails"
-	docker tag `docker images -q "build_ngraph:${DBUILD_VERSION}"` build_ngraph:latest
+	@echo ${DBUILD_DIR}
+	export CONTEXTDIR=${DBUILD_DIR};./make-dimage.sh
+	docker tag build_ngraph:latest build_ngraph:${DBUILD_VERSION}
 
 build_docker: build_docker_image
 
 # Build docs
 docs: sphinx_doc
 
+# Docs build does not depend on GPU dependencies
 sphinx_doc: build_docker_image
 	# sphinx html docs build
 	docker run --rm --tty \
             ${VOLUME} \
-	    {DOCKER_RUN_ENV} \
+	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-test/doc/sphinx; env VERBOSE=1 make html 2>&1 | tee make_sphinx_html.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-docs.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Build
 build_all: build_gcc build_clang
 
+# Build targets ALWAYS clean build directories (BUILD-GCC, BUILD-CLANG) prior to building
+# Always use docker command to build docker images
+# nvidia-docker command is not appropriate
 build_gcc: build_docker_image
-	# Remove old distribution directory if present
-	( test -d "${DIR}"/BUILD-GCC/ngraph_dist && rm -fr "${DIR}"/BUILD-GCC/ngraph_dist && echo "Removed old ${DIR}/BUILD-GCC/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
-	# Make BUILD-GCC directory as user
-	mkdir -p "${DIR}"/BUILD-GCC
-	chmod ug+rwx "${DIR}"/BUILD-GCC
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-test/BUILD-GCC/unit-test-results.xml" \
+	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN='build_gcc' \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -x; set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# Build targets ALWAYS clean build directories (BUILD-GCC, BUILD-CLANG) prior to building
+# Always use docker command to build docker images
+# nvidia-docker command is not appropriate
 build_clang: build_docker_image
-	# Remove old distribution directory if present
-	( test -d "${DIR}"/BUILD-CLANG/ngraph_dist && rm -fr "${DIR}"/BUILD-CLANG/ngraph_dist && echo "Removed old ${DIR}/BUILD-CLANG/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
-	# Make BUILD-CLANG directory as user
-	mkdir -p "${DIR}"/BUILD-CLANG
-	chmod ug+rwx "${DIR}"/BUILD-CLANG
+	@echo ""
+	@echo "${DOCKER_CMD_MESG}"
+	@echo ""
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG/unit-test-results.xml" \
+	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN='build_clang' \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; if [ -f "/etc/centos-release" ]; then cat /etc/centos-release; fi; if [ -f "/etc/lsb-release" ]; then cat /etc/lsb-release; fi; uname -a ; cat /etc/os-release || true; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Check (run unit-tests)
-
 check_all: check_gcc check_clang
 
+# Always use the platform-specific docker command to run unit tests
+# ngraph make check target executes unit-test-check and style-check
 check_gcc: build_gcc
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-test/BUILD-GCC/unit-test-results.xml" \
+	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN=check_gcc \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-GCC; env VERBOSE=1 make unit-test-check 2>&1 | tee make_check_gcc.log ; sed -E -e 's/classname\=\"[a-zA-Z0-9_]+/&1_gcc/' unit-test-results.xml > unit-test-results-gcc.xml" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
+# Always use the platform-specific docker command to run unit tests
+# ngraph make check target executes unit-test-check and style-check
 check_clang: build_clang
-	docker run --rm --tty \
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG/unit-test-results.xml" \
+	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN=check_clang \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log ; sed -E -e 's/classname\=\"[a-zA-Z0-9_]+/&1_clang/' unit-test-results.xml > unit-test-results-clang.xml" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-style_clang: build_clang
-	docker run --rm --tty \
+# Always use the platform-specific docker command to run unit tests
+unit_test_check_gcc: build_gcc
+	${DOCKER_CMD} run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG/unit-test-results.xml" \
+	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN='unit-test-check_gcc' \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG; env VERBOSE=1 make style-check 2>&1 | tee make_style_check_clang.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
+
+# Always use the platform-specific docker command to run unit tests
+unit_test_check_clang: build_clang
+	${DOCKER_CMD} run --rm --tty \
+            ${VOLUME} \
+	    ${DOCKER_RUN_ENV} \
+	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN='unit-test-check_clang' \
+            --env RUN_UID="$(shell id -u)" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
+            "build_ngraph:${DBUILD_VERSION}" \
+	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
+
+style_check_clang: build_clang
 
 # Install
 
 install_all: install_gcc install_clang
 
-install_gcc: check_gcc
-	# Puts ngraph_dist in BUILD-GCC directory.  This is used by Jenkins ngraph-tensorflow batch job.
+# install targets do not depend on GPU dependencies
+# no unit tests are executed
+# build prerequisites include GPU dependencies in the docker image automatically
+install_gcc: build_gcc
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
+	    --env BUILD_SUBDIR=BUILD-GCC \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN=install_gcc \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-GCC ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_gcc.log ; tar czf ngraph_dist_gcc.tgz ngraph_dist 2>&1 | tee make_tarball_gcc.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
-install_clang: check_clang
-	# Puts ngraph_dist in BUILD-CLANG directory.  This is used by Jenkins ngraph-tensorflow batch job.
+# install targets do not depend on GPU dependencies
+# no unit tests are executed
+# build prerequisites include GPU dependencies in the docker image automatically
+install_clang: build_clang
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
+	    --env BUILD_SUBDIR=BUILD-CLANG \
+	    --env CMAKE_OPTIONS_EXTRA="${CMAKE_OPTIONS_EXTRA}" \
+	    --env PARALLEL=${PARALLEL} \
+	    --env THIRD_PARTY_CACHE_DIR=${THIRD_PARTY_CACHE_DIR} \
+	    --env CMD_TO_RUN=install_clang \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-test/BUILD-CLANG ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_clang.log ; tar czf ngraph_dist_clang.tgz ngraph_dist 2>&1 | tee make_tarball_clang.log" \
+            --env RUN_CMD="${DOCKUSER_HOME}/ngraph-test/contrib/docker/build-ngraph-and-test.sh" \
             "build_ngraph:${DBUILD_VERSION}" \
 	    sh -c "cd ${DOCKUSER_HOME}; ${RUN_AS_USER_SCRIPT}"
 
 # Interactive shell
 
+# Always use the platform-specific docker command for the interactive shell 
 shell: build_docker_image
 	# "make shell" runs an interactive shell in the docker image, for debugging
-	docker run --rm --tty --interactive \
+	@echo "${DOCKER_CMD_MESG}"
+	${DOCKER_CMD} run --rm --tty --interactive \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
@@ -240,17 +324,4 @@ clean:
 	rmdir "${DIR}"/contrib/docker/.build-* || echo "keep going if directory is not present"
 	rm -fr "${DIR}"/BUILD-GCC
 	rm -fr "${DIR}"/BUILD-CLANG
-
-#
-# DEPRECATED TARGETS -- These WILL BE REMOVED in a future revision.
-#                       They exist here to maintain compatibility in Jenkins
-#                       jobs on older development branches.
-#
-
-check_cpu: check_all
-	echo 'WARNING: "make check_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make check_cpu" runs "make check_all" now, building with all compilers (gcc and clang)'
-
-build_ngraph_cpu: build_docker_image
-	echo 'WARNING: "make build_ngraph_cpu" is DEPRECATED and will be removed in a future revision'
-	echo '         "make build_ngraph_cpu" runs "make build_docker_image" now'
+	rm -fr "${DIR}"/BUILD-DOCS

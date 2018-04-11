@@ -37,6 +37,7 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<Parameter>(output.get_element_type(), output.get_shape());
 }
 
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
+void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    auto delta = deltas.at(0);
 }
