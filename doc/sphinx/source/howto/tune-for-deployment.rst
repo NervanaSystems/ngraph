@@ -1,9 +1,9 @@
 .. tune-for-deployment.rst
 
 
-#####################################################
-Fine-tune code deployment to nGraph-enabled devices  
-#####################################################
+############################################
+Fine-tune code deployment to nGraph devices  
+############################################
 
 When deploying code to nGraph-enabled devices, there are some additional 
 configuration options that can be incorporated. Fine-tuning an nGraph-enabled
@@ -29,10 +29,12 @@ something unique to that framework-model topology. The larger and more complex a
 framework is, the harder it becomes to extract the best performance; default-enabled
 configuration options from the framework side can slow down compilation time 
 without the developer being any the wiser. Sometimes only `a few small`_ 
-adjustments can increase performance   
+adjustments can increase performance. Likewise, a minimally-designed framework
+could offer significant performance-improvement opportunities by lowering overhead.
 
 For this reason, we're providing some of the more commonly-used options for 
-fine-tuning a code deployment. 
+fine-tuning various kinds code deployments to the nGraph-enabled devices we 
+currently support. Watch this section for new updates. 
 
 
 Training Deep Neural Networks
@@ -136,13 +138,14 @@ Intra-op and inter-op parallelism
 * ``inter_op_parallelism_threads``
 
 Some frameworks attempt to use these settings to improve performance; however, 
-are not sufficient to achieve optimal performance. Framework-based adjustments 
-cannot access the underlying  NUMA configuration in multi-socket Intel Xeon 
-processor-based platforms.
+they are often not sufficient to achieve optimal performance. Framework-based 
+adjustments cannot access the underlying  NUMA configuration in multi-socket 
+Intel Xeon processor-based platforms.  NUMA stands for :abbr:`Non-Uniform Memory Access (NUMA)`. 
+It indicates how each CPU can access memory attached to each socket. 
 
-In addition, without the knowledge of CPU socket and NUMA configuration, simple 
+In addition, without the knowledge of CPU socket and NUMA configuration, a simple 
 thread affinity (as in the case of thread pool) does not lead to optimal 
-performance. In fact, it can sometimes prohibitively decrease throughput, as a 
+performance. In fact, it can sometimes prohibitively decrease throughput; a 
 core from socket 0 might have to continually access cache lines from the memory 
 bank of socket 1, increasing bandwidth demands on the Intel® Ultra-Path 
 Interconnect (Intel® UPI). This situation exacerbates with larger number of 
@@ -152,13 +155,14 @@ configuration parameters to achieve the best performance for NN workloads on
 CPU platforms.
 
 
+
+
 .. rubric:: Footnotes
 
-.. [f1] Benchmarking performance of DL systems is a young discipline; it is a
-   good idea to be vigilant for atypical results based on distortions in the 
-   configuration parameters of benchmarks used. Every topology is different, and 
-   performance increases for any model can be achieved through multiple means.    
-
+.. [#f1] Benchmarking performance of DL systems is a young discipline; it is a
+   good idea to be vigilant for results based on atypical distortions in the 
+   configuration parameters. Every topology is different, and performance 
+   increases or slowdowns can be attributed to multiple means.    
 
 .. _engineering teams spend several weeks or months: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
