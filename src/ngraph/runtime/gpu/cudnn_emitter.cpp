@@ -26,31 +26,55 @@
 
 using namespace ngraph;
 
-cudnnTensorDescriptor_t
-    runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(const Shape& shape)
+cudnnTensorDescriptor_t runtime::gpu::cudnn_util::tensor_descriptor_from_shape(const Shape& shape)
 {
     cudnnTensorDescriptor_t desc;
     cudnnCreateTensorDescriptor(&desc);
-    cudnnSetTensor4dDescriptor(
-        desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1], shape[2], shape[3]);
-    return desc;
-}
 
-cudnnTensorDescriptor_t
-    runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(const Shape& shape)
-{
-    std::vector<int> dimensions(shape.size());
-    for (auto i = 0u; i < shape.size(); i++)
+    if (shape.size() < 4)
     {
-        dimensions[i] = static_cast<int>(shape[i]);
+        std::array<int, 4> dimensions;
+        size_t pos = 0;
+        for (size_t i = shape.size(); i < 4; i++)
+        {
+            dimensions[pos++] = 1;
+        }
+        for (size_t i = 0; i < shape.size(); i++)
+        {
+            dimensions[pos++] = static_cast<int>(shape[i]);
+        }
+        cudnnSetTensor4dDescriptor(desc,
+                                   CUDNN_TENSOR_NCHW,
+                                   CUDNN_DATA_FLOAT,
+                                   dimensions[0],
+                                   dimensions[1],
+                                   dimensions[2],
+                                   dimensions[3]);
     }
-    cudnnTensorDescriptor_t desc;
-    cudnnCreateTensorDescriptor(&desc);
-    cudnnSetTensorNdDescriptor(desc,
-                               CUDNN_DATA_FLOAT,
-                               dimensions.size(),
-                               dimensions.data(),
-                               runtime::gpu::cudnn_util::compute_strides(dimensions).data());
+    else if (shape.size() == 4)
+    {
+        cudnnSetTensor4dDescriptor(desc,
+                                   CUDNN_TENSOR_NCHW,
+                                   CUDNN_DATA_FLOAT,
+                                   static_cast<int>(shape[0]),
+                                   static_cast<int>(shape[1]),
+                                   static_cast<int>(shape[2]),
+                                   static_cast<int>(shape[3]));
+    }
+    else
+    {
+        std::vector<int> dimensions(shape.size());
+        for (auto i = 0u; i < shape.size(); i++)
+        {
+            dimensions[i] = static_cast<int>(shape[i]);
+        }
+        cudnnSetTensorNdDescriptor(desc,
+                                   CUDNN_DATA_FLOAT,
+                                   dimensions.size(),
+                                   dimensions.data(),
+                                   runtime::gpu::cudnn_util::compute_strides(dimensions).data());
+    }
+
     return desc;
 }
 
@@ -234,12 +258,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     }
 
     cudnnPoolingDescriptor_t desc;
-    cudnnTensorDescriptor_t input_desc;
-    cudnnTensorDescriptor_t output_desc;
+    auto input_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(input_shape);
+    auto output_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(output_shape);
     if (input_shape.size() == 4)
     {
-        input_desc = runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(input_shape);
-        output_desc = runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(output_shape);
         cudnnCreatePoolingDescriptor(&desc);
         cudnnSetPooling2dDescriptor(desc,
                                     pool_op,
@@ -253,14 +275,6 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     }
     else if (input_shape.size() == 5)
     {
-        if (window_shape.size() != 3 || window_strides.size() != 3 || padding_below.size() != 3)
-        {
-            throw std::runtime_error(
-                "3d pooling requested but window properties are not 3 dimensional.");
-        }
-        input_desc = runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(input_shape);
-        output_desc = runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(output_shape);
-
         std::vector<int> w_strides(window_strides.size());
         std::vector<int> w_shape(window_shape.size());
         std::vector<int> w_padding(padding_below.size());
