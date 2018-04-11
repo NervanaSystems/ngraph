@@ -458,6 +458,16 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(make_shared<op::Abs>(label), make_shared<op::Abs>(add)));
     ASSERT_EQ(n.get_pattern_map()[label], add);
 
+    //Correct argument order
+    ASSERT_FALSE(n.match(b - a, a - b));
+    auto aab = a * (a - b);
+    auto paab = pattern * (pattern - b);
+    ASSERT_TRUE(n.match(paab, aab));
+    auto aba = a * (b - a);
+    ASSERT_FALSE(n.match(paab, aba));
+    auto paba = pattern * (b - pattern);
+    ASSERT_FALSE(n.match(paba, aab));
+
     //Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
