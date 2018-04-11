@@ -55,7 +55,7 @@ size_t GPUPrimitiveEmitter::lookup(std::string hash)
     }
     return std::numeric_limits<size_t>::max();
 }
-size_t GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
+void GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
 {
     m_primitive_map.insert({hash, index});
 }

@@ -96,7 +96,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     if (input_shape.size() <= 4)
     {
         // construct input tensor descriptor rt impl.
-        std::array<size_t, 4> dimensions;
+        std::array<int, 4> dimensions;
         size_t pos = 0;
         for (size_t i = input_shape.size(); i < 4; i++)
         {
@@ -104,7 +104,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         }
         for (size_t i = 0; i < input_shape.size(); i++)
         {
-            dimensions[pos++] = input_shape[i];
+            dimensions[pos++] = static_cast<int>(input_shape[i]);
         }
 
         get_input_desc = [dimensions]() {
@@ -144,16 +144,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     {
         auto dimensions = runtime::gpu::cudnn_util::get_vector_int_from_size_t(input_shape);
         get_input_desc = [dimensions]() {
-            float* x = new float();
-
             cudnnTensorDescriptor_t desc;
             cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(
-                desc,
-                CUDNN_DATA_FLOAT,
-                dimensions.size(),
-                dimensions.data(),
-                runtime::gpu::cudnn_util::compute_strides(dimensions).data());
+            cudnnSetTensorNdDescriptor(desc,
+                                       CUDNN_DATA_FLOAT,
+                                       static_cast<int>(dimensions.size()),
+                                       dimensions.data(),
+                                       cudnn_util::compute_strides(dimensions).data());
             return desc;
         };
 
@@ -166,12 +163,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         get_output_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
             cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(
-                desc,
-                CUDNN_DATA_FLOAT,
-                dimensions.size(),
-                dimensions.data(),
-                runtime::gpu::cudnn_util::compute_strides(dimensions).data());
+            cudnnSetTensorNdDescriptor(desc,
+                                       CUDNN_DATA_FLOAT,
+                                       static_cast<int>(dimensions.size()),
+                                       dimensions.data(),
+                                       cudnn_util::compute_strides(dimensions).data());
             return desc;
         };
     }
