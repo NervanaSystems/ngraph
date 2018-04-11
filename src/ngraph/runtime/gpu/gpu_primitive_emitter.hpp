@@ -41,7 +41,7 @@ namespace ngraph
                 std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
                 size_t insert(gpu::primitive* f);
                 size_t lookup(std::string hash);
-                size_t cache(const std::string& hash, const size_t& index);
+                void cache(const std::string& hash, const size_t& index);
 
             private:
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
