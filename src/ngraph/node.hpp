@@ -191,6 +191,7 @@ namespace ngraph
         /// Get all the nodes that uses the current node
         NodeVector get_users() const;
 
+        virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
 

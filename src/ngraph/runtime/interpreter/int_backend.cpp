@@ -53,31 +53,31 @@ shared_ptr<ngraph::runtime::TensorView>
     return static_pointer_cast<runtime::TensorView>(rc);
 }
 
-bool runtime::interpreter::INT_Backend::compile(const ngraph::Function& func)
+bool runtime::interpreter::INT_Backend::compile(std::shared_ptr<Function> func)
 {
-    if (!contains_key(m_function_map, &func))
+    if (!contains_key(m_function_map, func))
     {
         FunctionInstance instance;
-        instance.m_function = clone_function(func);
+        instance.m_function = func;
         instance.m_external_function =
             make_shared<interpreter::ExternalFunction>(instance.m_function);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<interpreter::INT_CallFrame>(cf);
-        m_function_map.insert({&func, instance});
+        m_function_map.insert({func, instance});
     }
     return true;
 }
 
-bool runtime::interpreter::INT_Backend::call(const Function& fun,
+bool runtime::interpreter::INT_Backend::call(std::shared_ptr<Function> func,
                                              const vector<shared_ptr<runtime::TensorView>>& outputs,
                                              const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
-    auto it = m_function_map.find(&fun);
+    auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
-        compile(fun);
-        it = m_function_map.find(&fun);
+        compile(func);
+        it = m_function_map.find(func);
     }
 
     if (it == m_function_map.end())

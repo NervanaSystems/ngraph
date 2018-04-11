@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -83,6 +84,12 @@ namespace ngraph
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The above-padding shape.
             const Shape& get_padding_above() const { return m_padding_above; }
+            /// \return The default value for MaxPool.
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
