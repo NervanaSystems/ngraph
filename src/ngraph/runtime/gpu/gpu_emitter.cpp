@@ -918,8 +918,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                << ", " << max_pool->get_window_movement_strides()[0] << ", "
                                << input_shape.back() << ", " << result_shape.back() << ");\n";
                     }
-                    // 2d max pool without padding (NCHW)
-                    else if (input_shape.size() >= 4)
+                    // 2d and 3d max pool (NCHW)
+                    else if (input_shape.size() == 4 || input_shape.size() == 5)
                     {
                         auto& cudnn_emitter =
                             external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -948,6 +948,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "Pooling currently only supports up to 3 spatial dimensions.");
                     }
 
                     if (pad_required)
