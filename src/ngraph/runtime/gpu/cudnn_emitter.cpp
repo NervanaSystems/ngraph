@@ -84,11 +84,7 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
     // descriptors for Nd tensors
     else
     {
-        std::vector<int> dimensions(input_shape.size());
-        for (auto i = 0u; i < input_shape.size(); i++)
-        {
-            dimensions[i] = static_cast<int>(input_shape[i]);
-        }
+        auto dimensions = cudnn_util::get_vector_int_from_size_t(input_shape);
         get_input_desc = [dimensions]() {
             float* x = new float();
 
@@ -155,14 +151,28 @@ size_t CUDNNEmitter::build_reduce_forward(GPURuntimeContext* ctx,
     return this->m_primitive_emitter->insert(reduce);
 }
 
-std::vector<int> cudnn_util::compute_strides(const std::vector<int>& dim)
+std::vector<int> cudnn_util::compute_strides(const Shape& shape)
 {
-    std::vector<int> strides(dim.size(), 1);
-    std::copy(dim.begin() + 1, dim.end(), strides.begin());
-    for (int64_t i = dim.size() - 2; i >= 0; i--)
+    return cudnn_util::get_vector_int_from_size_t(ngraph::row_major_strides(shape));
+}
+
+std::vector<int> cudnn_util::compute_strides(const std::vector<int>& shape)
+{
+    std::vector<int> strides(shape.size(), 1);
+    std::copy(shape.begin() + 1, shape.end(), strides.begin());
+    for (int64_t i = shape.size() - 2; i >= 0; i--)
     {
         strides[i] *= strides[i + 1];
     }
-
     return strides;
+}
+
+std::vector<int> cudnn_util::get_vector_int_from_size_t(const std::vector<size_t>& vec)
+{
+    std::vector<int> low_vec(vec.size(), 1);
+    for (int i = 0; i < vec.size(); i++)
+    {
+        low_vec[i] = static_cast<int>(vec[i]);
+    }
+    return low_vec;
 }

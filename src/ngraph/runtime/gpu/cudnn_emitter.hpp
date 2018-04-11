@@ -36,7 +36,9 @@ namespace ngraph
         {
             namespace cudnn_util
             {
-                std::vector<int> compute_strides(const std::vector<int>& dim);
+                std::vector<int> compute_strides(const Shape&);
+                std::vector<int> compute_strides(const std::vector<int>&);
+                std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
             class GPUPrimitiveEmitter;
 

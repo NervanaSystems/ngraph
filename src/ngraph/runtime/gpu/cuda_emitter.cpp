@@ -21,9 +21,8 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::gpu;
 
-CUDAEmitter::CUDAEmitter(GPUPrimitiveEmitter* emitter)
+runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter)
     : m_primitive_emitter(emitter)
 {
 }
