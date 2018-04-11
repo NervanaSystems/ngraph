@@ -25,9 +25,9 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::gpu;
 
-cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_4d_from_shape(const Shape& shape)
+cudnnTensorDescriptor_t
+    runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(const Shape& shape)
 {
     cudnnTensorDescriptor_t desc;
     cudnnCreateTensorDescriptor(&desc);
@@ -36,7 +36,8 @@ cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_4d_from_shape(const Shape&
     return desc;
 }
 
-cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_Nd_from_shape(const Shape& shape)
+cudnnTensorDescriptor_t
+    runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(const Shape& shape)
 {
     std::vector<int> dimensions(shape.size());
     for (auto i = 0u; i < shape.size(); i++)
@@ -49,16 +50,16 @@ cudnnTensorDescriptor_t cudnn_util::tensor_descriptor_Nd_from_shape(const Shape&
                                CUDNN_DATA_FLOAT,
                                dimensions.size(),
                                dimensions.data(),
-                               cudnn_util::compute_strides(dimensions).data());
+                               runtime::gpu::cudnn_util::compute_strides(dimensions).data());
     return desc;
 }
 
-std::vector<int> cudnn_util::compute_strides(const Shape& shape)
+std::vector<int> runtime::gpu::cudnn_util::compute_strides(const Shape& shape)
 {
-    return cudnn_util::get_vector_int_from_size_t(ngraph::row_major_strides(shape));
+    return runtime::gpu::cudnn_util::get_vector_int_from_size_t(row_major_strides(shape));
 }
 
-std::vector<int> cudnn_util::compute_strides(const std::vector<int>& shape)
+std::vector<int> runtime::gpu::cudnn_util::compute_strides(const std::vector<int>& shape)
 {
     std::vector<int> strides(shape.size(), 1);
     std::copy(shape.begin() + 1, shape.end(), strides.begin());
@@ -69,7 +70,8 @@ std::vector<int> cudnn_util::compute_strides(const std::vector<int>& shape)
     return strides;
 }
 
-std::vector<int> cudnn_util::get_vector_int_from_size_t(const std::vector<size_t>& vec)
+std::vector<int>
+    runtime::gpu::cudnn_util::get_vector_int_from_size_t(const std::vector<size_t>& vec)
 {
     std::vector<int> low_vec(vec.size(), 1);
     for (int i = 0; i < vec.size(); i++)
@@ -79,15 +81,15 @@ std::vector<int> cudnn_util::get_vector_int_from_size_t(const std::vector<size_t
     return low_vec;
 }
 
-CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
+runtime::gpu::CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
     : m_primitive_emitter(emitter)
 {
 }
 
-size_t CUDNNEmitter::build_reduce_forward(const GPURuntimeContext* ctx,
-                                          const cudnnReduceTensorOp_t& reduce_op,
-                                          const ngraph::Shape& input_shape,
-                                          const ngraph::AxisSet& reduction_axes)
+size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPURuntimeContext* ctx,
+                                                        const cudnnReduceTensorOp_t& reduce_op,
+                                                        const Shape& input_shape,
+                                                        const AxisSet& reduction_axes)
 {
     std::function<cudnnTensorDescriptor_t(void)> get_input_desc;
     std::function<cudnnTensorDescriptor_t(void)> get_output_desc;
@@ -140,17 +142,18 @@ size_t CUDNNEmitter::build_reduce_forward(const GPURuntimeContext* ctx,
     // descriptors for Nd tensors
     else
     {
-        auto dimensions = cudnn_util::get_vector_int_from_size_t(input_shape);
+        auto dimensions = runtime::gpu::cudnn_util::get_vector_int_from_size_t(input_shape);
         get_input_desc = [dimensions]() {
             float* x = new float();
 
             cudnnTensorDescriptor_t desc;
             cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(desc,
-                                       CUDNN_DATA_FLOAT,
-                                       dimensions.size(),
-                                       dimensions.data(),
-                                       cudnn_util::compute_strides(dimensions).data());
+            cudnnSetTensorNdDescriptor(
+                desc,
+                CUDNN_DATA_FLOAT,
+                dimensions.size(),
+                dimensions.data(),
+                runtime::gpu::cudnn_util::compute_strides(dimensions).data());
             return desc;
         };
 
@@ -163,11 +166,12 @@ size_t CUDNNEmitter::build_reduce_forward(const GPURuntimeContext* ctx,
         get_output_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
             cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(desc,
-                                       CUDNN_DATA_FLOAT,
-                                       dimensions.size(),
-                                       dimensions.data(),
-                                       cudnn_util::compute_strides(dimensions).data());
+            cudnnSetTensorNdDescriptor(
+                desc,
+                CUDNN_DATA_FLOAT,
+                dimensions.size(),
+                dimensions.data(),
+                runtime::gpu::cudnn_util::compute_strides(dimensions).data());
             return desc;
         };
     }
@@ -207,25 +211,24 @@ size_t CUDNNEmitter::build_reduce_forward(const GPURuntimeContext* ctx,
     return this->m_primitive_emitter->insert(reduce);
 }
 
-size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
-                                   const cudnnPoolingMode_t& pool_op,
-                                   const Prop& direction,
-                                   const ngraph::Shape& input_shape,
-                                   const ngraph::Shape& output_shape,
-                                   const ngraph::Strides& window_strides,
-                                   const ngraph::Shape& window_shape,
-                                   const ngraph::Shape& padding_below,
-                                   const ngraph::Shape& padding_above)
+size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
+                                                 const cudnnPoolingMode_t& pool_op,
+                                                 const Prop& direction,
+                                                 const Shape& input_shape,
+                                                 const Shape& output_shape,
+                                                 const Strides& window_strides,
+                                                 const Shape& window_shape,
+                                                 const Shape& padding_below,
+                                                 const Shape& padding_above)
 {
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "pool_op" << pool_op << "_dir" << static_cast<int>(direction) << "_i" << join(input_shape)
-       << "_o" << join(output_shape) << "_ws" << join(window_shape) << "_wst"
-       << join(window_strides) << "_pb" << join(padding_below) << "_pb" << join(padding_above);
+    ss << "pool_op" << pool_op << "_dir" << static_cast<int>(direction) << "_i"
+       << join(input_shape, "_") << "_o" << join(output_shape, "_") << "_ws"
+       << join(window_shape, "_") << "_wst" << join(window_strides, "_") << "_pb"
+       << join(padding_below, "_") << "_pb" << join(padding_above, "_");
     std::string hash = ss.str();
-    std::replace(hash.begin(), hash.end(), ' ', '_');
-    std::replace(hash.begin(), hash.end(), ',', '_');
 
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -239,8 +242,8 @@ size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     cudnnTensorDescriptor_t output_desc;
     if (input_shape.size() == 4)
     {
-        input_desc = cudnn_util::tensor_descriptor_4d_from_shape(input_shape);
-        output_desc = cudnn_util::tensor_descriptor_4d_from_shape(output_shape);
+        input_desc = runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(input_shape);
+        output_desc = runtime::gpu::cudnn_util::tensor_descriptor_4d_from_shape(output_shape);
         cudnnCreatePoolingDescriptor(&desc);
         cudnnSetPooling2dDescriptor(desc,
                                     pool_op,
@@ -259,8 +262,8 @@ size_t CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
             throw std::runtime_error(
                 "3d pooling requested but window properties are not 3 dimensional.");
         }
-        input_desc = cudnn_util::tensor_descriptor_Nd_from_shape(input_shape);
-        output_desc = cudnn_util::tensor_descriptor_Nd_from_shape(output_shape);
+        input_desc = runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(input_shape);
+        output_desc = runtime::gpu::cudnn_util::tensor_descriptor_Nd_from_shape(output_shape);
 
         std::vector<int> w_strides(window_strides.size());
         std::vector<int> w_shape(window_shape.size());

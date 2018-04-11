@@ -33,20 +33,18 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 
 size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContext* ctx,
                                             const std::array<std::string, 2>& dtypes,
-                                            const ngraph::Shape& input_shape,
-                                            const ngraph::Shape& output_shape,
-                                            const ngraph::Shape& padding_below,
-                                            const ngraph::Shape& padding_above,
-                                            const ngraph::Shape& padding_interior)
+                                            const Shape& input_shape,
+                                            const Shape& output_shape,
+                                            const Shape& padding_below,
+                                            const Shape& padding_above,
+                                            const Shape& padding_interior)
 {
     if (padding_interior.size())
     {
         throw std::runtime_error("Interior padding is not yet supported in the GPU transformer.");
     }
-    std::string hash = "pad_i" + join(input_shape) + "_pb" + join(padding_below) + "_pa" +
-                       join(padding_above) + "_pi" + join(padding_interior);
-    std::replace(hash.begin(), hash.end(), ' ', '_');
-    std::replace(hash.begin(), hash.end(), ',', '_');
+    std::string hash = "pad_i" + join(input_shape, "_") + "_pb" + join(padding_below, "_") + "_pa" +
+                       join(padding_above, "_") + "_pi" + join(padding_interior, "_");
 
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)

@@ -133,38 +133,3 @@ void runtime::gpu::emit_reshape(const std::string& name,
                                   0));  // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
 }
-
-// void runtime::gpu::emit_1d_max_pool(GPURuntimeContext* ctx,
-//                                     const std::string& name,
-//                                     const std::string& kernel,
-//                                     const std::array<std::string, 2>& data_types,
-//                                     size_t count,
-//                                     CUdeviceptr in,
-//                                     CUdeviceptr out,
-//                                     size_t width,
-//                                     size_t stride,
-//                                     size_t input_size,
-//                                     size_t output_size)
-// {
-//     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-//     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
-//     auto compiled_kernel = ctx->nvrtc_cache->get(name_signature);
-//     if (compiled_kernel == nullptr)
-//     {
-//         compiled_kernel = ctx->nvrtc_cache->set(name_signature, kernel);
-//     }
-
-//     void* args_list[] = {&in, &out, &input_strides, &trans_strides, &rank, &count};
-//     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-//                                   static_cast<unsigned int>(count),
-//                                   1,
-//                                   1, // grid dim
-//                                   1,
-//                                   1,
-//                                   1, // block dim
-//                                   0,
-//                                   NULL, // shared mem and stream
-//                                   args_list,
-//                                   0));  // arguments
-//     CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-// }
