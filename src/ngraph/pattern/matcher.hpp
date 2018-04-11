@@ -75,7 +75,7 @@ namespace ngraph
             static std::shared_ptr<T> unique_match(std::shared_ptr<Node> node)
             {
                 std::shared_ptr<T> matched;
-                for (auto arg : node->get_input_ops())
+                for (auto arg : node->get_arguments())
                 {
                     if (auto t_casted = std::dynamic_pointer_cast<T>(arg))
                     {
