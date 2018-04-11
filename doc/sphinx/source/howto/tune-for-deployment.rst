@@ -20,7 +20,7 @@ attempt to extract performance include:
 * Testing and recording the results of various system-level configuration options
   or flags enabled or disabled,
 * Compiling with a mix of custom environment variables, 
-* Finding semi-related comparisons for benchmarking[#f1]_, and 
+* Finding semi-related comparisons for benchmarking [#1]_, and 
 * Writing new assembly code to help a machine-learning algorithm learn faster or 
   more accurately that it did on previous runs. 
 
@@ -159,7 +159,7 @@ CPU platforms.
 
 .. rubric:: Footnotes
 
-.. [#f1] Benchmarking performance of DL systems is a young discipline; it is a
+.. [#1] Benchmarking performance of DL systems is a young discipline; it is a
    good idea to be vigilant for results based on atypical distortions in the 
    configuration parameters. Every topology is different, and performance 
    increases or slowdowns can be attributed to multiple means.    
