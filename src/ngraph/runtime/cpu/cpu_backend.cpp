@@ -46,30 +46,30 @@ std::shared_ptr<ngraph::runtime::TensorView>
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
 }
 
-bool runtime::cpu::CPU_Backend::compile(const ngraph::Function& func)
+bool runtime::cpu::CPU_Backend::compile(std::shared_ptr<Function> func)
 {
-    if (!contains_key(m_function_map, &func))
+    if (!contains_key(m_function_map, func))
     {
         FunctionInstance instance;
-        instance.m_function = clone_function(func);
+        instance.m_function = func;
         instance.m_external_function = make_shared<CPU_ExternalFunction>(instance.m_function);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
-        m_function_map.insert({&func, instance});
+        m_function_map.insert({func, instance});
     }
     return true;
 }
 
-bool runtime::cpu::CPU_Backend::call(const Function& func,
+bool runtime::cpu::CPU_Backend::call(std::shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::TensorView>>& outputs,
                                      const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
-    auto it = m_function_map.find(&func);
+    auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
         compile(func);
-        it = m_function_map.find(&func);
+        it = m_function_map.find(func);
     }
 
     if (it == m_function_map.end())
@@ -96,9 +96,9 @@ bool runtime::cpu::CPU_Backend::call(
     return true;
 }
 
-void runtime::cpu::CPU_Backend::remove_compiled_function(const Function& func)
+void runtime::cpu::CPU_Backend::remove_compiled_function(std::shared_ptr<Function> func)
 {
-    m_function_map.erase(&func);
+    m_function_map.erase(func);
 }
 
 std::shared_ptr<ngraph::runtime::TensorView> runtime::cpu::CPU_Backend::make_primary_tensor_view(
