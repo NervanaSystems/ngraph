@@ -33,6 +33,14 @@ void regclass_pyngraph_op_BatchNorm(py::module m)
                             const std::shared_ptr<ngraph::Node>&,
                             const std::shared_ptr<ngraph::Node>&,
                             const std::shared_ptr<ngraph::Node>&>());
+
+    batch_norm.def(py::init<double,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            bool&>());
 }
 
 void regclass_pyngraph_op_BatchNormBackprop(py::module m)

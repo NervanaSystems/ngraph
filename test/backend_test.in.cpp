@@ -2579,7 +2579,6 @@ TEST(${BACKEND_NAME}, exp)
 
 TEST(${BACKEND_NAME}, slice_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
@@ -2599,7 +2598,6 @@ TEST(${BACKEND_NAME}, slice_scalar)
 
 TEST(${BACKEND_NAME}, slice_matrix)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 2};
@@ -2619,7 +2617,6 @@ TEST(${BACKEND_NAME}, slice_matrix)
 
 TEST(${BACKEND_NAME}, slice_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{16};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
@@ -2639,7 +2636,6 @@ TEST(${BACKEND_NAME}, slice_vector)
 
 TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4};
@@ -2661,7 +2657,6 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
 
 TEST(${BACKEND_NAME}, slice_3d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -2687,7 +2682,6 @@ TEST(${BACKEND_NAME}, slice_3d)
 
 TEST(${BACKEND_NAME}, slice_3d_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4, 4};
@@ -2715,7 +2709,6 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
 
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4, 4};
@@ -5626,7 +5619,6 @@ TEST(${BACKEND_NAME}, zero_sized_subtract)
 
 TEST(${BACKEND_NAME}, convolution_outlining)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
