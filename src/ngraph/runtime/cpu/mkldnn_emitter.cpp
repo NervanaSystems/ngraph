@@ -681,7 +681,7 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
 
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                    const mkldnn::memory::desc& result_desc,
-                                   const size_t concat_dims)
+                                   const size_t concat_dim)
 {
     std::vector<mkldnn::memory::primitive::at> inputs_primitive;
     std::vector<size_t> inputs_data_index;
@@ -703,7 +703,7 @@ size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inpu
 
     // concat primtive descriptor
     mkldnn::concat::primitive_desc concat_pd =
-        mkldnn::concat::primitive_desc(result_desc, static_cast<int>(concat_dims), inputs_pd);
+        mkldnn::concat::primitive_desc(result_desc, static_cast<int>(concat_dim), inputs_pd);
     // concat primitive
     size_t concat_index = insert_primitive(
         new mkldnn::concat(concat_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));

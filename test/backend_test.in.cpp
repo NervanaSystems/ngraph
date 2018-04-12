@@ -485,12 +485,39 @@ TEST(${BACKEND_NAME}, concat_vector)
 
 TEST(${BACKEND_NAME}, concat_4d_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{3, 1, 1, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, concat_2d_tensor)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 

@@ -186,7 +186,7 @@ namespace ngraph
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
-                                    const size_t concat_dims);
+                                    const size_t concat_dim);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

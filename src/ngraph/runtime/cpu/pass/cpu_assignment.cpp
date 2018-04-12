@@ -83,7 +83,8 @@ namespace ngraph
                     auto concat = static_cast<op::Concat*>(node);
 
                     if (node->get_input_element_type(0) == element::f32 &&
-                        (node->get_input_shape(0)).size() == 4)
+                        ((node->get_input_shape(0)).size() == 4 ||
+                         (node->get_input_shape(0)).size() == 2))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
