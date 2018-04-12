@@ -785,7 +785,8 @@ void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
+    runtime::gpu::GPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

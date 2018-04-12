@@ -35,8 +35,9 @@ namespace ngraph
             class GPU_Backend : public Backend
             {
             public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
+                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::gpu::GPU_ExternalFunction>&
+                        external_function);
 
                 std::shared_ptr<ngraph::runtime::TensorView>
                     create_tensor(const ngraph::element::Type& element_type,
