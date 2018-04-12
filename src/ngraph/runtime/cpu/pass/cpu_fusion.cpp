@@ -13,6 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+#include <typeindex>
+#include <typeinfo>
 
 #include "cpu_fusion.hpp"
 #include <algorithm>
@@ -899,17 +901,6 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
     auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
 
-    // auto multiply_pred = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Multiply>(n));
-    // };
-    // //auto skip_multiply =
-    // auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10,100}, multiply_pred);
-
-    // auto broadcast_pred_1 = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
-    // };
-    // auto skip_param_1_1 = std::make_shared<pattern::op::Any>(param1_1, broadcast_pred_1);
-
     auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto broadcast_pred_1 = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
@@ -936,8 +927,6 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
                                                         false,
                                                         true,
                                                         AxisSet{0});
-
-    //auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
 
     auto X = std::make_shared<op::Add>(MatmulBias1, MatmulBias2);
     // construct forget gate
@@ -975,7 +964,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
 
     //Define a call back that needs to called once the DFG matches the pattern
     pattern::recurrent_graph_rewrite_callback callback =
-        [ct_label, param1_1, param1_2, param2_1, param2_2, bias1, bias2](
+        [ct_label, param1_1, param1_2, param2_1, param2_2, bias1, bias2, ct_1](
             pattern::RecurrentMatcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                          << m.get_match_root()->get_name();
@@ -987,6 +976,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
             auto label_bias1 = m.get_bound_nodes_for_pattern(bias1);
             auto label_bias2 = m.get_bound_nodes_for_pattern(bias2);
             auto label_ct = m.get_bound_nodes_for_pattern(ct_label);
+            auto ct_1_label = m.get_bound_nodes_for_pattern(ct_1);
 
             std::cout << "In LSTM fprop call back" << std::endl;
 
@@ -1003,73 +993,50 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
             //     return false;
             // }
 
+            std::cout << "label_ct: " << join(label_ct[0]->get_shape()) <<  " " << label_ct[0]->get_name() << std::endl;
+            Shape ct_shape{label_ct[0]->get_shape()};
             auto lstm = std::make_shared<op::LSTM>(label_param1_1[0],
                                                    label_param1_2[0],
                                                    label_param2_1[0],
                                                    label_param2_2[0],
                                                    label_bias1[0],
-                                                   label_bias2[0]);
+                                                   label_bias2[0],
+                                                   ct_shape);
+
 
             auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
             auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
 
             std::vector<std::shared_ptr<Node>> new_args;
-            for (auto user : label_ct[0]->get_users())
+            for (auto node : label_ct[0]->get_users())
             {
-                for (size_t i = 0; i < user->get_input_size(); i++)
+                //std::cout << "Add_inputs: " << node->get_name() << std::endl;
+                if (std::dynamic_pointer_cast<op::Multiply>(node))
                 {
-                    if (user->get_input_op(i) == label_ct[0])
+                    std::cout << "node_name: " << node->get_name() << std::endl;
+                    for (size_t i = 0; i < node->get_input_size(); i++)
                     {
-                        new_args.push_back(ct_output);
+                        if (node->get_input_op(i) == label_ct[0])
+                        {
+                            new_args.push_back(ct_output);
+                        }
+                        else
+                        {
+                            new_args.push_back(node->get_input_op(i));
+                        }     
+                        std::cout << "Multiply_input's shape: " <<  join(new_args[i]->get_shape())  <<  " " << new_args[i]->get_name() << std::endl;              
                     }
-                    else
-                    {
-                        new_args.push_back(user->get_input_op(i));
-                    }
+                    auto new_ct_node = node->copy_with_new_args(new_args);
+                    std::cout << "node: " << node->get_name() << " replaced with  " << new_ct_node->get_name() << std::endl;;
+                    ngraph::replace_node(node, new_ct_node); 
+                    new_args.clear();
                 }
             }
             ngraph::replace_node(m.get_match_root(), ht_output);
-            std::cout << "label_ct " << label_ct[0];
-
             return true;
-
-            // std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-            // for (auto bn_in : m_bn->get_output_inputs(0))
-            // {
-            //     auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(bn_in->get_node());
-            //     mgoes[mgoe->get_n()] = mgoe;
-            // }
-
-            // if (mgoes[0]->get_users().size() > 1)
-            // {
-            //     NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
-            //     return false;
-            // }
-
-            // mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
-
-            // mgoes[0] = m.match_root(); //replace relu instead of its GetOutputElement
-
-            // auto bn_relu = std::make_shared<op::BatchNormRelu>(
-            //     m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
-
-            // auto bn_relu_output = std::make_shared<op::GetOutputElement>(bn_relu, 0);
-            // auto bn_relu_mean = std::make_shared<op::GetOutputElement>(bn_relu, 1);
-            // auto bn_relu_var = std::make_shared<op::GetOutputElement>(bn_relu, 2);
-
-            // std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
-
-            // for (size_t i = 0; i < mgoes.size(); i++)
-            // {
-            //     ngraph::replace_node(mgoes.at(i), new_nodes[i]);
-            // }
-            // return true;
         };
-    //Matcher::match_recurring_pattern(func->get_result()->get_input_op(0), ht, param1_1, matches, empty_correlated_matches);
-    //auto m = std::make_shared<ngraph::pattern::Matcher>(ht, callback);
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
         ht, param1_1, empty_correlated_matches, callback);
-    //pattern::RecurrentMatcher m(ht, param1_1,  empty_correlated_matches, callback);
     this->add_matcher(m);
 }

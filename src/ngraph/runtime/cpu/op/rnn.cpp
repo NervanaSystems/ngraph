@@ -33,7 +33,8 @@ shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
                              new_args.at(2),
                              new_args.at(3),
                              new_args.at(4),
-                             new_args.at(5));
+                             new_args.at(5),
+                             m_lstm_cell_shape);
 }
 
 op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
@@ -41,12 +42,14 @@ op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
                std::shared_ptr<Node> param2_1,
                std::shared_ptr<Node> param2_2,
                std::shared_ptr<Node> bias1,
-               std::shared_ptr<Node> bias2)
+               std::shared_ptr<Node> bias2,
+               Shape lstm_cell_shape)
     : RequiresTensorViewArgs("LSTM", {param1_1, param1_2, param2_1, param2_2, bias1, bias2})
     , m_shape_input(param1_1->get_shape())
+    , m_lstm_cell_shape(lstm_cell_shape)
 {
     add_output(param1_1->get_element_type(), m_shape_input);
-    add_output(param1_1->get_element_type(), param1_1->get_shape());
+    add_output(param1_1->get_element_type(), m_lstm_cell_shape);
 }
 
 // op::LSTMBackprop::LSTMBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)

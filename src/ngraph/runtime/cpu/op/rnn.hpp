@@ -31,8 +31,10 @@ namespace ngraph
                  std::shared_ptr<Node> param2_1,
                  std::shared_ptr<Node> param2_2,
                  std::shared_ptr<Node> bias1,
-                 std::shared_ptr<Node> bias2);
+                 std::shared_ptr<Node> bias2,
+                 Shape lstm_cell_shape);
             Shape get_input_shape() const { return m_shape_input; }
+            Shape get_cell_shape() const { return m_lstm_cell_shape; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             // virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -40,6 +42,7 @@ namespace ngraph
 
         private:
             Shape m_shape_input;
+            Shape m_lstm_cell_shape;
         };
 
         /// \brief Elementwise LSTMBackprop operation.
