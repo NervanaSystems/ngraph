@@ -26,6 +26,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 
@@ -75,7 +76,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     bool modified = false;
 
     auto data_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
+        return std::dynamic_pointer_cast<op::GetOutputElement>(n) != nullptr;
     };
     auto data_slice = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 4}, data_pred);
     auto data_pattern = construct_data_pattern(data_slice);
