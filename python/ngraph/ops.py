@@ -21,10 +21,10 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, N
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling,\
-    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, \
-    GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
-    NotEqual, OneHot, Pad, Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, \
-    Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
+    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+    FunctionCall, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, \
+    Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, Relu, ReplaceSlice, \
+    Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Iterable, List
 
@@ -779,3 +779,9 @@ def batch_norm(eps,             # type: float
         return BatchNorm(eps, gamma, beta, data)
     else:
         return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+
+
+@nameable_op
+def function_call(function_to_call, args):  # type: (Node, NodeVector) -> Node
+    """Return Function call op."""
+    return FunctionCall(function_to_call, args)

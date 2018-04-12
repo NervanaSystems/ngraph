@@ -36,6 +36,7 @@ from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import equal
 from ngraph.ops import exp
+from ngraph.ops import function_call
 from ngraph.ops import floor
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
