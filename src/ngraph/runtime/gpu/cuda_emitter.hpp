@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPURuntimeContext;
+            struct GPURuntimeContext;
             class GPUPrimitiveEmitter;
 
             class CUDAEmitter
