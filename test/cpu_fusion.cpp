@@ -1082,10 +1082,10 @@ TEST(cpu_fusion, lstm_fprop_fusion)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/1_lstm_cell_forward.json");
+    pass_manager.register_pass<runtime::cpu::pass::RecurrentCPUFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3_lstm_cell_forward.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
 }
-

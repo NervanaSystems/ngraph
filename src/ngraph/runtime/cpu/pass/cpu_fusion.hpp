@@ -27,6 +27,7 @@ namespace ngraph
             namespace pass
             {
                 class CPUFusion;
+                class RecurrentCPUFusion;
             }
         }
     }
@@ -49,7 +50,6 @@ public:
         construct_conv_bias();
         construct_batch_norm_relu();
         construct_conv_relu();
-        construct_lstm_fprop();
     }
 
 private:
@@ -64,5 +64,17 @@ private:
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_conv_relu();
+};
+
+class ngraph::runtime::cpu::pass::RecurrentCPUFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RecurrentCPUFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_lstm_fprop();
+    }
+
+private:
     void construct_lstm_fprop();
 };

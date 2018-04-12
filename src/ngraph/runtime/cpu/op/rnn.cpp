@@ -46,6 +46,7 @@ op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
     , m_shape_input(param1_1->get_shape())
 {
     add_output(param1_1->get_element_type(), m_shape_input);
+    add_output(param1_1->get_element_type(), param1_1->get_shape());
 }
 
 // op::LSTMBackprop::LSTMBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
