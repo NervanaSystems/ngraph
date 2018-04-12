@@ -51,16 +51,16 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                bool compile(const ngraph::Function& fun) override;
+                bool compile(std::shared_ptr<Function> func) override;
 
                 bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
-                bool call(const ngraph::Function& fun,
+                bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
-                void remove_compiled_function(const Function& func) override;
+                void remove_compiled_function(std::shared_ptr<Function> func) override;
 
             private:
                 class FunctionInstance
@@ -71,7 +71,7 @@ namespace ngraph
                     std::shared_ptr<Function> m_function;
                 };
 
-                std::map<const Function*, FunctionInstance> m_function_map;
+                std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
             };
         }
     }
