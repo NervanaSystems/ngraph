@@ -4,6 +4,9 @@
 BatchNorm
 #########
 
+NOTE: This describes what the BatchNorm op should look like. The current version
+will be made a CPU transformer op.
+
 .. code-block:: cpp
 
    BatchNorm  // Produces a normalized output
@@ -14,34 +17,36 @@ Description
 
 Produces a normalized output.
 
-Version 1:
+Inputs
+------
 
-.. code-block:: cpp
++---------------------+-------------------------+--------------------------------+
+| Name                | Element Type            | Shape                          |
++=====================+=========================+================================+
+| ``input``           | same as ``gamma``       | \(..., C, ...\)                |
++---------------------+-------------------------+--------------------------------+
+| ``gamma``           | any                     | \(C\)                          |
++---------------------+-------------------------+--------------------------------+
+| ``beta``            | same as ``gamma``       | \(C\)                          |
++---------------------+-------------------------+--------------------------------+
+| ``global_mean``     | same as ``gamma``       | \(C\)                          |
++---------------------+-------------------------+--------------------------------+
+| ``global_variance`` | same as ``gamma``       | \(C\)                          |
++---------------------+-------------------------+--------------------------------+
+| ``use_global``      | ``bool``                | \(\)                           |
++---------------------+-------------------------+--------------------------------+
 
-   BatchNorm(epsilon, gamma, beta, input) -> normalized, mean, variance
 
 Attributes
 ----------
 
-+-----------------+-----------------+---------------------+
-| Name            | Type            | Notes               |
-+=================+=================+=====================+
-| ``epsilon``     | ``double``      | Bias for variance.  |
-+-----------------+-----------------+---------------------+
-
-
-Inputs
-------
-
-+-----------------+-------------------------+--------------------------------+
-| Name            | Element Type            | Shape                          |
-+=================+=========================+================================+
-| ``gamma``       | any                     | \(C\)                          |
-+-----------------+-------------------------+--------------------------------+
-| ``beta``        | same as ``gamma``       | \(C\)                          |
-+-----------------+-------------------------+--------------------------------+
-| ``input``       | same as ``gamma``       | \(\*, C, ...\)                 |
-+-----------------+-------------------------+--------------------------------+
++-----------------+--------------------+----------------------+
+| Name             | Type               | Notes               |
++==================+====================+=====================+
+| ``epsilon``      | same as ``input``  | Bias for variance   |
++------------------+--------------------+---------------------+
+| ``channel_axis`` | size_t             | Channel axis        |
++------------------+--------------------+---------------------+
 
 Outputs
 -------
@@ -55,51 +60,8 @@ Outputs
 | ``batch_variance``  | same as ``gamma``       | \(C\)                          |
 +---------------------+-------------------------+--------------------------------+
 
-The ``batch_mean`` and ``batch_variance`` are computed per-channel from ``input``
-and will serve as :math:`\mu` and :math:`\nu` in the mathematical definition.
-
-Version 2:
-
-.. code-block:: cpp
-
-   BatchNorm(epsilon, gamma, beta, input, mean, variance) -> normalized
-
-Attributes
-----------
-
-+-----------------+-----------------+---------------------+
-| Name            | Type            | Notes               |
-+=================+=================+=====================+
-| ``epsilon``     | ``double``      | Bias for variance.  |
-+-----------------+-----------------+---------------------+
-
-Inputs
-------
-+---------------------+-------------------------+--------------------------------+
-| Name                | Element Type            | Shape                          |
-+=====================+=========================+================================+
-| ``gamma``           | any                     | \(C\)                          |
-+---------------------+-------------------------+--------------------------------+
-| ``beta``            | same as ``gamma``       | \(C\)                          |
-+---------------------+-------------------------+--------------------------------+
-| ``input``           | same as ``gamma``       | \(\*, C, ...\)                 |
-+---------------------+-------------------------+--------------------------------+
-| ``global_mean``     | same as ``gamma``       | \(C\)                          |
-+---------------------+-------------------------+--------------------------------+
-| ``global_variance`` | same as ``gamma``       | \(C\)                          |
-+---------------------+-------------------------+--------------------------------+
-
-Outputs
--------
-
-+-----------------+-------------------------+--------------------------------+
-| Name            | Element Type            | Shape                          |
-+=================+=========================+================================+
-| ``normalized``  | same as ``gamma``       | same as ``input``              |
-+-----------------+-------------------------+--------------------------------+
-
-The ``global_mean`` and ``global_variance`` will serve as :math:`\mu` and :math:`\nu`
-in the mathematical definition.
+The ``batch_mean`` and ``batch_variance`` are computed per-channel from ``input``.
+The values only need to be computed if ``use_global`` is ``false`` or they are used.
 
 
 Mathematical Definition
@@ -110,12 +72,15 @@ channel, with channel being axis 1. For each position, there are
 :math:`C` channel values, each normalized independently.
 
 Normalization of a channel sample is controlled by two values, the
-mean :math:`\mu`, and the variance :math:`\nu`, and two scaling
-attributes, :math:`\gamma` and :math:`\beta`.
+mean :math:`\mu`, and the variance :math:`\sigma^2`, and two scaling
+attributes, :math:`\gamma` and :math:`\beta`. The values for :math:`\mu`
+and :math:`\sigma^2` come from either compuing the mean and variance of
+``input`` or from ``global_mean`` and ``global_variance``, depending on
+the value of ``use_global``.
 
 .. math::
 
-   y_c = \frac{x_c-\mu_c}{\sqrt{\nu_c+\epsilon}}\gamma_c+\beta_c
+   y_c = \frac{x_c-\mu_c}{\sqrt{\sigma^2_c+\epsilon}}\gamma_c+\beta_c
 
 The mean and variance can be arguments or computed for each channel of
 ``input`` over the positional axes. When computed from ``input``, the
