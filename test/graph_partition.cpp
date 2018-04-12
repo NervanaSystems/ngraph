@@ -35,172 +35,6 @@
 using namespace std;
 using namespace ngraph;
 
-static shared_ptr<runtime::Manager> get_cached_manager(const string& name)
-{
-    static unordered_map<string, shared_ptr<runtime::Manager>> cached_managers = {};
-    if (cached_managers.find(name) == cached_managers.end())
-    {
-        cached_managers[name] = runtime::Manager::get(name);
-    }
-    return cached_managers.at(name);
-}
-
-static shared_ptr<runtime::Backend> get_cached_backend(const string& name)
-{
-    static unordered_map<string, shared_ptr<runtime::Backend>> cached_backends = {};
-    if (cached_backends.find(name) == cached_backends.end())
-    {
-        cached_backends[name] = get_cached_manager(name)->allocate_backend();
-    }
-    return cached_backends.at(name);
-}
-
-class HybridCallFrame
-{
-public:
-    HybridCallFrame(const vector<shared_ptr<Function>>& sub_functions,
-                    const vector<shared_ptr<runtime::CallFrame>>& call_frames,
-                    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>&
-                        map_parameter_to_result,
-                    const vector<shared_ptr<op::Parameter>>& main_function_parameters,
-                    const vector<shared_ptr<op::Result>>& main_function_results)
-        : m_sub_functions(sub_functions)
-        , m_call_frames(call_frames)
-        , m_map_parameter_to_result(map_parameter_to_result)
-        , m_main_function_parameters(main_function_parameters)
-        , m_main_function_results(main_function_results)
-    {
-    }
-
-    void call(const vector<shared_ptr<runtime::TensorView>>& outputs,
-              const vector<shared_ptr<runtime::TensorView>>& inputs)
-    {
-        // Every parameter and result node in every sub_function maps to one TensorView
-        unordered_map<shared_ptr<Node>, shared_ptr<runtime::TensorView>> map_node_to_tensor_view;
-
-        // Main function's parameters and results
-        for (size_t i = 0; i < inputs.size(); ++i)
-        {
-            map_node_to_tensor_view[m_main_function_parameters[i]] = inputs[i];
-        }
-        for (size_t i = 0; i < outputs.size(); ++i)
-        {
-            map_node_to_tensor_view[m_main_function_results[i]] = outputs[i];
-        }
-
-        // Call call_frames
-        for (auto idx = 0; idx < m_call_frames.size(); idx++)
-        {
-            // Get placement
-            auto sub_function = m_sub_functions[idx];
-            auto call_frame = m_call_frames[idx];
-            Placement placement = get_colocated_function_placement(sub_function);
-            if (placement != Placement::CPU && placement != Placement::INTERPRETER)
-            {
-                throw ngraph_error("Placement must be CPU or INTERPRETER");
-            }
-
-            // Get backend
-            auto manager = get_cached_manager(placement_to_string(placement));
-            auto backend = get_cached_backend(placement_to_string(placement));
-
-            // Prepare input TensorViews
-            vector<shared_ptr<runtime::TensorView>> parameter_tvs;
-            for (auto parameter_node : sub_function->get_parameters())
-            {
-                if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
-                {
-                    parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
-                }
-                else
-                {
-                    auto result_node = m_map_parameter_to_result.at(parameter_node);
-                    auto result_tv = map_node_to_tensor_view.at(result_node);
-                    auto parameter_tv = backend->make_primary_tensor_view(
-                        parameter_node->get_element_type(), parameter_node->get_shape());
-                    copy_data(parameter_tv, read_vector<float>(result_tv));
-                    map_node_to_tensor_view[parameter_node] = parameter_tv;
-                    parameter_tvs.push_back(parameter_tv);
-                }
-            }
-
-            // Prepare output TensorViews
-            vector<shared_ptr<runtime::TensorView>> result_tvs;
-            for (auto result_node : sub_function->get_results())
-            {
-                if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
-                {
-                    result_tvs.push_back(map_node_to_tensor_view.at(result_node));
-                }
-                else
-                {
-                    auto result_tv = backend->make_primary_tensor_view(
-                        result_node->get_element_type(), result_node->get_shape());
-                    map_node_to_tensor_view[result_node] = result_tv;
-                    result_tvs.push_back(result_tv);
-                }
-            }
-
-            // Call
-            call_frame->call(result_tvs, parameter_tvs);
-        }
-    }
-
-protected:
-    vector<shared_ptr<Function>> m_sub_functions;
-    vector<shared_ptr<runtime::CallFrame>> m_call_frames;
-    unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
-    vector<shared_ptr<op::Parameter>> m_main_function_parameters;
-    vector<shared_ptr<op::Result>> m_main_function_results;
-};
-
-// HybridCallFrame servers 2 purposes:
-// 1. HybridBackend's main use case is to test device placement and graph partition routines.
-// 2. It also shows how glued-hybrid runtime can be built by combining different runtimes.
-//
-// By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
-// INTERPRETER tensor view). It falls back to CPU when requested by placement.
-class HybridBackend
-{
-public:
-    shared_ptr<runtime::TensorView> make_primary_tensor_view(const element::Type& element_type,
-                                                             const Shape& shape)
-    {
-        return get_cached_backend("INTERPRETER")->make_primary_tensor_view(element_type, shape);
-    }
-
-    // Returns CallFrame directly, simplifies calling process
-    shared_ptr<HybridCallFrame> compile(const shared_ptr<Function>& main_function)
-    {
-        // Store main_functions parameter and results, since main_function will be split
-        auto main_function_parameters = main_function->get_parameters();
-        auto main_function_results = main_function->get_results();
-
-        // Split to functions
-        vector<shared_ptr<Function>> sub_functions;
-        unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
-        tie(sub_functions, map_parameter_to_result) = split_function_by_placement(main_function);
-
-        // Make call frames
-        vector<shared_ptr<runtime::CallFrame>> call_frames;
-        for (auto sub_function : sub_functions)
-        {
-            Placement placement = get_colocated_function_placement(sub_function);
-            auto manager = get_cached_manager(placement_to_string(placement));
-            auto backend = get_cached_backend(placement_to_string(placement));
-            auto external = manager->compile(sub_function);
-            auto call_frame = backend->make_call_frame(external);
-            call_frames.push_back(call_frame);
-        }
-
-        return make_shared<HybridCallFrame>(sub_functions,
-                                            call_frames,
-                                            map_parameter_to_result,
-                                            main_function_parameters,
-                                            main_function_results);
-    }
-};
-
 // Perform all operations on INTERPRETER and fallback Multiply to CPU
 static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared_ptr<Node> node) {
     Placement placement;
@@ -214,6 +48,158 @@ static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared
         placement = Placement::INTERPRETER;
     }
     return placement;
+};
+
+// HybridCallFrame servers 2 purposes:
+// 1. HybridBackend's main use case is to test device placement and graph partition routines.
+// 2. It also shows how glued-hybrid runtime can be built by combining different runtimes.
+//
+// By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
+// INTERPRETER tensor view). It falls back to CPU when requested by placement.
+class HybridBackend
+{
+public:
+    HybridBackend(const function<Placement(shared_ptr<Node>)>& placement_policy)
+        : m_placement_policy(placement_policy)
+    {
+    }
+
+    ~HybridBackend() {}
+    shared_ptr<runtime::TensorView> create_tensor(const element::Type& element_type,
+                                                  const Shape& shape)
+    {
+        return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
+    }
+
+    bool compile(const shared_ptr<Function>& func)
+    {
+        if (!contains_key(m_function_map, func))
+        {
+            // Clone function
+            FunctionInstance instance;
+            instance.m_function = clone_function(*func);
+
+            // Run placement pass
+            pass::Manager pass_manager;
+            pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
+            pass_manager.run_passes(instance.m_function);
+
+            // Split function to sub_functions
+            tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+                split_function_by_placement(instance.m_function);
+            m_function_map.insert({func, instance});
+
+            // Compile subfunctions in corresponding backends
+            for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+            {
+                Placement placement = get_colocated_function_placement(sub_function);
+                auto backend = get_cached_backend(placement);
+                backend->compile(sub_function);
+            }
+        }
+        return true;
+    }
+
+    bool call(const shared_ptr<Function>& func,
+              const vector<shared_ptr<runtime::TensorView>>& outputs,
+              const vector<shared_ptr<runtime::TensorView>>& inputs)
+    {
+        // Get FunctionInstance
+        bool rc = true;
+        auto it = m_function_map.find(func);
+        if (it == m_function_map.end())
+        {
+            compile(func);
+            it = m_function_map.find(func);
+        }
+        if (it == m_function_map.end())
+        {
+            throw runtime_error("Error constructing backend.");
+        }
+        FunctionInstance& instance = it->second;
+
+        // Parameter and result node in sub_function maps to one TensorView
+        unordered_map<shared_ptr<Node>, shared_ptr<runtime::TensorView>> map_node_to_tensor_view;
+        for (size_t i = 0; i < inputs.size(); ++i)
+        {
+            map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
+        }
+        for (size_t i = 0; i < outputs.size(); ++i)
+        {
+            map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
+        }
+
+        // Call subfunctions
+        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        {
+            // Init backend
+            Placement placement = get_colocated_function_placement(sub_function);
+            auto backend = get_cached_backend(placement);
+
+            // Prepare parameter TensorViews
+            vector<shared_ptr<runtime::TensorView>> parameter_tvs;
+            for (auto parameter_node : sub_function->get_parameters())
+            {
+                if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+                {
+                    parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
+                }
+                else
+                {
+                    auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+                    auto result_tv = map_node_to_tensor_view.at(result_node);
+                    auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
+                                                               parameter_node->get_shape());
+                    copy_data(parameter_tv, read_vector<float>(result_tv));
+                    map_node_to_tensor_view[parameter_node] = parameter_tv;
+                    parameter_tvs.push_back(parameter_tv);
+                }
+            }
+
+            // Prepare result TensorViews
+            vector<shared_ptr<runtime::TensorView>> result_tvs;
+            for (auto result_node : sub_function->get_results())
+            {
+                if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
+                {
+                    result_tvs.push_back(map_node_to_tensor_view.at(result_node));
+                }
+                else
+                {
+                    auto result_tv = backend->create_tensor(result_node->get_element_type(),
+                                                            result_node->get_shape());
+                    map_node_to_tensor_view[result_node] = result_tv;
+                    result_tvs.push_back(result_tv);
+                }
+            }
+
+            // Call
+            backend->call(sub_function, result_tvs, parameter_tvs);
+        }
+        return rc;
+    }
+
+protected:
+    class FunctionInstance
+    {
+    public:
+        shared_ptr<Function> m_function;
+        vector<shared_ptr<Function>> m_sub_functions;
+        unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
+    };
+
+    shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
+    {
+        if (m_cached_backends.find(placement) == m_cached_backends.end())
+        {
+            m_cached_backends[placement] = runtime::Backend::create(placement_to_string(placement));
+        }
+        return m_cached_backends.at(placement);
+    }
+
+    map<Placement, shared_ptr<runtime::Backend>> m_cached_backends;
+    map<shared_ptr<Function>, FunctionInstance> m_function_map;
+    function<Placement(shared_ptr<Node>)> m_placement_policy;
 };
 
 TEST(graph_partition, placement_all_cpu_policy)
@@ -318,47 +304,42 @@ TEST(graph_partition, hybrid_abc_manual)
     shared_ptr<op::Parameter> P2 = RP2.second;
 
     // Backends
-    auto int_manager = runtime::Manager::get(placement_to_string(Placement::INTERPRETER));
-    auto int_backend = int_manager->allocate_backend();
-    auto cpu_manager = runtime::Manager::get(placement_to_string(Placement::CPU));
-    auto cpu_backend = cpu_manager->allocate_backend();
+    auto int_backend = runtime::Backend::create(placement_to_string(Placement::INTERPRETER));
+    auto cpu_backend = runtime::Backend::create(placement_to_string(Placement::CPU));
 
     // f0 on INT
-    auto a = int_backend->make_primary_tensor_view(element::f32, shape);
-    auto b = int_backend->make_primary_tensor_view(element::f32, shape);
-    auto c = int_backend->make_primary_tensor_view(element::f32, shape);
-    auto r0 = int_backend->make_primary_tensor_view(element::f32, shape);
-    auto r1 = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto a = int_backend->create_tensor(element::f32, shape);
+    auto b = int_backend->create_tensor(element::f32, shape);
+    auto c = int_backend->create_tensor(element::f32, shape);
+    auto r0 = int_backend->create_tensor(element::f32, shape);
+    auto r1 = int_backend->create_tensor(element::f32, shape);
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
-    auto f0_external = int_manager->compile(f0);
-    auto f0_call_frame = int_backend->make_call_frame(f0_external);
-    f0_call_frame->call({r0, r1}, {a, b, c});
+    int_backend->compile(f0);
+    int_backend->call(f0, {r0, r1}, {a, b, c});
 
     // f1 on CPU
-    auto p0 = cpu_backend->make_primary_tensor_view(element::f32, shape);
-    auto p1 = cpu_backend->make_primary_tensor_view(element::f32, shape);
-    auto r2 = cpu_backend->make_primary_tensor_view(element::f32, shape);
+    auto p0 = cpu_backend->create_tensor(element::f32, shape);
+    auto p1 = cpu_backend->create_tensor(element::f32, shape);
+    auto r2 = cpu_backend->create_tensor(element::f32, shape);
     copy_data(p0, read_vector<float>(r0));
     copy_data(p1, read_vector<float>(r1));
 
     auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
-    auto f1_external = cpu_manager->compile(f1);
-    auto f1_call_frame = cpu_backend->make_call_frame(f1_external);
-    f1_call_frame->call({r2}, {p0, p1});
+    cpu_backend->compile(f1);
+    cpu_backend->call(f1, {r2}, {p0, p1});
 
     // f2 on INT
-    auto p2 = int_backend->make_primary_tensor_view(element::f32, shape);
-    auto r = int_backend->make_primary_tensor_view(element::f32, shape);
+    auto p2 = int_backend->create_tensor(element::f32, shape);
+    auto r = int_backend->create_tensor(element::f32, shape);
     copy_data(p2, read_vector<float>(r2));
 
     auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
-    auto f2_external = int_manager->compile(f2);
-    auto f2_call_frame = int_backend->make_call_frame(f2_external);
-    f2_call_frame->call({r}, {p2});
+    int_backend->compile(f2);
+    int_backend->call(f2, {r}, {p2});
 
     // Check final result on INT
     EXPECT_EQ(read_vector<float>(r),
@@ -394,23 +375,17 @@ TEST(graph_partition, hybrid_abc)
     auto R = make_shared<op::Result>(E);
     auto f = make_shared<Function>(ResultVector{R}, op::ParameterVector{A, B, C});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(f);
-
-    auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(f);
-
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> r = backend->make_primary_tensor_view(element::f32, shape);
+    auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> r = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
@@ -435,25 +410,21 @@ TEST(graph_partition, hybrid_abcd)
     shared_ptr<Node> H = F + G;
     shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(f);
+    auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
+    backend->compile(f);
 
-    auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(f);
-
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> d = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> r = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> d = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> r = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    cf->call({r}, {a, b, c, d});
+    backend->call(f, {r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
@@ -475,23 +446,19 @@ TEST(graph_partition, hybrid_back_and_forth)
     shared_ptr<Node> F = E * C;
     shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(f);
+    auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
+    backend->compile(f);
 
-    auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(f);
-
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> r = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> r = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
@@ -516,23 +483,19 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     shared_ptr<Node> H = F + G;
     shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(f);
+    auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
+    backend->compile(f);
 
-    auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(f);
-
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> r = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> r = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    cf->call({r}, {a, b, c});
+    backend->call(f, {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
@@ -548,20 +511,16 @@ TEST(graph_partition, hybrid_no_split)
     shared_ptr<Node> C = A + B;
     shared_ptr<Function> f = make_shared<Function>(C, op::ParameterVector{A, B});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-    pass_manager.run_passes(f);
+    auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
+    backend->compile(f);
 
-    auto backend = make_shared<HybridBackend>();
-    auto cf = backend->compile(f);
-
-    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    cf->call({c}, {a, b});
+    backend->call(f, {c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
