@@ -20,10 +20,10 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
     Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, Broadcast, Ceiling, Concat, \
-    Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, GreaterEq,\
-    Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
-    OneHot, Pad, Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, \
+from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling,\
+    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, Greater, \
+    GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
+    NotEqual, OneHot, Pad, Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, \
     Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Iterable, List
@@ -761,3 +761,21 @@ def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> 
     :return: The new node with reversed axes.
     """
     return Reverse(node, AxisSet(reversed_axes))
+
+
+@nameable_op
+def batch_norm(eps,             # type: float
+               gamma,           # type: Node
+               beta,            # type: Node
+               data,            # type: Node
+               mean=None,       # type: Node
+               variance=None,   # type: Node
+               training=False,  # type: bool
+               name=None,       # type: str
+               ):
+    # type: (...) -> Node
+    """Return batch normalization node."""
+    if mean is None and variance is None:
+        return BatchNorm(eps, gamma, beta, data)
+    else:
+        return BatchNorm(eps, gamma, beta, data, mean, variance, training)

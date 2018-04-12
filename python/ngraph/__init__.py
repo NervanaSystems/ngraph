@@ -22,6 +22,7 @@ from ngraph.ops import add
 from ngraph.ops import asin
 from ngraph.ops import atan
 from ngraph.ops import avg_pool
+from ngraph.ops import batch_norm
 from ngraph.ops import broadcast
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
