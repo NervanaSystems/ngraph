@@ -50,7 +50,7 @@ void ngraph::runtime::cpu::pass::WeightFusion::construct_weight_fusion()
     auto conv = std::make_shared<ngraph::op::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
 
-    pattern::gr_callback_fn callback = [param](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_weight against " << m.match_root()->get_name();
 
         auto m_cvt_lt = m.match_root()->get_input_op(1);
