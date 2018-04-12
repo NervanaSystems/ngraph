@@ -12,25 +12,26 @@ ways to command your training or inference computations to run the way you want.
 
 Most of the time, and how this has worked :doc:`for many <../framework-integration-guides>` 
 of the "direct optimizations" we've shared with the developer community, 
-`engineering teams spend several weeks or months`_ working on extracting best 
-performance from a specific :abbr:`DL (Deep Learning)` model embedded in a 
-specific framework that is training a specific dataset. Some of the ways we 
-attempt to extract performance include: 
+`engineering teams carefully tune the workload to extract best performance`_ 
+from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
+that is training a specific dataset. Some of the ways we attempt to extract 
+performance include: 
 
 * Testing and recording the results of various system-level configuration options
   or flags enabled or disabled,
 * Compiling with a mix of custom environment variables, 
 * Finding semi-related comparisons for benchmarking [#1]_, and 
-* Writing new assembly code to help a machine-learning algorithm learn faster or 
-  more accurately that it did on previous runs. 
+* Tuning lower levels of system so that the machine-learning algorithm can learn 
+  faster or more accurately that it did on previous runs, such as with :doc:`../ops/index`. 
 
 In nearly every case, the "best" mix of configuration options boils down to 
 something unique to that framework-model topology. The larger and more complex a 
-framework is, the harder it becomes to extract the best performance; default-enabled
-configuration options from the framework side can slow down compilation time 
-without the developer being any the wiser. Sometimes only `a few small`_ 
-adjustments can increase performance. Likewise, a minimally-designed framework
-could offer significant performance-improvement opportunities by lowering overhead.
+framework is, the harder it becomes to extract the best performance; 
+configuration options that are enabled by "default" from the framework side can 
+sometimes slow down compilation time without the developer being any the wiser. 
+Sometimes only `a few small`_ adjustments can increase performance. Likewise, a 
+minimally-designed framework could offer significant performance-improvement 
+opportunities by lowering overhead.
 
 For this reason, we're providing some of the more commonly-used options for 
 fine-tuning various kinds code deployments to the nGraph-enabled devices we 
@@ -45,15 +46,17 @@ that can be used to tune for optimal performance when your system already has a
 version of nGraph installed.  
 
 Before tweaking various environment variables, be aware that how the computation 
-gets deployed depends upon the data format that the model is using. NHWC or NCHW
+gets executed depends upon the data format that the model is using. NHWC or NCHW
 are the two more common layouts, and the ultimate runtime can vary greatly -- 
 even when all other factors are the same -- when this detail is overlooked.
 
+For CPU backends (and most cuDNN), the preferred layout is ``NCHW``.
+
 * **N** -- Number of images per batch
-* **H** -- Height of the image
-* **W** -- Width of the image
 * **C** -- Channel of the image (expressed as a number like 3 for RGB and 1 
   for grayscale)
+* **H** -- Height of the image
+* **W** -- Width of the image
 
 MKL-DNN
 -------
@@ -85,7 +88,7 @@ Threading
 
 The number of threads set by ``OMP_NUM_THREADS`` ought not exceed the number of 
 physical cores. The threads should be pinned to their respective physical cores 
-and actived as follows:
+and activated as follows:
 
 * When ``HT=off``, ``KMP_AFFINITY=compact,granularity=fine``
 
@@ -100,8 +103,9 @@ configured for local memory allocation (``numactl --localloc``)
 
 Convolution shapes
 ^^^^^^^^^^^^^^^^^^
+
 * When **running inference, or training for forward-propagation and weight 
-  updates**,
+  updates**, for best performance:
   
   - the number of input channels should be 1, 3, or a multiple of SIMD-width (8 
     for AVX2 systems, 16 for AVX512 systems). 
@@ -120,7 +124,7 @@ Convolution shapes
 ^^^^^^^^^^^^^^^^^^^
 
 The best resource for this configuration option is the `gnu.org site`_ 
-``OMP_NUM_THREADS`` defaults to the number of physical cores. To check the 
+``OMP_NUM_THREADS`` defaults to the number of logical cores. To check the 
 number of cores on your system, you can run the following on the command-line to 
 see the details of your CPU: 
 
@@ -128,8 +132,6 @@ see the details of your CPU:
 
    $ lscpu
 
-Adjusting this parameter beyond matching the number of cores can have an impact 
-when using Intel® Xeon Phi™ (Knights Landing) for some models. 
 
 Intra-op and inter-op parallelism 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,22 +139,30 @@ Intra-op and inter-op parallelism
 * ``intra_op_parallelism_threads``
 * ``inter_op_parallelism_threads``
 
-Some frameworks attempt to use these settings to improve performance; however, 
-they are often not sufficient to achieve optimal performance. Framework-based 
-adjustments cannot access the underlying  NUMA configuration in multi-socket 
-Intel Xeon processor-based platforms.  NUMA stands for :abbr:`Non-Uniform Memory Access (NUMA)`. 
-It indicates how each CPU can access memory attached to each socket. 
+Some frameworks, like Tensorflow, use these settings to improve performance; 
+however, they are often not sufficient to achieve optimal performance. 
+Framework-based adjustments cannot access the underlying  NUMA configuration in 
+multi-socket Intel Xeon processor-based platforms, which is a key requirement for
+many kinds of inference-engine computations.  See the next section on 
+NUMA performance to learn more about this performance feature available to systems
+utilizing nGraph. 
 
-In addition, without the knowledge of CPU socket and NUMA configuration, a simple 
-thread affinity (as in the case of thread pool) does not lead to optimal 
-performance. In fact, it can sometimes prohibitively decrease throughput; a 
-core from socket 0 might have to continually access cache lines from the memory 
-bank of socket 1, increasing bandwidth demands on the Intel® Ultra-Path 
-Interconnect (Intel® UPI). This situation exacerbates with larger number of 
-sockets found in 4, 8, and 16 socket systems. We believe that users need to be 
-aware of system level optimizations in addition to framework specific 
-configuration parameters to achieve the best performance for NN workloads on 
-CPU platforms.
+
+NUMA performance 
+~~~~~~~~~~~~~~~~~
+
+NUMA stands for :abbr:`Non-Uniform Memory Access (NUMA)`. It indicates how each 
+CPU can access memory attached to each socket. 
+
+Without the "knowledge" of CPU socket and NUMA configuration, a simple thread 
+affinity (as in the case of thread pool) does not lead to optimal performance. 
+In fact, it can sometimes prohibitively decrease throughput; a core from socket 
+0 might have to continually access cache lines from the memory bank of socket 1, 
+increasing bandwidth demands on the Intel® Ultra-Path Interconnect (Intel® UPI). 
+This situation is exacerbated with larger number of sockets found in 4, 8, and 
+16-socket systems. We believe that users need to be aware of system level 
+optimizations in addition to framework specific configuration parameters to 
+achieve the best performance for NN workloads on CPU platforms.
 
 
 
@@ -164,7 +174,7 @@ CPU platforms.
    configuration parameters. Every topology is different, and performance 
    increases or slowdowns can be attributed to multiple means.    
 
-.. _engineering teams spend several weeks or months: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
+.. _engineering teams carefully tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
 .. _KMP options: https://software.intel.com/en-us/node/522691
 .. _MKLDNN: https://github.com/intel/mkl-dnn
