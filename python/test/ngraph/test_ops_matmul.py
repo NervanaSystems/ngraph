@@ -38,6 +38,7 @@ from test.ngraph.util import run_op_node
     ([2, 3, 4, 5], [5, 2, 3], None, 1),
     ([2, 3, 4, 5], [4, 5, 2, 4], 2, 2),
 ])
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_dot(left_shape, right_shape, reduction_axes_count, numpy_axes):
     np.random.seed(133391)
     left_input = -100.0 + np.random.rand(*left_shape) * 200.0
@@ -48,6 +49,7 @@ def test_dot(left_shape, right_shape, reduction_axes_count, numpy_axes):
     assert np.allclose(result, expected)
 
 
+@pytest.config.gpu_skip(reason='under investigation, runtime error is: function failed to compile')
 def test_dot_tensor_scalar():
     np.random.seed(133391)
     left_input = 10.0

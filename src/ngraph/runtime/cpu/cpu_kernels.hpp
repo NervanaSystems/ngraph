@@ -109,6 +109,7 @@ namespace ngraph
 {
     class Shape;
     class AxisSet;
+    class AxisVector;
 
     namespace runtime
     {
@@ -144,6 +145,24 @@ namespace ngraph
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape);
+
+                void reduce_max_2d_1rd_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape,
+                                               const AxisSet& reduction_axes);
+
+                void reshape_3d_3d_float32(float* input,
+                                           float* output,
+                                           const Shape& input_shape,
+                                           const AxisVector& input_axis_order,
+                                           const Shape& output_shape);
+
+                void reshape_4d_4d_float32(float* input,
+                                           float* output,
+                                           const Shape& input_shape,
+                                           const AxisVector& input_axis_order,
+                                           const Shape& output_shape);
             }
         }
     }

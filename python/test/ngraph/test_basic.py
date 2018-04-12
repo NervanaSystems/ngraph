@@ -19,11 +19,13 @@ import json
 
 import ngraph as ng
 from test.ngraph.util import get_runtime, run_op_node
+from ngraph.impl import Function, NodeVector
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
                                    np.int8, np.int16, np.int32, np.int64,
                                    np.uint8, np.uint16, np.uint32, np.uint64])
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_simple_computation_on_ndarrays(dtype):
     runtime = get_runtime()
 
@@ -45,6 +47,26 @@ def test_simple_computation_on_ndarrays(dtype):
     value_c = np.array([[21, 22], [23, 24]], dtype=dtype)
     result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([[630, 704], [782, 864]], dtype=dtype))
+
+
+def test_function_call():
+    runtime = get_runtime()
+    dtype = int
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, dtype=dtype, name='A')
+    parameter_b = ng.parameter(shape, dtype=dtype, name='B')
+    parameter_c = ng.parameter(shape, dtype=dtype, name='C')
+    parameter_list = [parameter_a, parameter_b, parameter_c]
+    ops = ((parameter_a + parameter_b) * parameter_c)
+    func = Function(NodeVector([ops]), parameter_list, 'addmul')
+    fc = ng.function_call(func, NodeVector(parameter_list))
+    computation = runtime.computation(fc, parameter_a, parameter_b, parameter_c)
+
+    value_a = np.array([[1, 2], [3, 4]], dtype=dtype)
+    value_b = np.array([[5, 6], [7, 8]], dtype=dtype)
+    value_c = np.array([[9, 10], [11, 12]], dtype=dtype)
+    result = computation(value_a, value_b, value_c)
+    assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
 
 
 def test_serialization():

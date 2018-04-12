@@ -1,38 +1,33 @@
 # nGraph python binding
 
-## Installation (If you haven't build nGraph yet.)
+## Installation
 
-Checkout nGraph and python wrapper code and build bdist wheel.
+### Install nGraph (Required)
 
 ```
-git clone https://github.com/NervanaSystems/ngraph.git
+Follow the [steps](http://ngraph.nervanasys.com/docs/latest/install.html) to build and install ngraph.
+```
+
+Clone the pybind repository
+
+```
 cd ngraph/python
+git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
 ```
 
-```
-pip install wheel
-```
-
-To build python2 bdist wheel type
-```
-./build_python2_wheel.sh
-```
-To build python3 bdist wheel type
-```
-./build_python3_wheel.sh
-```
-
-The bdist wheel will be placed in ngraph/python/build/dist
-Activate your virtual environment and install the bdist wheel
+Set the environment variables
 
 ```
-pip install -U <full path to the bdist wheel>
+export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
+export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
+export PYBIND_HEADERS_PATH=pybind11
 ```
 
-For example, On MacOS you would run a command like,
+Install Wrapper (python binding)
 
 ```
-pip install -U build/dist/ngraph-0.0.1-cp35-cp35m-linux_x86_64.whl
+python setup.py install
 ```
 
 To run unit tests, first install additional required packages.
@@ -42,9 +37,10 @@ pip install -r test_requirements.txt
 ```
 
 Then run a test.
+
 ```
 pytest test/test_ops.py
-pytest test/ngraph/*
+pytest test/ngraph/
 ```
 
 ## Running tests with tox
@@ -59,8 +55,6 @@ pytest test/ngraph/*
 Installing and running test with Tox:
 
     pip install tox
-    export NGRAPH_CPP_BUILD_PATH=<current working directory>/build/ngraph_dist/
-    export LD_LIBRARY_PATH=<current working directory>/build/ngraph_dist/lib/ 
     tox
 
 You can run tests using only Python 3 or 2 using the `-e` (environment) switch:

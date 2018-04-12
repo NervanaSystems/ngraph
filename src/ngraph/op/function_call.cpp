@@ -16,6 +16,7 @@
 
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -51,7 +52,9 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
 
 shared_ptr<Node> op::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
 {
-    return make_shared<FunctionCall>(m_function, new_args);
+    shared_ptr<FunctionCall> fc = make_shared<FunctionCall>(m_function, new_args);
+    fc->m_function = clone_function(*m_function);
+    return fc;
 }
 
 /// \return A singleton vector containing the function to be called.

@@ -30,36 +30,19 @@
 #include "ngraph/op/sum.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-bool ngraph::pass::GetOutputElementElimination::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
 {
     bool optimized = false;
-    for (auto n : f->get_ordered_ops())
+    for (auto& input : n->get_inputs())
     {
-        for (auto& input : n->get_inputs())
+        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(input.get_output().get_node()))
         {
-            if (auto goe =
-                    std::dynamic_pointer_cast<op::GetOutputElement>(input.get_output().get_node()))
-            {
-                auto multi = goe->get_inputs().at(0).get_output().get_node();
-                input.replace_output(goe->get_inputs().at(goe->get_n()).get_output());
-
-                //fix node arguments
-                auto& n_args =
-                    const_cast<ngraph::NodeVector&>(n->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-                auto it = std::find(begin(n_args), end(n_args), goe);
-                if (it == end(n_args))
-                {
-                    throw ngraph_error("Expected to find GetOutputElement in n's inputs");
-                }
-                *it = multi;
-
-                //fix multi's users
-                const_cast<std::multiset<Node*>&>(multi->users()).insert(n.get());
-
-                //we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
-                optimized = true;
-            }
+            auto multi = goe->get_inputs().at(0).get_output().get_node();
+            input.replace_output(goe->get_inputs().at(goe->get_n()).get_output());
+            // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
+            optimized = true;
         }
     }
     return optimized;
