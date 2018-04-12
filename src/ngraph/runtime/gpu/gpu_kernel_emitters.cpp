@@ -123,7 +123,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
                                                       const std::string& data_type,
                                                       const Shape& shape)
 {
-    std::vector<size_t> dimensions;
+    Shape dimensions;
     for (size_t i = shape.size(); i < 4; i++)
     {
         dimensions.push_back(1);
@@ -148,16 +148,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
     }
     else
     {
-        auto compute_strides = [](const std::vector<size_t>& dim) {
-            std::vector<size_t> strides(dim.size(), 1);
-            std::copy(dim.begin() + 1, dim.end(), strides.begin());
-            for (int64_t i = dim.size() - 2; i >= 0; i--)
-            {
-                strides[i] *= strides[i + 1];
-            }
-            return strides;
-        };
-        std::vector<size_t> strides = compute_strides(dimensions);
+        Strides strides = row_major_strides(dimensions);
         writer << "const int " << name << "_axes[] = {" << join(dimensions) << "};\n";
         writer << "const int " << name << "_strides[] = {" << join(strides) << "};\n";
         writer << "cudnnSetTensorNdDescriptor(" << name << ",\n";
