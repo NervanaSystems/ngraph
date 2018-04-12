@@ -16,12 +16,17 @@
 
 #pragma once
 
+#include <array>
+
 namespace ngraph
 {
+    class Shape;
+
     namespace runtime
     {
         namespace gpu
         {
+            class GPURuntimeContext;
             class GPUPrimitiveEmitter;
 
             class CUDAEmitter
@@ -29,7 +34,13 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_pad();
+                size_t build_pad(const GPURuntimeContext* ctx,
+                                 const std::array<std::string, 2>& dtypes,
+                                 const Shape& input_shape,
+                                 const Shape& output_shape,
+                                 const Shape& pad_below,
+                                 const Shape& pad_above,
+                                 const Shape& pad_interior);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);

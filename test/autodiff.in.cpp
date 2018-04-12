@@ -32,7 +32,6 @@ using namespace ngraph;
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -41,7 +40,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto reshape = make_shared<op::Reshape>(
-        A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
+        A, AxisVector{3, 0, 1, 2}, Shape{4, 1, 4, 4}); //convert CHWN to NCHW
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
@@ -79,7 +78,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
@@ -1595,7 +1593,6 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
     Shape shape_a{4, 1, 4, 4}; //in NCHW
@@ -1638,7 +1635,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 

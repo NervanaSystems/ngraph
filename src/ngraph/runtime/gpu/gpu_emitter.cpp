@@ -786,9 +786,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto sum_index =
                                 cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_ADD,
                                                                     args[0].get_shape(),
-                                                                    sum->get_reduction_axes(),
-                                                                    CUDNN_REDUCE_TENSOR_ADD);
+                                                                    sum->get_reduction_axes());
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -799,6 +799,250 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer.block_end();
                 return;
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Pad)
+            {
+                auto pad = static_cast<const ngraph::op::Pad*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto input_shape = args[0].get_shape();
+                    auto output_shape = out[0].get_shape();
+                    auto padding_below = pad->get_padding_below();
+                    auto padding_above = pad->get_padding_above();
+                    auto padding_interior = pad->get_padding_interior();
+
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                    auto pad_index =
+                        cuda_emitter->build_pad(external_function->ctx().get(),
+                                                {args[0].get_type(), out[0].get_type()},
+                                                input_shape,
+                                                output_shape,
+                                                padding_below,
+                                                padding_above,
+                                                {});
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data() ";
+                    writer << ");\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPool)
+            {
+                // assumes NC{d1,d2,...} format
+                auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto& input_shape = args[0].get_shape();
+                    auto input_rank = input_shape.size();
+                    auto& result_shape = out[0].get_shape();
+                    auto padding_below = max_pool->get_padding_below();
+                    auto padding_above = max_pool->get_padding_above();
+                    if (padding_below.size() != padding_above.size())
+                    {
+                        throw std::runtime_error(
+                            "Padding below and above are of different dimension.");
+                    }
+
+                    bool pad_required = false;
+                    auto shape_to_pool =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
+                    if (shape_to_pool != input_shape)
+                    {
+                        pad_required = true;
+                    }
+
+                    if (pad_required && padding_below != padding_above)
+                    {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                        // auto temp_buffer = create_gpu_buffer(shape_size(output_shape)*type_size);
+                        auto temp_size =
+                            shape_size(shape_to_pool) * args[0].get_element_type().size();
+                        writer << "void* pad_buffer = "
+                               << "runtime::gpu::create_gpu_buffer(" << temp_size << ");\n";
+                        writer << "runtime::gpu::cuda_memset(pad_buffer, 0, " << temp_size
+                               << ");\n";
+
+                        auto pad_index =
+                            cuda_emitter->build_pad(external_function->ctx().get(),
+                                                    {args[0].get_type(), out[0].get_type()},
+                                                    input_shape,
+                                                    shape_to_pool,
+                                                    padding_below,
+                                                    padding_above,
+                                                    /*padding_interior*/ {});
+
+                        writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{pad_buffer}.data()";
+                        writer << ");\n";
+
+                        // asymetric padding has been applied, zero out padding vectors to
+                        // ensure cudnn does not assume padding during pooling
+                        std::fill(padding_below.begin(), padding_below.end(), 0);
+                        std::fill(padding_above.begin(), padding_above.end(), 0);
+                    }
+
+                    int num_nontrivial_dims = 0;
+                    for (int i = shape_to_pool.size() - 1; i > 1; i--)
+                    {
+                        if (shape_to_pool[i] > 1)
+                        {
+                            num_nontrivial_dims++;
+                        }
+                    }
+
+                    // 1d max pool
+                    if (input_shape.size() == 3 || num_nontrivial_dims == 1)
+                    {
+                        // pre-compile cuda kernel
+                        runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
+                                                       max_pool->description(),
+                                                       {args[0].get_type(), out[0].get_type()},
+                                                       0);
+                        // emit invocation of kernel
+                        writer << "runtime::gpu::emit_1d_max_pool("
+                               << "ctx, "
+                               << "\"" << max_pool->description() << "\", "
+                               << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                               << "\"}, " << out[0].get_size() << ", " << args[0].get_name() << ", "
+                               << out[0].get_name() << ", " << max_pool->get_window_shape()[0]
+                               << ", " << max_pool->get_window_movement_strides()[0] << ", "
+                               << input_shape.back() << ", " << result_shape.back() << ");\n";
+                    }
+                    // 2d and 3d max pool (NCHW)
+                    else if (input_shape.size() == 4 || input_shape.size() == 5)
+                    {
+                        auto& cudnn_emitter =
+                            external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                        auto max_pool_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         CUDNN_POOLING_MAX,
+                                                         CUDNNEmitter::Prop::Forward,
+                                                         shape_to_pool,
+                                                         result_shape,
+                                                         max_pool->get_window_movement_strides(),
+                                                         max_pool->get_window_shape(),
+                                                         padding_below,
+                                                         padding_above);
+
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
+                        if (pad_required)
+                        {
+                            // this would be much cleaner if gpu::memory_primitive's were implemented
+                            // and could be bound to callable primitives.
+                            writer << "std::vector<void*>{pad_buffer}.data(), ";
+                        }
+                        else
+                        {
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                        }
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "Pooling currently only supports up to 3 spatial dimensions.");
+                    }
+
+                    if (pad_required)
+                    {
+                        writer << "runtime::gpu::free_gpu_buffer(pad_buffer);\n";
+                    }
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolBackprop)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
+                    auto fp_input_shape = out[0].get_shape();
+                    auto fp_output_shape = args[1].get_shape();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    if (fp_input_shape.size() >= 4)
+                    {
+                        auto max_pool_bp_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         CUDNN_POOLING_MAX,
+                                                         CUDNNEmitter::Prop::Backward,
+                                                         fp_input_shape,
+                                                         fp_output_shape,
+                                                         mpb->get_window_movement_strides(),
+                                                         mpb->get_window_shape(),
+                                                         mpb->get_padding_below(),
+                                                         mpb->get_padding_above());
+
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_bp_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[1].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                }
+                writer.block_end();
+            }
+
+            // assumes NC{d1,d2,d3,...} format
+            Shape get_padded_shape(const Shape& input_shape,
+                                   const Shape& padding_below,
+                                   const Shape& padding_above,
+                                   const Shape& padding_interior)
+            {
+                if (padding_interior.size())
+                {
+                    throw std::runtime_error(
+                        "Interior padding support is not yet available on GPU.");
+                }
+
+                enum class padtype
+                {
+                    None,
+                    Symmetric,
+                    Asymmetric
+                };
+                auto type = padtype::None;
+                for (int i = 0; i < padding_below.size(); i++)
+                {
+                    if (padding_below[i] != 0 || padding_above[i] != 0)
+                    {
+                        type = padtype::Symmetric;
+                    }
+                    if (padding_below[i] != padding_above[i])
+                    {
+                        type = padtype::Asymmetric;
+                        break;
+                    }
+                }
+                if (type == padtype::None)
+                {
+                    return input_shape;
+                }
+
+                Shape padded_shape = input_shape;
+                for (int i = 0; i < padding_below.size(); i++)
+                {
+                    padded_shape[padded_shape.size() - 1 - i] +=
+                        (padding_below[padding_below.size() - 1 - i] +
+                         padding_above[padding_above.size() - 1 - i]);
+                }
+
+                return padded_shape;
             }
         }
     }
