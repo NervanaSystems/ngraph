@@ -818,7 +818,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     auto pad_index =
                         cuda_emitter->build_pad(external_function->ctx().get(),
-                                                {args[0].get_type(), out[0].get_type()},
+                                                {{args[0].get_type(), out[0].get_type()}},
                                                 input_shape,
                                                 output_shape,
                                                 padding_below,
@@ -840,7 +840,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 {
                     auto& input_shape = args[0].get_shape();
-                    auto input_rank = input_shape.size();
                     auto& result_shape = out[0].get_shape();
                     auto padding_below = max_pool->get_padding_below();
                     auto padding_above = max_pool->get_padding_above();
@@ -873,7 +872,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                         auto pad_index =
                             cuda_emitter->build_pad(external_function->ctx().get(),
-                                                    {args[0].get_type(), out[0].get_type()},
+                                                    {{args[0].get_type(), out[0].get_type()}},
                                                     input_shape,
                                                     shape_to_pool,
                                                     padding_below,
@@ -892,7 +891,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
 
                     int num_nontrivial_dims = 0;
-                    for (int i = shape_to_pool.size() - 1; i > 1; i--)
+                    for (int64_t i = shape_to_pool.size() - 1; i > 1; i--)
                     {
                         if (shape_to_pool[i] > 1)
                         {
@@ -906,7 +905,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         // pre-compile cuda kernel
                         runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
                                                        max_pool->description(),
-                                                       {args[0].get_type(), out[0].get_type()},
+                                                       {{args[0].get_type(), out[0].get_type()}},
                                                        0);
                         // emit invocation of kernel
                         writer << "runtime::gpu::emit_1d_max_pool("
