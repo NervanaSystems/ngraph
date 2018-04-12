@@ -26,17 +26,17 @@
 #include <cuda_runtime.h>
 
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
 {
-    float* local = new float[element_count];
+    std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
-    cudaMemcpy(local, p, size_in_bytes, cudaMemcpyDeviceToHost);
+    cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost);
     std::cout << "{" << join(local) << "}" << std::endl;
-    delete[] local;
 }
 
 void runtime::gpu::check_cuda_errors(CUresult err)
