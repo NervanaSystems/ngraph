@@ -35,11 +35,7 @@ void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t el
     float* local = new float[element_count];
     size_t size_in_bytes = element_size * element_count;
     cudaMemcpy(local, p, size_in_bytes, cudaMemcpyDeviceToHost);
-    for (size_t i = 0; i < element_count; i++)
-    {
-        std::cout << local[i] << ", ";
-    }
-    std::cout << "end" << std::endl;
+    std::cout << "{" << join(local) << "}" << std::endl;
     delete[] local;
 }
 
