@@ -83,14 +83,11 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
                                                       const std::string& data_type,
                                                       const Shape& shape)
 {
-    std::vector<size_t> dimensions;
-    for (size_t i = shape.size(); i < 4; i++)
+    Shape dimensions(fmax(4, shape.size()), 1);
+    int idx = 0;
+    for (size_t i = dimensions.size() - shape.size(); i < dimensions.size(); i++)
     {
-        dimensions.push_back(1);
-    }
-    for (size_t i = 0; i < shape.size(); i++)
-    {
-        dimensions.push_back(shape[i]);
+        dimensions[i] = shape[idx++];
     }
 
     writer << "cudnnFilterDescriptor_t " << name << ";\n";
@@ -123,14 +120,11 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
                                                       const std::string& data_type,
                                                       const Shape& shape)
 {
-    Shape dimensions;
-    for (size_t i = shape.size(); i < 4; i++)
+    Shape dimensions(fmax(4, shape.size()), 1);
+    int idx = 0;
+    for (size_t i = dimensions.size() - shape.size(); i < dimensions.size(); i++)
     {
-        dimensions.push_back(1);
-    }
-    for (size_t i = 0; i < shape.size(); i++)
-    {
-        dimensions.push_back(shape[i]);
+        dimensions[i] = shape[idx++];
     }
 
     writer << "cudnnTensorDescriptor_t " << name << ";\n";
