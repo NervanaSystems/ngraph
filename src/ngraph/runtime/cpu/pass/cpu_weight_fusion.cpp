@@ -81,6 +81,7 @@ void ngraph::runtime::cpu::pass::WeightFusion::construct_weight_fusion()
                     if (ui->get_users().size() != 1)
                     {
                         NGRAPH_DEBUG << u->get_name() << " has more than one user";
+                        break;
                     }
                     ui = ui->get_users().at(0);
                 }
@@ -102,7 +103,8 @@ void ngraph::runtime::cpu::pass::WeightFusion::construct_weight_fusion()
         auto new_cvt_lt = m_cvt_lt->copy_with_new_args({m_cvt_lt});
         auto new_conv_bprop =
             m_conv_bprop->copy_with_new_args({new_cvt_lt, m_conv_bprop->get_input_op(1)});
-        NGRAPH_DEBUG << "Replacing " << m_conv_bprop << " with " << new_conv_bprop;
+        NGRAPH_DEBUG << "Replacing " << m_conv_bprop->get_name() << " with "
+                     << new_conv_bprop->get_name();
         ngraph::replace_node(m_conv_bprop, new_conv_bprop);
         return true;
     };
