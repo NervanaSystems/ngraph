@@ -21,6 +21,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/strides.hpp"
@@ -51,6 +52,28 @@ namespace ngraph
                              size_t repeat_size,
                              size_t repeat_times,
                              size_t count);
+
+            void emit_reshape(const std::string& name,
+                              const std::array<std::string, 2>& data_types,
+                              GPURuntimeContext* ctx,
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              CUdeviceptr input_strides,
+                              CUdeviceptr trans_strides,
+                              size_t rank,
+                              size_t count);
+
+            void emit_slice(const std::string& name,
+                            CUdeviceptr in,
+                            CUdeviceptr out,
+                            const std::array<std::string, 2>& data_types,
+                            GPURuntimeContext* ctx,
+                            CUdeviceptr input_strides,
+                            CUdeviceptr lower_bounds,
+                            CUdeviceptr slice_strides,
+                            CUdeviceptr output_strides,
+                            size_t rank,
+                            size_t count);
 
             template <typename T, typename... Inputs>
             void emit_elementwise_op(const std::string& name,
@@ -101,16 +124,6 @@ namespace ngraph
                                               0));  // arguments
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
-
-            void emit_reshape(const std::string& name,
-                              const std::array<std::string, 2>& data_types,
-                              GPURuntimeContext* ctx,
-                              CUdeviceptr in,
-                              CUdeviceptr out,
-                              CUdeviceptr input_strides,
-                              CUdeviceptr trans_strides,
-                              size_t rank,
-                              size_t count);
 
             template <typename... Args>
             void emit_1d_max_pool(GPURuntimeContext* ctx,

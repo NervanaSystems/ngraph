@@ -239,14 +239,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle, " << args0 << ", "
+                writer << "cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle, " << args0 << ", "
                        << args1 << ", " << conv_descriptor << ", " << out0 << ", " << conv_algo
                        << ", "
                        << "&workSpaceSizeInBytes);\n";
 
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-                writer << "cudnnConvolutionForward(cudnn_handle, "
+                writer << "cudnnConvolutionForward(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
@@ -323,7 +323,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn_handle, " << args0
+                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle, " << args0
                        << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
@@ -331,7 +331,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
-                writer << "cudnnConvolutionBackwardData(cudnn_handle, "
+                writer << "cudnnConvolutionBackwardData(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
@@ -410,7 +410,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn_handle, " << args0
+                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle, " << args0
                        << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
@@ -418,7 +418,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
-                writer << "cudnnConvolutionBackwardFilter(cudnn_handle, "
+                writer << "cudnnConvolutionBackwardFilter(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
@@ -886,6 +886,78 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
                     writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
                     writer << "runtime::gpu::free_gpu_buffer(trans_strides_d);\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Slice)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto slice = static_cast<const op::Slice*>(node);
+
+                const auto arg_shape = args[0].get_shape();
+                const auto arg_rank = arg_shape.size();
+                const auto result_shape = out[0].get_shape();
+                const Coordinate& lower_bounds = slice->get_lower_bounds();
+                const Strides slice_strides = slice->get_strides();
+                const auto input_strides = row_major_strides(arg_shape);
+                const auto output_strides = row_major_strides(result_shape);
+
+                writer.block_begin("  // " + node->get_name());
+                if (args[0].get_size() == out[0].get_size())
+                {
+                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                }
+                else
+                {
+                    writer << "size_t rank = " << arg_rank << ";\n";
+                    writer << "std::vector<size_t> input_strides_h = {"
+                           << join(input_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> output_strides_h = {"
+                           << join(output_strides, "UL,") << "UL};\n";
+                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,")
+                           << "UL};\n";
+                    writer << "std::vector<size_t> slice_strides_h = {"
+                           << join(slice_strides, "UL,") << "UL};\n";
+
+                    writer << "void* input_strides_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "void* output_strides_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "void* slice_strides_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "void* lower_bounds_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer
+                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
+                           "sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(output_strides_d, "
+                              "output_strides_h.data(), "
+                              "sizeof(size_t) * rank);\n";
+                    writer
+                        << "runtime::gpu::cuda_memcpyHtD(slice_strides_d, slice_strides_h.data(), "
+                           "sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(lower_bounds_d, lower_bounds_h.data(), "
+                              "sizeof(size_t) * rank);\n";
+
+                    writer << "runtime::gpu::emit_slice(\"" << node->description()
+                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << out[0].get_name() << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", "
+                           << "ctx, "
+                           << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
+                              "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
+                           << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
+                    writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
+                    writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
+                    writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
+                    writer << "runtime::gpu::free_gpu_buffer(lower_bounds_d);\n";
                 }
                 writer.block_end();
             }
