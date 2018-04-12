@@ -276,7 +276,7 @@ namespace ngraph
             Matcher m(m_pattern);
             Matcher::PatternMap previous_matches;
             m_matches.clear();
-            m_match_root.reset();
+            m_match_root = graph;
 
             NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
             //try to match one cell (i.e. pattern)
@@ -315,6 +315,12 @@ namespace ngraph
                     }
                 }
             }
+
+            if (!matched)
+            {
+                m_match_root.reset();
+            }
+
             return matched;
         }
 
