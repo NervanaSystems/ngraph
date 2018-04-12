@@ -239,9 +239,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle, " << args0 << ", "
-                       << args1 << ", " << conv_descriptor << ", " << out0 << ", " << conv_algo
-                       << ", "
+                writer << "cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle, " << args0
+                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
+                       << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
 
                 writer << "void* workspace = "
@@ -323,8 +323,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle, " << args0
-                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
+                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle, "
+                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
 
@@ -410,8 +410,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle, " << args0
-                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
+                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle, "
+                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
                        << "&workSpaceSizeInBytes);\n";
 
