@@ -70,7 +70,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         Shape pad_above(input_shape.size(), 0);
         if (padding_below.size() != input_shape.size())
         {
-            for (int i = padding_below.size() - 1; i >= 0; i--)
+            for (int64_t i = padding_below.size() - 1; i >= 0; i--)
             {
                 pad_below[i + input_shape.size() - padding_below.size()] = padding_below[i];
                 pad_above[i + input_shape.size() - padding_above.size()] = padding_above[i];
@@ -102,8 +102,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
             {
                 writer << "size_t idx = ";
                 writer << offset << " + tid % " << input_shape.back();
-                int last = input_strides.size() - 1;
-                for (int i = last - 1; i > 0; i--)
+                int64_t last = input_strides.size() - 1;
+                for (int64_t i = last - 1; i > 0; i--)
                 {
                     writer << " + ((tid / " << input_strides[i] << ") % " << input_shape[i + 1]
                            << ") * " << output_strides[i];
@@ -152,13 +152,13 @@ void print_tensor_from_gpu(codegen::CodeWriter& writer,
         writer << "for (int i=0; i<" << shape_size(shape) << "; i++)\n";
         writer.block_begin();
         {
-            for (int i = strides.size() - 1; i >= 0; i--)
+            for (int64_t i = strides.size() - 1; i >= 0; i--)
             {
                 writer << "if (i % " << strides[i] << " == 0)\n";
                 writer.block_begin();
                 {
                     writer << "printf(\"";
-                    for (int j = 0; j < strides.size() - 1 - i; j++)
+                    for (int64_t j = 0; j < strides.size() - 1 - i; j++)
                     {
                         writer << "\\n";
                     }

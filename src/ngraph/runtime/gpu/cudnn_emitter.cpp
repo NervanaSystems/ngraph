@@ -70,7 +70,7 @@ cudnnTensorDescriptor_t runtime::gpu::cudnn_util::tensor_descriptor_from_shape(c
         }
         cudnnSetTensorNdDescriptor(desc,
                                    CUDNN_DATA_FLOAT,
-                                   dimensions.size(),
+                                   static_cast<int>(dimensions.size()),
                                    dimensions.data(),
                                    runtime::gpu::cudnn_util::compute_strides(dimensions).data());
     }
@@ -266,12 +266,12 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
         cudnnSetPooling2dDescriptor(desc,
                                     pool_op,
                                     CUDNN_NOT_PROPAGATE_NAN,
-                                    window_shape[0],
-                                    window_shape[1],
-                                    padding_below[0],
-                                    padding_below[1],
-                                    window_strides[0],
-                                    window_strides[1]);
+                                    static_cast<int>(window_shape[0]),
+                                    static_cast<int>(window_shape[1]),
+                                    static_cast<int>(padding_below[0]),
+                                    static_cast<int>(padding_below[1]),
+                                    static_cast<int>(window_strides[0]),
+                                    static_cast<int>(window_strides[1]));
     }
     else if (input_shape.size() == 5)
     {
@@ -293,6 +293,11 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
                                     w_padding.data(),
                                     w_strides.data());
     }
+    else
+    {
+        throw std::runtime_error("Pooling currently supports up to 3 spatial dimensions only.");
+    }
+
     gpu::primitive* pool = nullptr;
     if (direction == Prop::Forward)
     {
