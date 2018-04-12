@@ -110,13 +110,11 @@ Compile MXNet with nGraph
       libopenblas-dev
 
 
-#. Clone the ``ngraph-mxnet`` repository recursively and checkout the
-   ``ngraph-integration-dev`` branch:
+#. Clone the ``ngraph-mxnet`` repository recursively
 
    .. code-block:: console
 
       $ git clone --recursive git@github.com:NervanaSystems/ngraph-mxnet.git
-      $ cd ngraph-mxnet && git checkout ngraph-integration-dev
 
 #. Edit the ``make/config.mk`` file from the repo we just checked out to set
    the ``USE_NGRAPH`` option (line ``100``) to true with `1` and set the :envvar:`NGRAPH_DIR`
