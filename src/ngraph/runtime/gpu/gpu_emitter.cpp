@@ -96,6 +96,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -1150,7 +1151,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                 padding_above,
                                                 {});
                     writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                           << args[1].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data() ";
                     writer << ");\n";
                 }
@@ -1192,8 +1194,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                             shape_size(shape_to_pool) * args[0].get_element_type().size();
                         writer << "void* pad_buffer = "
                                << "runtime::gpu::create_gpu_buffer(" << temp_size << ");\n";
-                        writer << "runtime::gpu::cuda_memset(pad_buffer, 0, " << temp_size
-                               << ");\n";
+
+                        std::stringstream ss;
+                        ss << TypeInfo::Get(args[0].get_element_type())->lowest();
 
                         auto pad_index =
                             cuda_emitter->build_pad(external_function->ctx().get(),
@@ -1202,7 +1205,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                     shape_to_pool,
                                                     padding_below,
                                                     padding_above,
-                                                    /*padding_interior*/ {});
+                                                    /*padding_interior*/ {},
+                                                    ss.str());
 
                         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

@@ -37,14 +37,20 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                             const Shape& output_shape,
                                             const Shape& padding_below,
                                             const Shape& padding_above,
-                                            const Shape& padding_interior)
+                                            const Shape& padding_interior,
+                                            const std::string& pad_value)
 {
     if (padding_interior.size())
     {
         throw std::runtime_error("Interior padding is not yet supported in the GPU transformer.");
     }
+
+    // Need to check: are there models in which some tensors will have different types? if so, this
+    // hash needs to include the tensor types.
+    std::string val_hash = (pad_value == "") ? "0" : "1";
     std::string hash = "pad_i" + join(input_shape, "_") + "_pb" + join(padding_below, "_") + "_pa" +
-                       join(padding_above, "_") + "_pi" + join(padding_interior, "_");
+                       join(padding_above, "_") + "_pi" + join(padding_interior, "_") + "_pv" +
+                       val_hash;
 
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
@@ -60,9 +66,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         return primitive_index;
     }
 
+    uint32_t nthreads = shape_size(output_shape);
+
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
-    auto nthreads = shape_size(input_shape);
     if (compiled_kernel == nullptr)
     {
         // normalize pad dimensions to shape dimensions
@@ -92,12 +99,35 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         }
 
         codegen::CodeWriter writer;
-        writer << "extern \"C\" __global__ void cuda_" << hash << "(" << dtypes[0] << "* in, "
-               << dtypes[1] << "* out)\n";
+        writer << "extern \"C\" __global__ void cuda_" << hash << "(";
+
+        // if the pad value is static, a runtime argument isn't necessary
+        if (pad_value == "")
+        {
+            writer << dtypes[0] << "* val, ";
+        }
+        writer << dtypes[0] << "* in, " << dtypes[1] << "* out)\n";
         writer.block_begin();
         {
             writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+
+            // fill kernel
             writer << "if (tid < " << nthreads << ")\n";
+            writer.block_begin();
+            {
+                if (pad_value == "")
+                {
+                    writer << "out[tid] = *val;\n";
+                }
+                else
+                {
+                    writer << "out[tid] = " << pad_value << ";\n";
+                }
+            }
+            writer.block_end();
+
+            // pad re-index kernel
+            writer << "if (tid < " << shape_size(input_shape) << ")\n";
             writer.block_begin();
             {
                 writer << "size_t idx = ";
@@ -114,34 +144,57 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
             writer.block_end();
         }
         writer.block_end();
+
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
+    gpu::primitive* pad = nullptr;
 
-    auto pad = new gpu::primitive{[=](void** inputs, void** outputs) {
-
-        void* args_list[] = {&inputs[0], &outputs[0]};
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<unsigned int>(nthreads),
-                                      1,
-                                      1, // grid dim
-                                      1,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list,
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-    }};
+    // if the pad value is statically provided, the kernel call signature is different
+    if (pad_value == "") // pad value provided at runtime (dynamic)
+    {
+        pad = new gpu::primitive{[=](void** inputs, void** outputs) {
+            void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<unsigned int>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }};
+    }
+    else // pad value provided at compile time (static)
+    {
+        pad = new gpu::primitive{[=](void** inputs, void** outputs) {
+            void* args_list[] = {&inputs[0], &outputs[0]};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<unsigned int>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }};
+    }
 
     primitive_index = this->m_primitive_emitter->insert(pad);
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
 
-void print_tensor_from_gpu(codegen::CodeWriter& writer,
-                           const std::string& tensor_name,
-                           const Shape& shape)
+void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
+                                                      const std::string& tensor_name,
+                                                      const Shape& shape)
 {
     auto strides = row_major_strides(shape);
     writer << "__syncthreads();\n";

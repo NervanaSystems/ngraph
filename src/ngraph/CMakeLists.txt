@@ -282,6 +282,7 @@ endif()
             runtime/gpu/gpu_invoke.cpp
             runtime/gpu/cudnn_emitter.cpp
             runtime/gpu/cuda_emitter.cpp
+	    runtime/gpu/type_info.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
