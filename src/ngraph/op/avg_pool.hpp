@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -86,6 +87,11 @@ namespace ngraph
             bool get_include_padding_in_avg_computation() const
             {
                 return m_include_padding_in_avg_computation;
+            }
+            /// \return The default value for AvgPool.
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
             }
 
         protected:

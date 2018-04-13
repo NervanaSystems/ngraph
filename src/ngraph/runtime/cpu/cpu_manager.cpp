@@ -20,11 +20,17 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_manager.hpp"
 
+using namespace std;
 using namespace ngraph;
 
 std::shared_ptr<ngraph::runtime::Backend> runtime::cpu::CPU_Manager::allocate_backend()
 {
     return std::make_shared<CPU_Backend>();
+}
+
+vector<size_t> runtime::cpu::CPU_Manager::get_subdevices() const
+{
+    throw runtime_error("unimplemented");
 }
 
 std::shared_ptr<ngraph::runtime::ExternalFunction>

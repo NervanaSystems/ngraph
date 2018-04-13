@@ -211,8 +211,9 @@ TEST(copy, FunctionCall)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_functions()[0] == f);
+    EXPECT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_EQ(node_cast->get_functions().size(), 1);
+    EXPECT_NE(f, node_cast->get_functions()[0]);
 }
 
 TEST(copy, greater_eq)
@@ -303,9 +304,10 @@ TEST(copy, reduce)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(f == node_cast->get_functions()[0]);
-    ASSERT_TRUE(axes == node_cast->get_reduction_axes());
+    EXPECT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_EQ(node_cast->get_functions().size(), 1);
+    EXPECT_NE(f, node_cast->get_functions()[0]);
+    EXPECT_TRUE(axes == node_cast->get_reduction_axes());
 }
 
 TEST(copy, remainder)

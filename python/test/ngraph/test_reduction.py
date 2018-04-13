@@ -36,6 +36,7 @@ from ngraph.utils.types import get_element_type
     (ng.sum, np.sum, (0, 2)),
     (ng.prod, np.prod, (0, 2)),
 ])
+@pytest.config.gpu_skip(reason='Not implemented')
 def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
     np.random.seed(133391)
