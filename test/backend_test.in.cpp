@@ -6900,7 +6900,6 @@ TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 // Trivial case with no reduced axes.
 TEST(${BACKEND_NAME}, max_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
@@ -6919,7 +6918,6 @@ TEST(${BACKEND_NAME}, max_trivial)
 // Failure has been reported at 5D for some reason
 TEST(${BACKEND_NAME}, max_trivial_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
@@ -6940,7 +6938,6 @@ TEST(${BACKEND_NAME}, max_trivial_5d)
 
 TEST(${BACKEND_NAME}, max_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
@@ -6962,7 +6959,6 @@ TEST(${BACKEND_NAME}, max_to_scalar)
 
 TEST(${BACKEND_NAME}, max_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
@@ -6985,7 +6981,6 @@ TEST(${BACKEND_NAME}, max_matrix_columns)
 
 TEST(${BACKEND_NAME}, max_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7008,7 +7003,6 @@ TEST(${BACKEND_NAME}, max_matrix_rows)
 
 TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0};
@@ -7037,7 +7031,6 @@ TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 
 TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
@@ -7066,7 +7059,6 @@ TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 
 TEST(${BACKEND_NAME}, max_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0};
@@ -7092,7 +7084,6 @@ TEST(${BACKEND_NAME}, max_vector_zero)
 
 TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0, 0};
@@ -7118,7 +7109,6 @@ TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 
 TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -7138,7 +7128,6 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
 
 TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -7158,7 +7147,6 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
 
 TEST(${BACKEND_NAME}, max_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7178,7 +7166,6 @@ TEST(${BACKEND_NAME}, max_3d_to_vector)
 
 TEST(${BACKEND_NAME}, max_3d_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7199,7 +7186,6 @@ TEST(${BACKEND_NAME}, max_3d_to_scalar)
 
 TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0, 2};
@@ -7226,7 +7212,6 @@ TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 // Trivial case with no reduced axes.
 TEST(${BACKEND_NAME}, min_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
@@ -7245,7 +7230,6 @@ TEST(${BACKEND_NAME}, min_trivial)
 // Failure has been reported at 5D for some reason
 TEST(${BACKEND_NAME}, min_trivial_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
@@ -7266,7 +7250,6 @@ TEST(${BACKEND_NAME}, min_trivial_5d)
 
 TEST(${BACKEND_NAME}, min_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
@@ -7288,7 +7271,6 @@ TEST(${BACKEND_NAME}, min_to_scalar)
 
 TEST(${BACKEND_NAME}, min_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
@@ -7311,7 +7293,6 @@ TEST(${BACKEND_NAME}, min_matrix_columns)
 
 TEST(${BACKEND_NAME}, min_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7334,7 +7315,6 @@ TEST(${BACKEND_NAME}, min_matrix_rows)
 
 TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0};
@@ -7363,7 +7343,6 @@ TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 
 TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
@@ -7392,7 +7371,6 @@ TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 
 TEST(${BACKEND_NAME}, min_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0};
@@ -7418,7 +7396,6 @@ TEST(${BACKEND_NAME}, min_vector_zero)
 
 TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0, 0};
@@ -7444,7 +7421,6 @@ TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 
 TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -7464,7 +7440,6 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
 
 TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -7484,7 +7459,6 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
 
 TEST(${BACKEND_NAME}, min_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7504,7 +7478,6 @@ TEST(${BACKEND_NAME}, min_3d_to_vector)
 
 TEST(${BACKEND_NAME}, min_3d_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7525,7 +7498,6 @@ TEST(${BACKEND_NAME}, min_3d_to_scalar)
 
 TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0, 2};
