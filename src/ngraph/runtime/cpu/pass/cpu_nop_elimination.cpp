@@ -70,7 +70,7 @@ HANDLER_DECL(eliminate_slice)
     auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node);
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
-        function->replace_node(node, node->get_input_op(0));
+        function->replace_node(node, node->get_argument(0));
         return true;
     }
     return false;

@@ -701,12 +701,12 @@ TEST(pattern, recurrent_graph_rewrite)
         auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, op::ParameterVector{a, b});
         pass_manager.run_passes(f);
 
-        auto left_abs = graph->get_input_op(0);
-        auto add_a = left_abs->get_input_op(0);
+        auto left_abs = graph->get_argument(0);
+        auto add_a = left_abs->get_argument(0);
         ASSERT_EQ(add_a, a);
 
-        auto right_abs = graph->get_input_op(1);
-        auto add_b = right_abs->get_input_op(0);
+        auto right_abs = graph->get_argument(1);
+        auto add_b = right_abs->get_argument(0);
         ASSERT_EQ(add_b, b);
     }
 }
