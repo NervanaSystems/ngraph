@@ -33,13 +33,6 @@ vector<size_t> runtime::cpu::CPU_Manager::get_subdevices() const
     throw runtime_error("unimplemented");
 }
 
-std::shared_ptr<ngraph::runtime::ExternalFunction>
-    runtime::cpu::CPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
-{
-    auto rc = std::make_shared<CPU_ExternalFunction>(fun);
-    return rc;
-}
-
 ngraph::runtime::Manager::Factory runtime::cpu::CPU_Manager::factory =
     ngraph::runtime::Manager::register_factory(
         "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {

@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
@@ -24,35 +23,30 @@
 using namespace ngraph;
 using namespace std;
 
-std::shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
-    const std::shared_ptr<ExternalFunction>& external_function)
+shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
+    const shared_ptr<GPU_ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
 }
 
-std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::gpu::GPU_Backend::make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                                        const Shape& shape)
+shared_ptr<runtime::TensorView>
+    runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
 }
 
-std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::gpu::GPU_Backend::create_tensor(const ngraph::element::Type& element_type,
-                                             const Shape& shape)
+shared_ptr<runtime::TensorView> runtime::gpu::GPU_Backend::create_tensor(
+    const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape, memory_pointer);
 }
 
-bool runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func)
+bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 {
     if (!contains_key(m_function_map, func))
     {
         FunctionInstance instance;
-        instance.m_function = func;
-        instance.m_external_function = make_shared<GPU_ExternalFunction>(instance.m_function);
+        instance.m_external_function = make_shared<GPU_ExternalFunction>(func);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
         m_function_map.insert({func, instance});
@@ -60,10 +54,9 @@ bool runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func)
     return true;
 }
 
-bool runtime::gpu::GPU_Backend::call(
-    std::shared_ptr<Function> func,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
+                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
+                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
 
@@ -85,24 +78,4 @@ bool runtime::gpu::GPU_Backend::call(
     instance.m_call_frame->call(outputs, inputs);
 
     return rc;
-}
-
-bool runtime::gpu::GPU_Backend::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
-{
-    if (m_function_map.size() != 1)
-    {
-        throw runtime_error("This call method only works if a single function is compiled");
-    }
-    FunctionInstance& instance = m_function_map.begin()->second;
-    instance.m_call_frame->call(outputs, inputs);
-    return true;
-}
-
-std::shared_ptr<ngraph::runtime::TensorView> runtime::gpu::GPU_Backend::make_primary_tensor_view(
-    const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
-{
-    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape, memory_pointer);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
