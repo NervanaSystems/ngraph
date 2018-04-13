@@ -14,9 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <sstream>
+
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/manager.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -45,4 +48,65 @@ vector<size_t> runtime::Backend::get_subdevices(const string& type)
 
 void runtime::Backend::remove_compiled_function(std::shared_ptr<Function> func)
 {
+}
+
+void runtime::Backend::validate_call(shared_ptr<const Function> function,
+                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
+                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+{
+    const op::ParameterVector& input_parameters = function->get_parameters();
+    if (input_parameters.size() != inputs.size())
+    {
+        stringstream ss;
+        ss << "Call input count " << inputs.size() << " does not match Function's Parameter count "
+           << input_parameters.size();
+        throw runtime_error(ss.str());
+    }
+    if (function->get_output_size() != outputs.size())
+    {
+        stringstream ss;
+        ss << "Call output count " << outputs.size() << " does not match Function's Result count "
+           << function->get_output_size();
+        throw runtime_error(ss.str());
+    }
+
+    for (size_t i = 0; i < input_parameters.size(); i++)
+    {
+        if (input_parameters[i]->get_element_type() != inputs[i]->get_tensor().get_element_type())
+        {
+            stringstream ss;
+            ss << "Input " << i << " type '" << inputs[i]->get_tensor().get_element_type()
+               << "' does not match Parameter type '" << input_parameters[i]->get_element_type()
+               << "'";
+            throw runtime_error(ss.str());
+        }
+        if (input_parameters[i]->get_shape() != inputs[i]->get_shape())
+        {
+            stringstream ss;
+            ss << "Input " << i << " shape {" << join(inputs[i]->get_shape())
+               << "} does not match Parameter shape {" << join(input_parameters[i]->get_shape())
+               << "}";
+            throw runtime_error(ss.str());
+        }
+    }
+
+    for (size_t i = 0; i < function->get_output_size(); i++)
+    {
+        if (function->get_output_element_type(i) != outputs[i]->get_tensor().get_element_type())
+        {
+            stringstream ss;
+            ss << "Output " << i << " type '" << outputs[i]->get_tensor().get_element_type()
+               << "' does not match Parameter type '" << function->get_output_element_type(i)
+               << "'";
+            throw runtime_error(ss.str());
+        }
+        if (function->get_output_shape(i) != outputs[i]->get_shape())
+        {
+            stringstream ss;
+            ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
+               << "} does not match Parameter shape {" << join(function->get_output_shape(i))
+               << "}";
+            throw runtime_error(ss.str());
+        }
+    }
 }
