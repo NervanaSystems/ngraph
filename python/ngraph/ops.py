@@ -17,15 +17,15 @@
 """Factory functions for all ngraph ops."""
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Node, NodeVector, \
-    Shape, Strides
+from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
+    NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling,\
+from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling, \
     Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
     FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, Relu, \
-    ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, \
-    Tan, Tanh
+    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, \
+    Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
+    Subtract, Sum, Tan, Tanh
 
 from typing import Iterable, List
 
@@ -34,7 +34,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput
+    NodeInput, ScalarData, CallableData
 from ngraph.utils.types import get_element_type
 
 
@@ -632,6 +632,39 @@ def prod(node, reduction_axes=None, name=None):
     :return: The new node performing product-reduction operation.
     """
     return Product(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+
+
+@nameable_op
+def reduce(node,                 # type: Node
+           initial_value,        # type: ScalarData
+           reduction_function,   # type: CallableData
+           reduction_axes=None,  # type: List[int]
+           name=None,            # type: str
+           ):
+    # type: (...) -> Node
+    """Perform general tensor reduction operation.
+
+    :param node: The node providing data for reduction operation.
+    :param initial_value: The initial value for reduction operation.
+    :param reduction_function: The function performing binary reduction operation or a nGraph
+                           Function object. The operation must accept two nodes providing scalar
+                           operands and return a node which produces a scalar result.
+    :param reduction_axes: The list of axes indices to be reduced. Default to reduce all axes.
+    :param name: The new name for output node.
+    :return: The node performing reduction operation with provided reduction node.
+    """
+    if reduction_axes is None:
+        reduction_axes = list(range(len(node.shape)))
+    init_val_node = constant(initial_value)
+    if not isinstance(reduction_function, Function):
+        # wrap reduction function into Function object
+        param1 = Parameter(node.get_element_type(), Shape([]))
+        param2 = Parameter(node.get_element_type(), Shape([]))
+        reduction_operation = Function(NodeVector([reduction_function(param1, param2)]),
+                                       [param1, param2], 'reduction_operation')
+    else:
+        reduction_operation = reduction_function
+    return Reduce(node, init_val_node, reduction_operation, AxisSet(set(reduction_axes)))
 
 
 # reshape ops
