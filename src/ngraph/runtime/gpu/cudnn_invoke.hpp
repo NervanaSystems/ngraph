@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include <cstddef>
 
 namespace ngraph
 {
@@ -27,17 +24,15 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CudaFunctionPool
-            {
-            public:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
+            struct GPURuntimeContext;
 
-            private:
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
-            };
+            namespace cudnn_utils
+            {
+                extern "C" void cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                                                       size_t primitive_index,
+                                                       void** args,
+                                                       void** result);
+            }
         }
     }
 }
