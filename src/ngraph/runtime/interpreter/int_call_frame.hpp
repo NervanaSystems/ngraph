@@ -29,8 +29,8 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
@@ -303,14 +303,15 @@ private:
             ngraph::op::BatchNorm* bn = dynamic_cast<ngraph::op::BatchNorm*>(&node);
             if (bn->get_output_size() == 3)
             {
-                reference::batch_norm_three_outputs<T>(bn->get_eps_value(),
-                                                       reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                                       reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                                       reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                                                       reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                                       reinterpret_cast<T*>(out[1]->get_data_ptr()),
-                                                       reinterpret_cast<T*>(out[2]->get_data_ptr()),
-                                                       args[2]->get_shape());
+                reference::batch_norm_three_outputs<T>(
+                    bn->get_eps_value(),
+                    reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                    reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                    reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                    reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                    reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                    reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                    args[2]->get_shape());
             }
             else
             {
@@ -496,7 +497,8 @@ private:
         }
         else if (node_op == "GetOutputElement")
         {
-            const op::GetOutputElement* get_output_element = static_cast<const op::GetOutputElement*>(&node);
+            const op::GetOutputElement* get_output_element =
+                static_cast<const op::GetOutputElement*>(&node);
             size_t n = get_output_element->get_n();
             size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
