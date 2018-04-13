@@ -1170,10 +1170,10 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& result_shape = out[0].get_shape();
                     auto padding_below = max_pool->get_padding_below();
                     auto padding_above = max_pool->get_padding_above();
-                    if (padding_below.size() != padding_above.size())
+                    if (input_shape.size() < 3)
                     {
                         throw std::runtime_error(
-                            "Padding below and above are of different dimension.");
+                            "Invalid tensor type, tensors should be of at least 3 dimensions.");
                     }
 
                     bool pad_required = false;
@@ -1228,40 +1228,40 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                     }
 
-                    // 1d max pool
-                    if (input_shape.size() == 3 || num_nontrivial_dims == 1)
+                    if (input_shape.size() <= 5)
                     {
-                        // pre-compile cuda kernel
-                        runtime::gpu::emit_1d_max_pool(external_function->ctx().get(),
-                                                       max_pool->description(),
-                                                       {{args[0].get_type(), out[0].get_type()}},
-                                                       0);
-                        // emit invocation of kernel
-                        writer << "runtime::gpu::emit_1d_max_pool("
-                               << "ctx, "
-                               << "\"" << max_pool->description() << "\", "
-                               << "{\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                               << "\"}, " << out[0].get_size() << ", " << args[0].get_name() << ", "
-                               << out[0].get_name() << ", " << max_pool->get_window_shape()[0]
-                               << ", " << max_pool->get_window_movement_strides()[0] << ", "
-                               << input_shape.back() << ", " << result_shape.back() << ");\n";
-                    }
-                    // 2d and 3d max pool (NCHW)
-                    else if (input_shape.size() == 4 || input_shape.size() == 5)
-                    {
-                        auto& cudnn_emitter =
-                            external_function->get_primitive_emitter()->get_cudnn_emitter();
+                        uint32_t max_pool_index = 0;
+                        // 1d max pool (NCW)
+                        if ((input_shape.size() == 3 || num_nontrivial_dims == 1))
+                        {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        auto max_pool_index =
-                            cudnn_emitter->build_pooling(external_function->ctx().get(),
-                                                         CUDNN_POOLING_MAX,
-                                                         CUDNNEmitter::Prop::Forward,
-                                                         shape_to_pool,
-                                                         result_shape,
-                                                         max_pool->get_window_movement_strides(),
-                                                         max_pool->get_window_shape(),
-                                                         padding_below,
-                                                         padding_above);
+                        max_pool_index =
+                            cuda_emitter->build_1d_max_pool(external_function->ctx().get(),
+                                                            {{args[0].get_type(), out[0].get_type()}},
+                                                            input_shape,
+                                                            result_shape,
+                                                            max_pool->get_window_shape().back(),
+                                                            max_pool->get_window_movement_strides().back());
+                        }
+                        // 2d and 3d max pool (NCHW)
+                        else if (input_shape.size() == 4 || input_shape.size() == 5)
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                            max_pool_index =
+                                cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                             CUDNN_POOLING_MAX,
+                                                             CUDNNEmitter::Prop::Forward,
+                                                             shape_to_pool,
+                                                             result_shape,
+                                                             max_pool->get_window_movement_strides(),
+                                                             max_pool->get_window_shape(),
+                                                             padding_below,
+                                                             padding_above);
+                        }
 
                         writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
                         if (pad_required)

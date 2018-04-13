@@ -44,6 +44,13 @@ namespace ngraph
                                  const Shape& pad_interior,
                                  const std::string& pad_value = "");
 
+                size_t build_1d_max_pool(const GPURuntimeContext* ctx,
+                                         const std::array<std::string, 2>& dtypes,
+                                         const Shape& input_shape,
+                                         const Shape& output_shape,
+                                         uint32_t window_width,
+                                         uint32_t window_stride);
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
