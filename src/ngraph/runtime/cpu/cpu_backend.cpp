@@ -48,6 +48,7 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
+        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
@@ -81,7 +82,7 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
+    if (instance.m_external_function != nullptr)
     {
         throw runtime_error("Performance data collection must be enabled prior to compiling.");
     }

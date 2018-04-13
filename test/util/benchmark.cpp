@@ -198,8 +198,9 @@ void run_benchmark(shared_ptr<Function> f,
 {
     stopwatch timer;
     timer.start();
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend = runtime::Backend::create(backend_name);
     backend->enable_performance_data(f, timing_detail);
+    backend->compile(f);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;

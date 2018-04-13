@@ -41,7 +41,7 @@ shared_ptr<runtime::TensorView> runtime::interpreter::INT_Backend::create_tensor
     return make_shared<runtime::HostTensorView>(element_type, shape, memory_pointer, "external");
 }
 
-bool runtime::interpreter::INT_Backend::compile(std::shared_ptr<Function> func)
+bool runtime::interpreter::INT_Backend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -49,12 +49,13 @@ bool runtime::interpreter::INT_Backend::compile(std::shared_ptr<Function> func)
         instance.m_external_function = make_shared<ExternalFunction>(func);
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<INT_CallFrame>(cf);
+        instance.m_call_frame->m_emit_timing = instance.m_performance_counters_enabled;
         instance.m_call_frame->set_nan_check(instance.m_nan_check_enabled);
     }
     return true;
 }
 
-bool runtime::interpreter::INT_Backend::call(std::shared_ptr<Function> func,
+bool runtime::interpreter::INT_Backend::call(shared_ptr<Function> func,
                                              const vector<shared_ptr<runtime::TensorView>>& outputs,
                                              const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
@@ -73,8 +74,29 @@ bool runtime::interpreter::INT_Backend::call(std::shared_ptr<Function> func,
     return rc;
 }
 
-void runtime::interpreter::INT_Backend::set_nan_check(std::shared_ptr<Function> func, bool enable)
+void runtime::interpreter::INT_Backend::set_nan_check(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
     instance.m_nan_check_enabled = enable;
+}
+
+void runtime::interpreter::INT_Backend::enable_performance_data(shared_ptr<Function> func,
+                                                                bool enable)
+{
+    FunctionInstance& instance = m_function_map[func];
+    instance.m_performance_counters_enabled = enable;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::interpreter::INT_Backend::get_performance_data(shared_ptr<Function> func) const
+{
+    vector<runtime::PerformanceCounter> rc;
+    const FunctionInstance& instance = m_function_map.at(func);
+    for (const pair<const Node*, stopwatch> p : instance.m_call_frame->m_timer_map)
+    {
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
+    }
+    return rc;
 }

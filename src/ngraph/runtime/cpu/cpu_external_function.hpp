@@ -115,7 +115,6 @@ namespace ngraph
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
                 bool m_is_compiled;
-                bool m_timing;
                 EntryPoint m_compiled_function;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;

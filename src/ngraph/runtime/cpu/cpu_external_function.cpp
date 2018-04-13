@@ -280,7 +280,6 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
-    , m_timing(false)
     , m_compiled_function(nullptr)
     , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
@@ -298,8 +297,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         return;
     }
-
-    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
