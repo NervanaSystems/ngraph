@@ -10,19 +10,25 @@ configuration options that can be incorporated. Fine-tuning an nGraph-enabled
 device is as much of an art as it is a science; there are virtually limitless
 ways to command your training or inference computations to run the way you want.  
 
-Most of the time, and how this has worked :doc:`for many <../framework-integration-guides>` 
+In this section, which was written for framework architects or engineers who are 
+optimizing an new or less widely-supported framework, we provide some of our 
+learnings from the work we've done in developing our custom bridge code, such as
+that for our `ngraph tensorflow bridge` code. 
+
+Indeed, how this has worked :doc:`for many <../framework-integration-guides>` 
 of the "direct optimizations" we've shared with the developer community, 
 `engineering teams carefully tune the workload to extract best performance`_ 
 from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
-that is training a specific dataset. Some of the ways we attempt to extract 
+that is training a specific dataset. Some of the ways we attempt to improve 
 performance include: 
 
 * Testing and recording the results of various system-level configuration options
-  or flags enabled or disabled,
+  or enabled or disabled flags,
 * Compiling with a mix of custom environment variables, 
 * Finding semi-related comparisons for benchmarking [#1]_, and 
-* Tuning lower levels of system so that the machine-learning algorithm can learn 
-  faster or more accurately that it did on previous runs, such as with :doc:`../ops/index`. 
+* Tuning lower levels of the system so that the machine-learning algorithm can 
+  learn faster or more accurately that it did on previous runs, such as 
+  with :doc:`../ops/index`. 
 
 In nearly every case, the "best" mix of configuration options boils down to 
 something unique to that framework-model topology. The larger and more complex a 
@@ -50,7 +56,7 @@ gets executed depends upon the data format that the model is using. NHWC or NCHW
 are the two more common layouts, and the ultimate runtime can vary greatly -- 
 even when all other factors are the same -- when this detail is overlooked.
 
-For CPU backends (and most cuDNN), the preferred layout is ``NCHW``.
+For CPU (and most cuDNN) backends, the preferred layout is ``NCHW``.
 
 * **N** -- Number of images per batch
 * **C** -- Channel of the image (expressed as a number like 3 for RGB and 1 
@@ -162,7 +168,7 @@ increasing bandwidth demands on the Intel® Ultra-Path Interconnect (Intel® UPI
 This situation is exacerbated with larger number of sockets found in 4, 8, and 
 16-socket systems. We believe that users need to be aware of system level 
 optimizations in addition to framework specific configuration parameters to 
-achieve the best performance for NN workloads on CPU platforms.
+achieve the best performance for NN workloads on CPU platforms. 
 
 
 
@@ -174,6 +180,7 @@ achieve the best performance for NN workloads on CPU platforms.
    configuration parameters. Every topology is different, and performance 
    increases or slowdowns can be attributed to multiple means.    
 
+.. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow
 .. _engineering teams carefully tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
 .. _KMP options: https://software.intel.com/en-us/node/522691
