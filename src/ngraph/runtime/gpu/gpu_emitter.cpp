@@ -1230,7 +1230,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     if (input_shape.size() <= 5)
                     {
-                        uint32_t max_pool_index = 0;
+                        size_t max_pool_index = 0;
                         // 1d max pool (NCW)
                         if ((input_shape.size() == 3 || num_nontrivial_dims == 1))
                         {

@@ -33,6 +33,7 @@ namespace ngraph
             class TypeInfo
             {
             public:
+                virtual ~TypeInfo() = default;
                 // Helper functions to request information about the underlying c-type
                 // that is implicitly associated with the registed element::Type
                 virtual std::string lowest() const = 0;
