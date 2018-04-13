@@ -57,6 +57,7 @@ Not currently a comprehensive list.
    atan.rst
    avg_pool.rst
    avg_pool_backprop.rst
+   batch_norm.rst
    broadcast.rst
    ceiling.rst
    concat.rst
