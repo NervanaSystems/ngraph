@@ -21,13 +21,13 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     NodeVector, Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling, \
-    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \ 
+    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
     FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, \
     Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
     Subtract, Sum, Tan, Tanh
 
-from typing import Callable, Iterable, List
+from typing import Iterable, List
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
