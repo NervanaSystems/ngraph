@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,30 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include <string>
-#include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "cudnn_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-namespace ngraph
+extern "C" void ngraph::runtime::gpu::cudnn_utils::cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                                                                          size_t primitive_index,
+                                                                          void** args,
+                                                                          void** result)
 {
-    namespace runtime
-    {
-        namespace gpu
-        {
-            class CudaFunctionPool
-            {
-            public:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
-
-            private:
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
-            };
-        }
-    }
+    (*ctx->cudnn_primitives[primitive_index])(args, result);
 }
