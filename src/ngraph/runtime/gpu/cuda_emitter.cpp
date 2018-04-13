@@ -67,7 +67,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         return primitive_index;
     }
 
-    uint32_t nthreads = shape_size(output_shape);
+    size_t nthreads = shape_size(output_shape);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
@@ -197,8 +197,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
                                                     const std::array<std::string, 2>& dtypes,
                                                     const Shape& input_shape,
                                                     const Shape& output_shape,
-                                                    uint32_t window_width,
-                                                    uint32_t window_stride)
+                                                    size_t window_width,
+                                                    size_t window_stride)
 {
     auto input_width = input_shape.back();
     auto output_width = output_shape.back();

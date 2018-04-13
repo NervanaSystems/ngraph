@@ -48,8 +48,8 @@ namespace ngraph
                                          const std::array<std::string, 2>& dtypes,
                                          const Shape& input_shape,
                                          const Shape& output_shape,
-                                         uint32_t window_width,
-                                         uint32_t window_stride);
+                                         size_t window_width,
+                                         size_t window_stride);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
