@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,27 +16,36 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include <array>
 
 namespace ngraph
 {
+    class Shape;
+
     namespace runtime
     {
         namespace gpu
         {
-            class CudaFunctionPool
+            struct GPURuntimeContext;
+            class GPUPrimitiveEmitter;
+
+            class CUDAEmitter
             {
+                friend class GPUPrimitiveEmitter;
+
             public:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
+                size_t build_pad(const GPURuntimeContext* ctx,
+                                 const std::array<std::string, 2>& dtypes,
+                                 const Shape& input_shape,
+                                 const Shape& output_shape,
+                                 const Shape& pad_below,
+                                 const Shape& pad_above,
+                                 const Shape& pad_interior);
 
             private:
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
+                CUDAEmitter(GPUPrimitiveEmitter* emitter);
+
+                GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }
     }

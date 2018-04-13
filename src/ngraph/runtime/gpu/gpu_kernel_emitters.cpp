@@ -209,7 +209,7 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
     writer << "                               CUDNN_REDUCE_TENSOR_NO_INDICES,\n";
     writer << "                               CUDNN_32BIT_INDICES);\n";
     writer << "size_t workspace_size = 0;\n";
-    writer << "cudnnGetReductionWorkspaceSize(cudnn_handle,\n";
+    writer << "cudnnGetReductionWorkspaceSize(*ctx->cudnn_handle,\n";
     writer << "                               reduceTensorDesc,\n";
     writer << "                               " << input_desc << ",\n";
     writer << "                               " << output_desc << ",\n";
@@ -217,7 +217,7 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
     writer << "void* workspace_ptr = "
               "ngraph::runtime::gpu::create_gpu_buffer(workspace_size);\n";
     writer << "float alpha = " << alpha << ", beta = " << beta << ";\n";
-    writer << "cudnnReduceTensor(cudnn_handle,\n";
+    writer << "cudnnReduceTensor(*ctx->cudnn_handle,\n";
     writer << "                  reduceTensorDesc,\n";
     writer << "                  nullptr,\n";
     writer << "                  0,\n";

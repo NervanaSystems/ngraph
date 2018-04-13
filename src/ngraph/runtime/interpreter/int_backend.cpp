@@ -73,6 +73,9 @@ bool runtime::interpreter::INT_Backend::call(std::shared_ptr<Function> func,
                                              const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
+
+    validate_call(func, outputs, inputs);
+
     auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
