@@ -29,15 +29,12 @@ shared_ptr<runtime::TensorView>
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}), op::ParameterVector{A});
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({result}, {a});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    backend->call(f, {result}, {a});
 
     return result;
 }
@@ -49,15 +46,12 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, true), op::ParameterVector{A});
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({result}, {a});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    backend->call(f, {result}, {a});
 
     return result;
 }
@@ -69,15 +63,12 @@ shared_ptr<runtime::TensorView> make_reduce_result_false(
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, false), op::ParameterVector{A});
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    cf->call({result}, {a});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    backend->call(f, {result}, {a});
 
     return result;
 }
@@ -151,17 +142,13 @@ TEST(builder, tensor_mask)
         make_shared<Function>(builder::tensor_mask<op::Less>(sequence_lengths, 1, 0, mask_shape, 0),
                               op::ParameterVector{sequence_lengths});
 
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
 
-    auto sequence_lengths_data =
-        backend->make_primary_tensor_view(element::u32, max_sequence_length);
+    auto sequence_lengths_data = backend->create_tensor(element::u32, max_sequence_length);
     copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
-    auto result = backend->make_primary_tensor_view(element::boolean, mask_shape);
+    auto result = backend->create_tensor(element::boolean, mask_shape);
 
-    cf->call({result}, {sequence_lengths_data});
+    backend->call(f, {result}, {sequence_lengths_data});
     vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
 
     EXPECT_EQ(expected, read_vector<char>(result));

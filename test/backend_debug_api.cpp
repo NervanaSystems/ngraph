@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -35,23 +35,20 @@ TEST(INTERPRETER, nan_check_input)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INT_CallFrame> icf =
-        static_pointer_cast<runtime::interpreter::INT_CallFrame>(cf);
+    shared_ptr<runtime::interpreter::INT_Backend> ibackend =
+        static_pointer_cast<runtime::interpreter::INT_Backend>(backend);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, NAN, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 1, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    icf->set_nan_check(true);
-    EXPECT_ANY_THROW(icf->call({result}, {a, b}));
+    ibackend->set_nan_check(f, true);
+    EXPECT_ANY_THROW(ibackend->call(f, {result}, {a, b}));
 }
 
 TEST(INTERPRETER, nan_check_output)
@@ -61,21 +58,18 @@ TEST(INTERPRETER, nan_check_output)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
 
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INT_CallFrame> icf =
-        static_pointer_cast<runtime::interpreter::INT_CallFrame>(cf);
+    shared_ptr<runtime::interpreter::INT_Backend> ibackend =
+        static_pointer_cast<runtime::interpreter::INT_Backend>(backend);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 0, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 0, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
-    icf->set_nan_check(true);
-    EXPECT_ANY_THROW(icf->call({result}, {a, b}));
+    ibackend->set_nan_check(f, true);
+    EXPECT_ANY_THROW(ibackend->call(f, {result}, {a, b}));
 }

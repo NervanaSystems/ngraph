@@ -73,7 +73,8 @@ size_t
 }
 
 float test_accuracy(MNistDataLoader& loader,
-                    std::shared_ptr<runtime::CallFrame> cf,
+                    std::shared_ptr<runtime::Backend> backend,
+                    std::shared_ptr<Function> function,
                     const std::shared_ptr<runtime::TensorView>& t_X,
                     const std::shared_ptr<runtime::TensorView>& t_Y,
                     const std::shared_ptr<runtime::TensorView>& t_softmax,
@@ -95,7 +96,8 @@ float test_accuracy(MNistDataLoader& loader,
         t_Y->write(loader.get_label_floats(),
                    0,
                    loader.get_label_batch_size() * sizeof(float));
-        cf->call({t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
+        backend->call(
+            function, {t_softmax}, {t_X, t_W0, t_b0, t_W1, t_b1});
         size_t acc = accuracy_count(t_softmax, t_Y);
         acc_count += acc;
         sample_count += batch_size;
@@ -181,8 +183,7 @@ int main(int argc, const char* argv[])
     auto b1_next = b1 + adjoints.backprop_node(b1);
 
     // Get the backend
-    auto manager = runtime::Manager::get("CPU");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("CPU");
 
     // Allocate and randomly initialize variables
     auto t_W0 = make_output_tensor(backend, W0, 0);
@@ -223,8 +224,6 @@ int main(int argc, const char* argv[])
             NodeVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
             op::ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
-    auto train_ext = manager->compile(train_function);
-    auto train_cf = backend->make_call_frame(train_ext);
 
     // Plain inference
     // X, W0, b0, W1, b1 -> softmax
@@ -233,8 +232,6 @@ int main(int argc, const char* argv[])
         clone_function(Function(NodeVector{softmax},
                                 op::ParameterVector{X, W0, b0, W1, b1}),
                        inference_node_map);
-    auto inference_ext = manager->compile(inference_function);
-    auto inference_cf = backend->make_call_frame(inference_ext);
 
     set_scalar(t_learning_rate, .03f);
 
@@ -248,7 +245,8 @@ int main(int argc, const char* argv[])
         t_Y->write(train_loader.get_label_floats(),
                    0,
                    train_loader.get_label_batch_size() * sizeof(float));
-        train_cf->call(
+        backend->call(
+            train_function,
             {t_loss,
              t_softmax,
              t_W0_next,
@@ -265,15 +263,17 @@ int main(int argc, const char* argv[])
         if (train_loader.get_epoch() != last_epoch)
         {
             last_epoch = train_loader.get_epoch();
-            std::cout << "Test accuracy: " << test_accuracy(test_loader,
-                                                            inference_cf,
-                                                            t_X,
-                                                            t_Y,
-                                                            t_softmax,
-                                                            t_W0,
-                                                            t_b0,
-                                                            t_W1,
-                                                            t_b1)
+            std::cout << "Test accuracy: "
+                      << test_accuracy(test_loader,
+                                       backend,
+                                       inference_function,
+                                       t_X,
+                                       t_Y,
+                                       t_softmax,
+                                       t_W0,
+                                       t_b0,
+                                       t_W1,
+                                       t_b1)
                       << std::endl;
         }
     }

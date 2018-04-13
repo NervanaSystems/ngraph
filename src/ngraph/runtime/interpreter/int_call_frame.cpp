@@ -27,7 +27,7 @@ using namespace ngraph;
 
 runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<Function> func)
     : m_function(func)
-    , m_emit_timing(std::getenv("NGRAPH_INTERPRETER_EMIT_TIMING") != nullptr)
+    , m_emit_timing(false)
     , m_nan_check(std::getenv("NGRAPH_INTERPRETER_NAN_CHECK") != nullptr)
 {
 }
