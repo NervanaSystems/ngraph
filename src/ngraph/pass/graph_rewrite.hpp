@@ -25,10 +25,12 @@ namespace ngraph
     namespace pass
     {
         class GraphRewrite;
+        class RecurrentGraphRewrite;
     }
     namespace pattern
     {
         class Matcher;
+        class RecurrentMatcher;
     }
 }
 
@@ -61,4 +63,21 @@ public:
 private:
     //enable cascading rewrites
     std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
+};
+
+class ngraph::pass::RecurrentGraphRewrite : public FunctionPass
+{
+public:
+    RecurrentGraphRewrite(size_t num_iters = 10)
+        : FunctionPass()
+        , m_num_iters(num_iters)
+    {
+    }
+
+    void add_matcher(std::shared_ptr<pattern::RecurrentMatcher> m) { m_matchers.push_back(m); }
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+
+private:
+    size_t m_num_iters;
+    std::vector<std::shared_ptr<pattern::RecurrentMatcher>> m_matchers;
 };

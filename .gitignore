@@ -100,3 +100,9 @@ python-wheels/
 
 # python wheels
 python/share/*
+
+# git merge
+*.orig
+\#*
+\.#*
+

@@ -16,12 +16,12 @@
 """Functions related to converting between Python and numpy types and ngraph types."""
 
 import logging
-from typing import Union, List
+from typing import Callable, Union, List
 
 import numpy as np
 
 from ngraph.impl import Type as NgraphType
-from ngraph.impl import Node, Shape
+from ngraph.impl import Function, Node, Shape
 from ngraph.impl.op import Constant
 
 from ngraph.exceptions import NgraphTypeError
@@ -32,7 +32,9 @@ log = logging.getLogger(__file__)
 TensorShape = List[int]
 NumericData = Union[int, float, np.ndarray]
 NumericType = Union[type, np.dtype]
+ScalarData = Union[int, float]
 NodeInput = Union[Node, NumericData]
+CallableData = Union[Callable, Function]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.boolean, np.bool),
