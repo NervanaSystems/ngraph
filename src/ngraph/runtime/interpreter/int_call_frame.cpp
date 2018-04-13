@@ -110,7 +110,15 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             base_type = op->get_inputs().at(0).get_tensor().get_element_type();
         }
-        secondary_type = op->get_element_type();
+
+        if (op->get_outputs().empty())
+        {
+            secondary_type = op->get_element_type();
+        }
+        else
+        {
+            secondary_type = op->get_outputs().at(0).get_tensor().get_element_type();
+        }
 
         // Some ops have unusual intput/output types so handle those special cases here
         if (op->description() == "Select")

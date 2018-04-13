@@ -24,10 +24,12 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -53,6 +55,7 @@
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
@@ -295,6 +298,32 @@ private:
                                             apb->get_padding_above(),
                                             apb->get_include_padding_in_avg_computation());
         }
+        else if (node_op == "BatchNorm")
+        {
+            ngraph::op::BatchNorm* bn = dynamic_cast<ngraph::op::BatchNorm*>(&node);
+            if (bn->get_output_size() == 3)
+            {
+                reference::batch_norm_three_outputs<T>(bn->get_eps_value(),
+                                                       reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                       reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                       reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                       reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                       reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                                                       reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                                                       args[2]->get_shape());
+            }
+            else
+            {
+                reference::batch_norm_one_output<T>(bn->get_eps_value(),
+                                                    reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                    reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                    reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                    reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                                    reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                                    reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                    args[2]->get_shape());
+            }
+        }
         else if (node_op == "Broadcast")
         {
             ngraph::op::Broadcast* broadcast = dynamic_cast<ngraph::op::Broadcast*>(&node);
@@ -464,6 +493,13 @@ private:
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
             call(function, out, args);
+        }
+        else if (node_op == "GetOutputElement")
+        {
+            const op::GetOutputElement* get_output_element = static_cast<const op::GetOutputElement*>(&node);
+            size_t n = get_output_element->get_n();
+            size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
+            std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
         }
         else if (node_op == "Greater")
         {
