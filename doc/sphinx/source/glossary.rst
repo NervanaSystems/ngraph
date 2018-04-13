@@ -102,3 +102,9 @@ Glossary
       The serialized version of a trained model that can be passed to
       one of the nGraph backends for computation.      
 
+   data layouts
+
+      The ordering of different data formats into a specific layout that
+      can be used to run a model; ``NCHW`` and ``NHWC`` both represent
+      two different data layouts. Data layouts can have significant 
+      impact on performance.  
