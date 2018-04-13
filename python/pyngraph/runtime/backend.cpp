@@ -19,7 +19,6 @@
 //#include <string>
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "pyngraph/runtime/backend.hpp"
@@ -35,5 +34,5 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.def("make_primary_tensor_view",
                 (std::shared_ptr<ngraph::runtime::TensorView>(ngraph::runtime::Backend::*)(
                     const ngraph::element::Type&, const ngraph::Shape&)) &
-                    ngraph::runtime::Backend::make_primary_tensor_view);
+                    ngraph::runtime::Backend::create_tensor);
 }

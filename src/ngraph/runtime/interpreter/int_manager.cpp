@@ -34,12 +34,6 @@ std::vector<size_t> runtime::interpreter::INT_Manager::get_subdevices() const
     return rc;
 }
 
-shared_ptr<runtime::ExternalFunction>
-    runtime::interpreter::INT_Manager::compile(const shared_ptr<Function>& fun)
-{
-    return make_shared<ExternalFunction>(fun);
-}
-
 runtime::Manager::Factory runtime::interpreter::INT_Manager::factory =
     runtime::Manager::register_factory("INTERPRETER",
                                        [](const string& name) -> shared_ptr<runtime::Manager> {
