@@ -27,6 +27,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
 namespace ngraph
@@ -37,6 +38,7 @@ namespace ngraph
         {
             class GPU_Emitter;
             class GPU_CallFrame;
+            struct GPURuntimeContext;
 
             using OpFunction =
                 std::function<void(GPU_ExternalFunction* external_function,
@@ -54,7 +56,13 @@ namespace ngraph
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
-                std::shared_ptr<GPU_CallFrame> make_call_frame();
+                ~GPU_ExternalFunction();
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
+                const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
+                {
+                    return m_primitive_emitter;
+                }
 
             protected:
                 void compile();
@@ -83,6 +91,8 @@ namespace ngraph
                 bool m_release_function;
                 bool m_is_compiled;
                 bool m_timing;
+                std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+                std::unique_ptr<GPURuntimeContext> m_ctx;
             };
         }
     }

@@ -60,6 +60,8 @@ bool runtime::interpreter::INT_Backend::call(std::shared_ptr<Function> func,
 {
     bool rc = true;
 
+    validate_call(func, outputs, inputs);
+
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {

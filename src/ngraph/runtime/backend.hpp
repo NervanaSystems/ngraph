@@ -79,6 +79,11 @@ namespace ngraph
             virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
             virtual std::vector<PerformanceCounter>
                 get_performance_data(std::shared_ptr<Function> func) const;
+
+        protected:
+            void validate_call(std::shared_ptr<const Function> func,
+                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
         };
     }
 }

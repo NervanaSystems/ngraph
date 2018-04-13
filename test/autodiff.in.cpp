@@ -32,7 +32,6 @@ using namespace ngraph;
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 4, 4, 4}; //in CHWN
@@ -73,7 +72,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 5, 5, 2}; //in CHWN
@@ -1463,7 +1461,6 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{4, 1, 4, 4}; //in NCHW
     Shape maxpool_shape{4, 1, 3, 3};
@@ -1500,7 +1497,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 2, 5, 5}; //in NCHW
