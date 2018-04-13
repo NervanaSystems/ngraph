@@ -23,6 +23,7 @@
 #include "cpu_nop_elimination.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 
 #define TI(x) std::type_index(typeid(x))
@@ -64,12 +65,24 @@ HANDLER_DECL(eliminate_convert)
     return false;
 }
 
+HANDLER_DECL(eliminate_slice)
+{
+    auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node);
+    if (slice->get_input_shape(0) == slice->get_output_shape(0))
+    {
+        function->replace_node(node, node->get_input_op(0));
+        return true;
+    }
+    return false;
+}
+
 static const std::unordered_map<std::type_index,
                                 std::function<bool(const std::shared_ptr<ngraph::Function>&,
                                                    const std::shared_ptr<ngraph::Node>&)>>
     dispatcher{{TI(ngraph::op::Pad), &eliminate_pad},
                {TI(ngraph::op::Sum), &eliminate_sum},
-               {TI(ngraph::op::Convert), &eliminate_convert}};
+               {TI(ngraph::op::Convert), &eliminate_convert},
+               {TI(ngraph::op::Slice), &eliminate_slice}};
 
 bool ngraph::runtime::cpu::pass::CPUNopElimination::run_on_function(
     std::shared_ptr<ngraph::Function> function)

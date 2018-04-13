@@ -185,7 +185,7 @@ namespace ngraph
             /// \brief Invoked by a pass to process a successful match
             bool process_match();
 
-            std::shared_ptr<Node> match_root() { return m_match_root; }
+            std::shared_ptr<Node> get_match_root() { return m_match_root; }
         private:
             std::shared_ptr<Node> m_pattern;
             std::shared_ptr<op::Label> m_recurrent_pattern;

@@ -2579,7 +2579,6 @@ TEST(${BACKEND_NAME}, exp)
 
 TEST(${BACKEND_NAME}, slice_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
@@ -2599,7 +2598,6 @@ TEST(${BACKEND_NAME}, slice_scalar)
 
 TEST(${BACKEND_NAME}, slice_matrix)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 2};
@@ -2619,7 +2617,6 @@ TEST(${BACKEND_NAME}, slice_matrix)
 
 TEST(${BACKEND_NAME}, slice_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{16};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
@@ -2639,7 +2636,6 @@ TEST(${BACKEND_NAME}, slice_vector)
 
 TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4};
@@ -2661,7 +2657,6 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
 
 TEST(${BACKEND_NAME}, slice_3d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -2687,7 +2682,6 @@ TEST(${BACKEND_NAME}, slice_3d)
 
 TEST(${BACKEND_NAME}, slice_3d_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4, 4};
@@ -2715,7 +2709,6 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
 
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{4, 4, 4};
@@ -4066,7 +4059,6 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
 
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -4089,7 +4081,6 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -4116,7 +4107,6 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
 
 TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -4148,7 +4138,6 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 
 TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -4256,7 +4245,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 5, 5};
@@ -4337,7 +4325,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
@@ -5626,7 +5613,6 @@ TEST(${BACKEND_NAME}, zero_sized_subtract)
 
 TEST(${BACKEND_NAME}, convolution_outlining)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
