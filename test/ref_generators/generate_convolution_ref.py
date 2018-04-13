@@ -221,7 +221,6 @@ def emit_test(t,f):
 TEST (${BACKEND_NAME}, %s)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     Shape shape_a{%s};
     Shape shape_b{%s};
     Shape shape_r{%s};
