@@ -67,7 +67,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
    .. code-block:: console
 
-      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph
 
 #. Create a build directory outside of the ``ngraph/src`` directory 
@@ -141,7 +141,7 @@ The process documented here will work on CentOS 7.4.
    .. code-block:: console
 
       $ cd /opt/libraries 
-      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
       $ cmake ../
       $ make && sudo make install 
