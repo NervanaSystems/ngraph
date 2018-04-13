@@ -14,30 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace gpu
-        {
-            class CudaFunctionPool
-            {
-            public:
-                CudaFunctionPool() {}
-                ~CudaFunctionPool() {}
-                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
-
-            private:
-                std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
-            };
-        }
-    }
-}
+using namespace ngraph;
+using namespace ngraph::runtime::gpu;
