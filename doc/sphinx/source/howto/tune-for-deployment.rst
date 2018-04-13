@@ -11,9 +11,9 @@ device is as much of an art as it is a science; there are virtually limitless
 ways to command your training or inference computations to run the way you want.  
 
 In this section, which was written for framework architects or engineers who are 
-optimizing an new or less widely-supported framework, we provide some of our 
+optimizing a new or less widely-supported framework, we provide some of our 
 learnings from the work we've done in developing our custom bridge code, such as
-that for our `ngraph tensorflow bridge` code. 
+that for our `ngraph tensorflow bridge`_ code. 
 
 Indeed, how this has worked :doc:`for many <../framework-integration-guides>` 
 of the "direct optimizations" we've shared with the developer community, 
@@ -129,14 +129,14 @@ Convolution shapes
 ``OMP_NUM_THREADS``
 ^^^^^^^^^^^^^^^^^^^
 
-The best resource for this configuration option is the `gnu.org site`_ 
-``OMP_NUM_THREADS`` defaults to the number of logical cores. To check the 
+The best resource for this configuration option is the `gnu org site`_ 
+``OMP_NUM_THREADS`` defaults to the number of logical cores. To chekc the 
 number of cores on your system, you can run the following on the command-line to 
 see the details of your CPU: 
 
 .. code-block:: console
 
-   $ lscpu
+   $ lscpu  
 
 
 Intra-op and inter-op parallelism 
@@ -185,4 +185,8 @@ achieve the best performance for NN workloads on CPU platforms.
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
 .. _KMP options: https://software.intel.com/en-us/node/522691
 .. _MKLDNN: https://github.com/intel/mkl-dnn
-.. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
+.. _gnu org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
+
+
+
+
