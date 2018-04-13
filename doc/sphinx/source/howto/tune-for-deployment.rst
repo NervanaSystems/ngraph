@@ -130,7 +130,7 @@ Convolution shapes
 ^^^^^^^^^^^^^^^^^^^
 
 The best resource for this configuration option is the `gnu org site`_ 
-``OMP_NUM_THREADS`` defaults to the number of logical cores. To chekc the 
+``OMP_NUM_THREADS`` defaults to the number of logical cores. To check the 
 number of cores on your system, you can run the following on the command-line to 
 see the details of your CPU: 
 
@@ -150,8 +150,8 @@ however, they are often not sufficient to achieve optimal performance.
 Framework-based adjustments cannot access the underlying  NUMA configuration in 
 multi-socket Intel Xeon processor-based platforms, which is a key requirement for
 many kinds of inference-engine computations.  See the next section on 
-NUMA performance to learn more about this performance feature available to systems
-utilizing nGraph. 
+NUMA performance to learn more about this performance feature available to 
+systems utilizing nGraph. 
 
 
 NUMA performance 
