@@ -48,6 +48,7 @@ namespace ngraph
                 {
                     return dispatcher.at(type);
                 }
+
             protected:
                 template <typename T>
                 std::string to_string(const T& val) const

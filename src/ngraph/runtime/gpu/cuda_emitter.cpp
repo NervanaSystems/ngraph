@@ -22,8 +22,8 @@
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -205,10 +205,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
 
     std::stringstream ss;
     ss << "maxpool"
-       << "_i" << input_width
-       << "_o" << output_width
-       << "_w" << window_width
-       << "_s" << window_stride;
+       << "_i" << input_width << "_o" << output_width << "_w" << window_width << "_s"
+       << window_stride;
     auto hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -226,8 +224,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     {
         codegen::CodeWriter writer;
         // assumes data is in NCW format
-        writer << "extern \"C\" __global__ void cuda_" << hash << "("
-               << dtypes[0] << "* in, "
+        writer << "extern \"C\" __global__ void cuda_" << hash << "(" << dtypes[0] << "* in, "
                << dtypes[1] << "* out)\n";
         writer.block_begin();
         {
@@ -237,7 +234,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
             writer.block_begin();
             {
                 // index into input tensor
-                writer << "size_t start = (tid / " << output_width << ") * " << input_width << " + " << " (tid % " << output_width << ") * " << window_stride << ";\n";
+                writer << "size_t start = (tid / " << output_width << ") * " << input_width << " + "
+                       << " (tid % " << output_width << ") * " << window_stride << ";\n";
                 writer << dtypes[0] << " max_val = " << TypeInfo::Get(dtypes[0])->lowest() << ";\n";
                 writer << "for (size_t i = start; i < start + " << window_width << "; i++)\n";
                 writer.block_begin();
@@ -259,23 +257,21 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
 
-
-
     auto pool = new gpu::primitive{[=](void** inputs, void** outputs) {
-            void* args_list[] = {&inputs[0], &outputs[0]};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
-                                          1,
-                                          1, // grid dim
-                                          1,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }};
+        void* args_list[] = {&inputs[0], &outputs[0]};
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      static_cast<unsigned int>(nthreads),
+                                      1,
+                                      1, // grid dim
+                                      1,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list,
+                                      0));  // arguments
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }};
 
     primitive_index = this->m_primitive_emitter->insert(pool);
     m_primitive_emitter->cache(hash, primitive_index);
