@@ -64,6 +64,10 @@ namespace ngraph
                                              const std::vector<GPU_TensorViewWrapper>& args,
                                              const std::vector<GPU_TensorViewWrapper>& out);
             };
+            Shape get_padded_shape(const Shape& input_shape,
+                                   const Shape& padding_below,
+                                   const Shape& padding_above,
+                                   const Shape& padding_interior);
         }
     }
 }
