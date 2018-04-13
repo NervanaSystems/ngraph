@@ -35,10 +35,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), op::ParameterVector{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto v = vector<float>{1, 2, 3, 4};
     int comm_size;
@@ -53,6 +50,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     std::transform(
         v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
-    cf->call({result}, {a});
+    backend->call(f, {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }
