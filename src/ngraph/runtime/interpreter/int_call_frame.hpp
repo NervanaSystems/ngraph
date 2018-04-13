@@ -126,6 +126,7 @@ namespace ngraph
 class ngraph::runtime::interpreter::INT_CallFrame
 {
     friend class INT_Backend;
+
 public:
     INT_CallFrame(std::shared_ptr<Function> func);
 
