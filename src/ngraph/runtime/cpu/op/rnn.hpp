@@ -45,6 +45,17 @@ namespace ngraph
             Shape m_lstm_cell_shape;
         };
 
+        class RNN : public util::RequiresTensorViewArgs
+        {
+        public:
+            RNN(std::shared_ptr<Node> src_iter,
+                std::shared_ptr<Node> src_layer,
+                std::shared_ptr<Node> weights_iter,
+                std::shared_ptr<Node> weights_layer);
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+
         /// \brief Elementwise LSTMBackprop operation.
         ///
         // class LSTMBackprop : public util::RequiresTensorViewArgs

@@ -39,33 +39,33 @@ public:
     CPUFusion()
         : GraphRewrite()
     {
-        // construct_matmul();
-        // construct_matmulbias();
-        // construct_fprop_bn();
-        // construct_zero_padded_reshaped_conv();
-        // construct_zero_padded_conv();
-        // construct_zero_padded_conv_backprop_filters();
         construct_sigmoid();
         construct_sigmoid_bprop();
-        // construct_conv_bias();
-        // construct_batch_norm_relu();
-        // construct_conv_relu();
         construct_lstm_fprop();
+        construct_fprop_bn();
+        construct_zero_padded_reshaped_conv();
+        construct_zero_padded_conv();
+        construct_zero_padded_conv_backprop_filters();
+        construct_conv_bias();
+        construct_batch_norm_relu();
+        construct_conv_relu();
+        //construct_matmul();
+        //construct_matmulbias();
     }
 
 private:
+    void construct_sigmoid();
+    void construct_sigmoid_bprop();
+    void construct_lstm_fprop();
     void construct_matmul();
     void construct_matmulbias();
     void construct_conv_bias();
     void construct_fprop_bn();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_conv_relu();
-    void construct_lstm_fprop();
 };
 
 class ngraph::runtime::cpu::pass::RecurrentCPUFusion : public ngraph::pass::RecurrentGraphRewrite
@@ -74,9 +74,9 @@ public:
     RecurrentCPUFusion()
         : RecurrentGraphRewrite()
     {
-        //construct_lstm_fprop();
+        construct_rnn_fprop();
     }
 
 private:
-    //void construct_lstm_fprop();
+    void construct_rnn_fprop();
 };

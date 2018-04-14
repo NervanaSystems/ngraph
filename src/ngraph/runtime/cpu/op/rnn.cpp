@@ -52,6 +52,26 @@ op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
     add_output(param1_1->get_element_type(), m_lstm_cell_shape);
 }
 
+shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+
+    return make_shared<RNN>(new_args[0], new_args[1], new_args[2], new_args[3]);
+}
+
+op::RNN::RNN(std::shared_ptr<Node> src_iter,
+             std::shared_ptr<Node> src_layer,
+             std::shared_ptr<Node> weights_iter,
+             std::shared_ptr<Node> weights_layer)
+    : RequiresTensorViewArgs("RNN", {src_iter, src_layer, weights_iter, weights_layer})
+{
+    add_output(src_layer->get_element_type(), src_layer->get_shape());
+    add_output(src_iter->get_element_type(), src_iter->get_shape());
+}
+
 // op::LSTMBackprop::LSTMBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
 //     : RequiresTensorViewArgs("LSTMBackprop", {arg, delta})
 // {

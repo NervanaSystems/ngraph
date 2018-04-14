@@ -166,6 +166,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
+    std::cout << "MatmulBias: " << m << std::endl;
     this->add_matcher(m);
 }
 
@@ -241,6 +242,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, callback);
+    std::cout << "Matmul: " << m << std::endl;
     this->add_matcher(m);
 }
 
@@ -646,6 +648,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
+    std::cout << "Sigmoid: " << m << std::endl;
     this->add_matcher(m);
 }
 
@@ -1055,9 +1058,54 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
         };
     //std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::Matcher>(ht, callback);
+    std::cout << "lstm: " << m << std::endl;
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
+{
+    auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
+    auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
+    auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+
+    //TODO: Figure out how to pass variable number of Xt and Weights for the RNN Superfused OP
+    // for now just feeding the the same param's to verify the PM and fusion
+    auto lstm = std::make_shared<op::LSTM>(
+        param1_1, param1_2, param2_1, param2_2, bias1, bias2, Shape{10, 100});
+
+    auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
+    auto lstm_label =
+        std::make_shared<pattern::op::Label>(ht_output, nullptr, NodeVector{ht_output});
+
+    pattern::recurrent_graph_rewrite_callback callback =
+        [param1_1, param1_2, param2_1, param2_2, bias1, bias2](pattern::RecurrentMatcher& m) {
+
+            auto label_param1_1 = m.get_bound_nodes_for_pattern(param1_1);
+            auto label_param1_2 = m.get_bound_nodes_for_pattern(param1_2);
+            auto label_param2_1 = m.get_bound_nodes_for_pattern(param2_1);
+            auto label_param2_2 = m.get_bound_nodes_for_pattern(param2_2);
+            auto label_bias1 = m.get_bound_nodes_for_pattern(bias1);
+            auto label_bias2 = m.get_bound_nodes_for_pattern(bias2);
+
+            auto rnn = std::make_shared<op::RNN>(
+                label_param1_2[0], label_param1_2[0], label_param2_1[0], label_param2_2[0]);
+
+            auto rnn_layer = std::make_shared<op::GetOutputElement>(rnn, 0);
+
+            std::cout << "In Recurrent RNN matcher " << std::endl;
+            ngraph::replace_node(m.get_match_root(), rnn_layer);
+            return true;
+
+        };
+
+    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
+    auto m = std::make_shared<pattern::RecurrentMatcher>(
+        ht_output, param1_1, empty_correlated_matches, callback);
+    this->add_matcher(m);
+}
 // void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_lstm_fprop()
 // {
 //     auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
