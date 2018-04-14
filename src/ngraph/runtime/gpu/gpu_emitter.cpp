@@ -1149,7 +1149,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                 output_shape,
                                                 padding_below,
                                                 padding_above,
-                                                {});
+                                                padding_interior);
                     writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ", "
                            << args[1].get_name() << "}.data(), ";

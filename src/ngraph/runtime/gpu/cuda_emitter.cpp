@@ -41,11 +41,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                             const Shape& padding_interior,
                                             const std::string& pad_value)
 {
-    if (padding_interior.size())
-    {
-        throw std::runtime_error("Interior padding is not yet supported in the GPU transformer.");
-    }
-
     // Need to check: are there models in which some tensors will have different types? if so, this
     // hash needs to include the tensor types.
     std::string val_hash = (pad_value == "") ? "0" : "1";
@@ -76,6 +71,11 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         // normalize pad dimensions to shape dimensions
         Shape pad_below(input_shape.size(), 0);
         Shape pad_above(input_shape.size(), 0);
+        Shape pad_interior(input_shape.size(), 0);
+
+        // if padding_interior is not zero length, it
+        // is from op::Pad for which padding_below will
+        // always be equal in size to padding_above
         if (padding_below.size() != input_shape.size())
         {
             for (int64_t i = padding_below.size() - 1; i >= 0; i--)
@@ -88,6 +88,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         {
             pad_below = padding_below;
             pad_above = padding_above;
+            pad_interior = padding_interior;
         }
 
         auto input_strides = row_major_strides(input_shape);
@@ -132,12 +133,13 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
             writer.block_begin();
             {
                 writer << "size_t idx = ";
-                writer << offset << " + tid % " << input_shape.back();
+                writer << offset << " + (tid % " << input_shape.back() << ") * "
+                       << 1 + pad_interior.back();
                 int64_t last = input_strides.size() - 1;
-                for (int64_t i = last - 1; i > 0; i--)
+                for (int64_t i = last - 1; i >= 0; i--)
                 {
-                    writer << " + ((tid / " << input_strides[i] << ") % " << input_shape[i + 1]
-                           << ") * " << output_strides[i];
+                    writer << " + (((tid / " << input_strides[i] << ") % " << input_shape[i + 1]
+                           << ") * " << 1 + pad_interior[i] << ") * " << output_strides[i];
                 }
                 writer << ";\n";
                 writer << "out[idx] = in[tid];\n";
