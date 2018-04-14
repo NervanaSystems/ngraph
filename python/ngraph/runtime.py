@@ -20,7 +20,6 @@ from typing import List
 import numpy as np
 
 from ngraph.impl import Function, Node, serialize, TensorViewType, util
-from ngraph.impl.runtime import Manager
 from ngraph.impl.op import Parameter
 
 from ngraph.utils.types import get_dtype, NumericData
@@ -31,7 +30,7 @@ log = logging.getLogger(__file__)
 def runtime(manager_name='CPU'):  # type: (str) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
-    Use signature to parametrize runtime as needed.
+    Use signature to parameterize runtime as needed.
     """
     return Runtime(manager_name)
 
