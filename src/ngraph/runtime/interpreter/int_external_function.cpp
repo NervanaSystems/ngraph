@@ -94,8 +94,10 @@ using descriptor::layout::DenseTensorViewLayout;
 
 runtime::interpreter::ExternalFunction::ExternalFunction(const shared_ptr<Function>& function,
                                                          bool release_function)
-    : runtime::ExternalFunction(function, release_function)
-    , m_interpreter_function(function)
+    : m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
+    , m_timing(false)
 {
 }
 
@@ -110,7 +112,7 @@ void runtime::interpreter::ExternalFunction::compile()
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(m_interpreter_function);
+    pass_manager.run_passes(m_function);
 
     m_is_compiled = true;
     if (m_release_function)
@@ -119,7 +121,8 @@ void runtime::interpreter::ExternalFunction::compile()
     }
 }
 
-shared_ptr<runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call_frame()
+shared_ptr<runtime::interpreter::INT_CallFrame>
+    runtime::interpreter::ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {
