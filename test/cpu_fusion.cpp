@@ -45,9 +45,9 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/pass/convolution_weight_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_weight_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1117,7 +1117,7 @@ TEST(cpu_fusion, weight_fusion)
     auto f = make_shared<Function>(NodeVector{conv_relu, conv_bprop_abs},
                                    op::ParameterVector{param, data_conv, dummy_arg_conv_bprop});
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::WeightFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConvolutionWeightOptimization>();
     pass_manager.run_passes(f);
 
     auto new_conv_bprop_data = conv_bprop_abs->get_input_op(0);

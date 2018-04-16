@@ -31,14 +31,14 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_weight_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/convolution_weight_optimization.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-void ngraph::runtime::cpu::pass::WeightFusion::construct_weight_fusion()
+void ngraph::runtime::cpu::pass::ConvolutionWeightOptimization::construct_weight_fusion()
 {
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{64});
     auto reshape_conv =
@@ -100,9 +100,17 @@ void ngraph::runtime::cpu::pass::WeightFusion::construct_weight_fusion()
             return false;
         }
 
-        auto new_cvt_lt = m_cvt_lt->copy_with_new_args({m_cvt_lt});
+        auto m_cvt_lt_bprop = m_conv_bprop->get_input_op(0);
+        //this automatically copies layout info
+        auto new_cvt_lt = m_cvt_lt_bprop->copy_with_new_args({m_cvt_lt});
         auto new_conv_bprop =
             m_conv_bprop->copy_with_new_args({new_cvt_lt, m_conv_bprop->get_input_op(1)});
+
+        //layout info needs to be copied manually
+        const auto& conv_bprop_tv = m_conv_bprop->get_output_tensor_view(0);
+        const auto& conv_bprop_layout = conv_bprop_tv->get_tensor_view_layout();
+        new_conv_bprop->get_output_tensor_view()->set_tensor_view_layout(conv_bprop_layout);
+
         NGRAPH_DEBUG << "Replacing " << m_conv_bprop->get_name() << " with "
                      << new_conv_bprop->get_name();
         ngraph::replace_node(m_conv_bprop, new_conv_bprop);

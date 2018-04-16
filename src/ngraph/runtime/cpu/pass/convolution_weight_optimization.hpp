@@ -25,16 +25,16 @@ namespace ngraph
         {
             namespace pass
             {
-                class WeightFusion;
+                class ConvolutionWeightOptimization;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::WeightFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::ConvolutionWeightOptimization : public ngraph::pass::GraphRewrite
 {
 public:
-    WeightFusion()
+    ConvolutionWeightOptimization()
         : GraphRewrite()
     {
         construct_weight_fusion();
