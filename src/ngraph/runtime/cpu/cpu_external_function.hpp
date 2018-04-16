@@ -33,7 +33,6 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
-#include "ngraph/runtime/external_function.hpp"
 
 namespace ngraph
 {
@@ -68,16 +67,15 @@ namespace ngraph
                 }
             };
 
-            class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<CPU_ExternalFunction>
+            class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
-                friend class CPU_CallFrame;
+                friend class CPU_Backend;
 
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+                std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
@@ -89,10 +87,9 @@ namespace ngraph
                 }
 
                 const std::string& get_function_name() const { return m_function_name; }
+                const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
             protected:
                 void compile();
-
-                EntryPoint m_compiled_function;
 
             private:
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
@@ -114,7 +111,11 @@ namespace ngraph
                     const std::unordered_map<const Node*, std::string>& node_cache);
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
-
+                void release_function() { m_function = nullptr; }
+                std::shared_ptr<ngraph::Function> m_function;
+                bool m_release_function;
+                bool m_is_compiled;
+                EntryPoint m_compiled_function;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;

@@ -21,6 +21,6 @@ using namespace std;
 
 TEST(runtime_manager, invalidName)
 {
-    ASSERT_THROW(ngraph::runtime::Manager::get("COMPLETELY-BOGUS-MANAGER-NAME"),
+    ASSERT_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-MANAGER-NAME"),
                  ngraph::ngraph_error);
 }

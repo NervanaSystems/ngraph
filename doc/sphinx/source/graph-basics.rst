@@ -70,7 +70,7 @@ and results in a tensor with the same element type and shape:
 Here, :math:`X_I` means the value of a coordinate :math:`I` for the tensor 
 :math:`X`. So the value of sum of two tensors is a tensor whose value at a 
 coordinate is the sum of the elements are that coordinate for the two inputs. 
-Unlike many frameowrks, it says nothing about storage or arrays.
+Unlike many frameworks, it says nothing about storage or arrays.
 
 An ``Add`` op is used to represent an elementwise tensor sum. To
 construct an Add op, each of the two inputs of the ``Add`` must be

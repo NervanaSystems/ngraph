@@ -29,7 +29,7 @@ model = (A + B) * C
 # >>> print(model)
 # <Node: 'Multiply_6'>
 
-runtime = ng.runtime(manager_name='INTERPRETER')
+runtime = ng.runtime(backend_name='INTERPRETER')
 # >>> print(runtime)
 # <Runtime: Manager='INTERPRETER'>
 

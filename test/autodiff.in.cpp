@@ -32,9 +32,7 @@ using namespace ngraph;
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 4, 4, 4}; //in CHWN
     Shape maxpool_shape{1, 4, 3, 3};
@@ -47,14 +45,11 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                           13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -71,17 +66,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 5, 5, 2}; //in CHWN
     Shape maxpool_shape{1, 2, 2, 2};
@@ -94,14 +85,11 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                           30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -116,17 +104,14 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape padding{1, 1};
 
@@ -140,15 +125,12 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
         make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding, false);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{4, 8, 12, 16};
 
@@ -159,17 +141,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 4, 4};
     Shape avgpool_shape{1, 1, 3, 3};
@@ -180,15 +159,12 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{1, 3, 1, 3, 1, 3, 1, 3, 3, 5, 3, 5, 3, 5, 3, 5};
 
@@ -199,17 +175,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{2, 2, 4, 4};
     Shape avgpool_shape{2, 2, 2, 2};
@@ -220,15 +193,12 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 12);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{//i1c1
                           1,
@@ -305,17 +275,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
@@ -330,16 +297,15 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
@@ -354,16 +320,15 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
@@ -380,15 +345,14 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        auto x = rng.initialize(backend->create_tensor(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_abs)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
     // that point by skipping (-0.01,0.01).
@@ -404,46 +368,41 @@ TEST(${BACKEND_NAME}, backwards_abs)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_pos}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_add)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0 + X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_add_nested)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -451,44 +410,41 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
         return make_shared<Function>((X0 + X1) + (X1 + X0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_broadcast0)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{2, 3}, AxisSet{0}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_broadcast1)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{3, 2}, AxisSet{1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_concat_vector)
@@ -496,16 +452,15 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -514,8 +469,7 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_concat_axis_0)
@@ -523,16 +477,15 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{3, 2};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{1, 2};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -541,8 +494,7 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_concat_axis_1)
@@ -550,16 +502,15 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape_0{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
+    auto x0 = rng.initialize(backend->create_tensor(element::f32, shape_0));
     Shape shape_1{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
+    auto x1 = rng.initialize(backend->create_tensor(element::f32, shape_1));
     Shape shape_2{2, 1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
+    auto x2 = rng.initialize(backend->create_tensor(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
@@ -568,16 +519,14 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_ceiling)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
     // them.
@@ -594,27 +543,23 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_minusone = rng_minusone.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(
-            manager, backend, make_graph, {x_minusone}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone = rng_plusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plusone = rng_plusone.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plusone}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo = rng_plustwo.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plustwo = rng_plustwo.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plustwo}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_plustwo}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_cos)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -626,9 +571,9 @@ TEST(${BACKEND_NAME}, backwards_cos)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
@@ -636,8 +581,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -649,9 +593,9 @@ TEST(${BACKEND_NAME}, backwards_cosh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
@@ -660,38 +604,34 @@ TEST(${BACKEND_NAME}, backwards_divide)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     test::Uniform<float> rng1(1.0f, 2.0f);
     test::Uniform<float> rng2(-2.0f, -1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng1.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x2 = rng2.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng1.initialize(backend->create_tensor<float>(shape));
+    auto x2 = rng2.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0 / X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x2}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{};
     Shape shape1{};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -699,20 +639,18 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{};
     Shape shape1{3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -720,20 +658,18 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{3, 4};
     Shape shape1{};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -741,20 +677,18 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{3};
     Shape shape1{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -762,21 +696,19 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{4, 3};
     Shape shape1{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -784,21 +716,19 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{4, 3};
     Shape shape1{3, 5};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -806,21 +736,19 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape0{2, 4, 3};
     Shape shape1{4, 3, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
@@ -828,33 +756,30 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
         return make_shared<Function>(make_shared<op::Dot>(X0, X1, 2),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_exp)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Exp>(X0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_floor)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
     // them.
@@ -871,50 +796,45 @@ TEST(${BACKEND_NAME}, backwards_floor)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_minusone = rng_minusone.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(
-            manager, backend, make_graph, {x_minusone}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone = rng_plusone.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plusone = rng_plusone.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plusone}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo = rng_plustwo.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_plustwo = rng_plustwo.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_plustwo}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_plustwo}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_log)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(1.0f, 2.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Log>(X0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_maximum)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -922,19 +842,17 @@ TEST(${BACKEND_NAME}, backwards_maximum)
         return make_shared<Function>(make_shared<op::Maximum>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_minimum)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -942,58 +860,53 @@ TEST(${BACKEND_NAME}, backwards_minimum)
         return make_shared<Function>(make_shared<op::Minimum>(X0, X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_multiply)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_negative)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(-X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_parameter)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_power)
@@ -1001,8 +914,7 @@ TEST(${BACKEND_NAME}, backwards_power)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng_neg(-5.0f, -0.5f);
     test::Uniform<float> rng_pos(0.5f, 5.0f);
@@ -1015,36 +927,32 @@ TEST(${BACKEND_NAME}, backwards_power)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
-    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
 
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_relu)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng_neg(-1.0f, -0.01f);
     test::Uniform<float> rng_pos(0.01f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1054,15 +962,13 @@ TEST(${BACKEND_NAME}, backwards_relu)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_pos}, .01f, .01f));
     }
 }
 
@@ -1071,8 +977,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape_x{5, 5};
@@ -1087,38 +992,35 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
-        auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
+        auto x = rng.initialize(backend->create_tensor<float>(shape_x));
+        auto y = rng.initialize(backend->create_tensor<float>(shape_y));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x, y}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x, y}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_reshape)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Reshape>(X0, AxisVector{1, 0}, Shape{4, 3}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_select)
+TEST(DISABLED_${BACKEND_NAME}, backwards_select)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -1132,29 +1034,22 @@ TEST(${BACKEND_NAME}, backwards_select)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
+        auto x0 = backend->create_tensor(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
-        auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-        auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+        auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare_selective<float>(manager,
-                                                      backend,
-                                                      make_graph,
-                                                      {x0, x1, x2},
-                                                      .01f,
-                                                      .01f,
-                                                      std::vector<bool>{false, true, true}));
+        EXPECT_TRUE(autodiff_numeric_compare_selective<float>(
+            backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_select_nested)
+TEST(DISABLED_${BACKEND_NAME}, backwards_select_nested)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -1168,19 +1063,13 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
+        auto x0 = backend->create_tensor(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
-        auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-        auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+        auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare_selective<float>(manager,
-                                                      backend,
-                                                      make_graph,
-                                                      {x0, x1, x2},
-                                                      .01f,
-                                                      .01f,
-                                                      std::vector<bool>{false, true, true}));
+        EXPECT_TRUE(autodiff_numeric_compare_selective<float>(
+            backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
     }
 }
 
@@ -1188,8 +1077,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
     // that point by skipping (-0.01,0.01).
@@ -1205,22 +1093,19 @@ TEST(${BACKEND_NAME}, backwards_sign)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_neg}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_neg}, .01f, .01f));
 
-        auto x_pos = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_pos}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_pos}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_sin)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -1232,9 +1117,9 @@ TEST(${BACKEND_NAME}, backwards_sin)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
@@ -1242,8 +1127,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -1255,9 +1139,9 @@ TEST(${BACKEND_NAME}, backwards_sinh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
@@ -1266,8 +1150,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{5, 5};
     auto make_graph = [shape]() {
@@ -1278,58 +1161,55 @@ TEST(${BACKEND_NAME}, backwards_slice)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_softmax_all)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_softmax_axis)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_softmax_underflow)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto low = std::numeric_limits<float>::lowest();
 
     Shape shape{2, 3};
-    auto x0 = backend->make_primary_tensor_view(element::f32, shape);
+    auto x0 = backend->create_tensor(element::f32, shape);
     copy_data(x0, vector<float>{low, 1, 2, 3, 4, 5});
 
     auto make_graph = [shape]() {
@@ -1337,159 +1217,152 @@ TEST(${BACKEND_NAME}, backwards_softmax_underflow)
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_softmax_3d)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3, 4};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph0 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph0, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph0, {x0}, .01f, .01f));
 
     auto make_graph1 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph1, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph1, {x0}, .01f, .01f));
 
     auto make_graph2 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{2}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph2, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph2, {x0}, .01f, .01f));
 
     auto make_graph01 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph01, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph01, {x0}, .01f, .01f));
 
     auto make_graph02 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 2}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph02, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph02, {x0}, .01f, .01f));
 
     auto make_graph12 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1, 2}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph12, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph12, {x0}, .01f, .01f));
 
     auto make_graph012 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1, 2}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph012, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph012, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_subtract)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(X0 - X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_sum_v2s)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_sum_m2s)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0, 1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{8, 9};
-    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{1}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_tan)
@@ -1497,8 +1370,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto pi = 3.14159f;
 
@@ -1517,15 +1389,13 @@ TEST(${BACKEND_NAME}, backwards_tan)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x_r = rng_r.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_r = rng_r.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_r}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_r}, .01f, .01f));
 
-        auto x_l = rng_l.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x_l = rng_l.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(
-            autodiff_numeric_compare<float>(manager, backend, make_graph, {x_l}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_l}, .01f, .01f));
     }
 }
 
@@ -1534,8 +1404,7 @@ TEST(${BACKEND_NAME}, backwards_tanh)
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{2, 3};
@@ -1547,22 +1416,21 @@ TEST(${BACKEND_NAME}, backwards_tanh)
 
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+        auto x = rng.initialize(backend->create_tensor<float>(shape));
 
-        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
     }
 }
 
 TEST(${BACKEND_NAME}, backwards_abc)
 {
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
-    auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape));
+    auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1571,33 +1439,29 @@ TEST(${BACKEND_NAME}, backwards_abc)
         return make_shared<Function>((X0 + X1) * X2,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     Shape shape{2, 4, 5};
-    auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape));
+    auto x = rng.initialize(backend->create_tensor(element::f32, shape));
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Reverse>(X, AxisSet{0, 2}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{4, 1, 4, 4}; //in NCHW
     Shape maxpool_shape{4, 1, 3, 3};
 
@@ -1606,14 +1470,11 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::f32, shape_a);
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                             13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -1630,17 +1491,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 2, 5, 5}; //in NCHW
     Shape maxpool_shape{1, 2, 2, 2};
@@ -1651,14 +1508,11 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep =
-        backend->make_primary_tensor_view(element::f32, maxpool_shape);
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input =
-        backend->make_primary_tensor_view(element::f32, shape_a);
-    shared_ptr<runtime::TensorView> output =
-        backend->make_primary_tensor_view(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                             30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -1674,8 +1528,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    auto external = manager->compile(df);
-    auto cf = backend->make_call_frame(external);
-    cf->tensor_call({output}, {input, ep});
+    backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }

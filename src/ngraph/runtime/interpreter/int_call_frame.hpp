@@ -45,8 +45,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -115,8 +115,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-
         namespace interpreter
         {
             class INT_CallFrame;
@@ -125,8 +123,10 @@ namespace ngraph
 }
 
 // Compile and execute graphs
-class ngraph::runtime::interpreter::INT_CallFrame : public runtime::CallFrame
+class ngraph::runtime::interpreter::INT_CallFrame
 {
+    friend class INT_Backend;
+
 public:
     INT_CallFrame(std::shared_ptr<Function> func);
 
@@ -134,8 +134,8 @@ public:
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
     void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
-    std::vector<runtime::PerformanceCounter> get_performance_data() const override;
+              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
+    std::vector<runtime::PerformanceCounter> get_performance_data() const;
 
     void set_nan_check(bool);
 
@@ -143,7 +143,7 @@ private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
     void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
-                     const std::vector<std::shared_ptr<TensorView>>& inputs) override;
+                     const std::vector<std::shared_ptr<TensorView>>& inputs);
     void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& outputs,
                      const std::vector<std::shared_ptr<HostTensorView>>& inputs);
     void call(std::shared_ptr<Function> function,
