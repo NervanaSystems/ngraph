@@ -254,7 +254,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
+    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
 TEST(cpu_fusion, commutative_matmul_bias)
@@ -275,7 +275,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
+    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
@@ -297,9 +297,9 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     auto func = make_shared<Function>(graph, op::ParameterVector{W, x, b});
     pass_manager.run_passes(func);
-    auto gmm = graph->get_input_op(0);
+    auto gmm = graph->get_argument(0);
     ASSERT_TRUE(std::dynamic_pointer_cast<op::MatmulBias>(gmm));
-    ASSERT_EQ(gmm->get_input_op(2), b);
+    ASSERT_EQ(gmm->get_argument(2), b);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)

@@ -27,8 +27,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CallFrame;
-
             namespace eigen
             {
                 using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;

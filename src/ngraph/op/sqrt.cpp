@@ -39,7 +39,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_input_op(0);
+    auto x = get_argument(0);
 
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }

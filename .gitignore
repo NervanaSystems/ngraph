@@ -106,3 +106,5 @@ python/share/*
 \#*
 \.#*
 
+python/pybind11/
+
