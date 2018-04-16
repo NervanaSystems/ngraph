@@ -28,13 +28,8 @@ static const std::string s_output_dir = "gpu_codegen";
 
 using namespace ngraph;
 
-runtime::gpu::CudaFunctionPool& runtime::gpu::CudaFunctionPool::instance()
-{
-    static CudaFunctionPool pool;
-    return pool;
-}
-
-void runtime::gpu::CudaFunctionPool::set(const std::string& name, const std::string& kernel)
+std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::set(const std::string& name,
+                                                                const std::string& kernel)
 {
     const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};
     std::string filename =
@@ -42,7 +37,9 @@ void runtime::gpu::CudaFunctionPool::set(const std::string& name, const std::str
     std::ofstream out(filename);
     out << kernel;
     out.close();
-    m_function_map.insert({name, CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts)});
+    auto cu_compiled_function = CudaFunctionBuilder::get("cuda_" + name, kernel, 2, opts);
+    m_function_map.insert({name, cu_compiled_function});
+    return cu_compiled_function;
 }
 
 std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionPool::get(const std::string& name)

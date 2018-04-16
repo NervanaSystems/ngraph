@@ -100,6 +100,11 @@ namespace ngraph
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
             virtual void remove_compiled_function(std::shared_ptr<Function> func);
+
+        protected:
+            void validate_call(std::shared_ptr<const Function> func,
+                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
         };
     }
 }
