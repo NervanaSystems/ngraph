@@ -142,13 +142,13 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-std::shared_ptr<Node> Node::get_input_op(size_t index)
+std::shared_ptr<Node> Node::get_argument(size_t index)
 {
     for (auto& i : get_inputs())
     {
         if (i.get_output().get_node()->get_outputs().size() != 1)
         {
-            throw "get_input_op called on an argument w/ multiple outputs";
+            throw "get_argument called on an argument w/ multiple outputs";
         }
     }
     return m_inputs.at(index).get_output().get_node();
@@ -162,7 +162,7 @@ Node::~Node()
     }
 }
 
-NodeVector Node::get_input_ops()
+NodeVector Node::get_arguments()
 {
     NodeVector result;
     for (auto& i : get_inputs())
@@ -299,7 +299,7 @@ descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
 {
     for (size_t i = 0; i < this->get_input_size(); ++i)
     {
-        if (this->get_input_op(i) == src)
+        if (this->get_argument(i) == src)
         {
             return &(this->get_inputs().at(i));
         }
@@ -311,7 +311,7 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
 {
     for (size_t i = 0; i < dst->get_input_size(); ++i)
     {
-        if (dst->get_input_op(i).get() == this)
+        if (dst->get_argument(i).get() == this)
         {
             return &(dst->get_inputs().at(i).get_output());
         }

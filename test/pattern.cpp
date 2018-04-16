@@ -82,20 +82,20 @@ bool sum_predicate(std::shared_ptr<Node> gn)
     NGRAPH_DEBUG << "pred_v2 : looking at " << gn->get_name();
     if (auto r = std::dynamic_pointer_cast<op::Reduce>(gn))
     {
-        auto reducee = gn->get_input_op(0);
-        auto reduce_constant = gn->get_input_op(1);
+        auto reducee = gn->get_argument(0);
+        auto reduce_constant = gn->get_argument(1);
 
         if (!is_zero(reduce_constant))
         {
             return false;
         }
 
-        auto result = r->get_functions()[0]->get_result()->get_input_op(0);
+        auto result = r->get_functions()[0]->get_result()->get_argument(0);
         NGRAPH_DEBUG << "looking at function's result  " << result->get_name();
         if (auto sum = std::dynamic_pointer_cast<op::Add>(result))
         {
-            auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(0));
-            auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(1));
+            auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_argument(0));
+            auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_argument(1));
 
             const auto parm_or_nil = [](std::shared_ptr<Node> p) {
                 return p ? p->get_name() : std::string("(nil)");
@@ -158,14 +158,14 @@ public:
         ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.match_root()->get_name();
-            assert(m.match_root()->get_input_ops().size() == 2);
+            assert(m.match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.match_root()->get_input_ops().at(const_node_index));
-            auto second_node = m.match_root()->get_input_ops().at(const_node_index);
+                m.match_root()->get_arguments().at(const_node_index));
+            auto second_node = m.match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -203,14 +203,14 @@ public:
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
                          << m.match_root()->get_name();
-            assert(m.match_root()->get_input_ops().size() == 2);
+            assert(m.match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.match_root()->get_input_ops().at(const_node_index));
-            auto second_node = m.match_root()->get_input_ops().at(const_node_index);
+                m.match_root()->get_arguments().at(const_node_index));
+            auto second_node = m.match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -309,7 +309,7 @@ TEST(pattern, graph_rewrite)
         auto sum = (a + iconst0);
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(sum->get_output_inputs(0)
@@ -325,7 +325,7 @@ TEST(pattern, graph_rewrite)
         auto mul = (a * iconst1);
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(mul->get_outputs()
@@ -342,7 +342,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_input_ops().at(0), a);
+        ASSERT_EQ(graph->get_arguments().at(0), a);
         ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -356,7 +356,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -369,7 +369,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -387,10 +387,10 @@ TEST(pattern, graph_rewrite)
             make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(innermost_abs))));
 
         run_passes(pass_manager, nested_sum_graph, {parm});
-        auto sum = std::dynamic_pointer_cast<op::Sum>(innermost_abs->get_input_op(0));
+        auto sum = std::dynamic_pointer_cast<op::Sum>(innermost_abs->get_argument(0));
         ASSERT_TRUE(sum);
         ASSERT_EQ(sum->get_reduction_axes(), axes);
-        ASSERT_EQ(sum->get_input_op(0), parm);
+        ASSERT_EQ(sum->get_argument(0), parm);
     }
 }
 
@@ -711,12 +711,12 @@ TEST(pattern, recurrent_graph_rewrite)
         auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, op::ParameterVector{a, b});
         pass_manager.run_passes(f);
 
-        auto left_abs = graph->get_input_op(0);
-        auto add_a = left_abs->get_input_op(0);
+        auto left_abs = graph->get_argument(0);
+        auto add_a = left_abs->get_argument(0);
         ASSERT_EQ(add_a, a);
 
-        auto right_abs = graph->get_input_op(1);
-        auto add_b = right_abs->get_input_op(0);
+        auto right_abs = graph->get_argument(1);
+        auto add_b = right_abs->get_argument(0);
         ASSERT_EQ(add_b, b);
     }
 }

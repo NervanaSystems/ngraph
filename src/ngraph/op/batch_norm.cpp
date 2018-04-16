@@ -49,14 +49,14 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
     for (size_t i = 0; i < 2; i++)
     {
-        if (get_input_op(i)->get_element_type() != et)
+        if (get_argument(i)->get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";
             throw ngraph_error(err_msg.c_str());
         }
 
-        if (get_input_op(i)->get_shape() != channel_shape)
+        if (get_argument(i)->get_shape() != channel_shape)
         {
             auto err_msg = std::string("The shape of ") + input_names[i] +
                            " isn't equal to input channel's shape";
@@ -101,7 +101,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_input_op(i)->get_element_type() != et)
+        if (get_argument(i)->get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";
@@ -110,13 +110,13 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     }
     for (size_t index = 0; index < get_input_size(); index++)
     {
-        if (index != INPUT_INDEX && get_input_op(index)->get_shape().size() != 1)
+        if (index != INPUT_INDEX && get_argument(index)->get_shape().size() != 1)
         {
             auto err_msg = std::string(input_names[index]) + " should have rank of 1";
             throw ngraph_error(err_msg.c_str());
         }
 
-        if (index != INPUT_INDEX && get_input_op(index)->get_shape()[0] != m_bn_input_shape[1])
+        if (index != INPUT_INDEX && get_argument(index)->get_shape()[0] != m_bn_input_shape[1])
         {
             auto err_msg = std::string(input_names[index]) +
                            " shape should match the input channel size (" +
@@ -195,7 +195,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_input_op(i)->get_element_type() != et)
+        if (get_argument(i)->get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";
@@ -212,7 +212,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
             continue;
         }
 
-        if (get_input_op(i)->get_shape() != channel_shape)
+        if (get_argument(i)->get_shape() != channel_shape)
         {
             auto err_msg = std::string("The shape of ") + input_names[i] +
                            " isn't equal to input channel's shape";
@@ -249,9 +249,9 @@ std::shared_ptr<ngraph::Node>
 void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
                                               const NodeVector& deltas)
 {
-    auto gamma = get_input_op(0);
-    auto beta = get_input_op(1);
-    auto input = get_input_op(2);
+    auto gamma = get_argument(0);
+    auto beta = get_argument(1);
+    auto input = get_argument(2);
     std::shared_ptr<Node> mean = nullptr;
     std::shared_ptr<Node> var = nullptr;
 
@@ -279,8 +279,8 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     }
     else // BatchNorm Training with global stats
     {
-        mean = get_input_op(3);
-        var = get_input_op(4);
+        mean = get_argument(3);
+        var = get_argument(4);
     }
     auto bbn = std::make_shared<op::BatchNormBackprop>(
         get_eps_value(), gamma, beta, input, mean, var, deltas.at(0));
