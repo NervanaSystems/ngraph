@@ -4231,7 +4231,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 
     backend->call(f, {result}, {a});
     auto min = std::numeric_limits<float>::lowest();
-    //EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{min, min, min, min, min},
                                                            {1, 2, 2, 2, 1},
                                                            {3, 3, 2, 2, 1},
