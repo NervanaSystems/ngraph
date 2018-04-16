@@ -53,5 +53,5 @@ TEST(core_fusion, core_fusion_pass_basic)
     pass_manager.register_pass<pass::CoreFusion>();
     auto func = make_shared<Function>(graph, op::ParameterVector{B});
     pass_manager.run_passes(func);
-    ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_input_op(0)), nullptr);
+    ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }

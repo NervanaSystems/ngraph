@@ -90,7 +90,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     //we don't really need a broadcast node but
     //labelling a Broadcast allows us to extract
     //params from all 3 labels in the same fashion
-    //(i.e. via get_input_op(0))
+    //(i.e. via get_argument(0))
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
     };
@@ -121,7 +121,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 //in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
                 //if we have less than 3 matches we skip this node anyways
                 auto matched = matcher->get_pattern_map()[labels[i]];
-                params.push_back(matched->get_input_op(0));
+                params.push_back(matched->get_argument(0));
                 matched_nodes.push_back(matched);
             }
 

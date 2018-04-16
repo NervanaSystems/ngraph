@@ -40,7 +40,7 @@ void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = get_input_op(0);
+    auto x = get_argument(0);
 
     adjoints.add_delta(x, make_shared<op::Convert>(delta, x->get_element_type()));
 }

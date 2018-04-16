@@ -92,7 +92,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 
     size_t pos = 0;
 
-    for (auto arg : get_input_ops())
+    for (auto arg : get_arguments())
     {
         auto arg_shape = arg->get_shape();
 
