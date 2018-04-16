@@ -57,7 +57,7 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
 {
     auto delta = deltas.at(0);
 
-    auto x = get_input_op(0);
+    auto x = get_argument(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }

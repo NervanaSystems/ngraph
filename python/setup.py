@@ -24,6 +24,7 @@ import distutils.ccompiler
 __version__ = '0.2.0'
 
 PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
+NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 
 
 def find_ngraph_dist_dir():
@@ -31,7 +32,7 @@ def find_ngraph_dist_dir():
     if os.environ.get('NGRAPH_CPP_BUILD_PATH'):
         ngraph_dist_dir = os.environ.get('NGRAPH_CPP_BUILD_PATH')
     else:
-        ngraph_dist_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/ngraph_dist')
+        ngraph_dist_dir = os.path.join(NGRAPH_DEFAULT_INSTALL_DIR, 'ngraph_dist')
 
     found = os.path.exists(os.path.join(ngraph_dist_dir, 'include/ngraph'))
     if not found:
@@ -47,7 +48,7 @@ def find_pybind_headers_dir():
     if os.environ.get('PYBIND_HEADERS_PATH'):
         pybind_headers_dir = os.environ.get('PYBIND_HEADERS_PATH')
     else:
-        pybind_headers_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'build/pybind11')
+        pybind_headers_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'pybind11')
 
     found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
     if not found:
@@ -204,9 +205,6 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/batch_norm.cpp',
            'pyngraph/ops/softmax.cpp',
            'pyngraph/runtime/backend.cpp',
-           'pyngraph/runtime/call_frame.cpp',
-           'pyngraph/runtime/external_function.cpp',
-           'pyngraph/runtime/manager.cpp',
            'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
            'pyngraph/runtime/tensor_view.cpp',
            'pyngraph/passes/manager.cpp',

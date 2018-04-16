@@ -37,7 +37,7 @@ HANDLER_DECL(eliminate_pad)
     auto pad = std::dynamic_pointer_cast<ngraph::op::Pad>(node);
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
-        function->replace_node(node, node->get_input_op(0));
+        function->replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
@@ -48,7 +48,7 @@ HANDLER_DECL(eliminate_sum)
     auto sum = std::dynamic_pointer_cast<ngraph::op::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
-        function->replace_node(node, node->get_input_op(0));
+        function->replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
@@ -57,9 +57,9 @@ HANDLER_DECL(eliminate_sum)
 HANDLER_DECL(eliminate_convert)
 {
     auto convert = std::dynamic_pointer_cast<ngraph::op::Convert>(node);
-    if (convert->get_convert_element_type() == convert->get_input_op(0)->get_element_type())
+    if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type())
     {
-        function->replace_node(node, node->get_input_op(0));
+        function->replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
@@ -70,7 +70,7 @@ HANDLER_DECL(eliminate_slice)
     auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node);
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
-        function->replace_node(node, node->get_input_op(0));
+        function->replace_node(node, node->get_argument(0));
         return true;
     }
     return false;

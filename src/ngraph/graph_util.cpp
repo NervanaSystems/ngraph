@@ -68,7 +68,7 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_input_ops())
+        for (auto arg : n->get_arguments())
         {
             if (instances_seen.count(arg) == 0)
             {
@@ -140,8 +140,8 @@ std::list<std::shared_ptr<ngraph::Node>>
     for (auto node : nodes)
     {
         node_map[node.get()] = node;
-        node_dependency_count[node.get()] = node->get_input_ops().size();
-        if (node->get_input_ops().size() == 0)
+        node_dependency_count[node.get()] = node->get_arguments().size();
+        if (node->get_arguments().size() == 0)
         {
             independent_nodes.push_back(node.get());
         }
@@ -208,7 +208,7 @@ std::list<std::shared_ptr<ngraph::Node>>
         {
             // get (already) cloned arguments and clone the node
             NodeVector cloned_args;
-            for (auto arg : node->get_input_ops())
+            for (auto arg : node->get_arguments())
             {
                 cloned_args.push_back(node_map.get(arg));
             }

@@ -71,14 +71,14 @@ def test_function_call():
 
 def test_serialization():
     dtype = np.float32
-    manager_name = pytest.config.getoption('backend', default='CPU')
+    backend_name = pytest.config.getoption('backend', default='CPU')
 
     shape = [2, 2]
     parameter_a = ng.parameter(shape, dtype=dtype, name='A')
     parameter_b = ng.parameter(shape, dtype=dtype, name='B')
     parameter_c = ng.parameter(shape, dtype=dtype, name='C')
     model = (parameter_a + parameter_b) * parameter_c
-    runtime = ng.runtime(manager_name=manager_name)
+    runtime = ng.runtime(backend_name=backend_name)
     computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
     serialized = computation.serialize(2)
     serial_json = json.loads(serialized)

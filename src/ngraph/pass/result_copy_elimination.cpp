@@ -25,7 +25,7 @@ bool ngraph::pass::ResultCopyElimination::run_on_function(std::shared_ptr<ngraph
     std::set<std::shared_ptr<Node>> seen;
     for (auto res : f->get_results())
     {
-        auto arg = res->get_input_op(0);
+        auto arg = res->get_argument(0);
         //we need a copy
         if (arg->is_parameter() || arg->is_constant())
         {

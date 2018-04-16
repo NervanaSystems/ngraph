@@ -43,8 +43,8 @@ void op::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
+    auto x = get_argument(0);
+    auto y = get_argument(1);
 
     adjoints.add_delta(
         x, delta * make_shared<op::Convert>(make_shared<op::Less>(x, y), x->get_element_type()));
