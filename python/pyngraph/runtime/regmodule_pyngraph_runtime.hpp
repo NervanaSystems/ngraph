@@ -18,9 +18,6 @@
 
 #include <pybind11/pybind11.h>
 #include "pyngraph/runtime/backend.hpp"
-#include "pyngraph/runtime/call_frame.hpp"
-#include "pyngraph/runtime/external_function.hpp"
-#include "pyngraph/runtime/manager.hpp"
 #include "pyngraph/runtime/tensor_view.hpp"
 
 namespace py = pybind11;
