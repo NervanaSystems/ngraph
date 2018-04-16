@@ -792,7 +792,7 @@ using namespace ngraph::runtime;
                     if (!n->is_parameter() && !n->is_constant())
                     {
                         bool is_head = true;
-                        for (auto arg : n->get_input_ops())
+                        for (auto arg : n->get_arguments())
                         {
                             if (!arg->is_parameter() && !arg->is_constant())
                             {
