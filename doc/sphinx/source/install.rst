@@ -80,7 +80,10 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 #. Generate the GNUMakefiles in the customary manner (from within the 
    ``build`` directory). If running ``gcc-5.4.0`` or ``clang-3.9``, remember 
    that you can also append ``cmake`` with the prebuilt LLVM option to 
-   speed-up the build:
+   speed-up the build. Another option if your deployment system has Intel®
+   Advanced Vector Extensions (Intel® AVX) is to target the accelerations 
+   available directly by compiling the build as follows during the cmake 
+   step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.
 
    .. code-block:: console
 
