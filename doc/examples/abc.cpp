@@ -35,20 +35,15 @@ int main()
     auto f = std::make_shared<Function>(NodeVector{t1},
                                         op::ParameterVector{a, b, c});
 
-    // Get the backend
-    auto manager = runtime::Manager::get("CPU");
-    auto backend = manager->allocate_backend();
-
-    // Compile the function
-    auto external = manager->compile(f);
-    auto cf = backend->make_call_frame(external);
+    // Create the backend
+    auto backend = runtime::Backend::create("CPU");
 
     // Allocate tensors for arguments a, b, c
-    auto t_a = backend->make_primary_tensor_view(element::f32, s);
-    auto t_b = backend->make_primary_tensor_view(element::f32, s);
-    auto t_c = backend->make_primary_tensor_view(element::f32, s);
+    auto t_a = backend->create_tensor(element::f32, s);
+    auto t_b = backend->create_tensor(element::f32, s);
+    auto t_c = backend->create_tensor(element::f32, s);
     // Allocate tensor for the result
-    auto t_result = backend->make_primary_tensor_view(element::f32, s);
+    auto t_result = backend->create_tensor(element::f32, s);
 
     // Initialize tensors
     float v_a[2][3] = {{1, 2, 3}, {4, 5, 6}};
@@ -60,7 +55,7 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    cf->call({t_result}, {t_a, t_b, t_c});
+    backend->call(f, {t_result}, {t_a, t_b, t_c});
 
     // Get the result
     float r[2][3];

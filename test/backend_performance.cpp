@@ -26,7 +26,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/serializer.hpp"
@@ -144,26 +143,21 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto concat = make_shared<op::Concat>(params_as_nodes, concatenation_axis);
         auto f = make_shared<Function>(concat, params);
 
-        auto manager = runtime::Manager::get(backend_name);
-        auto external = manager->compile(f);
-        auto backend = manager->allocate_backend();
-        auto cf = backend->make_call_frame(external);
+        auto backend = runtime::Backend::create(backend_name);
 
         vector<shared_ptr<runtime::TensorView>> input_vals;
 
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto tv = backend->make_primary_tensor_view(element::f32, shape_of_each_array);
+            auto tv = backend->create_tensor(element::f32, shape_of_each_array);
             copy_data(tv, data_arrays[i]);
             input_vals.push_back(tv);
         }
 
-        auto result_tv = backend->make_primary_tensor_view(element::f32, result_shape);
+        auto result_tv = backend->create_tensor(element::f32, result_shape);
         result_tvs.push_back(result_tv);
 
-        std::function<void()> cb = [input_vals, result_tv, cf]() {
-            cf->call({result_tv}, input_vals);
-        };
+        std::function<void()> cb = [&]() { backend->call(f, {result_tv}, input_vals); };
 
         test_callbacks.push_back(cb);
     }

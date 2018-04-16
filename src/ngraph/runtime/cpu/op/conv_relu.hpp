@@ -34,8 +34,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            std::shared_ptr<Node> get_filters() { return get_input_op(1); }
-            std::shared_ptr<Node> get_data_batch() { return get_input_op(0); }
+            std::shared_ptr<Node> get_filters() { return get_argument(1); }
+            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

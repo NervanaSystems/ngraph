@@ -20,7 +20,7 @@ from typing import List
 import numpy as np
 
 from ngraph.impl import Function, Node, serialize, TensorViewType, util
-from ngraph.impl.runtime import Manager
+from ngraph.impl.runtime import Backend
 from ngraph.impl.op import Parameter
 
 from ngraph.utils.types import get_dtype, NumericData
@@ -28,24 +28,23 @@ from ngraph.utils.types import get_dtype, NumericData
 log = logging.getLogger(__file__)
 
 
-def runtime(manager_name='CPU'):  # type: (str) -> 'Runtime'
+def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
-    Use signature to parametrize runtime as needed.
+    Use signature to parameterize runtime as needed.
     """
-    return Runtime(manager_name)
+    return Runtime(backend_name)
 
 
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, manager_name):  # type: (str) -> None
-        self.manager_name = manager_name
-        self.manager = Manager.get(manager_name)
-        self.backend = self.manager.allocate_backend()
+    def __init__(self, backend_name):  # type: (str) -> None
+        self.backend_name = backend_name
+        self.backend = Backend.create(backend_name)
 
     def __repr__(self):  # type: () -> str
-        return '<Runtime: Manager=\'{}\'>'.format(self.manager_name)
+        return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
 
     def computation(self, node, *inputs):  # type: (Node, *Node) -> 'Computation'
         """Return a callable Computation object."""
@@ -63,10 +62,9 @@ class Computation:
         for parameter in parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
-            self.tensor_views.append(runtime.backend.make_primary_tensor_view(element_type, shape))
+            self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
         self.function = Function(self.node, self.parameters, 'ngraph_computation')
-        external = self.runtime.manager.compile(self.function)
-        self.call_frame = self.runtime.backend.make_call_frame(external)
+        self.backend = runtime.backend
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -83,11 +81,11 @@ class Computation:
         result_shape = self.node.get_shape()
         result_dtype = get_dtype(result_element_type)
 
-        result_view = self.runtime.backend.make_primary_tensor_view(
+        result_view = self.runtime.backend.create_tensor(
             result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        self.call_frame.call([result_view], self.tensor_views)
+        self.backend.call(self.function, [result_view], self.tensor_views)
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)

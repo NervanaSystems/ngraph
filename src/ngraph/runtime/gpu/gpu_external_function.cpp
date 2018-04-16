@@ -239,9 +239,12 @@ static const runtime::gpu::OpMap dispatcher{
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
-    , m_compiled_function(nullptr)
+    : m_compiled_function(nullptr)
     , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
+    , m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
+    , m_timing(false)
     , m_ctx(new GPURuntimeContext)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context
@@ -797,7 +800,8 @@ void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
+    runtime::gpu::GPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

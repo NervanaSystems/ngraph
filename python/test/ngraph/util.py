@@ -27,8 +27,8 @@ def _get_numpy_dtype(scalar):
 
 def get_runtime():
     """Return runtime object."""
-    manager_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(manager_name=manager_name)
+    backend_name = pytest.config.getoption('backend', default='CPU')
+    return ng.runtime(backend_name=backend_name)
 
 
 def run_op_node(input_data, op_fun, *args):
