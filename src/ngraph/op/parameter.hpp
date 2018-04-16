@@ -40,7 +40,7 @@ namespace ngraph
         ///
         /// | Type    | Description                                                                                                                 |
         /// | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$T\f$ | The value of the parameter, supplied by the `FunctionCall` to this function or in the initial `ngraph::runtime::CallFrame`. |
+        /// | \f$T\f$ | The value of the parameter, supplied by the `FunctionCall` to this function.                                                |
         class Parameter : public op::Op
         {
         protected:
