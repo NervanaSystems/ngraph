@@ -28,7 +28,7 @@ using namespace ngraph;
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const shared_ptr<Node>& bias)
     : RequiresTensorViewArgs("ConvolutionBias",
-                             {conv->get_input_op(0), conv->get_input_op(1), bias})
+                             {conv->get_argument(0), conv->get_argument(1), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -110,13 +110,13 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
 {
     auto delta = deltas.at(0);
 
-    auto data = get_input_op(0);
+    auto data = get_argument(0);
     const auto data_shape = data->get_shape();
 
-    auto filter = get_input_op(1);
+    auto filter = get_argument(1);
     const auto filter_shape = filter->get_shape();
 
-    auto bias = get_input_op(2);
+    auto bias = get_argument(2);
     const auto bias_shape = bias->get_shape();
 
     // using regular convolution backprop for data

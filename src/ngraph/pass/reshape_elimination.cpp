@@ -117,7 +117,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         }
 
         auto r2 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
-        auto r1 = std::dynamic_pointer_cast<op::Reshape>(r2->get_input_op(0));
+        auto r1 = std::dynamic_pointer_cast<op::Reshape>(r2->get_argument(0));
 
         Shape do_r2(r1->get_shape().size());
         std::iota(begin(do_r2), end(do_r2), 0);
@@ -174,18 +174,18 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
             return false;
         }
 
-        auto mdot = mtranspose->get_input_op(0);
+        auto mdot = mtranspose->get_argument(0);
         if (mdot->get_shape().size() != 2)
         {
             NGRAPH_DEBUG << "Dot has the wrong shape. " << vector_to_string(mdot->get_shape());
             return false;
         }
 
-        auto arg0 = mdot->get_input_op(0);
+        auto arg0 = mdot->get_argument(0);
         auto reshape0_shape = Shape{arg0->get_shape().at(1), arg0->get_shape().at(0)};
         auto reshape0 = std::make_shared<op::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
 
-        auto arg1 = mdot->get_input_op(1);
+        auto arg1 = mdot->get_argument(1);
         auto reshape1_shape = Shape{arg1->get_shape().at(1), arg1->get_shape().at(0)};
         auto reshape1 = std::make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
