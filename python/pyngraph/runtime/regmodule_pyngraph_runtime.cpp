@@ -25,7 +25,4 @@ void regmodule_pyngraph_runtime(py::module m)
         m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
     regclass_pyngraph_runtime_TensorView(m_runtime);
     regclass_pyngraph_runtime_Backend(m_runtime);
-    regclass_pyngraph_runtime_CallFrame(m_runtime);
-    regclass_pyngraph_runtime_ExternalFunction(m_runtime);
-    regclass_pyngraph_runtime_Manager(m_runtime);
 }
