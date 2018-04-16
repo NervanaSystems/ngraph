@@ -25,7 +25,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class CallFrame;
         namespace cpu
         {
             class CPU_ExternalFunction;
