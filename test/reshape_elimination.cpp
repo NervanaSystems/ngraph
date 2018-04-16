@@ -98,11 +98,11 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     pass_manager.register_pass<pass::ReshapeElimination>();
     auto func = make_shared<Function>(graph, op::ParameterVector{W, x});
     pass_manager.run_passes(func);
-    auto gdot = graph->get_input_op(0);
+    auto gdot = graph->get_argument(0);
     ASSERT_TRUE(std::dynamic_pointer_cast<op::Dot>(gdot));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_input_op(0)));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_input_op(1)));
-    ASSERT_EQ(gdot->get_input_op(0)->get_input_op(0), x);
-    ASSERT_EQ(gdot->get_input_op(1)->get_input_op(0), W);
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(0)));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(1)));
+    ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
+    ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
     ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
 }

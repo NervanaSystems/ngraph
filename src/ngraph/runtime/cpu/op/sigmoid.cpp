@@ -65,6 +65,6 @@ void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::SigmoidBackprop>(get_input_op(0), delta);
-    adjoints.add_delta(get_input_op(0), backprop);
+    auto backprop = make_shared<op::SigmoidBackprop>(get_argument(0), delta);
+    adjoints.add_delta(get_argument(0), backprop);
 }
