@@ -1174,7 +1174,8 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         throw std::runtime_error(
                             "MaxPool operation requested for a tensor of less than 3 dimensions. "
-                            "Tensors should have at least one spatial dimension, dim(NC{d1...dN}) <= 3");
+                            "Tensors should have at least one spatial dimension, dim(NC{d1...dN}) "
+                            "<= 3");
                     }
 
                     bool pad_required = false;
