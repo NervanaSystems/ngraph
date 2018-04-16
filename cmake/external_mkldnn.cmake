@@ -39,6 +39,7 @@ if(NGRAPH_CPU_ENABLE)
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            BUILD_COMMAND $(MAKE) mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -59,6 +60,7 @@ if(NGRAPH_CPU_ENABLE)
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            BUILD_COMMAND $(MAKE) mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
