@@ -306,12 +306,12 @@ TEST(${BACKEND_NAME}, batch_norm_one_output)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_in);
+    auto a = backend->create_tensor(element::f32, shape_in);
     copy_data(
         a,
         vector<float>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
 
-    auto result = backend->make_primary_tensor_view(element::f32, shape_in);
+    auto result = backend->create_tensor(element::f32, shape_in);
     vector<float> expected_result{
         -0.09365749, -1.01327395, -1.04269195, 5.00118923, -0.43295258, -1.24840283};
 
@@ -342,25 +342,25 @@ TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape_in);
+    auto a = backend->create_tensor(element::f32, shape_in);
     copy_data(
         a,
         vector<float>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
 
-    auto result0 = backend->make_primary_tensor_view(element::f32, shape_in);
+    auto result0 = backend->create_tensor(element::f32, shape_in);
     vector<float> expected_result0{
         0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
 
     backend->call(f0, {result0}, {a});
     EXPECT_EQ(vector<float>{expected_result0}, read_vector<float>(result0));
 
-    auto result1 = backend->make_primary_tensor_view(element::f32, shape_mean);
+    auto result1 = backend->create_tensor(element::f32, shape_mean);
     vector<float> expected_result1{0.27972114, -1.14431989, 0.49731493};
 
     backend->call(f1, {result1}, {a});
     EXPECT_EQ(vector<float>{expected_result1}, read_vector<float>(result1));
 
-    auto result2 = backend->make_primary_tensor_view(element::f32, shape_mean);
+    auto result2 = backend->create_tensor(element::f32, shape_mean);
     vector<float> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
 
     backend->call(f2, {result2}, {a});
