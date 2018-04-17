@@ -19,7 +19,6 @@
 #include "benchmark.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
