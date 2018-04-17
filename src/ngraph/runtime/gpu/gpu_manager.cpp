@@ -30,12 +30,6 @@ std::vector<size_t> runtime::gpu::GPU_Manager::get_subdevices() const
     throw std::runtime_error("Unimplemented method");
 }
 
-std::shared_ptr<ngraph::runtime::ExternalFunction>
-    runtime::gpu::GPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
-{
-    return std::make_shared<GPU_ExternalFunction>(fun);
-}
-
 ngraph::runtime::Manager::Factory runtime::gpu::GPU_Manager::factory =
     ngraph::runtime::Manager::register_factory(
         "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {

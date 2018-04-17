@@ -65,7 +65,7 @@ bool ngraph::pass::Inliner::inline_function_call(std::shared_ptr<ngraph::Node> i
     ngraph::NodeMap nm;
     for (size_t i = 0; i < callee->get_parameters().size(); i++)
     {
-        nm.add(callee->get_parameters().at(i), callsite->get_input_op(i));
+        nm.add(callee->get_parameters().at(i), callsite->get_argument(i));
     }
 
     ngraph::clone_function(*callee, nm);

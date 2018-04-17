@@ -17,21 +17,21 @@
 import onnx
 
 onnx_protobuf = onnx.load('/path/to/model/cntk_ResNet20_CIFAR10/model.onnx')
- 
+
 # Convert a serialized ONNX model to an ngraph model
 from ngraph_onnx.onnx_importer.importer import import_onnx_model
 ng_model = import_onnx_model(onnx_protobuf)[0]
 
- 
+
 # Using an ngraph runtime (CPU backend), create a callable computation
 import ngraph as ng
-runtime = ng.runtime(manager_name='CPU')
+runtime = ng.runtime(backend_name='CPU')
 resnet = runtime.computation(ng_model['output'], *ng_model['inputs'])
- 
+
 # Load or create an image
 import numpy as np
 picture = np.ones([1, 3, 32, 32])
- 
+
 # Run ResNet inference on picture
 resnet(picture)
- 
+

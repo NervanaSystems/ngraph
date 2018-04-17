@@ -58,5 +58,5 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_input_op(0), delta);
+    adjoints.add_delta(get_argument(0), delta);
 }

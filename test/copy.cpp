@@ -36,7 +36,7 @@ bool check_unary()
     auto node = make_shared<OP>(arg0);
     auto new_node = node->copy_with_new_args(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_input_ops());
+    return (nullptr != new_node) && (new_args == new_node->get_arguments());
 }
 
 template <typename OP>
@@ -51,7 +51,7 @@ bool check_binary()
     auto node = make_shared<OP>(arg0, arg1);
     auto new_node = node->copy_with_new_args(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_input_ops());
+    return (nullptr != new_node) && (new_args == new_node->get_arguments());
 }
 
 TEST(copy, abs)
@@ -94,7 +94,7 @@ TEST(copy, broadcast)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(shape == node_cast->get_broadcast_shape());
     ASSERT_TRUE(axes == node_cast->get_broadcast_axes());
 }
@@ -118,7 +118,7 @@ TEST(copy, concat)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
 }
 
@@ -132,7 +132,7 @@ TEST(copy, constant)
     auto node_cast = dynamic_pointer_cast<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(NodeVector{} == new_node->get_input_ops());
+    ASSERT_TRUE(NodeVector{} == new_node->get_arguments());
     ASSERT_TRUE(node_cast->get_vector<float>() == c);
     ASSERT_TRUE(node_cast->get_shape() == shape);
     ASSERT_TRUE(node_cast->get_element_type() == et);
@@ -151,7 +151,7 @@ TEST(copy, convert)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(et == node_cast->get_convert_element_type());
 }
 
@@ -211,7 +211,7 @@ TEST(copy, FunctionCall)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    EXPECT_TRUE(new_args == new_node->get_input_ops());
+    EXPECT_TRUE(new_args == new_node->get_arguments());
     ASSERT_EQ(node_cast->get_functions().size(), 1);
     EXPECT_NE(f, node_cast->get_functions()[0]);
 }
@@ -275,7 +275,7 @@ TEST(copy, parameter)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_node->get_input_ops().size() == 0);
+    ASSERT_TRUE(new_node->get_arguments().size() == 0);
     ASSERT_TRUE(node->has_same_type(new_node));
 }
 
@@ -304,7 +304,7 @@ TEST(copy, reduce)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    EXPECT_TRUE(new_args == new_node->get_input_ops());
+    EXPECT_TRUE(new_args == new_node->get_arguments());
     ASSERT_EQ(node_cast->get_functions().size(), 1);
     EXPECT_NE(f, node_cast->get_functions()[0]);
     EXPECT_TRUE(axes == node_cast->get_reduction_axes());
@@ -330,7 +330,7 @@ TEST(copy, reshape)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(axes == node_cast->get_input_order());
     ASSERT_TRUE(shape_out == node_cast->get_output_shape());
 }
@@ -351,7 +351,7 @@ TEST(copy, select)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
 }
 
 TEST(copy, sign)
@@ -385,7 +385,7 @@ TEST(copy, slice)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(lower == node_cast->get_lower_bounds());
     ASSERT_TRUE(upper == node_cast->get_upper_bounds());
     ASSERT_TRUE(strides == node_cast->get_strides());
@@ -409,7 +409,7 @@ TEST(copy, sum)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
+    ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(axes == node_cast->get_reduction_axes());
 }
 
