@@ -39,6 +39,7 @@ namespace ngraph
                                           T* out2,
                                           const Shape& arg2_shape)
             {
+                auto eps_casted = static_cast<T>(eps);
                 auto channels = arg2_shape[1];
 
                 // We use these objects to iterate over the indices in a channel.
@@ -85,7 +86,7 @@ namespace ngraph
 
                         auto input_index = arg2_transform.index(arg2_coord);
                         auto normalized =
-                            (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps));
+                            (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
                         out0[input_index] = normalized * channel_gamma + channel_beta;
                     }
                 }
@@ -101,6 +102,7 @@ namespace ngraph
                                        T* out0,
                                        const Shape& arg2_shape)
             {
+                auto eps_casted = static_cast<T>(eps);
                 CoordinateTransform arg2_transform(arg2_shape);
 
                 for (Coordinate arg2_coord : arg2_transform)
@@ -113,7 +115,7 @@ namespace ngraph
 
                     auto input_index = arg2_transform.index(arg2_coord);
                     auto normalized =
-                        (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps));
+                        (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
                     out0[input_index] = normalized * channel_gamma + channel_beta;
                 }
             }
