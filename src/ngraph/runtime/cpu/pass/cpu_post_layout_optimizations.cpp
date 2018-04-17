@@ -53,8 +53,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_weight against " << m.match_root()->get_name();
 
-        auto m_cvt_lt = m.match_root()->get_input_op(1);
-        auto m_reshape_conv = m_cvt_lt->get_input_op(0);
+        auto m_cvt_lt = m.match_root()->get_argument(1);
+        auto m_reshape_conv = m_cvt_lt->get_argument(0);
 
         std::shared_ptr<Node> m_conv_bprop;
 
@@ -100,8 +100,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
             return false;
         }
 
-        auto m_cvt_lt_bprop = m_conv_bprop->get_input_op(0);
-        auto m_reshape_bprop = m_cvt_lt_bprop->get_input_op(0);
+        auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
+        auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
 
         NGRAPH_DEBUG << "Replacing input "
                      << m_cvt_lt_bprop->get_inputs().at(0).get_output().get_node()->get_name()

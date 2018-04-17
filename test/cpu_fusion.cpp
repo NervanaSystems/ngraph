@@ -1068,10 +1068,10 @@ TEST(cpu_fusion, weight_fusion)
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.run_passes(f);
 
-    auto new_conv_bprop_data = conv_bprop_abs->get_input_op(0);
-    auto new_convert_layout = new_conv_bprop_data->get_input_op(0);
+    auto new_conv_bprop_data = conv_bprop_abs->get_argument(0);
+    auto new_convert_layout = new_conv_bprop_data->get_argument(0);
 
     ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
-                  new_convert_layout->get_input_op(0)),
+                  new_convert_layout->get_argument(0)),
               cvt_lt_conv);
 }
