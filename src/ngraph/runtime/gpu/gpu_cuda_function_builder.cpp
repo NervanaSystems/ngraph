@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <iostream>
 #include <string>
 
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"

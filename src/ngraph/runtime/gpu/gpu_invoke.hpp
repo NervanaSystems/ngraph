@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,19 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/runtime/external_function.hpp"
-#include "pyngraph/runtime/external_function.hpp"
+#pragma once
 
-namespace py = pybind11;
+#include <cstddef>
 
-void regclass_pyngraph_runtime_ExternalFunction(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::runtime::ExternalFunction,
-               std::shared_ptr<ngraph::runtime::ExternalFunction>>
-        externalFunction(m, "ExternalFunction");
-    externalFunction.doc() =
-        "ngraph.impl.runtime.ExternalFunction wraps ngraph::runtime::ExternalFunction";
+    namespace runtime
+    {
+        namespace gpu
+        {
+            struct GPURuntimeContext;
+            extern "C" void invoke_primitive(GPURuntimeContext* ctx,
+                                             size_t primitive_index,
+                                             void** args,
+                                             void** result);
+        }
+    }
 }

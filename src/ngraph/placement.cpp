@@ -74,7 +74,7 @@ static vector<unordered_set<shared_ptr<Node>>>
 
     for (shared_ptr<Node> node : f->get_ops())
     {
-        size_t dependency_count = node->get_input_ops().size();
+        size_t dependency_count = node->get_arguments().size();
         node_map[node.get()] = node;
         node_dependency_count[node.get()] = dependency_count;
         if (dependency_count == 0)
@@ -179,7 +179,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     }
     for (auto dst_node : f->get_ordered_ops())
     {
-        for (auto src_node : dst_node->get_input_ops())
+        for (auto src_node : dst_node->get_arguments())
         {
             auto src_cluster = map_node_to_cluster.at(src_node);
             auto dst_cluster = map_node_to_cluster.at(dst_node);

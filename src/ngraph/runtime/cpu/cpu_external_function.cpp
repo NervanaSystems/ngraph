@@ -279,7 +279,9 @@ static const runtime::cpu::OpMap dispatcher{
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
+    : m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
     , m_compiled_function(nullptr)
     , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
@@ -297,8 +299,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         return;
     }
-
-    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
@@ -794,7 +794,7 @@ using namespace ngraph::runtime;
                     if (!n->is_parameter() && !n->is_constant())
                     {
                         bool is_head = true;
-                        for (auto arg : n->get_input_ops())
+                        for (auto arg : n->get_arguments())
                         {
                             if (!arg->is_parameter() && !arg->is_constant())
                             {
@@ -899,7 +899,8 @@ using namespace ngraph::runtime;
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+    runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

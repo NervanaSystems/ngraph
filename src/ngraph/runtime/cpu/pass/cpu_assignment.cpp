@@ -58,11 +58,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto arg1_rank = arg1_shape.size();
 
-                    auto src_size = 1;
-                    for (size_t i = 0; i < node->get_input_shape(0).size(); i++)
-                    {
-                        src_size *= arg0_shape[0];
-                    }
+                    auto src_size = shape_size(arg0_shape);
+
                     // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN overhead
                     // for smaller tensor sizes
                     if (node->get_input_element_type(0) == element::f32 &&
@@ -116,7 +113,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormRelu)
                 {
-                    if (node->get_input_op(2 /*input data*/)->get_shape().size() == 4)
+                    if (node->get_argument(2 /*input data*/)->get_shape().size() == 4)
                     {
                         auto bn_relu = static_cast<op::BatchNormRelu*>(node);
                         auto op_annotations =

@@ -48,7 +48,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
 
     for (size_t i = 0; i < 2; i++)
     {
-        if (get_input_op(i)->get_element_type() != et)
+        if (get_argument(i)->get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";

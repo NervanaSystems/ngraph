@@ -52,6 +52,16 @@
         }                                                                                          \
     } while (0)
 
+#define CUDNN_SAFE_CALL(func)                                                                      \
+    {                                                                                              \
+        cudnnStatus_t e = (func);                                                                  \
+        if (e != CUDNN_STATUS_SUCCESS)                                                             \
+        {                                                                                          \
+            auto msg = cudnnGetErrorString(e);                                                     \
+            throw std::runtime_error("\ncuDNN error: " + std::string(msg));                        \
+        }                                                                                          \
+    }
+
 namespace ngraph
 {
     namespace runtime

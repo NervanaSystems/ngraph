@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,8 +16,23 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <cstddef>
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace gpu
+        {
+            struct GPURuntimeContext;
 
-void regclass_pyngraph_runtime_Manager(py::module m);
+            namespace cudnn_utils
+            {
+                extern "C" void cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                                                       size_t primitive_index,
+                                                       void** args,
+                                                       void** result);
+            }
+        }
+    }
+}

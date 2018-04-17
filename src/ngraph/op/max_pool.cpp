@@ -398,7 +398,7 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto operand = get_input_op(0);
+    auto operand = get_argument(0);
     auto backprop =
         make_shared<op::MaxPoolBackprop>(operand,
                                          delta,

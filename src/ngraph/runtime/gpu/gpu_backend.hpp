@@ -35,27 +35,20 @@ namespace ngraph
             class GPU_Backend : public Backend
             {
             public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
+                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::gpu::GPU_ExternalFunction>&
+                        external_function);
 
                 std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
-
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape,
-                                             void* memory_pointer) override;
+                    create_tensor(const ngraph::element::Type& element_type,
+                                  const Shape& shape,
+                                  void* memory_pointer) override;
 
                 std::shared_ptr<ngraph::runtime::TensorView>
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
                 bool compile(std::shared_ptr<Function> func) override;
-
-                bool call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
@@ -67,7 +60,6 @@ namespace ngraph
                 public:
                     std::shared_ptr<GPU_ExternalFunction> m_external_function;
                     std::shared_ptr<GPU_CallFrame> m_call_frame;
-                    std::shared_ptr<Function> m_function;
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;

@@ -37,9 +37,9 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs)
+void runtime::cpu::CPU_CallFrame::call(
+    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -71,26 +71,6 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& results,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments)
-{
-    // TODO: Check types of args and result
-    vector<shared_ptr<runtime::TensorView>> inputs;
-    for (shared_ptr<runtime::TensorView> argument : arguments)
-    {
-        argument->collect_tensor_views(inputs, argument);
-    }
-
-    vector<shared_ptr<runtime::TensorView>> outputs;
-    for (shared_ptr<runtime::TensorView> result : results)
-    {
-        result->collect_tensor_views(outputs, result);
-    }
-
-    tensor_call(outputs, inputs);
-}
-
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
     const LayoutDescriptorPtrs& layouts) const
@@ -109,30 +89,6 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
         }
         tvs[i]->get_descriptor()->set_tensor_view_layout(layouts[i]);
     }
-}
-
-vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
-{
-    vector<runtime::PerformanceCounter> rc;
-    auto* engine = m_external_function->m_execution_engine.get();
-    if (engine)
-    {
-        auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-        auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-        auto get_microseconds =
-            engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-        auto get_call_count = engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-        if (get_count && get_name && get_microseconds && get_call_count)
-        {
-            size_t count = get_count();
-            for (size_t i = 0; i < count; i++)
-            {
-                rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-            }
-        }
-    }
-    return rc;
 }
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context()
