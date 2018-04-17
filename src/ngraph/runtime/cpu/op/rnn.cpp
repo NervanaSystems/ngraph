@@ -23,7 +23,7 @@ using namespace ngraph;
 
 shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 6)
+    if (new_args.size() != 7)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -34,6 +34,7 @@ shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
                              new_args.at(3),
                              new_args.at(4),
                              new_args.at(5),
+                             new_args.at(6),
                              m_lstm_cell_shape);
 }
 
@@ -43,8 +44,10 @@ op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
                std::shared_ptr<Node> param2_2,
                std::shared_ptr<Node> bias1,
                std::shared_ptr<Node> bias2,
+               std::shared_ptr<Node> lstm_cell_state,
                Shape lstm_cell_shape)
-    : RequiresTensorViewArgs("LSTM", {param1_1, param1_2, param2_1, param2_2, bias1, bias2})
+    : RequiresTensorViewArgs(
+          "LSTM", {param1_1, param1_2, param2_1, param2_2, bias1, bias2, lstm_cell_state})
     , m_shape_input(param1_1->get_shape())
     , m_lstm_cell_shape(lstm_cell_shape)
 {

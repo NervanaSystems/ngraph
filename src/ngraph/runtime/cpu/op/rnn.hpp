@@ -32,6 +32,7 @@ namespace ngraph
                  std::shared_ptr<Node> param2_2,
                  std::shared_ptr<Node> bias1,
                  std::shared_ptr<Node> bias2,
+                 std::shared_ptr<Node> lstm_cell_state,
                  Shape lstm_cell_shape);
             Shape get_input_shape() const { return m_shape_input; }
             Shape get_cell_shape() const { return m_lstm_cell_shape; }
