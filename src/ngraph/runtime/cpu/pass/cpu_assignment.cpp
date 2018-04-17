@@ -113,7 +113,7 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormRelu)
                 {
-                    if (node->get_input_op(2 /*input data*/)->get_shape().size() == 4)
+                    if (node->get_argument(2 /*input data*/)->get_shape().size() == 4)
                     {
                         auto bn_relu = static_cast<op::BatchNormRelu*>(node);
                         auto op_annotations =

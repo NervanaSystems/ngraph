@@ -35,12 +35,12 @@ TEST(build_graph, build_simple)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_input_ops()[0], arg2);
-    ASSERT_EQ(dot->get_input_ops()[1], arg0);
+    ASSERT_EQ(dot->get_arguments()[0], arg2);
+    ASSERT_EQ(dot->get_arguments()[1], arg0);
 
     auto cluster_0 = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg2, arg3});
 
-    ASSERT_EQ(cluster_0->get_output_op(0)->get_input_op(0), dot);
+    ASSERT_EQ(cluster_0->get_output_op(0)->get_argument(0), dot);
 }
 
 // Check node comparisons
@@ -67,8 +67,8 @@ TEST(build_graph, literal)
     ASSERT_EQ(float0->get_element_type(), element::f32);
     ASSERT_EQ(float0->get_shape(), Shape{});
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_input_ops().at(0), float0);
-    ASSERT_EQ(d->get_input_ops().at(1), float0);
+    ASSERT_EQ(d->get_arguments().at(0), float0);
+    ASSERT_EQ(d->get_arguments().at(1), float0);
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
@@ -88,8 +88,8 @@ TEST(build_graph, tensor)
     ASSERT_EQ(float0->get_element_type(), element::f32);
     ASSERT_EQ(float0->get_shape(), shape);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_input_ops().at(0), float0);
-    ASSERT_EQ(d->get_input_ops().at(1), float0);
+    ASSERT_EQ(d->get_arguments().at(0), float0);
+    ASSERT_EQ(d->get_arguments().at(1), float0);
 
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
@@ -114,8 +114,8 @@ TEST(build_graph, function_undeclared_parameters)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_input_ops()[0], arg2);
-    ASSERT_EQ(dot->get_input_ops()[1], arg0);
+    ASSERT_EQ(dot->get_arguments()[0], arg2);
+    ASSERT_EQ(dot->get_arguments()[1], arg0);
     try
     {
         auto f = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg3});

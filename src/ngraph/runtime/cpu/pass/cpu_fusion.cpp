@@ -143,7 +143,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto mpattern = m.match_root(); //add
         auto m_matmul = ngraph::pattern::Matcher::unique_match<op::MatmulBias>(mpattern);
         auto m_broadcast = ngraph::pattern::Matcher::unique_match<op::Broadcast>(mpattern);
-        auto m_bias = m_broadcast->get_input_op(0);
+        auto m_bias = m_broadcast->get_argument(0);
         auto pattern_map = m.get_pattern_map();
 
         auto mmb = std::make_shared<op::MatmulBias>(pattern_map[W],
@@ -210,14 +210,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         bool transpose_w = false;
         Shape shape_arg0{pattern_map[W]->get_shape()};
-        if (!init_cblas_arg(dot->get_input_op(0), pattern_map[W], transpose_w, shape_arg0))
+        if (!init_cblas_arg(dot->get_argument(0), pattern_map[W], transpose_w, shape_arg0))
         {
             return false;
         }
 
         bool transpose_x = false;
         Shape shape_arg1{pattern_map[x]->get_shape()};
-        if (!init_cblas_arg(dot->get_input_op(1), pattern_map[x], transpose_x, shape_arg1))
+        if (!init_cblas_arg(dot->get_argument(1), pattern_map[x], transpose_x, shape_arg1))
         {
             return false;
         }
@@ -717,10 +717,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
+        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_argument(0));
         if (conv->get_input_shape(0).size() == 4)
         {
-            auto bias = m.match_root()->get_input_op(1)->get_input_op(0);
+            auto bias = m.match_root()->get_argument(1)->get_argument(0);
             auto bias_shape = bias->get_shape();
             if (bias_shape.size() > 1)
             {
@@ -773,7 +773,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
         auto pattern_map = m.get_pattern_map();
         auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
-            m.match_root()->get_input_op(0)->get_inputs().at(0).get_output().get_node());
+            m.match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
         if (!m_bn->get_training_flag())
         {
@@ -845,7 +845,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.match_root()->get_name();
 
-        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_input_op(0));
+        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.match_root()->get_argument(0));
 
         //These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;

@@ -32,12 +32,6 @@ shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor() const
     return m_descriptor;
 }
 
-void runtime::TensorView::collect_tensor_views(vector<shared_ptr<TensorView>>& views,
-                                               const shared_ptr<TensorView>& value) const
-{
-    views.push_back(value);
-}
-
 const Shape& runtime::TensorView::get_shape() const
 {
     return m_descriptor->get_tensor_view_type()->get_shape();

@@ -1015,7 +1015,7 @@ TEST(${BACKEND_NAME}, backwards_reshape)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(DISABLED_${BACKEND_NAME}, backwards_select)
+TEST(${BACKEND_NAME}, backwards_select)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
@@ -1044,7 +1044,7 @@ TEST(DISABLED_${BACKEND_NAME}, backwards_select)
     }
 }
 
-TEST(DISABLED_${BACKEND_NAME}, backwards_select_nested)
+TEST(${BACKEND_NAME}, backwards_select_nested)
 {
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
