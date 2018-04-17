@@ -316,7 +316,7 @@ TEST(${BACKEND_NAME}, batch_norm_one_output)
         -0.09365749, -1.01327395, -1.04269195, 5.00118923, -0.43295258, -1.24840283};
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{expected_result}, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, batch_norm_three_outputs)
@@ -352,19 +352,19 @@ TEST(${BACKEND_NAME}, batch_norm_three_outputs)
         0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
 
     backend->call(f0, {result0}, {a});
-    EXPECT_EQ(vector<float>{expected_result0}, read_vector<float>(result0));
+    EXPECT_TRUE(test::all_close(vector<float>{expected_result0}, read_vector<float>(result0)));
 
     auto result1 = backend->create_tensor(element::f32, shape_mean);
     vector<float> expected_result1{0.27972114, -1.14431989, 0.49731493};
 
     backend->call(f1, {result1}, {a});
-    EXPECT_EQ(vector<float>{expected_result1}, read_vector<float>(result1));
+    EXPECT_TRUE(test::all_close(vector<float>{expected_result1}, read_vector<float>(result1)));
 
     auto result2 = backend->create_tensor(element::f32, shape_mean);
     vector<float> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
 
     backend->call(f2, {result2}, {a});
-    EXPECT_EQ(vector<float>{expected_result2}, read_vector<float>(result2));
+    EXPECT_TRUE(test::all_close(vector<float>{expected_result2}, read_vector<float>(result2)));
 }
 
 TEST(${BACKEND_NAME}, ceiling)
