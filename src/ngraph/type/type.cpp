@@ -46,12 +46,6 @@ bool TensorViewType::operator==(const TensorViewType& that) const
     return rc;
 }
 
-void TensorViewType::collect_tensor_views(
-    std::vector<std::shared_ptr<const TensorViewType>>& views) const
-{
-    views.push_back(shared_from_this());
-}
-
 std::ostream& ngraph::operator<<(std::ostream& out, const TensorViewType& obj)
 {
     out << "TensorViewType(" << obj.m_element_type << ", {" << join(obj.m_shape) << "})";
