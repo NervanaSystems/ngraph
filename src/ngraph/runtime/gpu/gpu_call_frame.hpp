@@ -55,11 +55,6 @@ namespace ngraph
                 void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
 
-                /// @brief Invoke the function with tuples pre-expanded to their underlying
-                /// tensor views.
-                void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
-                                 const std::vector<std::shared_ptr<TensorView>>& inputs);
-
                 void setup_runtime_context();
                 void cleanup_runtime_context();
 
