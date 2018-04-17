@@ -31,14 +31,14 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/pass/convolution_weight_optimization.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-void ngraph::runtime::cpu::pass::ConvolutionWeightOptimization::construct_weight_fusion()
+void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fusion()
 {
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{64});
     auto reshape_conv =
@@ -52,8 +52,6 @@ void ngraph::runtime::cpu::pass::ConvolutionWeightOptimization::construct_weight
 
     pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_weight against " << m.match_root()->get_name();
-
-        std::cout << "In a callback for construct_weight against " << m.match_root()->get_name() << std::endl;
 
         auto m_cvt_lt = m.match_root()->get_input_op(1);
         auto m_reshape_conv = m_cvt_lt->get_input_op(0);
@@ -105,26 +103,12 @@ void ngraph::runtime::cpu::pass::ConvolutionWeightOptimization::construct_weight
         auto m_cvt_lt_bprop = m_conv_bprop->get_input_op(0);
         auto m_reshape_bprop = m_cvt_lt_bprop->get_input_op(0);
 
+        NGRAPH_DEBUG << "Replacing input "
+                     << m_cvt_lt_bprop->get_inputs().at(0).get_output().get_node()->get_name()
+                     << " to " << m_cvt_lt_bprop->get_name() << " with "
+                     << m_cvt_lt->get_outputs().at(0).get_node()->get_name();
         m_cvt_lt_bprop->get_inputs().at(0).replace_output(m_cvt_lt->get_outputs().at(0));
-        //this automatically copies layout info
-        // auto new_cvt_lt = m_cvt_lt_bprop->copy_with_new_args({m_cvt_lt});
-        // auto new_conv_bprop =
-        //     m_conv_bprop->copy_with_new_args({new_cvt_lt, m_conv_bprop->get_input_op(1)});
 
-        //layout info needs to be copied manually
-
-        // const auto& conv_bprop_tv = m_conv_bprop->get_output_tensor_view(0);
-        // const auto& conv_bprop_layout = conv_bprop_tv->get_tensor_view_layout();
-        // new_conv_bprop->get_output_tensor_view()->set_tensor_view_layout(conv_bprop_layout);
-
-        // NGRAPH_DEBUG << "Replacing " << m_conv_bprop->get_name() << " with "
-        //              << new_conv_bprop->get_name();
-
-        // std::cout << "Replacing " << m_conv_bprop->get_name() << " with "
-        //              << new_conv_bprop->get_name() << std::endl;
-
-
-        //ngraph::replace_node(m_conv_bprop, new_conv_bprop);
         return true;
     };
 
