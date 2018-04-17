@@ -293,15 +293,15 @@ TEST(${BACKEND_NAME}, batch_norm_one_output)
     auto shape_in = Shape{2, 3};
     auto shape_mean = Shape{3};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_in);
+    auto A = make_shared<op::Parameter>(element::f64, shape_in);
     auto Mean =
-        op::Constant::create(element::f32, shape_mean, {0.00396654, -1.25294404, 1.16651872});
+        op::Constant::create(element::f64, shape_mean, {0.00396654, -1.25294404, 1.16651872});
     auto Variance =
-        op::Constant::create(element::f32, shape_mean, {2.40871689, 1.44969511, 0.23469392});
+        op::Constant::create(element::f64, shape_mean, {2.40871689, 1.44969511, 0.23469392});
     auto Beta =
-        op::Constant::create(element::f32, shape_mean, {2.14211921, -0.75733924, 0.42210531});
+        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
     auto Gamma =
-        op::Constant::create(element::f32, shape_mean, {1.75437676, 0.37950502, 1.13727544});
+        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
     auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A, Mean, Variance, false);
     auto f = make_shared<Function>(BN, op::ParameterVector{A});
@@ -312,14 +312,14 @@ TEST(${BACKEND_NAME}, batch_norm_one_output)
     auto a = backend->create_tensor(element::f32, shape_in);
     copy_data(
         a,
-        vector<float>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
+        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
 
     auto result = backend->create_tensor(element::f32, shape_in);
-    vector<float> expected_result{
+    vector<double> expected_result{
         -0.09365749, -1.01327395, -1.04269195, 5.00118923, -0.43295258, -1.24840283};
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(vector<float>{expected_result}, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result}, read_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, batch_norm_three_outputs)
@@ -330,11 +330,11 @@ TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto shape_in = Shape{2, 3};
     auto shape_mean = Shape{3};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_in);
+    auto A = make_shared<op::Parameter>(element::f64, shape_in);
     auto Beta =
-        op::Constant::create(element::f32, shape_mean, {2.14211921, -0.75733924, 0.42210531});
+        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
     auto Gamma =
-        op::Constant::create(element::f32, shape_mean, {1.75437676, 0.37950502, 1.13727544});
+        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
     auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A);
 
@@ -351,26 +351,26 @@ TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto a = backend->create_tensor(element::f32, shape_in);
     copy_data(
         a,
-        vector<float>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
+        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
 
-    auto result0 = backend->create_tensor(element::f32, shape_in);
-    vector<float> expected_result0{
+    auto result0 = backend->create_tensor(element::f64, shape_in);
+    vector<double> expected_result0{
         0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
 
     backend->call(f0, {result0}, {a});
-    EXPECT_TRUE(test::all_close(vector<float>{expected_result0}, read_vector<float>(result0)));
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result0}, read_vector<double>(result0)));
 
     auto result1 = backend->create_tensor(element::f32, shape_mean);
-    vector<float> expected_result1{0.27972114, -1.14431989, 0.49731493};
+    vector<double> expected_result1{0.27972114, -1.14431989, 0.49731493};
 
     backend->call(f1, {result1}, {a});
-    EXPECT_TRUE(test::all_close(vector<float>{expected_result1}, read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result1}, read_vector<double>(result1)));
 
     auto result2 = backend->create_tensor(element::f32, shape_mean);
-    vector<float> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
+    vector<double> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
 
     backend->call(f2, {result2}, {a});
-    EXPECT_TRUE(test::all_close(vector<float>{expected_result2}, read_vector<float>(result2)));
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result2}, read_vector<double>(result2)));
 }
 
 TEST(${BACKEND_NAME}, ceiling)
