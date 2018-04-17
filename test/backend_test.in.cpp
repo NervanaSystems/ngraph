@@ -287,6 +287,9 @@ TEST(${BACKEND_NAME}, abs)
 
 TEST(${BACKEND_NAME}, batch_norm_one_output)
 {
+    SKIP_TEST_FOR("CPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+
     auto shape_in = Shape{2, 3};
     auto shape_mean = Shape{3};
 
@@ -321,6 +324,9 @@ TEST(${BACKEND_NAME}, batch_norm_one_output)
 
 TEST(${BACKEND_NAME}, batch_norm_three_outputs)
 {
+    SKIP_TEST_FOR("CPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+
     auto shape_in = Shape{2, 3};
     auto shape_mean = Shape{3};
 
