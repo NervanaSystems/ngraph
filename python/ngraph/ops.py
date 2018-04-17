@@ -27,14 +27,14 @@ from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broad
     Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
     Subtract, Sum, Tan, Tanh
 
-from typing import Iterable, List
+from typing import Callable, Iterable, List, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, CallableData
+    NodeInput, ScalarData
 from ngraph.utils.types import get_element_type
 
 
@@ -637,7 +637,7 @@ def prod(node, reduction_axes=None, name=None):
 @nameable_op
 def reduce(node,                 # type: Node
            initial_value,        # type: ScalarData
-           reduction_function,   # type: CallableData
+           reduction_function,   # type: Union[Callable, Function]
            reduction_axes=None,  # type: List[int]
            name=None,            # type: str
            ):
