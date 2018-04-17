@@ -30,7 +30,7 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void batch_norm_three_outputs(float eps,
+            void batch_norm_three_outputs(double eps,
                                           const T* arg0,
                                           const T* arg1,
                                           const T* arg2,
@@ -92,7 +92,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void batch_norm_one_output(float eps,
+            void batch_norm_one_output(double eps,
                                        const T* arg0,
                                        const T* arg1,
                                        const T* arg2,
