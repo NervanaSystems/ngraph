@@ -1175,17 +1175,57 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        auto concat = static_cast<const ngraph::op::Concat*>(node.get());
                         auto input0_layout =
                             runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
                         size_t num_inputs = node->get_input_size();
+                        size_t concat_dim = concat->get_concatenation_axis();
+                        auto result_shape = node->get_output_shape(0);
+                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_input_element_type(0));
+                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                        auto result_desc =
+                            memory::desc(mkldnn_result_shape, et, memory::format::any);
 
+                        std::vector<mkldnn::memory::format> inputs_format;
+                        std::vector<mkldnn::memory::desc> inputs_data_desc;
+                        std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+                        vector<TensorViewWrapper> in;
+                        for (const descriptor::Input& input : node->get_inputs())
+                        {
+                            const descriptor::Output& output = input.get_output();
+                            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                            in.push_back(TensorViewWrapper(tv, "None"));
+                        }
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            inputs_format.push_back(
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(concat, i));
+                        }
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            inputs_data_desc.push_back(mkldnn::memory::desc(
+                                mkldnn::memory::dims(in[i].get_shape().begin(),
+                                                     in[i].get_shape().end()),
+                                mkldnn_utils::get_mkldnn_data_type(in[i].get_element_type()),
+                                inputs_format[i]));
+                        }
+                        for (size_t i = 0; i < inputs_data_desc.size(); i++)
+                        {
+                            inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                                inputs_data_desc[i],
+                                runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        }
+                        auto prim_desc = concat::primitive_desc(
+                            result_desc, static_cast<int>(concat_dim), inputs_pd);
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         for (size_t i = 0; i < num_inputs; i++)
                         {
                             prim_input_formats.push_back(input0_layout);
                         }
-                        prim_output_formats.push_back(input0_layout);
+                        prim_output_formats.push_back(static_cast<memory::format>(
+                            prim_desc.dst_primitive_desc().desc().data.format));
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
