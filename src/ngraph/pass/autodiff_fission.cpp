@@ -54,7 +54,7 @@ void pass::AutodiffFission::construct_cross_entropy_softmax()
             << m.match_root()->get_name();
 
         auto m_ce_sm = std::dynamic_pointer_cast<op::CrossEntropySoftMax>(m.match_root());
-        auto old_ce = m_ce_sm->get_original_cross_entropy();
+        auto old_ce = m_ce_sm->get_original_node();
         ngraph::replace_node(m.match_root(), old_ce);
         return true;
     };

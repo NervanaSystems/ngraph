@@ -51,14 +51,6 @@ namespace ngraph
             {
                 throw ngraph_error("Uncopyable");
             }
-
-            std::shared_ptr<Node> get_original_cross_entropy() const
-            {
-                return m_original_cross_entropy;
-            }
-
-        private:
-            std::shared_ptr<Node> m_original_cross_entropy;
         };
     }
 }

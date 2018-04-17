@@ -26,7 +26,6 @@ op::CrossEntropySoftMax::CrossEntropySoftMax(std::shared_ptr<ngraph::Node> y,
                                              std::shared_ptr<Node> old_cross_entropy,
                                              size_t axis)
     : Decollapsible("CrossEntropySoftMax", {y, t}, old_cross_entropy)
-    , m_original_cross_entropy(old_cross_entropy)
 {
     if (y->get_shape() != t->get_shape())
     {
