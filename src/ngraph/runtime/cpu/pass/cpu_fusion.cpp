@@ -1035,13 +1035,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
                     std::cout << "node_name: " << node->get_name() << std::endl;
                     for (size_t i = 0; i < node->get_input_size(); i++)
                     {
-                        if (node->get_input_op(i) == pattern_map[ct_label])
+                        if (node->get_argument(i) == pattern_map[ct_label])
                         {
                             new_args.push_back(ct_output);
                         }
                         else
                         {
-                            new_args.push_back(node->get_input_op(i));
+                            new_args.push_back(node->get_argument(i));
                         }
                         std::cout << "Multiply_input's shape: " << join(new_args[i]->get_shape())
                                   << " " << new_args[i]->get_name() << std::endl;
@@ -1108,26 +1108,44 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             auto bias1_label = m.get_bound_nodes_for_pattern(bias1);
             auto bias2_label = m.get_bound_nodes_for_pattern(bias2);
             auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
-            // auto rnn = std::make_shared<op::RNN>(
-            // label_param1_2[0], label_bias2[0], label_param2_2[0], label_bias1[0]);
 
-            //auto rnn_layer = std::make_shared<op::GetOutputElement>(rnn, 0);
-            std::cout << "In Recurrent RNN matcher " << std::endl;
-            std::cout << "xt: " << xt_label.size() << " " << xt_label[0]->get_name() << std::endl;
-            std::cout << "ht: " << ht_1_label.size() << " " << ht_1_label[0]->get_name()
-                      << std::endl;
-            std::cout << "cell_state,ct-1: " << cell_state.size() << " "
-                      << cell_state[0]->get_name() << std::endl;
-            std::cout << "weights_1: " << weights_1_label.size() << " "
-                      << weights_1_label[0]->get_name() << std::endl;
-            std::cout << "weights_2: " << weights_1_label.size() << " "
-                      << weights_2_label[0]->get_name() << std::endl;
-            std::cout << "bias1: " << bias1_label.size() << " " << bias1_label[0]->get_name()
-                      << std::endl;
-            std::cout << "bias2: " << bias2_label.size() << " " << bias2_label[0]->get_name()
-                      << std::endl;
-            // ngraph::replace_node(m.get_match_root(), rnn_layer);
-            return false;
+            std::vector<std::shared_ptr<pattern::op::Label>> lstm_bound_labels{
+                ct_1, xt, weights_1, weights_2, bias1, bias2, rpattern_ht_1};
+            NodeVector rnn_args;
+            for (size_t i = 0; i < lstm_bound_labels.size(); i++)
+            {
+                auto node_lables = m.get_bound_nodes_for_pattern(lstm_bound_labels[i]);
+                for (size_t j = 0; j < node_lables.size(); j++)
+                {
+                    std::cout << node_lables[j]->get_name() << " ";
+                    if (!std::dynamic_pointer_cast<op::GetOutputElement>(node_lables[j]))
+                    {
+                        rnn_args.push_back(node_lables[j]);
+                        std::cout << std::endl;
+                    }
+                }
+            }
+            auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
+            Shape lstm_output_shape{ht_1_label[0]->get_shape()};
+            auto rnn = std::make_shared<op::RNN>(rnn_args, num_of_lstm_matched, lstm_output_shape);
+
+            // //auto rnn_layer = std::make_shared<op::GetOutputElement>(rnn, 0);
+            // std::cout << "In Recurrent RNN matcher " << std::endl;
+            // std::cout << "xt: " << xt_label.size() << " " << xt_label[0]->get_name() << std::endl;
+            // std::cout << "ht: " << ht_1_label.size() << " " << ht_1_label[0]->get_name()
+            //           << std::endl;
+            // std::cout << "cell_state,ct-1: " << cell_state.size() << " "
+            //           << cell_state[0]->get_name() << std::endl;
+            // std::cout << "weights_1: " << weights_1_label.size() << " "
+            //           << weights_1_label[0]->get_name() << std::endl;
+            // std::cout << "weights_2: " << weights_1_label.size() << " "
+            //           << weights_2_label[0]->get_name() << std::endl;
+            // std::cout << "bias1: " << bias1_label.size() << " " << bias1_label[0]->get_name()
+            //           << std::endl;
+            // std::cout << "bias2: " << bias2_label.size() << " " << bias2_label[0]->get_name()
+            //           << std::endl;
+            //ngraph::replace_node(m.get_match_root(), rnn);
+            return true;
         };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
@@ -1254,13 +1272,13 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 //                     std::cout << "node_name: " << node->get_name() << std::endl;
 //                     for (size_t i = 0; i < node->get_input_size(); i++)
 //                     {
-//                         if (node->get_input_op(i) == label_ct[0])
+//                         if (node->get_argument(i) == label_ct[0])
 //                         {
 //                             new_args.push_back(ct_output);
 //                         }
 //                         else
 //                         {
-//                             new_args.push_back(node->get_input_op(i));
+//                             new_args.push_back(node->get_argument(i));
 //                         }
 //                         std::cout << "Multiply_input's shape: " <<  join(new_args[i]->get_shape())  <<  " " << new_args[i]->get_name() << std::endl;
 //                     }

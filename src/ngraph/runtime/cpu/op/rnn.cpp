@@ -57,49 +57,16 @@ op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
 
 shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
-    return make_shared<RNN>(new_args[0], new_args[1], new_args[2], new_args[3]);
+    return make_shared<RNN>(new_args, m_number_of_lstm_cells, m_lstm_output_shape);
 }
 
-op::RNN::RNN(std::shared_ptr<Node> src_iter,
-             std::shared_ptr<Node> src_layer,
-             std::shared_ptr<Node> weights_iter,
-             std::shared_ptr<Node> weights_layer)
-    : RequiresTensorViewArgs("RNN", {src_iter, src_layer, weights_iter, weights_layer})
+op::RNN::RNN(const NodeVector& args, const int number_of_lstm_cells, Shape lstm_output_shape)
+    : RequiresTensorViewArgs("RNN", args)
+    , m_number_of_lstm_cells(number_of_lstm_cells)
+    , m_lstm_output_shape(lstm_output_shape)
 {
-    add_output(src_layer->get_element_type(), src_layer->get_shape());
-    add_output(src_iter->get_element_type(), src_iter->get_shape());
+    for (size_t i = 0; i < number_of_lstm_cells; i++)
+    {
+        add_output(args[0]->get_element_type(), lstm_output_shape);
+    }
 }
-
-// op::LSTMBackprop::LSTMBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-//     : RequiresTensorViewArgs("LSTMBackprop", {arg, delta})
-// {
-//     if (arg->get_element_type() != delta->get_element_type())
-//     {
-//         throw ngraph_error("Argument and delta element types for LSTM backprop do not match");
-//     }
-//     if (arg->get_shape() != delta->get_shape())
-//     {
-//         throw ngraph_error("Argument and delta shape for LSTM backprop do not match");
-//     }
-//     set_value_type_checked(delta->get_element_type(), delta->get_shape());
-// }
-
-// shared_ptr<Node> op::LSTMBackprop::copy_with_new_args(const NodeVector& new_args) const
-// {
-//     if (new_args.size() != 2)
-//     {
-//         throw ngraph_error("Incorrect number of new arguments");
-//     }
-//     return make_shared<LSTMBackprop>(new_args.at(0), new_args.at(1));
-// }
-
-// void op::LSTM::generate_adjoints(autodiff::Adjoints& adjoints, const shared_ptr<Node>& delta)
-// {
-//     auto backprop = make_shared<op::LSTMBackprop>(get_input_op(0), delta);
-//     adjoints.add_delta(get_input_op(0), backprop);
-// }

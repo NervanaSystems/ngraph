@@ -49,26 +49,13 @@ namespace ngraph
         class RNN : public util::RequiresTensorViewArgs
         {
         public:
-            RNN(std::shared_ptr<Node> src_iter,
-                std::shared_ptr<Node> src_layer,
-                std::shared_ptr<Node> weights_iter,
-                std::shared_ptr<Node> weights_layer);
+            RNN(const NodeVector& args, const int number_of_lstm_cells, Shape lstm_output_shape);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            int get_num_of_lstm_cells() { return m_number_of_lstm_cells; }
+        private:
+            int m_number_of_lstm_cells;
+            Shape m_lstm_output_shape;
         };
-
-        /// \brief Elementwise LSTMBackprop operation.
-        ///
-        // class LSTMBackprop : public util::RequiresTensorViewArgs
-        // {
-        // public:
-        //     /// \brief Constructs a LSTMBackprop operation.
-        //     ///
-        //     /// \param arg Node that produces the LSTM forward input tensor.
-        //     LSTMBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
-
-        //     virtual std::shared_ptr<Node>
-        //         copy_with_new_args(const NodeVector& new_args) const override;
-        //};
     }
 }
