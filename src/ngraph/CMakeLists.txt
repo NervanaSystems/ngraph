@@ -47,6 +47,7 @@ set (SRC
     op/convolution.cpp
     op/cos.cpp
     op/cosh.cpp
+    op/cross_entropy_softmax.cpp
     op/divide.cpp
     op/dot.cpp
     op/equal.cpp
@@ -98,10 +99,13 @@ set (SRC
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise.cpp
+    op/util/decollapsible.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/autodiff_fission.cpp
+    pass/autodiff_fusion.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
