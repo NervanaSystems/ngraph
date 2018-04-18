@@ -102,6 +102,7 @@ set (SRC
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/algebraic_simplification.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp

@@ -35,12 +35,6 @@
 using namespace ngraph;
 using namespace std;
 
-bool is_zero(shared_ptr<Node> reduce_constant)
-{
-    auto result_bool = is_equal_to_const_value("0", reduce_constant);
-    return result_bool;
-}
-
 static shared_ptr<Node> construct_constant_node(int n)
 {
     return op::Constant::create(element::f32, Shape{}, {n});
@@ -64,7 +58,7 @@ void pass::CoreFusion::construct_relu_pattern()
 
         auto pattern_map = m.get_pattern_map();
         auto mzero = m.get_pattern_map()[zero];
-        if (!is_zero(mzero))
+        if (!ngraph::is_zero(mzero))
         {
             NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
             return false;
