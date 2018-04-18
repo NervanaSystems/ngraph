@@ -14,10 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-void regclass_pyngraph_runtime_ExternalFunction(py::module m);
+using namespace ngraph;
+using namespace ngraph::runtime::gpu;

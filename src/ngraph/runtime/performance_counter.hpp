@@ -16,18 +16,12 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "ngraph/runtime/tensor_view.hpp"
+#include <cstddef>
 
 namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
-        class Value;
-
         class PerformanceCounter
         {
         public:
@@ -45,26 +39,6 @@ namespace ngraph
             std::string m_name;
             size_t m_total_microseconds;
             size_t m_call_count;
-        };
-
-        // A VM for executing lightly-compiled graph functions.
-        class CallFrame
-        {
-        public:
-            virtual ~CallFrame() {}
-            /// @brief Invoke the function with values matching the signature of the function.
-            ///
-            virtual void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
-
-            /// @brief Invoke the function
-            virtual void tensor_call(const TensorViewPtrs& outputs,
-                                     const TensorViewPtrs& inputs) = 0;
-
-            virtual std::vector<PerformanceCounter> get_performance_data() const
-            {
-                return std::vector<PerformanceCounter>();
-            }
         };
     }
 }

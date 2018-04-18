@@ -30,18 +30,12 @@ namespace ngraph
             class CudaFunctionPool
             {
             public:
-                static CudaFunctionPool& instance();
-                CudaFunctionPool(CudaFunctionPool const&) = delete;
-                CudaFunctionPool(CudaFunctionPool&&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool const&) = delete;
-                CudaFunctionPool& operator=(CudaFunctionPool&&) = delete;
-
-                void set(const std::string& name, const std::string& kernel);
-                std::shared_ptr<CUfunction> get(const std::string& name);
-
-            protected:
                 CudaFunctionPool() {}
                 ~CudaFunctionPool() {}
+                std::shared_ptr<CUfunction> set(const std::string& name, const std::string& kernel);
+                std::shared_ptr<CUfunction> get(const std::string& name);
+
+            private:
                 std::unordered_map<std::string, std::shared_ptr<CUfunction>> m_function_map;
             };
         }

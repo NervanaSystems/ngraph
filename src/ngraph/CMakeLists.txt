@@ -223,6 +223,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
+        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -277,6 +278,12 @@ endif()
             runtime/gpu/gpu_cuda_function_builder.cpp
             runtime/gpu/gpu_cuda_function_pool.cpp
             runtime/gpu/gpu_cuda_context_manager.cpp
+            runtime/gpu/gpu_runtime_context.cpp
+            runtime/gpu/gpu_primitive_emitter.cpp
+            runtime/gpu/gpu_invoke.cpp
+            runtime/gpu/cudnn_emitter.cpp
+            runtime/gpu/cuda_emitter.cpp
+            runtime/gpu/type_info.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

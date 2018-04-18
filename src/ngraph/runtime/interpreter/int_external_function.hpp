@@ -19,8 +19,6 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/external_function.hpp"
 
 namespace ngraph
 {
@@ -28,16 +26,22 @@ namespace ngraph
     {
         namespace interpreter
         {
-            class ExternalFunction : public ngraph::runtime::ExternalFunction
+            class INT_CallFrame;
+
+            class ExternalFunction
             {
             public:
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                  bool release_function = false);
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+                std::shared_ptr<INT_CallFrame> make_call_frame();
 
             protected:
-                std::shared_ptr<ngraph::Function> m_interpreter_function;
                 void compile();
+                void release_function() { m_function = nullptr; }
+                std::shared_ptr<ngraph::Function> m_function;
+                bool m_release_function;
+                bool m_is_compiled;
+                bool m_timing;
             };
         }
     }

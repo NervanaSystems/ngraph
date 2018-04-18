@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <string>
 
-#include <pybind11/pybind11.h>
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_runtime_CallFrame(py::module m);
+extern "C" void ngraph::runtime::gpu::invoke_primitive(GPURuntimeContext* ctx,
+                                                       size_t primitive_index,
+                                                       void** args,
+                                                       void** result)
+{
+    (*ctx->gpu_primitives[primitive_index])(args, result);
+}

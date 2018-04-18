@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,18 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/runtime/call_frame.hpp"
-#include "pyngraph/runtime/call_frame.hpp"
+#include <string>
 
-namespace py = pybind11;
+#include "cudnn_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-void regclass_pyngraph_runtime_CallFrame(py::module m)
+extern "C" void ngraph::runtime::gpu::cudnn_utils::cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                                                                          size_t primitive_index,
+                                                                          void** args,
+                                                                          void** result)
 {
-    py::class_<ngraph::runtime::CallFrame, std::shared_ptr<ngraph::runtime::CallFrame>> callFrame(
-        m, "CallFrame");
-    callFrame.doc() = "ngraph.impl.runtime.CallFrame wraps ngraph::runtime::CallFrame";
-    callFrame.def("call", &ngraph::runtime::CallFrame::call);
+    (*ctx->cudnn_primitives[primitive_index])(args, result);
 }
