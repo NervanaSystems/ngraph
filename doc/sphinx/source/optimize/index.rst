@@ -1,18 +1,23 @@
 .. optimize/index: 
 
-Optimize a framework to use nGraph
-===================================
+##########################################
+Additional optimizations for frameworks   
+##########################################
+
+In this section, which was written for framework architects or engineers who are 
+optimizing a new or less widely-supported framework, we provide some of our 
+learnings from the work we've done in developing and documenting custom bridge 
+code, such as that for our `ngraph tensorflow bridge`_ code.
 
 .. important:: This section contains articles for framework owners or developers
    who want to incorporate the nGraph library directly into their framework and 
-   optimize for some specific characteristic that is important to a data 
-   scientist.  
+   optimize for some specific compute-time characteristic. 
+
 
 .. toctree::
-   :maxdepth: 1
-   :caption: How to 
+   :maxdepth: 1 
 
-   tune-for-deployment.rst
+   generic-frameworks.rst
 
 
 When using a framework to run a model or deploy an algorithm on nGraph 
@@ -23,41 +28,8 @@ science; there are virtually limitless ways to do so.
 
 Since a framework is typically designed around some feature, such as fast 
 training using image data, inference on a mobile device, or support for voice 
-and speech pattern recognition, a framework cannot optimize for all possibilities 
-at the same time.   
-
-Right now the preferred way for a data scientist to get better performance is 
-to shop around and select the framework that is "already" designed or optimized 
-for some characteristic or trait of the model they want to test, build, or run. 
-One challenge of the framework developer, then, is to differentiate from the pack 
-by providing a means to obtain reproducible results using their specific 
-frontend API + graph when running models with various scenarios of interest to 
-data scientists.  
-
-How this has worked :doc:`for many <../framework-integration-guides>` of the 
-"direct optimizations" we've shared with the developer community, our 
-`engineering teams carefully tune the workload to extract best performance`_ 
-from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
-that is training a specific dataset. Some of the various ways we attempt to 
-improve performance include: 
-
-* Testing and recording the results of various system-level configuration options
-  or enabled or disabled flags,
-* Compiling with a mix of custom environment variables, 
-* Finding semi-related comparisons for benchmarking [#1]_, and 
-* Tuning lower levels of the system so that the machine-learning algorithm can 
-  learn faster or more accurately that it did on previous runs, 
-* Incorporating various :doc:`../ops/index` to build graphs more efficiently. 
-
-This approach, however, is obviously not a scalable solution for any framework 
-developer. Nor is it ideal for team looking to innovate for solutions that may 
-be bogged down by a large "one size fits all" framework trying to be everything 
-to everybody.  
-
-In this section, which was written for framework architects or engineers who are 
-optimizing a new or less widely-supported framework, we provide some of our 
-learnings from the work we've done in developing our custom bridge code, such as
-that for our `ngraph tensorflow bridge`_ code.
+and speech pattern recognition, a framework cannot optimize for all 
+possibilities at the same time.   
 
 In general, the larger and more complex a framework is, the harder it becomes 
 to navigate and extract the best performance; configuration options that are 
@@ -67,9 +39,42 @@ adjustments can increase performance. Likewise, a minimalistic framework that
 is designed around one specific kind of model can sometimes offer significant 
 performance-improvement opportunities by lowering overhead. 
 
-For this reason, we're providing some of the more commonly-used options for 
+Right now the preferred way for a data scientist to get better performance is 
+to shop around and select the framework that is "already" designed or optimized 
+for some characteristic or trait of the model they want to build, test, tweak, 
+or run. One challenge of the framework developer, then, is to differentiate from 
+the pack by providing a means to obtain reproducible results. The other challenge 
+is to provide sufficient documentation, or to give hints for how to do any 
+"fine-tuning" when using the framework's frontend API. 
+
+How this has worked in creating the :doc:`the direct optimizations <../framework-integration-guides>` 
+we've shared with the developer community, our `engineering teams carefully tune the workload to extract best performance`_ 
+from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
+that is training a specific dataset. Our forks of the frameworks adjust the code 
+and/or explain how to set the parameters that achieve reproducible results. 
+
+Some of the ways we attempt to improve performance include: 
+
+* Testing and recording the results of various system-level configuration options
+  or enabled or disabled flags,
+* Compiling with a mix of custom environment variables, 
+* Finding semi-related comparisons for benchmarking [#1]_, and 
+* Tuning lower levels of the system so that the machine-learning algorithm can 
+  learn faster or more accurately that it did on previous runs, 
+* Incorporating various :doc:`../ops/index` to build graphs more efficiently. 
+
+This approach, however, is obviously not a scalable solution for developers on  
+the framework side who are trying to support multiple use cases. Nor is it ideal 
+for teams looking to pivot or innovate multi-layer solutions based on something 
+**other than training speed**, things like accuracy or precision. Chasing 
+performance improvements does eventually yield a diminishing 
+:abbr:`Return on Investment (ROI)`, though it is up to the framework 
+developer to decide when that is for each of their customers.    
+
+For these reasons, we're providing some of the more commonly-used options for 
 fine-tuning various kinds code deployments to the nGraph-enabled devices we 
-currently support. Watch this section for new updates. 
+currently support. Watch this section as we enable new devices and post new 
+updates. 
 
 .. rubric:: Footnotes
 
@@ -82,3 +87,4 @@ currently support. Watch this section for new updates.
 .. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow
 .. _engineering teams carefully tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
+.. _Movidius: https://www.movidius.com/

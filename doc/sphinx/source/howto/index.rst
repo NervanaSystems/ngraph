@@ -8,7 +8,6 @@ How to
    :caption: How to 
 
    execute.rst
-   tune-for-deployment.rst
    operator.rst
    update.rst
    derive-for-training.rst
@@ -46,7 +45,7 @@ computation that can run on an nGraph backend; this is analogous to a
 framework bridge.  We also provide a larger example for training and
 evaluating a simple MNIST MLP model. Details that might be helpful when 
 fine-tuning training of a Neural Network can be found on our article describing
-how to :doc:`tune-for-deployment`.
+how to :doc:`../optimize/tune-for-deployment`.
 
 For data scientists or algorithm developers who are trying to extract specifics 
 about the state of a model at a certain node, or who want to optimize a model 
