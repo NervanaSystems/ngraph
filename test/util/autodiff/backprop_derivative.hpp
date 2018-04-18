@@ -179,7 +179,7 @@ namespace ngraph
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)
             {
-                auto tv = backend->create_tensor<T>(node->get_shape());
+                auto tv = backend->create_tensor(node->get_element_type(), node->get_shape());
                 mod_f_output_args.push_back(tv);
                 mod_df_input_args.push_back(tv);
             }

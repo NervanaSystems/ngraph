@@ -125,6 +125,7 @@ codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
     , m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
+    , m_enable_pass_report((std::getenv("NGRAPH_COMPILER_REPORT_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
     initialize();
@@ -147,7 +148,11 @@ void codegen::StaticCompiler::initialize()
     // This is for both Eigen strong and weak inlines
     args.push_back("-mllvm");
     args.push_back("-inline-threshold=1000000");
-
+    if (m_enable_pass_report)
+    {
+        args.push_back("-Rpass-analysis=loop-vectorize");
+        args.push_back("-Rpass=loop-vectorize");
+    }
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
@@ -157,10 +162,17 @@ void codegen::StaticCompiler::initialize()
     diag_options->ShowCarets = false;
     diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
-    DiagnosticsEngine diag_engine(diag_id, &*diag_options);
+    // create a diagnosetic buffer for errors caused by argument parsing
+    TextDiagnosticBuffer* diag_buffer = new TextDiagnosticBuffer();
+    DiagnosticsEngine diag_engine(diag_id, &*diag_options, diag_buffer);
 
     // Create and initialize CompilerInstance
     m_compiler = std::unique_ptr<CompilerInstance>(new CompilerInstance());
+
+    // Initialize CompilerInvocation
+    CompilerInvocation::CreateFromArgs(
+        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
+
     DiagnosticConsumer* diag_consumer;
     if (m_enable_diag_output)
     {
@@ -170,11 +182,8 @@ void codegen::StaticCompiler::initialize()
     {
         diag_consumer = new IgnoringDiagConsumer();
     }
+    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get generated.
     m_compiler->createDiagnostics(diag_consumer);
-
-    // Initialize CompilerInvocation
-    CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
 
     configure_search_path();
 
@@ -213,6 +222,9 @@ void codegen::StaticCompiler::initialize()
     // Enable various target features
     auto& TO = m_compiler->getInvocation().getTargetOpts();
     TO.CPU = sys::getHostCPUName();
+
+    // Flush out any errors from clang/llvm arg parsing.
+    diag_buffer->FlushDiagnostics(m_compiler->getDiagnostics());
 }
 
 codegen::StaticCompiler::~StaticCompiler()

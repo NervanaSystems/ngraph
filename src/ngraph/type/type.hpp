@@ -44,7 +44,6 @@ namespace ngraph
         const Shape& get_shape() const { return m_shape; }
         bool operator==(const TensorViewType& that) const;
         bool operator!=(const TensorViewType& that) const;
-        void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const;
 
         friend std::ostream& operator<<(std::ostream&, const TensorViewType&);
 
