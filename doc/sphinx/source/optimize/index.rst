@@ -5,9 +5,9 @@ Additional optimizations for frameworks
 ##########################################
 
 In this section, which was written for framework architects or engineers who are 
-optimizing a new or less widely-supported framework, we provide some of our 
-learnings from the work we've done in developing and documenting custom bridge 
-code, such as that for our `ngraph tensorflow bridge`_ code.
+optimizing a brand new or less widely-supported framework, we provide some of our 
+learnings from the work we've done in developing for direct optimizations and 
+custom bridge code, such as that for our `ngraph tensorflow bridge`_ code.
 
 .. important:: This section contains articles for framework owners or developers
    who want to incorporate the nGraph library directly into their framework and 
@@ -22,9 +22,9 @@ code, such as that for our `ngraph tensorflow bridge`_ code.
 
 When using a framework to run a model or deploy an algorithm on nGraph 
 devices, there are some additional configuration options that can be 
-incorporated -- manually or via scripting -- to improve performance. 
-Fine-tuning an nGraph-enabled device is as much of an art as it is a 
-science; there are virtually limitless ways to do so. 
+incorporated -- manually on the command line or via scripting -- to improve 
+performance. Fine-tuning an nGraph-enabled device is as much of an art as it 
+is a science; there are virtually limitless ways to do so. 
 
 Since a framework is typically designed around some feature, such as fast 
 training using image data, inference on a mobile device, or support for voice 
@@ -34,7 +34,7 @@ possibilities at the same time.
 In general, the larger and more complex a framework is, the harder it becomes 
 to navigate and extract the best performance; configuration options that are 
 enabled by "default" from the framework side can sometimes slow down compilation 
-time without the developer being any the wiser. Sometimes only `a few small`_ 
+without the developer being any the wiser. Sometimes only `a few small`_ 
 adjustments can increase performance. Likewise, a minimalistic framework that 
 is designed around one specific kind of model can sometimes offer significant 
 performance-improvement opportunities by lowering overhead. 
@@ -43,9 +43,9 @@ Right now the preferred way for a data scientist to get better performance is
 to shop around and select the framework that is "already" designed or optimized 
 for some characteristic or trait of the model they want to build, test, tweak, 
 or run. One challenge of the framework developer, then, is to differentiate from 
-the pack by providing a means to obtain reproducible results. The other challenge 
-is to provide sufficient documentation, or to give hints for how to do any 
-"fine-tuning" when using the framework's frontend API. 
+the pack by providing a means for the data scientist to obtain reproducible 
+results. The other challenge is to provide sufficient documentation, or to 
+provide sufficient hints for how to do any "fine-tuning" for specific use cases. 
 
 How this has worked in creating the :doc:`the direct optimizations <../framework-integration-guides>` 
 we've shared with the developer community, our `engineering teams carefully tune the workload to extract best performance`_ 
@@ -72,7 +72,7 @@ performance improvements does eventually yield a diminishing
 developer to decide when that is for each of their customers.    
 
 For these reasons, we're providing some of the more commonly-used options for 
-fine-tuning various kinds code deployments to the nGraph-enabled devices we 
+fine-tuning various code deployments to the nGraph-enabled devices we 
 currently support. Watch this section as we enable new devices and post new 
 updates. 
 
