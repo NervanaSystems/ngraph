@@ -188,14 +188,16 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
-def reshape(node, input_order, output_shape, name=None):
-    # type: (Node, List[int], List[int], str) -> None
+def reshape(node, output_shape, input_order=None, name=None):
+    # type: (Node, List[int], List[int], str) -> Node
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
     :param input_order: The order in which to iterate over input axes of input tensor.
     :param output_shape: The new shape for input tensor.
     """
+    if input_order is None:
+        input_order = list(range(len(node.shape)))
     return Reshape(node, AxisVector(input_order), Shape(output_shape))
 
 
