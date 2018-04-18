@@ -85,8 +85,8 @@ namespace ngraph
                         auto channel_beta = arg1[c];
 
                         auto input_index = arg2_transform.index(arg2_coord);
-                        auto normalized =
-                            (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
+                        auto normalized = (arg2[input_index] - channel_mean) /
+                                          (std::sqrt(channel_var + eps_casted));
                         out0[input_index] = normalized * channel_gamma + channel_beta;
                     }
                 }
