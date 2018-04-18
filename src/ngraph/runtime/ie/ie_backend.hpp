@@ -429,13 +429,24 @@ namespace ngraph
                                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                             out[0]->get_element_count());
                     }
-                    /*
                     else if (node_op == "FunctionCall")
                     {
                         std::shared_ptr<Function> function = node.get_functions()[0];
-                        call(function, out, args);
+
+                        std::vector<std::shared_ptr<runtime::TensorView>> outputs;
+                        for (auto tv : out)
+                        {
+                            outputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                        }
+
+                        std::vector<std::shared_ptr<runtime::TensorView>> inputs;
+                        for (auto tv : args)
+                        {
+                            inputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                        }
+
+                        call(function, outputs, inputs);
                     }
-                    */
                     else if (node_op == "Greater")
                     {
                         reference::greater<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),

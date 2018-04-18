@@ -60,7 +60,7 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
 {
     validate_call(function, outputs, inputs);
 
-    // TODO: check if function already compiled
+    // TODO: check if function already compiled?
     compile(function);
 
     // convert inputs to HostTensorView
@@ -152,9 +152,27 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
         }
         secondary_type = op->get_element_type();
 
+        // some ops have unusual intput/output types so handle those special cases here
+        if (op->description() == "Select")
+        {
+            base_type = op->get_inputs().at(1).get_tensor().get_element_type();
+            secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
+        }
+
         generate_calls(base_type, secondary_type, *op, op_outputs, op_inputs);
 
-        // TODO: cleanup tensors
+        // delete any obsolete tensors
+        for (const descriptor::Tensor* t : op->liveness_free_list)
+        {
+            for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
+            {
+                if (it->second->get_tensor().get_name() == t->get_name())
+                {
+                    tensor_map.erase(it);
+                    break;
+                }
+            }
+        }
     }
 
     return true;
