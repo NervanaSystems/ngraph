@@ -140,12 +140,6 @@ public:
     void set_nan_check(bool);
 
 private:
-    /// @brief Invoke the function with tuples pre-expanded to their underlying
-    /// tensor views.
-    void tensor_call(const std::vector<std::shared_ptr<TensorView>>& outputs,
-                     const std::vector<std::shared_ptr<TensorView>>& inputs);
-    void tensor_call(const std::vector<std::shared_ptr<INTTensorView>>& outputs,
-                     const std::vector<std::shared_ptr<INTTensorView>>& inputs);
     void call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<runtime::interpreter::INTTensorView>>& output_tvs,
               const std::vector<std::shared_ptr<runtime::interpreter::INTTensorView>>& input_tvs);
