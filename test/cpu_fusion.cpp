@@ -38,12 +38,15 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -1024,4 +1027,51 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
     auto mmbs = get_ops_of_type<op::MatmulBias>(func);
     ASSERT_TRUE(std::any_of(begin(mmbs), end(mmbs), mmb_predicate));
+}
+
+TEST(cpu_fusion, weight_fusion)
+{
+    auto param = std::make_shared<op::Parameter>(element::f32, Shape{64});
+    auto reshape_conv =
+        std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
+    auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
+    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_view().get();
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt, AxisVector{0, 1, 2, 3});
+    auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
+    auto conv = std::make_shared<ngraph::op::Convolution>(
+        data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
+
+    auto reshape_conv_bprop =
+        std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
+    auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
+    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_view().get();
+    auto lt_desc_bprop =
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop, AxisVector{0, 1, 2, 3});
+    auto cvt_lt_conv_bprop =
+        std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
+    auto conv_bprop = std::make_shared<op::ConvolutionBackpropData>(Shape{1, 4, 7, 7},
+                                                                    cvt_lt_conv_bprop,
+                                                                    dummy_arg_conv_bprop,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+
+    auto conv_relu = std::make_shared<op::Relu>(conv);
+    auto conv_bprop_abs = std::make_shared<op::Abs>(conv_bprop);
+
+    auto f = make_shared<Function>(NodeVector{conv_relu, conv_bprop_abs},
+                                   op::ParameterVector{param, data_conv, dummy_arg_conv_bprop});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.run_passes(f);
+
+    auto new_conv_bprop_data = conv_bprop_abs->get_argument(0);
+    auto new_convert_layout = new_conv_bprop_data->get_argument(0);
+
+    ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
+                  new_convert_layout->get_argument(0)),
+              cvt_lt_conv);
 }
