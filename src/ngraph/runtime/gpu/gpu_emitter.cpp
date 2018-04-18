@@ -1412,6 +1412,36 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNorm)
+            {
+                const ngraph::op::BatchNorm* batchnorm =
+                    static_cast<const ngraph::op::BatchNorm*>(node);
+
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                CUDNNEmitter::Prop dir;
+                if (batchnorm->get_training_flag() && args.size() == 3)
+                {
+                    // forward train
+                    dir = CUDNNEmitter::Prop::Forward;
+                }
+                else
+                {
+                    // forward inference
+                    dir = CUDNNEmitter::Prop::Inference;
+                }
+
+
+
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            {
+            }
+
             // assumes NC{d1,d2,d3,...} format
             Shape get_padded_shape(const Shape& input_shape,
                                    const Shape& padding_below,

@@ -231,7 +231,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     return this->m_primitive_emitter->insert(reduce);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
+size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
                                                  const cudnnPoolingMode_t& pool_op,
                                                  const Prop& direction,
                                                  const Shape& input_shape,
@@ -299,7 +299,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     }
 
     gpu::primitive* pool = nullptr;
-    if (direction == Prop::Forward)
+    if (direction != Prop::Backward)
     {
         pool = new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
@@ -313,7 +313,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
                                 outputs[0]);
         }};
     }
-    else if (direction == Prop::Backward)
+    else
     {
         pool = new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
@@ -340,6 +340,117 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     }
 
     primitive_index = this->m_primitive_emitter->insert(pool);
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
+                                                   const cudnnBatchNormMode_t& bn_op,
+                                                   const Prop& direction,
+                                                   const Shape& tensor_shape,
+                                                   const Shape& param_shape,
+                                                   double epsilon)
+{
+    std::stringstream ss;
+    // hash params TBD
+    std::string hash = ss.str();
+
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    if (epsilon < CUDNN_BN_MIN_EPSILON)
+    {
+        throw std::runtime_error("Batch Norm epsilon is less than CUDNN_BN_MIN_EPSILON");
+    }
+
+    cudnnTensorDescriptor_t derived_param_desc;
+    auto tensor_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(tensor_shape);
+    cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op);
+
+    float alpha = 1.0, beta = 0.0;
+    gpu::primitive* batchnorm;
+    switch (direction)
+    {
+    case Prop::Inference: {
+        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+                cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
+                                                        bn_op,
+                                                        &alpha,
+                                                        &beta,
+                                                        tensor_desc,
+                                                        inputs[2],  // tensor
+                                                        tensor_desc,
+                                                        outputs[0], // tensor
+                                                        derived_param_desc,
+                                                        inputs[0],  // gain
+                                                        inputs[1],  // bias
+                                                        inputs[3],  // mean
+                                                        inputs[4],  // variance
+                                                        epsilon);
+            }};
+        break;
+    }
+    case Prop::Forward: {
+        // currently not using the cudnn fused forward/backward training
+        // so this factor needs to be set to 1.0;
+        double exp_avg_factor = 1.0;
+        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+                cudnnBatchNormalizationForwardTraining(
+                    *ctx->cudnn_handle,
+                    bn_op,
+                    &alpha,
+                    &beta,
+                    tensor_desc,
+                    inputs[2],
+                    tensor_desc,
+                    outputs[0],
+                    derived_param_desc,
+                    inputs[0],
+                    inputs[1],
+                    exp_avg_factor,
+                    outputs[1], // running mean
+                    outputs[2], // running var
+                    epsilon,
+                    NULL,      // batch mean
+                    NULL);      // batch var
+            }};
+        break;
+    }
+    case Prop::Backward: {
+        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+                cudnnBatchNormalizationBackward(
+                    *ctx->cudnn_handle,
+                    bn_op,
+                    &alpha,
+                    &beta,
+                    &alpha,
+                    &beta,
+                    tensor_desc,
+                    inputs[2 /* input tensor x */],
+                    tensor_desc,
+                    inputs[5 /* dy */],
+                    tensor_desc,
+                    outputs[0/* dx */],
+                    derived_param_desc,
+                    inputs[0 /* gamma */],
+                    outputs[1 /* dgamma */],
+                    outputs[2 /* dbeta */],
+                    epsilon,
+                    inputs[3 /* mu batch mean*/],
+                    inputs[4 /* 1/sig**2 batch inverse variance*/]);
+            }};
+        break;
+    }
+    default: {
+        throw std::runtime_error("No default case for CUDNN BatchNorm");
+    }
+    }
+
+
+    primitive_index = this->m_primitive_emitter->insert(batchnorm);
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
