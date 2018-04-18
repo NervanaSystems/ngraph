@@ -42,9 +42,9 @@ runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::gpu::GPU_CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs)
+void runtime::gpu::GPU_CallFrame::call(
+    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
 {
     //Device tensors
     vector<void*> inputs;
@@ -64,26 +64,6 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     }
 
     m_compiled_function(inputs.data(), outputs.data(), m_external_function->m_ctx.get());
-}
-
-void runtime::gpu::GPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& results,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments)
-{
-    // TODO: Check types of args and result
-    vector<shared_ptr<runtime::TensorView>> inputs;
-    for (shared_ptr<runtime::TensorView> argument : arguments)
-    {
-        argument->collect_tensor_views(inputs, argument);
-    }
-
-    vector<shared_ptr<runtime::TensorView>> outputs;
-    for (shared_ptr<runtime::TensorView> result : results)
-    {
-        result->collect_tensor_views(outputs, result);
-    }
-
-    tensor_call(outputs, inputs);
 }
 
 void runtime::gpu::GPU_CallFrame::setup_runtime_context()

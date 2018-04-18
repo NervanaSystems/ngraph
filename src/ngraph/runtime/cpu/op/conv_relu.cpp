@@ -25,7 +25,7 @@ using namespace std;
 using namespace ngraph;
 
 op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv)
-    : RequiresTensorViewArgs("ConvolutionRelu", {conv->get_input_op(0), conv->get_input_op(1)})
+    : RequiresTensorViewArgs("ConvolutionRelu", {conv->get_argument(0), conv->get_argument(1)})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())

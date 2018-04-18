@@ -50,7 +50,7 @@ namespace ngraph
 
             if (is_match) //in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
             {
-                auto args = label->get_input_ops();
+                auto args = label->get_arguments();
                 if (args.size() > 0)
                 {
                     if (args.size() != 1)
@@ -83,7 +83,7 @@ namespace ngraph
             }
             else
             {
-                auto args = any->get_input_ops();
+                auto args = any->get_arguments();
                 if (args.size() != 1)
                 {
                     throw ngraph_error("Any can only take one argument");
@@ -153,8 +153,8 @@ namespace ngraph
                          << "pattern = " << pattern_node->get_name() << " "
                          << "matched " << graph_node->get_name();
 
-            auto args = graph_node->get_input_ops();
-            auto pattern_args = pattern_node->get_input_ops();
+            auto args = graph_node->get_arguments();
+            auto pattern_args = pattern_node->get_arguments();
 
             if (args.size() != pattern_args.size())
             {

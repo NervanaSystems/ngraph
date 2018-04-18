@@ -120,6 +120,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
@@ -307,6 +308,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
@@ -792,7 +794,7 @@ using namespace ngraph::runtime;
                     if (!n->is_parameter() && !n->is_constant())
                     {
                         bool is_head = true;
-                        for (auto arg : n->get_input_ops())
+                        for (auto arg : n->get_arguments())
                         {
                             if (!arg->is_parameter() && !arg->is_constant())
                             {

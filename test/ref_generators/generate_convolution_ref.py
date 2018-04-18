@@ -249,7 +249,7 @@ TEST (${BACKEND_NAME}, %s)
     vector<float> expected_result{%s};
 
     backend->call(function, {result}, {a, b});
-    EXPECT_TRUE(all_close<float>(vector<float>{expected_result}, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {
         EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {a, b}, .01f, .01f));
@@ -367,26 +367,6 @@ def main():
 
 using namespace std;
 using namespace ngraph;
-
-template<typename T>
-static bool all_close(const std::vector<T>& a,
-                      const std::vector<T>& b,
-                      T rtol = T(1e-4),
-                      T atol = T(1e-7))
-{
-    assert(a.size() == b.size());
-
-    bool rc = true;
-
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
-        {
-            rc = false;
-        }
-    }
-    return rc;
-}
 
 ''')
 
