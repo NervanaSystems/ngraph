@@ -4288,7 +4288,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 5, 5};
@@ -4318,15 +4317,15 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 
     backend->call(f, {result}, {a});
     auto min = std::numeric_limits<float>::lowest();
-    EXPECT_EQ((test::NDArray<float, 4>({{{{min, min, min, min, min},
-                                          {1, 2, 2, 2, 1},
-                                          {3, 3, 2, 2, 1},
-                                          {3, 3, 2, 1, 1},
-                                          {2, 1, 2, 2, 2},
-                                          {2, 2, 2, 2, 2},
-                                          {2, 2, 1, 0, 0}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{min, min, min, min, min},
+                                                           {1, 2, 2, 2, 1},
+                                                           {3, 3, 2, 2, 1},
+                                                           {3, 3, 2, 1, 1},
+                                                           {2, 1, 2, 2, 2},
+                                                           {2, 2, 2, 2, 2},
+                                                           {2, 2, 1, 0, 0}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
@@ -4374,7 +4373,6 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 // values still "win" versus out-of-bounds values), which is good.
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     auto shape_a = Shape{
@@ -6295,7 +6293,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
 
 TEST(${BACKEND_NAME}, pad_interior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6326,7 +6323,6 @@ TEST(${BACKEND_NAME}, pad_interior_1d)
 
 TEST(${BACKEND_NAME}, pad_exterior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6357,7 +6353,6 @@ TEST(${BACKEND_NAME}, pad_exterior_1d)
 
 TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6389,7 +6384,6 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 
 TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6425,7 +6419,6 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
 
 TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0, 0};
@@ -6461,7 +6454,6 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 
 TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{0, 3};
@@ -6497,7 +6489,6 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 
 TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{3, 0};
@@ -6533,7 +6524,6 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 
 TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{1, 2, 2, 2};
@@ -6603,7 +6593,6 @@ TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
 // we should just count the pre-interior-padding length as zero.
 TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     Shape shape_a{2, 0, 3, 2};
