@@ -126,7 +126,6 @@ set (SRC
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
-    runtime/interpreter/int_kernels.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
