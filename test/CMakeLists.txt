@@ -39,6 +39,7 @@ set (SRC
     inliner.cpp
     input_output_assign.cpp
     main.cpp
+    onnx_import.cpp
     op.cpp
     graph_partition.cpp
     includes.cpp
@@ -172,6 +173,11 @@ endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
+
+# ONNX requires Protobuf
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+target_link_libraries(unit-test Protobuf)
 
 if(NGRAPH_NNP_ENABLE)
     # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.

@@ -31,6 +31,12 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
+    onnx_import/onnx.pb.cc
+    onnx_import/graph.cpp
+    onnx_import/model.cpp
+    onnx_import/node.cpp
+    onnx_import/value_info.cpp
+    onnx_util.cpp
     op/abs.cpp
     op/acos.cpp
     op/add.cpp
@@ -368,6 +374,11 @@ if (NGRAPH_NNP_ENABLE)
     add_dependencies(ngraph ext_nnp_transformer)
     add_dependencies(ext_nnp_transformer ext_llvm)
 endif()
+
+# ONNX requires Protobuf
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+target_link_libraries(ngraph PRIVATE Protobuf)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
