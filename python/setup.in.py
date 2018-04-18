@@ -21,9 +21,9 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.2.0'
+__version__ = '${NGRAPH_VERSION}'
 
-PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
+PYNGRAPH_SOURCE_DIR = '${CMAKE_CURRENT_SOURCE_DIR}'
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 
 
@@ -60,10 +60,9 @@ def find_pybind_headers_dir():
         return pybind_headers_dir
 
 
-NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
-PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + "/include"
-NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + "/include"
-NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + "/lib"
+PYBIND11_INCLUDE_DIR = '${PYBIND11_INCLUDE_DIR}'
+NGRAPH_CPP_INCLUDE_DIR = '${NGRAPH_INSTALL_INCLUDE}'
+NGRAPH_CPP_LIBRARY_DIR = '${NGRAPH_INSTALL_LIB}'
 
 
 # Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils

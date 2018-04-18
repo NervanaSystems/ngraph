@@ -16,6 +16,15 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+include(cmake/Modules/git_tags.cmake)
+NGRAPH_GET_VERSION_LABEL()
+
+string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+set(NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
+
+message(STATUS "NGRAPH_VERSION ${NGRAPH_VERSION}")
+message(STATUS "NGRAPH_VERSION_SHORT ${NGRAPH_VERSION_SHORT}")
+
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -209,6 +218,7 @@ add_subdirectory(third-party)
 # - defines the 'NGRAPH_VERSION' cmake variable.
 # - install-related targets.
 add_subdirectory(src)
+add_subdirectory(python)
 
 add_subdirectory(test)
 

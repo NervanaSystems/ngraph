@@ -22,12 +22,14 @@ set(NGRAPH_BUILD_SPHINX_DOCS FALSE
 if (NGRAPH_BUILD_SPHINX_DOCS)
     find_package(Sphinx REQUIRED)
 
+    configure_file(source/conf.in.py source/conf.py)
+
     set(SPHINX_IN ${CMAKE_CURRENT_SOURCE_DIR}/source)
     set(SPHINX_OUT ${CMAKE_CURRENT_BINARY_DIR}/build)
 
     add_custom_target(sphinx-docs
         ALL
-        COMMAND ${SPHINX_EXECUTABLE} -b html "${SPHINX_IN}" "${SPHINX_OUT}"
+        COMMAND ${SPHINX_EXECUTABLE} -c ${CMAKE_CURRENT_BINARY_DIR}/source -b html "${SPHINX_IN}" "${SPHINX_OUT}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Generating documentation with Sphinx"
         VERBATIM )
@@ -41,4 +43,3 @@ if (NGRAPH_BUILD_SPHINX_DOCS)
         OPTIONAL
         )
 endif()
-
