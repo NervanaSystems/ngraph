@@ -929,11 +929,19 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Result)
                 {
-                    auto input_layout =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                    vector<memory::format> prim_output_formats;
-                    prim_output_formats.push_back(input_layout);
-                    set_output_layouts(node, prim_output_formats);
+                    auto result = static_cast<const ngraph::op::Result*>(node.get());
+                    if (result->needs_default_layout())
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
                 }
 
                 template <>
