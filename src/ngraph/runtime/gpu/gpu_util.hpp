@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -48,9 +49,10 @@
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error in file: " +               \
-                                        std::string(__FILE__) + std::string(" line: ") +           \
-                                        std::string(__LINE__) + std::string(msg));                 \
+            std::stringstream ss;                                                                   \
+            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
+               << __LINE__ << msg;                                                                 \
+            throw std::runtime_error(ss.str());                                                    \
         }                                                                                          \
     } while (0)
 
@@ -60,9 +62,10 @@
         if (e != CUDNN_STATUS_SUCCESS)                                                             \
         {                                                                                          \
             auto msg = cudnnGetErrorString(e);                                                     \
-            throw std::runtime_error("\ncuDNN error: " #func " failed with error in file:" +       \
-                                        std::string(__FILE__) + std::string(" line: ") +           \
-                                        std::string(__LINE__) + std::string(msg));                 \
+            std::stringstream ss;                                                                   \
+            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
+               << __LINE__ << msg;                                                                 \
+            throw std::runtime_error(ss.str());                                                    \
         }                                                                                          \
     }
 
@@ -72,9 +75,10 @@
         if (e != CUBLAS_STATUS_SUCCESS)                                                             \
         {                                                                                          \
             auto msg = cublasGetStatusString(e);                                                    \
-            throw std::runtime_error("\ncuBlas error: " #func " failed with error in file:" +       \
-                                        std::string(__FILE__) + std::string(" line: ") +           \
-                                        std::string(__LINE__) + std::string(msg));                 \
+            std::stringstream ss;                                                                   \
+            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
+               << __LINE__ << msg;                                                                 \
+            throw std::runtime_error(ss.str());                                                    \
         }                                                                                          \
     }
 namespace ngraph
