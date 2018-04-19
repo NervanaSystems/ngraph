@@ -7867,6 +7867,64 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
     EXPECT_ANY_THROW(backend->call(f, {a}, {c, b}));
 }
 
+TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h3w3_mean_var)
+{
+    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
+    auto input_shape = Shape{2, 2, 3, 3};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 3, 3};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+
+    copy_data(_input,
+              vector<float>{0.03619267f, 0.09543187f, 0.46407401f, 0.16237388f, 0.91416208f,
+                      0.06574134f, 0.6214749f, 0.67533921f, 0.70999167f, 0.06719394f,
+                      0.15409613f, 0.10390471f, 0.57582359f, 0.65806555f, 0.23770687f,
+                      0.6544199f, 0.5641472f, 0.80395969f, 0.42021086f, 0.4395879f,
+                      0.72458188f, 0.39322274f, 0.10430663f, 0.43826283f, 0.71844985f,
+                      0.17046169f, 0.90589762f, 0.18433692f, 0.84482933f, 0.13120005f,
+                      0.15301889f, 0.07555091f, 0.88283657f, 0.77849304f, 0.58942638f,
+                      0.74083024f});
+
+
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
+
+    vector<float> expected_mean{0.44776465f,0.45554666f};
+    vector<float> expected_variance{0.08044312f,0.08852283f};
+
+    backend->call(f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean),1e-5f,1e-6f));
+    EXPECT_TRUE(test::all_close(expected_variance, read_vector<float>(result_variance),1e-5f,1e-6f));
+}
+
 TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 {
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
@@ -7925,14 +7983,13 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 
     backend->call(f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
-    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
-    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
-    EXPECT_TRUE(test::all_close(expected_variance, read_vector<float>(result_variance)));
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output),1e-5f,1e-6f));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean),1e-5f,1e-6f));
+    EXPECT_TRUE(test::all_close(expected_variance, read_vector<float>(result_variance),1e-5f,1e-6f));
 }
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
@@ -7955,7 +8012,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
                                    op::ParameterVector{input, gamma, beta});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
-    auto _input = backend->create_tensor(element::f32, Shape{2, 2, 2, 1});
+    auto _input = backend->create_tensor(element::f32, input_shape);
     copy_data(_input,
               vector<float>{0.54881352f,
                             0.71518934f,
@@ -7987,7 +8044,6 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
 
 TEST(${BACKEND_NAME}, bn_bprop_n4c3h2w2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{4, 3, 2, 2};
@@ -8085,7 +8141,6 @@ TEST(${BACKEND_NAME}, bn_bprop_n4c3h2w2)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
@@ -8105,7 +8160,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
-    auto _input = backend->create_tensor(element::f32, Shape{2, 2, 2, 1});
+    auto _input = backend->create_tensor(element::f32, input_shape);
     copy_data(_input,
               vector<float>{0.54881352f,
                             0.71518934f,
@@ -8137,7 +8192,6 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
@@ -8157,7 +8211,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
-    auto _input = backend->create_tensor(element::f32, Shape{2, 2, 2, 1});
+    auto _input = backend->create_tensor(element::f32, input_shape);
     copy_data(_input,
               vector<float>{0.54881352f,
                             0.71518934f,

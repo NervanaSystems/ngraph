@@ -367,6 +367,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     }
 
     cudnnTensorDescriptor_t derived_param_desc;
+    cudnnCreateTensorDescriptor(&derived_param_desc);
     auto tensor_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(tensor_shape);
     cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op);
 
@@ -394,9 +395,9 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         break;
     }
     case Prop::Forward: {
-        // currently not using the cudnn fused forward/backward training
+        // currently not using the cudnn calculation of mean/variance
         // so this factor needs to be set to 1.0;
-        double exp_avg_factor = 1.0;
+        double exp_avg_factor = 1.0f;
         batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
                 cudnnBatchNormalizationForwardTraining(
                     *ctx->cudnn_handle,
@@ -414,7 +415,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                     outputs[1], // running mean
                     outputs[2], // running var
                     epsilon,
-                    NULL,      // batch mean
+                    NULL,       // batch mean
                     NULL);      // batch var
             }};
         break;

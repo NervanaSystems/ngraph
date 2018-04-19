@@ -1433,13 +1433,50 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     dir = CUDNNEmitter::Prop::Inference;
                 }
 
+                auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
+                                                               CUDNN_BATCHNORM_SPATIAL,
+                                                               dir,
+                                                               args[2].get_shape(),
+                                                               args[0].get_shape(),
+                                                               batchnorm->get_eps_value());
 
 
+
+                writer.block_begin("  // " + node->get_name());
+                {
+                    writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
+                    writer << "std::vector<void*>{" << args.front().get_name();
+                    for (size_t i=1; i<args.size(); i++)
+                    {
+                        writer <<  ", " << args[i].get_name();
+                    }
+                    writer << "}.data(), ";
+                    writer << "std::vector<void*>{" << out.front().get_name();
+                    for (size_t i=1; i<out.size(); i++)
+                    {
+                        writer <<  ", " << out[i].get_name();
+                    }
+                    writer << "}.data()";
+                    writer << ");\n";
+                }
+                writer.block_end();
             }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
             {
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
+            {
+                auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
+
+                writer.block_begin("  // "+node->get_name());
+                writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
+                       << args[get_tuple_element->get_n()].get_name() << ", "
+                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                writer.block_end();
             }
 
             // assumes NC{d1,d2,d3,...} format
