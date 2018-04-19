@@ -6,8 +6,9 @@ Python API
 
 This section contains nGraph™ Python API documentation.
 
-Packages
-++++++++
+Module Index
+============
+
 .. toctree::
    :maxdepth: 1
 
@@ -18,8 +19,8 @@ Packages
 =======
 
 
-Simple example of API usage:
-++++++++++++++++++++++++++++
+Simple example of API usage
+===========================
 
 .. literalinclude:: /../../../python/examples/basic.py
    :language: python
