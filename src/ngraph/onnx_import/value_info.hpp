@@ -30,7 +30,7 @@ namespace ngraph
         class ValueInfo
         {
             onnx::ValueInfoProto m_value_info_proto;
-            Graph* m_graph_prt;
+            Graph* m_graph_ptr;
 
             friend std::ostream& operator<<(std::ostream& os, const ValueInfo& wrapper);
 

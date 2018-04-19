@@ -33,6 +33,7 @@ set (SRC
     node.cpp
     onnx_import/onnx.pb.cc
     onnx_import/graph.cpp
+    onnx_import/mapping.cpp
     onnx_import/model.cpp
     onnx_import/node.cpp
     onnx_import/value_info.cpp
@@ -144,7 +145,7 @@ set (SRC
     graph_util.cpp
     placement.cpp
     cpio.cpp
-    )
+)
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
 file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
@@ -378,6 +379,7 @@ endif()
 # ONNX requires Protobuf
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
+link_directories(${PROTOBUF_LIBRARY_DIRS})
 target_link_libraries(ngraph PRIVATE Protobuf)
 
 #-----------------------------------------------------------------------------------------------

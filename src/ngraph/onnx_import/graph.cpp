@@ -23,10 +23,10 @@ Graph::Graph(const onnx::GraphProto& graph_proto)
     : m_graph_proto(graph_proto)
 {
     for (const auto& node : m_graph_proto.node())
-        m_nodes.emplace_back(Node(node, this));
+        m_nodes.emplace_back(node, this);
 
     for (const auto& value : m_graph_proto.value_info())
-        m_values.emplace_back(ValueInfo(value, this));
+        m_values.emplace_back(value, this);
 }
 
 std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const Graph& wrapper)

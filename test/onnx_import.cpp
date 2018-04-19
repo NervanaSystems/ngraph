@@ -46,4 +46,11 @@ TEST(onnx, basic)
     std::stringstream graph_stream;
     graph_stream << graph_wrapper;
     ASSERT_EQ("<Graph: CNTKGraph>", graph_stream.str());
+
+    auto value = graph_wrapper.get_values()[0];
+    std::stringstream value_stream;
+    value_stream << value;
+    ASSERT_EQ("<ValueInfo: Parameter15>", value_stream.str());
+    ASSERT_EQ(element::f32, value.get_element_type());
+
 }

@@ -177,6 +177,7 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 # ONNX requires Protobuf
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
+link_directories(${PROTOBUF_LIBRARY_DIRS})
 target_link_libraries(unit-test Protobuf)
 
 if(NGRAPH_NNP_ENABLE)

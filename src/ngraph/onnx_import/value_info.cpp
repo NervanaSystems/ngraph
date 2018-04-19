@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-#include <map>
+#include <exception>
 #include <ostream>
 #include <vector>
 
@@ -25,15 +25,14 @@ using namespace ngraph::onnx_import;
 
 ValueInfo::ValueInfo(const onnx::ValueInfoProto& proto, Graph* graph_ptr)
     : m_value_info_proto(proto)
-    , m_graph_prt(graph_ptr)
+    , m_graph_ptr(graph_ptr)
 {
 }
 
 std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const ValueInfo& wrapper)
 {
     std::string name = wrapper.m_value_info_proto.name();
-    os << "<ValueInfo("
-       << "): " << name << ">";
+    os << "<ValueInfo: " << name << ">";
     return os;
 }
 
@@ -53,11 +52,12 @@ const ngraph::element::Type ValueInfo::get_element_type() const
     onnx::TensorProto_DataType onnx_element_type =
         m_value_info_proto.type().tensor_type().elem_type();
 
-    if (mapping::onnx_to_ng_types.count(onnx_element_type) == 0)
+    try
     {
-        throw ngraph::ngraph_error("ValueInfo(" + m_value_info_proto.name() +
-                                   "): Unrecognized element type");
+        return mapping::onnx_to_ng_type(onnx_element_type);
     }
-
-    return mapping::onnx_to_ng_types.at(onnx_element_type);
+    catch (std::exception& e)
+    {
+        throw ngraph::ngraph_error("ValueInfo(" + m_value_info_proto.name() + "): " + e.what());
+    }
 }

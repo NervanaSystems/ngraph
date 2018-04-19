@@ -28,7 +28,7 @@ namespace ngraph
         class Node
         {
             onnx::NodeProto m_node_proto;
-            Graph* m_graph_prt;
+            Graph* m_graph_ptr;
 
             friend std::ostream& operator<<(std::ostream& os, const Node& wrapper);
 

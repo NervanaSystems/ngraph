@@ -22,7 +22,7 @@ using namespace ngraph::onnx_import;
 
 Node::Node(const onnx::NodeProto& node_proto, Graph* graph_ptr)
     : m_node_proto(node_proto)
-    , m_graph_prt(graph_ptr)
+    , m_graph_ptr(graph_ptr)
 {
 }
 
