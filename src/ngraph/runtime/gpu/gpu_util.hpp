@@ -48,7 +48,9 @@
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg));     \
+            throw std::runtime_error("\nerror: " #x " failed with error in file: " +               \
+                                        std::string(__FILE__) + std::string(" line: ") +           \
+                                        std::string(__LINE__) + std::string(msg));                 \
         }                                                                                          \
     } while (0)
 
@@ -58,10 +60,23 @@
         if (e != CUDNN_STATUS_SUCCESS)                                                             \
         {                                                                                          \
             auto msg = cudnnGetErrorString(e);                                                     \
-            throw std::runtime_error("\ncuDNN error: " + std::string(msg));                        \
+            throw std::runtime_error("\ncuDNN error: " #func " failed with error in file:" +       \
+                                        std::string(__FILE__) + std::string(" line: ") +           \
+                                        std::string(__LINE__) + std::string(msg));                 \
         }                                                                                          \
     }
 
+#define CUBLAS_SAFE_CALL(func)                                                                      \
+    {                                                                                              \
+        cublasStatus_t e = (func);                                                                  \
+        if (e != CUBLAS_STATUS_SUCCESS)                                                             \
+        {                                                                                          \
+            auto msg = cublasGetStatusString(e);                                                    \
+            throw std::runtime_error("\ncuBlas error: " #func " failed with error in file:" +       \
+                                        std::string(__FILE__) + std::string(" line: ") +           \
+                                        std::string(__LINE__) + std::string(msg));                 \
+        }                                                                                          \
+    }
 namespace ngraph
 {
     namespace runtime
