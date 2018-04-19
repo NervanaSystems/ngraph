@@ -32,13 +32,6 @@ using namespace ngraph;
 
 #define TI(x) std::type_index(typeid(x))
 
-static std::shared_ptr<Node> canonicalize_constant(std::shared_ptr<Node> cnst, double val)
-{
-    return cnst->get_shape().size() > 0
-               ? cnst
-               : op::Constant::create(cnst->get_element_type(), Shape{}, {val});
-}
-
 template <typename T>
 static std::shared_ptr<pattern::Matcher>
     create_binary_matcher(std::shared_ptr<pattern::op::Label> label,
@@ -54,6 +47,7 @@ static std::shared_ptr<pattern::Matcher>
 
 static bool simplify_multiply(std::shared_ptr<Node> n)
 {
+    NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
     auto iconst = ngraph::make_zero(element::i32, Shape{});
     auto label = std::make_shared<pattern::op::Label>(iconst);
     auto const_label = std::make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
@@ -65,17 +59,17 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
         auto x = pattern_map[label];
         auto cnst = pattern_map[const_label];
 
-        auto can_const = canonicalize_constant(cnst, 0);
-        if (ngraph::is_zero(can_const))
+        if (ngraph::is_zero(cnst))
         {
-            ngraph::replace_node(n, can_const);
+            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << cnst->get_name();
+            ngraph::replace_node(n, cnst);
             return true;
         }
 
-        can_const = canonicalize_constant(cnst, 1);
-        if (ngraph::is_one(can_const))
+        if (ngraph::is_one(cnst))
         {
-            ngraph::replace_node(n, label);
+            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
+            ngraph::replace_node(n, x);
             return true;
         }
     }
@@ -84,22 +78,29 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
 
 static bool simplify_add(std::shared_ptr<Node> n)
 {
+    NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
     auto iconst = ngraph::make_zero(element::i32, Shape{});
     auto label = std::make_shared<pattern::op::Label>(iconst);
     auto const_label = std::make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
-    auto matcher = create_binary_matcher<op::Multiply>(label, const_label);
+    auto matcher = create_binary_matcher<op::Add>(label, const_label);
 
     if (matcher->match(n))
     {
         auto pattern_map = matcher->get_pattern_map();
         auto x = pattern_map[label];
         auto cnst = pattern_map[const_label];
+        NGRAPH_DEBUG << "Node " << n->get_name() << " matched \" arg + 0 \" \n"
+                     << " arg : " << x->get_name() << " , const : " << cnst->get_name();
 
-        auto can_const = canonicalize_constant(cnst, 0);
-        if (ngraph::is_zero(can_const))
+        if (ngraph::is_zero(cnst))
         {
-            ngraph::replace_node(n, label);
+            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
+            ngraph::replace_node(n, x);
             return true;
+        }
+        else
+        {
+            NGRAPH_DEBUG << cnst->get_name() << " not equal to 0 ";
         }
     }
     return false;
@@ -133,7 +134,7 @@ bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngra
             continue;
         }
 
-        replaced = replaced || eh->second(n);
+        replaced = eh->second(n) || replaced;
     }
     return replaced;
 }

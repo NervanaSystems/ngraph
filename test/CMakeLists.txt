@@ -26,6 +26,7 @@ include_directories(
 
 set (SRC
     backend_api.cpp
+    algebraic_simplification.cpp
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
