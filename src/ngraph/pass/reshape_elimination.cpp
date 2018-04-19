@@ -29,7 +29,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/util.hpp"
 

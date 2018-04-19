@@ -30,7 +30,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"

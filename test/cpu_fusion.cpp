@@ -36,7 +36,7 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -83,8 +83,8 @@ TEST(cpu_fusion, gemm_pattern)
         return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
     };
 
-    auto skip_w = std::make_shared<pattern::op::Any>(W, reshape_pred);
-    auto skip_x = std::make_shared<pattern::op::Any>(x, reshape_pred);
+    auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
+    auto skip_x = std::make_shared<pattern::op::Skip>(x, reshape_pred);
 
     auto pdot = make_shared<op::Dot>(skip_w, skip_x);
     auto b = std::make_shared<pattern::op::Label>(C);

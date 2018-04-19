@@ -42,7 +42,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -177,8 +177,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
         return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
     };
 
-    auto skip_w = std::make_shared<pattern::op::Any>(W, reshape_pred);
-    auto skip_x = std::make_shared<pattern::op::Any>(x, reshape_pred);
+    auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
+    auto skip_x = std::make_shared<pattern::op::Skip>(x, reshape_pred);
 
     auto pdot = std::make_shared<op::Dot>(skip_w, skip_x);
 

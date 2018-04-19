@@ -143,7 +143,7 @@ TEST(DISABLED_include, complete)
                                     "ngraph/pass/visualize_tree.hpp",
                                     "ngraph/pattern/core_fusion.hpp",
                                     "ngraph/pattern/matcher.hpp",
-                                    "ngraph/pattern/op/any.hpp",
+                                    "ngraph/pattern/op/skip.hpp",
                                     "ngraph/pattern/op/label.hpp",
                                     "ngraph/pattern/op/pattern.hpp",
                                     "ngraph/placement.hpp",
