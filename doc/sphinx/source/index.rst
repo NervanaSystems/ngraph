@@ -144,6 +144,7 @@ Contents
    ops/index.rst
    framework-integration-guides.rst
    project/index.rst
+   python_api/index.rst
 
 
 Indices and tables
