@@ -14,17 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/util.hpp"
-
 #include "ngraph/runtime/ie/ie_backend.hpp"
 
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/memory_layout.hpp"
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -101,7 +98,7 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
         tensor_map.insert({tv, func_outputs[output_count]});
     }
 
-    // for each op in the graph
+    // for each ordered op in the graph
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
         if (op->description() == "Parameter")

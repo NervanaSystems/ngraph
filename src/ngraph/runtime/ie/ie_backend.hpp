@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+#include <string>
+#include <sstream>
+
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -100,7 +105,10 @@
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/runtime/reference/allreduce.hpp"
+#endif
 
 namespace ngraph
 {
@@ -186,7 +194,7 @@ namespace ngraph
                         std::stringstream ss;
                         ss << "unsupported element type " << secondary_type << " op "
                            << op.get_name();
-                        throw std::runtime_error(ss.str());
+                        throw ngraph_error(ss.str());
                     }
                 }
 
@@ -868,7 +876,7 @@ namespace ngraph
                     {
                         std::stringstream ss;
                         ss << "unsupported op " << node_op;
-                        throw std::runtime_error(ss.str());
+                        throw ngraph_error(ss.str());
                     }
                 }
             };

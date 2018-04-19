@@ -14,25 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/ie/ie_backend.hpp"
 #include "ngraph/runtime/ie/ie_manager.hpp"
+#include "ngraph/runtime/ie/ie_backend.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 shared_ptr<runtime::Backend> runtime::ie::IE_Manager::allocate_backend()
 {
-    return make_shared<IE_Backend>();
+    return make_shared<runtime::ie::IE_Backend>();
 }
 
-std::vector<size_t> runtime::ie::IE_Manager::get_subdevices() const
+vector<size_t> runtime::ie::IE_Manager::get_subdevices() const
 {
     vector<size_t> rc;
     return rc;
 }
 
-runtime::Manager::Factory runtime::ie::IE_Manager::factory =
-    runtime::Manager::register_factory("IE",
-                                       [](const string& name) -> shared_ptr<runtime::Manager> {
-                                           return make_shared<IE_Manager>();
-                                       });
+runtime::Manager::Factory runtime::ie::IE_Manager::factory = runtime::Manager::register_factory(
+    "IE", [](const string& name) -> shared_ptr<runtime::Manager> {
+        return make_shared<runtime::ie::IE_Manager>();
+    });
