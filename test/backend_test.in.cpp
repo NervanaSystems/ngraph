@@ -7865,3 +7865,43 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
 
     EXPECT_ANY_THROW(backend->call(f, {a}, {c, b}));
 }
+
+TEST(${BACKEND_NAME}, logical_and)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::And>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{0, 0, 1, 0, 0, 0, 1, 0}), read_vector<char>(result));
+}
+
+TEST(${BACKEND_NAME}, logical_or)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Or>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
+}

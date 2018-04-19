@@ -35,6 +35,7 @@ set (SRC
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/and.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,6 +71,7 @@ set (SRC
     op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
+    op/or.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
@@ -97,6 +99,7 @@ set (SRC
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
