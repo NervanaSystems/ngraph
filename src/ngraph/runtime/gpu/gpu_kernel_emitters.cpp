@@ -58,8 +58,8 @@ void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& 
 
     if (padding.size() == 2)
     {
-        writer << "CUDNN_SAFE_CALL(cudnnSetConvolution2dDescriptor(" << name << ", " << padding[0] << ", "
-               << padding[1] << ", " << window_movement_strides[0] << ", "
+        writer << "CUDNN_SAFE_CALL(cudnnSetConvolution2dDescriptor(" << name << ", " << padding[0]
+               << ", " << padding[1] << ", " << window_movement_strides[0] << ", "
                << window_movement_strides[1] << ", " << window_dilation_strides[0] << ", "
                << window_dilation_strides[1] << ", " << mode << ", " << data_type << "));\n";
     }
@@ -71,9 +71,10 @@ void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& 
         writer << "const int " << name << "_window_dilation_strides[] = {"
                << join(window_dilation_strides) << "};\n";
 
-        writer << "CUDNN_SAFE_CALL(cudnnSetConvolutionNdDescriptor(" << name << ", " << padding.size() << ", "
-               << name << "_padding, " << name << "_window_movement_strides, " << name
-               << "_window_dilation_strides, " << mode << ", " << data_type << "));\n";
+        writer << "CUDNN_SAFE_CALL(cudnnSetConvolutionNdDescriptor(" << name << ", "
+               << padding.size() << ", " << name << "_padding, " << name
+               << "_window_movement_strides, " << name << "_window_dilation_strides, " << mode
+               << ", " << data_type << "));\n";
     }
 }
 

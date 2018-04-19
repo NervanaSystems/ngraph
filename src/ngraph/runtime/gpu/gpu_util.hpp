@@ -17,8 +17,8 @@
 #pragma once
 
 #include <memory>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -49,38 +49,40 @@
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            std::stringstream ss;                                                                   \
-            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
-               << __LINE__ << msg;                                                                 \
-            throw std::runtime_error(ss.str());                                                    \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #x " failed with error in file: " << __FILE__              \
+                         << " line: " << __LINE__ << msg;                                          \
+            throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)
 
 #define CUDNN_SAFE_CALL(func)                                                                      \
+    do                                                                                             \
     {                                                                                              \
         cudnnStatus_t e = (func);                                                                  \
         if (e != CUDNN_STATUS_SUCCESS)                                                             \
         {                                                                                          \
             auto msg = cudnnGetErrorString(e);                                                     \
-            std::stringstream ss;                                                                   \
-            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
-               << __LINE__ << msg;                                                                 \
-            throw std::runtime_error(ss.str());                                                    \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #func " failed with error in file: " << __FILE__           \
+                         << " line: " << __LINE__ << msg;                                          \
+            throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
-    }
+    } while (0)
 
-#define CUBLAS_SAFE_CALL(func)                                                                      \
+#define CUBLAS_SAFE_CALL(func)                                                                     \
+    do                                                                                             \
     {                                                                                              \
-        cublasStatus_t e = (func);                                                                  \
-        if (e != CUBLAS_STATUS_SUCCESS)                                                             \
+        cublasStatus_t e = (func);                                                                 \
+        if (e != CUBLAS_STATUS_SUCCESS)                                                            \
         {                                                                                          \
-            auto msg = cublasGetStatusString(e);                                                    \
-            std::stringstream ss;                                                                   \
-            ss << "\nerror: " #x " failed with error in file: " << __FILE__ << " line: "           \
-               << __LINE__ << msg;                                                                 \
-            throw std::runtime_error(ss.str());                                                    \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #func " failed with error in file: " << __FILE__           \
+                         << " line: " << __LINE__ << "error: " << e;                               \
+            throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
-    }
+    } while (0)
+
 namespace ngraph
 {
     namespace runtime
