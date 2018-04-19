@@ -122,7 +122,11 @@ static const string s_output_dir = "gpu_codegen";
 class StaticInitializers
 {
 public:
-    StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
+    StaticInitializers()
+    {
+        file_util::remove_directory(s_output_dir);
+        file_util::make_directory(s_output_dir);
+    }
 };
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
@@ -740,7 +744,6 @@ using namespace std;
     }
     // TODO: Cleanup and make this a utility function
 
-    file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
