@@ -50,8 +50,8 @@
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
             std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #x " failed with error in file: " << __FILE__              \
-                         << " line: " << __LINE__ << msg;                                          \
+            safe_call_ss << "\nerror: " #x " failed with error"                                    \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
             throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)
@@ -64,8 +64,8 @@
         {                                                                                          \
             auto msg = cudnnGetErrorString(e);                                                     \
             std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error in file: " << __FILE__           \
-                         << " line: " << __LINE__ << msg;                                          \
+            safe_call_ss << "\nerror: " #func " failed with error"                                 \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
             throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)
@@ -77,8 +77,8 @@
         if (e != CUBLAS_STATUS_SUCCESS)                                                            \
         {                                                                                          \
             std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error in file: " << __FILE__           \
-                         << " line: " << __LINE__ << "error: " << e;                               \
+            safe_call_ss << "\nerror: " #func " failed with error"                                 \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << e;    \
             throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)
