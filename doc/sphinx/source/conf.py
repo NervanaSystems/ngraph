@@ -19,8 +19,12 @@
 
 import os
 import sys
+
 # Add path to nGraph Python API.
-sys.path.append(os.path.abspath('../../../python'))
+
+#sys.path.append(os.path.abspath('../../../python/ngraph'))
+
+sys.path.insert(0, os.path.abspath('../../../python'))
 
 # -- General configuration ------------------------------------------------
 
@@ -33,6 +37,8 @@ needs_sphinx = '1.6.5'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
