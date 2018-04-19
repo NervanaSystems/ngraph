@@ -25,23 +25,26 @@ namespace ngraph
 {
     namespace runtime
     {
-        static size_t alignment = 64;
+        namespace interpreter
+        {
+            static size_t alignment = 64;
 
-        class HostTensorView;
+            class INTTensorView;
+        }
     }
 }
 
-class ngraph::runtime::HostTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::interpreter::INTTensorView : public ngraph::runtime::TensorView
 {
 public:
-    HostTensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   const std::string& name = "external");
-    HostTensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   void* memory_pointer,
-                   const std::string& name = "external");
-    virtual ~HostTensorView() override;
+    INTTensorView(const ngraph::element::Type& element_type,
+                  const Shape& shape,
+                  const std::string& name = "external");
+    INTTensorView(const ngraph::element::Type& element_type,
+                  const Shape& shape,
+                  void* memory_pointer,
+                  const std::string& name = "external");
+    virtual ~INTTensorView() override;
 
     char* get_data_ptr();
     const char* get_data_ptr() const;

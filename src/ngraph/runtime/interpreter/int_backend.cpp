@@ -15,9 +15,9 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
+#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -32,13 +32,14 @@ shared_ptr<runtime::TensorView>
     runtime::interpreter::INT_Backend::create_tensor(const element::Type& element_type,
                                                      const Shape& shape)
 {
-    return make_shared<runtime::HostTensorView>(element_type, shape, "external");
+    return make_shared<runtime::interpreter::INTTensorView>(element_type, shape, "external");
 }
 
 shared_ptr<runtime::TensorView> runtime::interpreter::INT_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensorView>(element_type, shape, memory_pointer, "external");
+    return make_shared<runtime::interpreter::INTTensorView>(
+        element_type, shape, memory_pointer, "external");
 }
 
 bool runtime::interpreter::INT_Backend::compile(shared_ptr<Function> func)
