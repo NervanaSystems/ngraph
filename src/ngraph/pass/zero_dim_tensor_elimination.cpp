@@ -63,7 +63,7 @@ static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function>
     //zero-length nodes (which violates our assumption)
     for (auto r : f->get_results())
     {
-        auto n = r->get_input_op(0);
+        auto n = r->get_argument(0);
         if (zero_length_nodes.count(n) != 0)
         {
             zero_length_nodes.erase(n);
@@ -103,7 +103,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
         }
 
         auto new_node = n->get_default_value();
-        if (!new_node || !has_zero_dim(n->get_input_op(0)))
+        if (!new_node || !has_zero_dim(n->get_argument(0)))
         {
             continue;
         }

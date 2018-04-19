@@ -27,14 +27,14 @@ from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broad
     Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
     Subtract, Sum, Tan, Tanh
 
-from typing import Iterable, List
+from typing import Callable, Iterable, List, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, CallableData
+    NodeInput, ScalarData
 from ngraph.utils.types import get_element_type
 
 
@@ -188,14 +188,16 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
-def reshape(node, input_order, output_shape, name=None):
-    # type: (Node, List[int], List[int], str) -> None
+def reshape(node, output_shape, input_order=None, name=None):
+    # type: (Node, List[int], List[int], str) -> Node
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
     :param input_order: The order in which to iterate over input axes of input tensor.
     :param output_shape: The new shape for input tensor.
     """
+    if input_order is None:
+        input_order = list(range(len(node.shape)))
     return Reshape(node, AxisVector(input_order), Shape(output_shape))
 
 
@@ -637,7 +639,7 @@ def prod(node, reduction_axes=None, name=None):
 @nameable_op
 def reduce(node,                 # type: Node
            initial_value,        # type: ScalarData
-           reduction_function,   # type: CallableData
+           reduction_function,   # type: Union[Callable, Function]
            reduction_axes=None,  # type: List[int]
            name=None,            # type: str
            ):
