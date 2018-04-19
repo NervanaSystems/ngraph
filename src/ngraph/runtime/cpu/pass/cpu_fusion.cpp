@@ -1095,7 +1095,9 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 
     auto lstm = std::make_shared<op::LSTM>(
         rpattern_ht_1, weights_1, xt, weights_2, bias1, bias2, ct_1, Shape{32, 100});
+    //auto lstm_node_label = std::make_shared<pattern::op::Label>(lstm, nullptr, NodeVector{lstm});
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
+    //auto goe_label = std::make_shared<pattern::op::Label>(goe, lstm_pred, NodeVector{goe});
 
     pattern::recurrent_graph_rewrite_callback callback =
         [rpattern_ht_1, weights_1, xt, weights_2, bias1, bias2, ct_1](
@@ -1111,23 +1113,105 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 
             std::vector<std::shared_ptr<pattern::op::Label>> lstm_bound_labels{
                 ct_1, xt, weights_1, weights_2, bias1, bias2, rpattern_ht_1};
+
+            std::set<std::shared_ptr<ngraph::Node>> lstm_in_same_rnn;
+            std::set<std::shared_ptr<ngraph::Node>> lstm_in_diff_rnn;
+            std::set<std::shared_ptr<ngraph::Node>> lstm_goes;
+
             NodeVector rnn_args;
+
+            // find all the inputs for RNN op
             for (size_t i = 0; i < lstm_bound_labels.size(); i++)
             {
                 auto node_lables = m.get_bound_nodes_for_pattern(lstm_bound_labels[i]);
                 for (size_t j = 0; j < node_lables.size(); j++)
                 {
-                    std::cout << node_lables[j]->get_name() << " ";
+                    //std::cout << node_lables[j]->get_name() << " ";
                     if (!std::dynamic_pointer_cast<op::GetOutputElement>(node_lables[j]))
                     {
                         rnn_args.push_back(node_lables[j]);
-                        std::cout << std::endl;
+                        //std::cout << std::endl;
+                    }
+                    else
+                    {
+                        // collect the lstm op's which consumes GOE && check if this lstm belongs to same RNN layer
+                        lstm_goes.insert(node_lables[j]);
+                        for (auto& goe_input : node_lables[j]->get_arguments())
+                        {
+                            if (std::dynamic_pointer_cast<op::LSTM>(goe_input))
+                            {
+                                lstm_in_same_rnn.insert(goe_input);
+                                std::cout << "goe " << node_lables[j]->get_name()
+                                          << " goe_user: " << goe_input->get_name() << std::endl;
+                            }
+                        }
                     }
                 }
             }
+
+            for (auto& goe_node : lstm_goes)
+            {
+                // now check which LSTM belongs to different layer
+                for (auto& goe_user : goe_node->get_users())
+                {
+                    if (std::dynamic_pointer_cast<op::LSTM>(goe_user))
+                    {
+                        if (lstm_in_same_rnn.count(goe_user) == 0)
+                        {
+                            lstm_in_diff_rnn.insert(goe_user);
+                        }
+                    }
+                }
+            }
+            std::cout << "lstm_in_same_rnn: ";
+            for (auto& node : lstm_in_same_rnn)
+            {
+                std::cout << node->get_name() << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "lstm_in_diff_rnn: ";
+            for (auto& node : lstm_in_diff_rnn)
+            {
+                std::cout << node->get_name() << " ";
+            }
+            std::cout << std::endl;
+
             auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
             Shape lstm_output_shape{ht_1_label[0]->get_shape()};
             auto rnn = std::make_shared<op::RNN>(rnn_args, num_of_lstm_matched, lstm_output_shape);
+
+            std::vector<std::shared_ptr<ngraph::Node>> rnn_outputs;
+
+            for (size_t i = 0; i < rnn->get_output_size(); i++)
+            {
+                rnn_outputs.push_back(std::make_shared<op::GetOutputElement>(rnn, i));
+            }
+            std::cout << "rnn_outputs-size: " << rnn_outputs.size() << std::endl;
+            // Replace the lstm inputs beloning to different rnn layer with rnn outputs
+            std::vector<std::shared_ptr<Node>> new_args;
+            size_t index = 0;
+            for (auto& node : lstm_in_diff_rnn)
+            {
+                for (size_t pos = 0; pos < node->get_input_size(); pos++)
+                {
+                    //std::cout << "lstm_inputs: " << (node->get_argument(pos)->get_name() << " input_size " << node->get_arguments().size() << std::endl;
+                    if (pos == 0)
+                    {
+                        std::cout << "index: " << index << std::endl;
+                        new_args.push_back(rnn_outputs[index++]);
+                    }
+                    else
+                    {
+                        new_args.push_back(node->get_argument(pos));
+                    }
+                }
+                auto new_node = node->copy_with_new_args(new_args);
+                std::cout << "node: " << node->get_name() << " replaced with  "
+                          << new_node->get_name() << std::endl;
+                ngraph::replace_node(node, new_node);
+                index = 0;
+                new_args.clear();
+            }
 
             // //auto rnn_layer = std::make_shared<op::GetOutputElement>(rnn, 0);
             // std::cout << "In Recurrent RNN matcher " << std::endl;
@@ -1144,8 +1228,13 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             //           << std::endl;
             // std::cout << "bias2: " << bias2_label.size() << " " << bias2_label[0]->get_name()
             //           << std::endl;
-            //ngraph::replace_node(m.get_match_root(), rnn);
-            return true;
+            ngraph::replace_node(m.get_match_root(), rnn_outputs[0]);
+            static int count = 0;
+            if (count++ > 0)
+                return false;
+            else
+                return true;
+
         };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
