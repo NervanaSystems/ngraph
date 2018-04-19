@@ -901,42 +901,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
 {
-    // auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    // auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-
-    // auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    // auto broadcast_pred_1 = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
-    // };
-    // auto skip_param_1_1 = std::make_shared<pattern::op::Any>(param1_1, broadcast_pred_1);
-    // auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-
-    // auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
-    // auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
-
-    // auto MatmulBias1 = std::make_shared<op::MatmulBias>(skip_param_1_1,
-    //                                                     param1_2,
-    //                                                     bias1,
-    //                                                     param1_1->get_shape(),
-    //                                                     param1_2->get_shape(),
-    //                                                     false,
-    //                                                     true,
-    //                                                     AxisSet{0});
-    // auto MatmulBias2 = std::make_shared<op::MatmulBias>(param2_1,
-    //                                                     param2_2,
-    //                                                     bias2,
-    //                                                     param2_1->get_shape(),
-    //                                                     param2_2->get_shape(),
-    //                                                     false,
-    //                                                     true,
-    //                                                     AxisSet{0});
-
+    // param1_1 -> ht_1 (src_iter)
     auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto broadcast_pred_1 = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
     };
     auto skip_param_1_1 = std::make_shared<pattern::op::Any>(param1_1, broadcast_pred_1);
-    //auto param_1_1 = std::make_shared<pattern::op::Label>(element::f32, shape{10, 50});
+    // param1_2 -> h2h weights (weights_iter)
     auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto param1_2_reshape =
         std::make_shared<op::Reshape>(param1_2, AxisVector{1, 0}, Shape{100, 400});
@@ -946,7 +917,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
     auto broadcast_bias1 = std::make_shared<op::Broadcast>(bias1, Shape{10, 400}, AxisSet{0});
     auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias1);
 
+    // param2_1 -> xt (src_layer)
     auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
+    // param2_2 -> i2h weights (weights_layer)
     auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
     auto param2_2_reshape =
         std::make_shared<op::Reshape>(param2_2, AxisVector{1, 0}, Shape{50, 400});
@@ -955,7 +928,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
     auto broadcast_bias2 = std::make_shared<op::Broadcast>(bias2, Shape{10, 400}, AxisSet{0});
     auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias2);
 
-    auto X = std::make_shared<op::Add>(add_1, add_2);
+    auto X = std::make_shared<op::Add>(add_2, add_1);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
@@ -964,10 +937,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
     };
 
+    //ct-1 -> cell state (src_iter -> {ht | ct-1}
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto skip_ct_1 = std::make_shared<pattern::op::Any>(ct_1, broadcast_pred);
-    // auto broadcast_ct_1 = std::make_shared<op::Broadcast>(ct_1, Shape{10, 100}, AxisSet{0, 1});
-    // auto ct_1_label = std::make_shared<pattern::op::Label>(broadcast_ct_1, nullptr, NodeVector{broadcast_ct_1});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, skip_ct_1);
 
     // construct input gate
@@ -1074,51 +1046,45 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
     // auto lstm_label =
     //     std::make_shared<pattern::op::Label>(element::f32, Shape{ }, lstm_pred);
     // auto goe = std::make_shared<pattern::op::Label>(lstm_label, goe_pred, NodeVector{lstm_label});
-    // auto rpattern = std::make_shared<pattern::op::Label>(element::f32, Shape{ 10, 100 });
-    // auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{ 400, 100 });
-    // auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{ 400 });
-    // auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{ 10, 50 });
-    // auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{ 400, 50 });
-    // auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{ 400 });
-    // auto lstm_cell_state = std::make_shared<pattern::op::Label>(element::f32, Shape{ 10, 100 });
 
-    // auto xt_pred = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
-    // };
     auto rpattern_ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto weights_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 200});
-    auto weights_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
     auto lstm = std::make_shared<op::LSTM>(
-        rpattern_ht_1, weights_1, xt, weights_2, bias1, bias2, ct_1, Shape{32, 100});
+        xt, weights_i2h, rpattern_ht_1, weights_h2h, bias1, bias2, ct_1, Shape{32, 100});
     //auto lstm_node_label = std::make_shared<pattern::op::Label>(lstm, nullptr, NodeVector{lstm});
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
     //auto goe_label = std::make_shared<pattern::op::Label>(goe, lstm_pred, NodeVector{goe});
 
     pattern::recurrent_graph_rewrite_callback callback =
-        [rpattern_ht_1, weights_1, xt, weights_2, bias1, bias2, ct_1](
+        [rpattern_ht_1, weights_h2h, xt, weights_i2h, bias1, bias2, ct_1](
             pattern::RecurrentMatcher& m) {
 
             auto cell_state = m.get_bound_nodes_for_pattern(ct_1);
             auto xt_label = m.get_bound_nodes_for_pattern(xt);
-            auto weights_1_label = m.get_bound_nodes_for_pattern(weights_1);
-            auto weights_2_label = m.get_bound_nodes_for_pattern(weights_2);
+            auto weights_h2h_label = m.get_bound_nodes_for_pattern(weights_h2h);
+            auto weights_i2h_label = m.get_bound_nodes_for_pattern(weights_i2h);
             auto bias1_label = m.get_bound_nodes_for_pattern(bias1);
             auto bias2_label = m.get_bound_nodes_for_pattern(bias2);
             auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
 
             std::vector<std::shared_ptr<pattern::op::Label>> lstm_bound_labels{
-                ct_1, xt, weights_1, weights_2, bias1, bias2, rpattern_ht_1};
+                ct_1, xt, weights_h2h, weights_i2h, bias1, bias2, rpattern_ht_1};
 
             std::set<std::shared_ptr<ngraph::Node>> lstm_in_same_rnn;
             std::set<std::shared_ptr<ngraph::Node>> lstm_in_diff_rnn;
             std::set<std::shared_ptr<ngraph::Node>> lstm_goes;
 
+            std::cout << "xt: " << xt_label.size() << std::endl;
             NodeVector rnn_args;
+
+            // collect unique parameters from the bounded label
+            std::set<std::shared_ptr<Node>> unique_params;
 
             // find all the inputs for RNN op
             for (size_t i = 0; i < lstm_bound_labels.size(); i++)
@@ -1129,7 +1095,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
                     //std::cout << node_lables[j]->get_name() << " ";
                     if (!std::dynamic_pointer_cast<op::GetOutputElement>(node_lables[j]))
                     {
-                        rnn_args.push_back(node_lables[j]);
+                        unique_params.insert(node_lables[j]);
                         //std::cout << std::endl;
                     }
                     else
@@ -1147,6 +1113,16 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
                         }
                     }
                 }
+
+                // push the uniques params as the RNN argiments
+                if (!unique_params.empty())
+                {
+                    for (auto& param : unique_params)
+                    {
+                        rnn_args.push_back(param);
+                    }
+                }
+                unique_params.clear();
             }
 
             for (auto& goe_node : lstm_goes)
@@ -1220,10 +1196,10 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             //           << std::endl;
             // std::cout << "cell_state,ct-1: " << cell_state.size() << " "
             //           << cell_state[0]->get_name() << std::endl;
-            // std::cout << "weights_1: " << weights_1_label.size() << " "
-            //           << weights_1_label[0]->get_name() << std::endl;
-            // std::cout << "weights_2: " << weights_1_label.size() << " "
-            //           << weights_2_label[0]->get_name() << std::endl;
+            // std::cout << "weights_h2h: " << weights_h2h_label.size() << " "
+            //           << weights_h2h_label[0]->get_name() << std::endl;
+            // std::cout << "weights_i2h: " << weights_h2h_label.size() << " "
+            //           << weights_i2h_label[0]->get_name() << std::endl;
             // std::cout << "bias1: " << bias1_label.size() << " " << bias1_label[0]->get_name()
             //           << std::endl;
             // std::cout << "bias2: " << bias2_label.size() << " " << bias2_label[0]->get_name()

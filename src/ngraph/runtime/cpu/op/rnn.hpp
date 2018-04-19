@@ -26,13 +26,13 @@ namespace ngraph
         class LSTM : public util::RequiresTensorViewArgs
         {
         public:
-            LSTM(std::shared_ptr<Node> param1_1,
-                 std::shared_ptr<Node> param1_2,
-                 std::shared_ptr<Node> param2_1,
-                 std::shared_ptr<Node> param2_2,
-                 std::shared_ptr<Node> bias1,
-                 std::shared_ptr<Node> bias2,
-                 std::shared_ptr<Node> lstm_cell_state,
+            LSTM(std::shared_ptr<Node> input_xt_1,
+                 std::shared_ptr<Node> i2h_weights,
+                 std::shared_ptr<Node> hidden_state_ht_1,
+                 std::shared_ptr<Node> h2h_weights,
+                 std::shared_ptr<Node> i2h_bias,
+                 std::shared_ptr<Node> h2h_bias,
+                 std::shared_ptr<Node> cell_state_ct_1,
                  Shape lstm_cell_shape);
             Shape get_input_shape() const { return m_shape_input; }
             Shape get_cell_shape() const { return m_lstm_cell_shape; }

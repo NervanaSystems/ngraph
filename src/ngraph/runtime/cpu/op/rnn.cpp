@@ -38,21 +38,27 @@ shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
                              m_lstm_cell_shape);
 }
 
-op::LSTM::LSTM(std::shared_ptr<Node> param1_1,
-               std::shared_ptr<Node> param1_2,
-               std::shared_ptr<Node> param2_1,
-               std::shared_ptr<Node> param2_2,
-               std::shared_ptr<Node> bias1,
-               std::shared_ptr<Node> bias2,
-               std::shared_ptr<Node> lstm_cell_state,
+op::LSTM::LSTM(std::shared_ptr<Node> input_xt_1,
+               std::shared_ptr<Node> i2h_weights,
+               std::shared_ptr<Node> hidden_state_ht_1,
+               std::shared_ptr<Node> h2h_weights,
+               std::shared_ptr<Node> i2h_bias,
+               std::shared_ptr<Node> h2h_bias,
+               std::shared_ptr<Node> cell_state_ct_1,
                Shape lstm_cell_shape)
-    : RequiresTensorViewArgs(
-          "LSTM", {param1_1, param1_2, param2_1, param2_2, bias1, bias2, lstm_cell_state})
-    , m_shape_input(param1_1->get_shape())
+    : RequiresTensorViewArgs("LSTM",
+                             {input_xt_1,
+                              i2h_weights,
+                              hidden_state_ht_1,
+                              h2h_weights,
+                              i2h_bias,
+                              h2h_bias,
+                              cell_state_ct_1})
+    , m_shape_input(hidden_state_ht_1->get_shape())
     , m_lstm_cell_shape(lstm_cell_shape)
 {
-    add_output(param1_1->get_element_type(), m_shape_input);
-    add_output(param1_1->get_element_type(), m_lstm_cell_shape);
+    add_output(hidden_state_ht_1->get_element_type(), m_shape_input);
+    add_output(cell_state_ct_1->get_element_type(), m_lstm_cell_shape);
 }
 
 shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
