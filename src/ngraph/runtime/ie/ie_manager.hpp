@@ -31,9 +31,7 @@ namespace ngraph
             {
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
-
                 virtual std::vector<size_t> get_subdevices() const override;
-
                 static Factory factory;
             };
         };
