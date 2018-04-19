@@ -144,6 +144,14 @@ Contents
    ops/index.rst
    framework-integration-guides.rst
    project/index.rst
+   
+
+
+.. toctree::
+   :maxdepth: 2
+   :name: python_api
+   :caption: PythonAPI
+
    python_api/index.rst
 
 
