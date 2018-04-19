@@ -17,13 +17,13 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include <string>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -43,7 +43,6 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -58,7 +57,6 @@
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
-#include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
@@ -93,8 +91,6 @@
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
-#include "ngraph/runtime/reference/select.hpp"
-#include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
 #include "ngraph/runtime/reference/sinh.hpp"
@@ -133,72 +129,12 @@ namespace ngraph
                           const std::vector<std::shared_ptr<TensorView>>& intputs) override;
 
             private:
-                void generate_calls(const element::Type& base_type,
-                                    const element::Type& secondary_type,
+                void generate_calls(const element::Type& type,
                                     Node& op,
                                     const std::vector<std::shared_ptr<HostTensorView>>& outputs,
                                     const std::vector<std::shared_ptr<HostTensorView>>& inputs);
 
-                template <typename BASE>
-                void generate_calls(const element::Type& secondary_type,
-                                    Node& op,
-                                    const std::vector<std::shared_ptr<HostTensorView>>& outputs,
-                                    const std::vector<std::shared_ptr<HostTensorView>>& inputs)
-                {
-                    if (secondary_type == element::boolean)
-                    {
-                        op_engine<BASE, char>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::f32)
-                    {
-                        op_engine<BASE, float>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::f64)
-                    {
-                        op_engine<BASE, double>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::i8)
-                    {
-                        op_engine<BASE, int8_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::i16)
-                    {
-                        op_engine<BASE, int16_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::i32)
-                    {
-                        op_engine<BASE, int32_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::i64)
-                    {
-                        op_engine<BASE, int64_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::u8)
-                    {
-                        op_engine<BASE, uint8_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::u16)
-                    {
-                        op_engine<BASE, uint16_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::u32)
-                    {
-                        op_engine<BASE, uint32_t>(op, outputs, inputs);
-                    }
-                    else if (secondary_type == element::u64)
-                    {
-                        op_engine<BASE, uint64_t>(op, outputs, inputs);
-                    }
-                    else
-                    {
-                        std::stringstream ss;
-                        ss << "unsupported element type " << secondary_type << " op "
-                           << op.get_name();
-                        throw ngraph_error(ss.str());
-                    }
-                }
-
-                template <typename T, typename S>
+                template <typename T>
                 void op_engine(Node& node,
                                const std::vector<std::shared_ptr<HostTensorView>>& out,
                                const std::vector<std::shared_ptr<HostTensorView>>& args)
@@ -312,12 +248,6 @@ namespace ngraph
                         reference::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
                                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                                out[0]->get_element_count());
-                    }
-                    else if (node_op == "Convert")
-                    {
-                        reference::convert<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                              reinterpret_cast<S*>(out[0]->get_data_ptr()),
-                                              out[0]->get_element_count());
                     }
                     else if (node_op == "Convolution")
                     {
@@ -694,10 +624,6 @@ namespace ngraph
                                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                                     out[0]->get_element_count());
                     }
-                    // else if (node_op == "Remainder")
-                    // {
-                    //     // node = make_shared<op::Remainder>(args[0], args[1]);
-                    // }
                     else if (node_op == "ReplaceSlice")
                     {
                         const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
@@ -734,72 +660,6 @@ namespace ngraph
                                            args[0]->get_shape(),
                                            out[0]->get_shape(),
                                            reverse->get_reversed_axes());
-                    }
-                    else if (node_op == "Select")
-                    {
-                        reference::select<T>(reinterpret_cast<char*>(args[0]->get_data_ptr()),
-                                             reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                             reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                             out[0]->get_element_count());
-                    }
-                    else if (node_op == "SelectAndScatter")
-                    {
-                        op::SelectAndScatter* select_and_scatter =
-                            dynamic_cast<op::SelectAndScatter*>(&node);
-
-                        std::shared_ptr<Function> selection_function =
-                            select_and_scatter->get_functions()[0];
-                        std::function<bool(T, T)> f_selection =
-                            [this, &node, selection_function](T x, T y) -> bool {
-                            auto tx = std::make_shared<HostTensorView>(
-                                node.get_inputs().at(0).get_element_type(),
-                                Shape{},
-                                "selection_temp_x");
-                            auto ty = std::make_shared<HostTensorView>(
-                                node.get_inputs().at(1).get_element_type(),
-                                Shape{},
-                                "selection_temp_y");
-                            auto tr = std::make_shared<HostTensorView>(
-                                element::boolean, Shape{}, "selection_temp_r");
-                            *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
-                            *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                            call(selection_function, {tr}, {tx, ty});
-                            return *(reinterpret_cast<char*>(tr->get_data_ptr()));
-                        };
-
-                        std::shared_ptr<Function> scatter_function =
-                            select_and_scatter->get_functions()[1];
-                        std::function<T(T, T)> f_scatter =
-                            [this, &node, scatter_function](T x, T y) -> T {
-                            auto tx = std::make_shared<HostTensorView>(
-                                node.get_inputs().at(0).get_element_type(),
-                                Shape{},
-                                "scatter_temp_x");
-                            auto ty = std::make_shared<HostTensorView>(
-                                node.get_inputs().at(1).get_element_type(),
-                                Shape{},
-                                "scatter_temp_y");
-                            auto tr = std::make_shared<HostTensorView>(
-                                node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                            *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
-                            *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
-                            call(scatter_function, {tr}, {tx, ty});
-                            return *(reinterpret_cast<T*>(tr->get_data_ptr()));
-                        };
-
-                        reference::select_and_scatter<T>(
-                            reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                            reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            args[0]->get_shape(),
-                            args[1]->get_shape(),
-                            out[0]->get_shape(),
-                            f_selection,
-                            f_scatter,
-                            select_and_scatter->get_window_shape(),
-                            select_and_scatter->get_window_movement_strides());
                     }
                     else if (node_op == "Sign")
                     {

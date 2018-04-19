@@ -122,7 +122,7 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
             shared_ptr<runtime::HostTensorView> htv;
             if (!contains_key(tensor_map, tv))
             {
-                // The output tensor is not in the tensor map so create a new tensor
+                // the output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->get_output_tensor(i).get_name();
@@ -137,26 +137,13 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
         }
 
         // get op type
-        element::Type base_type;
-        element::Type secondary_type;
-        if (op->get_inputs().empty())
+        element::Type type = op->get_element_type();
+        if (!op->get_inputs().empty())
         {
-            base_type = op->get_element_type();
-        }
-        else
-        {
-            base_type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-        secondary_type = op->get_element_type();
-
-        // some ops have unusual intput/output types so handle those special cases here
-        if (op->description() == "Select")
-        {
-            base_type = op->get_inputs().at(1).get_tensor().get_element_type();
-            secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
+            type = op->get_inputs().at(0).get_tensor().get_element_type();
         }
 
-        generate_calls(base_type, secondary_type, *op, op_outputs, op_inputs);
+        generate_calls(type, *op, op_outputs, op_inputs);
 
         // delete any obsolete tensors
         for (const descriptor::Tensor* t : op->liveness_free_list)
@@ -175,61 +162,59 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
     return true;
 }
 
-void runtime::ie::IE_Backend::generate_calls(
-    const element::Type& base_type,
-    const element::Type& secondary_type,
-    Node& op,
-    const vector<shared_ptr<HostTensorView>>& outputs,
-    const vector<shared_ptr<HostTensorView>>& inputs)
+void runtime::ie::IE_Backend::generate_calls(const element::Type& type,
+                                             Node& op,
+                                             const vector<shared_ptr<HostTensorView>>& outputs,
+                                             const vector<shared_ptr<HostTensorView>>& inputs)
 {
-    if (base_type == element::boolean)
+    if (type == element::boolean)
     {
-        generate_calls<char>(secondary_type, op, outputs, inputs);
+        op_engine<char>(op, outputs, inputs);
     }
-    else if (base_type == element::f32)
+    else if (type == element::f32)
     {
-        generate_calls<float>(secondary_type, op, outputs, inputs);
+        op_engine<float>(op, outputs, inputs);
     }
-    else if (base_type == element::f64)
+    else if (type == element::f64)
     {
-        generate_calls<double>(secondary_type, op, outputs, inputs);
+        op_engine<double>(op, outputs, inputs);
     }
-    else if (base_type == element::i8)
+    else if (type == element::i8)
     {
-        generate_calls<int8_t>(secondary_type, op, outputs, inputs);
+        op_engine<int8_t>(op, outputs, inputs);
     }
-    else if (base_type == element::i16)
+    else if (type == element::i16)
     {
-        generate_calls<int16_t>(secondary_type, op, outputs, inputs);
+        op_engine<int16_t>(op, outputs, inputs);
     }
-    else if (base_type == element::i32)
+    else if (type == element::i32)
     {
-        generate_calls<int32_t>(secondary_type, op, outputs, inputs);
+        op_engine<int32_t>(op, outputs, inputs);
     }
-    else if (base_type == element::i64)
+    else if (type == element::i64)
     {
-        generate_calls<int64_t>(secondary_type, op, outputs, inputs);
+        op_engine<int64_t>(op, outputs, inputs);
     }
-    else if (base_type == element::u8)
+    else if (type == element::u8)
     {
-        generate_calls<uint8_t>(secondary_type, op, outputs, inputs);
+        op_engine<uint8_t>(op, outputs, inputs);
     }
-    else if (base_type == element::u16)
+    else if (type == element::u16)
     {
-        generate_calls<uint16_t>(secondary_type, op, outputs, inputs);
+        op_engine<uint16_t>(op, outputs, inputs);
     }
-    else if (base_type == element::u32)
+    else if (type == element::u32)
     {
-        generate_calls<uint32_t>(secondary_type, op, outputs, inputs);
+        op_engine<uint32_t>(op, outputs, inputs);
     }
-    else if (base_type == element::u64)
+    else if (type == element::u64)
     {
-        generate_calls<uint64_t>(secondary_type, op, outputs, inputs);
+        op_engine<uint64_t>(op, outputs, inputs);
     }
     else
     {
         stringstream ss;
-        ss << "unsupported element type " << base_type << " op " << op.get_name();
-        throw runtime_error(ss.str());
+        ss << "unsupported element type " << type << " op " << op.get_name();
+        throw ngraph_error(ss.str());
     }
 }
