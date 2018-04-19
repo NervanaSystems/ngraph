@@ -825,5 +825,5 @@ def function_call(function_to_call, args):  # type: (Node, NodeVector) -> Node
 
 @nameable_op
 def get_output_element(data, index):  # type: (Node, int) -> Node
-    """Return the `n`th element of the input tuple."""
+    """Return the n-th element of the input tuple."""
     return GetOutputElement(data, index)
