@@ -4,39 +4,41 @@
 ngraph
 ######
 
+
 .. automodule:: ngraph
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :public-members:
+
 
 
 Submodules
+==========
+
+
+Exceptions
 ----------
 
-ngraph.exceptions module
-------------------------
-
 .. automodule:: ngraph.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
-ngraph.ops module
------------------
+Ops
+---
 
 .. automodule:: ngraph.ops
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
-ngraph.runtime module
----------------------
+Runtime
+--------
 
 .. automodule:: ngraph.runtime
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
