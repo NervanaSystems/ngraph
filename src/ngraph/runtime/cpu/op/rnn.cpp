@@ -63,16 +63,28 @@ op::LSTM::LSTM(std::shared_ptr<Node> input_xt_1,
 
 shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
 {
-    return make_shared<RNN>(new_args, m_number_of_lstm_cells, m_lstm_output_shape);
+    return make_shared<RNN>(new_args[0],
+                            new_args[1],
+                            new_args[2],
+                            new_args[3],
+                            new_args[4],
+                            m_number_of_lstm_cells,
+                            m_lstm_output_shape);
 }
 
-op::RNN::RNN(const NodeVector& args, const int number_of_lstm_cells, Shape lstm_output_shape)
-    : RequiresTensorViewArgs("RNN", args)
+op::RNN::RNN(std::shared_ptr<Node> src_layer,
+             std::shared_ptr<Node> src_iter,
+             std::shared_ptr<Node> weights_layer,
+             std::shared_ptr<Node> weights_iter,
+             std::shared_ptr<Node> bias,
+             const int number_of_lstm_cells,
+             Shape lstm_output_shape)
+    : RequiresTensorViewArgs("RNN", {src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_number_of_lstm_cells(number_of_lstm_cells)
     , m_lstm_output_shape(lstm_output_shape)
 {
     for (size_t i = 0; i < number_of_lstm_cells; i++)
     {
-        add_output(args[0]->get_element_type(), lstm_output_shape);
+        add_output(src_layer->get_element_type(), src_layer->get_shape());
     }
 }

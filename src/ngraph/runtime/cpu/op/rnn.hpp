@@ -49,7 +49,13 @@ namespace ngraph
         class RNN : public util::RequiresTensorViewArgs
         {
         public:
-            RNN(const NodeVector& args, const int number_of_lstm_cells, Shape lstm_output_shape);
+            RNN(std::shared_ptr<Node> src_layer,
+                std::shared_ptr<Node> src_iter,
+                std::shared_ptr<Node> weights_layer,
+                std::shared_ptr<Node> weights_iter,
+                std::shared_ptr<Node> bias,
+                const int number_of_lstm_cells,
+                Shape lstm_output_shape);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             int get_num_of_lstm_cells() { return m_number_of_lstm_cells; }
