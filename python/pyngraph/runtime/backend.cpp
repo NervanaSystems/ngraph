@@ -30,7 +30,6 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.doc() = "ngraph.impl.runtime.Backend wraps ngraph::runtime::Backend";
     backend.def_static("create", &ngraph::runtime::Backend::create);
     backend.def_static("get_registered_devices", &ngraph::runtime::Backend::get_registered_devices);
-    backend.def_static("get_subdevices", &ngraph::runtime::Backend::get_subdevices);
     backend.def("create_tensor",
                 (std::shared_ptr<ngraph::runtime::TensorView>(ngraph::runtime::Backend::*)(
                     const ngraph::element::Type&, const ngraph::Shape&)) &
