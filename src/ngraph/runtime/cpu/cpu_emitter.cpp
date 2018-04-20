@@ -366,19 +366,20 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LSTM)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::RNN)
             {
-                const ngraph::op::LSTM* lstm = static_cast<const ngraph::op::LSTM*>(node);
+                const ngraph::op::RNN* rnn_node = static_cast<const ngraph::op::RNN*>(node);
 
                 // TODO: identify the sequence lengths from the fused Op
-                const int src_seq_length_max = 20;
+                const int src_seq_length_max = rnn_node->get_src_sequence_length();
                 // TODO: 2 for bi directional , 1 for uni directional
                 const int enc_uni_n_layers = 1;
                 // TODO: LSTM will have 4 gates, GRU and vanilla RNN have different no. of gates
-                const int lstm_n_gates = 4;
+                const int lstm_n_gates = rnn_node->get_gates_per_cell();
+                ;
                 // TODO: Figure out the feature size from the fused Op
-                const int feature_size = 512;
-                const int batch = 128;
+                const int feature_size = rnn_node->get_feature_size();
+                const int batch = rnn_node->get_batch_size();
 
                 //TODO: identify the right way to set src_iter and dst_iter
                 auto zero_md = mkldnn::zero_md();

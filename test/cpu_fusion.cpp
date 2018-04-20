@@ -42,6 +42,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
@@ -1035,4 +1036,61 @@ TEST(cpu_fusion, lstm_fprop_fusion)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
+}
+
+TEST(cpu_fusion, rnn_fprop)
+{
+    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{30, 50});
+    auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 50});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
+    const int number_of_cells = 3;
+    const int number_of_gates_per_cell = 4;
+    const int src_seq_length = 3;
+    auto rnn_node = make_shared<op::RNN>(src_layer,
+                                         src_iter,
+                                         weights_layer,
+                                         weights_iter,
+                                         biases,
+                                         number_of_cells,
+                                         number_of_gates_per_cell,
+                                         src_seq_length,
+                                         Shape{10, 100});
+    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
+    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
+
+    auto func = make_shared<Function>(
+        NodeVector{rnn_ht_output},
+        op::ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::TensorView> src_layer_t =
+        backend->create_tensor(element::f32, src_layer->get_shape());
+    shared_ptr<runtime::TensorView> src_iter_t =
+        backend->create_tensor(element::f32, src_iter->get_shape());
+    shared_ptr<runtime::TensorView> weights_layer_t =
+        backend->create_tensor(element::f32, weights_layer->get_shape());
+    shared_ptr<runtime::TensorView> weights_iter_t =
+        backend->create_tensor(element::f32, weights_iter->get_shape());
+    shared_ptr<runtime::TensorView> biases_t =
+        backend->create_tensor(element::f32, biases->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->create_tensor(element::f32, rnn_ht_output->get_shape());
+
+    copy_data(src_layer_t, vector<float>(1500, 1));
+    copy_data(src_iter_t, vector<float>(2000, 1));
+    copy_data(weights_layer_t, vector<float>(20000, 1));
+    copy_data(weights_iter_t, vector<float>(40000, 1));
+    copy_data(biases_t, vector<float>(400, 1));
+
+    backend->call(
+        func, {result}, {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
+    //vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    //ASSERT_TRUE(read_vector<float>(result) == expected);
+    auto result_t = read_vector<float>(result);
+    for (auto& val : result_t)
+    {
+        std::cout << val << " ";
+    }
 }
