@@ -45,7 +45,7 @@ computation that can run on an nGraph backend; this is analogous to a
 framework bridge.  We also provide a larger example for training and
 evaluating a simple MNIST MLP model. Details that might be helpful when 
 fine-tuning training of a Neural Network can be found on our article describing
-how to :doc:`../optimize/tune-for-deployment`.
+how to fine-tune code deployment to :doc:`../optimize/generic-frameworks`.
 
 For data scientists or algorithm developers who are trying to extract specifics 
 about the state of a model at a certain node, or who want to optimize a model 
