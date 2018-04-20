@@ -34,3 +34,8 @@ runtime::gpu::CudaContextManager::CudaContextManager()
     CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
     m_context_ptr = std::make_shared<CUcontext>(m_context);
 }
+
+runtime::gpu::CudaContextManager::~CudaContextManager()
+{
+    CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
+}
