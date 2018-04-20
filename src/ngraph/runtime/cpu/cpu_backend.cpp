@@ -24,6 +24,14 @@
 using namespace ngraph;
 using namespace std;
 
+static bool static_init()
+{
+    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
+    return true;
+};
+
+bool runtime::cpu::CPU_Backend::init = static_init();
+
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
 {
