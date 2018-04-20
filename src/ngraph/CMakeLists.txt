@@ -126,9 +126,6 @@ set (SRC
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
-    runtime/interpreter/int_kernels.cpp
-    runtime/interpreter/int_manager.cpp
-    runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
@@ -194,7 +191,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         codegen/execution_engine.cpp
         runtime/cpu/cpu_call_frame.cpp
         runtime/cpu/cpu_backend.cpp
-        runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/cpu_kernel_emitters.cpp
         runtime/cpu/cpu_kernel_utils.cpp
@@ -269,7 +265,6 @@ endif()
             runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
             runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
