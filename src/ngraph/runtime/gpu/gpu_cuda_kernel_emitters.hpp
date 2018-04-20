@@ -124,42 +124,6 @@ namespace ngraph
                                               0));  // arguments
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
-
-            template <typename... Args>
-            void emit_1d_max_pool(GPURuntimeContext* ctx,
-                                  const std::string& name,
-                                  const std::array<std::string, 2>& data_types,
-                                  size_t count,
-                                  Args&&... args)
-            {
-                std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-                std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
-                auto compiled_kernel = ctx->compiled_kernel_pool->get(name_signature);
-                if (compiled_kernel == nullptr)
-                {
-                    codegen::CodeWriter writer;
-                    CudaKernelBuilder::get_1d_max_pool(writer, name_signature, data_types);
-                    std::string kernel = writer.get_code();
-                    compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
-                }
-
-                if (sizeof...(args))
-                {
-                    std::vector<void*> args_list = {&args..., &count};
-                    CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                                  static_cast<unsigned int>(count),
-                                                  1,
-                                                  1, // grid dim
-                                                  1,
-                                                  1,
-                                                  1, // block dim
-                                                  0,
-                                                  NULL, // shared mem and stream
-                                                  &args_list[0],
-                                                  0));  // arguments
-                    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-                }
-            }
         }
     }
 }

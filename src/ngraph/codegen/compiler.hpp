@@ -88,6 +88,7 @@ private:
     bool m_precompiled_header_valid;
     bool m_debuginfo_enabled;
     bool m_enable_diag_output;
+    bool m_enable_pass_report;
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
     std::string m_pch_path;
