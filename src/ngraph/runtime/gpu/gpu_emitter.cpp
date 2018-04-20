@@ -426,8 +426,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
-                writer << "runtime::gpu::free_gpu_buffer(workspace));\n";
+                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
+                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
 
