@@ -15,22 +15,23 @@
 *******************************************************************************/
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/manager.hpp"
-#include "pyngraph/runtime/manager.hpp"
+
+#include "ngraph/op/pad.hpp"
+#include "ngraph/shape.hpp"
+#include "pyngraph/ops/pad.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_runtime_Manager(py::module m)
+void regclass_pyngraph_op_Pad(py::module m)
 {
-    py::class_<ngraph::runtime::Manager, std::shared_ptr<ngraph::runtime::Manager>> manager(
-        m, "Manager");
-    manager.doc() = "ngraph.impl.runtime.Manager wraps ngraph::runtime::Manager";
-    manager.def_static("get", &ngraph::runtime::Manager::get);
-    manager.def("compile", &ngraph::runtime::Manager::compile);
-    manager.def("allocate_backend", &ngraph::runtime::Manager::allocate_backend);
+    py::class_<ngraph::op::Pad,
+               std::shared_ptr<ngraph::op::Pad>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        pad(m, "Pad");
+    pad.doc() = "ngraph.impl.op.Pad wraps ngraph::op::Pad";
+    pad.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                     const std::shared_ptr<ngraph::Node>&,
+                     const ngraph::Shape&,
+                     const ngraph::Shape&,
+                     const ngraph::Shape&>());
 }

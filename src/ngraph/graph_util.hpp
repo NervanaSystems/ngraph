@@ -47,12 +47,7 @@ namespace ngraph
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
-    void free_nodes(std::shared_ptr<Function>);
-
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
 
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
@@ -110,8 +105,11 @@ namespace ngraph
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned function ops
-    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
+    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func,
                                                      NodeMap& node_map);
+
+    // input function is cloned and returned
+    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
 
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
@@ -125,4 +123,8 @@ namespace ngraph
                                  const std::shared_ptr<Node>& new_node);
 
     std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
+
+    std::shared_ptr<Node> make_constant_from_string(std::string val,
+                                                    const element::Type& element_type,
+                                                    const Shape& shape);
 }

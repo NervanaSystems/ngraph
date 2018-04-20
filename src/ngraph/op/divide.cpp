@@ -39,8 +39,8 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
+    auto x = get_argument(0);
+    auto y = get_argument(1);
 
     adjoints.add_delta(x, delta / y);
     adjoints.add_delta(y, -delta * shared_from_this() / y);

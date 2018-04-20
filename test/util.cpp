@@ -145,19 +145,18 @@ TEST(util, contains)
 
 TEST(util, all_close)
 {
-    auto manager = runtime::Manager::get("INTERPRETER");
-    auto backend = manager->allocate_backend();
+    auto backend = runtime::Backend::create("INTERPRETER");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
-    auto b = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
 
     copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_TRUE(ngraph::test::all_close<float>(a, b));
 
-    auto c = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
+    auto c = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(c, test::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, 0, .05f));
@@ -278,7 +277,7 @@ TEST_F(CloneTest, clone_nodes_partial)
 
 TEST_F(CloneTest, clone_function_full)
 {
-    auto cloned_func = clone_function(func, node_map);
+    auto cloned_func = clone_function(*func, node_map);
     ASSERT_TRUE(CompareNodeVector(func->get_ops(), cloned_func->get_ops(), node_map));
 }
 
@@ -294,8 +293,7 @@ TEST(graph_util, clone_multiple_results)
     auto f =
         make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
 
-    NodeMap node_map;
-    auto copy = clone_function(f, node_map);
+    auto copy = clone_function(*f);
 }
 
 TEST(util, round_up)

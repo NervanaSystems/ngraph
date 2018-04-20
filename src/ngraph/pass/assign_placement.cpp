@@ -18,25 +18,15 @@
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
 
-using namespace std;
 using namespace ngraph;
+using namespace std;
 
-ngraph::pass::AssignPlacement::AssignPlacement(
-    std::function<Placement(std::shared_ptr<Node>)> placement_policy)
+pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> placement_policy)
     : m_placement_policy(placement_policy)
 {
 }
 
-bool ngraph::pass::AssignPlacement::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
-{
-    for (const std::shared_ptr<Node>& node : nodes)
-    {
-        run_on_node(node);
-    }
-    return false;
-}
-
-bool ngraph::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
     node->set_placement(m_placement_policy(node));
     return false;

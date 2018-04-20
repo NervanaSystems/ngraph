@@ -13,8 +13,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include <algorithm>
+
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 
 using namespace ngraph;
 
@@ -128,6 +130,37 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
             }
             writer.block_end();
             writer << "out[idx_out] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
+                                                   const std::string& name,
+                                                   const std::array<std::string, 2>& data_types)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, size_t* input_strides, size_t* lower_bounds, size_t* "
+                               "slice_strides, size_t* output_strides, size_t rank, size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "size_t idx_in = 0;\n";
+            writer << "size_t idx_out = tid;\n";
+
+            writer << "for(size_t i = 0; i < rank; i++)\n";
+            writer.block_begin();
+            {
+                writer << "idx_in += (((idx_out / output_strides[i]) * slice_strides[i]) + "
+                          "lower_bounds[i]) * input_strides[i];\n";
+                writer << "idx_out %= output_strides[i];\n";
+            }
+            writer.block_end();
+            writer << "out[tid] = in[idx_in];\n";
         }
         writer.block_end();
     }

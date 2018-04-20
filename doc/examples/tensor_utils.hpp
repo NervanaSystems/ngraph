@@ -27,7 +27,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_output_tensor(
     const std::shared_ptr<ngraph::Node>& node,
     size_t output_pos)
 {
-    return backend->make_primary_tensor_view(
+    return backend->create_tensor(
         node->get_output_element_type(output_pos),
         node->get_output_shape(output_pos));
 }

@@ -114,10 +114,14 @@ set (SRC
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
+    pass/zero_dim_tensor_elimination.cpp
+    pass/validate_graph.cpp
     pass/visualize_tree.cpp
     pass/core_fusion.cpp
+    pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/backend.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
@@ -205,6 +209,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/kernel/eigen_thread_pool.cpp
         runtime/cpu/kernel/pad.cpp
+        runtime/cpu/kernel/reduce_max.cpp
+        runtime/cpu/kernel/reduce_sum.cpp
+        runtime/cpu/kernel/reshape.cpp
         runtime/cpu/op/conv_bias.cpp
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
@@ -216,6 +223,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
+        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -270,6 +278,12 @@ endif()
             runtime/gpu/gpu_cuda_function_builder.cpp
             runtime/gpu/gpu_cuda_function_pool.cpp
             runtime/gpu/gpu_cuda_context_manager.cpp
+            runtime/gpu/gpu_runtime_context.cpp
+            runtime/gpu/gpu_primitive_emitter.cpp
+            runtime/gpu/gpu_invoke.cpp
+            runtime/gpu/cudnn_emitter.cpp
+            runtime/gpu/cuda_emitter.cpp
+            runtime/gpu/type_info.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

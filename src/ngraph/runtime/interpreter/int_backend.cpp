@@ -15,23 +15,88 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/interpreter/int_external_function.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
-    const shared_ptr<ExternalFunction>& external_function)
+shared_ptr<runtime::interpreter::INT_CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
+    const shared_ptr<runtime::interpreter::ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
 }
 
 shared_ptr<runtime::TensorView>
-    runtime::interpreter::INT_Backend::make_primary_tensor_view(const element::Type& element_type,
-                                                                const Shape& shape)
+    runtime::interpreter::INT_Backend::create_tensor(const element::Type& element_type,
+                                                     const Shape& shape)
 {
-    auto rc = make_shared<runtime::HostTensorView>(element_type, shape, "external");
-    return static_pointer_cast<runtime::TensorView>(rc);
+    return make_shared<runtime::HostTensorView>(element_type, shape, "external");
+}
+
+shared_ptr<runtime::TensorView> runtime::interpreter::INT_Backend::create_tensor(
+    const element::Type& element_type, const Shape& shape, void* memory_pointer)
+{
+    return make_shared<runtime::HostTensorView>(element_type, shape, memory_pointer, "external");
+}
+
+bool runtime::interpreter::INT_Backend::compile(shared_ptr<Function> func)
+{
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
+    {
+        instance.m_external_function = make_shared<ExternalFunction>(func);
+        auto cf = instance.m_external_function->make_call_frame();
+        instance.m_call_frame = dynamic_pointer_cast<INT_CallFrame>(cf);
+        instance.m_call_frame->m_emit_timing = instance.m_performance_counters_enabled;
+        instance.m_call_frame->set_nan_check(instance.m_nan_check_enabled);
+    }
+    return true;
+}
+
+bool runtime::interpreter::INT_Backend::call(shared_ptr<Function> func,
+                                             const vector<shared_ptr<runtime::TensorView>>& outputs,
+                                             const vector<shared_ptr<runtime::TensorView>>& inputs)
+{
+    bool rc = true;
+
+    validate_call(func, outputs, inputs);
+
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
+    {
+        rc = compile(func);
+    }
+
+    instance.m_call_frame->call(outputs, inputs);
+
+    return rc;
+}
+
+void runtime::interpreter::INT_Backend::set_nan_check(shared_ptr<Function> func, bool enable)
+{
+    FunctionInstance& instance = m_function_map[func];
+    instance.m_nan_check_enabled = enable;
+}
+
+void runtime::interpreter::INT_Backend::enable_performance_data(shared_ptr<Function> func,
+                                                                bool enable)
+{
+    FunctionInstance& instance = m_function_map[func];
+    instance.m_performance_counters_enabled = enable;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::interpreter::INT_Backend::get_performance_data(shared_ptr<Function> func) const
+{
+    vector<runtime::PerformanceCounter> rc;
+    const FunctionInstance& instance = m_function_map.at(func);
+    for (const pair<const Node*, stopwatch> p : instance.m_call_frame->m_timer_map)
+    {
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
+    }
+    return rc;
 }

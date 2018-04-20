@@ -120,6 +120,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
@@ -277,7 +278,9 @@ static const runtime::cpu::OpMap dispatcher{
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
+    : m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
     , m_compiled_function(nullptr)
     , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
@@ -296,8 +299,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         return;
     }
 
-    m_emit_timing = m_timing | (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
-
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
@@ -307,11 +308,18 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
     pass_manager.run_passes(m_function);
+
+    unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+    }
 
     codegen::CodeWriter writer;
 
@@ -380,7 +388,7 @@ using namespace ngraph::runtime;
         size_t index = 0;
         for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
         {
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
             {
                 if (!node->is_parameter() && !node->is_constant())
                 {
@@ -430,7 +438,7 @@ using namespace ngraph::runtime;
     writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
         {
             const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
@@ -459,7 +467,7 @@ using namespace ngraph::runtime;
     unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
-        const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        list<shared_ptr<Node>> tmp = function_ordered_ops.at(current_function);
         if (tmp.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
@@ -518,6 +526,7 @@ using namespace ngraph::runtime;
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
+        auto ordered_ops = function_ordered_ops.at(current_function);
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
@@ -525,7 +534,7 @@ using namespace ngraph::runtime;
             output_names.insert(tv->get_tensor().get_name());
         }
         set<descriptor::TensorView*> constants;
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
@@ -554,7 +563,7 @@ using namespace ngraph::runtime;
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             if (node->liveness_new_list.size() > 0)
             {
@@ -577,7 +586,7 @@ using namespace ngraph::runtime;
             writer << "\n";
 
             // Add temporaries to the variable name map
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            for (shared_ptr<Node> node : ordered_ops)
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
@@ -645,7 +654,7 @@ using namespace ngraph::runtime;
             }
         }
 
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        for (shared_ptr<Node> node : ordered_ops)
         {
             auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
             // with shared pointers, which is fine here but clang doesn't like it.)
@@ -785,7 +794,7 @@ using namespace ngraph::runtime;
                     if (!n->is_parameter() && !n->is_constant())
                     {
                         bool is_head = true;
-                        for (auto arg : n->get_input_ops())
+                        for (auto arg : n->get_arguments())
                         {
                             if (!arg->is_parameter() && !arg->is_constant())
                             {
@@ -890,7 +899,8 @@ using namespace ngraph::runtime;
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+    runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

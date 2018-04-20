@@ -35,10 +35,10 @@ if(NGRAPH_CPU_ENABLE)
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -55,10 +55,10 @@ if(NGRAPH_CPU_ENABLE)
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            BUILD_COMMAND ${CMAKE_MAKE_PROGRAM} mkldnn
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
             DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"

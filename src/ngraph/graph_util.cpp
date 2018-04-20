@@ -68,7 +68,7 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_input_ops())
+        for (auto arg : n->get_arguments())
         {
             if (instances_seen.count(arg) == 0)
             {
@@ -105,18 +105,6 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
     }
 }
 
-void ngraph::free_nodes(shared_ptr<Function> p)
-{
-    std::deque<Node*> sorted_list;
-
-    traverse_nodes(p, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
-
-    for (Node* n : sorted_list)
-    {
-        n->clear_arguments();
-    }
-}
-
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
@@ -140,24 +128,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
-
-    // Fix users and arguments
-    replace_node_users_arguments(target, replacement);
-}
-
-void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
-                                          std::shared_ptr<Node> replacement)
-{
-    for (auto user : target->users())
-    {
-        auto& args = const_cast<ngraph::NodeVector&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-        auto it = std::find(begin(args), end(args), target);
-        assert(it != end(args));
-        it = args.erase(it);
-        args.insert(it, replacement);
-        const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);
-    }
-    const_cast<std::multiset<Node*>&>(target->users()).clear();
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
@@ -170,8 +140,8 @@ std::list<std::shared_ptr<ngraph::Node>>
     for (auto node : nodes)
     {
         node_map[node.get()] = node;
-        node_dependency_count[node.get()] = node->get_input_ops().size();
-        if (node->get_input_ops().size() == 0)
+        node_dependency_count[node.get()] = node->get_arguments().size();
+        if (node->get_arguments().size() == 0)
         {
             independent_nodes.push_back(node.get());
         }
@@ -238,7 +208,7 @@ std::list<std::shared_ptr<ngraph::Node>>
         {
             // get (already) cloned arguments and clone the node
             NodeVector cloned_args;
-            for (auto arg : node->get_input_ops())
+            for (auto arg : node->get_arguments())
             {
                 cloned_args.push_back(node_map.get(arg));
             }
@@ -256,15 +226,21 @@ std::list<std::shared_ptr<ngraph::Node>>
     return cloned_nodes;
 }
 
-std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func,
+std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function& func)
+{
+    NodeMap nm;
+    return clone_function(func, nm);
+}
+
+std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function& func,
                                                          NodeMap& node_map)
 {
     // clone function operations
-    clone_nodes(func->get_ops(), node_map);
+    clone_nodes(func.get_ops(), node_map);
 
     // get cloned function results and parameters
     ResultVector cloned_results;
-    for (shared_ptr<Node> node : func->get_results())
+    for (shared_ptr<Node> node : func.get_results())
     {
         auto result = std::dynamic_pointer_cast<op::Result>(node_map.get(node));
         if (!result)
@@ -274,7 +250,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
         cloned_results.push_back(result);
     }
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
-    for (auto param : func->get_parameters())
+    for (auto param : func.get_parameters())
     {
         cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.get(param)));
     }
@@ -338,18 +314,6 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
 
-    // Fix user / argument among src, dst and par
-    const_cast<multiset<Node*>&>(src_node->users()).erase(dst_node.get());  // Remove [2]
-    const_cast<multiset<Node*>&>(par_node->users()).insert(dst_node.get()); // Add [10]
-    auto& dst_args = const_cast<NodeVector&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-    auto it = find(dst_args.begin(), dst_args.end(), src_node);
-    if (it == dst_args.end())
-    {
-        throw ngraph_error("src_node is not an input to dst_node");
-    }
-    it = dst_args.erase(it);       // Remove [3]
-    dst_args.insert(it, par_node); // Add [11]
-
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
     res_node->set_placement(src_node->get_placement());
@@ -406,18 +370,6 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     descriptor::Output* src_output = src_node->get_output_to(dst_node);
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Fix user / argument
-    const_cast<multiset<Node*>&>(src_node->users()).erase(dst_node.get());  // Remove [2]
-    const_cast<multiset<Node*>&>(new_node->users()).insert(dst_node.get()); // Add [10]
-    auto& dst_args = const_cast<NodeVector&>(dst_node->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-    auto it = find(dst_args.begin(), dst_args.end(), src_node);
-    if (it == dst_args.end())
-    {
-        throw ngraph_error("src_node is not an input to dst_node");
-    }
-    it = dst_args.erase(it);       // Remove [3]
-    dst_args.insert(it, new_node); // Add [11]
 }
 
 // Assert that nodes in the function is colocated and return that placement
@@ -456,4 +408,12 @@ std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const
         zero = std::make_shared<op::Broadcast>(zero, shape, axes);
     }
     return zero;
+}
+
+std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
+                                                        const element::Type& element_type,
+                                                        const Shape& shape)
+{
+    auto cvals = std::vector<std::string>(shape_size(shape), val);
+    return std::make_shared<op::Constant>(element_type, shape, cvals);
 }

@@ -14,19 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/runtime/external_function.hpp"
-#include "pyngraph/runtime/external_function.hpp"
+#pragma once
 
-namespace py = pybind11;
+#include "ngraph/pass/pass.hpp"
 
-void regclass_pyngraph_runtime_ExternalFunction(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::runtime::ExternalFunction,
-               std::shared_ptr<ngraph::runtime::ExternalFunction>>
-        externalFunction(m, "ExternalFunction");
-    externalFunction.doc() =
-        "ngraph.impl.runtime.ExternalFunction wraps ngraph::runtime::ExternalFunction";
+    namespace pass
+    {
+        class ZeroDimTensorElimination;
+    }
 }
+
+class ngraph::pass::ZeroDimTensorElimination : public FunctionPass
+{
+public:
+    ZeroDimTensorElimination()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

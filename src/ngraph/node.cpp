@@ -39,13 +39,11 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
-    , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
     size_t i = 0;
-    for (auto arg : m_arguments)
+    for (auto arg : arguments)
     {
-        arg->m_users.insert(this);
         for (descriptor::Output& output : arg->get_outputs())
         {
             m_inputs.emplace_back(this, i++, output);
@@ -144,19 +142,27 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-std::shared_ptr<Node> Node::get_input_op(size_t index)
+std::shared_ptr<Node> Node::get_argument(size_t index)
 {
-    for (auto arg : m_arguments)
+    for (auto& i : get_inputs())
     {
-        if (arg->get_outputs().size() != 1)
+        if (i.get_output().get_node()->get_outputs().size() != 1)
         {
-            throw "get_input_op called on an argument w/ multiple outputs";
+            throw "get_argument called on an argument w/ multiple outputs";
         }
     }
     return m_inputs.at(index).get_output().get_node();
 }
 
-NodeVector Node::get_input_ops() //const
+Node::~Node()
+{
+    for (auto& input : m_inputs)
+    {
+        input.get_output().remove_input(&input);
+    }
+}
+
+NodeVector Node::get_arguments()
 {
     NodeVector result;
     for (auto& i : get_inputs())
@@ -164,10 +170,6 @@ NodeVector Node::get_input_ops() //const
         {
             result.push_back(i.get_output().get_node());
         }
-    }
-    if (m_arguments != result)
-    {
-        throw ngraph_error("Arguments aren't equal: different values");
     }
     return result;
 }
@@ -297,7 +299,7 @@ descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
 {
     for (size_t i = 0; i < this->get_input_size(); ++i)
     {
-        if (this->get_input_op(i) == src)
+        if (this->get_argument(i) == src)
         {
             return &(this->get_inputs().at(i));
         }
@@ -309,7 +311,7 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
 {
     for (size_t i = 0; i < dst->get_input_size(); ++i)
     {
-        if (dst->get_input_op(i).get() == this)
+        if (dst->get_argument(i).get() == this)
         {
             return &(dst->get_inputs().at(i).get_output());
         }

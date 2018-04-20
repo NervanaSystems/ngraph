@@ -53,3 +53,33 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
 {
     return run_matchers_on_nodes_list(f->get_ordered_ops(), m_matchers, f);
 }
+
+bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
+{
+    bool changed = false;
+    size_t i = 0;
+    do
+    {
+        for (auto node : f->get_ops())
+        {
+            for (auto matcher : m_matchers)
+            {
+                NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
+                             << node->get_name() << " , is_output = " << node->is_output();
+                if (matcher->match(node))
+                {
+                    NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
+                                 << node->get_name();
+                    if (matcher->process_match())
+                    {
+                        changed = true;
+                        goto next_fusion;
+                    }
+                }
+            }
+        }
+    next_fusion:
+        i++;
+    } while (changed && i < m_num_iters);
+    return changed;
+}

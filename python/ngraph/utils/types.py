@@ -32,6 +32,7 @@ log = logging.getLogger(__file__)
 TensorShape = List[int]
 NumericData = Union[int, float, np.ndarray]
 NumericType = Union[type, np.dtype]
+ScalarData = Union[int, float]
 NodeInput = Union[Node, NumericData]
 
 ngraph_to_numpy_types_map = [

@@ -26,8 +26,8 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
 namespace ngraph
@@ -36,9 +36,9 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_ExternalFunction;
             class GPU_Emitter;
             class GPU_CallFrame;
+            struct GPURuntimeContext;
 
             using OpFunction =
                 std::function<void(GPU_ExternalFunction* external_function,
@@ -49,15 +49,20 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<GPU_ExternalFunction>
+            class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
             {
                 friend class GPU_CallFrame;
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+                ~GPU_ExternalFunction();
+                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
+                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
+                const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
+                {
+                    return m_primitive_emitter;
+                }
 
             protected:
                 void compile();
@@ -77,11 +82,17 @@ namespace ngraph
                     codegen::CodeWriter& writer,
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
-
+                void release_function() { m_function = nullptr; }
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::shared_ptr<ngraph::Function> m_function;
+                bool m_release_function;
+                bool m_is_compiled;
+                bool m_timing;
+                std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+                std::unique_ptr<GPURuntimeContext> m_ctx;
             };
         }
     }

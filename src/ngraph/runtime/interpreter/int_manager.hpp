@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/runtime/manager.hpp"
 
@@ -36,8 +37,7 @@ namespace ngraph
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
 
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+                virtual std::vector<size_t> get_subdevices() const override;
 
                 static Factory factory;
             };

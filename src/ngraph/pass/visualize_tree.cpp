@@ -34,7 +34,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
             size_t i = 0;
-            for (auto arg : node->get_input_ops())
+            for (auto arg : node->get_arguments())
             {
                 m_ss << add_attributes(arg);
                 m_ss << add_attributes(node);

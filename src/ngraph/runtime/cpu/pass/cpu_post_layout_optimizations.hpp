@@ -15,38 +15,29 @@
 *******************************************************************************/
 
 #pragma once
-
-#include <cassert>
-#include <memory>
-
-#include "ngraph/descriptor/buffer.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
+    namespace runtime
     {
-        /// @brief Specifies a contiguous portion of a buffer.
-        ///
-        /// Currently only implemented for linear buffers.
-        class BufferPos
+        namespace cpu
         {
-        public:
-            BufferPos() {}
-            BufferPos(std::shared_ptr<Buffer> buffer, size_t offset, size_t size)
-                : m_buffer(buffer)
-                , m_offset(offset)
-                , m_size(size)
+            namespace pass
             {
-                assert(buffer->size() >= offset + size);
+                class CPUPostLayoutOptimizations;
             }
-
-            BufferPos(const BufferPos& buffer_pos) = default;
-            BufferPos& operator=(const BufferPos& buffer_pos) = default;
-
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            size_t m_offset;
-            size_t m_size;
-        };
+        }
     }
 }
+
+class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUPostLayoutOptimizations()
+        : GraphRewrite()
+    {
+        construct_weight_fusion();
+    }
+    void construct_weight_fusion();
+};
