@@ -42,7 +42,7 @@ to be trained well enough.
 
 To get started, we've provided a basic example for how to :doc:`execute` a
 computation that can run on an nGraph backend; this is analogous to a
-framework bridge.  We also provide a larger example for training and
+framework bridge. We also provide a larger example for training and
 evaluating a simple MNIST MLP model. Details that might be helpful when 
 fine-tuning training of a Neural Network can be found on our article describing
 how to fine-tune code deployment to :doc:`../optimize/generic-frameworks`.
