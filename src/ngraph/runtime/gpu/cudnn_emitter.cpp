@@ -356,10 +356,10 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     std::string hash = ss.str();
 
     size_t primitive_index = m_primitive_emitter->lookup(hash);
-    if (primitive_index != std::numeric_limits<size_t>::max())
-    {
-        return primitive_index;
-    }
+    // if (primitive_index != std::numeric_limits<size_t>::max())
+    // {
+    //     return primitive_index;
+    // }
 
     if (epsilon < CUDNN_BN_MIN_EPSILON)
     {
@@ -395,9 +395,23 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         break;
     }
     case Prop::Forward: {
-        // currently not using the cudnn calculation of mean/variance
-        // so this factor needs to be set to 1.0;
+        cudnnOpTensorDescriptor_t op_desc;
+        cudnnCreateOpTensorDescriptor(&op_desc);
+        cudnnSetOpTensorDescriptor(op_desc,
+                                   CUDNN_OP_TENSOR_MUL,
+                                   CUDNN_DATA_FLOAT,
+                                   CUDNN_NOT_PROPAGATE_NAN);
+
+        // currently not using the cudnn moving average
+        // calculation so this factor needs to be set to 1.0
         double exp_avg_factor = 1.0f;
+
+        // factor to convert unbiased variance to biased variance estimate
+        // mini-batch statistics (variance of the sample) should be used
+        // in training and population statistics (sample variance) used
+        // during inference. see commit note for 3b081ce for more details.
+        float m = tensor_shape[0]*tensor_shape[2]*tensor_shape[3];
+        float bias_factor = (m-1)/m;
         batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
                 cudnnBatchNormalizationForwardTraining(
                     *ctx->cudnn_handle,
@@ -412,16 +426,30 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                     inputs[0],
                     inputs[1],
                     exp_avg_factor,
-                    outputs[1], // running mean
-                    outputs[2], // running var
+                    outputs[1],
+                    outputs[2],
                     epsilon,
-                    NULL,       // batch mean
-                    NULL);      // batch var
+                    NULL,
+                    NULL);
+
+                // convert to biased variance
+                cudnnOpTensor(*ctx->cudnn_handle,
+                              op_desc,
+                              &beta,
+                              derived_param_desc,
+                              outputs[2],
+                              &beta,
+                              derived_param_desc,
+                              outputs[2],
+                              &bias_factor,
+                              derived_param_desc,
+                              outputs[2]);
             }};
         break;
     }
     case Prop::Backward: {
         batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+                //runtime::gpu::print_gpu_f32_tensor(inputs[2],shape_size(tensor_shape),sizeof(float));
                 cudnnBatchNormalizationBackward(
                     *ctx->cudnn_handle,
                     bn_op,
@@ -440,8 +468,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                     outputs[1 /* dgamma */],
                     outputs[2 /* dbeta */],
                     epsilon,
-                    inputs[3 /* mu batch mean*/],
-                    inputs[4 /* 1/sig**2 batch inverse variance*/]);
+                    NULL,  // inputs[3 /* mu batch mean*/],
+                    NULL); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
             }};
         break;
     }

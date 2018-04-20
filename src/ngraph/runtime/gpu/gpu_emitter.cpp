@@ -1440,8 +1440,6 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                args[0].get_shape(),
                                                                batchnorm->get_eps_value());
 
-
-
                 writer.block_begin("  // " + node->get_name());
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
@@ -1465,6 +1463,38 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
             {
+                const ngraph::op::BatchNormBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
+                                                               CUDNN_BATCHNORM_SPATIAL,
+                                                               CUDNNEmitter::Prop::Backward,
+                                                               args[2].get_shape(),
+                                                               args[0].get_shape(),
+                                                               batchnorm->get_eps_value());
+
+                writer.block_begin("  // " + node->get_name());
+                {
+                    writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
+                    writer << "std::vector<void*>{" << args.front().get_name();
+                    for (size_t i=1; i<args.size(); i++)
+                    {
+                        writer <<  ", " << args[i].get_name();
+                    }
+                    writer << "}.data(), ";
+                    writer << "std::vector<void*>{" << out.front().get_name();
+                    for (size_t i=1; i<out.size(); i++)
+                    {
+                        writer <<  ", " << out[i].get_name();
+                    }
+                    writer << "}.data()";
+                    writer << ");\n";
+                }
+                writer.block_end();
+
             }
 
             template <>
