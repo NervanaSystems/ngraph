@@ -28,6 +28,14 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
+static bool static_init()
+{
+    runtime::Backend::register_backend("IE", make_shared<runtime::ie::IE_Backend>());
+    return true;
+};
+
+bool runtime::ie::IE_Backend::init = static_init();
+
 shared_ptr<runtime::TensorView> runtime::ie::IE_Backend::create_tensor(const element::Type& type,
                                                                        const Shape& shape)
 {

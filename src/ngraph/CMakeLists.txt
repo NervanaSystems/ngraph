@@ -124,7 +124,6 @@ set (SRC
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
     runtime/ie/ie_backend.cpp
-    runtime/ie/ie_manager.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp

@@ -129,6 +129,7 @@ namespace ngraph
                           const std::vector<std::shared_ptr<TensorView>>& intputs) override;
 
             private:
+                static bool init;
                 void generate_calls(const element::Type& type,
                                     Node& op,
                                     const std::vector<std::shared_ptr<HostTensorView>>& outputs,
