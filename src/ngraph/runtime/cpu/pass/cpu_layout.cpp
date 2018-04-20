@@ -138,12 +138,14 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
 }
 
 void runtime::cpu::pass::CPULayout::set_default_layouts(
-    runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<Node> node)
+    runtime::cpu::CPU_ExternalFunction* external_function,
+    std::shared_ptr<Node> node,
+    bool use_replace = true)
 {
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
     uint index = 0;
-    for (const descriptor::Input& input : node->get_inputs())
+    for (descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
@@ -164,7 +166,14 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
-            replace_node = true;
+            if (use_replace)
+            {
+                replace_node = true;
+            }
+            else
+            {
+                input.replace_output(new_node->get_outputs().at(0));
+            }
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                          << output.get_node()->get_name()
                          << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
@@ -932,7 +941,7 @@ namespace ngraph
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     if (result->needs_default_layout())
                     {
-                        set_default_layouts(external_function, node);
+                        set_default_layouts(external_function, node, false);
                     }
                     else
                     {
