@@ -427,21 +427,18 @@ TEST(${BACKEND_NAME}, concat_4d_tensor)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{2});
-    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    auto c = backend->create_tensor(element::f32, shape);
     copy_data(c, vector<float>{3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -455,21 +452,18 @@ TEST(${BACKEND_NAME}, concat_2d_tensor)
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
                                    op::ParameterVector{A, B, C});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->create_tensor(element::f32, shape);
     copy_data(b, vector<float>{2});
-    auto c = backend->make_primary_tensor_view(element::f32, shape);
+    auto c = backend->create_tensor(element::f32, shape);
     copy_data(c, vector<float>{3});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    cf->call({result}, {a, b, c});
+    backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
