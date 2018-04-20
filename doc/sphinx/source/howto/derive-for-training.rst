@@ -110,7 +110,7 @@ Backprop
 --------
 
 We want to reduce the loss by adjusting the weights. We compute the
-asjustments using the reverse mode autodiff algorithm, commonly
+adjustments using the reverse mode autodiff algorithm, commonly
 referred to as "backprop" because of the way it is implemented in
 interpreted frameworks. In nGraph, we augment the loss computation
 with computations for the weight adjustments. This allows the
