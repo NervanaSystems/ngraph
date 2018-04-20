@@ -18,7 +18,7 @@ git clone --recursive -b allow-nonconstructible-holders https://github.com/jager
 Install Wrapper (python binding)
 
 ```
-python setup.py install
+python ../build/setup.py install
 ```
 
 To run unit tests, first install additional required packages.
