@@ -143,6 +143,7 @@ Contents
    howto/index.rst
    ops/index.rst
    framework-integration-guides.rst
+   optimize/index.rst
    project/index.rst
 
 
