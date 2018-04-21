@@ -505,6 +505,56 @@ TEST(${BACKEND_NAME}, concat_vector)
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
+TEST(${BACKEND_NAME}, concat_4d_tensor)
+{
+    Shape shape{1, 1, 1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1, 1, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
+TEST(${BACKEND_NAME}, concat_2d_tensor)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
 // from numpy import *
 // a=linspace(1,2*3*4*3*2,2*3*4*3*2)
 // b=linspace(1000+1,1000+2*3*3*3*2,2*3*3*3*2)
