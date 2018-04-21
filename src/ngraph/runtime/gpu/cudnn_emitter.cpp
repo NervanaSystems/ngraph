@@ -351,15 +351,16 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                                                    const Shape& param_shape,
                                                    double epsilon)
 {
+    // Assumes NC{d1...dN} format
     std::stringstream ss;
-    // hash params TBD
+    ss << "bn_op" << bn_op << "_dir" << static_cast<int>(direction) << "_ts" << join(tensor_shape,"_")
+       << "_ps" << join(param_shape,"_") << "_eps" << *reinterpret_cast<uint64_t*>(&epsilon);
     std::string hash = ss.str();
-
     size_t primitive_index = m_primitive_emitter->lookup(hash);
-    // if (primitive_index != std::numeric_limits<size_t>::max())
-    // {
-    //     return primitive_index;
-    // }
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
 
     if (epsilon < CUDNN_BN_MIN_EPSILON)
     {
@@ -410,7 +411,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // mini-batch statistics (variance of the sample) should be used
         // in training and population statistics (sample variance) used
         // during inference. see commit note for 3b081ce for more details.
-        float m = tensor_shape[0]*tensor_shape[2]*tensor_shape[3];
+        float m = shape_size(tensor_shape)/tensor_shape[1];
         float bias_factor = (m-1)/m;
         batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
                 cudnnBatchNormalizationForwardTraining(
