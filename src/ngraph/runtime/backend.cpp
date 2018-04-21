@@ -18,11 +18,22 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+bool runtime::Backend::register_backend(const string& name, shared_ptr<Backend> backend)
+{
+    get_backend_map().insert({name, backend});
+    return true;
+}
+
+unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backend_map()
+{
+    static unordered_map<string, shared_ptr<Backend>> backend_map;
+    return backend_map;
+}
 
 runtime::Backend::~Backend()
 {
@@ -30,24 +41,22 @@ runtime::Backend::~Backend()
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
-    shared_ptr<Manager> manager = runtime::Manager::get(type);
-    return manager->allocate_backend();
+    auto it = get_backend_map().find(type);
+    if (it == get_backend_map().end())
+    {
+        throw runtime_error("Backend '" + type + "' not found in registered backends.");
+    }
+    return it->second;
 }
 
 vector<string> runtime::Backend::get_registered_devices()
 {
     vector<string> rc;
-    for (const pair<string, runtime::Manager::Factory>& p : runtime::Manager::get_factory_map())
+    for (const auto& p : get_backend_map())
     {
         rc.push_back(p.first);
     }
     return rc;
-}
-
-vector<size_t> runtime::Backend::get_subdevices(const string& type)
-{
-    shared_ptr<Manager> manager = runtime::Manager::get(type);
-    return manager->get_subdevices();
 }
 
 void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)

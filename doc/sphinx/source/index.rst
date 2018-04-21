@@ -142,8 +142,9 @@ Contents
    graph-basics.rst
    howto/index.rst
    ops/index.rst
-   framework-integration-guides.rst
    project/index.rst
+   framework-integration-guides.rst
+   optimize/index.rst
 
 
 Indices and tables
