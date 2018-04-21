@@ -1349,6 +1349,7 @@ TEST(${BACKEND_NAME}, notequal)
 
 TEST(${BACKEND_NAME}, select)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
@@ -1766,6 +1767,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
@@ -1784,6 +1786,7 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
@@ -1802,6 +1805,7 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
@@ -5144,6 +5148,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
 //
 TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
@@ -5198,6 +5203,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
 //
 TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
@@ -5252,6 +5258,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
 //
 TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
