@@ -7925,9 +7925,10 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 
     backend->call(f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
-    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output),1e-5f,1e-6f));
-    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean),1e-5f,1e-6f));
-    EXPECT_TRUE(test::all_close(expected_variance, read_vector<float>(result_variance),1e-5f,1e-6f));
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output), 1e-5f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean), 1e-5f, 1e-6f));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
@@ -7981,7 +7982,8 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
-    EXPECT_TRUE(test::all_close(expected_variance, read_vector<float>(result_variance),1e-5f,1e-6f));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
 TEST(${BACKEND_NAME}, bn_bprop_n4c3h2w2)

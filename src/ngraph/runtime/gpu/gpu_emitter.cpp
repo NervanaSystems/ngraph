@@ -1444,15 +1444,15 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
                     writer << "std::vector<void*>{" << args.front().get_name();
-                    for (size_t i=1; i<args.size(); i++)
+                    for (size_t i = 1; i < args.size(); i++)
                     {
-                        writer <<  ", " << args[i].get_name();
+                        writer << ", " << args[i].get_name();
                     }
                     writer << "}.data(), ";
                     writer << "std::vector<void*>{" << out.front().get_name();
-                    for (size_t i=1; i<out.size(); i++)
+                    for (size_t i = 1; i < out.size(); i++)
                     {
-                        writer <<  ", " << out[i].get_name();
+                        writer << ", " << out[i].get_name();
                     }
                     writer << "}.data()";
                     writer << ");\n";
@@ -1480,21 +1480,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
                     writer << "std::vector<void*>{" << args.front().get_name();
-                    for (size_t i=1; i<args.size(); i++)
+                    for (size_t i = 1; i < args.size(); i++)
                     {
-                        writer <<  ", " << args[i].get_name();
+                        writer << ", " << args[i].get_name();
                     }
                     writer << "}.data(), ";
                     writer << "std::vector<void*>{" << out.front().get_name();
-                    for (size_t i=1; i<out.size(); i++)
+                    for (size_t i = 1; i < out.size(); i++)
                     {
-                        writer <<  ", " << out[i].get_name();
+                        writer << ", " << out[i].get_name();
                     }
                     writer << "}.data()";
                     writer << ");\n";
                 }
                 writer.block_end();
-
             }
 
             template <>
@@ -1502,7 +1501,7 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
-                writer.block_begin("  // "+node->get_name());
+                writer.block_begin("  // " + node->get_name());
                 writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
                        << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
