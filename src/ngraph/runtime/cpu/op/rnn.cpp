@@ -21,48 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 7)
+    if (new_args.size() != 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-
-    return make_shared<LSTM>(new_args.at(0),
-                             new_args.at(1),
-                             new_args.at(2),
-                             new_args.at(3),
-                             new_args.at(4),
-                             new_args.at(5),
-                             new_args.at(6),
-                             m_lstm_cell_shape);
-}
-
-op::LSTM::LSTM(std::shared_ptr<Node> input_xt_1,
-               std::shared_ptr<Node> i2h_weights,
-               std::shared_ptr<Node> hidden_state_ht_1,
-               std::shared_ptr<Node> h2h_weights,
-               std::shared_ptr<Node> i2h_bias,
-               std::shared_ptr<Node> h2h_bias,
-               std::shared_ptr<Node> cell_state_ct_1,
-               Shape lstm_cell_shape)
-    : RequiresTensorViewArgs("LSTM",
-                             {input_xt_1,
-                              i2h_weights,
-                              hidden_state_ht_1,
-                              h2h_weights,
-                              i2h_bias,
-                              h2h_bias,
-                              cell_state_ct_1})
-    , m_shape_input(hidden_state_ht_1->get_shape())
-    , m_lstm_cell_shape(lstm_cell_shape)
-{
-    add_output(hidden_state_ht_1->get_element_type(), m_shape_input);
-    add_output(cell_state_ct_1->get_element_type(), m_lstm_cell_shape);
-}
-
-shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
-{
     return make_shared<RNN>(new_args[0],
                             new_args[1],
                             new_args[2],

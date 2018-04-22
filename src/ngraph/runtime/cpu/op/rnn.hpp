@@ -23,29 +23,6 @@ namespace ngraph
 {
     namespace op
     {
-        class LSTM : public util::RequiresTensorViewArgs
-        {
-        public:
-            LSTM(std::shared_ptr<Node> input_xt_1,
-                 std::shared_ptr<Node> i2h_weights,
-                 std::shared_ptr<Node> hidden_state_ht_1,
-                 std::shared_ptr<Node> h2h_weights,
-                 std::shared_ptr<Node> i2h_bias,
-                 std::shared_ptr<Node> h2h_bias,
-                 std::shared_ptr<Node> cell_state_ct_1,
-                 Shape lstm_cell_shape);
-            Shape get_input_shape() const { return m_shape_input; }
-            Shape get_cell_shape() const { return m_lstm_cell_shape; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            // virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-            //                                const std::shared_ptr<Node>& delta) override;
-
-        private:
-            Shape m_shape_input;
-            Shape m_lstm_cell_shape;
-        };
-
         class RNN : public util::RequiresTensorViewArgs
         {
         public:
