@@ -23,10 +23,10 @@ namespace ngraph
 {
     namespace op
     {
-        class RNN : public util::RequiresTensorViewArgs
+        class Rnn : public util::RequiresTensorViewArgs
         {
         public:
-            RNN(std::shared_ptr<Node> src_layer,
+            Rnn(std::shared_ptr<Node> src_layer,
                 std::shared_ptr<Node> src_iter,
                 std::shared_ptr<Node> weights_layer,
                 std::shared_ptr<Node> weights_iter,

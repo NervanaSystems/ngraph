@@ -1048,7 +1048,7 @@ TEST(cpu_fusion, rnn_fprop)
     const int number_of_cells = 3;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 3;
-    auto rnn_node = make_shared<op::RNN>(src_layer,
+    auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
                                          weights_iter,

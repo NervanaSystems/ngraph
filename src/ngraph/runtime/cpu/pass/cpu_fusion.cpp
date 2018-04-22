@@ -52,9 +52,9 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
@@ -970,7 +970,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
                          << m.match_root()->get_name();
 
             auto pattern_map = m.get_pattern_map();
-            std::cout << "In LSTM fprop call back" << std::endl;
+            std::cout << "In Lstm fprop call back" << std::endl;
 
             // if (m.match_root()->get_element_type() != element::f32)
             // {
@@ -987,7 +987,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
 
             //std::cout << "label_ct: " << join(label_ct[0]->get_shape()) <<  " " << label_ct[0]->get_name() << std::endl;
             Shape ct_shape{pattern_map[ct_label]->get_shape()};
-            auto lstm = std::make_shared<op::LSTM>(pattern_map[param1_1],
+            auto lstm = std::make_shared<op::Lstm>(pattern_map[param1_1],
                                                    pattern_map[param1_2],
                                                    pattern_map[param2_1],
                                                    pattern_map[param2_2],
@@ -1054,7 +1054,7 @@ std::shared_ptr<ngraph::Node> ngraph::runtime::cpu::pass::RecurrentCPUFusion::co
             }
         }
     }
-    // push the uniques params as the RNN arguments
+    // push the uniques params as the Rnn arguments
     if (!unique_params.empty())
     {
         for (auto& param : unique_params)
@@ -1078,7 +1078,7 @@ std::shared_ptr<ngraph::Node> ngraph::runtime::cpu::pass::RecurrentCPUFusion::co
 void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 {
     // auto lstm_pred = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::LSTM>(n));
+    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Lstm>(n));
     // };
     // auto goe_pred = [](std::shared_ptr<Node> n) {
     //     return static_cast<bool>(std::dynamic_pointer_cast<op::GetOutputElement>(n));
@@ -1099,7 +1099,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
     auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm = std::make_shared<op::LSTM>(
+    auto lstm = std::make_shared<op::Lstm>(
         xt, weights_i2h, rpattern_ht_1, weights_h2h, bias1, bias2, ct_1, Shape{32, 100});
     //auto lstm_node_label = std::make_shared<pattern::op::Label>(lstm, nullptr, NodeVector{lstm});
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
@@ -1141,7 +1141,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             // // collect unique parameters from the bounded label
             // std::set<std::shared_ptr<Node>> unique_params;
 
-            // // find all the inputs for RNN op
+            // // find all the inputs for Rnn op
             // for (size_t i = 0; i < lstm_bound_labels.size(); i++)
             // {
             //     auto node_lables = m.get_bound_nodes_for_pattern(lstm_bound_labels[i]);
@@ -1155,11 +1155,11 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             //         }
             //         else
             //         {
-            //             // collect the lstm op's which consumes GOE && check if this lstm belongs to same RNN layer
+            //             // collect the lstm op's which consumes GOE && check if this lstm belongs to same Rnn layer
             //             lstm_goes.insert(node_lables[j]);
             //             for (auto& goe_input : node_lables[j]->get_arguments())
             //             {
-            //                 if (std::dynamic_pointer_cast<op::LSTM>(goe_input))
+            //                 if (std::dynamic_pointer_cast<op::Lstm>(goe_input))
             //                 {
             //                     lstm_in_same_rnn.insert(goe_input);
             //                     std::cout << "goe " << node_lables[j]->get_name()
@@ -1169,7 +1169,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             //         }
             //     }
 
-            //     // push the uniques params as the RNN arguments
+            //     // push the uniques params as the Rnn arguments
             //     if (!unique_params.empty())
             //     {
             //         NodeVector concat_args;
@@ -1192,10 +1192,10 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 
             // for (auto& goe_node : lstm_goes)
             // {
-            //     // now check which LSTM belongs to different layer
+            //     // now check which Lstm belongs to different layer
             //     for (auto& goe_user : goe_node->get_users())
             //     {
-            //         if (std::dynamic_pointer_cast<op::LSTM>(goe_user))
+            //         if (std::dynamic_pointer_cast<op::Lstm>(goe_user))
             //         {
             //             if (lstm_in_same_rnn.count(goe_user) == 0)
             //             {
@@ -1226,7 +1226,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             size_t sequence_len = num_of_lstm_matched;
             size_t feature_size = src_layer->get_shape()[1];
             Shape lstm_output_shape{ht_1_label[0]->get_shape()};
-            auto rnn = std::make_shared<op::RNN>(src_layer,
+            auto rnn = std::make_shared<op::Rnn>(src_layer,
                                                  src_iter,
                                                  weights_layer,
                                                  weights_iter,
@@ -1279,7 +1279,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             // }
 
             // //auto rnn_layer = std::make_shared<op::GetOutputElement>(rnn, 0);
-            // std::cout << "In Recurrent RNN matcher " << std::endl;
+            // std::cout << "In Recurrent Rnn matcher " << std::endl;
             // std::cout << "xt: " << xt_label.size() << " " << xt_label[0]->get_name() << std::endl;
             // std::cout << "ht: " << ht_1_label.size() << " " << ht_1_label[0]->get_name()
             //           << std::endl;

@@ -21,14 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 7)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<LSTM>(new_args.at(0),
+    return make_shared<Lstm>(new_args.at(0),
                              new_args.at(1),
                              new_args.at(2),
                              new_args.at(3),
@@ -38,7 +38,7 @@ shared_ptr<Node> op::LSTM::copy_with_new_args(const NodeVector& new_args) const
                              m_lstm_cell_shape);
 }
 
-op::LSTM::LSTM(std::shared_ptr<Node> input_xt_1,
+op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
                std::shared_ptr<Node> i2h_weights,
                std::shared_ptr<Node> hidden_state_ht_1,
                std::shared_ptr<Node> h2h_weights,
@@ -46,7 +46,7 @@ op::LSTM::LSTM(std::shared_ptr<Node> input_xt_1,
                std::shared_ptr<Node> h2h_bias,
                std::shared_ptr<Node> cell_state_ct_1,
                Shape lstm_cell_shape)
-    : RequiresTensorViewArgs("LSTM",
+    : RequiresTensorViewArgs("Lstm",
                              {input_xt_1,
                               i2h_weights,
                               hidden_state_ht_1,

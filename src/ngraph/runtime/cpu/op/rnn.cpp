@@ -21,13 +21,13 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<RNN>(new_args[0],
+    return make_shared<Rnn>(new_args[0],
                             new_args[1],
                             new_args[2],
                             new_args[3],
@@ -38,7 +38,7 @@ shared_ptr<Node> op::RNN::copy_with_new_args(const NodeVector& new_args) const
                             m_lstm_output_shape);
 }
 
-op::RNN::RNN(std::shared_ptr<Node> src_layer,
+op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              std::shared_ptr<Node> src_iter,
              std::shared_ptr<Node> weights_layer,
              std::shared_ptr<Node> weights_iter,
@@ -47,7 +47,7 @@ op::RNN::RNN(std::shared_ptr<Node> src_layer,
              const int number_of_gates_per_cell,
              const int src_seq_length,
              Shape lstm_output_shape)
-    : RequiresTensorViewArgs("RNN", {src_layer, src_iter, weights_layer, weights_iter, bias})
+    : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_number_of_lstm_cells(number_of_cells)
     , m_number_of_gates_per_cell(number_of_gates_per_cell)
     , m_src_seq_length(src_seq_length)

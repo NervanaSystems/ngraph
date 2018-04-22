@@ -366,15 +366,15 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::RNN)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
             {
-                const ngraph::op::RNN* rnn_node = static_cast<const ngraph::op::RNN*>(node);
+                const ngraph::op::Rnn* rnn_node = static_cast<const ngraph::op::Rnn*>(node);
 
                 // TODO: identify the sequence lengths from the fused Op
                 const int src_seq_length_max = rnn_node->get_src_sequence_length();
                 // TODO: 2 for bi directional , 1 for uni directional
                 const int enc_uni_n_layers = 1;
-                // TODO: LSTM will have 4 gates, GRU and vanilla RNN have different no. of gates
+                // TODO: Lstm will have 4 gates, GRU and vanilla Rnn have different no. of gates
                 const int lstm_n_gates = rnn_node->get_gates_per_cell();
                 ;
                 // TODO: Figure out the feature size from the fused Op
