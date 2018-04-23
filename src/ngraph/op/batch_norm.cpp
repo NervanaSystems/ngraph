@@ -267,15 +267,12 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     if (this->get_training_flag() && get_input_size() == 3)
     {
         std::set<size_t> output_input_found;
-        std::cout << "IF block" << std::endl;
         for (auto goe_input : get_output_inputs(0))
         {
-            std::cout << *goe_input->get_node() << std::endl;
             auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
             goes.at(goe->get_n()) = goe_input->get_node();
             output_input_found.insert(goe->get_n());
         }
-        std::cout << "goes size " << goes.size() << std::endl;
 
         if (output_input_found.count(1))
         {
