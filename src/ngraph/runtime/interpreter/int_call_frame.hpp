@@ -321,19 +321,19 @@ private:
         }
         else if (node_op == "BatchNormBackprop")
         {
-            ngraph::op::BatchNormBackprop* bn_bprop = dynamic_cast<ngraph::op::BatchNormBackprop*>(&node);
-            reference::batch_norm_backprop(
-                bn_bprop->get_eps_value(),
-                reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                reinterpret_cast<T*>(args[2]->get_data_ptr()),
-                reinterpret_cast<T*>(args[3]->get_data_ptr()),
-                reinterpret_cast<T*>(args[4]->get_data_ptr()),
-                reinterpret_cast<T*>(args[5]->get_data_ptr()),
-                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                reinterpret_cast<T*>(out[1]->get_data_ptr()),
-                reinterpret_cast<T*>(out[2]->get_data_ptr()),
-                args[2]->get_shape());
+            ngraph::op::BatchNormBackprop* bn_bprop =
+                dynamic_cast<ngraph::op::BatchNormBackprop*>(&node);
+            reference::batch_norm_backprop(bn_bprop->get_eps_value(),
+                                           reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[5]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                                           args[2]->get_shape());
         }
         else if (node_op == "Broadcast")
         {
