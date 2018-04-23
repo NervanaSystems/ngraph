@@ -35,6 +35,7 @@ set (SRC
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/and.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,6 +71,7 @@ set (SRC
     op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
+    op/or.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
@@ -97,6 +99,7 @@ set (SRC
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
@@ -124,12 +127,10 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
+    runtime/ie/ie_backend.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
-    runtime/interpreter/int_kernels.cpp
-    runtime/interpreter/int_manager.cpp
-    runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
@@ -195,7 +196,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         codegen/execution_engine.cpp
         runtime/cpu/cpu_call_frame.cpp
         runtime/cpu/cpu_backend.cpp
-        runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/cpu_kernel_emitters.cpp
         runtime/cpu/cpu_kernel_utils.cpp
@@ -224,6 +224,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
+        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -269,7 +270,6 @@ endif()
             runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
             runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
@@ -283,6 +283,7 @@ endif()
             runtime/gpu/gpu_invoke.cpp
             runtime/gpu/cudnn_emitter.cpp
             runtime/gpu/cuda_emitter.cpp
+            runtime/gpu/type_info.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

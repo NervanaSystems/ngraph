@@ -27,6 +27,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -62,6 +63,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -851,25 +853,70 @@ namespace ngraph
                     }
                 }
 #else
-                auto axis =
-                    (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
-                std::vector<std::string> arg_names;
-                std::vector<Shape> arg_shapes;
-
-                for (auto arg : args)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    arg_names.push_back(arg.get_name());
-                    arg_shapes.push_back(arg.get_shape());
-                }
+                    std::vector<mkldnn::memory::format> inputs_format;
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
 
-                kernel::emit_concat(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    arg_names,
-                                    out[0].get_name(),
-                                    arg_shapes,
-                                    result_shape,
-                                    axis);
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_format.push_back(
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, i));
+                    }
+
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_data_desc.push_back(
+                            mkldnn_emitter->build_memory_descriptor(args[i], inputs_format[i]));
+                    }
+
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+
+                    size_t concat_index = 0;
+                    size_t concat_dim =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                    concat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    size_t i;
+                    for (i = 0; i < args.size(); i++)
+                    {
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                               << ", " << args[i].get_name() << ");\n";
+                    }
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(concat_index) << ");\n";
+                }
+                else
+                {
+                    auto axis =
+                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+
+                    std::vector<std::string> arg_names;
+                    std::vector<Shape> arg_shapes;
+
+                    for (auto arg : args)
+                    {
+                        arg_names.push_back(arg.get_name());
+                        arg_shapes.push_back(arg.get_shape());
+                    }
+
+                    kernel::emit_concat(writer,
+                                        args[0].get_element_type().c_type_string(),
+                                        arg_names,
+                                        out[0].get_name(),
+                                        arg_shapes,
+                                        result_shape,
+                                        axis);
+                }
 #endif
             }
 
@@ -3602,6 +3649,24 @@ namespace ngraph
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";
                 writer << "               " << shape_size(node->get_shape()) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::And)
+            {
+                writer << "reference::logical_and(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Or)
+            {
+                writer << "reference::logical_or(" << args[0].get_name() << ",\n"
+                       << "                      " << args[1].get_name() << ",\n"
+                       << "                      " << out[0].get_name() << ",\n"
+                       << "                      " << out[0].get_size() << ");\n";
             }
         }
     }

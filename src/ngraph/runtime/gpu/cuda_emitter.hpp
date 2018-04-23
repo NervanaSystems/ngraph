@@ -17,6 +17,7 @@
 #pragma once
 
 #include <array>
+#include "ngraph/codegen/code_writer.hpp"
 
 namespace ngraph
 {
@@ -40,10 +41,21 @@ namespace ngraph
                                  const Shape& output_shape,
                                  const Shape& pad_below,
                                  const Shape& pad_above,
-                                 const Shape& pad_interior);
+                                 const Shape& pad_interior,
+                                 const std::string& pad_value = "");
+
+                size_t build_1d_max_pool(const GPURuntimeContext* ctx,
+                                         const std::array<std::string, 2>& dtypes,
+                                         const Shape& input_shape,
+                                         const Shape& output_shape,
+                                         size_t window_width,
+                                         size_t window_stride);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
+                void print_tensor_from_gpu(codegen::CodeWriter& writer,
+                                           const std::string& tensor_name,
+                                           const Shape& shape);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
