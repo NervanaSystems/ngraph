@@ -191,7 +191,6 @@ TEST(DISABLED_include, complete)
                                     "ngraph/runtime/interpreter/int_backend.hpp",
                                     "ngraph/runtime/interpreter/int_call_frame.hpp",
                                     "ngraph/runtime/interpreter/int_external_function.hpp",
-                                    "ngraph/runtime/interpreter/int_kernels.hpp",
                                     "ngraph/runtime/interpreter/int_manager.hpp",
                                     "ngraph/runtime/reference/abs.hpp",
                                     "ngraph/runtime/reference/acos.hpp",
