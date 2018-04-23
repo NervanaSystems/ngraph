@@ -72,8 +72,8 @@ namespace ngraph
         }
 
         bool Matcher::match_skip(const std::shared_ptr<op::Skip>& any,
-                                const std::shared_ptr<Node>& graph_node,
-                                PatternMap& pattern_map)
+                                 const std::shared_ptr<Node>& graph_node,
+                                 PatternMap& pattern_map)
         {
             auto predicate = any->get_predicate();
 
