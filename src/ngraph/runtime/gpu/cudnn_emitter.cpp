@@ -353,10 +353,13 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
 {
     // Assumes NC{d1...dN} format
     std::stringstream ss;
+    ss.precision(std::numeric_limits<double>::digits10 + 2);
+
     ss << "bn_op" << bn_op << "_dir" << static_cast<int>(direction) << "_ts"
-       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps"
-       << *reinterpret_cast<uint64_t*>(&epsilon);
+       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon;
     std::string hash = ss.str();
+    std::replace(hash.begin(), hash.end(), '.', '_');
+
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
     {
