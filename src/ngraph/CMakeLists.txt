@@ -372,6 +372,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # NGraph
+install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
