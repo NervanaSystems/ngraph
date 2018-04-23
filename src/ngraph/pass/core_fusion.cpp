@@ -29,8 +29,8 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -55,7 +55,7 @@ void pass::CoreFusion::construct_relu_pattern()
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
     };
-    auto skip_broadcast = std::make_shared<pattern::op::Any>(zero, broadcast_pred);
+    auto skip_broadcast = std::make_shared<pattern::op::Skip>(zero, broadcast_pred);
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
     pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
