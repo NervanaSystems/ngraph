@@ -28,6 +28,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
@@ -1074,4 +1075,51 @@ TEST(cpu_fusion, weight_fusion)
     ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
                   new_convert_layout->get_argument(0)),
               cvt_lt_conv);
+}
+
+TEST(cpu_fusion, max_pool_with_indices)
+{
+    Shape shape_a{1, 1, 14};
+    auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{3};
+    auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
+    auto C = std::make_shared<op::Parameter>(element::f32, max_pool->get_shape());
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{max_pool}, NodeVector{C});
+
+    auto dinput = adjoints.backprop_node(input);
+
+    auto df = std::make_shared<Function>(NodeVector{dinput}, op::ParameterVector{input, C});
+
+    auto f = std::make_shared<Function>(NodeVector{max_pool}, op::ParameterVector{input});
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    auto maxpool_goe_output =
+        std::dynamic_pointer_cast<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(maxpool_goe_output);
+    ASSERT_EQ(maxpool_goe_output->get_n(), 0);
+    auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
+    auto maxpool_goe_indices =
+        std::dynamic_pointer_cast<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
+    ASSERT_TRUE(maxpool_goe_indices);
+    ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
 }

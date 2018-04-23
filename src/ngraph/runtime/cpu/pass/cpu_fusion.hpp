@@ -49,6 +49,7 @@ public:
         construct_conv_bias();
         construct_batch_norm_relu();
         construct_conv_relu();
+        construct_max_pool_with_indices();
     }
 
 private:
@@ -63,4 +64,5 @@ private:
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_conv_relu();
+    void construct_max_pool_with_indices();
 };

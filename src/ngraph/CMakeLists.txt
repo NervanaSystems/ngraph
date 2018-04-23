@@ -217,6 +217,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
