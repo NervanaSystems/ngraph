@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <set>
+
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -185,11 +187,6 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     , epsilon(eps)
 
 {
-    if (input->get_shape().size() != 4)
-    {
-        throw ngraph_error("Input expected to be a 4D tensor");
-    }
-
     auto et = input->get_element_type();
     const char* input_names[] = {"gamma", "beta", "input", "mean", "variance", "delta"};
 
@@ -269,16 +266,37 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
     if (this->get_training_flag() && get_input_size() == 3)
     {
+        std::set<size_t> output_input_found;
+        std::cout << "IF block" << std::endl;
         for (auto goe_input : get_output_inputs(0))
         {
+            std::cout << *goe_input->get_node() << std::endl;
             auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
             goes.at(goe->get_n()) = goe_input->get_node();
+            output_input_found.insert(goe->get_n());
         }
-        mean = goes.at(1);
-        var = goes.at(2);
+        std::cout << "goes size " << goes.size() << std::endl;
+
+        if (output_input_found.count(1))
+        {
+            mean = goes.at(1);
+        }
+        else
+        {
+            mean = std::make_shared<GetOutputElement>(shared_from_this(), 1);
+        }
+        if (output_input_found.count(2))
+        {
+            var = goes.at(2);
+        }
+        else
+        {
+            var = std::make_shared<GetOutputElement>(shared_from_this(), 2);
+        }
     }
     else // BatchNorm Training with global stats
     {
+        std::cout << "ELSE block" << std::endl;
         mean = get_argument(3);
         var = get_argument(4);
     }
