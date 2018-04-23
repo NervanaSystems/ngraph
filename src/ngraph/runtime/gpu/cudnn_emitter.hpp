@@ -22,7 +22,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"

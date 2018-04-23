@@ -18,7 +18,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -287,7 +287,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include <cublas_v2.h>
     #include <cuda.h>
     #include <cuda_runtime.h>
-    #include <cudnn_v7.h>
+    #include <cudnn.h>
 
     #include "ngraph/descriptor/input.hpp"
     #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
@@ -756,12 +756,15 @@ using namespace std;
 
     if (codegen_module == nullptr)
     {
-        throw runtime_error("function failed to compile");
+        throw runtime_error("Function failed to compile to bitcode");
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
-    assert(m_compiled_function);
+    if (!m_compiled_function)
+    {
+        throw runtime_error("Function failed to compile");
+    }
 
     m_is_compiled = true;
     if (m_release_function)
