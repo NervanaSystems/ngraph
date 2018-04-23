@@ -116,52 +116,6 @@ TEST(algebraic_simplification, add_broadcast)
     }
 }
 
-TEST(algebraic_simplification, multiply_zero_one)
-{
-    Shape shapes[] = {Shape{}, Shape{2, 2}, Shape{3, 3, 3}};
-    element::Type types[] = {element::i32, element::f32, element::f64};
-    const size_t NUM_TESTS = 2;
-    auto type = element::i32;
-    Shape shape{};
-
-    NodeVector consts = {ngraph::make_constant_from_string("0", type, shape),
-                         ngraph::make_constant_from_string("1", type, shape)};
-
-    auto a = make_shared<op::Parameter>(type, shape);
-    auto b = make_shared<op::Parameter>(type, shape);
-    auto c = make_shared<op::Parameter>(type, shape);
-    std::string vals[] = {"0", "1"};
-    NodeVector expected_results[] = {ngraph::NodeVector{a, b, consts.at(0), c, consts.at(0)},
-                                     ngraph::NodeVector{a, b, a, c, b}};
-
-    for (size_t j = 0; j < NUM_TESTS; j++)
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
-        pass_manager.register_pass<pass::AlgebraicSimplification>();
-        pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
-        auto iconst = consts.at(j);
-        auto multiply_a_0 = a * iconst;
-        auto multiply_a_0_0 = multiply_a_0 * iconst;
-        auto multiply_b_0 = b * iconst;
-        auto multiply_b_0_0 = multiply_b_0 * iconst;
-
-        auto f =
-            std::make_shared<Function>(ngraph::NodeVector{a, b, multiply_a_0_0, c, multiply_b_0_0},
-                                       op::ParameterVector{a, b, c});
-        pass_manager.run_passes(f);
-
-        ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
-        auto expected = expected_results[j];
-        auto results = f->get_results();
-        for (size_t i = 0; i < results.size(); i++)
-        {
-            ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
-        }
-    }
-}
-
 TEST(algebraic_simplification, zero_plus_zero_commutativity)
 {
     Shape shape{};
