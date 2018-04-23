@@ -184,6 +184,10 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
 
+                size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                                    const mkldnn::memory::desc& result_desc,
+                                    const size_t concat_dim);
+
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;

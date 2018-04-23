@@ -29,3 +29,8 @@ TEST(backend_api, registered_devices)
 
     EXPECT_TRUE(contains(devices, "INTERPRETER"));
 }
+
+TEST(backend_api, invalid_name)
+{
+    ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
+}

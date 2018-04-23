@@ -48,11 +48,6 @@ namespace ngraph
             /// @returns A vector of all registered devices.
             static std::vector<std::string> get_registered_devices();
 
-            /// @brief Query the list of available subdevices of a particular device.
-            /// @param type The name of a registered backend, such as "CPU" or "GPU"
-            /// @returns A vector of available devices of the specified type.
-            static std::vector<size_t> get_subdevices(const std::string& type);
-
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
 
@@ -80,10 +75,15 @@ namespace ngraph
             virtual std::vector<PerformanceCounter>
                 get_performance_data(std::shared_ptr<Function> func) const;
 
+            static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
+
         protected:
             void validate_call(std::shared_ptr<const Function> func,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
+
+        private:
+            static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
         };
     }
 }
