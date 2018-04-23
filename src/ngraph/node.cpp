@@ -81,12 +81,12 @@ void Node::set_value_type_checked(const shared_ptr<const TensorViewType>& value_
     set_value_type_checked(value_type->get_element_type(), value_type->get_shape());
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::vector<descriptor::Output>& Node::get_outputs()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::vector<descriptor::Output>& Node::get_outputs() const
 {
     return m_outputs;
 }
