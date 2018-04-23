@@ -18,7 +18,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -287,7 +287,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include <cublas_v2.h>
     #include <cuda.h>
     #include <cuda_runtime.h>
-    #include <cudnn_v7.h>
+    #include <cudnn.h>
 
     #include "ngraph/descriptor/input.hpp"
     #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"

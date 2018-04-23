@@ -1,8 +1,8 @@
 .. framework-integration-guides:
 
-#############################
-Framework Integration Guides
-#############################
+###############################
+Integrate Supported Frameworks
+###############################
 
 * :ref:`neon_intg`
 * :ref:`mxnet_intg`
