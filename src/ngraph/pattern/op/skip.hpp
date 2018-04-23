@@ -25,14 +25,14 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Any allows users to specify unexpected nodes in a pattern
+            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
             /// and skip them if a predicate condition is satisfied.
             ///
-            class Any : public Pattern
+            class Skip : public Pattern
             {
             public:
-                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Any", NodeVector{arg}, predicate)
+                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern("Skip", NodeVector{arg}, predicate)
                 {
                     add_output(arg->get_element_type(), arg->get_shape());
                 }
