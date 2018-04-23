@@ -50,29 +50,29 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
     auto iconst = ngraph::make_zero(element::i32, Shape{});
     auto label = std::make_shared<pattern::op::Label>(iconst);
-    auto const_label = std::make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
-    auto matcher = create_binary_matcher<op::Multiply>(label, const_label);
+    auto const_label_zero =
+        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
+    auto const_label_one =
+        std::make_shared<pattern::op::Label>(iconst, ngraph::is_one, NodeVector{iconst});
+    auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
+    auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
 
-    if (matcher->match(n))
+    if (matcher_const_zero->match(n))
     {
-        auto pattern_map = matcher->get_pattern_map();
-        auto x = pattern_map[label];
-        auto cnst = pattern_map[const_label];
-
-        if (ngraph::is_zero(cnst))
-        {
-            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << cnst->get_name();
-            ngraph::replace_node(n, cnst);
-            return true;
-        }
-
-        if (ngraph::is_one(cnst))
-        {
-            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            ngraph::replace_node(n, x);
-            return true;
-        }
+        auto cnst = matcher_const_zero->get_pattern_map()[const_label_zero];
+        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << cnst->get_name();
+        ngraph::replace_node(n, cnst);
+        return true;
     }
+
+    if (matcher_const_one->match(n))
+    {
+        auto x = matcher_const_one->get_pattern_map()[label];
+        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
+        ngraph::replace_node(n, x);
+        return true;
+    }
+
     return false;
 }
 
