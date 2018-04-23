@@ -591,6 +591,14 @@ TEST(type_prop, multiply_bad_arguments)
                 });
 }
 
+TEST(type_prop, subtract_bad_arguments)
+{
+    test_binary("Subtract",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::Subtract>(x, y);
+                });
+}
+
 //
 // Tests for binary elementwise logical ops.
 //
