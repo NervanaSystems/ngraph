@@ -417,6 +417,7 @@ void codegen::StaticCompiler::configure_search_path()
 #ifdef CUDA_HEADER_PATHS
     // Only needed for GPU backend
     add_header_search_path(CUDA_HEADER_PATHS);
+    add_header_search_path(CUDNN_HEADER_PATHS);
 #endif
 
 #ifdef NGRAPH_DISTRIBUTED
