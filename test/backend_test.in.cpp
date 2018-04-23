@@ -7926,6 +7926,7 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{1, 2, 2, 2};
@@ -7990,6 +7991,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
@@ -8045,6 +8047,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
 
 TEST(${BACKEND_NAME}, bn_bprop_n4c3h2w2)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{4, 3, 2, 2};
@@ -8142,6 +8145,7 @@ TEST(${BACKEND_NAME}, bn_bprop_n4c3h2w2)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
@@ -8193,6 +8197,7 @@ TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
 
 TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
 {
+    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     SKIP_TEST_FOR("INTERPRETER", "${BACKEND_NAME}");
     auto input_shape = Shape{2, 2, 2, 1};
