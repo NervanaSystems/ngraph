@@ -409,7 +409,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
 
         // currently not using the cudnn moving average
         // calculation so this factor needs to be set to 1.0
-        double exp_avg_factor = 1.0f;
+        double exp_avg_factor = 1.0;
 
         // factor to convert unbiased variance to biased variance estimate
         // mini-batch statistics (variance of the sample) should be used
@@ -477,8 +477,6 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                 NULL); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
         }};
         break;
-    }
-    default: { throw std::runtime_error("No default case for CUDNN BatchNorm");
     }
     }
 
