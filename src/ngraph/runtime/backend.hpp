@@ -47,6 +47,7 @@ namespace ngraph
             /// @brief Query the list of registered devices
             /// @returns A vector of all registered devices.
             static std::vector<std::string> get_registered_devices();
+            static std::vector<std::string> get_registered_device_factories();
 
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
@@ -75,7 +76,8 @@ namespace ngraph
             virtual std::vector<PerformanceCounter>
                 get_performance_data(std::shared_ptr<Function> func) const;
 
-            static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
+            static bool register_backend_factory(const std::string& name,
+                                                 std::function<std::shared_ptr<Backend>()> factory);
 
         protected:
             void validate_call(std::shared_ptr<const Function> func,
@@ -84,6 +86,8 @@ namespace ngraph
 
         private:
             static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
+            static std::unordered_map<std::string, std::function<std::shared_ptr<Backend>()>>&
+                get_backend_factory_map();
         };
     }
 }
