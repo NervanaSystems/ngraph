@@ -50,6 +50,7 @@
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
@@ -81,6 +82,7 @@
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
+#include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
@@ -169,6 +171,13 @@ namespace ngraph
                                                 static_cast<int>(args[0]->get_element_count()));
                     }
 #endif
+                    else if (node_op == "And")
+                    {
+                        reference::logical_and(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                               reinterpret_cast<char*>(args[1]->get_data_ptr()),
+                                               reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                               out[0]->get_element_count());
+                    }
                     else if (node_op == "Asin")
                     {
                         reference::asin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -515,6 +524,13 @@ namespace ngraph
                                               args[0]->get_shape(),
                                               out[0]->get_shape(),
                                               oh->get_one_hot_axis());
+                    }
+                    else if (node_op == "Or")
+                    {
+                        reference::logical_or(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                              reinterpret_cast<char*>(args[1]->get_data_ptr()),
+                                              reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                              out[0]->get_element_count());
                     }
                     else if (node_op == "Parameter")
                     {
