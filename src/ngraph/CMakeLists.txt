@@ -35,6 +35,7 @@ set (SRC
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/and.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,6 +71,7 @@ set (SRC
     op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
+    op/or.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
@@ -97,11 +99,13 @@ set (SRC
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/algebraic_simplification.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -283,6 +287,8 @@ endif()
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
 
 endif()

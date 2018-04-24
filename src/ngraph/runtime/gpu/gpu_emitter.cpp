@@ -147,31 +147,31 @@ namespace ngraph
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[1].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 
@@ -240,18 +240,19 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle, " << args0
-                       << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
+                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_"
+                          "handle, "
+                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
-                       << "&workSpaceSizeInBytes);\n";
+                       << "&workSpaceSizeInBytes));\n";
 
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-                writer << "cudnnConvolutionForward(*ctx->cudnn_handle, "
+                writer << "CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
@@ -324,19 +325,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle, "
+                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->"
+                          "cudnn_handle, "
                        << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
-                       << "&workSpaceSizeInBytes);\n";
+                       << "&workSpaceSizeInBytes));\n";
 
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
-                writer << "cudnnConvolutionBackwardData(*ctx->cudnn_handle, "
+                writer << "CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
 
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
@@ -411,19 +413,20 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                                                         data_type);
 
                 writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle, "
+                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->"
+                          "cudnn_handle, "
                        << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
                        << conv_algo << ", "
-                       << "&workSpaceSizeInBytes);\n";
+                       << "&workSpaceSizeInBytes));\n";
 
                 writer << "void* workspace = "
                           "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
 
-                writer << "cudnnConvolutionBackwardFilter(*ctx->cudnn_handle, "
+                writer << "CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*ctx->cudnn_handle, "
                        << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
                        << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
                        << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << ");\n";
+                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
                 writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
                 writer.block_end();
             }
@@ -447,14 +450,14 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     writer.block_begin("  // " + node->get_name());
                     writer << "int count = " << second.get_size() << ";\n";
-                    writer << "cublasScopy("
+                    writer << "CUBLAS_SAFE_CALL(cublasScopy("
                            << "*ctx->cublas_handle,"
                            << "count ," << second.get_name() << ","
-                           << "1," << out[0].get_name() << ", 1);\n";
-                    writer << "cublasSscal("
+                           << "1," << out[0].get_name() << ", 1));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSscal("
                            << "*ctx->cublas_handle,"
                            << "count ," << first.get_name() << "," << out[0].get_name()
-                           << ", 1);\n";
+                           << ", 1));\n";
                     writer.block_end();
                     return;
                 }
@@ -483,11 +486,11 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                     }
                     writer.block_begin("  // " + node->get_name());
-                    writer << "cublasSdot("
+                    writer << "CUBLAS_SAFE_CALL(cublasSdot("
                            << "*ctx->cublas_handle," << args[0].get_size() << ","
                            << args[0].get_name() << ","
                            << "1," << args[1].get_name() << ","
-                           << "1," << out[0].get_name() << ");\n";
+                           << "1," << out[0].get_name() << "));\n";
                     writer.block_end();
                 }
                 // matrix vector
@@ -497,9 +500,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer.block_begin("  // " + node->get_name());
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0;\n";
-                    writer
-                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-                    writer << "cublasSgemv("
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_HOST));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSgemv("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
                            << "&alpha," // Alpha
@@ -508,9 +511,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "1,"
                            << "&beta," // beta
                            << out[0].get_name() << ","
-                           << "1);\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_DEVICE);\n";
+                           << "1));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE));\n";
                     writer.block_end();
                 }
                 // cases that can be treat as matrix multiply
@@ -570,9 +573,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "int m = " << m << ";\n";
                     writer << "int n = " << n << ";\n";
                     writer << "int k = " << k << ";\n";
-                    writer
-                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-                    writer << "cublasSgemm("
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_HOST));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSgemm("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_N,"
                            << "CUBLAS_OP_N,"
@@ -585,9 +588,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "k,"
                            << "&beta," // beta
                            << out[0].get_name() << ","
-                           << "n);\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_DEVICE);\n";
+                           << "n));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE));\n";
                     writer.block_end();
                 }
             }
@@ -604,31 +607,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MAX,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[1].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 
@@ -644,31 +647,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MIN,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[1].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 
@@ -684,31 +687,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 
@@ -816,9 +819,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                     // TODO Assert arg0_shape[0] == arg1_shape[0]?
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta = 0;\n";
-                    writer
-                        << "cublasSetPointerMode(*ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-                    writer << "cublasSgeam("
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_HOST));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSgeam("
                            << "*ctx->cublas_handle,"
                            << "CUBLAS_OP_T,"
                            << "CUBLAS_OP_T," << arg_shape[0] << "," << arg_shape[1] << ","
@@ -826,9 +829,9 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                            << args[0].get_name() << "," << arg_shape[1] << ","
                            << "&beta," // beta
                            << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name()
-                           << "," << result_shape[1] << ");\n";
-                    writer << "cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_DEVICE);\n";
+                           << "," << result_shape[1] << "));\n";
+                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
+                              "CUBLAS_POINTER_MODE_DEVICE));\n";
                 }
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
@@ -980,31 +983,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MUL,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[1].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 
@@ -1051,31 +1054,31 @@ cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
 cudnnTensorDescriptor_t descriptor;
-cudnnCreateTensorDescriptor(&descriptor);
-cudnnSetTensor4dDescriptor(descriptor,
+CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
                             /*batch_size=*/1,
                             /*channels=*/1,
                             /*image_height=*/1,
-                            /*image_width=*/count);
+                            /*image_width=*/count));
 
 cudnnOpTensorDescriptor_t opTensorDesc;
-cudnnCreateOpTensorDescriptor(&opTensorDesc);
-cudnnSetOpTensorDescriptor(opTensorDesc,
+CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_SQRT,
                             CUDNN_DATA_FLOAT,
-                            CUDNN_NOT_PROPAGATE_NAN);
+                            CUDNN_NOT_PROPAGATE_NAN));
     )";
 
-                writer << "cudnnOpTensor(*ctx->cudnn_handle,"
+                writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
                        << "&alpha1,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&alpha2,"
                        << "descriptor," << args[0].get_name() << ","
                        << "&beta,"
-                       << "descriptor," << out[0].get_name() << ");\n";
+                       << "descriptor," << out[0].get_name() << "));\n";
                 writer.block_end();
             }
 

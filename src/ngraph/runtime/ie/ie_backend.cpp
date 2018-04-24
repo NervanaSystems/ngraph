@@ -17,6 +17,9 @@
 #include "ngraph/runtime/ie/ie_backend.hpp"
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -145,10 +148,22 @@ bool runtime::ie::IE_Backend::call(shared_ptr<Function> function,
         }
 
         // get op type
-        element::Type type = op->get_element_type();
-        if (!op->get_inputs().empty())
+        element::Type type;
+        if (dynamic_pointer_cast<op::util::BinaryElementwiseComparison>(op) ||
+            dynamic_pointer_cast<op::Select>(op))
+        {
+            // Get the type of the second input, not the first
+            // All BinaryElementwiseComparision ops have the same type for inputs
+            // Select has bool for first input and the type we are interested in for the second
+            type = op->get_inputs().at(1).get_tensor().get_element_type();
+        }
+        else if (dynamic_pointer_cast<op::Convert>(op))
         {
             type = op->get_inputs().at(0).get_tensor().get_element_type();
+        }
+        else
+        {
+            type = op->get_element_type();
         }
 
         generate_calls(type, *op, op_outputs, op_inputs);

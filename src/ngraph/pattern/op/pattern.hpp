@@ -32,7 +32,7 @@ namespace ngraph
             class Pattern : public Node
             {
             public:
-                /// \brief \p a base class for \sa Any and \sa Label
+                /// \brief \p a base class for \sa Skip and \sa Label
                 ///
                 Pattern(const std::string& type_name, const NodeVector& nodes, Predicate pred)
                     : Node(type_name, nodes)
