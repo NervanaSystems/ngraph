@@ -285,8 +285,17 @@ endif()
             runtime/gpu/cuda_emitter.cpp
             runtime/gpu/type_info.cpp
             )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+
+	  # compile cuda sources seperately
+	  # via nvcc
+	  set (CUDA_SRC
+	    runtime/gpu/kernels/batchnorm.cu.cpp
+	    )
+	  set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+	  cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+
+          set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+            "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
     endif()
 
 endif()
@@ -296,7 +305,7 @@ if (NGRAPH_NNP_ENABLE)
     include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
 endif()
 
-add_library(ngraph SHARED ${SRC})
+add_library(ngraph SHARED ${SRC} ${CUDA_OBJ})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -356,7 +365,8 @@ endif()
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    find_library(CUDA_cudart_LIBRARY cudart /usr/local/cuda/lib64)
+    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_cudart_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 if(MPI_CXX_INCLUDE_PATH)
