@@ -1123,3 +1123,81 @@ TEST(cpu_fusion, max_pool_with_indices)
     ASSERT_TRUE(maxpool_goe_indices);
     ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
 }
+
+TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
+{
+    Shape shape_a{1, 4, 4, 4};
+    Shape maxpool_shape{1, 4, 3, 3};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = std::make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
+    auto f = std::make_shared<Function>(maxpool, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+
+    vector<float> dataInput{11.f, 31.f, 40.f, 47.f, 13.f, 61.f, 48.f, 59.f, 17.f, 39.f, 64.f,
+                            62.f, 45.f, 55.f, 36.f, 19.f, 65.f, 33.f, 49.f, 30.f, 56.f, 41.f,
+                            53.f, 58.f, 22.f, 35.f, 52.f, 50.f, 63.f, 54.f, 12.f, 26.f, 44.f,
+                            21.f, 69.f, 24.f, 46.f, 25.f, 51.f, 29.f, 72.f, 15.f, 73.f, 10.f,
+                            16.f, 37.f, 70.f, 32.f, 28.f, 66.f, 57.f, 27.f, 60.f, 42.f, 43.f,
+                            71.f, 18.f, 38.f, 67.f, 68.f, 14.f, 20.f, 34.f, 23.f};
+
+    vector<float> expected{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 12.0f, 0.0f, 4.0f, 0.0f, 0.0f,  16.0f,
+                           0.0f, 0.0f, 4.0f, 0.0f, 0.0f, 4.0f,  0.0f, 0.0f, 0.0f, 4.0f,  0.0f,
+                           8.0f, 8.0f, 0.0f, 0.0f, 4.0f, 0.0f,  4.0f, 4.0f, 0.0f, 0.0f,  0.0f,
+                           0.0f, 8.0f, 0.0f, 4.0f, 0.0f, 0.0f,  0.0f, 8.0f, 0.0f, 16.0f, 0.0f,
+                           0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 8.0f,  0.0f, 0.0f, 4.0f, 0.0f,  0.0f,
+                           8.0f, 0.0f, 4.0f, 8.0f, 4.0f, 0.0f,  0.0f, 0.0f, 0.0f};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = std::make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    backend->call(df, {output}, {input, ep});
+    std::cout << vector_to_string(read_vector<float>(output));
+    ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+TEST(cpu_fusion, backwards_maxpool_reshape)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    Shape shape_a{1, 4, 4, 4}; //in CHWN
+    Shape maxpool_shape{1, 4, 3, 3};
+
+    auto A = std::make_shared<op::Parameter>(element::i32, shape_a);
+    auto reshape = std::make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
+    auto f = std::make_shared<Function>(reshape, op::ParameterVector{A});
+
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
+    vector<int> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+
+    vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
+                          13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
+                          17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
+                          45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
+
+    copy_data(input, dataInput);
+    backend->call(f, {output}, {input});
+    std::cout << vector_to_string(read_vector<int>(output));
+}

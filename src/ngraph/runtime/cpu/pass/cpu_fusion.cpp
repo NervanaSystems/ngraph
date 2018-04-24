@@ -918,6 +918,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_max_pool_with_indices()
         std::cout << m_max_pool_bprop->get_name() << std::endl;
         std::cout << m_max_pool_bprop->get_argument(0)->get_name() << std::endl;
 
+        if (m_max_pool_bprop->get_shape().size() != 4 ||
+            m_max_pool_bprop->get_window_shape().size() != 2 ||
+            m_max_pool_bprop->get_input_element_type(0) != element::f32)
+        {
+            std::cout << "MKLDNN doesn't support inputs of given shape type";
+            return false;
+        }
+
         //find the original MaxPool now
         std::shared_ptr<op::MaxPool> m_max_pool;
         for (auto u : pattern_map[data]->get_users())
