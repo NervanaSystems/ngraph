@@ -195,7 +195,7 @@ def data_str(data):
     return result
 
 def emit_test(t,f):
-    test_name, enable_test_flag, input_batch_shape, filters_shape, move_strides, filter_dilation, below_pads, above_pads, data_dilation, bprop = t
+    test_name, skip_test_for_backends, input_batch_shape, filters_shape, move_strides, filter_dilation, below_pads, above_pads, data_dilation, bprop = t
 
     input_batch_literals = random_array_float_literals(reduce(mul,input_batch_shape))
     filters_literals = random_array_float_literals(reduce(mul,filters_shape))
@@ -204,11 +204,11 @@ def emit_test(t,f):
     input_batch_array.shape = input_batch_shape
     filters_array = np.array(map(lambda s: np.float32(s),filters_literals))
     filters_array.shape = filters_shape
-    skip_test = '//skip tests for specific platforms(ex. GPU) if any' 
-    if (enable_test_flag & 1) == 0:
-        skip_test += '''\n    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");'''
-    skip_test += '\n    //end skip tests' 
-    
+    skip_test_str = '//skip tests for specific platforms(ex. GPU) if any'
+    for backend in skip_test_for_backends:
+        skip_test_str += '''\n    SKIP_TEST_FOR("''' + backend + '''", "${BACKEND_NAME}");'''
+    skip_test_str += '\n    //end skip tests'
+
     print ("Generating convolution test '%s'..." % test_name)
 
     output_batch_data = convolution_ref(input_batch_array,filters_array,move_strides,filter_dilation,below_pads,above_pads,data_dilation)
@@ -262,7 +262,7 @@ TEST (${BACKEND_NAME}, %s)
 }
 '''
     f.write (template % (test_name,
-                         skip_test,
+                         skip_test_str,
                          shape_str(input_batch_shape),
                          shape_str(filters_shape),
                          shape_str(output_batch_data.shape),
@@ -277,50 +277,50 @@ TEST (${BACKEND_NAME}, %s)
                          bprop));
 
 #                                                                              filter                                      data
-#         test name                          enable flag  batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
+#         test name                              skip list   batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
 tests = [
-         ("convolution_2d_1item",                  1, (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_1_1x1_1",   1, (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_2_3x4_5",   0, (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     "true"),
-         ("convolution_2d_2items",                 1, (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided",         1, (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided_padded",  0, (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     "true"),
+         ("convolution_2d_1item",                  [],      (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_1item_padded_1_1x1_1",   [],      (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     "true"),
+         ("convolution_2d_1item_padded_2_3x4_5",   ["GPU"], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     "true"),
+         ("convolution_2d_2items",                 [],      (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_strided",         [],      (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_strided_padded",  ["GPU"], (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     "true"),
          ("convolution_2d_2items_strided_padded_same",
-                                                   1, (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated",         1, (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated_padded",  0, (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     "true"),
-         ("convolution_3d_2items",                 1, (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   "true"),
-         ("convolution_4d_2items",                 0, (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items",                 0, (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_padded_neg",      0, (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided",         0, (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_dilated",         0, (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided_dilated", 0, (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+                                                   [],      (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     "true"),
+         ("convolution_2d_2items_dilated",         [],      (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_dilated_padded",  ["GPU"], (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     "true"),
+         ("convolution_3d_2items",                 [],      (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   "true"),
+         ("convolution_4d_2items",                 ["GPU"], (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items",                 ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_padded_neg",      ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "false"),
+         ("convolution_4d_4items_strided",         ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_dilated",         ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_strided_dilated", ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded",
-                                                   0, (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "false"),
+                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded_neg",
-                                                   0, (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "false"),
+                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded_same",
-                                                   0, (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "false"),
-         ("convolution_2d_1item_1o1i_data_dilated",0, (1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o1i_data_dilated",0, (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o2i_data_dilated",0, (1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_5o3i_data_dilated",0, (1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_2item_5o3i_data_dilated",0, (2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "false"),
+         ("convolution_2d_1item_1o1i_data_dilated",["GPU"], (1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_2o1i_data_dilated",["GPU"], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_2o2i_data_dilated",["GPU"], (1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_5o3i_data_dilated",["GPU"], (1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_2item_5o3i_data_dilated",["GPU"], (2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
          ("convolution_2d_8item_large_5o3i_data_dilated",
-                                                   0, (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   ["GPU"], (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
          ("convolution_2d_8item_large_5o3i_uneven_filter_data_dilated",
-                                                   0, (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   ["GPU"], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
          ("convolution_2d_8item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   0, (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "false"),
+                                                   ["GPU"], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "false"),
          ("convolution_3d_2item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   0, (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "false"),
+                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "false"),
          ("convolution_3d_1item_large_5o3i_padded_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   0, (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   ["GPU"], (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   0, (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
-                                                   0, (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
         ]
 
 def main():
