@@ -37,5 +37,6 @@ runtime::gpu::CudaContextManager::CudaContextManager()
 
 runtime::gpu::CudaContextManager::~CudaContextManager()
 {
+    cudaDeviceReset();
     CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
 }

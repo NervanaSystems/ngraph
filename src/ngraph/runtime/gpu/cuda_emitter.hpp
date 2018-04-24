@@ -44,12 +44,18 @@ namespace ngraph
                                  const Shape& pad_interior,
                                  const std::string& pad_value = "");
 
-                size_t build_1d_max_pool(const GPURuntimeContext* ctx,
-                                         const std::array<std::string, 2>& dtypes,
-                                         const Shape& input_shape,
-                                         const Shape& output_shape,
-                                         size_t window_width,
-                                         size_t window_stride);
+		    size_t build_1d_max_pool(const GPURuntimeContext* ctx,
+					     const std::array<std::string, 2>& dtypes,
+					     const Shape& input_shape,
+					     const Shape& output_shape,
+					     size_t window_width,
+					     size_t window_stride);
+		    size_t build_batchnorm(const GPURuntimeContext* ctx);
+
+		    // size_t build_batchnorm(const GPURuntimeContext* ctx,
+		    // 			   const std::array<std::string, 2>& dtypes,
+		    // 			   const Shape& input_shape,
+		    // 			   const Shape& output_shape);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);

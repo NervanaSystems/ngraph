@@ -99,9 +99,15 @@
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
+
+
 using namespace std;
 namespace ngraph
 {
+    namespace op
+    {
+        class BatchNormPTX{};
+    }
     namespace runtime
     {
         namespace gpu
@@ -1413,6 +1419,21 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
                 writer.block_end();
+            }
+
+
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormPTX)
+            {
+                auto& cuda_emitter =
+                    external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                auto index = cuda_emitter->build_batchnorm(external_function->ctx().get());
+		writer.block_begin();
+		writer << "gpu::invoke_primitive(ctx, " << index << ", nullptr, nullptr);\n";
+		writer.block_end();
+		writer << "exit(0);\n";
             }
 
             template <>

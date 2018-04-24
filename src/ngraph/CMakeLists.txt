@@ -289,7 +289,7 @@ endif()
 	  # compile cuda sources seperately
 	  # via nvcc
 	  set (CUDA_SRC
-	  #  runtime/gpu/kernels/example.cu.cpp
+	    runtime/gpu/kernels/batchnorm.cu.cpp
 	    )
 	  set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
 	  cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)

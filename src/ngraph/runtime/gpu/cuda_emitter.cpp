@@ -24,6 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
 
@@ -278,6 +279,44 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     primitive_index = this->m_primitive_emitter->insert(pool);
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_batchnorm(const GPURuntimeContext* ctx)/*
+                                                     const std::array<std::string, 2>& dtypes,
+                                                     const Shape& input_shape,
+                                                     const Shape& output_shape)*/
+{
+    uint32_t nthreads = 1;
+    codegen::CodeWriter writer;
+
+    std::string hash = "divide_test";
+
+
+
+
+
+   auto compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
+
+    auto idx = new gpu::primitive{[=](void** inputs, void** outputs) {
+            void* args_list[] = {&inputs[0], &outputs[0]};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<unsigned int>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }};
+
+    size_t primitive_index = this->m_primitive_emitter->insert(idx);
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+
 }
 
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
