@@ -296,6 +296,10 @@ endif()
 
           set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
             "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
 
 endif()
