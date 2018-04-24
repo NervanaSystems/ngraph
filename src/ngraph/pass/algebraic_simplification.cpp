@@ -40,7 +40,7 @@ static std::shared_ptr<pattern::Matcher>
     auto bcst_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
     };
-    auto bcst = std::make_shared<pattern::op::Any>(const_label, bcst_pred);
+    auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
     auto matcher = std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst), nullptr);
     return matcher;
 }
