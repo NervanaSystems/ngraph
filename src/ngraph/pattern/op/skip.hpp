@@ -16,10 +16,8 @@
 
 #pragma once
 
-#include <functional>
-
 #include "ngraph/node.hpp"
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
 namespace ngraph
 {
@@ -27,28 +25,17 @@ namespace ngraph
     {
         namespace op
         {
-            using Predicate = std::function<bool(std::shared_ptr<Node>)>;
-
-            class Pattern : public Node
+            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
+            /// and skip them if a predicate condition is satisfied.
+            ///
+            class Skip : public Pattern
             {
             public:
-                /// \brief \p a base class for \sa Skip and \sa Label
-                ///
-                Pattern(const std::string& type_name, const NodeVector& nodes, Predicate pred)
-                    : Node(type_name, nodes)
-                    , m_predicate(pred)
+                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern("Skip", NodeVector{arg}, predicate)
                 {
+                    add_output(arg->get_element_type(), arg->get_shape());
                 }
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override
-                {
-                    throw ngraph_error("Uncopyable");
-                }
-
-                Predicate get_predicate() const { return m_predicate; }
-            protected:
-                std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };
         }
     }

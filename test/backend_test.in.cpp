@@ -5713,23 +5713,34 @@ TEST(${BACKEND_NAME}, mkldnn_layouts)
                                               Strides{1, 1});
     Shape pool_shape{1, 1};
     auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
-    auto f = make_shared<Function>(pool1, op::ParameterVector{A, B});
+    auto pool1_result = make_shared<op::Result>(pool1);
+    // Request result in default layout
+    pool1_result->set_needs_default_layout(true);
+    auto f = make_shared<Function>(ResultVector{pool1_result}, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
     vector<float> input(64, 1.0f);
-    copy_data(a, input);
-    auto b = backend->create_tensor(element::f32, shape_b);
-    vector<float> weights(512, 1.0f);
-    copy_data(b, weights);
-    auto result = backend->create_tensor(element::f32, shape_r);
+    vector<float> weights;
+    vector<float> rv(128);
+    for (int i = 0; i < 128; i++)
+        weights.push_back(0.0f);
+    for (int i = 0; i < 384; i++)
+        weights.push_back(1.0f);
 
-    vector<float> expected_result(128, 16.0f);
+    auto a = backend->create_tensor(element::f32, shape_a, input.data());
+    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
+    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
+
+    vector<float> expected_result;
+    for (int i = 0; i < 32; i++)
+        expected_result.push_back(0.0f);
+    for (int i = 0; i < 96; i++)
+        expected_result.push_back(16.0f);
 
     backend->call(f, {result}, {a, b});
-    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+
+    EXPECT_EQ(vector<float>{expected_result}, rv);
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
@@ -7914,4 +7925,44 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
     auto c = backend->create_tensor(element::f32, shape);
 
     EXPECT_ANY_THROW(backend->call(f, {a}, {c, b}));
+}
+
+TEST(${BACKEND_NAME}, logical_and)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::And>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{0, 0, 1, 0, 0, 0, 1, 0}), read_vector<char>(result));
+}
+
+TEST(${BACKEND_NAME}, logical_or)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Or>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
 }

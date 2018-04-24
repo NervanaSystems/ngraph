@@ -37,8 +37,8 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
@@ -402,11 +402,11 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(a, a));
 
     auto abs = make_shared<op::Abs>(a);
-    auto any = std::make_shared<pattern::op::Any>(a);
+    auto any = std::make_shared<pattern::op::Skip>(a);
     ASSERT_TRUE(n.match(any, abs));
 
     auto any_false =
-        std::make_shared<pattern::op::Any>(a, [](std::shared_ptr<Node> no) { return false; });
+        std::make_shared<pattern::op::Skip>(a, [](std::shared_ptr<Node> no) { return false; });
     ASSERT_TRUE(n.match(any_false, a));
 
     auto pattern = std::make_shared<pattern::op::Label>(a);
