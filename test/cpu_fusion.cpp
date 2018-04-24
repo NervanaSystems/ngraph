@@ -1170,34 +1170,5 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     }
 
     backend->call(df, {output}, {input, ep});
-    std::cout << vector_to_string(read_vector<float>(output));
     ASSERT_TRUE(read_vector<float>(output) == expected);
-}
-
-TEST(cpu_fusion, backwards_maxpool_reshape)
-{
-    auto backend = runtime::Backend::create("CPU");
-
-    Shape shape_a{1, 4, 4, 4}; //in CHWN
-    Shape maxpool_shape{1, 4, 3, 3};
-
-    auto A = std::make_shared<op::Parameter>(element::i32, shape_a);
-    auto reshape = std::make_shared<op::Reshape>(
-        A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
-    auto f = std::make_shared<Function>(reshape, op::ParameterVector{A});
-
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
-    vector<int> dataEp(shape_size(maxpool_shape), 4);
-
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
-
-    vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
-                          13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
-                          17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
-                          45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
-
-    copy_data(input, dataInput);
-    backend->call(f, {output}, {input});
-    std::cout << vector_to_string(read_vector<int>(output));
 }

@@ -911,18 +911,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_max_pool_with_indices()
         NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                      << m.match_root()->get_name();
 
-        //TODO: perform checks to only do this fusion if MKLDNN supports this shape
-
         auto pattern_map = m.get_pattern_map();
         auto m_max_pool_bprop = std::dynamic_pointer_cast<op::MaxPoolBackprop>(m.match_root());
-        std::cout << m_max_pool_bprop->get_name() << std::endl;
-        std::cout << m_max_pool_bprop->get_argument(0)->get_name() << std::endl;
 
         if (m_max_pool_bprop->get_shape().size() != 4 ||
             m_max_pool_bprop->get_window_shape().size() != 2 ||
             m_max_pool_bprop->get_input_element_type(0) != element::f32)
         {
-            std::cout << "MKLDNN doesn't support inputs of given shape type";
+            NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
             return false;
         }
 
@@ -946,8 +942,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_max_pool_with_indices()
 
         if (!m_max_pool)
         {
-            std::cout << "MaxPool for " << pattern_map[data]->get_name() << " and "
-                      << m_max_pool_bprop->get_name() << " not found" << std::endl;
             NGRAPH_DEBUG << "MaxPool for " << pattern_map[data]->get_name() << " and "
                          << m_max_pool_bprop->get_name() << " not found";
         }

@@ -125,21 +125,6 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
-static string print_tensor(const string& tensor, size_t count, const string& type)
-{
-    stringstream ss;
-    ss << "{\n";
-    ss << type << " * tmp = (" << type << "*)" << tensor << ";\n";
-    ss << "std::cout << \"[\";\n";
-    ss << "for (size_t i = 0; i < " << count << "; i++)\n";
-    ss << "{\n";
-    ss << "std::cout << tmp[i] << \",\";\n";
-    ss << "}\n";
-    ss << "std::cout << \"]\";\n;";
-    ss << "}\n";
-    return ss.str();
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -2728,23 +2713,8 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[1].get_name() << ");\n";
 
-                    writer << "std::cout << \"maxpool indices = \"; ";
-                    writer << print_tensor(out[1].get_name(),
-                                           shape_size(out[1].get_shape()),
-                                           out[1].get_element_type().c_type_string());
-
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(max_pool_index) << ");\n";
-
-                    std::cout << "In MaxPoolWithIndices" << node->get_name() << std::endl;
-                    writer << "std::cout << \"maxpool out = \"; ";
-                    writer << print_tensor(out[0].get_name(),
-                                           shape_size(out[0].get_shape()),
-                                           out[0].get_element_type().c_type_string());
-                    writer << "std::cout << \"maxpool indices = \"; ";
-                    writer << print_tensor(out[1].get_name(),
-                                           shape_size(out[1].get_shape()),
-                                           out[1].get_element_type().c_type_string());
                 }
                 else
                 {
