@@ -16,27 +16,27 @@
 
 #pragma once
 
-#include <cstddef>
-#include <iostream>
+#include "ngraph/node.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pattern
     {
-        namespace reference
+        namespace op
         {
-            template <typename T>
-            void select(const char* arg0,
-                        const T* arg1,
-                        const T* arg2,
-                        T* out,
-                        size_t count) // TODO: using char for bool, is this right?
+            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
+            /// and skip them if a predicate condition is satisfied.
+            ///
+            class Skip : public Pattern
             {
-                for (size_t i = 0; i < count; i++)
+            public:
+                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern("Skip", NodeVector{arg}, predicate)
                 {
-                    out[i] = arg0[i] ? arg1[i] : arg2[i];
+                    add_output(arg->get_element_type(), arg->get_shape());
                 }
-            }
+            };
         }
     }
 }
