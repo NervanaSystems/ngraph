@@ -26,7 +26,9 @@ using namespace std;
 
 static bool static_init()
 {
-    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
+    runtime::Backend::register_backend_factory("CPU", []() -> shared_ptr<runtime::Backend> {
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
     return true;
 };
 

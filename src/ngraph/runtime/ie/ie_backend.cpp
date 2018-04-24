@@ -30,7 +30,9 @@ using descriptor::layout::DenseTensorViewLayout;
 
 static bool static_init()
 {
-    runtime::Backend::register_backend("IE", make_shared<runtime::ie::IE_Backend>());
+    runtime::Backend::register_backend_factory("IE", []() -> shared_ptr<runtime::Backend> {
+        return make_shared<runtime::ie::IE_Backend>();
+    });
     return true;
 };
 

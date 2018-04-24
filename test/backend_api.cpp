@@ -24,7 +24,7 @@ using namespace ngraph;
 
 TEST(backend_api, registered_devices)
 {
-    vector<string> devices = runtime::Backend::get_registered_devices();
+    vector<string> devices = runtime::Backend::get_registered_device_factories();
     EXPECT_GE(devices.size(), 1);
 
     EXPECT_TRUE(contains(devices, "INTERPRETER"));
