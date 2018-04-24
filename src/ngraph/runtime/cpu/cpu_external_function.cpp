@@ -98,6 +98,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
@@ -308,6 +309,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
