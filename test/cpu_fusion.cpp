@@ -1079,9 +1079,9 @@ TEST(cpu_fusion, weight_fusion)
 
 TEST(cpu_fusion, max_pool_with_indices)
 {
-    Shape shape_a{1, 1, 14};
+    Shape shape_a{10, 3, 28, 28};
     auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
-    Shape window_shape{3};
+    Shape window_shape{2, 2};
     auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
     auto C = std::make_shared<op::Parameter>(element::f32, max_pool->get_shape());
 
