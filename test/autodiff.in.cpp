@@ -829,7 +829,6 @@ TEST(${BACKEND_NAME}, backwards_log)
 
 TEST(${BACKEND_NAME}, backwards_maximum)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}"); // no convert support
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -848,7 +847,6 @@ TEST(${BACKEND_NAME}, backwards_maximum)
 
 TEST(${BACKEND_NAME}, backwards_minimum)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}"); // no convert support
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1019,7 +1017,6 @@ TEST(${BACKEND_NAME}, backwards_reshape)
 
 TEST(${BACKEND_NAME}, backwards_select)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
@@ -1049,7 +1046,6 @@ TEST(${BACKEND_NAME}, backwards_select)
 
 TEST(${BACKEND_NAME}, backwards_select_nested)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 

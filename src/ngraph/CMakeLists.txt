@@ -35,6 +35,7 @@ set (SRC
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/and.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,6 +71,7 @@ set (SRC
     op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
+    op/or.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
@@ -97,11 +99,13 @@ set (SRC
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/algebraic_simplification.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -281,8 +285,17 @@ endif()
             runtime/gpu/cuda_emitter.cpp
             runtime/gpu/type_info.cpp
             )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+
+	  # compile cuda sources seperately
+	  # via nvcc
+	  set (CUDA_SRC
+	    runtime/gpu/kernels/batchnorm.cu.cpp
+	    )
+	  set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+	  cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+
+          set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+            "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
     endif()
 
 endif()
@@ -292,7 +305,7 @@ if (NGRAPH_NNP_ENABLE)
     include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
 endif()
 
-add_library(ngraph SHARED ${SRC})
+add_library(ngraph SHARED ${SRC} ${CUDA_OBJ})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -352,7 +365,8 @@ endif()
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    find_library(CUDA_cudart_LIBRARY cudart /usr/local/cuda/lib64)
+    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_cudart_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 if(MPI_CXX_INCLUDE_PATH)

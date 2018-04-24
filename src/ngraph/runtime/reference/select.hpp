@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 
 namespace ngraph
 {
