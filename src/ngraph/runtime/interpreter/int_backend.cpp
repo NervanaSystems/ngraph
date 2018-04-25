@@ -22,6 +22,15 @@
 using namespace ngraph;
 using namespace std;
 
+static bool static_init()
+{
+    runtime::Backend::register_backend("INTERPRETER",
+                                       make_shared<runtime::interpreter::INT_Backend>());
+    return true;
+};
+
+bool runtime::interpreter::INT_Backend::init = static_init();
+
 shared_ptr<runtime::interpreter::INT_CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
     const shared_ptr<runtime::interpreter::ExternalFunction>& external_function)
 {

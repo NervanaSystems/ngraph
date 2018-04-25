@@ -28,6 +28,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
@@ -70,6 +71,22 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         add->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
+                {
+                    auto concat = static_cast<op::Concat*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32 &&
+                        ((node->get_input_shape(0)).size() == 4 ||
+                         (node->get_input_shape(0)).size() == 2))
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        concat->set_op_annotations(op_annotations);
                     }
                 }
 
@@ -412,6 +429,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
+    {TI(ngraph::op::Concat), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Concat>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},

@@ -417,3 +417,15 @@ std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
     auto cvals = std::vector<std::string>(shape_size(shape), val);
     return std::make_shared<op::Constant>(element_type, shape, cvals);
 }
+
+bool ngraph::is_zero(std::shared_ptr<Node> reduce_constant)
+{
+    auto result_bool = is_equal_to_const_value("0", reduce_constant);
+    return result_bool;
+}
+
+bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
+{
+    auto result_bool = is_equal_to_const_value("1", reduce_constant);
+    return result_bool;
+}

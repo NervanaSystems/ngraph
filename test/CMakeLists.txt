@@ -26,6 +26,7 @@ include_directories(
 
 set (SRC
     backend_api.cpp
+    algebraic_simplification.cpp
     backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
@@ -45,7 +46,6 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
-    runtime_manager.cpp
     serialize.cpp
     pattern.cpp
     shape.cpp
@@ -71,6 +71,7 @@ add_subdirectory(files)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
+set(BACKEND_NAMES ${BACKEND_NAMES} "IE")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})

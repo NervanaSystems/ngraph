@@ -39,7 +39,7 @@ namespace ngraph
                 std::shared_ptr<CUcontext> get_context() { return m_context_ptr; }
             protected:
                 CudaContextManager();
-                ~CudaContextManager() {}
+                ~CudaContextManager();
                 CUdevice m_device;
                 CUcontext m_context;
                 std::shared_ptr<CUcontext> m_context_ptr;

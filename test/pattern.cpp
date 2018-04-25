@@ -37,8 +37,8 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
@@ -72,11 +72,6 @@ static std::shared_ptr<Node> construct_constant_node(int n)
     return op::Constant::create(element::i32, Shape{}, {n});
 }
 
-bool is_zero(std::shared_ptr<Node> reduce_constant)
-{
-    return is_equal_to_const_value("0", reduce_constant);
-}
-
 bool sum_predicate(std::shared_ptr<Node> gn)
 {
     NGRAPH_DEBUG << "pred_v2 : looking at " << gn->get_name();
@@ -85,7 +80,7 @@ bool sum_predicate(std::shared_ptr<Node> gn)
         auto reducee = gn->get_argument(0);
         auto reduce_constant = gn->get_argument(1);
 
-        if (!is_zero(reduce_constant))
+        if (!ngraph::is_zero(reduce_constant))
         {
             return false;
         }
@@ -402,11 +397,11 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(a, a));
 
     auto abs = make_shared<op::Abs>(a);
-    auto any = std::make_shared<pattern::op::Any>(a);
+    auto any = std::make_shared<pattern::op::Skip>(a);
     ASSERT_TRUE(n.match(any, abs));
 
     auto any_false =
-        std::make_shared<pattern::op::Any>(a, [](std::shared_ptr<Node> no) { return false; });
+        std::make_shared<pattern::op::Skip>(a, [](std::shared_ptr<Node> no) { return false; });
     ASSERT_TRUE(n.match(any_false, a));
 
     auto pattern = std::make_shared<pattern::op::Label>(a);
@@ -651,9 +646,9 @@ public:
             auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
 
             auto is_iconst_zero = [](std::shared_ptr<Node> n) {
-                bool result = is_zero(n);
+                bool result = ngraph::is_zero(n);
                 NGRAPH_DEBUG << n->get_name() << " is " << (result ? " a zero " : " not a zero");
-                return is_zero(n);
+                return ngraph::is_zero(n);
             };
 
             bool are_all_iconst_zeros =
