@@ -1424,21 +1424,19 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                CUDNNEmitter::Prop dir;
+                CUDNNEmitter::Prop direction;
                 if (batchnorm->get_training_flag() && args.size() == 3)
                 {
-                    // forward train
-                    dir = CUDNNEmitter::Prop::Forward;
+                    direction = CUDNNEmitter::Prop::Forward;
                 }
                 else
                 {
-                    // forward inference
-                    dir = CUDNNEmitter::Prop::Inference;
+                    direction = CUDNNEmitter::Prop::Inference;
                 }
 
                 auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
                                                                CUDNN_BATCHNORM_SPATIAL,
-                                                               dir,
+                                                               direction,
                                                                args[2].get_shape(),
                                                                args[0].get_shape(),
                                                                batchnorm->get_eps_value());
