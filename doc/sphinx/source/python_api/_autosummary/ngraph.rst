@@ -7,9 +7,6 @@ ngraph
 
 .. automodule:: ngraph
    :members:
-   :public-members:
-
-
 
 Submodules
 ==========
@@ -23,7 +20,6 @@ Exceptions
    :undoc-members:
    :show-inheritance:
 
-
 Ops
 ---
 
@@ -32,7 +28,6 @@ Ops
    :undoc-members:
    :show-inheritance:
 
-
 Runtime
 --------
 
@@ -40,5 +35,4 @@ Runtime
    :members:
    :undoc-members:
    :show-inheritance:
-
 

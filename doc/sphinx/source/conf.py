@@ -21,9 +21,6 @@ import os
 import sys
 
 # Add path to nGraph Python API.
-
-#sys.path.append(os.path.abspath('../../../python/ngraph'))
-
 sys.path.insert(0, os.path.abspath('../../../python'))
 
 # -- General configuration ------------------------------------------------
@@ -37,6 +34,7 @@ needs_sphinx = '1.6.5'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
@@ -219,3 +217,7 @@ rst_epilog = u"""
 # -- autodoc Extension configuration --------------------------------------
 
 autodoc_mock_imports = ['ngraph.impl', 'ngraph.utils']
+
+# -- autosummary Extension configuration ----------------------------------
+
+autosummary_generate = ['python_api/structure.rst']

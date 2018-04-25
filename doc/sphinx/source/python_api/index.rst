@@ -4,24 +4,18 @@
 Python API
 ##########
 
-This section contains nGraph™ Python API documentation.
-
-Module Index
-============
-
-.. toctree::
-   :maxdepth: 1
-
-   ngraph
-
-* :ref:`modindex`
-
-=======
-
-
-Simple example of API usage
-===========================
+This section contains nGraph™ Python API documentation. Python API exposes
+nGraph™ C++ operations to Python users. For quick-start you can find API usage
+example below.
 
 .. literalinclude:: /../../../python/examples/basic.py
    :language: python
    :lines: 18-48
+
+=======
+
+.. toctree::
+   :maxdepth: 1
+
+   structure
+   supported_ops
