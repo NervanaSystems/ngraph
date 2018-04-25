@@ -40,23 +40,18 @@ static std::shared_ptr<pattern::Matcher>
     auto bcst_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
     };
+
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
-    auto matcher = std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst), nullptr);
+    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
+    auto matcher =
+        std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label), nullptr);
     return matcher;
 }
 
-static std::shared_ptr<Node> get_broadcast_or_node(std::shared_ptr<Node> bin_op,
-                                                   std::shared_ptr<Node> arg)
+static std::shared_ptr<pattern::op::Label>
+    get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
 {
-    if (bin_op->get_shape() != arg->get_shape())
-    {
-        return std::dynamic_pointer_cast<op::Broadcast>(bin_op->get_argument(0)) &&
-                       bin_op->get_argument(0)->get_argument(0) == arg
-                   ? bin_op->get_argument(0)
-                   : bin_op->get_argument(1);
-    }
-
-    return arg;
+    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->pattern_node()->get_argument(1));
 }
 
 static bool simplify_multiply(std::shared_ptr<Node> n)
@@ -68,14 +63,16 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
         std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
     auto const_label_one =
         std::make_shared<pattern::op::Label>(iconst, ngraph::is_one, NodeVector{iconst});
+
     auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
     auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
 
     if (matcher_const_zero->match(n))
     {
-        auto cnst = matcher_const_zero->get_pattern_map()[const_label_zero];
-        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << cnst->get_name();
-        ngraph::replace_node(n, get_broadcast_or_node(n, cnst));
+        auto bcst_label = get_broadcast_label(matcher_const_zero);
+        auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
+        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
+        ngraph::replace_node(n, bcst_or_cnst);
         return true;
     }
 
@@ -83,7 +80,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     {
         auto x = matcher_const_one->get_pattern_map()[label];
         NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-        ngraph::replace_node(n, get_broadcast_or_node(n, x));
+        ngraph::replace_node(n, x);
         return true;
     }
 
@@ -109,7 +106,7 @@ static bool simplify_add(std::shared_ptr<Node> n)
         if (ngraph::is_zero(cnst))
         {
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            ngraph::replace_node(n, get_broadcast_or_node(n, x));
+            ngraph::replace_node(n, x);
             return true;
         }
         else
