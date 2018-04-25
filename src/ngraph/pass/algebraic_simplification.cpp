@@ -120,17 +120,6 @@ static bool simplify_add(std::shared_ptr<Node> n)
     return false;
 }
 
-static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
-{
-    size_t prod = 1;
-    for (auto axis : axes)
-    {
-        prod *= shape.at(axis);
-    }
-
-    return prod;
-}
-
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
     initialize_const_values_to_ops()
 {
