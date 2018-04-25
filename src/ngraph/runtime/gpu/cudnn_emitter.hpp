@@ -50,6 +50,7 @@ namespace ngraph
             public:
                 enum class Prop
                 {
+                    Inference,
                     Forward,
                     Backward
                 };
@@ -68,6 +69,13 @@ namespace ngraph
                                      const ngraph::Shape& window_shape,
                                      const ngraph::Shape& padding_below,
                                      const ngraph::Shape& padding_above);
+
+                size_t build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
+                                       const cudnnBatchNormMode_t& bn_op,
+                                       const Prop& direction,
+                                       const Shape& tensor_shape,
+                                       const Shape& param_shape,
+                                       double epsilon);
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
