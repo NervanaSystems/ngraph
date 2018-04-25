@@ -199,7 +199,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         };
     }
     // emit sum reduce operation
-    auto* reduce = new gpu::primitive{
+    std::unique_ptr<gpu::primitive> reduce(new gpu::primitive{
         [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
             auto input_desc = get_input_desc();
             auto output_desc = get_output_desc();
@@ -229,9 +229,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                               output_desc,
                                               outputs[0]));
             free_gpu_buffer(workspace_ptr);
-        }};
+        }});
 
-    return this->m_primitive_emitter->insert(reduce);
+    return this->m_primitive_emitter->insert(std::move(reduce));
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
@@ -301,10 +301,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
         throw std::runtime_error("Pooling currently supports up to 3 spatial dimensions only.");
     }
 
-    gpu::primitive* pool = nullptr;
+    std::unique_ptr<gpu::primitive> pool;
     if (direction != Prop::Backward)
     {
-        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
             CUDNN_SAFE_CALL(cudnnPoolingForward(*ctx->cudnn_handle,
                                                 desc,
@@ -314,11 +314,11 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
                                                 &beta,
                                                 output_desc,
                                                 outputs[0]));
-        }};
+        }});
     }
     else
     {
-        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
             // cuDNN requires the output tensor of the maxpool fprop to be passed even though
             // it is not mathematically necessary. It appears, however, that it is not actually
@@ -339,10 +339,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
                                                  // adjoint of input
                                                  input_desc,
                                                  outputs[0]));
-        }};
+        }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(pool);
+    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
@@ -380,12 +380,12 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op);
 
     float alpha = 1.0, beta = 0.0;
-    gpu::primitive* batchnorm;
+    std::unique_ptr<gpu::primitive> batchnorm;
     switch (direction)
     {
     case Prop::Inference:
     {
-        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
                                                     bn_op,
                                                     &alpha,
@@ -400,7 +400,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                                                     inputs[3], // mean
                                                     inputs[4], // variance
                                                     epsilon);
-        }};
+        }});
         break;
     }
     case Prop::Forward:
@@ -420,7 +420,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // during inference. see commit note for 3b081ce for more details.
         float m = shape_size(tensor_shape) / tensor_shape[1];
         float bias_factor = (m - 1) / m;
-        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
                                                    bn_op,
                                                    &alpha,
@@ -451,13 +451,12 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                           &bias_factor,
                           derived_param_desc,
                           outputs[2]);
-        }};
+        }});
         break;
     }
     case Prop::Backward:
     {
-        batchnorm = new gpu::primitive{[=](void** inputs, void** outputs) {
-            //runtime::gpu::print_gpu_f32_tensor(inputs[2],shape_size(tensor_shape),sizeof(float));
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             cudnnBatchNormalizationBackward(
                 *ctx->cudnn_handle,
                 bn_op,
@@ -478,12 +477,12 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                 epsilon,
                 NULL,  // inputs[3 /* mu batch mean*/],
                 NULL); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
-        }};
+        }});
         break;
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(batchnorm);
+    primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
