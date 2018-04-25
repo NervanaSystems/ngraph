@@ -228,6 +228,7 @@ TEST(graph_partition, placement_all_cpu_policy)
     }
 }
 
+#ifdef NGRAPH_CPU_ENABLE
 TEST(graph_partition, placement_int_with_cpu_mul_policy)
 {
     Shape shape = Shape{2, 2};
@@ -499,6 +500,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
+#endif
 
 TEST(graph_partition, hybrid_no_split)
 {
