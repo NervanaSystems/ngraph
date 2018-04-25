@@ -375,9 +375,9 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     }
 
     cudnnTensorDescriptor_t derived_param_desc;
-    cudnnCreateTensorDescriptor(&derived_param_desc);
+    CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&derived_param_desc));
     auto tensor_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(tensor_shape);
-    cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op);
+    CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
 
     float alpha = 1.0, beta = 0.0;
     std::unique_ptr<gpu::primitive> batchnorm;
@@ -386,29 +386,29 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     case Prop::Inference:
     {
         batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
-                                                    bn_op,
-                                                    &alpha,
-                                                    &beta,
-                                                    tensor_desc,
-                                                    inputs[2], // tensor
-                                                    tensor_desc,
-                                                    outputs[0], // tensor
-                                                    derived_param_desc,
-                                                    inputs[0], // gain
-                                                    inputs[1], // bias
-                                                    inputs[3], // mean
-                                                    inputs[4], // variance
-                                                    epsilon);
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
+                                                                    bn_op,
+                                                                    &alpha,
+                                                                    &beta,
+                                                                    tensor_desc,
+                                                                    inputs[2], // tensor
+                                                                    tensor_desc,
+                                                                    outputs[0], // tensor
+                                                                    derived_param_desc,
+                                                                    inputs[0], // gain
+                                                                    inputs[1], // bias
+                                                                    inputs[3], // mean
+                                                                    inputs[4], // variance
+                                                                    epsilon));
         }});
         break;
     }
     case Prop::Forward:
     {
         cudnnOpTensorDescriptor_t op_desc;
-        cudnnCreateOpTensorDescriptor(&op_desc);
-        cudnnSetOpTensorDescriptor(
-            op_desc, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN);
+        CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&op_desc));
+        CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
+            op_desc, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
 
         // currently not using the cudnn moving average
         // calculation so this factor needs to be set to 1.0
@@ -421,43 +421,43 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         float m = shape_size(tensor_shape) / tensor_shape[1];
         float bias_factor = (m - 1) / m;
         batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
-                                                   bn_op,
-                                                   &alpha,
-                                                   &beta,
-                                                   tensor_desc,
-                                                   inputs[2],
-                                                   tensor_desc,
-                                                   outputs[0],
-                                                   derived_param_desc,
-                                                   inputs[0],
-                                                   inputs[1],
-                                                   exp_avg_factor,
-                                                   outputs[1],
-                                                   outputs[2],
-                                                   epsilon,
-                                                   NULL,
-                                                   NULL);
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
+                                                                   bn_op,
+                                                                   &alpha,
+                                                                   &beta,
+                                                                   tensor_desc,
+                                                                   inputs[2],
+                                                                   tensor_desc,
+                                                                   outputs[0],
+                                                                   derived_param_desc,
+                                                                   inputs[0],
+                                                                   inputs[1],
+                                                                   exp_avg_factor,
+                                                                   outputs[1],
+                                                                   outputs[2],
+                                                                   epsilon,
+                                                                   NULL,
+                                                                   NULL));
 
             // convert to biased variance
-            cudnnOpTensor(*ctx->cudnn_handle,
-                          op_desc,
-                          &beta,
-                          derived_param_desc,
-                          outputs[2],
-                          &beta,
-                          derived_param_desc,
-                          outputs[2],
-                          &bias_factor,
-                          derived_param_desc,
-                          outputs[2]);
+            CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
+                                          op_desc,
+                                          &beta,
+                                          derived_param_desc,
+                                          outputs[2],
+                                          &beta,
+                                          derived_param_desc,
+                                          outputs[2],
+                                          &bias_factor,
+                                          derived_param_desc,
+                                          outputs[2]));
         }});
         break;
     }
     case Prop::Backward:
     {
         batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            cudnnBatchNormalizationBackward(
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
                 *ctx->cudnn_handle,
                 bn_op,
                 &alpha,
@@ -475,8 +475,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                 outputs[1 /* dgamma */],
                 outputs[2 /* dbeta */],
                 epsilon,
-                NULL,  // inputs[3 /* mu batch mean*/],
-                NULL); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
+                NULL,   // inputs[3 /* mu batch mean*/],
+                NULL)); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
         }});
         break;
     }
