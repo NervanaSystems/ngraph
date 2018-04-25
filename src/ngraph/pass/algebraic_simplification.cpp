@@ -45,6 +45,20 @@ static std::shared_ptr<pattern::Matcher>
     return matcher;
 }
 
+static std::shared_ptr<Node> get_broadcast_or_node(std::shared_ptr<Node> bin_op,
+                                                   std::shared_ptr<Node> arg)
+{
+    if (bin_op->get_shape() != arg->get_shape())
+    {
+        return std::dynamic_pointer_cast<op::Broadcast>(bin_op->get_argument(0)) &&
+                       bin_op->get_argument(0)->get_argument(0) == arg
+                   ? bin_op->get_argument(0)
+                   : bin_op->get_argument(1);
+    }
+
+    return arg;
+}
+
 static bool simplify_multiply(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
@@ -61,7 +75,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     {
         auto cnst = matcher_const_zero->get_pattern_map()[const_label_zero];
         NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << cnst->get_name();
-        ngraph::replace_node(n, cnst);
+        ngraph::replace_node(n, get_broadcast_or_node(n, cnst));
         return true;
     }
 
@@ -69,7 +83,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     {
         auto x = matcher_const_one->get_pattern_map()[label];
         NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-        ngraph::replace_node(n, x);
+        ngraph::replace_node(n, get_broadcast_or_node(n, x));
         return true;
     }
 
@@ -95,7 +109,7 @@ static bool simplify_add(std::shared_ptr<Node> n)
         if (ngraph::is_zero(cnst))
         {
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            ngraph::replace_node(n, x);
+            ngraph::replace_node(n, get_broadcast_or_node(n, x));
             return true;
         }
         else
@@ -106,12 +120,22 @@ static bool simplify_add(std::shared_ptr<Node> n)
     return false;
 }
 
+static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
+{
+    size_t prod = 1;
+    for (auto axis : axes)
+    {
+        prod *= shape.at(axis);
+    }
+
+    return prod;
+}
+
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
     initialize_const_values_to_ops()
 {
-    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
-        {TI(op::Add), simplify_add}, {TI(op::Multiply), simplify_multiply},
-    });
+    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
+        {{TI(op::Add), simplify_add}, {TI(op::Multiply), simplify_multiply}});
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
