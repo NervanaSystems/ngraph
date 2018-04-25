@@ -1145,8 +1145,8 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             pattern::RecurrentMatcher& m) {
 
             static int count = 0;
-            //if (count++ > 0)
-            //return false;
+            // if (count++ > 0)
+            // return false;
             std::cout << "|||||||| In recurrent fusion |||||||" << std::endl;
             std::cout << "Xt: " << m.get_bound_nodes_for_pattern(xt).size() << std::endl;
             std::cout << "weights_i2h: " << m.get_bound_nodes_for_pattern(weights_i2h).size()
@@ -1159,7 +1159,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             std::cout << "bias2: " << m.get_bound_nodes_for_pattern(bias2).size() << std::endl;
             std::cout << "ct_1: " << m.get_bound_nodes_for_pattern(ct_1).size() << std::endl;
 
-            auto ht_1_label = m.get_bound_nodes_for_pattern(xt);
+            auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
 
             std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{rpattern_ht_1, ct_1};
             auto src_iter = this->compute_rnn_args(src_iter_labels, m);
@@ -1182,8 +1182,8 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             // TODO: assert for batch_size, sequence length and num_of_lstm's fused
             size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
             size_t sequence_len = num_of_lstm_matched;
-            size_t feature_size = src_layer->get_shape()[1];
-            Shape lstm_output_shape{ht_1_label[0]->get_shape()};
+            size_t feature_size = ht_1_label[0]->get_shape()[1];
+
             auto rnn = std::make_shared<op::Rnn>(src_layer,
                                                  src_iter,
                                                  weights_layer,
@@ -1192,7 +1192,13 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
                                                  num_of_lstm_matched,
                                                  num_gates_in_lstm,
                                                  sequence_len,
-                                                 lstm_output_shape);
+                                                 feature_size);
+
+            std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
+            std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
+            std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
+            std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
+            std::cout << "bias: " << join(bias->get_shape()) << std::endl;
 
             std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep;
             auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);

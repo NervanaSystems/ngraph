@@ -17,6 +17,9 @@
 #include <cassert>
 #include <memory>
 
+#include <algorithm>
+#include <iostream>
+#include <string>
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
 
@@ -27,6 +30,15 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
     : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        std::cout << "args_name " << args[i]->get_name() << " Shape: ";
+        for (auto& dim : args[i]->get_shape())
+        {
+            cout << dim << " ";
+        }
+        cout << std::endl;
+    }
     if (m_inputs.size() < 1)
     {
         throw ngraph_error("At least one argument required");
@@ -60,8 +72,8 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
         {
             if (j != m_concatenation_axis && input_0_shape.at(j) != input_i_shape.at(j))
             {
-                //throw ngraph_error(
-                //    "Arguments to concat do not have same dimension on a non-concatenation axis");
+                throw ngraph_error(
+                    "Arguments to concat do not have same dimension on a non-concatenation axis");
             }
             else if (j == m_concatenation_axis)
             {

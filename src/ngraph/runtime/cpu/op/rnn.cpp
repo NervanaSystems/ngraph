@@ -35,7 +35,7 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_number_of_lstm_cells,
                             m_number_of_gates_per_cell,
                             m_src_seq_length,
-                            m_lstm_output_shape);
+                            m_feature_size);
 }
 
 op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
@@ -46,17 +46,16 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              const int number_of_cells,
              const int number_of_gates_per_cell,
              const int src_seq_length,
-             Shape lstm_output_shape)
+             const int feature_size)
     : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_number_of_lstm_cells(number_of_cells)
     , m_number_of_gates_per_cell(number_of_gates_per_cell)
     , m_src_seq_length(src_seq_length)
-    , m_lstm_output_shape(lstm_output_shape)
+    , m_feature_size(feature_size)
 {
     if (src_layer->get_shape().size() == 2)
     {
         m_batch_size = static_cast<int>(src_layer->get_shape()[0] / number_of_cells);
-        m_feature_size = static_cast<int>(src_layer->get_shape()[1]);
     }
     else
     {
@@ -64,5 +63,5 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     }
 
     add_output(src_layer->get_element_type(), src_layer->get_shape());
-    add_output(src_layer->get_element_type(), lstm_output_shape);
+    add_output(src_layer->get_element_type(), src_iter->get_shape());
 }

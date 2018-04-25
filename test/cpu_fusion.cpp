@@ -1048,6 +1048,7 @@ TEST(cpu_fusion, rnn_fprop)
     const int number_of_cells = 3;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 3;
+    const int feature_size = 100;
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -1056,7 +1057,7 @@ TEST(cpu_fusion, rnn_fprop)
                                          number_of_cells,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         Shape{10, 100});
+                                         feature_size);
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 

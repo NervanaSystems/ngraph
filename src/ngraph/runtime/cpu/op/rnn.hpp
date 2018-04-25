@@ -34,7 +34,7 @@ namespace ngraph
                 const int number_of_cells,
                 const int number_of_gates_per_cell,
                 const int src_seq_length,
-                Shape lstm_output_shape);
+                const int feature_size);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             int get_num_of_lstm_cells_fused() const { return m_number_of_lstm_cells; }
@@ -48,7 +48,6 @@ namespace ngraph
             int m_src_seq_length;
             int m_batch_size;
             int m_feature_size;
-            Shape m_lstm_output_shape;
         };
     }
 }
