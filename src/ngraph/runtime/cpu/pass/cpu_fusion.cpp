@@ -1037,7 +1037,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_lstm_fprop()
 }
 
 std::shared_ptr<ngraph::Node> ngraph::runtime::cpu::pass::RecurrentCPUFusion::compute_rnn_args(
-    std::vector<std::shared_ptr<pattern::op::Label>>& rnn_labels, pattern::RecurrentMatcher& m, bool input_symbol)
+    std::vector<std::shared_ptr<pattern::op::Label>>& rnn_labels,
+    pattern::RecurrentMatcher& m,
+    bool input_symbol)
 {
     std::cout << "Inside compute arg " << rnn_labels.size() << std::endl;
     std::set<std::shared_ptr<Node>> unique_params;
@@ -1141,14 +1143,21 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
     pattern::recurrent_graph_rewrite_callback callback =
         [lstm_node_label, rpattern_ht_1, weights_h2h, xt, weights_i2h, bias1, bias2, ct_1, this](
             pattern::RecurrentMatcher& m) {
+
+            static int count = 0;
+            //if (count++ > 0)
+            //return false;
             std::cout << "|||||||| In recurrent fusion |||||||" << std::endl;
-            std::cout << "Xt: " <<  m.get_bound_nodes_for_pattern(xt).size() << std::endl;
-            std::cout << "weights_i2h: " <<  m.get_bound_nodes_for_pattern(weights_i2h).size() << std::endl;
-            std::cout << "rpattern_ht_1: " <<  m.get_bound_nodes_for_pattern(rpattern_ht_1).size() << std::endl;
-            std::cout << "weights_h2h: " <<  m.get_bound_nodes_for_pattern(weights_h2h).size() << std::endl;
-            std::cout << "bias1: " <<  m.get_bound_nodes_for_pattern(bias1).size() << std::endl;
-            std::cout << "bias2: " <<  m.get_bound_nodes_for_pattern(bias2).size() << std::endl;
-            std::cout << "ct_1: " <<  m.get_bound_nodes_for_pattern(ct_1).size() << std::endl;
+            std::cout << "Xt: " << m.get_bound_nodes_for_pattern(xt).size() << std::endl;
+            std::cout << "weights_i2h: " << m.get_bound_nodes_for_pattern(weights_i2h).size()
+                      << std::endl;
+            std::cout << "rpattern_ht_1: " << m.get_bound_nodes_for_pattern(rpattern_ht_1).size()
+                      << std::endl;
+            std::cout << "weights_h2h: " << m.get_bound_nodes_for_pattern(weights_h2h).size()
+                      << std::endl;
+            std::cout << "bias1: " << m.get_bound_nodes_for_pattern(bias1).size() << std::endl;
+            std::cout << "bias2: " << m.get_bound_nodes_for_pattern(bias2).size() << std::endl;
+            std::cout << "ct_1: " << m.get_bound_nodes_for_pattern(ct_1).size() << std::endl;
 
             auto ht_1_label = m.get_bound_nodes_for_pattern(xt);
 
@@ -1162,7 +1171,7 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             auto weights_iter = this->compute_rnn_args(weights_iter_labels, m);
 
             std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{xt};
-            auto src_layer = this->compute_rnn_args(src_layer_labels, m, true);  
+            auto src_layer = this->compute_rnn_args(src_layer_labels, m, true);
 
             auto bias_i2h_label = m.get_bound_nodes_for_pattern(bias2);
             auto bias_h2h_label = m.get_bound_nodes_for_pattern(bias1);
@@ -1205,22 +1214,27 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             // find the lstm's nodes captured in PM
             auto lstm_goes = m.get_bound_nodes_for_pattern(lstm_node_label);
             std::set<std::shared_ptr<ngraph::Node>> lstm_nodes;
-            for (size_t i=0; i< lstm_goes.size(); i++)
+            for (size_t i = 0; i < lstm_goes.size(); i++)
             {
-               // lstm's will be the input to GOE's
-               lstm_nodes.insert(lstm_goes[i]->get_arguments()[0]);
+                // lstm's will be the input to GOE's
+                lstm_nodes.insert(lstm_goes[i]->get_arguments()[0]);
             }
 
-            std::cout << " ##### done collecting all lstm users #########" << std::endl;
+            std::cout << " ##### done collecting all lstm users #########"
+                      << "num lstm's" << lstm_nodes.size() << std::endl;
             // collect all the consumers of LSTM goe's (ht)
             std::set<std::shared_ptr<ngraph::Node>> lstm_goe0_user;
-            std::shared_ptr<Node> goe_0;      
-            for(auto &node : lstm_nodes)
+            std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_nodes_to_goe;
+            std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_goe_to_lstm_slices;
+            std::shared_ptr<Node> goe_0;
+            size_t index = 0;
+            for (auto& node : lstm_nodes)
             {
                 // now get the GOE0 which is the first output of lstm (ht)
-                for(auto& goes : node->get_outputs().at(0).get_inputs())
+                for (auto& goes : node->get_outputs().at(0).get_inputs())
                 {
-                    auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                    auto goe_node =
+                        std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
                     // first output node of lstm
                     if (goe_node->get_n() == 0)
                     {
@@ -1230,34 +1244,36 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
 
                 for (auto goe0_user : goe_0->get_users())
                 {
-
-                    if(lstm_nodes.find(goe0_user) == lstm_nodes.end() && !is_unreachable(goe0_user))
+                    if (lstm_nodes.find(goe0_user) == lstm_nodes.end() &&
+                        !is_unreachable(goe0_user))
                     {
                         lstm_goe0_user.insert(goe0_user);
-                        std::cout << "goe0_user "  << goe0_user->get_name() << " ";
+                        map_goe_to_lstm_slices[goe0_user] = ht_slice_per_timestep[index];
+                        std::cout << "goe0_user " << goe0_user->get_name() << " ";
                     }
-
                 }
-                std::cout << std::endl;
+                index++;
             }
 
             std::cout << "++ done collecting all lstm users ++++ " << std::endl;
             //now go through the lstm consumers and replace them with the slice
             std::vector<std::shared_ptr<Node>> new_args;
-            size_t index = 0;
-            for (auto &node : lstm_goe0_user)
+            for (auto& node : lstm_goe0_user)
             {
-                for (auto &node_args : node->get_arguments())
+                for (auto& node_args : node->get_arguments())
                 {
                     //std::cout << "lstm_inputs: " << (node->get_argument(pos)->get_name() << " input_size " << node->get_arguments().size() << std::endl;
                     if (std::find(lstm_goes.begin(), lstm_goes.end(), node_args) != lstm_goes.end())
                     {
-                        std::cout << "index: " << index << " args_shape " << join(node_args->get_shape()) << std::endl;
-                        new_args.push_back(ht_slice_per_timestep[index++]);
+                        std::cout << "index: " << index << " args_shape "
+                                  << join(node_args->get_shape())
+                                  << "name: " << node_args->get_name() << std::endl;
+                        new_args.push_back(map_goe_to_lstm_slices[node]);
                     }
                     else
                     {
-                        std::cout << " args_shape " << join(node_args->get_shape()) << std::endl;
+                        std::cout << " args_shape " << join(node_args->get_shape())
+                                  << "name: " << node_args->get_name() << std::endl;
                         new_args.push_back(node_args);
                     }
                 }
@@ -1285,14 +1301,14 @@ void ngraph::runtime::cpu::pass::RecurrentCPUFusion::construct_rnn_fprop()
             // std::cout << "bias2: " << bias2_label.size() << " " << bias2_label[0]->get_name()
             //           << std::endl;
             std::cout << "<<<<<<<<<<<< End recurrent fusion >>>>>>>>>>>>>" << std::endl;
-            ngraph::replace_node(m.get_match_root(), ht_slice_per_timestep[ht_slice_per_timestep.size()-1]);
+            ngraph::replace_node(m.get_match_root(),
+                                 ht_slice_per_timestep[ht_slice_per_timestep.size() - 1]);
             return true;
-
 
         };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    auto m =
-        std::make_shared<pattern::RecurrentMatcher>(lstm_node_label, rpattern_ht_1, empty_correlated_matches, callback);
+    auto m = std::make_shared<pattern::RecurrentMatcher>(
+        lstm_node_label, rpattern_ht_1, empty_correlated_matches, callback);
     this->add_matcher(m);
 }

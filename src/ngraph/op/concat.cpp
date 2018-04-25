@@ -60,8 +60,8 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
         {
             if (j != m_concatenation_axis && input_0_shape.at(j) != input_i_shape.at(j))
             {
-                throw ngraph_error(
-                    "Arguments to concat do not have same dimension on a non-concatenation axis");
+                //throw ngraph_error(
+                //    "Arguments to concat do not have same dimension on a non-concatenation axis");
             }
             else if (j == m_concatenation_axis)
             {
