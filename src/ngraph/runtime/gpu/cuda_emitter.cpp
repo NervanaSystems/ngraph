@@ -25,6 +25,7 @@
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/kernels/batchnorm.hpp"
 
 using namespace ngraph;
 
@@ -281,36 +282,35 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_batchnorm(const GPURuntimeContext* ctx)/*
-                                                     const std::array<std::string, 2>& dtypes,
-                                                     const Shape& input_shape,
-                                                     const Shape& output_shape)*/
+size_t runtime::gpu::CUDAEmitter::build_batchnorm(const GPURuntimeContext* ctx,
+                                                  const Shape& input_shape,
+                                                  double epsilon)
 {
-    uint32_t nthreads = 1;
     codegen::CodeWriter writer;
+    std::string hash = "batchnorm";
+    // auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
+    // if (compiled_kernel == nullptr)
+    // {
+    //     auto compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
+    // }
 
-    std::string hash = "divide_test";
-
-
-
-
-
-   auto compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
-
+    size_t data_size = 1;
+    for (int i = 2; i < input_shape.size(); i++)
+    {
+        data_size *= input_shape[i];
+    }
     auto idx = new gpu::primitive{[=](void** inputs, void** outputs) {
-            void* args_list[] = {&inputs[0], &outputs[0]};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
-                                          1,
-                                          1, // grid dim
-                                          1,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+            runtime::gpu::BatchNormNCDHW_Inference<float>(static_cast<float*>(outputs[0]),
+                                                          static_cast<float*>(inputs[3]),
+                                                          static_cast<float*>(inputs[4]),
+                                                          static_cast<float*>(inputs[2]),
+                                                          static_cast<float*>(inputs[0]),
+                                                          static_cast<float*>(inputs[1]),
+                                                          static_cast<int>(input_shape[0]),
+                                                          static_cast<int>(input_shape[1]),
+                                                          static_cast<int>(data_size),
+                                                          static_cast<float>(epsilon));
+            CUDA_SAFE_CALL(cuCtxSynchronize());
         }};
 
     size_t primitive_index = this->m_primitive_emitter->insert(idx);

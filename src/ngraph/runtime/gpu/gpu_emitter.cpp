@@ -104,10 +104,6 @@
 using namespace std;
 namespace ngraph
 {
-    namespace op
-    {
-        class BatchNormPTX{};
-    }
     namespace runtime
     {
         namespace gpu
@@ -1421,29 +1417,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_end();
             }
 
-
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormPTX)
-            {
-                auto& cuda_emitter =
-                    external_function->get_primitive_emitter()->get_cuda_emitter();
-
-                auto index = cuda_emitter->build_batchnorm(external_function->ctx().get());
-		writer.block_begin();
-		writer << "gpu::invoke_primitive(ctx, " << index << ", nullptr, nullptr);\n";
-		writer.block_end();
-		writer << "exit(0);\n";
-            }
-
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNorm)
             {
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
-
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                 CUDNNEmitter::Prop dir;
                 if (batchnorm->get_training_flag() && args.size() == 3)
@@ -1457,13 +1435,28 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     dir = CUDNNEmitter::Prop::Inference;
                 }
 
-                auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
-                                                               CUDNN_BATCHNORM_SPATIAL,
-                                                               dir,
-                                                               args[2].get_shape(),
-                                                               args[0].get_shape(),
-                                                               batchnorm->get_eps_value());
+                size_t bn_index = 0;
+                if (dir == CUDNNEmitter::Prop::Inference)
+                {
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
 
+                    bn_index = cuda_emitter->build_batchnorm(external_function->ctx().get(),
+                                                             args[2].get_shape(),
+                                                             batchnorm->get_eps_value());
+                }
+                else
+                {
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
+                                                              CUDNN_BATCHNORM_SPATIAL,
+                                                              dir,
+                                                              args[2].get_shape(),
+                                                              args[0].get_shape(),
+                                                              batchnorm->get_eps_value());
+                }
                 writer.block_begin("  // " + node->get_name());
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
@@ -1482,6 +1475,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << ");\n";
                 }
                 writer.block_end();
+
             }
 
             template <>
