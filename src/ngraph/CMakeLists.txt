@@ -105,6 +105,7 @@ set (SRC
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/algebraic_simplification.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -286,6 +287,8 @@ endif()
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
 
 endif()
@@ -303,10 +306,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource ext_json)
+    add_dependencies(ngraph header_resource)
     include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
+add_dependencies(ngraph ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -382,10 +386,12 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+if(MKLDNN_LIB_DIR)
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/

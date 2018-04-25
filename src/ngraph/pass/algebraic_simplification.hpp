@@ -14,22 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iostream>
+#pragma once
 
-#include "Eigen/Dense"
-#include "gtest/gtest.h"
+#include "ngraph/pass/pass.hpp"
 
-#include "ngraph/util.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-TEST(eigen, simple)
+namespace ngraph
 {
-    Eigen::MatrixXd m(2, 2);
-    m(0, 0) = 3;
-    m(1, 0) = 2.5;
-    m(0, 1) = -1;
-    m(1, 1) = m(1, 0) + m(0, 1);
-    EXPECT_FLOAT_EQ(m(1, 1), 1.5);
+    namespace pass
+    {
+        class AlgebraicSimplification;
+    }
 }
+
+class ngraph::pass::AlgebraicSimplification : public FunctionPass
+{
+public:
+    AlgebraicSimplification()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};
