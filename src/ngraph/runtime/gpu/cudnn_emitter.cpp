@@ -302,7 +302,11 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     }
 
     std::unique_ptr<gpu::primitive> pool;
-    if (direction != Prop::Backward)
+
+    switch (direction)
+    {
+    case (Prop::Inference):
+    case (Prop::Forward):
     {
         pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
@@ -315,8 +319,9 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
                                                 output_desc,
                                                 outputs[0]));
         }});
+        break;
     }
-    else
+    case (Prop::Backward):
     {
         pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
@@ -340,6 +345,8 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
                                                  input_desc,
                                                  outputs[0]));
         }});
+        break;
+    }
     }
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
