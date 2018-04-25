@@ -1,6 +1,7 @@
-=================
-Package structure
-=================
+==================
+nGraph Python APIs
+==================
+
 
 .. autosummary::
    :toctree: _autosummary
