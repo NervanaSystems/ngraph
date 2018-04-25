@@ -83,5 +83,5 @@ private:
     void construct_rnn_fprop();
     std::shared_ptr<ngraph::Node>
         compute_rnn_args(std::vector<std::shared_ptr<pattern::op::Label>>& rnn_labels,
-                         pattern::RecurrentMatcher& m);
+                         pattern::RecurrentMatcher& m, bool input_symbol=false);
 };
