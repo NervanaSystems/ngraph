@@ -55,7 +55,6 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
       $ cd build && cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
-      $ make -j 8 # no need to do this step if you are running a VM
       $ make install
 
 #. Build the Python package (binary wheel) for ngraph:
