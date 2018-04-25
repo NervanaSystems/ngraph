@@ -19,10 +19,10 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
-#include <string>
-#include <vector>
 #include <stdint.h>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include <cublas_v2.h>
 #include <cuda.h>
@@ -100,7 +100,7 @@ namespace ngraph
             void cuda_memcpyDtH(void* dst, void* src, size_t buffer_size);
             void cuda_memset(void* dst, int value, size_t buffer_size);
 
-            std::pair<uint64_t,uint64_t> get_magic_u64(uint64_t divisor);
+            std::pair<uint64_t, uint64_t> get_magic_u64(uint64_t divisor);
         }
     }
 }

@@ -25,10 +25,13 @@ namespace ngraph
             bool BatchNormNCDHW_Inference(T* y,
                                           const float* m,
                                           const float* v,
-                                          const     T* x,
+                                          const T* x,
                                           const float* g,
                                           const float* b,
-                                          int N, int C, int DHW, float epsilon);
+                                          int N,
+                                          int C,
+                                          int DHW,
+                                          float epsilon);
         }
     }
 }

@@ -15,16 +15,30 @@
 *******************************************************************************/
 #pragma once
 
-__device__ __forceinline__ void ew_zero(float  &a) { a = 0.0f; }
-
-__device__ __forceinline__ void __stg(const float *ptr, float val)
+__device__ __forceinline__ void ew_zero(float& a)
 {
-    asm volatile ("st.global.wb.f32 [%0], %1;" :: "l"(ptr), "f"(val)  );
+    a = 0.0f;
 }
 
-__device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, bool b=true) { float  v; ew_zero(v); if (b) v = __ldg(in + i); return v; }
+__device__ __forceinline__ void __stg(const float* ptr, float val)
+{
+    asm volatile("st.global.wb.f32 [%0], %1;" ::"l"(ptr), "f"(val));
+}
 
-__device__ __forceinline__ void store(float*  out, float  v, int i=0, bool b=true) { if (b) __stg(out + i, v); }
+__device__ __forceinline__ float load(const float* __restrict__ in, int i = 0, bool b = true)
+{
+    float v;
+    ew_zero(v);
+    if (b)
+        v = __ldg(in + i);
+    return v;
+}
+
+__device__ __forceinline__ void store(float* out, float v, int i = 0, bool b = true)
+{
+    if (b)
+        __stg(out + i, v);
+}
 
 __device__ __forceinline__ int div64(int value, int magic, int shift)
 {

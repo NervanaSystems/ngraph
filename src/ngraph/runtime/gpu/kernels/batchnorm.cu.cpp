@@ -15,9 +15,9 @@
 *******************************************************************************/
 
 #include <cuda.h>
-#include <vector_types.h>
 #include <cuda_runtime.h>
 #include <iostream>
+#include <vector_types.h>
 #include "ngraph/runtime/gpu/kernels/batchnorm.hpp"
 #include "ngraph/runtime/gpu/kernels/helpers.hpp"
 
@@ -26,18 +26,19 @@ using namespace ngraph;
 // batch normalization inference
 // y = g * (x - mean) / sqrt(var + eps) + b
 template <typename T, int THREADS>
-__global__ void __launch_bounds__(THREADS) batchnorm_inference_ncdhw(
-    T*              Y,
-    const float* __restrict__ M,
-    const float* __restrict__ V,
-    const     T* __restrict__ X,
-    const float* __restrict__ G,
-    const float* __restrict__ B,
-    int CDHW, int DHW, float epsilon)
+__global__ void __launch_bounds__(THREADS) batchnorm_inference_ncdhw(T* Y,
+                                                                     const float* __restrict__ M,
+                                                                     const float* __restrict__ V,
+                                                                     const T* __restrict__ X,
+                                                                     const float* __restrict__ G,
+                                                                     const float* __restrict__ B,
+                                                                     int CDHW,
+                                                                     int DHW,
+                                                                     float epsilon)
 {
     const int tid = threadIdx.x;
-    const int c   = blockIdx.x;
-    const int n   = blockIdx.y;
+    const int c = blockIdx.x;
+    const int n = blockIdx.y;
 
     int offset = n * CDHW + c * DHW;
 
@@ -45,7 +46,7 @@ __global__ void __launch_bounds__(THREADS) batchnorm_inference_ncdhw(
     float b = B[c];
 
     float mean = M[c];
-    float var  = V[c];
+    float var = V[c];
 
     float rstdg = rsqrtf(var + epsilon) * g;
 
@@ -63,24 +64,27 @@ template <typename T>
 bool runtime::gpu::BatchNormNCDHW_Inference(T* y,
                                             const float* m,
                                             const float* v,
-                                            const     T* x,
+                                            const T* x,
                                             const float* g,
                                             const float* b,
-                                            int N, int C, int DHW, float epsilon)
+                                            int N,
+                                            int C,
+                                            int DHW,
+                                            float epsilon)
 {
-    int CDHW = C*DHW;
+    int CDHW = C * DHW;
     dim3 grid(C, N, 1);
-    if (DHW < 128*8)
+    if (DHW < 128 * 8)
     {
-        batchnorm_inference_ncdhw<T, 32><<<grid,  32, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T, 32><<<grid, 32, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     }
-    else if (DHW < 512*8)
+    else if (DHW < 512 * 8)
     {
-        batchnorm_inference_ncdhw<T,128><<<grid, 128, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T, 128><<<grid, 128, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     }
     else
     {
-        batchnorm_inference_ncdhw<T,512><<<grid, 512, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
+        batchnorm_inference_ncdhw<T, 512><<<grid, 512, 0>>>(y, m, v, x, g, b, CDHW, DHW, epsilon);
     }
     return true;
 }
@@ -90,4 +94,7 @@ template bool runtime::gpu::BatchNormNCDHW_Inference<float>(float* y,
                                                             const float* x,
                                                             const float* g,
                                                             const float* b,
-                                                            int N, int C, int DHW, float epsilon);
+                                                            int N,
+                                                            int C,
+                                                            int DHW,
+                                                            float epsilon);

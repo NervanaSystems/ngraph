@@ -99,8 +99,6 @@
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
-
-
 using namespace std;
 namespace ngraph
 {
@@ -1475,7 +1473,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << ");\n";
                 }
                 writer.block_end();
-
             }
 
             template <>

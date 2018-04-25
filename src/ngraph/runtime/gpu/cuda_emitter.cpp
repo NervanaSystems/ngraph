@@ -22,10 +22,10 @@
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/kernels/batchnorm.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -300,23 +300,22 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const GPURuntimeContext* ctx,
         data_size *= input_shape[i];
     }
     auto idx = new gpu::primitive{[=](void** inputs, void** outputs) {
-            runtime::gpu::BatchNormNCDHW_Inference<float>(static_cast<float*>(outputs[0]),
-                                                          static_cast<float*>(inputs[3]),
-                                                          static_cast<float*>(inputs[4]),
-                                                          static_cast<float*>(inputs[2]),
-                                                          static_cast<float*>(inputs[0]),
-                                                          static_cast<float*>(inputs[1]),
-                                                          static_cast<int>(input_shape[0]),
-                                                          static_cast<int>(input_shape[1]),
-                                                          static_cast<int>(data_size),
-                                                          static_cast<float>(epsilon));
-            CUDA_SAFE_CALL(cuCtxSynchronize());
-        }};
+        runtime::gpu::BatchNormNCDHW_Inference<float>(static_cast<float*>(outputs[0]),
+                                                      static_cast<float*>(inputs[3]),
+                                                      static_cast<float*>(inputs[4]),
+                                                      static_cast<float*>(inputs[2]),
+                                                      static_cast<float*>(inputs[0]),
+                                                      static_cast<float*>(inputs[1]),
+                                                      static_cast<int>(input_shape[0]),
+                                                      static_cast<int>(input_shape[1]),
+                                                      static_cast<int>(data_size),
+                                                      static_cast<float>(epsilon));
+        CUDA_SAFE_CALL(cuCtxSynchronize());
+    }};
 
     size_t primitive_index = this->m_primitive_emitter->insert(idx);
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
-
 }
 
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
