@@ -54,6 +54,13 @@ static std::shared_ptr<pattern::op::Label>
     return std::dynamic_pointer_cast<pattern::op::Label>(matcher->pattern_node()->get_argument(1));
 }
 
+//`simplify_multiply` optimizes the following 4 *base* cases
+//(8 cases in total including variants due to commutativity)
+//
+//a * 0 -> 0
+//a * broadcast(0) -> broadcast(0)
+//a * 1 -> a
+//a * broadcast(1) -> a
 static bool simplify_multiply(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
@@ -87,6 +94,11 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     return false;
 }
 
+//`simplify_multiply` optimizes the following 2 *base* cases
+//(4 cases in total including variants due to commutativity)
+//
+//a + 0 -> a
+//a + broadcast(0) -> a
 static bool simplify_add(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
