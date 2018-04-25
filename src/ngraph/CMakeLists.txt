@@ -306,10 +306,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource ext_json)
+    add_dependencies(ngraph header_resource)
     include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
+add_dependencies(ngraph ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
