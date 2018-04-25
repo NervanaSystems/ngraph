@@ -116,6 +116,37 @@ TEST(algebraic_simplification, add_broadcast)
     }
 }
 
+TEST(algebraic_simplification, multiply_broadcast)
+{
+    Shape shape{2, 2};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto iconst0 = ngraph::make_zero(element::i32, Shape{});
+    auto const_broadcast = make_shared<op::Broadcast>(iconst0, shape, AxisSet{0, 1});
+    auto mul_a_0 = a * const_broadcast;
+    auto mul_a_0_0 = mul_a_0 * const_broadcast;
+    auto mul_b_0 = b * const_broadcast;
+    auto mul_b_0_0 = mul_b_0 * const_broadcast;
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, mul_a_0_0, c, mul_b_0_0},
+                                        op::ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+    auto expected = ngraph::NodeVector{a, b, const_broadcast, c, const_broadcast};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
 TEST(algebraic_simplification, zero_plus_zero_commutativity)
 {
     Shape shape{};
