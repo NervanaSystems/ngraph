@@ -53,6 +53,7 @@ Not currently a comprehensive list.
    acos.rst
    add.rst
    allreduce.rst
+   and.rst
    asin.rst
    atan.rst
    avg_pool.rst
@@ -83,6 +84,7 @@ Not currently a comprehensive list.
    negative.rst
    not_equal.rst
    not.rst
+   or.rst
    softmax.rst
 
    

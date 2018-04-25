@@ -14,29 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
-#include <cstddef>
-#include <iostream>
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
+                                                             const shared_ptr<Node>& arg0,
+                                                             const shared_ptr<Node>& arg1)
+    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
-    namespace runtime
+    if (arg0->get_element_type() != element::boolean ||
+        arg1->get_element_type() != element::boolean)
     {
-        namespace reference
-        {
-            template <typename T>
-            void select(const char* arg0,
-                        const T* arg1,
-                        const T* arg2,
-                        T* out,
-                        size_t count) // TODO: using char for bool, is this right?
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i] ? arg1[i] : arg2[i];
-                }
-            }
-        }
+        throw ngraph_error("Arguments must have boolean element type");
     }
 }

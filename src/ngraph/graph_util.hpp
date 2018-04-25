@@ -127,4 +127,8 @@ namespace ngraph
     std::shared_ptr<Node> make_constant_from_string(std::string val,
                                                     const element::Type& element_type,
                                                     const Shape& shape);
+
+    bool is_zero(std::shared_ptr<Node> reduce_constant);
+
+    bool is_one(std::shared_ptr<Node> reduce_constant);
 }
