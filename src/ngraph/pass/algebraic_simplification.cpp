@@ -118,6 +118,9 @@ static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
     return prod;
 }
 
+//`simplify_sum` optimizes the following case:
+//sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
+//where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
 static bool simplify_sum(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_sum for " << n->get_name();

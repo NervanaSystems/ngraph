@@ -257,9 +257,7 @@ TEST(algebraic_simplification, multiply_sum_vector_one)
     auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{1});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
     pass_manager.run_passes(f);
@@ -279,9 +277,7 @@ TEST(algebraic_simplification, multiply_sum_negative)
     auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{0, 1});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
     pass_manager.run_passes(f);
