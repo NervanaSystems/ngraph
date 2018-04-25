@@ -206,7 +206,9 @@ def emit_test(t,f):
     filters_array.shape = filters_shape
     skip_test_str = '//skip tests for specific platforms(ex. GPU) if any'
     for backend in skip_test_for_backends:
-        skip_test_str += '''\n    SKIP_TEST_FOR("''' + backend + '''", "${BACKEND_NAME}");'''
+        if backend['flag'] == 1:
+            skip_test_str += '''\n    NGRAPH_INFO << "TODO: Need to implement this op for ''' + backend['name'] + ''' later;";'''
+        skip_test_str += '''\n    SKIP_TEST_FOR("''' + backend['name'] + '''", "${BACKEND_NAME}");'''
     skip_test_str += '\n    //end skip tests'
 
     print ("Generating convolution test '%s'..." % test_name)
@@ -277,50 +279,50 @@ TEST (${BACKEND_NAME}, %s)
                          bprop));
 
 #                                                                              filter                                      data
-#         test name                              skip list   batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
+#         test name                                skip list   i             batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
 tests = [
-         ("convolution_2d_1item",                  [],      (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_1_1x1_1",   [],      (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_2_3x4_5",   ["GPU"], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     "true"),
-         ("convolution_2d_2items",                 [],      (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided",         [],      (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided_padded",  ["GPU"], (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     "true"),
+         ("convolution_2d_1item",                  [],                        (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_1item_padded_1_1x1_1",   [],                        (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     "true"),
+         ("convolution_2d_1item_padded_2_3x4_5",   [{'name':"GPU",'flag':1}], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     "true"),
+         ("convolution_2d_2items",                 [],                        (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_strided",         [],                        (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_strided_padded",  [{'name':"GPU",'flag':1}], (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     "true"),
          ("convolution_2d_2items_strided_padded_same",
-                                                   [],      (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated",         [],      (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated_padded",  ["GPU"], (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     "true"),
-         ("convolution_3d_2items",                 [],      (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   "true"),
-         ("convolution_4d_2items",                 ["GPU"], (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items",                 ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_padded_neg",      ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided",         ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_dilated",         ["GPU"], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided_dilated", ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+                                                   [],                        (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     "true"),
+         ("convolution_2d_2items_dilated",         [],                        (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     "true"),
+         ("convolution_2d_2items_dilated_padded",  [{'name':"GPU",'flag':1}], (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     "true"),
+         ("convolution_3d_2items",                 [],                        (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   "true"),
+         ("convolution_4d_2items",                 [{'name':"GPU",'flag':1}], (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items",                 [{'name':"GPU",'flag':1}], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_padded_neg",      [{'name':"GPU",'flag':1}], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "false"),
+         ("convolution_4d_4items_strided",         [{'name':"GPU",'flag':1}], (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_dilated",         [{'name':"GPU",'flag':1}], (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_4d_4items_strided_dilated", [{'name':"GPU",'flag':1}], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded",
-                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "false"),
+                                                   [{'name':"GPU",'flag':1}], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded_neg",
-                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "false"),
+                                                   [{'name':"GPU",'flag':1}], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "false"),
          ("convolution_4d_4items_strided_dilated_padded_same",
-                                                   ["GPU"], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "false"),
-         ("convolution_2d_1item_1o1i_data_dilated",["GPU"], (1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o1i_data_dilated",["GPU"], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o2i_data_dilated",["GPU"], (1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_5o3i_data_dilated",["GPU"], (1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_2item_5o3i_data_dilated",["GPU"], (2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+                                                   [{'name':"GPU",'flag':1}], (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "false"),
+         ("convolution_2d_1item_1o1i_data_dilated",[{'name':"GPU",'flag':1}], (1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_2o1i_data_dilated",[{'name':"GPU",'flag':1}], (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_2o2i_data_dilated",[{'name':"GPU",'flag':1}], (1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_1item_5o3i_data_dilated",[{'name':"GPU",'flag':1}], (1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_2item_5o3i_data_dilated",[{'name':"GPU",'flag':1}], (2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
          ("convolution_2d_8item_large_5o3i_data_dilated",
-                                                   ["GPU"], (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   [{'name':"GPU",'flag':1}], (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
          ("convolution_2d_8item_large_5o3i_uneven_filter_data_dilated",
-                                                   ["GPU"], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   [{'name':"GPU",'flag':1}], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
          ("convolution_2d_8item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   ["GPU"], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "false"),
+                                                   [{'name':"GPU",'flag':1}], (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "false"),
          ("convolution_3d_2item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "false"),
+                                                   [{'name':"GPU",'flag':1}], (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "false"),
          ("convolution_3d_1item_large_5o3i_padded_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   ["GPU"], (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   [{'name':"GPU",'flag':1}], (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   [{'name':"GPU",'flag':1}], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
-                                                   ["GPU"], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   [{'name':"GPU",'flag':1}], (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
         ]
 
 def main():
