@@ -45,6 +45,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
@@ -1075,3 +1076,46 @@ TEST(cpu_fusion, weight_fusion)
                   new_convert_layout->get_argument(0)),
               cvt_lt_conv);
 }
+
+TEST(cpu_fusion, sigmoid_multiply_fusion)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_after.pdf");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::SigmoidMultiply>(func);
+    std::cout << "sigmoid mulitply " << ccg << std::endl;
+//    ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid_node_1 = make_shared<op::Sigmoid>(input);
+    auto sigmoid_node_2 = make_shared<op::Sigmoid>(input);
+    auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+    auto func = make_shared<Function>(mul_node, op::ParameterVector{input});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> result =
+            backend->create_tensor(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    copy_data(a, dataA);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_after.pdf");
+    pass_manager.run_passes(func);
+    backend->call(func, {result}, {a});
+//    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+//    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+

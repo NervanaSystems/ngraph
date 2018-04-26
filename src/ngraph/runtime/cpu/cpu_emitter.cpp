@@ -96,6 +96,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -3401,6 +3402,43 @@ namespace ngraph
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                        << to_string(sigmoid_index) << ");\n";
+            }
+
+            std::string generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type)
+            {
+                std::string func_block;
+                switch (type) {
+                    case ngraph::op::SigmoidMultiply::FunctionType::Sigmoid:
+                        func_block = "sigmoid";
+                        break;
+                    case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
+                        func_block = "tanh";
+                        break;
+                    default:
+                        throw ngraph_error("generate_sigmoid_mul_func input function type not supported");
+                }
+                return func_block;
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
+            {
+                auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type());
+                std::string input_2_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type());
+
+//                const input_shape_1 = args[0].get_shape();
+//                const input_shape_2 = args[1].get_shape();
+//                auto result_shape = out[0].get_shape();
+//                int input_1_size = static_cast<int>(shape_size(input_shape_1));
+//                int result_1d_size = static_cast<int>(shape_size(result_shape));
+                writer.block_begin();
+                writer << "auto sigmoid = [](float x) { return 1; }; ";
+                writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = " + input_1_func_string + "(" << args[0].get_name() << "[i]) * ";
+                writer << input_2_func_string + "(" << args[1].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>

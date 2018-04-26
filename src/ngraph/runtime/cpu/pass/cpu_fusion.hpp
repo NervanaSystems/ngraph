@@ -38,17 +38,18 @@ public:
     CPUFusion()
         : GraphRewrite()
     {
-        construct_matmul();
-        construct_matmulbias();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-        construct_zero_padded_conv_backprop_filters();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_conv_bias();
-        construct_batch_norm_relu();
-        construct_conv_relu();
+//        construct_matmul();
+//        construct_matmulbias();
+//        construct_fprop_bn();
+//        construct_zero_padded_reshaped_conv();
+//        construct_zero_padded_conv();
+//        construct_zero_padded_conv_backprop_filters();
+//        construct_sigmoid();
+//        construct_sigmoid_bprop();
+//        construct_conv_bias();
+//        construct_batch_norm_relu();
+//        construct_conv_relu();
+        construct_sigmoid_multiply();
     }
 
 private:
@@ -63,4 +64,5 @@ private:
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_conv_relu();
+    void construct_sigmoid_multiply();
 };
