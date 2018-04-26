@@ -52,10 +52,15 @@ shared_ptr<runtime::TensorView> runtime::interpreter::INTBackend::create_tensor(
 
 bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 {
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(function);
+    FunctionInstance& instance = m_function_map[function];
+    if (!instance.m_is_compiled)
+    {
+        instance.m_is_compiled = true;
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+        pass_manager.register_pass<pass::Liveness>();
+        pass_manager.run_passes(function);
+    }
 
     return true;
 }
@@ -66,14 +71,18 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 {
     validate_call(function, outputs, inputs);
 
-    // TODO: check if function already compiled?
     compile(function);
+    FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensorView
     vector<shared_ptr<runtime::HostTensorView>> func_inputs;
     for (auto tv : inputs)
     {
         func_inputs.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
+    }
+    if (instance.m_nan_check_enabled)
+    {
+        perform_nan_check(func_inputs);
     }
 
     // convert outputs to HostTensorView
@@ -164,7 +173,19 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             type = op->get_element_type();
         }
 
+        if (instance.m_performance_counters_enabled)
+        {
+            instance.m_timer_map[op.get()].start();
+        }
         generate_calls(type, *op, op_outputs, op_inputs);
+        if (instance.m_performance_counters_enabled)
+        {
+            instance.m_timer_map[op.get()].stop();
+        }
+        if (instance.m_nan_check_enabled)
+        {
+            perform_nan_check(op_outputs, op.get());
+        }
 
         // delete any obsolete tensors
         for (const descriptor::Tensor* t : op->liveness_free_list)
@@ -258,12 +279,61 @@ vector<runtime::PerformanceCounter>
     runtime::interpreter::INTBackend::get_performance_data(shared_ptr<Function> func) const
 {
     vector<runtime::PerformanceCounter> rc;
-    // const FunctionInstance& instance = m_function_map.at(func);
-    // for (const pair<const Node*, stopwatch> p : instance.m_call_frame->m_timer_map)
-    // {
-    //     rc.emplace_back(p.first->get_name().c_str(),
-    //                     p.second.get_total_microseconds(),
-    //                     p.second.get_call_count());
-    // }
+    const FunctionInstance& instance = m_function_map.at(func);
+    for (const pair<const Node*, stopwatch> p : instance.m_timer_map)
+    {
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
+    }
     return rc;
+}
+
+void runtime::interpreter::INTBackend::perform_nan_check(
+    const vector<shared_ptr<HostTensorView>>& tvs, const Node* op)
+{
+    size_t arg_number = 1;
+    for (shared_ptr<HostTensorView> tv : tvs)
+    {
+        const element::Type& type = tv->get_tensor().get_element_type();
+        if (type == element::f32)
+        {
+            const float* data = reinterpret_cast<float*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (std::isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        else if (type == element::f64)
+        {
+            const double* data = reinterpret_cast<double*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (std::isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        arg_number++;
+    }
 }

@@ -147,12 +147,17 @@ private:
     class FunctionInstance
     {
     public:
+        bool m_is_compiled = false;
         bool m_nan_check_enabled = false;
         bool m_performance_counters_enabled = false;
+        std::unordered_map<const Node*, stopwatch> m_timer_map;
     };
-
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
     static bool init;
+
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
+                                  const Node* op = nullptr);
+
     void generate_calls(const element::Type& type,
                         Node& op,
                         const std::vector<std::shared_ptr<HostTensorView>>& outputs,
