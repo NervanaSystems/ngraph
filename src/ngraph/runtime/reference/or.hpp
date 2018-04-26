@@ -17,7 +17,6 @@
 #pragma once
 
 #include <cstddef>
-#include <iostream>
 
 namespace ngraph
 {
@@ -25,16 +24,12 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
-            void select(const char* arg0,
-                        const T* arg1,
-                        const T* arg2,
-                        T* out,
-                        size_t count) // TODO: using char for bool, is this right?
+            static inline void
+                logical_or(const char* arg0, const char* arg1, char* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = arg0[i] ? arg1[i] : arg2[i];
+                    out[i] = arg0[i] || arg1[i];
                 }
             }
         }

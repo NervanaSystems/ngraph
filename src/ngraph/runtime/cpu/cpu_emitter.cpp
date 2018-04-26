@@ -27,6 +27,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -62,6 +63,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -3604,6 +3606,24 @@ namespace ngraph
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";
                 writer << "               " << shape_size(node->get_shape()) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::And)
+            {
+                writer << "reference::logical_and(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Or)
+            {
+                writer << "reference::logical_or(" << args[0].get_name() << ",\n"
+                       << "                      " << args[1].get_name() << ",\n"
+                       << "                      " << out[0].get_name() << ",\n"
+                       << "                      " << out[0].get_size() << ");\n";
             }
         }
     }

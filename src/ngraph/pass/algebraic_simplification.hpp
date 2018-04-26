@@ -16,27 +16,23 @@
 
 #pragma once
 
-#include <cstddef>
-#include <iostream>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace reference
-        {
-            template <typename T>
-            void select(const char* arg0,
-                        const T* arg1,
-                        const T* arg2,
-                        T* out,
-                        size_t count) // TODO: using char for bool, is this right?
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i] ? arg1[i] : arg2[i];
-                }
-            }
-        }
+        class AlgebraicSimplification;
     }
 }
+
+class ngraph::pass::AlgebraicSimplification : public FunctionPass
+{
+public:
+    AlgebraicSimplification()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

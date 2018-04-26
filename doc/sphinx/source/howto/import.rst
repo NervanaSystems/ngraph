@@ -45,16 +45,27 @@ everything at once; if an `ngraph_dist` is already installed on your system,
 skip ahead to the next section, :ref:`install_ngonnx`.
    
 
-#. Prepare to install the nGraph library by building a Python3 wheel.
+#. Install prerequisites for the system and install nGraph as ``ngraph_dist``:
   
    .. code-block:: console
 
-      # apt update
-      # apt install python3 python3-pip python3-dev
-      # apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
+      $ apt update
+      $ apt install python3 python3-pip python3-dev
+      $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
+      $ cd ngraph && mkdir build
+      $ cd build && cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+      $ make install
+
+#. Build the Python package (binary wheel) for ngraph:
+
+   .. code-block:: console
+
       $ cd ngraph/python
-      $ ./build_python3_wheel.sh
+      $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      $ export PYBIND_HEADERS_PATH=$PWD/pybind11
+      $ export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+      $ python3 setup.py bdist_wheel
 
 #. After the Python3 binary wheel file (``ngraph-*.whl``) is prepared, install  
    with :command:`pip3`, or :command:`pip` in a virtual environment.

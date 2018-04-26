@@ -14,29 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/or.hpp"
 
-#include <cstddef>
-#include <iostream>
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::Or::Or(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseLogical("Or", arg0, arg1)
 {
-    namespace runtime
+}
+
+shared_ptr<Node> op::Or::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
     {
-        namespace reference
-        {
-            template <typename T>
-            void select(const char* arg0,
-                        const T* arg1,
-                        const T* arg2,
-                        T* out,
-                        size_t count) // TODO: using char for bool, is this right?
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i] ? arg1[i] : arg2[i];
-                }
-            }
-        }
+        throw ngraph_error("Incorrect number of new arguments");
     }
+    return make_shared<Or>(new_args.at(0), new_args.at(1));
 }

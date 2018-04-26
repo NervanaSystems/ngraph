@@ -14,22 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iostream>
-
-#include "Eigen/Dense"
-#include "gtest/gtest.h"
-
-#include "ngraph/util.hpp"
+#include "ngraph/op/and.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(eigen, simple)
+op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseLogical("And", arg0, arg1)
 {
-    Eigen::MatrixXd m(2, 2);
-    m(0, 0) = 3;
-    m(1, 0) = 2.5;
-    m(0, 1) = -1;
-    m(1, 1) = m(1, 0) + m(0, 1);
-    EXPECT_FLOAT_EQ(m(1, 1), 1.5);
+}
+
+shared_ptr<Node> op::And::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<And>(new_args.at(0), new_args.at(1));
 }

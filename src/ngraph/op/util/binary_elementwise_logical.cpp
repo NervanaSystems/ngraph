@@ -14,29 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
-#include "ngraph/node.hpp"
-#include "ngraph/pattern/op/pattern.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
+                                                             const shared_ptr<Node>& arg0,
+                                                             const shared_ptr<Node>& arg1)
+    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
-    namespace pattern
+    if (arg0->get_element_type() != element::boolean ||
+        arg1->get_element_type() != element::boolean)
     {
-        namespace op
-        {
-            /// \brief \p Any allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
-            class Any : public Pattern
-            {
-            public:
-                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Any", NodeVector{arg}, predicate)
-                {
-                    add_output(arg->get_element_type(), arg->get_shape());
-                }
-            };
-        }
+        throw ngraph_error("Arguments must have boolean element type");
     }
 }
