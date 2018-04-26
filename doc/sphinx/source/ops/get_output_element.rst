@@ -1,21 +1,18 @@
-.. softmax.rst:
+.. get_output_element.rst:
 
-#######
-Softmax
-#######
+################
+GetOutputElement
+################
 
 .. code-block:: cpp
 
-   Softmax  // Softmax operation
+   GetOutputElement  // Operation to get an output from an op
 
 
 Description
 ===========
 
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the expine of the
-value of the corresponding coordinate of ``arg`` divided by the sum
-of the expine of all coordinates of ``arg`` in the specified ``axes``.
+Accesses an output of a node.
 
 Inputs
 ------
@@ -31,7 +28,7 @@ Attributes
 +-----------------+----------------------------------------------------------------+
 | Name            | Description                                                    |
 +=================+================================================================+
-| ``axes``        | The axis positions (0-based) on which to calculate the softmax |
+| ``n``           | The output number from the node ``arg``                        |
 +-----------------+----------------------------------------------------------------+
 
 Outputs
@@ -40,21 +37,13 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``                |
+| ``output``      | Depends on `arg`        | Depends on `arg`               |
 +-----------------+-------------------------+--------------------------------+
-
-
-Mathematical Definition
-=======================
-
-.. math::
-
-   \texttt{output}_{i} = \frac{\exp(\texttt{arg}_{i})}{\sum_{j} \exp(\texttt{arg}_{j})}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Softmax
+.. doxygenclass:: ngraph::op::GetOutputElement
    :project: ngraph
-   :members: m_axes
+   :members:
