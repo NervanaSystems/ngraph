@@ -269,6 +269,13 @@ namespace ngraph
             };
 
             template <>
+            struct CudaOpMap<ngraph::op::Select>
+            {
+                static constexpr const char* op = "select";
+                static constexpr const char* math_kernel = "(x0 == 0) ? x1 : x2";
+            };
+
+            template <>
             struct CudaOpMap<ngraph::op::ReluBackprop>
             {
                 static constexpr const char* op = "relu_backprop";
