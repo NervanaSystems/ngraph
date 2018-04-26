@@ -259,3 +259,59 @@ TEST(algebraic_simplification, multiply_negative_tests)
         ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
     }
 }
+
+TEST(algebraic_simplification, multiply_sum_scalar_one)
+{
+    auto fconst1 = ngraph::op::Constant::create(element::f64, Shape{}, {1.0});
+    auto broadcast = std::make_shared<op::Broadcast>(fconst1, Shape{3, 5}, AxisSet{0, 1});
+    auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{0, 1});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    pass_manager.run_passes(f);
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values = new_const->get_vector<double>();
+    ASSERT_EQ(values.size(), 1);
+    ASSERT_EQ(values.at(0), 15);
+}
+
+TEST(algebraic_simplification, multiply_sum_vector_one)
+{
+    auto fconst1 = ngraph::op::Constant::create(element::f64, Shape{}, {1.0});
+    auto broadcast = std::make_shared<op::Broadcast>(fconst1, Shape{3, 5}, AxisSet{0, 1});
+    auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{1});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    pass_manager.run_passes(f);
+    auto new_broadcast =
+        std::dynamic_pointer_cast<op::Broadcast>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_broadcast);
+    auto new_const = std::dynamic_pointer_cast<op::Constant>(new_broadcast->get_argument(0));
+    auto values = new_const->get_vector<double>();
+    ASSERT_EQ(values.size(), 1);
+    ASSERT_EQ(values.at(0), 5);
+}
+
+TEST(algebraic_simplification, multiply_sum_negative)
+{
+    auto fconst1 = ngraph::op::Constant::create(element::f64, Shape{2}, {1.0, 1.0});
+    auto broadcast = std::make_shared<op::Broadcast>(fconst1, Shape{2, 5}, AxisSet{1});
+    auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{0, 1});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    pass_manager.run_passes(f);
+    auto f_sum = f->get_results().at(0)->get_argument(0);
+    ASSERT_EQ(f_sum, sum_fconst1);
+}

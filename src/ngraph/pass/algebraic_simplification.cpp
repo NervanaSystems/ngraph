@@ -18,6 +18,7 @@
 #include <set>
 
 #include "algebraic_simplification.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -129,11 +130,66 @@ static bool simplify_add(std::shared_ptr<Node> n)
     return false;
 }
 
+static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
+{
+    size_t prod = 1;
+    for (auto axis : axes)
+    {
+        prod *= shape.at(axis);
+    }
+
+    return prod;
+}
+
+//`simplify_sum` optimizes the following case:
+//sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
+//where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
+static bool simplify_sum(std::shared_ptr<Node> n)
+{
+    NGRAPH_DEBUG << "In simplify_sum for " << n->get_name();
+    auto sum = std::dynamic_pointer_cast<op::Sum>(n);
+
+    auto broadcast = std::dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
+    if (!broadcast)
+    {
+        NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
+        return false;
+    }
+
+    auto cnst = std::dynamic_pointer_cast<op::Constant>(broadcast->get_argument(0));
+    if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
+    {
+        NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";
+        return false;
+    }
+
+    auto multiplier = reduction_shape_size(sum->get_reduction_axes(), broadcast->get_shape());
+    double sum_const_value = cnst->get_vector<double>().at(0) * multiplier;
+    std::shared_ptr<Node> sum_cnst =
+        op::Constant::create(cnst->get_element_type(), Shape{}, {sum_const_value});
+    auto new_node = sum_cnst;
+    if (sum->get_shape().size() > 0)
+    {
+        ngraph::AxisSet axes{};
+        for (size_t i = 0; i < sum->get_shape().size(); i++)
+        {
+            axes.insert(i);
+        }
+        new_node = std::make_shared<op::Broadcast>(sum_cnst, sum->get_shape(), axes);
+    }
+
+    ngraph::replace_node(n, new_node);
+    return true;
+}
+
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
     initialize_const_values_to_ops()
 {
-    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
-        {{TI(op::Add), simplify_add}, {TI(op::Multiply), simplify_multiply}});
+    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
+        {TI(op::Add), simplify_add},
+        {TI(op::Multiply), simplify_multiply},
+        {TI(op::Sum), simplify_sum},
+    });
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
