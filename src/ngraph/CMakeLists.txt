@@ -284,6 +284,8 @@ endif()
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
 
 endif()
@@ -381,10 +383,12 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+if(MKLDNN_LIB_DIR)
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
