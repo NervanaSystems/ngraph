@@ -17,8 +17,6 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/label.hpp"
 
 namespace ngraph
 {
@@ -28,42 +26,37 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUFusion;
+                class LSTMFusion;
+                class RNNFusion;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusion()
+    LSTMFusion()
         : GraphRewrite()
     {
         construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-        construct_zero_padded_conv_backprop_filters();
-        construct_conv_bias();
-        construct_batch_norm_relu();
-        construct_conv_relu();
-        construct_matmul();
-        construct_matmulbias();
+        construct_lstm_fprop();
     }
 
 private:
     void construct_sigmoid();
-    void construct_sigmoid_bprop();
     void construct_lstm_fprop();
-    void construct_matmul();
-    void construct_matmulbias();
-    void construct_conv_bias();
-    void construct_fprop_bn();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-    void construct_zero_padded_conv_backprop_filters();
-    void construct_batch_norm_relu();
-    void construct_conv_relu();
+};
+
+class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RNNFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_rnn_fprop();
+    }
+
+private:
+    void construct_rnn_fprop();
 };

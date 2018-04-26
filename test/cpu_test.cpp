@@ -32,6 +32,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -373,9 +374,9 @@ TEST(cpu_test, fuse_fprop_lstm)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("lstm_fprop_before_fusion");
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("lstm_fprop_fusion");
-    pass_manager.register_pass<runtime::cpu::pass::RecurrentCPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("lstm_fprop_rnn_fusion");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3_lstm_cell_forward.json");
     const string json_string = file_util::read_file_to_string(json_path);
