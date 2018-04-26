@@ -6,7 +6,7 @@ MaxPool
 
 .. code-block:: cpp
 
-   MaxPool  // Common MaxPool operations
+   MaxPool  // MaxPool operations
 
 
 Description
@@ -49,14 +49,14 @@ Outputs
 | ``output``      | same as ``arg``         | :math:`(N,C,d'_1,\ldots,d'_n)` |
 +-----------------+-------------------------+--------------------------------+
 
-Max pooling takes as its input a data batch tensor of shape
+The input for max pooling is a data batch tensor of shape
 :math:`(N,C,d_1,\dots,d_n)` where :math:`n > 0`, every :math:`d_i >
 0`, and where :math:`N` is the batch size, and :math:`C > 0` is the
 number of channels (sometimes called features).  The dimensions
 :math:`(d_1,\dots,d_n` correspond to the shape of an
 :math:`n`-dimensional data item in a batch. For example, where
 :math:`n=2`, the data may represent a two-dimensional image.  It also
-takes two parameters:
+has two attributes:
 
 1. *the window shape* a size vector :math:`(w_1,\ldots,w_n)` where every :math:`w_i \le d_i`; and
 2. *the window movement strides, optional* a vector of positive integers :math:`(s_1,\dots,s_n)`.

@@ -6,7 +6,7 @@ GetOutputElement
 
 .. code-block:: cpp
 
-   GetOutputElement  // Operation to get an output from an op
+   GetOutputElement  // Operation to select a unique output from an op
 
 
 Description
