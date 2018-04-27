@@ -220,4 +220,6 @@ autodoc_mock_imports = ['ngraph.impl', 'ngraph.utils']
 
 # -- autosummary Extension configuration ----------------------------------
 
-autosummary_generate = ['python_api/structure.rst']
+# Disable autogeneration of summary files.
+# Currently we have customized this pages so we don't want them to be overwritten.
+# autosummary_generate = ['python_api/structure.rst']
