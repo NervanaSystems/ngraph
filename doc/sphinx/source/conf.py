@@ -187,7 +187,7 @@ texinfo_documents = [
 ]
 
 breathe_projects = {
-    "ngraph": "../../doxygen/xml",l
+    "ngraph": "../../doxygen/xml",
 }
 
 rst_epilog = u"""
