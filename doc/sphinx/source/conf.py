@@ -21,7 +21,7 @@ import os
 import sys
 
 # Add path to nGraph Python API.
-sys.path.insert(0, os.path.abspath('../../../python'))
+# sys.path.insert(0, os.path.abspath('../../../python'))
 
 # -- General configuration ------------------------------------------------
 
@@ -33,10 +33,6 @@ needs_sphinx = '1.6.5'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.inheritance_diagram',
-    'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
@@ -191,7 +187,7 @@ texinfo_documents = [
 ]
 
 breathe_projects = {
-    "ngraph": "../../doxygen/xml",
+    "ngraph": "../../doxygen/xml",l
 }
 
 rst_epilog = u"""
@@ -213,11 +209,3 @@ rst_epilog = u"""
    :ltrim:
    
 """
-
-# -- autodoc Extension configuration --------------------------------------
-
-autodoc_mock_imports = ['ngraph.impl', 'ngraph.utils']
-
-# -- autosummary Extension configuration ----------------------------------
-
-autosummary_generate = ['python_api/structure.rst']
