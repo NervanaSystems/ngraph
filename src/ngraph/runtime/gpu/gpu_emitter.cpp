@@ -1555,6 +1555,80 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 return padded_shape;
             }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPool)
+            {
+                // assumes NC{d1,d2,...} format
+                auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto& input_shape = args[0].get_shape();
+                    auto& result_shape = out[0].get_shape();
+                    auto padding_below = avg_pool->get_padding_below();
+                    auto padding_above = avg_pool->get_padding_above();
+                    if (input_shape.size() < 3)
+                    {
+                        throw std::runtime_error(
+                            "AvgPool operation requested for a tensor of less than 3 dimensions. "
+                            "Tensors should have at least one spatial dimension, dim(NC{d1...dN}) "
+                            "<= 3");
+                    }
+
+                    int num_nontrivial_dims = 0;
+                    for (int64_t i = input_shape.size() - 1; i > 1; i--)
+                    {
+                        if (input_shape[i] > 1)
+                        {
+                            num_nontrivial_dims++;
+                        }
+                    }
+
+                    // if 1d or has asymmetric padding, must handle pooling manually
+                    if (input_shape.size() == 3 || num_nontrivial_dims == 1 ||
+                        padding_below != padding_above)
+                    {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+                    }
+                    else if (input_shape.size() <= 5)
+                    {
+                        size_t avg_pool_index = 0;
+                        // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
+                        if (input_shape.size() == 4 || input_shape.size() == 5)
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                            auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
+                                                      ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                      : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                            avg_pool_index = cudnn_emitter->build_pooling(
+                                external_function->ctx().get(),
+                                cudnn_avg_type,
+                                CUDNNEmitter::Prop::Forward,
+                                input_shape,
+                                result_shape,
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_window_shape(),
+                                padding_below,
+                                padding_above);
+                        }
+
+                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "Pooling currently only supports up to 3 spatial dimensions.");
+                    }
+                }
+                writer.block_end();
+            }
         }
     }
 }

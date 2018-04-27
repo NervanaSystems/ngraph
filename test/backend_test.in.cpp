@@ -5767,7 +5767,6 @@ TEST(${BACKEND_NAME}, mkldnn_layouts)
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5804,7 +5803,6 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5855,7 +5853,6 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 
 TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5934,7 +5931,6 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6001,7 +5997,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
@@ -6038,7 +6033,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6069,7 +6063,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6107,7 +6100,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6143,7 +6135,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6179,7 +6170,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -6219,7 +6209,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
@@ -6255,7 +6244,6 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 3};
