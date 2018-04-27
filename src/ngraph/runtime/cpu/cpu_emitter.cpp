@@ -373,12 +373,14 @@ namespace ngraph
                 // TODO: identify the sequence lengths from the fused Op
                 const int src_seq_length_max = rnn_node->get_src_sequence_length();
                 // TODO: 2 for bi directional , 1 for uni directional
+                const int rnn_direction = 1;
+                // TODO: this should be the number of RNN layers fused
                 const int enc_uni_n_layers = 1;
                 // TODO: Lstm will have 4 gates, GRU and vanilla Rnn have different no. of gates
                 const int lstm_n_gates = rnn_node->get_gates_per_cell();
-                ;
+                const int lstm_n_states = 2;
                 // TODO: Figure out the feature size from the fused Op
-                const int feature_size = rnn_node->get_feature_size();
+                const int feature_size = rnn_node->get_input_feature_size();
                 const int batch = rnn_node->get_batch_size();
 
                 //TODO: identify the right way to set src_iter and dst_iter
@@ -386,20 +388,28 @@ namespace ngraph
 
                 mkldnn::memory::dims enc_uni_src_layer_tz = {
                     src_seq_length_max, batch, feature_size};
+                mkldnn::memory::dims enc_uni_src_iter_tz = {
+                    enc_uni_n_layers, rnn_direction, lstm_n_states, batch, feature_size};
                 mkldnn::memory::dims enc_uni_weights_layer_tz = {
-                    enc_uni_n_layers, 1, feature_size, lstm_n_gates, feature_size};
+                    enc_uni_n_layers, rnn_direction, feature_size, lstm_n_gates, feature_size};
                 mkldnn::memory::dims enc_uni_weights_iter_tz = {
-                    enc_uni_n_layers, 1, feature_size, lstm_n_gates, feature_size};
+                    enc_uni_n_layers, rnn_direction, feature_size, lstm_n_gates, feature_size};
                 mkldnn::memory::dims enc_uni_bias_tz = {
-                    enc_uni_n_layers, 1, lstm_n_gates, feature_size};
+                    enc_uni_n_layers, rnn_direction, lstm_n_gates, feature_size};
                 mkldnn::memory::dims enc_uni_dst_layer_tz = {
                     src_seq_length_max, batch, feature_size};
+                mkldnn::memory::dims enc_uni_dst_iter_tz = {
+                    enc_uni_n_layers, rnn_direction, lstm_n_states, batch, feature_size};
 
                 // We create the memory descriptors used by the user
                 auto user_enc_uni_src_layer_md =
                     mkldnn::memory::desc({enc_uni_src_layer_tz},
                                          mkldnn::memory::data_type::f32,
                                          mkldnn::memory::format::tnc);
+
+                auto user_enc_uni_src_iter_md = mkldnn::memory::desc({enc_uni_src_iter_tz},
+                                                                     mkldnn::memory::data_type::f32,
+                                                                     mkldnn::memory::format::ldsnc);
 
                 auto user_enc_uni_wei_layer_md =
                     mkldnn::memory::desc({enc_uni_weights_layer_tz},
@@ -417,15 +427,19 @@ namespace ngraph
                 auto enc_uni_dst_layer_md = mkldnn::memory::desc({enc_uni_dst_layer_tz},
                                                                  mkldnn::memory::data_type::f32,
                                                                  mkldnn::memory::format::tnc);
+
+                auto enc_uni_dst_iter_md = mkldnn::memory::desc({enc_uni_dst_iter_tz},
+                                                                mkldnn::memory::data_type::f32,
+                                                                mkldnn::memory::format::ldsnc);
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_index = mkldnn_emitter->build_rnn_forward(user_enc_uni_src_layer_md,
-                                                                   zero_md,
+                                                                   user_enc_uni_src_iter_md,
                                                                    user_enc_uni_wei_layer_md,
                                                                    user_enc_uni_wei_iter_md,
                                                                    user_enc_uni_bias_md,
                                                                    enc_uni_dst_layer_md,
-                                                                   zero_md);
-
+                                                                   enc_uni_dst_iter_md);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";

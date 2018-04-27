@@ -57,6 +57,6 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     , m_shape_input(hidden_state_ht_1->get_shape())
     , m_lstm_cell_shape(lstm_cell_shape)
 {
-    add_output(hidden_state_ht_1->get_element_type(), m_shape_input);
-    add_output(cell_state_ct_1->get_element_type(), m_lstm_cell_shape);
+    add_output(hidden_state_ht_1->get_element_type(), hidden_state_ht_1->get_shape());
+    add_output(cell_state_ct_1->get_element_type(), cell_state_ct_1->get_shape());
 }

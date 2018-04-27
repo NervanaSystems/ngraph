@@ -356,6 +356,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
             size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
             size_t sequence_len = num_of_lstm_matched;
             size_t feature_size = ht_1_label[0]->get_shape()[1];
+            //size_t output_feature_size =
 
             auto rnn = std::make_shared<op::Rnn>(src_layer,
                                                  src_iter,
