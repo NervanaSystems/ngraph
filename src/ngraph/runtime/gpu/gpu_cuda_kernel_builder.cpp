@@ -174,12 +174,12 @@ void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& wri
 {
     if (math_kernel.size())
     {
-        writer << "__device__ " << data_types[1] << " " << name << "(";
+        writer << "__device__ " << data_types[num_inputs] << " " << name << "(";
         for (size_t i = 0; i < num_inputs - 1; i++)
         {
             writer << data_types[i] << " x" << i << ", ";
         }
-        writer << data_types[num_inputs] << " x" << num_inputs - 1;
+        writer << data_types[num_inputs - 1] << " x" << num_inputs - 1;
         writer << ")\n";
         writer << "{\n";
         writer.indent++;
