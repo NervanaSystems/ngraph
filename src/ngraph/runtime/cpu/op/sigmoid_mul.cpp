@@ -44,7 +44,7 @@ op::SigmoidMultiply::FunctionType identify_node_fucntion(shared_ptr<Node> node) 
     }
 }
 op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_1, shared_ptr<Node> input_2)
-        : RequiresTensorViewArgs("Sigmoid", {input_1, input_2})
+        : RequiresTensorViewArgs("SigmoidMultiply", {input_1->get_argument(0), input_2->get_argument(0)})
 {
     if (input_1->get_element_type() != input_2->get_element_type())
     {

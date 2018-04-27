@@ -896,13 +896,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 {
     //construct predicate to match sigmoid and tanh
     auto sigmoid_pred = [](std::shared_ptr<Node> n) {
-        std::cout << "sigmoid pred" << std::endl;
-        return (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+        bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
                (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
+        std::cout << "sigmoid pred: " << result << std::endl;
+        return result;
     };
-    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
+//    auto sigmoid_1 = std::make_shared<op::Sigmoid>(input);
+//    auto sigmoid_2 = std::make_shared<op::Sigmoid>(input);
     auto elem_mul = std::make_shared<op::Multiply>(sigmoid_1, sigmoid_2);
 
     //Define a call back that needs to called once the DFG matches the pattern
@@ -925,6 +927,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 //        }
 
         auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(pattern_map[sigmoid_1], pattern_map[sigmoid_2]);
+//        auto sum_node = std::make_shared<op::Sum>(pattern_map[input], AxisSet{1});
         ngraph::replace_node(m.match_root(), sigmoid_mul_node);
         return true;
     };
