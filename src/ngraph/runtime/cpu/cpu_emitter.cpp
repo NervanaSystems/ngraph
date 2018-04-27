@@ -3051,9 +3051,6 @@ namespace ngraph
             {
                 auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
-                auto delta_shape = args[1].get_shape();
-                auto out_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
