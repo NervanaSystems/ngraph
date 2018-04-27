@@ -170,4 +170,3 @@ std::shared_ptr<Node> op::ConvolutionBiasRelu::copy_with_new_args(const NodeVect
                                                          get_padding_above(),
                                                          get_data_dilation_strides()));
 }
-
