@@ -1353,7 +1353,6 @@ TEST(${BACKEND_NAME}, notequal)
 TEST(${BACKEND_NAME}, select)
 {
     SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);

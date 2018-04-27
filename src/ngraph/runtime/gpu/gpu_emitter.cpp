@@ -123,7 +123,12 @@ namespace ngraph
                 writer << "if(count == 0) return;\n";
                 writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
                        << node->description() << ">(\"" << node->description() << "\""
-                       << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
+                       << ", std::vector<std::string>{";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << "\"" << args[i].get_type() << "\", ";
+                }
+                writer << "\"" << out[0].get_type() << "\"}"
                        << ", ctx"
                        << ", count"
                        << ", CUdeviceptr(" << out[0].get_name() << ")";
