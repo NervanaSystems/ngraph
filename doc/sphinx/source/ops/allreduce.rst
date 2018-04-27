@@ -1,8 +1,8 @@
 .. allreduce.rst:
 
-##########
+#########
 AllReduce
-##########
+#########
 
 .. code-block:: cpp
 
