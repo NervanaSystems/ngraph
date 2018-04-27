@@ -1037,6 +1037,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
     const int feature_size = 50;
+    const int num_rnn_cell_states = 2;
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -1045,11 +1046,11 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          number_of_cells,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         feature_size);
+                                         feature_size,
+                                         num_rnn_cell_states);
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
-    std::cout << "rnn_ct: " << join(rnn_ct_output->get_shape()) << std::endl;
     auto func = make_shared<Function>(
         NodeVector{rnn_ht_output, rnn_ct_output},
         op::ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
@@ -1284,6 +1285,7 @@ TEST(cpu_fusion, rnn_fprop_1)
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 2;
     const int feature_size = 50;
+    const int num_rnn_cell_states = 2;
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -1292,7 +1294,8 @@ TEST(cpu_fusion, rnn_fprop_1)
                                          number_of_cells,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         feature_size);
+                                         feature_size,
+                                         num_rnn_cell_states);
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 

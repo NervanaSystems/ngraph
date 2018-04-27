@@ -370,21 +370,16 @@ namespace ngraph
             {
                 const ngraph::op::Rnn* rnn_node = static_cast<const ngraph::op::Rnn*>(node);
 
-                // TODO: identify the sequence lengths from the fused Op
                 const int src_seq_length_max = rnn_node->get_src_sequence_length();
                 // TODO: 2 for bi directional , 1 for uni directional
                 const int rnn_direction = 1;
                 // TODO: this should be the number of RNN layers fused
                 const int enc_uni_n_layers = 1;
-                // TODO: Lstm will have 4 gates, GRU and vanilla Rnn have different no. of gates
+                // Note: Lstm will have 4 gates, GRU and vanilla Rnn have different no. of gates
                 const int lstm_n_gates = rnn_node->get_gates_per_cell();
-                const int lstm_n_states = 2;
-                // TODO: Figure out the feature size from the fused Op
+                const int lstm_n_states = rnn_node->get_num_rnn_cell_states();
                 const int feature_size = rnn_node->get_input_feature_size();
                 const int batch = rnn_node->get_batch_size();
-
-                //TODO: identify the right way to set src_iter and dst_iter
-                auto zero_md = mkldnn::zero_md();
 
                 mkldnn::memory::dims enc_uni_src_layer_tz = {
                     src_seq_length_max, batch, feature_size};

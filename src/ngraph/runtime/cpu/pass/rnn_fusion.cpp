@@ -278,11 +278,11 @@ static std::shared_ptr<ngraph::Node>
     return concat_args[0];
 }
 
-static bool is_unreachable(std::shared_ptr<ngraph::Node> n)
+static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
 {
     std::unordered_set<std::shared_ptr<ngraph::Node>> instances_seen;
     std::deque<std::shared_ptr<ngraph::Node>> stack;
-    stack.push_front(n);
+    stack.push_front(node);
 
     while (stack.size() > 0)
     {
@@ -356,7 +356,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
             size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
             size_t sequence_len = num_of_lstm_matched;
             size_t feature_size = ht_1_label[0]->get_shape()[1];
-            //size_t output_feature_size =
+            // number of states for LSTM is 2
+            size_t num_rnn_cell_states = 2;
 
             auto rnn = std::make_shared<op::Rnn>(src_layer,
                                                  src_iter,
@@ -366,7 +367,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                                                  num_of_lstm_matched,
                                                  num_gates_in_lstm,
                                                  sequence_len,
-                                                 feature_size);
+                                                 feature_size,
+                                                 num_rnn_cell_states);
 
             std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
             std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
