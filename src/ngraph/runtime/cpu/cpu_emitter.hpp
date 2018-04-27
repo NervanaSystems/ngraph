@@ -58,6 +58,13 @@ namespace ngraph
                 {
                 }
 
+                static void emitBatchNorm(CPU_ExternalFunction* external_function,
+                                          codegen::CodeWriter& writer,
+                                          const ngraph::Node* node,
+                                          const std::vector<TensorViewWrapper>& args,
+                                          const std::vector<TensorViewWrapper>& out,
+                                          bool append_relu = false);
+
             private:
                 static std::string emit_vector(const TensorViewWrapper&,
                                                const std::string& name = "");

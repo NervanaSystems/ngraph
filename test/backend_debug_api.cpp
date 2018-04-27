@@ -37,8 +37,8 @@ TEST(INTERPRETER, nan_check_input)
 
     auto backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INT_Backend> ibackend =
-        static_pointer_cast<runtime::interpreter::INT_Backend>(backend);
+    shared_ptr<runtime::interpreter::INTBackend> ibackend =
+        static_pointer_cast<runtime::interpreter::INTBackend>(backend);
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -60,8 +60,8 @@ TEST(INTERPRETER, nan_check_output)
 
     auto backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INT_Backend> ibackend =
-        static_pointer_cast<runtime::interpreter::INT_Backend>(backend);
+    shared_ptr<runtime::interpreter::INTBackend> ibackend =
+        static_pointer_cast<runtime::interpreter::INTBackend>(backend);
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
