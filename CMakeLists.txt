@@ -65,6 +65,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 include(var_functions)
 
+option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
+option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
+option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
+option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
+option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -103,7 +109,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
-if ("${NGRAPH_WARNINGS_AS_ERRORS}" MATCHES "^(ON|TRUE)$")
+if (NOT ${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     message(STATUS "Warnings as errors")
 endif()
@@ -136,8 +142,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 # Set true if CPU backend is built by default
-if (NOT DEFINED NGRAPH_CPU_ENABLE)
-    set(NGRAPH_CPU_ENABLE TRUE)
+if (NGRAPH_CPU_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -148,8 +154,8 @@ endif()
 # GPU support
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
-find_package(CUDA 8 QUIET)
-if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
+if(NGRAPH_GPU_ENABLE)
+    find_package(CUDA 8 REQUIRED)
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
     find_package(CUDNN 7 REQUIRED)
@@ -162,8 +168,6 @@ if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
         "Please select a correct compiler version\n"
         )
     endif()
-elseif(NGRAPH_GPU_ENABLE)
-    message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -171,9 +175,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
-    if(MPI_CXX_FOUND)
-        add_definitions(-DNGRAPH_DISTRIBUTED)
-    endif()
+    add_definitions(-DNGRAPH_DISTRIBUTED)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -209,7 +211,12 @@ add_subdirectory(third-party)
 # - install-related targets.
 add_subdirectory(src)
 
-add_subdirectory(test)
+if (NGRAPH_UNIT_TEST_ENABLE)
+    add_subdirectory(test)
+    message(STATUS "unit tests enabled")
+else()
+    message(STATUS "unit tests disabled")
+endif()
 
 add_subdirectory(doc)
 

@@ -34,7 +34,6 @@ set (SRC
     copy.cpp
     core_fusion.cpp
     cpio.cpp
-    eigen.cpp
     element_type.cpp
     file_util.cpp
     inliner.cpp
@@ -42,7 +41,6 @@ set (SRC
     main.cpp
     op.cpp
     graph_partition.cpp
-    includes.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -71,7 +69,6 @@ add_subdirectory(files)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
-set(BACKEND_NAMES ${BACKEND_NAMES} "IE")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
@@ -180,7 +177,7 @@ if(NGRAPH_NNP_ENABLE)
     target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
 endif()
 
-add_dependencies(unit-test ngraph libgtest ext_eigen ext_json)
+add_dependencies(unit-test ngraph libgtest ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
