@@ -378,11 +378,25 @@ namespace ngraph
                 // Note: Lstm will have 4 gates, GRU and vanilla Rnn have different no. of gates
                 const int lstm_n_gates = rnn_node->get_gates_per_cell();
                 const int lstm_n_states = rnn_node->get_num_rnn_cell_states();
-                const int feature_size = rnn_node->get_input_feature_size();
+                const int feature_size = rnn_node->get_src_iter_feature_size();
                 const int batch = rnn_node->get_batch_size();
 
+                if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                {
+                    throw ngraph_error(
+                        "input slc{ht} feature size is not equal to output dlc{ht} feature size ");
+                }
+
+                if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    rnn_node->get_num_of_lstm_cells_fused() != 1)
+                {
+                    throw ngraph_error(
+                        "input sic{ht_1|ct_1} feature size is not equal to output dlc{ht_1|ct_1} "
+                        "feature size ");
+                }
+
                 mkldnn::memory::dims enc_uni_src_layer_tz = {
-                    src_seq_length_max, batch, feature_size};
+                    src_seq_length_max, batch, rnn_node->get_src_layer_feature_size()};
                 mkldnn::memory::dims enc_uni_src_iter_tz = {
                     enc_uni_n_layers, rnn_direction, lstm_n_states, batch, feature_size};
                 mkldnn::memory::dims enc_uni_weights_layer_tz = {

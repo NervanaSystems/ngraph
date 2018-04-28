@@ -35,7 +35,8 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_number_of_lstm_cells,
                             m_number_of_gates_per_cell,
                             m_src_seq_length,
-                            m_input_feature_size,
+                            m_src_layer_feature_size,
+                            m_src_iter_feature_size,
                             m_num_rnn_cell_states);
 }
 
@@ -47,15 +48,27 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              const int number_of_cells,
              const int number_of_gates_per_cell,
              const int src_seq_length,
-             const int input_feature_size,
+             const int src_layer_feature_size,
+             const int src_iter_feature_size,
              const int num_rnn_cell_states)
     : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_number_of_lstm_cells(number_of_cells)
     , m_number_of_gates_per_cell(number_of_gates_per_cell)
     , m_src_seq_length(src_seq_length)
-    , m_input_feature_size(input_feature_size)
+    , m_src_layer_feature_size(src_layer_feature_size)
+    , m_src_iter_feature_size(src_iter_feature_size)
     , m_num_rnn_cell_states(num_rnn_cell_states)
 {
+    if (src_layer->get_shape().size() != weights_layer->get_shape().size())
+    {
+        throw ngraph_error("src_layer and i2h weights size dont match");
+    }
+
+    if (src_iter->get_shape().size() != weights_iter->get_shape().size())
+    {
+        throw ngraph_error("src_iter and h2h weights size dont match");
+    }
+
     if (src_layer->get_shape().size() == 2)
     {
         m_batch_size = static_cast<int>(src_layer->get_shape()[0] / number_of_cells);
@@ -65,10 +78,32 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer doesnt have a rank 2");
     }
 
+    if (shape_size(src_layer->get_shape()) !=
+        m_src_seq_length * m_batch_size * m_src_layer_feature_size)
+    {
+        std::cout << "shape_size: " << shape_size(src_layer->get_shape()) << std::endl;
+        throw ngraph_error("src_layer size is not equal t*n*c");
+    }
+
+    if (bias->get_shape()[0] != weights_layer->get_shape()[0] ||
+        bias->get_shape()[0] != weights_iter->get_shape()[0])
+    {
+        throw ngraph_error("bias and weights_shape are not compatible");
+    }
+
+    auto et = src_layer->get_element_type();
+    for (auto& rnn_input : get_arguments())
+    {
+        if (rnn_input->get_element_type() != et)
+        {
+            throw ngraph_error("all rnn inputs must have the same element type");
+        }
+    }
+
     add_output(src_layer->get_element_type(),
                Shape{static_cast<unsigned long>(m_number_of_lstm_cells * m_batch_size),
-                     static_cast<unsigned long>(m_input_feature_size)});
+                     static_cast<unsigned long>(m_src_iter_feature_size)});
     add_output(src_layer->get_element_type(),
                Shape{static_cast<unsigned long>(m_num_rnn_cell_states * m_batch_size),
-                     static_cast<unsigned long>(m_input_feature_size)});
+                     static_cast<unsigned long>(m_src_iter_feature_size)});
 }

@@ -40,6 +40,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -355,10 +356,19 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
             // TODO: assert for batch_size, sequence length and num_of_lstm's fused
             size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
             size_t sequence_len = num_of_lstm_matched;
+            size_t src_layer_feature_size = src_layer->get_shape()[1];
             size_t feature_size = ht_1_label[0]->get_shape()[1];
             // number of states for LSTM is 2
             size_t num_rnn_cell_states = 2;
 
+            std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
+            std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
+            std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
+            std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
+            std::cout << "bias: " << join(bias->get_shape()) << std::endl;
+            std::cout << "src_seq_len: " << sequence_len << std::endl;
+            std::cout << "batch_size: " << batch_size << std::endl;
+            std::cout << "feature_size: " << feature_size << std::endl;
             auto rnn = std::make_shared<op::Rnn>(src_layer,
                                                  src_iter,
                                                  weights_layer,
@@ -367,14 +377,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                                                  num_of_lstm_matched,
                                                  num_gates_in_lstm,
                                                  sequence_len,
+                                                 src_layer_feature_size,
                                                  feature_size,
                                                  num_rnn_cell_states);
-
-            std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
-            std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
-            std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
-            std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
-            std::cout << "bias: " << join(bias->get_shape()) << std::endl;
 
             std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep;
             auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
@@ -459,7 +464,10 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                 }
                 std::cout << "node bring replaced " << node->get_name();
                 auto new_node = node->copy_with_new_args(new_args);
-                ngraph::replace_node(node, new_node);
+                if (!std::dynamic_pointer_cast<op::Result>(node))
+                {
+                    ngraph::replace_node(node, new_node);
+                }
                 std::cout << "node: " << node->get_name() << " replaced with  "
                           << new_node->get_name() << std::endl;
                 new_args.clear();

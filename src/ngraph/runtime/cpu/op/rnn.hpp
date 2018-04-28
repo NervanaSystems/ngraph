@@ -34,7 +34,8 @@ namespace ngraph
                 const int number_of_cells,
                 const int number_of_gates_per_cell,
                 const int src_seq_length,
-                const int input_feature_size,
+                const int src_layer_feature_size,
+                const int src_iter_feature_size,
                 const int num_rnn_cell_states);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -42,14 +43,16 @@ namespace ngraph
             int get_src_sequence_length() const { return m_src_seq_length; }
             int get_gates_per_cell() const { return m_number_of_gates_per_cell; }
             int get_batch_size() const { return m_batch_size; }
-            int get_input_feature_size() const { return m_input_feature_size; }
+            int get_src_layer_feature_size() const { return m_src_layer_feature_size; }
+            int get_src_iter_feature_size() const { return m_src_iter_feature_size; }
             int get_num_rnn_cell_states() const { return m_num_rnn_cell_states; }
         private:
             int m_number_of_lstm_cells;
             int m_number_of_gates_per_cell;
             int m_src_seq_length;
             int m_batch_size;
-            int m_input_feature_size;
+            int m_src_layer_feature_size;
+            int m_src_iter_feature_size;
             int m_num_rnn_cell_states;
         };
     }
