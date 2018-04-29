@@ -1552,4 +1552,4 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
         EXPECT_EQ(node->get_num_of_lstm_cells_fused(), node->get_src_sequence_length());
         EXPECT_EQ(node->get_num_rnn_cell_states(), node->get_argument(1)->get_arguments().size());
     }
-
+}

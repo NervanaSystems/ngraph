@@ -47,8 +47,8 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -109,7 +109,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto broadcast_pred_1 = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
     };
-    auto skip_param_1_1 = std::make_shared<pattern::op::Any>(param1_1, broadcast_pred_1);
+    auto skip_param_1_1 = std::make_shared<pattern::op::Skip>(param1_1, broadcast_pred_1);
     // param1_2 -> h2h weights (weights_iter)
     auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto param1_2_reshape =
@@ -138,7 +138,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
     //ct-1 -> cell state (src_iter -> {ht | ct-1}
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    //auto skip_ct_1 = std::make_shared<pattern::op::Any>(ct_1, broadcast_pred);
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
     // construct input gate
@@ -306,7 +305,6 @@ static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
 {
     auto rpattern_ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    //auto skip_ht_1 = std::make_shared<pattern::op::Any>(rpattern_ht_1, broadcast_pred);
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 200});
     auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});

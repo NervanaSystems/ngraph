@@ -730,6 +730,7 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
                                    dst_iter_index};
 
     return rnn_index;
+}
 
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                    const mkldnn::memory::desc& result_desc,

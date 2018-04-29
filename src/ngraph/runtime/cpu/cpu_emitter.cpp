@@ -476,7 +476,6 @@ namespace ngraph
                        << ");\n";
             }
 
-            template <>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             codegen::CodeWriter& writer,
                                             const ngraph::Node* node,
