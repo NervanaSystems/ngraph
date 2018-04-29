@@ -324,160 +324,178 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
-    pattern::recurrent_graph_rewrite_callback callback =
-        [lstm_node_label, rpattern_ht_1, weights_h2h, xt, weights_i2h, bias1, bias2, ct_1](
-            pattern::RecurrentMatcher& m) {
+    pattern::recurrent_graph_rewrite_callback callback = [lstm_node_label,
+                                                          rpattern_ht_1,
+                                                          weights_h2h,
+                                                          xt,
+                                                          weights_i2h,
+                                                          bias1,
+                                                          bias2,
+                                                          ct_1](pattern::RecurrentMatcher& m) {
 
-            // static int count = 0;
-            // if (count++ > 0)
-            // return false;
-            std::cout << "|||||||| In recurrent fusion |||||||" << std::endl;
+        // static int count = 0;
+        // if (count++ > 0)
+        // return false;
+        std::cout << "|||||||| In recurrent fusion |||||||" << std::endl;
 
-            auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
+        auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{rpattern_ht_1, ct_1};
-            auto src_iter = compute_rnn_args(src_iter_labels, m);
+        std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{rpattern_ht_1, ct_1};
+        auto src_iter = compute_rnn_args(src_iter_labels, m);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> weights_layer_labels{weights_i2h};
-            auto weights_layer = compute_rnn_args(weights_layer_labels, m);
+        std::vector<std::shared_ptr<pattern::op::Label>> weights_layer_labels{weights_i2h};
+        auto weights_layer = compute_rnn_args(weights_layer_labels, m);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> weights_iter_labels{weights_h2h};
-            auto weights_iter = compute_rnn_args(weights_iter_labels, m);
+        std::vector<std::shared_ptr<pattern::op::Label>> weights_iter_labels{weights_h2h};
+        auto weights_iter = compute_rnn_args(weights_iter_labels, m);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{xt};
-            auto src_layer = compute_rnn_args(src_layer_labels, m, true);
+        std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{xt};
+        auto src_layer = compute_rnn_args(src_layer_labels, m, true);
 
-            auto bias_i2h_label = m.get_bound_nodes_for_pattern(bias2);
-            auto bias_h2h_label = m.get_bound_nodes_for_pattern(bias1);
-            auto bias = std::make_shared<op::Add>(bias_i2h_label[0], bias_h2h_label[0]);
+        auto bias_i2h_label = m.get_bound_nodes_for_pattern(bias2);
+        auto bias_h2h_label = m.get_bound_nodes_for_pattern(bias1);
+        auto bias = std::make_shared<op::Add>(bias_i2h_label[0], bias_h2h_label[0]);
 
-            auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
-            size_t num_gates_in_lstm = 4;
-            // TODO: assert for batch_size, sequence length and num_of_lstm's fused
-            size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
-            size_t sequence_len = num_of_lstm_matched;
-            size_t src_layer_feature_size = src_layer->get_shape()[1];
-            size_t feature_size = ht_1_label[0]->get_shape()[1];
-            // number of states for LSTM is 2
-            size_t num_rnn_cell_states = 2;
+        auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
+        size_t num_gates_in_lstm = 4;
+        // TODO: assert for batch_size, sequence length and num_of_lstm's fused
+        size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
+        size_t sequence_len = num_of_lstm_matched;
+        size_t src_layer_feature_size = src_layer->get_shape()[1];
+        size_t feature_size = ht_1_label[0]->get_shape()[1];
+        // number of states for LSTM is 2
+        size_t num_rnn_cell_states = 2;
 
-            std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
-            std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
-            std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
-            std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
-            std::cout << "bias: " << join(bias->get_shape()) << std::endl;
-            std::cout << "src_seq_len: " << sequence_len << std::endl;
-            std::cout << "batch_size: " << batch_size << std::endl;
-            std::cout << "feature_size: " << feature_size << std::endl;
-            auto rnn = std::make_shared<op::Rnn>(src_layer,
-                                                 src_iter,
-                                                 weights_layer,
-                                                 weights_iter,
-                                                 bias,
-                                                 num_of_lstm_matched,
-                                                 num_gates_in_lstm,
-                                                 sequence_len,
-                                                 src_layer_feature_size,
-                                                 feature_size,
-                                                 num_rnn_cell_states);
+        std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
+        std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
+        std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
+        std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
+        std::cout << "bias: " << join(bias->get_shape()) << std::endl;
+        std::cout << "src_seq_len: " << sequence_len << std::endl;
+        std::cout << "batch_size: " << batch_size << std::endl;
+        std::cout << "feature_size: " << feature_size << std::endl;
+        auto rnn = std::make_shared<op::Rnn>(src_layer,
+                                             src_iter,
+                                             weights_layer,
+                                             weights_iter,
+                                             bias,
+                                             num_of_lstm_matched,
+                                             num_gates_in_lstm,
+                                             sequence_len,
+                                             src_layer_feature_size,
+                                             feature_size,
+                                             num_rnn_cell_states);
 
-            std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep;
-            auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
-            auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
+        std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
+        auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
+        auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
 
-            //slice the rnn ht's
-            size_t start_index = 0;
-            size_t end_index = batch_size;
-            for (size_t i = 0; i < num_of_lstm_matched; i++)
+        //slice the rnn ht's
+        size_t start_index = 0;
+        size_t end_index = batch_size;
+        // capture the slices in the reverse order, so it corrosponds to lstm_goes order captured by the Pattern matcher
+        for (size_t i = 0; i < num_of_lstm_matched; i++)
+        {
+            ht_slice_per_timestep[i] = (std::make_shared<op::Slice>(
+                rnn_ht_out, Coordinate{start_index, 0}, Coordinate{end_index, feature_size}));
+            start_index += batch_size;
+            end_index += batch_size;
+        }
+        std::reverse(ht_slice_per_timestep.begin(), ht_slice_per_timestep.end());
+
+        std::cout << "rnn_time_slice: " << ht_slice_per_timestep.size() << std::endl;
+
+        // find the lstm's nodes captured in PM
+        auto lstm_goes = m.get_bound_nodes_for_pattern(lstm_node_label);
+        std::vector<std::shared_ptr<ngraph::Node>> lstm_nodes;
+
+        // we need to collect LSTM from GOE's, in order to deterministicaly determine
+        // the individaual time slice output ht. lstm_goes will hold the GOE in the decreasing
+        // order of the time slices
+        for (size_t i = 0; i < lstm_goes.size(); i++)
+        {
+            // lstm's will be the input to GOE's
+            lstm_nodes.push_back(lstm_goes[i]->get_arguments()[0]);
+        }
+
+        if (sequence_len != lstm_nodes.size())
+        {
+            throw ngraph_error(" Number of lstm nodes in RNN layer is not equal to time slices");
+        }
+
+        if (lstm_nodes.size() != lstm_goes.size() &&
+            lstm_goes.size() != ht_slice_per_timestep.size())
+        {
+            throw ngraph_error(
+                "Number of slices of rnn output ht is not equal to the time slices inn RNN layer");
+        }
+
+        // collect all the consumers of LSTM goe's (ht)
+        std::set<std::shared_ptr<ngraph::Node>> lstm_goe0_user;
+        std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_goe_to_lstm_slices;
+        std::shared_ptr<Node> goe_0;
+        for (size_t index = 0; index < lstm_nodes.size(); index++)
+        {
+            // now get the GOE0 which is the first output of lstm (ht)
+            for (auto& goes : lstm_nodes[index]->get_outputs().at(0).get_inputs())
             {
-                ht_slice_per_timestep.push_back(std::make_shared<op::Slice>(
-                    rnn_ht_out, Coordinate{start_index, 0}, Coordinate{end_index, feature_size}));
-                start_index += batch_size;
-                end_index += batch_size;
+                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                // first output node of lstm
+                if (goe_node->get_n() == 0)
+                {
+                    goe_0 = goes->get_node();
+                }
             }
 
-            std::cout << "rnn_time_slice: " << ht_slice_per_timestep.size() << std::endl;
-
-            // find the lstm's nodes captured in PM
-            auto lstm_goes = m.get_bound_nodes_for_pattern(lstm_node_label);
-            std::set<std::shared_ptr<ngraph::Node>> lstm_nodes;
-            for (size_t i = 0; i < lstm_goes.size(); i++)
+            for (auto goe0_user : goe_0->get_users())
             {
-                // lstm's will be the input to GOE's
-                lstm_nodes.insert(lstm_goes[i]->get_arguments()[0]);
+                if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
+                        lstm_nodes.end() &&
+                    !is_unreachable(goe0_user))
+                {
+                    lstm_goe0_user.insert(goe0_user);
+                    map_goe_to_lstm_slices[goe0_user] = ht_slice_per_timestep[index];
+                    std::cout << "goe0_user " << goe0_user->get_name() << " ";
+                }
             }
+        }
 
-            // collect all the consumers of LSTM goe's (ht)
-            std::set<std::shared_ptr<ngraph::Node>> lstm_goe0_user;
-            std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_nodes_to_goe;
-            std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_goe_to_lstm_slices;
-            std::shared_ptr<Node> goe_0;
-            //TODO figure out to elimate using buggy index
-            size_t index = 0;
-            for (auto& node : lstm_nodes)
+        std::cout << "++ done collecting all lstm users ++++ " << std::endl;
+        //now go through the lstm consumers and replace them with the slice
+        std::vector<std::shared_ptr<Node>> new_args;
+        for (auto& node : lstm_goe0_user)
+        {
+            for (auto& node_args : node->get_arguments())
             {
-                // now get the GOE0 which is the first output of lstm (ht)
-                for (auto& goes : node->get_outputs().at(0).get_inputs())
+                if (std::find(lstm_goes.begin(), lstm_goes.end(), node_args) != lstm_goes.end())
                 {
-                    auto goe_node =
-                        std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
-                    // first output node of lstm
-                    if (goe_node->get_n() == 0)
-                    {
-                        goe_0 = goes->get_node();
-                    }
+                    std::cout << " args_shape " << join(node_args->get_shape())
+                              << "name: " << node_args->get_name() << std::endl;
+                    new_args.push_back(map_goe_to_lstm_slices[node]);
                 }
-
-                for (auto goe0_user : goe_0->get_users())
+                else
                 {
-                    if (lstm_nodes.find(goe0_user) == lstm_nodes.end() &&
-                        !is_unreachable(goe0_user))
-                    {
-                        lstm_goe0_user.insert(goe0_user);
-                        map_goe_to_lstm_slices[goe0_user] = ht_slice_per_timestep[index];
-                        std::cout << "goe0_user " << goe0_user->get_name() << " ";
-                    }
+                    std::cout << " args_shape " << join(node_args->get_shape())
+                              << "name: " << node_args->get_name() << std::endl;
+                    new_args.push_back(node_args);
                 }
-                index++;
             }
-
-            std::cout << "++ done collecting all lstm users ++++ " << std::endl;
-            //now go through the lstm consumers and replace them with the slice
-            std::vector<std::shared_ptr<Node>> new_args;
-            for (auto& node : lstm_goe0_user)
+            std::cout << "node bring replaced " << node->get_name();
+            auto new_node = node->copy_with_new_args(new_args);
+            if (!std::dynamic_pointer_cast<op::Result>(node))
             {
-                for (auto& node_args : node->get_arguments())
-                {
-                    if (std::find(lstm_goes.begin(), lstm_goes.end(), node_args) != lstm_goes.end())
-                    {
-                        std::cout << "index: " << index << " args_shape "
-                                  << join(node_args->get_shape())
-                                  << "name: " << node_args->get_name() << std::endl;
-                        new_args.push_back(map_goe_to_lstm_slices[node]);
-                    }
-                    else
-                    {
-                        std::cout << " args_shape " << join(node_args->get_shape())
-                                  << "name: " << node_args->get_name() << std::endl;
-                        new_args.push_back(node_args);
-                    }
-                }
-                std::cout << "node bring replaced " << node->get_name();
-                auto new_node = node->copy_with_new_args(new_args);
-                if (!std::dynamic_pointer_cast<op::Result>(node))
-                {
-                    ngraph::replace_node(node, new_node);
-                }
-                std::cout << "node: " << node->get_name() << " replaced with  "
-                          << new_node->get_name() << std::endl;
-                new_args.clear();
+                ngraph::replace_node(node, new_node);
             }
-            std::cout << "<<<<<<<<<<<< End recurrent fusion >>>>>>>>>>>>>" << std::endl;
-            ngraph::replace_node(m.get_match_root(),
-                                 ht_slice_per_timestep[ht_slice_per_timestep.size() - 1]);
-            return true;
+            std::cout << "node: " << node->get_name() << " replaced with  " << new_node->get_name()
+                      << std::endl;
+            new_args.clear();
+        }
+        std::cout << "<<<<<<<<<<<< End recurrent fusion >>>>>>>>>>>>>" << std::endl;
+        ngraph::replace_node(m.get_match_root(),
+                             ht_slice_per_timestep[ht_slice_per_timestep.size() - 1]);
+        return true;
 
-        };
+    };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
