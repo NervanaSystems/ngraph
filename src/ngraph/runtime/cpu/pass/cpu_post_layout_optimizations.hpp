@@ -14,24 +14,30 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/gpu/gpu_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#pragma once
+#include "ngraph/pass/graph_rewrite.hpp"
 
-using namespace ngraph;
-
-std::shared_ptr<ngraph::runtime::Backend> runtime::gpu::GPU_Manager::allocate_backend()
+namespace ngraph
 {
-    return std::make_shared<GPU_Backend>();
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUPostLayoutOptimizations;
+            }
+        }
+    }
 }
 
-std::vector<size_t> runtime::gpu::GPU_Manager::get_subdevices() const
+class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
 {
-    throw std::runtime_error("Unimplemented method");
-}
-
-ngraph::runtime::Manager::Factory runtime::gpu::GPU_Manager::factory =
-    ngraph::runtime::Manager::register_factory(
-        "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-            return std::make_shared<GPU_Manager>();
-        });
+public:
+    CPUPostLayoutOptimizations()
+        : GraphRewrite()
+    {
+        construct_weight_fusion();
+    }
+    void construct_weight_fusion();
+};

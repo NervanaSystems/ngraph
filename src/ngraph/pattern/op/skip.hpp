@@ -14,4 +14,29 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/interpreter/int_kernels.hpp"
+#pragma once
+
+#include "ngraph/node.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
+
+namespace ngraph
+{
+    namespace pattern
+    {
+        namespace op
+        {
+            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
+            /// and skip them if a predicate condition is satisfied.
+            ///
+            class Skip : public Pattern
+            {
+            public:
+                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern("Skip", NodeVector{arg}, predicate)
+                {
+                    add_output(arg->get_element_type(), arg->get_shape());
+                }
+            };
+        }
+    }
+}

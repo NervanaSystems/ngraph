@@ -76,11 +76,104 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     add_output(input->get_element_type(), m_bn_variance_shape);
 }
 
+ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
+                                         std::shared_ptr<ngraph::Node> gamma,
+                                         std::shared_ptr<ngraph::Node> beta,
+                                         std::shared_ptr<ngraph::Node> input,
+                                         std::shared_ptr<ngraph::Node> mean,
+                                         std::shared_ptr<ngraph::Node> variance,
+                                         bool training)
+    : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input, mean, variance})
+    , m_bn_input_shape(input->get_shape())
+    , m_bn_variance_shape(variance->get_shape())
+    , m_bn_mean_shape(mean->get_shape())
+    , m_epsilon(eps)
+    , m_training(training)
+{
+    if (m_bn_input_shape.size() != 4)
+    {
+        throw ngraph_error("input tensor to batchnorm must have rank 4");
+    }
+    else
+    {
+        this->m_bn_variance_shape.push_back(input->get_shape()[1]);
+        this->m_bn_mean_shape.push_back(input->get_shape()[1]);
+    }
+
+    if (m_bn_input_shape[1] == 0)
+    {
+        throw ngraph_error(
+            "input tensor must have at least one channel axis for batch normalization");
+    }
+
+    auto et = input->get_element_type();
+    const char* input_names[] = {"gamma", "beta"};
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        if (get_argument(i)->get_element_type() != et)
+        {
+            auto err_msg = std::string("The element type of ") + input_names[i] +
+                           " isn't equal to input data's type";
+            throw ngraph_error(err_msg.c_str());
+        }
+    }
+
+    if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    {
+        throw ngraph_error("gamma and beta shoud have rank 1");
+    }
+
+    if (gamma->get_shape().size() != beta->get_shape().size())
+    {
+        throw ngraph_error("gamma and beta rank does not match");
+    }
+
+    if (gamma->get_element_type() != beta->get_element_type())
+    {
+        throw ngraph_error("gamma and beta element type does not match");
+    }
+
+    add_output(input->get_element_type(), m_bn_input_shape);
+}
+
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNormRelu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
-        throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNormRelu>(
-        m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+    if (this->m_training)
+    {
+        if (new_args.size() == 3)
+        {
+            return std::make_shared<BatchNormRelu>(
+                m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+        }
+        else if (new_args.size() == 5)
+        {
+            return std::make_shared<BatchNormRelu>(m_epsilon,
+                                                   new_args.at(0),
+                                                   new_args.at(1),
+                                                   new_args.at(2),
+                                                   new_args.at(3),
+                                                   new_args.at(4),
+                                                   true);
+        }
+        else
+        {
+            throw ngraph_error("BatchNormRelu: Incorrect number of new arguments");
+        }
+    }
+    else
+    {
+        if (new_args.size() != 5)
+        {
+            throw ngraph_error("Incorrect number of new arguments");
+        }
+        return std::make_shared<BatchNormRelu>(m_epsilon,
+                                               new_args.at(0),
+                                               new_args.at(1),
+                                               new_args.at(2),
+                                               new_args.at(3),
+                                               new_args.at(4),
+                                               false);
+    }
 }

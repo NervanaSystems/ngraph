@@ -18,7 +18,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -122,7 +122,11 @@ static const string s_output_dir = "gpu_codegen";
 class StaticInitializers
 {
 public:
-    StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
+    StaticInitializers()
+    {
+        file_util::remove_directory(s_output_dir);
+        file_util::make_directory(s_output_dir);
+    }
 };
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
@@ -182,7 +186,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Negative>},
     {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Select>},
+    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
     {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise},
@@ -287,7 +291,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include <cublas_v2.h>
     #include <cuda.h>
     #include <cuda_runtime.h>
-    #include <cudnn_v7.h>
+    #include <cudnn.h>
 
     #include "ngraph/descriptor/input.hpp"
     #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
@@ -740,7 +744,6 @@ using namespace std;
     }
     // TODO: Cleanup and make this a utility function
 
-    file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
@@ -756,12 +759,15 @@ using namespace std;
 
     if (codegen_module == nullptr)
     {
-        throw runtime_error("function failed to compile");
+        throw runtime_error("Function failed to compile to bitcode");
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
-    assert(m_compiled_function);
+    if (!m_compiled_function)
+    {
+        throw runtime_error("Function failed to compile");
+    }
 
     m_is_compiled = true;
     if (m_release_function)

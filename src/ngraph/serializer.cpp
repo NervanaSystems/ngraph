@@ -24,6 +24,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -373,6 +375,10 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "AllReduce")
             {
                 node = make_shared<op::AllReduce>(args[0]);
+            }
+            else if (node_op == "And")
+            {
+                node = make_shared<op::And>(args[0], args[1]);
             }
             else if (node_op == "Asin")
             {
@@ -714,6 +720,10 @@ static shared_ptr<ngraph::Function>
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
                 node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
+            }
+            else if (node_op == "Or")
+            {
+                node = make_shared<op::Or>(args[0], args[1]);
             }
             else if (node_op == "Pad")
             {

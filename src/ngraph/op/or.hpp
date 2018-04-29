@@ -16,21 +16,35 @@
 
 #pragma once
 
-#include <cstddef>
+#include <memory>
+
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
+    namespace op
     {
-        // A buffer identfies a chunk of storage
-        // In descriptors, we are identifying what will be associated with actual memory
-        // during execution.
-        class Buffer
+        /// \brief Elementwise logical-or operation.
+        ///
+        class Or : public util::BinaryElementwiseLogical
         {
         public:
-            size_t size() const { return m_size; }
+            /// \brief Constructs a logical-or operation.
+            ///
+            /// \param arg0 Node that produces the first input tensor.<br>
+            /// `[d0, ...]`
+            /// \param arg1 Node that produces the second input tensor.<br>
+            /// `[d0, ...]`
+            ///
+            /// Output `[d0, ...]`
+            ///
+            Or(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
         protected:
-            size_t m_size;
+            virtual bool is_commutative() override { return true; }
         };
     }
 }

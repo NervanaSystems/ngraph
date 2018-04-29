@@ -16,37 +16,35 @@
 
 #pragma once
 
-#include <cassert>
 #include <memory>
 
-#include "ngraph/descriptor/buffer.hpp"
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
+    namespace op
     {
-        /// @brief Specifies a contiguous portion of a buffer.
+        /// \brief Elementwise logical-and operation.
         ///
-        /// Currently only implemented for linear buffers.
-        class BufferPos
+        class And : public util::BinaryElementwiseLogical
         {
         public:
-            BufferPos() {}
-            BufferPos(std::shared_ptr<Buffer> buffer, size_t offset, size_t size)
-                : m_buffer(buffer)
-                , m_offset(offset)
-                , m_size(size)
-            {
-                assert(buffer->size() >= offset + size);
-            }
+            /// \brief Constructs a logical-and operation.
+            ///
+            /// \param arg0 Node that produces the first input tensor.<br>
+            /// `[d0, ...]`
+            /// \param arg1 Node that produces the second input tensor.<br>
+            /// `[d0, ...]`
+            ///
+            /// Output `[d0, ...]`
+            ///
+            And(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
-            BufferPos(const BufferPos& buffer_pos) = default;
-            BufferPos& operator=(const BufferPos& buffer_pos) = default;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            std::shared_ptr<Buffer> m_buffer;
-            size_t m_offset;
-            size_t m_size;
+            virtual bool is_commutative() override { return true; }
         };
     }
 }

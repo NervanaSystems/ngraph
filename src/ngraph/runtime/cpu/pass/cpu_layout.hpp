@@ -61,7 +61,8 @@ namespace ngraph
                         std::shared_ptr<Node>& node,
                         const std::vector<mkldnn::memory::format>& output_formats);
                     static void set_default_layouts(CPU_ExternalFunction* external_function,
-                                                    std::shared_ptr<Node> node);
+                                                    std::shared_ptr<Node> node,
+                                                    bool use_replace);
                 };
             }
         }
