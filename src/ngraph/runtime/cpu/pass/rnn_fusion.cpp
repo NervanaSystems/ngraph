@@ -98,7 +98,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
-    std::cout << "Sigmoid: " << m << std::endl;
+    NGRAPH_DEBUG << "Sigmoid: " << m;
     this->add_matcher(m);
 }
 
@@ -168,7 +168,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                          << m.match_root()->get_name();
 
             auto pattern_map = m.get_pattern_map();
-            std::cout << "In Lstm fprop call back" << std::endl;
+            NGRAPH_DEBUG << "In Lstm fprop call back";
 
             if (m.match_root()->get_element_type() != element::f32)
             {
@@ -177,7 +177,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                 return false;
             }
 
-            //std::cout << "label_ct: " << join(label_ct[0]->get_shape()) <<  " " << label_ct[0]->get_name() << std::endl;
+            if (m.match_root()->get_shape() != pattern_map[param2_1]->get_shape())
+            {
+                NGRAPH_DEBUG << "matched_node_shape: " << join(m.match_root()->get_shape())
+                             << " hidden state shape: " << join(pattern_map[param2_1]->get_shape());
+                return false;
+            }
             Shape ct_shape{pattern_map[ct_label]->get_shape()};
             auto lstm = std::make_shared<op::Lstm>(pattern_map[param1_1],
                                                    pattern_map[param1_2],
@@ -194,10 +199,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             std::vector<std::shared_ptr<Node>> new_args;
             for (auto node : pattern_map[ct_label]->get_users())
             {
-                //std::cout << "Add_inputs: " << node->get_name() << std::endl;
+                //std::cout << "Add_inputs: " << node->get_name() ;
                 if (std::dynamic_pointer_cast<op::Multiply>(node))
                 {
-                    std::cout << "node_name: " << node->get_name() << std::endl;
+                    NGRAPH_DEBUG << "node_name: " << node->get_name();
                     for (size_t i = 0; i < node->get_input_size(); i++)
                     {
                         if (node->get_argument(i) == pattern_map[ct_label])
@@ -208,12 +213,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                         {
                             new_args.push_back(node->get_argument(i));
                         }
-                        std::cout << "Multiply_input's shape: " << join(new_args[i]->get_shape())
-                                  << " " << new_args[i]->get_name() << std::endl;
+                        NGRAPH_DEBUG << "Multiply_input's shape: " << join(new_args[i]->get_shape())
+                                     << " " << new_args[i]->get_name();
                     }
                     auto new_ct_node = node->copy_with_new_args(new_args);
-                    std::cout << "node: " << node->get_name() << " replaced with  "
-                              << new_ct_node->get_name() << std::endl;
+                    NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
+                                 << new_ct_node->get_name();
                     ;
                     ngraph::replace_node(node, new_ct_node);
                     new_args.clear();
@@ -223,7 +228,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return true;
         };
     auto m = std::make_shared<pattern::Matcher>(ht, callback);
-    std::cout << "lstm: " << m << std::endl;
+    NGRAPH_DEBUG << "lstm: " << m;
     this->add_matcher(m);
 }
 
@@ -232,7 +237,7 @@ static std::shared_ptr<ngraph::Node>
                      pattern::RecurrentMatcher& m,
                      bool input_symbol = false)
 {
-    std::cout << "Inside compute arg " << rnn_labels.size() << std::endl;
+    NGRAPH_DEBUG << "Inside compute arg " << rnn_labels.size();
     std::set<std::shared_ptr<Node>> unique_params;
     NodeVector concat_args;
 
@@ -323,10 +328,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                                                           bias2,
                                                           ct_1](pattern::RecurrentMatcher& m) {
 
-        // static int count = 0;
-        // if (count++ > 0)
-        // return false;
-        std::cout << "|||||||| In recurrent fusion |||||||" << std::endl;
+        NGRAPH_DEBUG << " In recurrent RNN fusion callback";
 
         auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
 
@@ -356,14 +358,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
         // number of states for LSTM is 2
         size_t num_rnn_cell_states = 2;
 
-        std::cout << "src_layer: " << join(src_layer->get_shape()) << std::endl;
-        std::cout << "src_iter: " << join(src_iter->get_shape()) << std::endl;
-        std::cout << "weights_layer: " << join(weights_layer->get_shape()) << std::endl;
-        std::cout << "weights_iter: " << join(weights_iter->get_shape()) << std::endl;
-        std::cout << "bias: " << join(bias->get_shape()) << std::endl;
-        std::cout << "src_seq_len: " << sequence_len << std::endl;
-        std::cout << "batch_size: " << batch_size << std::endl;
-        std::cout << "feature_size: " << feature_size << std::endl;
+        NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
+        NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
+        NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
+        NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
+        NGRAPH_DEBUG << "bias: " << join(bias->get_shape());
+        NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
+        NGRAPH_DEBUG << "batch_size: " << batch_size;
+        NGRAPH_DEBUG << "feature_size: " << feature_size;
 
         if ((src_layer->get_arguments().size()) != sequence_len)
         {
@@ -405,7 +407,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
         }
         std::reverse(ht_slice_per_timestep.begin(), ht_slice_per_timestep.end());
 
-        std::cout << "rnn_time_slice: " << ht_slice_per_timestep.size() << std::endl;
+        NGRAPH_DEBUG << "rnn_time_slice: " << ht_slice_per_timestep.size();
 
         // find the lstm's nodes captured in PM
         auto lstm_goes = m.get_bound_nodes_for_pattern(lstm_node_label);
@@ -457,13 +459,12 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                 {
                     lstm_goe0_user.insert(goe0_user);
                     map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
-                    std::cout << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
-                              << " goe0_user " << goe0_user->get_name() << " ";
+                    NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
+                                 << " goe0_user " << goe0_user->get_name() << " ";
                 }
             }
         }
 
-        std::cout << "++ done collecting all lstm users ++++ " << std::endl;
         //now go through the lstm consumers and replace them with the slice
         std::vector<std::shared_ptr<Node>> new_args;
         for (auto& node : lstm_goe0_user)
@@ -472,29 +473,29 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
             {
                 if (std::find(lstm_goes.begin(), lstm_goes.end(), node_args) != lstm_goes.end())
                 {
-                    std::cout << " args_shape " << join(node_args->get_shape())
-                              << "name: " << node_args->get_name() << std::endl;
+                    NGRAPH_DEBUG << " args_shape " << join(node_args->get_shape())
+                                 << "name: " << node_args->get_name();
                     new_args.push_back(map_goe_to_lstm_slices[node_args]);
                 }
                 else
                 {
-                    std::cout << " args_shape " << join(node_args->get_shape())
-                              << "name: " << node_args->get_name() << std::endl;
+                    NGRAPH_DEBUG << " args_shape " << join(node_args->get_shape())
+                                 << "name: " << node_args->get_name();
                     new_args.push_back(node_args);
                 }
             }
-            std::cout << "node bring replaced " << node->get_name();
+            NGRAPH_DEBUG << "node bring replaced " << node->get_name();
             auto new_node = node->copy_with_new_args(new_args);
             if (!std::dynamic_pointer_cast<op::Result>(node))
             {
                 ngraph::replace_node(node, new_node);
             }
-            std::cout << "node: " << node->get_name() << " replaced with  " << new_node->get_name()
-                      << std::endl;
+            NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
+                         << new_node->get_name();
             new_args.clear();
         }
-        std::cout << "<<<<<<<<<<<< End recurrent fusion >>>>>>>>>>>>> "
-                  << "matched_node: " << m.get_match_root()->get_name() << std::endl;
+        NGRAPH_DEBUG << "End of recurrent fusion call back "
+                     << "matched_node: " << m.get_match_root()->get_name();
         ngraph::replace_node(m.get_match_root(), ht_slice_per_timestep[0]);
         return true;
 

@@ -1029,15 +1029,15 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
-    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 50});
+    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 50});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
     auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
     const int number_of_cells = 1;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
-    const int src_layer_feature_size = 50;
+    const int src_layer_feature_size = 100;
     const int feature_size = 100;
     const int num_rnn_cell_states = 2;
     auto rnn_node = make_shared<op::Rnn>(src_layer,
@@ -1073,9 +1073,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     shared_ptr<runtime::TensorView> result_ct =
         backend->create_tensor(element::f32, Shape{20, 100});
 
-    copy_data(src_layer_t, vector<float>(500, 1));
+    copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(2000, 1));
-    copy_data(weights_layer_t, vector<float>(400 * 50, 1));
+    copy_data(weights_layer_t, vector<float>(400 * 100, 1));
     copy_data(weights_iter_t, vector<float>(400 * 100, 1));
     copy_data(biases_t, vector<float>(400, 1));
 
@@ -1459,6 +1459,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
         2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,
         2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,
         2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f};
+
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }

@@ -17,9 +17,6 @@
 #include <cassert>
 #include <memory>
 
-#include <algorithm>
-#include <iostream>
-#include <string>
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
 
@@ -30,15 +27,6 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
     : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        std::cout << "args_name " << args[i]->get_name() << " Shape: ";
-        for (auto& dim : args[i]->get_shape())
-        {
-            cout << dim << " ";
-        }
-        cout << std::endl;
-    }
     if (m_inputs.size() < 1)
     {
         throw ngraph_error("At least one argument required");

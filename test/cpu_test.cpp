@@ -368,4 +368,3 @@ TEST(cpu_test, batchnorm_fprop_globalstats_b2c2w2h1)
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
-

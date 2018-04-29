@@ -395,6 +395,11 @@ namespace ngraph
                         "feature size ");
                 }
 
+                NGRAPH_DEBUG << "slc: " << rnn_node->get_src_layer_feature_size()
+                             << " sic: " << feature_size;
+                NGRAPH_DEBUG << "batch_size: " << batch << " lstm_n_states " << lstm_n_states
+                             << " lstm_n_gates: " << lstm_n_gates
+                             << " src_seq_length_max: " << src_seq_length_max;
                 mkldnn::memory::dims enc_uni_src_layer_tz = {
                     src_seq_length_max, batch, rnn_node->get_src_layer_feature_size()};
                 mkldnn::memory::dims enc_uni_src_iter_tz = {
