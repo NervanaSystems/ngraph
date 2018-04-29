@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1460,4 +1461,44 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
         2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f,      2.0f};
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
+}
+
+TEST(cpu_fusion, fuse_2_layer_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3_lstm_cell_forward.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t count = count_ops_of_type<op::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rnn_ops.size(), count);
+    for (auto& node : rnn_ops)
+    {
+        EXPECT_EQ(node->get_num_of_lstm_cells_fused(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_rnn_cell_states(), node->get_argument(1)->get_arguments().size());
+    }
+}
+TEST(cpu_fusion, fuse_1_layer_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3LSTM_forward.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t count = count_ops_of_type<op::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rnn_ops.size(), 1);
+    EXPECT_EQ(rnn_ops.size(), count);
+    for (auto& node : rnn_ops)
+    {
+        EXPECT_EQ(node->get_num_of_lstm_cells_fused(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_rnn_cell_states(), node->get_argument(1)->get_arguments().size());
+    }
 }

@@ -364,6 +364,18 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
         std::cout << "src_seq_len: " << sequence_len << std::endl;
         std::cout << "batch_size: " << batch_size << std::endl;
         std::cout << "feature_size: " << feature_size << std::endl;
+
+        if ((src_layer->get_arguments().size()) != sequence_len)
+        {
+            throw ngraph_error(
+                "number of lstm inputs captured in the RNN fusion is not equal to "
+                "src_sequence_length");
+        }
+
+        if ((src_iter->get_arguments().size()) != num_rnn_cell_states)
+        {
+            throw ngraph_error("number of states for RNN op is not equal to (ht_1|ct_1)");
+        }
         auto rnn = std::make_shared<op::Rnn>(src_layer,
                                              src_iter,
                                              weights_layer,
@@ -417,7 +429,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
             lstm_goes.size() != ht_slice_per_timestep.size())
         {
             throw ngraph_error(
-                "Number of slices of rnn output ht is not equal to the time slices inn RNN layer");
+                "Number of slices of rnn output ht is not equal to the time slices in RNN layer");
         }
 
         // collect all the consumers of LSTM goe's (ht)
