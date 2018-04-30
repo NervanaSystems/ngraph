@@ -57,9 +57,8 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     ExternalProject_Get_Property(ext_llvm source_dir)
-    set(LLVM_INCLUDE_DIR "${source_dir}/include" PARENT_SCOPE)
-    set(LLVM_INCLUDE_DIR "${source_dir}/include")  # used by other external projects in current scope
-    set(LLVM_LIB_DIR "${source_dir}/lib" PARENT_SCOPE)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include")
+    set(LLVM_LIB_DIR "${source_dir}/lib")
 
     set(LLVM_LINK_LIBS
         clangTooling
@@ -138,6 +137,6 @@ if (NGRAPH_CPU_ENABLE)
         tinfo
         z
         m
-        PARENT_SCOPE)
+    )
 
 endif()

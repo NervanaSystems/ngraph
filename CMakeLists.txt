@@ -222,10 +222,22 @@ endif()
 #     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
-# The following 'add_subdirectory' call:
-# - defines the 'libgtest' target.
-# - defines the 'GTEST_INCLUDE_DIR' cmake variable.
-add_subdirectory(third-party)
+message(STATUS "EXTERNAL_PROJECTS_ROOT ${EXTERNAL_PROJECTS_ROOT}")
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+message(STATUS "EXTERNAL_PROJECTS_ROOT ${EXTERNAL_PROJECTS_ROOT}")
+include(cmake/external_gtest.cmake)
+include(cmake/external_json.cmake)
+include(cmake/external_eigen.cmake)
+include(cmake/external_mkldnn.cmake)
+if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+    include(cmake/external_llvm_prebuilt.cmake)
+else()
+    include(cmake/external_llvm.cmake)
+endif()
+include(cmake/external_tbb.cmake)
+include(cmake/external_nnp_transformer.cmake)
 
 # The following 'add_subdirectory' call:
 # - defines the 'ngraph' library target.

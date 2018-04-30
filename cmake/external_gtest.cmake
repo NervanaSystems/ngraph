@@ -62,11 +62,14 @@ endif()
 
 #----------------------------------------------------------------------------------------------------------
 
+ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
+
 get_filename_component(
     GTEST_INCLUDE_DIR
     "${EXTERNAL_PROJECTS_ROOT}/gtest/src/googletest/include"
     ABSOLUTE)
-set(GTEST_INCLUDE_DIR "${GTEST_INCLUDE_DIR}" PARENT_SCOPE)
+message(STATUS "BINARY_DIR ${BINARY_DIR}")
+message(STATUS "GTEST_INCLUDE_DIR ${GTEST_INCLUDE_DIR}")
 
 # Create a libgtest target to be used as a dependency by test programs
 add_library(libgtest IMPORTED STATIC GLOBAL)

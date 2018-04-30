@@ -62,4 +62,4 @@ endif()
 
 #----------------------------------------------------------------------------------------------------------
 
-set(EIGEN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src" PARENT_SCOPE)
+set(EIGEN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src")

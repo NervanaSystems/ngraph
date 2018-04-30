@@ -90,9 +90,8 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
 
     ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
 
-    set(LLVM_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/include" PARENT_SCOPE)
-    set(LLVM_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/include")  # used by other external projects in current scope
-    set(LLVM_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/lib" PARENT_SCOPE)
+    set(LLVM_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/include")
+    set(LLVM_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/lib")
 
     if(APPLE)
         set(LLVM_LINK_LIBS
