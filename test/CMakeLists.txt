@@ -170,7 +170,7 @@ if(CUDA_INCLUDE_DIRS)
     target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
-target_link_libraries(unit-test ngraph libgtest pthread)
+target_link_libraries(unit-test ngraph gtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 if(NGRAPH_NNP_ENABLE)
@@ -179,7 +179,7 @@ if(NGRAPH_NNP_ENABLE)
     target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
 endif()
 
-add_dependencies(unit-test ngraph libgtest ext_json)
+add_dependencies(unit-test ngraph ext_gtest ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
