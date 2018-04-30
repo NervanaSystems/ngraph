@@ -20,6 +20,7 @@
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -39,16 +40,22 @@ namespace ngraph
                 for (const Coordinate& in_coord : input_transform)
                 {
                     size_t batch_index = in_coord[batch_axis];
+                    //int seq_index = j < sequences[k] ? sequences[k] - j - 1 : j;
                     size_t sequence_index =
-                        sequence_lengths[batch_index]
+                        in_coord[sequence_axis] < sequence_lengths[batch_index]
                             ? sequence_lengths[batch_index] - in_coord[sequence_axis] - 1
                             : in_coord[sequence_axis];
 
                     //make a copy of in_coord and update sequence_index
                     Coordinate out_coord = in_coord;
-                    in_coord[sequence_axis] = sequence_index;
-
-                    out[output_transform.index(out_coord)] = output_transform.index(in_coord);
+                    out_coord[sequence_axis] = sequence_index;
+                    //std::vector<size_t> tmp {out_coord.begin(), out_coord.end()};
+                    std::vector<size_t> tmp {in_coord.begin(), in_coord.end()};
+                    std::cout << "in coord = " << ngraph::vector_to_string(tmp)
+                              <<  "batch_index = " << in_coord[batch_axis] 
+                              << " sequence_lengths[batch_index] = " << sequence_lengths[batch_index]
+                              << std::endl;
+                    out[input_transform.index(out_coord)] = arg[input_transform.index(in_coord)];
                 }
             }
         }

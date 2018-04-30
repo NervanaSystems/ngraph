@@ -39,6 +39,7 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -59,4 +60,51 @@ TEST(cpu_test, unhandled_op)
     auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     ASSERT_THROW(backend->compile(f), ngraph_error);
+}
+
+TEST(cpu_test, reverse_sequence)
+{
+    Shape shape{2, 3, 4, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+
+    size_t batch_axis = 2;
+    size_t sequence_axis = 1;
+    Shape sequence_lengths{1,2,1,2};
+    auto rs = std::make_shared<op::ReverseSequence>(A, batch_axis, sequence_axis, sequence_lengths);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> input
+    {
+                        //B1
+                        0,0, 3,0, 6,0, 9,0,
+                        1,0, 4,0, 7,0, 10,0,
+                        2,0, 5,0, 8,0, 11,0,
+                        //B2
+                        12,0, 15,0, 18,0, 21,0,
+                        13,0, 16,0, 19,0, 22,0,
+                        14,0, 17,0, 20,0, 23,0,
+    };
+
+    std::vector<int> expected
+    {
+        0,  0,  4,  0,  6,  0, 10,  0,
+        1,  0,  3,  0,  7,  0,  9,  0,
+        2,  0,  5,  0,  8,  0, 11,  0,
+
+        12,  0, 16,  0, 18,  0, 22,  0,
+        13,  0, 15,  0, 19,  0, 21,  0,
+        14,  0, 17,  0, 20,  0, 23,  0
+    };
+
+    copy_data(a, input);
+
+    backend->call(f, {result}, {a});
+    EXPECT_EQ(read_vector<int>(result), expected);
 }

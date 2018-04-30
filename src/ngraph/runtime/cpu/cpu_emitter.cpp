@@ -76,6 +76,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
@@ -2743,6 +2744,24 @@ namespace ngraph
                 writer << "                {" << join(arg_shape) << "},\n";
                 writer << "                {" << join(result_shape) << "},\n";
                 writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReverseSequence)
+            {
+                auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
+                auto arg_shape = args[0].get_shape();
+
+                std::cout << "seq_lengths = " << vector_to_string(rs->get_sequence_lengths()) << std::endl;
+                std::cout << "batch_axis = " <<  rs->get_batch_axis() << std::endl;
+                std::cout << "get_sequence_axis = " <<  rs->get_sequence_axis() << std::endl;
+                writer << "reference::reverse_sequence<" << out[0].get_type() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                {" << join(arg_shape) << "},\n";
+                writer << "                 " << rs->get_batch_axis() << ",\n";
+                writer << "                 " << rs->get_sequence_axis() << ",\n";
+                writer << "                {" << join(rs->get_sequence_lengths()) << "});\n";
             }
 
             template <>

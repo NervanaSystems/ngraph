@@ -38,16 +38,16 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            size_t get_batch_axis() { return m_batch_axis; }
-            size_t get_sequence_axis() { return m_seq_axis; }
-            Shape get_sequence_lengths() { return m_seq_lengths; }
+            size_t get_batch_axis() const { return m_batch_axis; }
+            size_t get_sequence_axis() const { return m_seq_axis; }
+            Shape get_sequence_lengths() const { return m_seq_lengths; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
         private:
-            bool m_batch_axis{0};
-            bool m_seq_axis{0};
+            size_t m_batch_axis{0};
+            size_t m_seq_axis{0};
             Shape m_seq_lengths;
         };
     }
