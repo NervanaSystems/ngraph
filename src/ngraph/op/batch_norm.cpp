@@ -187,6 +187,11 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     , epsilon(eps)
 
 {
+    if (input->get_shape().size() != 4)
+    {
+        throw ngraph_error("Input expected to be a 4D tensor");
+    }
+
     auto et = input->get_element_type();
     const char* input_names[] = {"gamma", "beta", "input", "mean", "variance", "delta"};
 

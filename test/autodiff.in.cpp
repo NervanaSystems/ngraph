@@ -1537,7 +1537,7 @@ TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
     SKIP_TEST_FOR("CPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
 
-    auto shape_in = Shape{2, 3};
+    auto shape_in = Shape{2, 3, 1, 1};
     auto shape_mean = Shape{3};
 
     auto make_graph = [shape_in, shape_mean] {
@@ -1554,7 +1554,6 @@ TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     test::Uniform<double> rng(-1.0f, 1.0f);
-    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->create_tensor<double>(shape_in));
     auto x1 = rng.initialize(backend->create_tensor<double>(shape_mean));
     auto x2 = rng.initialize(backend->create_tensor<double>(shape_mean));
