@@ -186,7 +186,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Negative>},
     {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Select>},
+    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise},
     {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
     {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise},

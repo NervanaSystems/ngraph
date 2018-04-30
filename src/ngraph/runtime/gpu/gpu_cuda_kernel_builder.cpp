@@ -20,19 +20,18 @@
 
 using namespace ngraph;
 
-void runtime::gpu::CudaKernelBuilder::get_elementwise_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::string& op,
-    const std::array<std::string, 2>& data_types,
-    const size_t& num_inputs)
+void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
+                                                         const std::string& name,
+                                                         const std::string& op,
+                                                         const std::vector<std::string>& data_types,
+                                                         const size_t& num_inputs)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
     {
-        writer << data_types[0] << "* in" << i << ", ";
+        writer << data_types[i] << "* in" << i << ", ";
     }
-    writer << data_types[1] << "* out,"
+    writer << data_types[num_inputs] << "* out, "
            << "size_t n)\n";
     writer << "{\n";
     writer.indent++;
@@ -167,21 +166,20 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_device_helper(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::string& math_kernel,
-    const std::array<std::string, 2>& data_types,
-    const size_t& num_inputs)
+void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        const std::string& math_kernel,
+                                                        const std::vector<std::string>& data_types,
+                                                        const size_t& num_inputs)
 {
     if (math_kernel.size())
     {
-        writer << "__device__ " << data_types[1] << " " << name << "(";
+        writer << "__device__ " << data_types[num_inputs] << " " << name << "(";
         for (size_t i = 0; i < num_inputs - 1; i++)
         {
-            writer << data_types[0] << " x" << i << ", ";
+            writer << data_types[i] << " x" << i << ", ";
         }
-        writer << data_types[0] << " x" << num_inputs - 1;
+        writer << data_types[num_inputs - 1] << " x" << num_inputs - 1;
         writer << ")\n";
         writer << "{\n";
         writer.indent++;
