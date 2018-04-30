@@ -1531,3 +1531,33 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
+
+TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
+{
+    SKIP_TEST_FOR("CPU", "${BACKEND_NAME}");
+    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+
+    auto shape_in = Shape{2, 3};
+    auto shape_mean = Shape{3};
+
+    auto make_graph = [shape_in, shape_mean] {
+        auto A = make_shared<op::Parameter>(element::f64, shape_in);
+        auto B = make_shared<op::Parameter>(element::f64, shape_mean);
+        auto C = make_shared<op::Parameter>(element::f64, shape_mean);
+
+        auto BN = make_shared<op::BatchNorm>(1e-3, B, C, A);
+
+        auto f = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0),
+                                       op::ParameterVector{A, B, C});
+        return f;
+    };
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    test::Uniform<double> rng(-1.0f, 1.0f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<double>(shape_in));
+    auto x1 = rng.initialize(backend->create_tensor<double>(shape_mean));
+    auto x2 = rng.initialize(backend->create_tensor<double>(shape_mean));
+
+    EXPECT_TRUE(autodiff_numeric_compare<double>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
+}
