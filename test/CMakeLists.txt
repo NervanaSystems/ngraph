@@ -69,7 +69,6 @@ add_subdirectory(files)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
-set(BACKEND_NAMES ${BACKEND_NAMES} "IE")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
@@ -100,6 +99,8 @@ endif()
 if(NGRAPH_NNP_ENABLE)
     include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI_TESTER")
     set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
     # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
     add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
