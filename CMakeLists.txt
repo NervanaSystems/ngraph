@@ -170,41 +170,10 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
-# GPU support
-#-----------------------------------------------------------------------------------------------
-# Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
-if(NGRAPH_GPU_ENABLE)
-    find_package(CUDA 8 REQUIRED)
-    message(STATUS "GPU Backend Enabled")
-    set(NGRAPH_GPU_ENABLE TRUE)
-    find_package(CUDNN 7 REQUIRED)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
-        NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
-        CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
-        message(FATAL_ERROR
-        "CUDA 8.0 is not compatible with GCC version >= 6.\n"
-        "Please select a correct compiler version\n"
-        )
-    endif()
-    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
-elseif(NGRAPH_GPU_ENABLE)
-    message(FATAL_ERROR "GPU was required but CUDA library was not found")
-endif()
-
-#-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
-endif()
-
-#-----------------------------------------------------------------------------------------------
-# distributed support
-#-----------------------------------------------------------------------------------------------
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -228,10 +197,19 @@ endif()
 #     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
-# The following 'add_subdirectory' call:
-# - defines the 'libgtest' target.
-# - defines the 'GTEST_INCLUDE_DIR' cmake variable.
-add_subdirectory(third-party)
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+include(cmake/external_gtest.cmake)
+include(cmake/external_json.cmake)
+include(cmake/external_eigen.cmake)
+include(cmake/external_mkldnn.cmake)
+if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+    include(cmake/external_llvm_prebuilt.cmake)
+else()
+    include(cmake/external_llvm.cmake)
+endif()
+include(cmake/external_tbb.cmake)
 
 # The following 'add_subdirectory' call:
 # - defines the 'ngraph' library target.
