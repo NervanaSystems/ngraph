@@ -28,6 +28,7 @@ SET(JSON_GIT_LABEL v3.1.1)
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
         ext_json
+        PREFIX json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
         GIT_TAG ${JSON_GIT_LABEL}
         # Disable install step
@@ -41,6 +42,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
 else()
     ExternalProject_Add(
         ext_json
+        PREFIX json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
         GIT_TAG ${JSON_GIT_LABEL}
         # Disable install step
@@ -55,7 +57,5 @@ endif()
 
 #------------------------------------------------------------------------------
 
-get_filename_component(
-    JSON_INCLUDE_DIR
-    "${EXTERNAL_PROJECTS_ROOT}/ext_json-prefix/src/ext_json/include"
-    ABSOLUTE)
+ExternalProject_Get_Property(ext_json SOURCE_DIR)
+set(JSON_INCLUDE_DIR "${SOURCE_DIR}/include")
