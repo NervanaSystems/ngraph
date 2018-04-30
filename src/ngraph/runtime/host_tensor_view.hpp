@@ -46,6 +46,18 @@ public:
     char* get_data_ptr();
     const char* get_data_ptr() const;
 
+    template <typename T>
+    T* get_data_ptr()
+    {
+        return reinterpret_cast<T*>(get_data_ptr());
+    }
+
+    template <typename T>
+    const T* get_data_ptr() const
+    {
+        return reinterpret_cast<T*>(get_data_ptr());
+    }
+
     size_t get_size() const;
     const element::Type& get_element_type() const;
 
