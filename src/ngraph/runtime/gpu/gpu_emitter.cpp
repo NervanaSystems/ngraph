@@ -794,7 +794,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                auto concat = static_cast<const ngraph::op::Broadcast*>(node);
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
             }
