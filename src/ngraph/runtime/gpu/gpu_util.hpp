@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 #include <nvrtc.h>
 
 //why use "do...while.."
@@ -48,19 +49,39 @@
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg));     \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #x " failed with error"                                    \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
+            throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)
 
 #define CUDNN_SAFE_CALL(func)                                                                      \
+    do                                                                                             \
     {                                                                                              \
         cudnnStatus_t e = (func);                                                                  \
         if (e != CUDNN_STATUS_SUCCESS)                                                             \
         {                                                                                          \
             auto msg = cudnnGetErrorString(e);                                                     \
-            throw std::runtime_error("\ncuDNN error: " + std::string(msg));                        \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #func " failed with error"                                 \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
+            throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
-    }
+    } while (0)
+
+#define CUBLAS_SAFE_CALL(func)                                                                     \
+    do                                                                                             \
+    {                                                                                              \
+        cublasStatus_t e = (func);                                                                 \
+        if (e != CUBLAS_STATUS_SUCCESS)                                                            \
+        {                                                                                          \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #func " failed with error"                                 \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << e;    \
+            throw std::runtime_error(safe_call_ss.str());                                          \
+        }                                                                                          \
+    } while (0)
 
 namespace ngraph
 {
@@ -74,6 +95,7 @@ namespace ngraph
             void free_gpu_buffer(void* buffer);
             void cuda_memcpyDtD(void* dst, void* src, size_t buffer_size);
             void cuda_memcpyHtD(void* dst, void* src, size_t buffer_size);
+            void cuda_memcpyDtH(void* dst, void* src, size_t buffer_size);
             void cuda_memset(void* dst, int value, size_t buffer_size);
         }
     }

@@ -16,27 +16,23 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
-#include "ngraph/pattern/op/pattern.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace pattern
+    namespace pass
     {
-        namespace op
-        {
-            /// \brief \p Any allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
-            class Any : public Pattern
-            {
-            public:
-                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Any", NodeVector{arg}, predicate)
-                {
-                    add_output(arg->get_element_type(), arg->get_shape());
-                }
-            };
-        }
+        class AlgebraicSimplification;
     }
 }
+
+class ngraph::pass::AlgebraicSimplification : public FunctionPass
+{
+public:
+    AlgebraicSimplification()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

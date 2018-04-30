@@ -23,28 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Min-reduction operation.
-        ///
-        /// Reduces the tensor, eliminating the specified reduction axes by taking the minimum element.
-        ///
-        /// This is equivalent to Reduce where `arg_init` = -inf and `reduction_function` is \f$f(x,y) = min(x,y)\f$.
-        ///
-        /// ## Parameters
-        ///
-        /// |                      | Description                                  |
-        /// | -------------------- | -------------------------------------------- |
-        /// | `reduction_axes`     | The axes to eliminate through min-reduction. |
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                            |
-        /// | ----- | --------------------------------- | ------------------------------------------------------ |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                                      | Description                                                                                                                       |
-        /// | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by taking the minimum element. |
         class Min : public util::ArithmeticReduction
         {
         public:

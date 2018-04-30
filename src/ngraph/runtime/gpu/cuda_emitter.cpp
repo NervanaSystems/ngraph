@@ -150,12 +150,12 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
-    gpu::primitive* pad = nullptr;
+    std::unique_ptr<gpu::primitive> pad;
 
     // if the pad value is statically provided, the kernel call signature is different
     if (pad_value == "") // pad value provided at runtime (dynamic)
     {
-        pad = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           static_cast<unsigned int>(nthreads),
@@ -169,11 +169,11 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                           args_list,
                                           0));  // arguments
             CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }};
+        }});
     }
     else // pad value provided at compile time (static)
     {
-        pad = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           static_cast<unsigned int>(nthreads),
@@ -187,10 +187,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                           args_list,
                                           0));  // arguments
             CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }};
+        }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(pad);
+    primitive_index = this->m_primitive_emitter->insert(std::move(pad));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
@@ -259,7 +259,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
 
-    auto pool = new gpu::primitive{[=](void** inputs, void** outputs) {
+    std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) {
         void* args_list[] = {&inputs[0], &outputs[0]};
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       static_cast<unsigned int>(nthreads),
@@ -273,9 +273,9 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
                                       args_list,
                                       0));  // arguments
         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-    }};
+    }});
 
-    primitive_index = this->m_primitive_emitter->insert(pool);
+    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }

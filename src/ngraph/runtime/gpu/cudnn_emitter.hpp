@@ -22,7 +22,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cudnn_v7.h>
+#include <cudnn.h>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
@@ -50,6 +50,7 @@ namespace ngraph
             public:
                 enum class Prop
                 {
+                    Inference,
                     Forward,
                     Backward
                 };
@@ -68,6 +69,13 @@ namespace ngraph
                                      const ngraph::Shape& window_shape,
                                      const ngraph::Shape& padding_below,
                                      const ngraph::Shape& padding_above);
+
+                size_t build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
+                                       const cudnnBatchNormMode_t& bn_op,
+                                       const Prop& direction,
+                                       const Shape& tensor_shape,
+                                       const Shape& param_shape,
+                                       double epsilon);
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);

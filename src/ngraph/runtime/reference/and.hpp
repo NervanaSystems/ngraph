@@ -14,22 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <iostream>
+#pragma once
 
-#include "Eigen/Dense"
-#include "gtest/gtest.h"
+#include <cstddef>
 
-#include "ngraph/util.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-TEST(eigen, simple)
+namespace ngraph
 {
-    Eigen::MatrixXd m(2, 2);
-    m(0, 0) = 3;
-    m(1, 0) = 2.5;
-    m(0, 1) = -1;
-    m(1, 1) = m(1, 0) + m(0, 1);
-    EXPECT_FLOAT_EQ(m(1, 1), 1.5);
+    namespace runtime
+    {
+        namespace reference
+        {
+            static inline void
+                logical_and(const char* arg0, const char* arg1, char* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg0[i] && arg1[i];
+                }
+            }
+        }
+    }
 }

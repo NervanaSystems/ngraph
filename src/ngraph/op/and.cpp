@@ -14,27 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
-
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
-#include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_manager.hpp"
+#include "ngraph/op/and.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-std::shared_ptr<ngraph::runtime::Backend> runtime::cpu::CPU_Manager::allocate_backend()
+op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseLogical("And", arg0, arg1)
 {
-    return std::make_shared<CPU_Backend>();
 }
 
-vector<size_t> runtime::cpu::CPU_Manager::get_subdevices() const
+shared_ptr<Node> op::And::copy_with_new_args(const NodeVector& new_args) const
 {
-    throw runtime_error("unimplemented");
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<And>(new_args.at(0), new_args.at(1));
 }
-
-ngraph::runtime::Manager::Factory runtime::cpu::CPU_Manager::factory =
-    ngraph::runtime::Manager::register_factory(
-        "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-            return std::make_shared<CPU_Manager>();
-        });
