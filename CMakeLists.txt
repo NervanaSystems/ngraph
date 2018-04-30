@@ -172,7 +172,7 @@ if(NGRAPH_GPU_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
-# enable or disable NGRAPH_DEBUG macro
+# enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
