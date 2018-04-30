@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 function(NGRAPH_GET_CURRENT_HASH)
+    find_package(Git REQUIRED)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse --verify HEAD
         RESULT_VARIABLE result
@@ -24,6 +25,7 @@ function(NGRAPH_GET_CURRENT_HASH)
 endfunction()
 
 function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
+    find_package(Git REQUIRED)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} ls-remote --tags
         RESULT_VARIABLE RESULT
@@ -39,6 +41,7 @@ function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
 endfunction()
 
 function(NGRAPH_GET_MOST_RECENT_TAG)
+    find_package(Git REQUIRED)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
         RESULT_VARIABLE RESULT
