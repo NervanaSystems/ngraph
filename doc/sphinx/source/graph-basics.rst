@@ -1,23 +1,38 @@
 .. graph-basics:
 
+############
 Graph Basics
-============
+############
 
-This section describes the basic concepts you need to know when 
-constructing a graph.
+
+Concepts
+========
+
+This section explains some of the primary concepts needed to understand graph
+construction. 
 
 
 Framework Bridges
 ------------------
 
-Frontends (or users who require the flexibility of constructing 
-Ops directly) can utilize a set of graph construction functions 
-to construct graphs. 
+In the nGraph ecosystem, a framework is any "frontend" that helps a data 
+scientist model or simulate a specific (usually large-scale) computational 
+problem through the use of a high-level, data science-oriented language.  
 
-A framework bridge constructs a function which is compiled/optimized
-by a sequence of graph transformations that replace subgraphs of the
-computation with more optimal subgraphs. Throughout this process, ops
-represent tensor operations.
+A framework :term:`bridge` is a concept we use in nGraph to describe how that 
+computational problem gets presented to the nGraph :abbr:`Intermediate Representation (IR)` 
+for execution on an nGraph backend. On the nGraph side, we perform graph 
+transformations that replace subgraphs of the computation with more optimal 
+(in terms of machine code) subgraphs. Throughout this process, ``ops`` represent tensor operations. 
+
+Either the framework can provide its own graph of functions to compiled and 
+optimized via :abbr:`Ahead-of-Time (AoT)` compilation to send back to the 
+framework, or an entity (framework or user) who requires the flexibility of 
+shaping ops directly can use our graph construction functions to experiment with 
+building runtime APIs for their framework. 
+
+See the section on :doc:`howto/execute` for a detailed walk-through describing 
+how this translation can be programmed to happen automatically via a framework. 
 
 
 Tensors
@@ -116,6 +131,18 @@ During execution, the output of the nth ``Parameter`` op will be the tensor
 corresponding to the array provided as the nth argument, and the outputs
 of all result ops will be written into the result arrays in row-major
 order.
+
+
+Transformers
+------------
+
+The bridge can use bridge-specific ops, as long as they can be converted to transformer ops, usually by being converted to core ops on the way. We don’t have a way to do this yet, but we are working on it.
+For example, TF might make a `PaddedCell` op and use nGraph pattern replacement facilities to convert that into core ops. Or, TF might make a `SecretSauce` op that is only implemented on Xeon, but that’s okay as long as you only use Xeon as a transformer.
+A transformer should be able to run all core ops, although we might loosen that for weaker transformers, and say that they can reject being able to run some graphs.
+
+
+
+
 
 An Example
 ----------
