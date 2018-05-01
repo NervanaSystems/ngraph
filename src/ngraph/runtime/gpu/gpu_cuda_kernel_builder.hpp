@@ -46,7 +46,7 @@ namespace ngraph
                 static void get_concat_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::vector<std::string>& data_types,
-                                               const size_t& num_inputs);
+                                               size_t num_inputs);
 
                 static void get_onehot_op(codegen::CodeWriter& writer,
                                           const std::string& name,

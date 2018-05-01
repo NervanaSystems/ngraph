@@ -36,7 +36,7 @@ namespace ngraph
 
                 void emit_memcpyDtD(codegen::CodeWriter& writer,
                                     const GPU_TensorViewWrapper& dst,
-                                    const GPU_TensorViewWrapper& src
+                                    const GPU_TensorViewWrapper& src,
                                     size_t buffer_size = 0);
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,

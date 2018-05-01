@@ -140,8 +140,8 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                                                      const std::vector<std::string>& data_types,
                                                      size_t num_inputs)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << 
-    for(int i = 0; i < num_inputs; i++)
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for(size_t i = 0; i < num_inputs; i++)
     {
         writer << data_types[i] << "* in" << i << ", ";
     }
@@ -150,14 +150,14 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        writer << "if (tid < n)\n";
+        writer << "if(tid < n)\n";
         writer.block_begin();
         {
             writer << "size_t idx_out = tid;\n";
             writer << "size_t block_id = tid/block_size;\n";
             writer << "size_t block_idx = tid%block_size;\n";
-            writer << "bool processed = false;"
-            for(int i = 0; i < num_inputs; i++)
+            writer << "bool processed = false;";
+            for(size_t i = 0; i < num_inputs; i++)
             {
                 writer << "if(!processed && block_idx < block_stride[" << i << "])\n";
                 writer.block_begin();

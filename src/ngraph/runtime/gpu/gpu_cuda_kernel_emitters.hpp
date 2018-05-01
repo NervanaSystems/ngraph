@@ -76,7 +76,7 @@ namespace ngraph
                             size_t rank,
                             size_t count);
 
-            template <typename T, typename... Inputs>
+            template <typename t, typename... Inputs>
             void emit_elementwise_op(const std::string& name,
                                      const std::vector<std::string>& data_types,
                                      GPURuntimeContext* ctx,

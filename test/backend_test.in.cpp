@@ -305,7 +305,6 @@ TEST(${BACKEND_NAME}, ceiling)
 
 TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 3};
@@ -334,7 +333,6 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
 
 TEST(${BACKEND_NAME}, concat_matrix_rowwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{3, 2};
@@ -392,7 +390,6 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
 
 TEST(${BACKEND_NAME}, concat_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{6};
