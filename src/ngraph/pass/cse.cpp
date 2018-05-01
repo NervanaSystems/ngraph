@@ -38,16 +38,17 @@ using namespace ngraph;
 
 static bool cse_unarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
-    NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << "and " << b->get_name();
+    NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
 
     return a->get_argument(0) == b->get_argument(0);
 }
 
 static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
-    NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << "and " << b->get_name();
+    NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << " and " << b->get_name();
 
-    return a->get_argument(0) == b->get_argument(0) && a->get_argument(1) == b->get_argument(1);
+    return (a->get_argument(0) == b->get_argument(0) && a->get_argument(1) == b->get_argument(1)) ||
+           (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
 }
 
 static std::unordered_map<std::type_index,
@@ -67,6 +68,7 @@ static std::unordered_map<std::type_index,
 class NodeKey
 {
 public:
+
     NodeKey(std::shared_ptr<Node> n)
         : m_node(n)
     {
@@ -113,12 +115,24 @@ namespace std
 
             arg_ids.push_back(type_hash);
 
-            for (auto arg : k.get_node()->get_arguments())
+            auto cargs = k.get_node()->get_arguments();
+
+            //TODO: Do we need another map, so we could
+            //specify how to compute hash for each op?
+            if (p_this.is_commutative())
+            {
+                std::sort(begin(cargs),end(cargs));
+            }                
+
+            for (auto arg : cargs)
             {
                 arg_ids.push_back(arg->get_instance_id());
             }
 
-            return ngraph::hash_combine(arg_ids);
+            auto hashc = ngraph::hash_combine(arg_ids);
+            NGRAPH_DEBUG << "Hash for node " << p_this.get_name() << " hash elements = " 
+                << vector_to_string(arg_ids) << " hash = " << std::hex << hashc;
+            return hashc;
         }
     };
 }
@@ -131,6 +145,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
 
     for (auto n : f->get_ordered_ops())
     {
+         NGRAPH_DEBUG << "Running CommonSubexpressionElimination for " << n->get_name();
         if (n->is_output() || n->is_parameter() ||
             n->is_constant() /*we could CSE constants as well*/)
         {
