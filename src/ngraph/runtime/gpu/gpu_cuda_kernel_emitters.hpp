@@ -25,6 +25,7 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -125,7 +126,7 @@ namespace ngraph
                 CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
             }
 
-            template <typename T, typename... Inputs>
+            template <typename... Inputs>
             void emit_concat_op(const std::string& name,
                                      const std::vector<std::string>& data_types,
                                      GPURuntimeContext* ctx,
@@ -149,7 +150,6 @@ namespace ngraph
                     std::string kernel = writer.get_code();
                     compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
                 }
-ize_t* block_strides, size_t block_size, size_t n
                 //convert runtime ptr to driver api ptr
                 void* args_list[] = {&inputs..., &out, &block_strides, &block_size, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),

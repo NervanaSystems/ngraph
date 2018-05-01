@@ -799,11 +799,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 std::vector<size_t> block_strides(args.size(), 1);
                 size_t block_size = 0;
-                for(int i = 0; i < args.size(); i++)
+                for(size_t i = 0; i < args.size(); i++)
                 {
                     auto arg_shape = args[i].get_shape();
                     auto arg_rank = arg_shape.size();
-                    for(int j = axis; j < arg_rank; j++)
+                    for(size_t j = axis; j < arg_rank; j++)
                     {
                         block_strides[i] *= arg_shape[j];
                     }

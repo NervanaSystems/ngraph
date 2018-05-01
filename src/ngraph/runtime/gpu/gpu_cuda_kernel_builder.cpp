@@ -154,19 +154,19 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
         writer.block_begin();
         {
             writer << "size_t idx_out = tid;\n";
-            writer << "size_t block_id = tid/block_size;\n";
-            writer << "size_t block_idx = tid%block_size;\n";
-            writer << "bool processed = false;";
+            writer << "size_t block_id = tid / block_size;\n";
+            writer << "size_t block_idx = tid % block_size;\n";
+            writer << "bool processed = false;\n";
             for(size_t i = 0; i < num_inputs; i++)
             {
-                writer << "if(!processed && block_idx < block_stride[" << i << "])\n";
+                writer << "if(!processed && (block_idx < block_strides[" << i << "]))\n";
                 writer.block_begin();
                 {
-                    writer << "out[idx_out] = in" << i << "[block_id * block_stride[" << i << "] + block_idx];";
+                    writer << "out[idx_out] = in" << i << "[block_id * block_strides[" << i << "] + block_idx];";
                     writer << "processed = true;\n";
                 }
                 writer.block_end();
-                writer << "block_idx -= block_stride[" << i << "];\n";
+                writer << "block_idx -= block_strides[" << i << "];\n";
             }
         }
         writer.block_end();
