@@ -795,8 +795,48 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
-                auto arg_shape = args[0].get_shape();
-                auto result_shape = out[0].get_shape();
+                auto axis = concat->get_concatenation_axis();
+
+                std::vector<size_t> block_strides(args.size(), 1);
+                size_t block_size = 0;
+                for(int i = 0; i < args.size(); i++)
+                {
+                    auto arg_shape = args[i].get_shape();
+                    auto arg_rank = arg_shape.size();
+                    for(int j = axis; j < arg_rank; j++)
+                    {
+                        block_strides[i] *= arg_shape[j];
+                    }
+                    block_size += block_strides[i];
+                }
+
+                writer.block_begin("  // " + node->get_name());
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer << "int num_inputs = " << args.size() << ";\n";
+                writer << "std::vector<size_t> block_strides_h = {" << join(block_strides) << "};\n";
+                writer << "void* block_strides_d = "
+                            "runtime::gpu::create_gpu_buffer(sizeof(size_t) * num_inputs);\n";
+                writer
+                    << "runtime::gpu::cuda_memcpyHtD(block_strides_d, block_strides_h.data(), "
+                        "sizeof(size_t) * num_inputs);\n";
+
+                writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
+                       << ", std::vector<std::string>{";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << "\"" << args[i].get_type() << "\", ";
+                }
+                writer << "\"" << out[0].get_type() << "\"}"
+                       << ", ctx"
+                       << ", count"
+                       << ", " << block_size
+                       << ", CUdeviceptr(" << out[0].get_name() << ")";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
+                }
+                writer << ");\n";
+                writer.block_end();
             }
 
             template <>
