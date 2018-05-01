@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <dlfcn.h>
 #include <sstream>
 
 #include "ngraph/runtime/backend.hpp"
@@ -39,12 +40,36 @@ runtime::Backend::~Backend()
 {
 }
 
+void* runtime::Backend::open_shared_library(const string& type)
+{
+    void* handle = nullptr;
+    vector<string> names;
+    names.push_back("lib" + type + ".so");
+    names.push_back("lib" + to_lower(type) + ".so");
+    names.push_back("lib" + type + "_backend.so");
+    names.push_back("lib" + to_lower(type) + "_backend.so");
+    for (const string& name : names)
+    {
+        handle = dlopen(name.c_str(), RTLD_NOW);
+        if (handle)
+        {
+            break;
+        }
+    }
+    return handle;
+}
+
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     auto it = get_backend_map().find(type);
     if (it == get_backend_map().end())
     {
-        throw runtime_error("Backend '" + type + "' not found in registered backends.");
+        open_shared_library(type);
+        it = get_backend_map().find(type);
+        if (it == get_backend_map().end())
+        {
+            throw runtime_error("Backend '" + type + "' not found in registered backends.");
+        }
     }
     return it->second;
 }
