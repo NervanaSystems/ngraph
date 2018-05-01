@@ -5,24 +5,46 @@ Graph Basics
 ############
 
 
-Concepts
-========
+This section explains some of the primary concepts upon which the nGraph library 
+and ecosystem are built. nGraph provides a unique departure from the first 
+generation of deep learning software design. The assumption for the first 
+generation was that designing complex and multi-faceted frameworks around 
+multiple single-task dedicated GPUs was the "best" way to achieve a performant 
+deep learning system. 
 
-This section explains some of the primary concepts needed to understand graph
-construction. 
+As the demand for different kinds of deep learning applications increases, 
+however, it is becoming more apparent that this approach creates its own set of 
+problems. For example, most frameworks expect full control of the GPU device. 
+Baked into this design is implied inefficiency for resource utilization whenever 
+the system encounters a bottleneck. In other words, if your deep learning model 
+requires any operation that hasn't been implemented on GPU, it must wait for 
+cpu/gpu copies. Most GPU framework owners will tell you to refactor model to remove the 
+unimplemented copy, rather than running multiple models in parallel. 
+
+Many other graph building efficiencies are available through nGraph. 
 
 
-Framework Bridges
------------------
+* :ref:`framework_bridges`
+* :ref:`about_transformers`
+* :ref:`graph_shaping`
+ 
+
+
+.. _framework_bridges:
+
+Framework bridges
+=================
 
 In the nGraph ecosystem, a framework is any "frontend" that helps a data 
-scientist model or simulate a specific (usually large-scale) computational 
-problem through the use of a high-level, data science-oriented language.  
+scientist model or simulate a specific (usually large-scale) deep learning 
+computational problem through the use of a high-level, data science-oriented 
+language. 
+
 
 A framework :term:`bridge` is a concept we use in nGraph to describe how that 
-computational problem gets presented to the nGraph 
-:abbr:`Intermediate Representation (IR)` for execution on an nGraph backend. 
-On the nGraph side, we perform graph transformations that replace subgraphs 
+computational problem gets presented in :abbr:`Intermediate Representation (IR)` 
+for execution on nGraph-enabled backends.  Once the framework has put some 
+outputs into the IR, we can perform graph transformations that replace subgraphs 
 of the computation with more optimal (in terms of machine code) subgraphs. 
 Throughout this process, ``ops`` represent tensor operations. 
 
@@ -35,8 +57,11 @@ building runtime APIs for their framework.
 See the section on :doc:`howto/execute` for a detailed walk-through describing 
 how this translation can be programmed to happen automatically via a framework. 
 
-Transformers
-------------
+
+.. _about_transformers:
+
+About transformers
+==================
 
 A framework bridge can use bridge-specific ops, as long as they can be 
 converted to transformer ops, usually by being converted to core ops on 
@@ -44,6 +69,12 @@ the way. For example, a framework might have a `PaddedCell` op and use
 nGraph pattern replacement facilities to convert that into one of our core 
 ops. 
 
+
+
+.. _graph_shaping:
+
+Graph shaping
+=============
 
 Tensors
 -------
