@@ -17,7 +17,6 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
