@@ -17,6 +17,7 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
@@ -62,6 +63,14 @@ namespace ngraph
                     s *= shape[*it];
                 }
                 std::reverse(strides.begin(), strides.end());
+            }
+
+            const bool LayoutDescriptor::is_mkldnn_format() const
+            {
+                return (
+                    mkldnn_format != mkldnn::memory::format::format_undef &&
+                    !runtime::cpu::mkldnn_utils::compare_mkldnn_formats(
+                        mkldnn_format, runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*this)));
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
