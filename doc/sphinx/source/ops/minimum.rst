@@ -42,15 +42,15 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \min(\texttt{arg0}_{i_0, \ldots, i_{n-1}}, \texttt{arg1}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \min(\mathtt{arg0}_{i_0, \ldots, i_{n-1}}, \mathtt{arg1}_{i_0, \ldots, i_{n-1}})
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \texttt{Less}(\texttt{arg0}, \texttt{arg1})\ \Delta \\
-   \overline{\texttt{arg1}} &\leftarrow \texttt{Less}(\texttt{arg1}, \texttt{arg0})\ \Delta
+   \overline{\mathtt{arg0}} &\leftarrow \mathtt{Less}(\mathtt{arg0}, \mathtt{arg1})\ \Delta \\
+   \overline{\mathtt{arg1}} &\leftarrow \mathtt{Less}(\mathtt{arg1}, \mathtt{arg0})\ \Delta
 
 
 C++ Interface
