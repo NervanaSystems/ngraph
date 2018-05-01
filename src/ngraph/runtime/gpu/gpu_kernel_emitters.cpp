@@ -41,14 +41,14 @@ void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
                                           const GPU_TensorViewWrapper& src,
                                           size_t buffer_size)
 {
-    if(buffer_size == 0)
+    if (buffer_size == 0)
     {
-    writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name() << ", "
-           << dst.get_size() << " * " << dst.get_element_type().size() << ");\n";
-    return;
+        writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name()
+               << ", " << dst.get_size() << " * " << dst.get_element_type().size() << ");\n";
+        return;
     }
     writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name() << ", "
-        << buffer_size << ");\n";
+           << buffer_size << ");\n";
     return;
 }
 

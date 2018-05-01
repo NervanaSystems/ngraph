@@ -417,7 +417,6 @@ TEST(${BACKEND_NAME}, concat_vector)
 
 TEST(${BACKEND_NAME}, concat_4d_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -443,7 +442,6 @@ TEST(${BACKEND_NAME}, concat_4d_tensor)
 
 TEST(${BACKEND_NAME}, concat_2d_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -514,7 +512,6 @@ TEST(${BACKEND_NAME}, concat_2d_tensor)
 //   2069.  2070.  2071.  2072.]
 TEST(${BACKEND_NAME}, concat_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 4 * 3 * 2);
     for (int i = 0; i < 2 * 3 * 4 * 3 * 2; i++)
     {

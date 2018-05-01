@@ -128,13 +128,13 @@ namespace ngraph
 
             template <typename... Inputs>
             void emit_concat_op(const std::string& name,
-                                     const std::vector<std::string>& data_types,
-                                     GPURuntimeContext* ctx,
-                                     size_t count,
-                                     size_t block_size,
-                                     CUdeviceptr block_strides,
-                                     CUdeviceptr out,
-                                     Inputs&&... inputs)
+                                const std::vector<std::string>& data_types,
+                                GPURuntimeContext* ctx,
+                                size_t count,
+                                size_t block_size,
+                                CUdeviceptr block_strides,
+                                CUdeviceptr out,
+                                Inputs&&... inputs)
             {
                 std::string type_signature = "_" + join(data_types, "_");
                 std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
