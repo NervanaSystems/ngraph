@@ -161,6 +161,12 @@ namespace ngraph
             }
 
             bool is_constant() const override { return true; }
+            // TODO(amprocte): m_reduction_function?
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"element_type", m_element_type}, {"shape", m_shape}};
+            }
+
         protected:
             template <typename T>
             void write_values(const std::vector<T>& values)

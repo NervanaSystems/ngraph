@@ -47,6 +47,11 @@ namespace ngraph
                 }
 
                 Predicate get_predicate() const { return m_predicate; }
+                AttributeMap get_attribute_map() const override
+                {
+                    throw ngraph_error("Attempted to serialize Pattern op");
+                }
+
             protected:
                 std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };

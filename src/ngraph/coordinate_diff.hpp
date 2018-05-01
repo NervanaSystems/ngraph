@@ -19,10 +19,13 @@
 #include <cstddef>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
+#include "ngraph/util.hpp"
+
 namespace ngraph
 {
     /// \brief A difference (signed) of tensor element coordinates.
-    class CoordinateDiff : public std::vector<std::ptrdiff_t>
+    class CoordinateDiff : public std::vector<std::ptrdiff_t>, public Attribute
     {
     public:
         CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& diffs)
@@ -62,5 +65,8 @@ namespace ngraph
             static_cast<std::vector<std::ptrdiff_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
+        Attribute* clone() const { return new CoordinateDiff(*this); }
     };
 }

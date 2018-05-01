@@ -27,6 +27,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/attribute_map.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -192,6 +193,8 @@ namespace ngraph
         NodeVector get_users() const;
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
+        virtual AttributeMap get_attribute_map() const = 0;
+
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
 

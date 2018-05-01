@@ -145,6 +145,15 @@ namespace ngraph
                 return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
             }
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_movement_strides", m_window_movement_strides},
+                                    {"window_dilation_strides", m_window_dilation_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above},
+                                    {"data_dilation_strides", m_data_dilation_strides}};
+            }
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
@@ -235,6 +244,17 @@ namespace ngraph
             const Strides& get_data_dilation_strides_backward() const
             {
                 return m_data_dilation_strides_backward;
+            }
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{
+                    {"data_batch_shape", m_data_batch_shape},
+                    {"window_movement_strides_forward", m_window_movement_strides_forward},
+                    {"window_dilation_strides_forward", m_window_dilation_strides_forward},
+                    {"padding_below_forward", m_padding_below_forward},
+                    {"padding_above_forward", m_padding_above_forward},
+                    {"data_dilation_strides_forward", m_data_dilation_strides_forward}};
             }
 
         protected:
@@ -330,6 +350,17 @@ namespace ngraph
             const Strides& get_data_dilation_strides_backward() const
             {
                 return m_data_dilation_strides_backward;
+            }
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{
+                    {"filters_shape", m_filters_shape},
+                    {"window_movement_strides_forward", m_window_movement_strides_forward},
+                    {"window_dilation_strides_forward", m_window_dilation_strides_forward},
+                    {"padding_below_forward", m_padding_below_forward},
+                    {"padding_above_forward", m_padding_above_forward},
+                    {"data_dilation_strides_forward", m_data_dilation_strides_forward}};
             }
 
         protected:

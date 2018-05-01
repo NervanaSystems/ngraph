@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
@@ -88,6 +89,12 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"epsilon", BoxedAttribute<double>(m_epsilon)},
+                                    {"training", BoxedAttribute<bool>(m_training)}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -111,12 +118,17 @@ namespace ngraph
                               std::shared_ptr<Node> variance,
                               std::shared_ptr<Node> delta);
 
-            double get_eps_value() const { return epsilon; }
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"epsilon", BoxedAttribute<double>(m_epsilon)}};
+            }
+
         private:
-            double epsilon;
+            double m_epsilon;
         };
     }
 }

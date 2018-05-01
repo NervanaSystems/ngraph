@@ -53,6 +53,8 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1);
+
+                AttributeMap get_attribute_map() const override { return AttributeMap{}; }
             };
         }
     }

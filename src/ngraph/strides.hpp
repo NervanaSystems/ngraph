@@ -19,10 +19,13 @@
 #include <cstddef>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
+#include "ngraph/util.hpp"
+
 namespace ngraph
 {
     /// \brief Strides for a tensor.
-    class Strides : public std::vector<size_t>
+    class Strides : public std::vector<size_t>, public Attribute
     {
     public:
         Strides(const std::initializer_list<size_t>& axis_strides)
@@ -62,5 +65,8 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
+        Attribute* clone() const { return new Strides(*this); }
     };
 }

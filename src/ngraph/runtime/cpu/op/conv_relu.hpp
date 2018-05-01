@@ -39,6 +39,15 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_movement_strides", m_window_movement_strides},
+                                    {"window_dilation_strides", m_window_dilation_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above},
+                                    {"data_dilation_strides", m_data_dilation_strides}};
+            }
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;

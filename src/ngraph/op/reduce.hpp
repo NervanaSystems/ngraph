@@ -107,6 +107,12 @@ namespace ngraph
             }
             /// \return The axis positions (0-based) to be eliminated through reduction.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            // TODO(amprocte): m_reduction_function?
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"reduction_axes", m_reduction_axes}};
+            }
+
         protected:
             std::shared_ptr<Function> m_reduction_function;
             AxisSet m_reduction_axes;

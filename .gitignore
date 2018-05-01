@@ -108,3 +108,5 @@ python/share/*
 
 python/pybind11/
 
+# pretty-printed graphs
+*.pretty

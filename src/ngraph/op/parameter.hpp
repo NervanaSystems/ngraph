@@ -56,6 +56,11 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"shape", get_shape()}, {"element_type", get_element_type()}};
+            }
         };
     }
 }

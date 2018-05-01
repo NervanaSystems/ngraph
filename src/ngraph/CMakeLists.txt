@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    attribute_map.cpp
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
@@ -116,6 +117,7 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
+    pass/pretty_print.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp

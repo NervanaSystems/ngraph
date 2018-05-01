@@ -50,6 +50,13 @@ namespace ngraph
             /// \return The default value for Pad.
             virtual std::shared_ptr<Node> get_default_value() const override;
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above},
+                                    {"padding_interior", m_padding_interior}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

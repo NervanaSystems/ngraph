@@ -78,6 +78,12 @@ namespace ngraph
             const AxisVector& get_input_order() const { return m_input_order; }
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"input_order", m_input_order},
+                                    {"output_shape", m_output_shape}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

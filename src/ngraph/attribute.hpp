@@ -16,25 +16,18 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
+#include <string>
 
 namespace ngraph
 {
-    namespace op
+    /// \brief Base class for graph element attributes.
+    class Attribute
     {
-        /// \brief Elementwise logical negation operation.
-        class Not : public util::UnaryElementwise
-        {
-        public:
-            /// \brief Constructs a logical negation operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Not(const std::shared_ptr<Node>& arg);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            AttributeMap get_attribute_map() const override { return AttributeMap{}; }
-        };
-    }
+    public:
+        Attribute() {}
+        Attribute(const Attribute& other) {}
+        virtual ~Attribute() {}
+        virtual std::string to_string() const = 0;
+        virtual Attribute* clone() const = 0;
+    };
 }

@@ -14,27 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/attribute_map.hpp"
 
-#include "ngraph/op/util/unary_elementwise.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        /// \brief Elementwise logical negation operation.
-        class Not : public util::UnaryElementwise
-        {
-        public:
-            /// \brief Constructs a logical negation operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Not(const std::shared_ptr<Node>& arg);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            AttributeMap get_attribute_map() const override { return AttributeMap{}; }
-        };
-    }
-}
+using namespace ngraph;

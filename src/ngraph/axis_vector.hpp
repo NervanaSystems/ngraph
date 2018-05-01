@@ -19,10 +19,13 @@
 #include <cstddef>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
+#include "ngraph/util.hpp"
+
 namespace ngraph
 {
     /// \brief A vector of axes.
-    class AxisVector : public std::vector<size_t>
+    class AxisVector : public std::vector<size_t>, public Attribute
     {
     public:
         AxisVector(const std::initializer_list<size_t>& axes)
@@ -62,5 +65,8 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
+        Attribute* clone() const { return new AxisVector(*this); }
     };
 }

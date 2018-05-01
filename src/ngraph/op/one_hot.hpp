@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -57,6 +58,12 @@ namespace ngraph
 
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"shape", m_shape},
+                                    {"one_hot_axis", BoxedAttribute<size_t>(m_one_hot_axis)}};
+            }
+
         protected:
             Shape m_shape;
             size_t m_one_hot_axis;
