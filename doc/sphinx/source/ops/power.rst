@@ -1,21 +1,18 @@
-.. log.rst:
+.. power.rst:
 
-###
-Log
-###
+#####
+Power
+#####
 
-.. code-block:: cpp 
+.. code-block:: cpp
 
-   Log  // Elementwise logine operation
-
+   Power  // Elementwise exponentiation operation
 
 
 Description
 ===========
 
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the logine of the
-value at the corresponding coordinate of ``arg``.
+Elementwise exponentiation operation.
 
 Inputs
 ------
@@ -23,7 +20,9 @@ Inputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg``         | Any                     | Any                            |
+| ``arg0``        | any                     | any                            |
++-----------------+-------------------------+--------------------------------+
+| ``arg1``        | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
 
 Outputs
@@ -32,7 +31,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``                |
+| ``output``      | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -41,20 +40,20 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \log(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
-
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \mathtt{arg0}_{i_0, \ldots, i_{n-1}} ^ {\mathtt{arg1}_{i_0, \ldots, i_{n-1}}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\mathtt{arg}} \leftarrow \frac{\Delta}{\mathtt{input}}
+   \overline{\mathtt{arg0}} &\leftarrow \frac{\Delta \cdot \mathtt{arg1}}{\mathtt{arg0}} \\
+   \overline{\mathtt{arg1}} &\leftarrow \Delta \cdot \mathtt{output} \cdot \log(\mathtt{arg1})
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Log
+.. doxygenclass:: ngraph::op::Power
    :project: ngraph
    :members:

@@ -91,6 +91,10 @@ Not currently a comprehensive list.
    one_hot.rst
    or.rst
    pad.rst
+   parameter.rst
+   power.rst
+   product.rst
+   relu.rst
    softmax.rst
 
    

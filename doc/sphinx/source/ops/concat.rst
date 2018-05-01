@@ -56,13 +56,13 @@ Let
 
 .. math::
 
-   s(i) &= \sum_{j<i} \texttt{args}[i].\texttt{shape}\left[\texttt{concatenation_axis}\right]\\
+   s(i) &= \sum_{j<i} \mathtt{args}[i].\mathtt{shape}\left[\mathtt{concatenation_axis}\right]\\
    t(i) &= \text{The greatest }j\text{ such that }i \ge s(j)\\
    p(C)_i &= \begin{cases}
-   C_i-s(t(i))&\text{if }i==\texttt{concatenation_axis}\\
+   C_i-s(t(i))&\text{if }i==\mathtt{concatenation_axis}\\
    C_i&\text{otherwise}
    \end{cases}\\
-   \texttt{output}_C&=\texttt{args}[t(C_i)]_{p(C)}
+   \mathtt{output}_C&=\mathtt{args}[t(C_i)]_{p(C)}
 
 
 
