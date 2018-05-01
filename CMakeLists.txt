@@ -70,6 +70,7 @@ option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
+option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -168,6 +169,13 @@ if(NGRAPH_GPU_ENABLE)
         "Please select a correct compiler version\n"
         )
     endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------
+# enable or disable output from NGRAPH_DEBUG statements
+#-----------------------------------------------------------------------------------------------
+if(NGRAPH_DEBUG_ENABLE)
+    add_definitions(-DNGRAPH_DEBUG_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------

@@ -33,9 +33,7 @@ namespace ngraph
         /// \f[
         ///     \mathit{sum}\left(\{0\},
         ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\
-        ///                3 & 4 \\
-        ///                5 & 6 \end{array} \right]\right) =
+        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
         ///     \left[ (1 + 3 + 5), (2 + 4 + 6) \right] =
         ///     \left[ 9, 12 \right]~~~\text{(dimension 0 (rows) is eliminated)}
         /// \f]
@@ -43,9 +41,7 @@ namespace ngraph
         /// \f[
         ///     \mathit{sum}\left(\{1\},
         ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\
-        ///                3 & 4 \\
-        ///                5 & 6 \end{array} \right]\right) =
+        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
         ///     \left[ (1 + 2), (3 + 4), (5 + 6) \right] =
         ///     \left[ 3, 7, 11 \right]~~~\text{(dimension 1 (columns) is eliminated)}
         /// \f]
@@ -53,9 +49,7 @@ namespace ngraph
         /// \f[
         ///     \mathit{sum}\left(\{0,1\},
         ///         \left[ \begin{array}{ccc}
-        ///                1 & 2 \\
-        ///                3 & 4 \\
-        ///                5 & 6 \end{array} \right]\right) =
+        ///                1 & 2 \\ 3 & 4 \\ 5 & 6 \end{array} \right]\right) =
         ///      (1 + 2) + (3 + 4) + (5 + 6) =
         ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
