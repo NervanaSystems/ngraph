@@ -1,21 +1,12 @@
-.. log.rst:
+.. relu.rst:
 
-###
-Log
-###
+####
+Relu
+####
 
-.. code-block:: cpp 
+.. code-block:: cpp
 
-   Log  // Elementwise logine operation
-
-
-
-Description
-===========
-
-Produces a tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the logine of the
-value at the corresponding coordinate of ``arg``.
+   Relu  // Elementwise relu operation
 
 Inputs
 ------
@@ -35,26 +26,20 @@ Outputs
 | ``output``      | Same as ``arg``         | Same as ``arg``                |
 +-----------------+-------------------------+--------------------------------+
 
-
 Mathematical Definition
 =======================
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \log(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
-
-
-Backprop
-========
-
-.. math::
-
-   \overline{\mathtt{arg}} \leftarrow \frac{\Delta}{\mathtt{input}}
-
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} =
+   \begin{cases}
+   0&\text{if }\mathtt{arg}_{i_0, \ldots, i_{n-1}} \le 0 \\
+   \mathtt{arg}_{i_0, \ldots, i_{n-1}}&\text{otherwise}
+   \end{cases}
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Log
+.. doxygenclass:: ngraph::op::Relu
    :project: ngraph
    :members:
