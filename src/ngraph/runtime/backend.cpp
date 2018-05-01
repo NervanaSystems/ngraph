@@ -53,6 +53,11 @@ void* runtime::Backend::open_shared_library(const string& type)
         handle = dlopen(name.c_str(), RTLD_NOW);
         if (handle)
         {
+            function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
+            if (create)
+            {
+                create();
+            }
             break;
         }
     }
