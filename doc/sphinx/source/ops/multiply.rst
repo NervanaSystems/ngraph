@@ -42,15 +42,15 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} \texttt{arg1}_{i_0, \ldots, i_{n-1}}
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \mathtt{arg0}_{i_0, \ldots, i_{n-1}} \mathtt{arg1}_{i_0, \ldots, i_{n-1}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg0}} &\leftarrow \Delta\ \texttt{arg1}\\
-   \overline{\texttt{arg1}} &\leftarrow \Delta\ \texttt{arg0}
+   \overline{\mathtt{arg0}} &\leftarrow \Delta\ \mathtt{arg1}\\
+   \overline{\mathtt{arg1}} &\leftarrow \Delta\ \mathtt{arg0}
 
 
 C++ Interface
