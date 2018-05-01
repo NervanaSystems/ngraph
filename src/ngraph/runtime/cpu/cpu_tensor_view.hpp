@@ -57,6 +57,9 @@ namespace ngraph
                 /// @param n Number of bytes to read, must be integral number of elements.
                 void read(void* p, size_t tensor_offset, size_t n) const override;
 
+                /// @brief Finalize and commit any pending updates or layout conversion for this tensor.
+                virtual void read() override;
+
             private:
                 static const size_t BufferAlignment;
 

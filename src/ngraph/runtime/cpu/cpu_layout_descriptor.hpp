@@ -52,7 +52,6 @@ namespace ngraph
                     mkldnn_format = format;
                 }
                 mkldnn::memory::format get_mkldnn_format() const { return mkldnn_format; }
-                const bool is_mkldnn_format() const;
                 const AxisVector& get_axis_order() const { return axis_order; }
                 static const AxisVector Native2DAxisOrder;
                 static const AxisVector Native4DAxisOrder;
