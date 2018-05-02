@@ -16,6 +16,18 @@
 
 #include "ngraph/op/asin.hpp"
 
+#include "ngraph/axis_set.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/shape.hpp"
+
+#include <string>
+#include <vector>
+
 using namespace std;
 using namespace ngraph;
 
@@ -31,4 +43,20 @@ shared_ptr<Node> op::Asin::copy_with_new_args(const NodeVector& new_args) const
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<Asin>(new_args.at(0));
+}
+
+void op::Asin::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta = deltas.at(0);
+
+    auto x = get_inputs().at(0).get_output().get_node();
+
+    auto one = make_shared<op::Constant>(x->get_element_type(), Shape{}, vector<string>{"1"});
+
+    AxisSet axes;
+    for (size_t i = 0; i < x->get_shape().size(); i++)
+        axes.insert(i);
+    auto ones = make_shared<op::Broadcast>(one, x->get_shape(), axes);
+
+    adjoints.add_delta(x, delta / make_shared<op::Sqrt>(ones - x * x));
 }
