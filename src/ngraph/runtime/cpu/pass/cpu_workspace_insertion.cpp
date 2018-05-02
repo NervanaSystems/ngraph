@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "cpu_fusion_bprop.hpp"
+#include "cpu_workspace_insertion.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -43,8 +43,8 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -52,7 +52,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
-void ngraph::runtime::cpu::pass::CPUFusionBackprop::construct_max_pool_with_indices()
+void ngraph::runtime::cpu::pass::CPUWorkspaceInsertion::construct_max_pool_with_indices()
 {
     Shape shape_data{1, 1, 14};
     auto data = std::make_shared<pattern::op::Label>(element::f32, shape_data);

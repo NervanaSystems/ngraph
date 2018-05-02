@@ -26,16 +26,16 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUFusionBackprop;
+                class CPUWorkspaceInsertion;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusionBackprop : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusionBackprop()
+    CPUWorkspaceInsertion()
         : GraphRewrite()
     {
         construct_max_pool_with_indices();

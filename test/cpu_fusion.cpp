@@ -47,9 +47,9 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion_bprop.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1103,7 +1103,7 @@ TEST(cpu_fusion, max_pool_with_indices)
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusionBackprop>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
         pass_manager.run_passes(df);
     }
@@ -1165,7 +1165,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusionBackprop>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
         pass_manager.run_passes(df);
     }
