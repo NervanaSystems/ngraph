@@ -21,6 +21,7 @@ import os
 import sys
 
 # Add path to nGraph Python API.
+
 sys.path.insert(0, os.path.abspath('../../../python'))
 
 # -- General configuration ------------------------------------------------
@@ -222,4 +223,5 @@ autodoc_mock_imports = ['ngraph.impl', 'ngraph.utils']
 
 # This enables autogeneration of standard summary files
 # However we customize them to our needs, thus disable it at the moment.
+
 # autosummary_generate = ['python_api/structure.rst']

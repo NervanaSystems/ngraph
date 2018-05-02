@@ -1104,17 +1104,30 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
-                        if (!bn->get_training_flag() || bn->get_inputs().size() != 3)
+                        if (bn->get_inputs().size() == 3)
                         {
-                            throw ngraph_error("Only training batchnorm should have been fused");
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_output_formats.push_back(input_layout);
+                            prim_output_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(memory::format::x);
                         }
-
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
-                        prim_output_formats.push_back(memory::format::x);
-                        prim_output_formats.push_back(memory::format::x);
+                        else if (bn->get_inputs().size() == 5)
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(input_layout);
+                        }
+                        else
+                        {
+                            throw ngraph_error(
+                                "In CPU Layout: unknown number of inputs for BatchNormRelu " +
+                                to_string(bn->get_inputs().size()));
+                        }
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);

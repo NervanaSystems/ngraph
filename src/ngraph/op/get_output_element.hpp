@@ -22,25 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation to get an element from a tuple.
-        ///
-        /// ## Parameters
-        ///
-        /// |     | Description                                                        |
-        /// | --- | ------------------------------------------------------------------ |
-        /// | `n` | The position of the element (0-based) to get from the input tuple. |
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                                                        | Description                                |
-        /// | ------ | ----------------------------------------------------------- | ------------------------------------------ |
-        /// | `arg`  | \f$(T_1,\dots,T_{n-1},T_n,T_{n+1},\dots,T_m)~(m \geq 1)\f$ | An input tuple with at least `n` elements. |
-        ///
-        /// ## Output
-        ///
-        /// | Type      | Description                           |
-        /// | --------- | ------------------------------------- |
-        /// | \f$T_n\f$ | The `n`th element of the input tuple. |
+        /// \brief Operation to get an output from a node.
         class GetOutputElement : public Node
         {
         public:
