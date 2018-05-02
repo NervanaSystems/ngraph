@@ -1096,25 +1096,28 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
 
 TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
 {
-    const size_t w = 200;
-    const size_t h = 200;
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
-    auto sigmoid_node_1 = make_shared<op::Sigmoid>(input);
-    auto sigmoid_node_2 = make_shared<op::Tanh>(input);
+    const size_t w = 20000;
+    const size_t h = 20000;
+    auto input1 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
+    auto input2 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
+    auto sigmoid_node_1 = make_shared<op::Sigmoid>(input1);
+    auto sigmoid_node_2 = make_shared<op::Tanh>(input2);
     auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-    auto func = make_shared<Function>(mul_node, op::ParameterVector{input});
+    auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
 
     auto backend = runtime::Backend::create("CPU");
 
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input1->get_shape());
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, input2->get_shape());
     shared_ptr<runtime::TensorView> result =
-            backend->create_tensor(element::f32, input->get_shape());
+            backend->create_tensor(element::f32, input1->get_shape());
 
     vector<float> dataA(w*h);
     for (int i = 0; i < w*h; ++i) {
         dataA[i] = 1;
     }
     copy_data(a, dataA);
+    copy_data(b, dataA);
 //    pass::Manager pass_manager;
 //    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
 //    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -1123,7 +1126,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
 
     ngraph::stopwatch timer;
     timer.start();
-    backend->call(func, {result}, {a});
+    backend->call(func, {result}, {a, b});
     timer.stop();
     std::cout << "time: " << timer.get_milliseconds() << std::endl;
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
