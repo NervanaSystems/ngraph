@@ -60,8 +60,6 @@ if (NGRAPH_CPU_ENABLE)
     set(LLVM_INCLUDE_DIR "${source_dir}/include")
     set(LLVM_LIB_DIR "${source_dir}/lib")
 
-    message(STATUS "*********************************** ${EXTERNAL_PROJECTS_ROOT}")
-
     set(LLVM_LINK_LIBS
         ${source_dir}/lib/libclangTooling.a
         ${source_dir}/lib/libclangFrontendTool.a
