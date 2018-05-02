@@ -67,18 +67,23 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
       $ python3 setup.py bdist_wheel
 
-#. After the Python3 binary wheel file (``ngraph-*.whl``) is prepared, install  
-   with :command:`pip3`, or :command:`pip` in a virtual environment.
+#. Check for the binary wheel file under ``/ngraph/python/dist/`` and activate a 
+   Python3 virtual environment to work with ONNX.
 
    .. code-block:: console
 
-      (your_venv) $ pip install -U build/dist/ngraph-0.1.0-cp35-cp35m-linux_x86_64.whl
+      $ cd dist/
+      $ python3 -m venv onnx
+      $ cd onnx/
+      $ . bin/activate
+      (onnx)$ pip install -U ngraph-0.2.0-cp35-cp35m-linux_x86_64.whl    
+
 
 #. Confirm ngraph is properly installed through a Python interpreter:
 
    .. code-block:: console
 
-      (your_venv) $ python3
+      (onnx) $ python3
 
    .. code-block:: python
       
@@ -98,7 +103,7 @@ Install the ``ngraph-onnx`` companion tool using pip:
 
 .. code-block:: console
 
-   (your_venv) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
+   (onnx) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
  
 
 Importing a serialized model
@@ -113,6 +118,26 @@ example model from Microsoft\*'s Deep Learning framework, `CNTK`_,
 we can outline the procedure to show how to run ResNet on model 
 that has been trained on the CIFAR10 data set and serialized with 
 ONNX. 
+
+
+(Optional) Localize your export to the virtual environment 
+----------------------------------------------------------
+
+For this example, let's say that our serialized file was output under our $HOME 
+directory, say at ``~/onnx_conversions/trained_model.onnx``. To make loading this 
+file easier, you can run the example below from your Venv in that directory. If 
+you invoke your python interpreter in a different directory, you will need to 
+specify the relative path to the location of the ``.onnx`` file.
+
+.. important:: If you invoke your Python interpreter in directory other than 
+   where you outputted your trained model, you will need to specify the 
+   **relative** path to the location of the ``.onnx`` file.
+
+
+.. code-block:: console 
+
+   (onnx) $ cd ~/onnx_conversions 
+   (onnx) $ python3 
 
 
 Enable ONNX and load an ONNX file from disk
