@@ -34,8 +34,8 @@ bool pass::PrettyPrint::run_on_module(vector<shared_ptr<ngraph::Function>>& func
         m_stream << "Function " << f->get_name() << std::endl;
         m_stream << "======================" << std::endl;
 
-        // map<size_t, list<node_ptr>> dependent_nodes;
-        traverse_nodes(f, [&](shared_ptr<Node> node) {
+        for (auto node : f->get_ordered_ops())
+        {
             m_stream << node->get_name() << " = ";
             m_stream << node->description();
 
@@ -83,7 +83,7 @@ bool pass::PrettyPrint::run_on_module(vector<shared_ptr<ngraph::Function>>& func
             }
 
             m_stream << std::endl;
-        });
+        }
     }
 
     return false;
