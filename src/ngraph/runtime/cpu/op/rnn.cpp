@@ -32,12 +32,14 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             new_args[2],
                             new_args[3],
                             new_args[4],
-                            m_number_of_lstm_cells,
+                            m_number_of_timesteps,
                             m_number_of_gates_per_cell,
                             m_src_seq_length,
                             m_src_layer_feature_size,
                             m_src_iter_feature_size,
-                            m_num_rnn_cell_states);
+                            m_num_rnn_cell_states,
+                            m_rnn_direction,
+                            m_num_of_fused_rnn_layers);
 }
 
 op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
@@ -45,19 +47,23 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              std::shared_ptr<Node> weights_layer,
              std::shared_ptr<Node> weights_iter,
              std::shared_ptr<Node> bias,
-             const int number_of_cells,
+             const int number_of_timesteps,
              const int number_of_gates_per_cell,
              const int src_seq_length,
              const int src_layer_feature_size,
              const int src_iter_feature_size,
-             const int num_rnn_cell_states)
+             const int num_rnn_cell_states,
+             const int rnn_direction,
+             const int num_of_fused_rnn_layers)
     : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
-    , m_number_of_lstm_cells(number_of_cells)
+    , m_number_of_timesteps(number_of_timesteps)
     , m_number_of_gates_per_cell(number_of_gates_per_cell)
     , m_src_seq_length(src_seq_length)
     , m_src_layer_feature_size(src_layer_feature_size)
     , m_src_iter_feature_size(src_iter_feature_size)
     , m_num_rnn_cell_states(num_rnn_cell_states)
+    , m_rnn_direction(rnn_direction)
+    , m_num_of_fused_rnn_layers(num_of_fused_rnn_layers)
 {
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
     {
@@ -71,7 +77,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
 
     if (src_layer->get_shape().size() == 2)
     {
-        m_batch_size = static_cast<int>(src_layer->get_shape()[0] / number_of_cells);
+        m_batch_size = static_cast<int>(src_layer->get_shape()[0] / number_of_timesteps);
     }
     else
     {
@@ -101,7 +107,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     }
 
     add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_number_of_lstm_cells * m_batch_size),
+               Shape{static_cast<unsigned long>(m_number_of_timesteps * m_batch_size),
                      static_cast<unsigned long>(m_src_iter_feature_size)});
     add_output(src_layer->get_element_type(),
                Shape{static_cast<unsigned long>(m_num_rnn_cell_states * m_batch_size),

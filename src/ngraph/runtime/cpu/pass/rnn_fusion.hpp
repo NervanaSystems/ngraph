@@ -54,9 +54,9 @@ public:
     RNNFusion()
         : RecurrentGraphRewrite()
     {
-        construct_rnn_fprop();
+        construct_rnn_lstm_fprop();
     }
 
 private:
-    void construct_rnn_fprop();
+    void construct_rnn_lstm_fprop();
 };

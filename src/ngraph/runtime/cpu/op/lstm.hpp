@@ -23,6 +23,21 @@ namespace ngraph
 {
     namespace op
     {
+        // In this version of LSTM op:
+        //
+        // INPUTS:
+        // [0] - xt, input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
+        // [1] - initializer for the input weights matrix, used for the linear transformation of the inputs.
+        // [2] - ht_1, hidden state of shape (batch_size, feature_size)
+        // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
+        // [4] - Initializer for the bias vector w.r.to inputs.
+        // [5] - Initializer for the bias vector w.r.to hidden state
+        // [6] - ct_1, cell state of shape (batch_size, feature_size)
+
+        // OUTPUT VALUE: A tuple with the following structure:
+        //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
+        //   [1] - {ht | ct} output recurrent state tensor with the same shape as states
+
         class Lstm : public util::RequiresTensorViewArgs
         {
         public:
@@ -38,8 +53,6 @@ namespace ngraph
             Shape get_cell_shape() const { return m_lstm_cell_shape; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            // virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-            //                                const std::shared_ptr<Node>& delta) override;
 
         private:
             Shape m_shape_input;

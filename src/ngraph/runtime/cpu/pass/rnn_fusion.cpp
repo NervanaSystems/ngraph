@@ -198,7 +198,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             std::vector<std::shared_ptr<Node>> new_args;
             for (auto node : pattern_map[ct_label]->get_users())
             {
-                //std::cout << "Add_inputs: " << node->get_name() ;
                 if (std::dynamic_pointer_cast<op::Multiply>(node))
                 {
                     NGRAPH_DEBUG << "node_name: " << node->get_name();
@@ -302,7 +301,7 @@ static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
     return true;
 }
 
-void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
+void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto rpattern_ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
@@ -355,6 +354,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
         size_t feature_size = ht_1_label[0]->get_shape()[1];
         // number of states for LSTM is 2
         size_t num_rnn_cell_states = 2;
+        size_t rnn_direction = 1;
+        size_t num_fused_rnn_layers = 1;
 
         NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
@@ -386,7 +387,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_fprop()
                                              sequence_len,
                                              src_layer_feature_size,
                                              feature_size,
-                                             num_rnn_cell_states);
+                                             num_rnn_cell_states,
+                                             rnn_direction,
+                                             num_fused_rnn_layers);
 
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);

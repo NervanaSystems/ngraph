@@ -210,7 +210,6 @@ const element::Type& Node::get_element_type() const
 {
     if (get_output_size() != 1)
     {
-        std::cout << this->get_name();
         throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
     }
     return get_output_element_type(0);
