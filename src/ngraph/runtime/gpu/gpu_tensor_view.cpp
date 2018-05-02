@@ -31,10 +31,7 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
                                              void* memory_pointer)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
-          "external",
-          true,
-          true,
-          false))
+          "external"))
     , m_custom_memory(false)
 {
     m_descriptor->set_tensor_view_layout(
