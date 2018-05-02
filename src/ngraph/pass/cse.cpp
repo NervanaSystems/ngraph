@@ -68,7 +68,6 @@ static std::unordered_map<std::type_index,
 class NodeKey
 {
 public:
-
     NodeKey(std::shared_ptr<Node> n)
         : m_node(n)
     {
@@ -121,8 +120,8 @@ namespace std
             //specify how to compute hash for each op?
             if (p_this.is_commutative())
             {
-                std::sort(begin(cargs),end(cargs));
-            }                
+                std::sort(begin(cargs), end(cargs));
+            }
 
             for (auto arg : cargs)
             {
@@ -130,8 +129,6 @@ namespace std
             }
 
             auto hashc = ngraph::hash_combine(arg_ids);
-            NGRAPH_DEBUG << "Hash for node " << p_this.get_name() << " hash elements = " 
-                << vector_to_string(arg_ids) << " hash = " << std::hex << hashc;
             return hashc;
         }
     };
@@ -145,7 +142,6 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
 
     for (auto n : f->get_ordered_ops())
     {
-         NGRAPH_DEBUG << "Running CommonSubexpressionElimination for " << n->get_name();
         if (n->is_output() || n->is_parameter() ||
             n->is_constant() /*we could CSE constants as well*/)
         {
@@ -166,3 +162,4 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
 
     return replaced;
 }
+
