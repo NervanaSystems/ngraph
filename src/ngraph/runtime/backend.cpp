@@ -43,22 +43,14 @@ runtime::Backend::~Backend()
 void* runtime::Backend::open_shared_library(const string& type)
 {
     void* handle = nullptr;
-    vector<string> names;
-    names.push_back("lib" + type + ".so");
-    names.push_back("lib" + to_lower(type) + ".so");
-    names.push_back("lib" + type + "_backend.so");
-    names.push_back("lib" + to_lower(type) + "_backend.so");
-    for (const string& name : names)
+    string name = "lib" + type + "_backend.so";
+    handle = dlopen(name.c_str(), RTLD_NOW);
+    if (handle)
     {
-        handle = dlopen(name.c_str(), RTLD_NOW);
-        if (handle)
+        function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
+        if (create)
         {
-            function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-            if (create)
-            {
-                create();
-            }
-            break;
+            create();
         }
     }
     return handle;
