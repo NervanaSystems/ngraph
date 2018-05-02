@@ -188,9 +188,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
-        codegen/code_writer.cpp
-        codegen/compiler.cpp
-        codegen/execution_engine.cpp
         runtime/cpu/cpu_call_frame.cpp
         runtime/cpu/cpu_backend.cpp
         runtime/cpu/cpu_kernels.cpp
@@ -224,10 +221,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_post_layout_optimizations.cpp
         runtime/cpu/pass/cpu_shuffle_folding.cpp
     )
-    # LLVM binary builds are typically built without RTTI
-    # The built-in headers are in a version-specific directory
-    # This must be kept in sync with the LLVM + Clang version in use
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
 
     set(HEADER_SEARCH_DEFINES
         "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
@@ -244,15 +237,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             "NGRAPH_TBB_ENABLE"
         )
     endif()
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-
-    set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
-        "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
 
     # GPU backend current requires CPU because they share compiler.cpp,
@@ -283,12 +272,10 @@ endif()
             runtime/gpu/cuda_emitter.cpp
             runtime/gpu/type_info.cpp
             )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
 endif()
+
+add_subdirectory(codegen)
 
 if (NGRAPH_NNP_ENABLE)
     link_directories(${NNP_TRANSFORMER_LIB_DIR})
@@ -298,17 +285,12 @@ endif()
 add_library(ngraph SHARED ${SRC})
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
-    # Generate the resource file containing all headers used by the codegen compiler
-    add_custom_target(header_resource
-        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
-        BYPRODUCTS
-    )
-    add_dependencies(ngraph header_resource)
+    # add_dependencies(ngraph header_resource)
     include_directories(SYSTEM ${CMAKE_BINARY_DIR})
 endif()
-add_dependencies(ngraph ext_json)
+add_dependencies(ngraph ext_json codegen)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+target_link_libraries(ngraph PUBLIC codegen)
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
