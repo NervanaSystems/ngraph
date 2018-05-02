@@ -903,8 +903,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     };
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
-//    auto sigmoid_1 = std::make_shared<op::Sigmoid>(input);
-//    auto sigmoid_2 = std::make_shared<op::Sigmoid>(input);
     auto elem_mul = std::make_shared<op::Multiply>(sigmoid_1, sigmoid_2);
 
     //Define a call back that needs to called once the DFG matches the pattern

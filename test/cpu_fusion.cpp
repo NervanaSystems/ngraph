@@ -31,6 +31,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -1095,9 +1096,11 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
 
 TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
 {
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    const size_t w = 200;
+    const size_t h = 200;
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
     auto sigmoid_node_1 = make_shared<op::Sigmoid>(input);
-    auto sigmoid_node_2 = make_shared<op::Sigmoid>(input);
+    auto sigmoid_node_2 = make_shared<op::Tanh>(input);
     auto mul_node = sigmoid_node_1 * sigmoid_node_2;
     auto func = make_shared<Function>(mul_node, op::ParameterVector{input});
 
@@ -1107,15 +1110,25 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
     shared_ptr<runtime::TensorView> result =
             backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataA(w*h);
+    for (int i = 0; i < w*h; ++i) {
+        dataA[i] = 1;
+    }
     copy_data(a, dataA);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_after.pdf");
-    pass_manager.run_passes(func);
+//    pass::Manager pass_manager;
+//    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
+//    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+//    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_after.pdf");
+//    pass_manager.run_passes(func);
+
+    ngraph::stopwatch timer;
+    timer.start();
     backend->call(func, {result}, {a});
-//    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    timer.stop();
+    std::cout << "time: " << timer.get_milliseconds() << std::endl;
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+// [ 0.55677, 0.981355, 0.55677, 0.981355 ]
+//    std::cout << vector_to_string(read_vector<float>(result)) << std::endl;
 //    ASSERT_TRUE(read_vector<float>(result) == expected);
 }
 

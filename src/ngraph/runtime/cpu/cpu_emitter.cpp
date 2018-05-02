@@ -3404,15 +3404,18 @@ namespace ngraph
                        << to_string(sigmoid_index) << ");\n";
             }
 
-            std::string generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type)
+            std::string generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
+            const std::string& input, const std::string& output)
             {
                 std::string func_block;
                 switch (type) {
                     case ngraph::op::SigmoidMultiply::FunctionType::Sigmoid:
-                        func_block = "sigmoid";
+                        func_block = "auto ex = exp(" + input + ");\n";
+                        func_block += output + " = ex/(ex+1.0);\n";
                         break;
                     case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
-                        func_block = "tanh";
+                        func_block = "auto ex = exp(2.0*" + input + ");\n";
+                        func_block += output + " = (ex-1)/(ex+1);\n";
                         break;
                     default:
                         throw ngraph_error("generate_sigmoid_mul_func input function type not supported");
@@ -3423,8 +3426,10 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
             {
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
-                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type());
-                std::string input_2_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type());
+                std::string val_0 = "val_0";
+                std::string val_1 = "val_1";
+                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(), args[0].get_name()+"[i]", val_0);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(), args[1].get_name()+"[i]", val_1);
 
 //                const input_shape_1 = args[0].get_shape();
 //                const input_shape_2 = args[1].get_shape();
@@ -3432,11 +3437,18 @@ namespace ngraph
 //                int input_1_size = static_cast<int>(shape_size(input_shape_1));
 //                int result_1d_size = static_cast<int>(shape_size(result_shape));
                 writer.block_begin();
-                writer << "auto sigmoid = [](float x) { return 1; }; ";
+                writer << "#pragma omp parallel for simd\n";
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = " + input_1_func_string + "(" << args[0].get_name() << "[i]) * ";
-                writer << input_2_func_string + "(" << args[1].get_name() << "[i]);\n";
+                writer << "float " << val_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << val_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << out[0].get_name() << "[i] = " + val_0 + " * " + val_1 + ";\n";
                 writer.block_end();
                 writer.block_end();
             }
