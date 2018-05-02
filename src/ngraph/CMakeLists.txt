@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 set (SRC
-    attribute_map.cpp
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
