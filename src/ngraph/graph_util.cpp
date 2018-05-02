@@ -345,18 +345,18 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 //
 // This cannot be achieved by ngraph::replace_node().
 // With replace_node(), we could do:
-//     S           S
-//    / \          |
-//   /   \   =>    N
-//  /     \       / \
-// D0     D1    D0   D1
+// [     S           S      ]
+// [    / \          |      ]
+// [   /   \   =>    N      ]
+// [  /     \       / \     ]
+// [ D0     D1    D0   D1   ]
 //
 // But we want:
-//     S            S
-//    / \          / \
-//   /   \   =>   N0  N1
-//  /     \      /     \
-// D0     D1    D0     D1
+// [     S            S     ]
+// [    / \          / \    ]
+// [   /   \   =>   N0  N1  ]
+// [  /     \      /     \  ]
+// [ D0     D1    D0     D1 ]
 //
 // Typically new_node is connected to src_node already. The reason we don't create `new_node`
 // inside the function and return it (similar to ngraph::insert_result_parameter_split) is that

@@ -111,12 +111,14 @@ namespace ngraph
                        __PRETTY_FUNCTION__)                                                        \
         .stream()
 
-// #define NGRAPH_DEBUG                                                                               \
-//     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
-//                        ngraph::get_file_name(__FILE__),                                            \
-//                        __LINE__,                                                                   \
-//                        __PRETTY_FUNCTION__)                                                        \
-//         .stream()
-
+#ifdef NGRAPH_DEBUG_ENABLE
+#define NGRAPH_DEBUG                                                                               \
+    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
+                       ngraph::get_file_name(__FILE__),                                            \
+                       __LINE__,                                                                   \
+                       __PRETTY_FUNCTION__)                                                        \
+        .stream()
+#else
 #define NGRAPH_DEBUG ngraph::get_nil_stream()
+#endif
 }
