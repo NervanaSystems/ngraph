@@ -25,14 +25,48 @@
 #include "ngraph/node.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
+bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
 {
-    unordered_set<descriptor::Tensor*> currently_live;
+    list<shared_ptr<Node>> ops = function->get_ordered_ops();
 
+    unordered_set<const descriptor::Tensor*> persistent_tensors;
+    for (shared_ptr<op::Parameter> node: function->get_parameters())
+    {
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            const descriptor::Tensor& tensor = node->get_output_tensor(i);
+            persistent_tensors.insert(&tensor);
+        }
+    }
+    for (shared_ptr<op::Result> node: function->get_results())
+    {
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            const descriptor::Tensor& tensor = node->get_output_tensor(i);
+            persistent_tensors.insert(&tensor);
+        }
+    }
+    for (shared_ptr<Node> node : function->get_ordered_ops())
+    {
+        if (auto constant_node = dynamic_pointer_cast<op::Constant>(node))
+        {
+            for (size_t i = 0; i < constant_node->get_output_size(); ++i)
+            {
+                const descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
+                persistent_tensors.insert(&tensor);
+            }
+        }
+    }
+
+    unordered_set<descriptor::Tensor*> currently_live;
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
         shared_ptr<Node> node = *it;
@@ -43,7 +77,7 @@ bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
         for (descriptor::Input& input_decl : node->get_inputs())
         {
             descriptor::Tensor& tensor = input_decl.get_tensor();
-            if (is_temporary(tensor))
+            if (persistent_tensors.count(tensor) == 0)
             {
                 input_tensor_decls.insert(&tensor);
             }
@@ -53,7 +87,7 @@ bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
             descriptor::Tensor& tensor = node->get_output_tensor(i);
-            if (is_temporary(tensor))
+            if (persistent_tensors.count(tensor) == 0)
             {
                 output_tensor_decls.insert(&tensor);
             }
@@ -124,11 +158,9 @@ bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
     return false;
 }
 
-bool pass::Liveness::is_temporary(const descriptor::Tensor& tensor)
+bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
 {
-    return tensor.is_persistent() == false && tensor.is_input() == false &&
-           tensor.is_output() == false && tensor.is_constant() == false;
-    // && tensor.is_compile_only() == false;
+
 }
 
 void pass::Liveness::validate_liveness(const list<Node*>& ops)
