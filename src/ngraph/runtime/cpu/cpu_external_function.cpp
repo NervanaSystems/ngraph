@@ -575,6 +575,26 @@ using namespace ngraph::runtime;
                    << ");\n";
         }
 
+        // Indexing for Control Flags
+        std::map<std::string, size_t> tensor_index_map;
+        std::map<std::string, size_t> param_index_map;
+        size_t tensor_index = 0;
+        for (shared_ptr<Node> node : ordered_ops)
+        {
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                for (const descriptor::Input& input : node->get_inputs())
+                {
+                    const descriptor::Output& output = input.get_output();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    tensor_index_map.insert({tv->get_tensor().get_name(), tensor_index++});
+                }
+            }
+        }
+
+        writer << "bool " << current_function->get_name() << "_t_en[" << tensor_index << "];\n";
+        writer << "bool " << current_function->get_name() << "_init = true;\n";
+
         writer << "extern \"C\" void " << current_function->get_name();
         writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
         writer << "{\n";
@@ -612,6 +632,8 @@ using namespace ngraph::runtime;
             }
         }
 
+        writer << "bool* t_en = (bool*)" << current_function->get_name() << "_t_en;\n";
+
         // Add inputs to the variable name map
         size_t arg_index = 0;
         for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
@@ -624,6 +646,7 @@ using namespace ngraph::runtime;
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+                param_index_map[tv->get_tensor().get_name()] = arg_index;
                 arg_index++;
             }
         }
@@ -735,6 +758,30 @@ using namespace ngraph::runtime;
             {
                 emit_debug_function_entry(writer, node.get(), in, out);
             }
+
+            // Op Control
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                writer << "if (" << current_function->get_name() << "_init ";
+                for (const descriptor::Input& input : node->get_inputs())
+                {
+                    const descriptor::Output& output = input.get_output();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    auto input_name = tv->get_tensor().get_name();
+
+                    if (output.get_node()->is_parameter())
+                    {
+                        writer << " || ctx->p_en[" << param_index_map[input_name] << "]";
+                    }
+                    else if (!output.get_node()->is_constant())
+                    {
+                        writer << " || t_en[" << tensor_index_map[input_name] << "]";
+                    }
+                }
+                writer << ") {\n";
+                writer.indent++;
+            }
+
             string func_name;
             auto it = match_functions.find(node.get());
             if (it == match_functions.end())
@@ -781,6 +828,19 @@ using namespace ngraph::runtime;
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
             {
+                for (auto output_name : node_output_names)
+                {
+                    writer << "t_en[" << tensor_index_map[output_name] << "] = true;\n";
+                }
+                writer.indent--;
+                writer << "} else {\n";
+                writer.indent++;
+                for (auto output_name : node_output_names)
+                {
+                    writer << "t_en[" << tensor_index_map[output_name] << "] = false;\n";
+                }
+                writer.indent--;
+                writer << "}\n";
                 emit_debug_function_exit(writer, node.get(), in, out);
                 if (runtime::cpu::IsTracingEnabled() &&
                     current_function->get_name() == m_function_name)
@@ -837,6 +897,7 @@ using namespace ngraph::runtime;
                 writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
             }
         }
+        writer << current_function->get_name() << "_init = false;\n";
 
         writer.indent--;
         // End generated function

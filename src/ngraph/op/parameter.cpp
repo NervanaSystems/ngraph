@@ -21,8 +21,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::Parameter::Parameter(const element::Type& element_type, const Shape& shape)
+op::Parameter::Parameter(const element::Type& element_type,
+                         const Shape& shape,
+                         const bool memoizable)
     : Op("Parameter", {})
+    , m_memoizable(memoizable)
 {
     add_output(element_type, shape);
 }

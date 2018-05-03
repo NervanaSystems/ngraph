@@ -40,10 +40,17 @@ namespace ngraph
             ///
             /// \param element_type The element type of the parameter.
             /// \param shape The shape of the parameter.
-            Parameter(const ngraph::element::Type& element_type, const Shape& shape);
+            /// \param memoizable True if parameter is not frequently updated
+            Parameter(const ngraph::element::Type& element_type,
+                      const Shape& shape,
+                      const bool memoizable = false);
 
+            const bool get_memoizable() const { return m_memoizable; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            bool m_memoizable;
         };
     }
 }
