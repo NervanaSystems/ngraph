@@ -40,7 +40,7 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \cos(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \cos(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
 
 
 Backprop
@@ -48,7 +48,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow -\Delta\ \sin(\texttt{arg})
+   \overline{\mathtt{arg}} \leftarrow -\Delta\ \sin(\mathtt{arg})
 
 
 C++ Interface

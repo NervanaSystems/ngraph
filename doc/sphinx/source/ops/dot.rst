@@ -61,14 +61,14 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_1,\dots,i_n,k_1,\ldots,k_p} =
+   \mathtt{output}_{i_1,\dots,i_n,k_1,\ldots,k_p} =
    \begin{cases}
-   \texttt{arg0}_{i_1,\dots,i_n} \cdot
-   \texttt{arg1}_{k_1,\dots,k_p}&\text{if }m=0,\\
+   \mathtt{arg0}_{i_1,\dots,i_n} \cdot
+   \mathtt{arg1}_{k_1,\dots,k_p}&\text{if }m=0,\\
    \sum_{j_1, \ldots, j_m}
-   \texttt{arg0}_{i_1,\dots,i_n,j_1,\dots,j_m}
+   \mathtt{arg0}_{i_1,\dots,i_n,j_1,\dots,j_m}
    \cdot
-   \texttt{arg1}_{j_1,\ldots,j_m,k_1,\ldots,k_p}
+   \mathtt{arg1}_{j_1,\ldots,j_m,k_1,\ldots,k_p}
    &\text{otherwise}.
    \end{cases}
 

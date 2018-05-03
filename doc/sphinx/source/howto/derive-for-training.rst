@@ -118,7 +118,7 @@ calculations for the adjustments to be further optimized.
 
 .. literalinclude:: ../../../examples/mnist_mlp.cpp
    :language: cpp
-   :lines: 172
+   :lines: 172-175
 
 
 For any node ``N``, if the update for ``loss`` is ``delta``, the
@@ -129,11 +129,12 @@ update computation for ``N`` will be given by the node
    auto update = loss->backprop_node(N, delta);
 
 The different update nodes will share intermediate computations. So to
-get the updated value for the weights we just say:
+get the updated values for the weights we just say:
 
 .. literalinclude:: ../../../examples/mnist_mlp.cpp
    :language: cpp
-   :lines: 168-178
+   :lines: 177-217
+
 
 .. _update:
 
@@ -152,5 +153,5 @@ compile clones of the nodes.
 
 .. literalinclude:: ../../../examples/mnist_mlp.cpp
    :language: cpp
-   :lines: 248-260
+   :lines: 220-226
 
