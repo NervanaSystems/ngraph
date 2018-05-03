@@ -241,12 +241,6 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<shared_p
 int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
 {
     int mass = 0;
-    // for input_decl in exop.input_decls:
-    //     tensor = input_decl.source_output_decl.tensor
-    //     mass += tensor->size()
-    // for output_decl in exop.output_decls:
-    //     tensor = output_decl.tensor
-    //     mass -= tensor->size()
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
         mass += tensor->size();
