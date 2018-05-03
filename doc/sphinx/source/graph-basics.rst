@@ -1,11 +1,11 @@
 .. graph-basics:
 
 #############
-nGraph Basics
+Graph Basics
 #############
 
 
-This section explains some of the primary concepts used in the nGraph library.
+This section explains some of the primary concepts used in the nGraph Library.
 Some new ideas regarding our unique departure from the first generation of deep 
 learning software design are also introduced. 
 
@@ -53,12 +53,12 @@ scientist to model or simulate a specific (usually large-scale) deep learning
 computational problem with the use of a high-level, data science-oriented 
 language. 
 
-A framework :term:`bridge` is a concept we use in nGraph to describe how that 
-computational problem gets presented in the :abbr:`Intermediate Representation (IR)` 
-for execution on nGraph-enabled backends.  Once the framework has put some 
-outputs into the IR, nGraph performs graph transformations that replace subgraphs 
-of the computation with more optimal (in terms of machine code) subgraphs. 
-Throughout this process, ``ops`` represent tensor operations. 
+A framework :term:`bridge` is a concept we use in to describe how that 
+computational problem gets presented in the nGraph :abbr:`Abstraction Layer (AL)` 
+for execution on backends.  Once the framework has put some outputs into the AL, 
+nGraph performs graph transformations that replace subgraphs of the computation 
+with more optimal (in terms of machine code) subgraphs. Throughout this process, 
+``ops`` represent tensor operations. 
 
 Either the framework can provide its own graph of functions to compiled and 
 optimized via :abbr:`Ahead-of-Time (AoT)` compilation to send back to the 
