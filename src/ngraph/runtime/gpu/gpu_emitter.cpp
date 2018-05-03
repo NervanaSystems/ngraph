@@ -1584,16 +1584,25 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                     }
 
+                    size_t avg_pool_index = 0;
+
                     // if 1d or has asymmetric padding, must handle pooling manually
-                    if (input_shape.size() == 3 || num_nontrivial_dims == 1 ||
+                    if (true || input_shape.size() == 3 || num_nontrivial_dims == 1 ||
                         padding_below != padding_above)
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                        avg_pool_index = cuda_emitter->build_avg_pool(external_function->ctx().get(),
+                                                                      {{args[0].get_type(), out[0].get_type()}},
+                                                                      input_shape,
+                                                                      result_shape,
+                                                                      avg_pool->get_window_shape(),
+                                                                      avg_pool->get_window_movement_strides(),
+                                                                      padding_below);
                     }
                     else if (input_shape.size() <= 5)
                     {
-                        size_t avg_pool_index = 0;
                         // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
                         if (input_shape.size() == 4 || input_shape.size() == 5)
                         {
@@ -1615,17 +1624,17 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 padding_below,
                                 padding_above);
                         }
-
-                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
                     }
                     else
                     {
                         throw std::runtime_error(
                             "Pooling currently only supports up to 3 spatial dimensions.");
                     }
+
+                    writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
