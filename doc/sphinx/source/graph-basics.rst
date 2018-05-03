@@ -1,27 +1,40 @@
 .. graph-basics:
 
-############
+#############
 Graph Basics
-############
+#############
 
 
-This section explains some of the primary concepts upon which the nGraph library 
-and ecosystem are built. nGraph provides a unique departure from the first 
-generation of deep learning software design. The assumption for the first 
-generation was that designing complex and multi-faceted frameworks around 
-multiple single-task dedicated GPUs was the "best" way to achieve a performant 
-deep learning system. 
+This section explains some of the primary concepts used in the nGraph Library.
+Some new ideas regarding our unique departure from the first generation of deep 
+learning software design are also introduced. 
 
-As the demand for different kinds of deep learning applications increases, 
-however, it is becoming more apparent that this approach creates its own set of 
-problems. For example, most frameworks expect full control of the GPU device. 
-Baked into this design is implied inefficiency for resource utilization whenever 
-the system encounters a bottleneck. In other words, if your deep learning model 
-requires any operation that hasn't been implemented on GPU, it must wait for 
-cpu/gpu copies. Most GPU framework owners will tell you to refactor model to remove the 
-unimplemented copy, rather than running multiple models in parallel. 
+Most frameworks for the first-generation of DNNs had a baked-in assumption that 
+performant deep learning systems required stacks of GPUs. Given this assumption, 
+the frameworks tended to yield best performance `only when given full control`_ 
+of the GPU devices, and if `any other resource demands`_ are made on the GPU, 
+the GPU ends up performing about the same as a CPU. Indeed, many GPU manufacturers 
+have gone out of their way to boast of multi-GPU to CPU performance, which is 
+essentially an apples-to-oranges comparison for this very reason.  
 
-Many other graph building efficiencies are available through nGraph. 
+As different kinds of deep learning applications emerge, and as layers of 
+complexity for anything other than a :abbr:`Just-in-Time (JIT)` compilation are 
+explored, limitations inherent in the first generation of DNNs become more apparent. 
+For example, most GPU frameworks that expect full control of the GPU devices 
+experience their own per-device inefficiency for resource utilization 
+whenever the system encounters a bottleneck. In other words, if a deep learning 
+model requires any operation that hasn't been implemented on GPU, it must wait 
+for copies to propagate to the GPUs. Most framework owners running GPUs 
+will tell you to refactor model to remove the unimplemented copy, rather than 
+attempt to run multiple models in parallel. Frameworks that compile with the 
+nGraph library, however, can be prescriptively programmed to work around such 
+limitations and can save the data scientist the pain of having to refactor 
+their model.    
+
+While the first generation of DNNs required a tradeoff between "specialized" and 
+"adaptable" (the trade-off between training and inference), nGraph allows algorithms 
+implemented in a DNN to be both specialized and adaptable. The new generation 
+of software design in and around AI ecosystems will be much more flexible.   
 
 
 * :ref:`framework_bridges`
@@ -35,18 +48,17 @@ Many other graph building efficiencies are available through nGraph.
 Framework bridges
 =================
 
-In the nGraph ecosystem, a framework is any "frontend" that helps a data 
-scientist model or simulate a specific (usually large-scale) deep learning 
-computational problem through the use of a high-level, data science-oriented 
+In the nGraph ecosystem, a framework is any "frontend" used by a data 
+scientist to model or simulate a specific (usually large-scale) deep learning 
+computational problem with the use of a high-level, data science-oriented 
 language. 
 
-
-A framework :term:`bridge` is a concept we use in nGraph to describe how that 
-computational problem gets presented in :abbr:`Intermediate Representation (IR)` 
-for execution on nGraph-enabled backends.  Once the framework has put some 
-outputs into the IR, we can perform graph transformations that replace subgraphs 
-of the computation with more optimal (in terms of machine code) subgraphs. 
-Throughout this process, ``ops`` represent tensor operations. 
+A framework :term:`bridge` is a concept we use in to describe how that 
+computational problem gets presented in the nGraph :abbr:`Abstraction Layer (AL)` 
+for execution on backends.  Once the framework has put some outputs into the AL, 
+nGraph performs graph transformations that replace subgraphs of the computation 
+with more optimal (in terms of machine code) subgraphs. Throughout this process, 
+``ops`` represent tensor operations. 
 
 Either the framework can provide its own graph of functions to compiled and 
 optimized via :abbr:`Ahead-of-Time (AoT)` compilation to send back to the 
@@ -60,15 +72,14 @@ how this translation can be programmed to happen automatically via a framework.
 
 .. _about_transformers:
 
-About transformers
-==================
+Transformer ops
+================
 
-A framework bridge can use bridge-specific ops, as long as they can be 
-converted to transformer ops, usually by being converted to core ops on 
-the way. For example, a framework might have a `PaddedCell` op and use 
-nGraph pattern replacement facilities to convert that into one of our core 
-ops. 
-
+A framework bridge can use any bridge-specific ops, as long as they can be 
+converted to transformer ops. This is usually achieved by them first being 
+converted to core ops on the way. For example, if a framework has a 
+``PaddedCell`` op, nGraph pattern replacement facilities can be used to convert 
+it into one of our core ops.  More detail on transformer ops will be coming soon.  
 
 
 .. _graph_shaping:
@@ -174,8 +185,35 @@ of all result ops will be written into the result arrays in row-major
 order.
 
 
+Shared pointers
+---------------
+
+We use shared pointers for all ops. For each parameter, we need to
+element type and shape attributes. When the function is called, each
+argument must conform to the corresponding parameter element type and
+shape.
+
+During typical graph construction, all ops have one output and some
+number of inputs, which makes it easy to construct the graph by
+assigning each unique output of a constructor argument node to an
+input of the op being constructed.  For example, `Add` need to supply
+node outputs to each of its two inputs, which we supply from the
+unique outputs of the parameters `a` and `b`.
+
+We do not perform any implicit element type coercion or shape
+conversion (such as broadcasts) since these can be
+framework-dependent, so all the shapes for the add and multiply must
+be the same. If there is a mismatch, the constructor will throw an
+exception.
+
+After the graph is constructed, we create the function, passing the
+`Function` constructor the nodes that are results and the parameters
+that are arguments.
+
+
+
 An Example
-----------
+==========
 
 ::
 
@@ -199,25 +237,11 @@ An Example
        auto f = std::make_shared<Function>(Nodes{t1}, Parameters{a, b, c});
    }
 
-We use shared pointers for all ops. For each parameter, we need to
-element type and shape attributes. When the function is called, each
-argument must conform to the corresponding parameter element type and
-shape.
 
-During typical graph construction, all ops have one output and some
-number of inputs, which makes it easy to construct the graph by
-assigning each unique output of a constructor argument node to an
-input of the op being constructed.  For example, `Add` need to supply
-node outputs to each of its two inputs, which we supply from the
-unique outputs of the parameters `a` and `b`.
 
-We do not perform any implicit element type coercion or shape
-conversion (such as broadcasts) since these can be
-framework-dependent, so all the shapes for the add and multiply must
-be the same. If there is a mismatch, the constructor will throw an
-exception.
 
-After the graph is constructed, we create the function, passing the
-`Function` constructor the nodes that are results and the parameters
-that are arguments.
+
+
+.. _only when given full control: https://stackoverflow.com/questions/49662266/performing-inference-in-tensorflow-with-multiple-graphs-on-same-gpu-parallely
+.. _any other resource demands: https://stackoverflow.com/questions/43416935/system-hangs-when-computing-gradients-on-gpu-with-tensorflow
 
