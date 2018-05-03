@@ -9,13 +9,13 @@ This section explains some of the primary concepts used in the nGraph Library.
 Some new ideas regarding our unique departure from the first generation of deep 
 learning software design are also introduced. 
 
-Most frameworks for the first-generation of DNNs had a baked-in assumption that 
-performant deep learning systems required stacks of GPUs. Given this assumption, 
-the frameworks tended to yield best performance `only when given full control`_ 
-of the GPU devices, and if `any other resource demands`_ are made on the GPU, 
-the GPU ends up performing about the same as a CPU. Indeed, many GPU manufacturers 
-have gone out of their way to boast of multi-GPU to CPU performance, which is 
-essentially an apples-to-oranges comparison for this very reason.  
+Many frameworks have a baked-in assumption that performant deep learning systems 
+require stacks of GPUs. Given this assumption, the frameworks tend to yield best 
+performance `only when given full control`_ of the GPU devices, and if 
+`any other resource demands`_ are made on the GPU, the GPU ends up performing about 
+the same as a CPU. Indeed, many GPU manufacturers have gone out of their way to 
+boast of multi-GPU to CPU performance, which is essentially an apples-to-oranges 
+comparison for this very reason. 
 
 As different kinds of deep learning applications emerge, and as layers of 
 complexity for anything other than a :abbr:`Just-in-Time (JIT)` compilation are 
@@ -31,10 +31,11 @@ nGraph library, however, can be prescriptively programmed to work around such
 limitations and can save the data scientist the pain of having to refactor 
 their model.    
 
-While the first generation of DNNs required a tradeoff between "specialized" and 
-"adaptable" (the trade-off between training and inference), nGraph allows algorithms 
-implemented in a DNN to be both specialized and adaptable. The new generation 
-of software design in and around AI ecosystems will be much more flexible.   
+While the first generation frameworks tended to need to make a tradeoff between 
+being "specialized" and "adaptable" (the trade-off between training and inference), 
+nGraph allows algorithms implemented in a DNN to be both specialized and adaptable. 
+The new generation of software design in and around AI ecosystems can and 
+should be much more flexible.   
 
 
 * :ref:`framework_bridges`
@@ -60,7 +61,7 @@ nGraph performs graph transformations that replace subgraphs of the computation
 with more optimal (in terms of machine code) subgraphs. Throughout this process, 
 ``ops`` represent tensor operations. 
 
-Either the framework can provide its own graph of functions to compiled and 
+Either the framework can provide its own graph of functions to be compiled and 
 optimized via :abbr:`Ahead-of-Time (AoT)` compilation to send back to the 
 framework, or an entity (framework or user) who requires the flexibility of 
 shaping ops directly can use our graph construction functions to experiment with 
