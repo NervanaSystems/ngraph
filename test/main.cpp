@@ -33,7 +33,9 @@ protected:
         int flag = 0;
         MPI_Initialized(&flag);
         if (!flag)
+        {
             MPI::Init();
+        }
     }
     virtual void TearDown() { MPI::Finalize(); }
     virtual ~MpiEnvironment() {}
