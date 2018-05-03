@@ -412,6 +412,9 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
+        // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
+        // via pooling window: JTRS. Currently feature pooling
+        // is not supported and so K = C and J is unused
         writer << "extern \"C\" __global__ void cuda_" << kernel_name << "(" << dtypes[0]
                << "* in, " << dtypes[1] << "* out, "
                << "float alpha, float beta, "
@@ -424,14 +427,8 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                << "int str_d, int str_h, int str_w, "
                << "int pad_d, int pad_h, int pad_w"
                << ")\n";
-
         writer.block_begin();
         {
-            // I: NCDHW -> O: NKMPQ
-            // via pooling window: JTRS
-            // currently feature pooling
-            // is not supported and so K = C
-            // and J is unused
             writer << "const int tid = threadIdx.x;\n";
             writer << "if (tid < 32)\n";
             writer.block_begin();
@@ -530,7 +527,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     int magic_RS, shift_RS;
     std::tie(magic_RS, shift_RS) = idiv_magic_u64(RS);
 
-    // TODO: not yet used
+    // TODO: blending factors are not currently implemented
     float alpha = 1.0f, beta = 0.0f;
 
     std::unique_ptr<gpu::primitive> pool(
