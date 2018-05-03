@@ -64,8 +64,6 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
 {
-    out << "Tensor(" << tensor.get_name() << ", ";
-    out << "T";
-    out << ")";
+    out << "Tensor(" << tensor.get_name() << ")";
     return out;
 }
