@@ -3231,9 +3231,18 @@ namespace ngraph
             {
                 auto input_tvl =
                     node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto input_cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl);
+                auto input_format = input_cpu_tvl.get_mkldnn_format();
+
+                // Reorder input shape if needed
+                auto input_axis_order = input_cpu_tvl.get_axis_order();
+                Shape input_shape(input_axis_order.size());
+                for (size_t idx = 0; idx < input_axis_order.size(); idx++)
+                {
+                    input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
+                }
+
                 auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                auto input_format =
-                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
@@ -3251,7 +3260,9 @@ namespace ngraph
                 }
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                    input_shape, args[0].get_element_type(), input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
