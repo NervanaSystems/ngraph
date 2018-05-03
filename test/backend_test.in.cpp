@@ -5786,19 +5786,19 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
@@ -5824,31 +5824,31 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}},
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}},
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
@@ -5877,56 +5877,56 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom},
-                                         {0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          4 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          1 / denom}},
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom},
+                                                          {0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           4 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           1 / denom}},
 
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom},
-                                         {3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom,
-                                          1 / denom,
-                                          2 / denom,
-                                          4 / denom,
-                                          3 / denom}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom},
+                                                          {3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom,
+                                                           1 / denom,
+                                                           2 / denom,
+                                                           4 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
@@ -5973,27 +5973,28 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 
     backend->call(f, {result}, {a});
 
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
-                            {7 / denom, 5 / denom, 3 / denom},
-                            {5 / denom, 2 / denom, 5 / denom},
-                            {6 / denom, 5 / denom, 5 / denom}},
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
+                                   {7 / denom, 5 / denom, 3 / denom},
+                                   {5 / denom, 2 / denom, 5 / denom},
+                                   {6 / denom, 5 / denom, 5 / denom}},
 
-                        {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
-                            {8 / denom, 6 / denom, 7 / denom},
-                            {7 / denom, 2 / denom, 3 / denom},
-                            {6 / denom, 1 / denom, 0 / denom}}},
+                                  {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
+                                   {8 / denom, 6 / denom, 7 / denom},
+                                   {7 / denom, 2 / denom, 3 / denom},
+                                   {6 / denom, 1 / denom, 0 / denom}}},
 
-                    {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
-                            {3 / denom, 5 / denom, 9 / denom},
-                            {3 / denom, 6 / denom, 9 / denom},
-                            {2 / denom, 3 / denom, 3 / denom}},
+                                 {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
+                                   {3 / denom, 5 / denom, 9 / denom},
+                                   {3 / denom, 6 / denom, 9 / denom},
+                                   {2 / denom, 3 / denom, 3 / denom}},
 
-                        {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
-                            {6 / denom, 5 / denom, 4 / denom},
-                            {7 / denom, 5 / denom, 6 / denom},
-                            {4 / denom, 2 / denom, 4 / denom}}}})
+                                  {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
+                                   {6 / denom, 5 / denom, 4 / denom},
+                                   {7 / denom, 5 / denom, 6 / denom},
+                                   {4 / denom, 2 / denom, 4 / denom}}}})
             .get_vector(),
-            read_vector<float>(result)));
+        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
@@ -6026,10 +6027,10 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
-                                          {6 / denom, 5 / denom, 8 / denom},
-                                          {6 / denom, 2 / denom, 4 / denom}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           {6 / denom, 5 / denom, 8 / denom},
+                                                           {6 / denom, 2 / denom, 4 / denom}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
@@ -6054,12 +6055,13 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
@@ -6087,16 +6089,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                  {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
+                                                   {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                   {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                   {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
@@ -6125,13 +6128,13 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           {0.0f / 2, 4.0f / 4, 6.0f / 4},
+                                                           {2.0f / 2, 5.0f / 4, 5.0f / 4}},
+                                                          {{3.0f / 1, 8.0f / 2, 7.0f / 2},
+                                                           {5.0f / 2, 10.0f / 4, 16.0f / 4},
+                                                           {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
@@ -6160,13 +6163,13 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           {5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                           {2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                          {{10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                           {11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                           {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
@@ -6194,16 +6197,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
-                                          {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
-                                          {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
-                                          {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
+                                   {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
+                                   {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
+                                   {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
+                                   {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
+                                  {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
+                                   {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
+                                   {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
+                                   {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
+                                   {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
             .get_vector(),
         read_vector<float>(result)));
 }
@@ -6234,13 +6238,13 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
-                                          {2.0f / 3, 8.0f / 9, 2.0f / 3},
-                                          {2.0f / 1, 2.0f / 3, 0.0f / 1}},
-                                         {{3.0f / 1, 10.0f / 3, 2.0f / 1},
-                                          {8.0f / 3, 35.0f / 9, 16.0f / 3},
-                                          {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
-            .get_vector(),
-        read_vector<float>(result)));
+                                                           {2.0f / 3, 8.0f / 9, 2.0f / 3},
+                                                           {2.0f / 1, 2.0f / 3, 0.0f / 1}},
+                                                          {{3.0f / 1, 10.0f / 3, 2.0f / 1},
+                                                           {8.0f / 3, 35.0f / 9, 16.0f / 3},
+                                                           {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
@@ -6268,9 +6272,10 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>(
-                   {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
-                     {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>(
+            {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
+              {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
             .get_vector(),
         read_vector<float>(result)));
 }

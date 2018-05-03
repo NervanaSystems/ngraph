@@ -22,20 +22,36 @@
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
 inline namespace enums
 {
-    enum pooling_indices { N_, C_, D_, H_, W_,
-                           K_, M_, P_, Q_,
-                           J_, T_, R_, S_,
-                           STRIDE_D, STRIDE_H, STRIDE_W,
-                           PAD_D, PAD_H, PAD_W,
-                           NUM_POOLING_INDICES
+    enum pooling_indices
+    {
+        N_,
+        C_,
+        D_,
+        H_,
+        W_,
+        K_,
+        M_,
+        P_,
+        Q_,
+        J_,
+        T_,
+        R_,
+        S_,
+        STRIDE_D,
+        STRIDE_H,
+        STRIDE_W,
+        PAD_D,
+        PAD_H,
+        PAD_W,
+        NUM_POOLING_INDICES
     };
 }
 
@@ -292,11 +308,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     return primitive_index;
 }
 
-std::vector<int> get_avgpool_params(const Shape& in,
-                                    const Shape& out,
-                                    const Shape& window,
-                                    const Shape& strides,
-                                    const Shape& pad)
+std::vector<int> get_avgpool_params(
+    const Shape& in, const Shape& out, const Shape& window, const Shape& strides, const Shape& pad)
 {
     std::vector<int> shape_params(NUM_POOLING_INDICES, 0);
     shape_params[N_] = static_cast<int>(in[0]);
@@ -376,14 +389,13 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     // assumes NCDHW format
     auto input_width = input_shape.back();
     auto output_width = output_shape.back();
-    auto s = get_avgpool_params(input_shape, output_shape, window_shape, window_stride, padding_below);
+    auto s =
+        get_avgpool_params(input_shape, output_shape, window_shape, window_stride, padding_below);
 
     std::string kernel_name = "avgpool";
     std::stringstream ss;
-    ss << kernel_name
-       << "_s" << join(s,"_")
-       << "_st" << join(window_stride,"_")
-       << "_ip" << int(include_pad);
+    ss << kernel_name << "_s" << join(s, "_") << "_st" << join(window_stride, "_") << "_ip"
+       << int(include_pad);
     auto hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -400,9 +412,8 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        writer << "extern \"C\" __global__ void cuda_" << kernel_name << "("
-               << dtypes[0] << "* in, "
-               << dtypes[1] << "* out, "
+        writer << "extern \"C\" __global__ void cuda_" << kernel_name << "(" << dtypes[0]
+               << "* in, " << dtypes[1] << "* out, "
                << "float alpha, float beta, "
                << "int N, int C, int D, int H, int W, "
                << "int HW, int DHW, int CDHW, int magic_N, int shift_N, "
@@ -500,14 +511,14 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     }
 
     // precompute for fast constant memory access
-    int HW = s[H_]*s[W_];
-    int DHW = s[D_]*HW;
-    int CDHW = s[C_]*DHW;
-    int PQ = s[P_]*s[Q_];
-    int MPQ = s[M_]*PQ;
-    int KMPQ = s[K_]*MPQ;
-    int RS = s[R_]*s[S_];
-    int TRS = s[T_]*RS;
+    int HW = s[H_] * s[W_];
+    int DHW = s[D_] * HW;
+    int CDHW = s[C_] * DHW;
+    int PQ = s[P_] * s[Q_];
+    int MPQ = s[M_] * PQ;
+    int KMPQ = s[K_] * MPQ;
+    int RS = s[R_] * s[S_];
+    int TRS = s[T_] * RS;
 
     // precompute magic numbers and shifts for fast integer division
     int magic_N, shift_N;
@@ -522,34 +533,29 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     // TODO: not yet used
     float alpha = 1.0f, beta = 0.0f;
 
-    std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-        void* args_list[] =
-        {
-            &inputs[0], &outputs[0],
-            &alpha, &beta,
-            &s[N_], &s[C_], &s[D_], &s[H_], &s[W_],
-            &HW, &DHW, &CDHW, &magic_N, &shift_N,
-            &s[P_], &s[Q_], &magic_P, &shift_P,
-            &PQ, &MPQ, &KMPQ,
-            &s[S_], &RS, &TRS,
-            &magic_S, &shift_S, &magic_RS, &shift_RS,
-            &s[STRIDE_D], &s[STRIDE_H], &s[STRIDE_W],
-            &s[PAD_D], &s[PAD_H], &s[PAD_W]
-        };
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      s[Q_],
-                                      s[M_]*s[P_],
-                                      s[N_]*s[K_],
-                                      32,
-                                      1,
-                                      1,
-                                      0,
-                                      NULL,
-                                      args_list,
-                                      0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
+    std::unique_ptr<gpu::primitive> pool(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* args_list[] = {&inputs[0],   &outputs[0], &alpha,    &beta,        &s[N_],
+                                 &s[C_],       &s[D_],      &s[H_],    &s[W_],       &HW,
+                                 &DHW,         &CDHW,       &magic_N,  &shift_N,     &s[P_],
+                                 &s[Q_],       &magic_P,    &shift_P,  &PQ,          &MPQ,
+                                 &KMPQ,        &s[S_],      &RS,       &TRS,         &magic_S,
+                                 &shift_S,     &magic_RS,   &shift_RS, &s[STRIDE_D], &s[STRIDE_H],
+                                 &s[STRIDE_W], &s[PAD_D],   &s[PAD_H], &s[PAD_W]};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          s[Q_],
+                                          s[M_] * s[P_],
+                                          s[N_] * s[K_],
+                                          32,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list,
+                                          0));
+            CUDA_SAFE_CALL(cuCtxSynchronize());
 
-    }});
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);
