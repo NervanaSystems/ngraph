@@ -841,11 +841,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     ngraph::pattern::graph_rewrite_callback callback =
         [input, mean, var, gamma, beta](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
-                         << m.match_root()->get_name();
+                         << m.get_match_root()->get_name();
 
             auto pattern_map = m.get_pattern_map();
             auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
-                m.match_root()->get_inputs().at(0).get_output().get_node());
+                m.get_match_root()->get_inputs().at(0).get_output().get_node());
 
             //as of now, only MKLDNN supports this fusion
             //and it requires input data's rank to be equal to 4
@@ -870,7 +870,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
                                                                pattern_map[var],
                                                                m_bn->get_training_flag());
 
-            ngraph::replace_node(m.match_root(), bn_relu);
+            ngraph::replace_node(m.get_match_root(), bn_relu);
 
             return true;
         };

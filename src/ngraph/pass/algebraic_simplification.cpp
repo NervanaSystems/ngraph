@@ -52,7 +52,7 @@ static std::shared_ptr<pattern::Matcher>
 static std::shared_ptr<pattern::op::Label>
     get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
 {
-    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->pattern_node()->get_argument(1));
+    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
