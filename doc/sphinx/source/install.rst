@@ -24,7 +24,10 @@ with the following packages and prerequisites:
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but should be considered experimental with
-limited support. 
+limited support. On Ubuntu 16.04 with gcc-5.4.0 or clang-3.9, for example, we 
+recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the cmake command in 
+step 4 below. This fetches a pre-built tarball of LLVM+Clang from llvm.org, 
+and it will substantially reduce build time.
 
 If using ``gcc`` version 4.8, it may be necessary to add symlinks from ``gcc`` 
 to ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
@@ -90,7 +93,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
    .. code-block:: console
 
-      $ cmake ../ [-DNGRAPH_TARGET_ARCH=skylake-avx512]
+      $ cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``$HOME/ngraph_dist``:
@@ -103,7 +106,9 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
-   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
+   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory. 
+   See the :doc:`project/doc-contributor-README` for more details about how to 
+   build documentation for nGraph. 
 
 
 .. _centos: 
