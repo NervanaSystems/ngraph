@@ -29,18 +29,6 @@ namespace ngraph
         /// Parameters are nodes that represent the arguments that will be passed to user-defined functions.
         /// Function creation requires a sequence of parameters.
         /// Basic graph operations do not need parameters attached to a function.
-        ///
-        /// ## Parameters
-        ///
-        /// |              | Description                        |
-        /// | -------------| ---------------------------------- |
-        /// | `value_type` | The type \f$T\f$ of the parameter. |
-        ///
-        /// ## Output
-        ///
-        /// | Type    | Description                                                                                                                 |
-        /// | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$T\f$ | The value of the parameter, supplied by the `FunctionCall` to this function.                                                |
         class Parameter : public op::Op
         {
         protected:
