@@ -1639,6 +1639,48 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer.block_end();
             }
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto output_shape = out[0].get_shape();
+                    auto delta_shape = args[0].get_shape();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    if (output_shape.size() >= 4)
+                    {
+                        auto cudnn_avg_type = apb->get_include_padding_in_avg_computation()
+                                                  ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                  : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                        auto avg_pool_bp_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         cudnn_avg_type,
+                                                         CUDNNEmitter::Prop::Backward,
+                                                         output_shape,
+                                                         delta_shape,
+                                                         apb->get_window_movement_strides(),
+                                                         apb->get_window_shape(),
+                                                         apb->get_padding_below(),
+                                                         apb->get_padding_above());
+
+                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_bp_index << ", ";
+                        // CUDNN backwards pooling requests input and output tensors from
+                        // the forward pass but does not use them. It also behaves differently
+                        // for max pool vs avg pool. The repetition of args below is to address
+                        // this interface in a way that supports both max and avg pooling
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                }
+                writer.block_end();
+            }
         }
     }
 }
