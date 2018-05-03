@@ -20,15 +20,15 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/op/result.hpp"
-#include "ngraph/op/parameter.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,7 +39,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
 
     unordered_set<descriptor::Tensor*> function_persistent_tensors;
     unordered_set<descriptor::Tensor*> function_output_tensors;
-    for (shared_ptr<op::Parameter> node: function->get_parameters())
+    for (shared_ptr<op::Parameter> node : function->get_parameters())
     {
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
@@ -47,7 +47,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
             function_persistent_tensors.insert(&tensor);
         }
     }
-    for (shared_ptr<op::Result> node: function->get_results())
+    for (shared_ptr<op::Result> node : function->get_results())
     {
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
