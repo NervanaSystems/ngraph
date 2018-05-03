@@ -33,6 +33,5 @@ public:
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 
 private:
-    bool run_on_call_graph(const std::list<std::shared_ptr<Node>>&);
     void validate_liveness(const std::list<Node*>& ops);
 };

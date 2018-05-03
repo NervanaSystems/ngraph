@@ -37,13 +37,13 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
 {
     list<shared_ptr<Node>> ops = function->get_ordered_ops();
 
-    unordered_set<const descriptor::Tensor*> function_persistent_tensors;
-    unordered_set<const descriptor::Tensor*> function_output_tensors;
+    unordered_set<descriptor::Tensor*> function_persistent_tensors;
+    unordered_set<descriptor::Tensor*> function_output_tensors;
     for (shared_ptr<op::Parameter> node: function->get_parameters())
     {
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
-            const descriptor::Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
             function_persistent_tensors.insert(&tensor);
         }
     }
@@ -51,9 +51,9 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
     {
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
-            const descriptor::Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
             function_persistent_tensors.insert(&tensor);
-            function_output_tensors.insert(*tensor);
+            function_output_tensors.insert(&tensor);
         }
     }
     for (shared_ptr<Node> node : function->get_ordered_ops())
@@ -62,7 +62,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
         {
             for (size_t i = 0; i < constant_node->get_output_size(); ++i)
             {
-                const descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
+                descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
                 function_persistent_tensors.insert(&tensor);
             }
         }
@@ -79,7 +79,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
         for (descriptor::Input& input_decl : node->get_inputs())
         {
             descriptor::Tensor& tensor = input_decl.get_tensor();
-            if (function_persistent_tensors.count(tensor) == 0)
+            if (!contains(function_persistent_tensors, &tensor))
             {
                 input_tensor_decls.insert(&tensor);
             }
@@ -89,7 +89,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
             descriptor::Tensor& tensor = node->get_output_tensor(i);
-            if (function_persistent_tensors.count(tensor) == 0)
+            if (!contains(function_persistent_tensors, &tensor))
             {
                 output_tensor_decls.insert(&tensor);
             }
@@ -132,7 +132,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
     {
         for (descriptor::Tensor* tensor : node->liveness_live_list)
         {
-            if (function_output_tensors.count(tensor) != 0)
+            if (contains(function_output_tensors, tensor))
             {
                 outputs.insert(tensor);
             }
@@ -158,11 +158,6 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
 
     // validate_liveness(ops);
     return false;
-}
-
-bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
-{
-
 }
 
 void pass::Liveness::validate_liveness(const list<Node*>& ops)
