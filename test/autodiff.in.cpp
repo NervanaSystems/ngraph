@@ -378,6 +378,22 @@ TEST(${BACKEND_NAME}, backwards_abs)
     }
 }
 
+TEST(${BACKEND_NAME}, backwards_acos)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-0.9f, 0.9f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Acos>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
+}
+
 TEST(${BACKEND_NAME}, backwards_add)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -411,6 +427,38 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
+}
+
+TEST(${BACKEND_NAME}, backwards_asin)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-0.9f, 0.9f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Asin>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
+}
+
+TEST(${BACKEND_NAME}, backwards_atan)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Atan>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(${BACKEND_NAME}, backwards_broadcast0)
