@@ -40,7 +40,6 @@ namespace ngraph
                 for (const Coordinate& in_coord : input_transform)
                 {
                     size_t batch_index = in_coord[batch_axis];
-                    //int seq_index = j < sequences[k] ? sequences[k] - j - 1 : j;
                     size_t sequence_index =
                         in_coord[sequence_axis] < sequence_lengths[batch_index]
                             ? sequence_lengths[batch_index] - in_coord[sequence_axis] - 1
