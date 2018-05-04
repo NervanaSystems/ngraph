@@ -170,7 +170,7 @@ static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst
     }
     else if (cnst->get_element_type() == element::i8)
     {
-        return multiply_by<char>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<signed char>(cnst->get_element_type(), multiplier, cnst);
     }
     else if (cnst->get_element_type() == element::f32)
     {
@@ -193,7 +193,7 @@ static std::shared_ptr<Node> get_prod_constant(std::shared_ptr<op::Constant> cns
     }
     else if (cnst->get_element_type() == element::i8)
     {
-        return pow_by<char>(cnst->get_element_type(), multiplier, cnst);
+        return pow_by<signed char>(cnst->get_element_type(), multiplier, cnst);
     }
     else if (cnst->get_element_type() == element::f32)
     {
