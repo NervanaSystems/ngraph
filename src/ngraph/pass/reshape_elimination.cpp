@@ -61,11 +61,11 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto gop = pattern_map[op];
 
-        auto r1 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
+        auto r1 = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
 
         if (r1->get_shape() != gop->get_shape())
         {
@@ -82,7 +82,7 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
             return false;
         }
 
-        ngraph::replace_node(m.match_root(), gop);
+        ngraph::replace_node(m.get_match_root(), gop);
         return true;
     };
 
@@ -101,22 +101,22 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_reshapex2_pattern against node = "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto gop = pattern_map[op];
 
-        if (gop->get_shape() != m.match_root()->get_shape())
+        if (gop->get_shape() != m.get_match_root()->get_shape())
         {
             NGRAPH_DEBUG << "Operand shape doesn't match the shape of the second reshape!";
             NGRAPH_DEBUG << "gop " << gop->get_name()
                          << "shape = " << vector_to_string(gop->get_shape());
-            NGRAPH_DEBUG << "match_root " << m.match_root()->get_name()
-                         << "shape = " << vector_to_string(m.match_root()->get_shape());
+            NGRAPH_DEBUG << "match_root " << m.get_match_root()->get_name()
+                         << "shape = " << vector_to_string(m.get_match_root()->get_shape());
             return false;
         }
 
-        auto r2 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
+        auto r2 = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
         auto r1 = std::dynamic_pointer_cast<op::Reshape>(r2->get_argument(0));
 
         Shape do_r2(r1->get_shape().size());
@@ -132,7 +132,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         if (r1->get_input_order() == do_r1 && r2->get_input_order() == do_r2)
         {
             NGRAPH_DEBUG << "Two reshapes were removed!";
-            ngraph::replace_node(m.match_root(), gop);
+            ngraph::replace_node(m.get_match_root(), gop);
             return true;
         }
 
@@ -141,7 +141,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         if (perm2 == do_r1)
         {
             NGRAPH_DEBUG << "Two transposes were removed!";
-            ngraph::replace_node(m.match_root(), gop);
+            ngraph::replace_node(m.get_match_root(), gop);
             return true;
         }
 
@@ -163,9 +163,9 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
 
     ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
 
-        auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
+        auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
         //this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
@@ -190,7 +190,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         auto reshape1 = std::make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
         auto tdot = std::shared_ptr<Node>(new op::Dot(reshape1, reshape0));
-        ngraph::replace_node(m.match_root(), tdot);
+        ngraph::replace_node(m.get_match_root(), tdot);
         return true;
     };
 
