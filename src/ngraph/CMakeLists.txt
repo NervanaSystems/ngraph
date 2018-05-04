@@ -139,18 +139,18 @@ set (SRC
     cpio.cpp
     )
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
-file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
-foreach(OP ${OPS})
-    file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
-    foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
-        set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-    endforeach(LINE ${OP_CLASS})
-endforeach()
-message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
-string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
+# message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
+# file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
+# foreach(OP ${OPS})
+#     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
+#     foreach(LINE ${OP_CLASS})
+#         string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
+#         set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+#     endforeach(LINE ${OP_CLASS})
+# endforeach()
+# message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
+# string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
+# file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
 
 # find_program (GRAPHVIZ dot)
 # message (STATUS "graphviz '${GRAPHVIZ}'")
@@ -158,6 +158,7 @@ find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
 endif()
+
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
@@ -166,116 +167,49 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
-    find_package(ZLIB REQUIRED)
+# if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+#     find_package(ZLIB REQUIRED)
 
-    if (NGRAPH_TBB_ENABLE)
-        include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-        tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                  tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-        find_package(TBB REQUIRED tbb)
-        if (NOT TBB_FOUND)
-            message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-        else()
-            message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-        endif()
-    endif()
+#     if (NGRAPH_TBB_ENABLE)
+#         include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+#         tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+#                   tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+#         find_package(TBB REQUIRED tbb)
+#         if (NOT TBB_FOUND)
+#             message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+#         else()
+#             message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+#         endif()
+#     endif()
 
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
+#     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
+#     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
 
-    # Add sources for the CPU backend
-    # and all its dependencies
-    set(SRC ${SRC}
-        runtime/cpu/cpu_call_frame.cpp
-        runtime/cpu/cpu_backend.cpp
-        runtime/cpu/cpu_kernels.cpp
-        runtime/cpu/cpu_kernel_emitters.cpp
-        runtime/cpu/cpu_kernel_utils.cpp
-        runtime/cpu/cpu_emitter.cpp
-        runtime/cpu/cpu_external_function.cpp
-        runtime/cpu/cpu_tensor_view.cpp
-        runtime/cpu/cpu_tensor_view_wrapper.cpp
-        runtime/cpu/cpu_layout_descriptor.cpp
-        runtime/cpu/cpu_tracing.cpp
-        runtime/cpu/mkldnn_emitter.cpp
-        runtime/cpu/mkldnn_invoke.cpp
-        runtime/cpu/mkldnn_utils.cpp
-        runtime/cpu/kernel/eigen_thread_pool.cpp
-        runtime/cpu/kernel/pad.cpp
-        runtime/cpu/kernel/reduce_max.cpp
-        runtime/cpu/kernel/reduce_sum.cpp
-        runtime/cpu/kernel/reshape.cpp
-        runtime/cpu/op/conv_bias.cpp
-        runtime/cpu/op/conv_relu.cpp
-        runtime/cpu/op/convert_layout.cpp
-        runtime/cpu/op/sigmoid.cpp
-        runtime/cpu/op/matmul_bias.cpp
-        runtime/cpu/op/batch_norm_relu.cpp
-        runtime/cpu/pass/cpu_assignment.cpp
-        runtime/cpu/pass/cpu_fusion.cpp
-        runtime/cpu/pass/cpu_layout.cpp
-        runtime/cpu/pass/cpu_nop_elimination.cpp
-        runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
-        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
-        runtime/cpu/pass/cpu_shuffle_folding.cpp
-    )
+#     set(HEADER_SEARCH_DEFINES
+#         "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+#         "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+#         "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
+#         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+#         "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
+#     )
 
-    set(HEADER_SEARCH_DEFINES
-        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
-        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
-        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-        "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
-    )
+#     if (NGRAPH_TBB_ENABLE)
+#         set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+#         set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
+#             "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+#             "NGRAPH_TBB_ENABLE"
+#         )
+#     endif()
+#     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    if (NGRAPH_TBB_ENABLE)
-        set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
-            "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
-            "NGRAPH_TBB_ENABLE"
-        )
-    endif()
-    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-
-if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-endif()
-
-    # GPU backend current requires CPU because they share compiler.cpp,
-    # and compiler.cpp requires MKLDNN
-    if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-
-        # Add sources for the GPU backend
-        # and all its dependencies
-        set(SRC ${SRC}
-            runtime/gpu/gpu_call_frame.cpp
-            runtime/gpu/gpu_backend.cpp
-            runtime/gpu/gpu_emitter.cpp
-            runtime/gpu/gpu_external_function.cpp
-            runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_tensor_view.cpp
-            runtime/gpu/gpu_tensor_view_wrapper.cpp
-            runtime/gpu/gpu_util.cpp
-            runtime/gpu/gpu_cuda_kernel_emitters.cpp
-            runtime/gpu/gpu_cuda_kernel_builder.cpp
-            runtime/gpu/gpu_cuda_function_builder.cpp
-            runtime/gpu/gpu_cuda_function_pool.cpp
-            runtime/gpu/gpu_cuda_context_manager.cpp
-            runtime/gpu/gpu_runtime_context.cpp
-            runtime/gpu/gpu_primitive_emitter.cpp
-            runtime/gpu/gpu_invoke.cpp
-            runtime/gpu/cudnn_emitter.cpp
-            runtime/gpu/cuda_emitter.cpp
-            runtime/gpu/type_info.cpp
-            )
-    endif()
-endif()
+#     if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
+#         include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+#         link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+#     endif()
+# endif()
 
 add_subdirectory(codegen)
+add_subdirectory(runtime)
 
 if (NGRAPH_NNP_ENABLE)
     link_directories(${NNP_TRANSFORMER_LIB_DIR})
@@ -283,14 +217,13 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 add_library(ngraph SHARED ${SRC})
-set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
-    # add_dependencies(ngraph header_resource)
-    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
+add_dependencies(ngraph ext_json)
+target_link_libraries(ngraph PUBLIC libjson)
+
+if (NGRAPH_CPU_ENABLE)
+    target_link_libraries(ngraph PUBLIC cpu_backend)
+    add_dependencies(ngraph cpu_backend)
 endif()
-add_dependencies(ngraph ext_json codegen)
-include_directories(SYSTEM ${JSON_INCLUDE_DIR})
-target_link_libraries(ngraph PUBLIC codegen)
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -326,10 +259,6 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
-
-if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
 if(NGRAPH_CPU_ENABLE)

@@ -14,25 +14,33 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(MKLDNN_INCLUDE_DIR)
-    link_directories(${MKLDNN_LIB_DIR})
+include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
+
+# Add sources for the GPU backend
+# and all its dependencies
+set(SRC
+    gpu_call_frame.cpp
+    gpu_backend.cpp
+    gpu_emitter.cpp
+    gpu_external_function.cpp
+    gpu_kernel_emitters.cpp
+    gpu_tensor_view.cpp
+    gpu_tensor_view_wrapper.cpp
+    gpu_util.cpp
+    gpu_cuda_kernel_emitters.cpp
+    gpu_cuda_kernel_builder.cpp
+    gpu_cuda_function_builder.cpp
+    gpu_cuda_function_pool.cpp
+    gpu_cuda_context_manager.cpp
+    gpu_runtime_context.cpp
+    gpu_primitive_emitter.cpp
+    gpu_invoke.cpp
+    cudnn_emitter.cpp
+    cuda_emitter.cpp
+    type_info.cpp
+    )
 endif()
 
-if (NGRAPH_CPU_ENABLE)
-    set (SRC
-        compile_benchmark.cpp
-        ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
-    )
+add_library(cpu_backend SHARED ${SRC})
+add_dependencies(cpu_backend codegen)
 
-    add_executable(compile_benchmark ${SRC})
-    add_dependencies(compile_benchmark ngraph cpu_backend)
-
-    set(HEADER_SEARCH_DEFINES
-        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-    )
-
-    target_link_libraries(compile_benchmark ngraph cpu_backend)
-    include_directories("${PROJECT_SOURCE_DIR}/test")
-
-    set_source_files_properties(compile_benchmark.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
-endif()

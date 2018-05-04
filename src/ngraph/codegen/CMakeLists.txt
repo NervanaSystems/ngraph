@@ -32,7 +32,7 @@ set(HEADER_SEARCH_DEFINES
     "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
     "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
 )
-    set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
+set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     set_property(SOURCE compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
@@ -54,4 +54,5 @@ add_custom_target(header_resource
 add_library(codegen SHARED ${SRC})
 add_dependencies(codegen header_resource ext_llvm)
 target_include_directories(codegen PUBLIC ${CMAKE_BINARY_DIR})
-target_link_libraries(codegen PUBLIC ${LLVM_LINK_LIBS})
+target_include_directories(codegen SYSTEM PUBLIC ${LLVM_INCLUDE_DIR})
+target_link_libraries(codegen PUBLIC ${LLVM_LINK_LIBS} pthread dl)
