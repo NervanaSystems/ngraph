@@ -33,11 +33,6 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
-    //this->m_batch_axis = batch_axis;
-    std::cout << "batch_axis = " << batch_axis << std::endl;
-    std::cout << "seq_axis = " << seq_axis << std::endl;
-    std::cout << "m_batch_axis (2) = " << this->m_batch_axis << std::endl;
-    std::cout << "m_seq_axis (2) = " << m_seq_axis << std::endl;
     if (arg->get_shape().at(batch_axis) != seq_lengths.size())
     {
         throw ngraph_error("Sequence length size should be equal to batch axis dimension");

@@ -2752,11 +2752,8 @@ namespace ngraph
                 auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
                 auto arg_shape = args[0].get_shape();
 
-                std::cout << "seq_lengths = " << vector_to_string(rs->get_sequence_lengths()) << std::endl;
-                std::cout << "batch_axis = " <<  rs->get_batch_axis() << std::endl;
-                std::cout << "get_sequence_axis = " <<  rs->get_sequence_axis() << std::endl;
-                writer << "reference::reverse_sequence<" << out[0].get_type() << ">(" << args[0].get_name()
-                       << ",\n";
+                writer << "reference::reverse_sequence<" << out[0].get_type() << ">("
+                       << args[0].get_name() << ",\n";
                 writer << "                " << out[0].get_name() << ",\n";
                 writer << "                {" << join(arg_shape) << "},\n";
                 writer << "                 " << rs->get_batch_axis() << ",\n";
