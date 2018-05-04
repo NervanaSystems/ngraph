@@ -42,14 +42,7 @@ namespace ngraph
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
                                              const std::array<std::string, 2>& data_types);
-/**
- * @brief generate concat cuda kernel
- * 
- * @param writer string container
- * @param name kernel name
- * @param data_types input and output datatype string
- * @param num_inputs
- */
+
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
                                           const std::vector<std::string>& data_types,
