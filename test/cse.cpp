@@ -32,7 +32,6 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -47,9 +46,7 @@ TEST(CSE, abs_abs)
     auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, op::ParameterVector{A});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
@@ -64,9 +61,7 @@ TEST(CSE, abs_abs_negative)
     auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), abs1);
     ASSERT_EQ(f->get_results().at(1)->get_argument(0), abs2);
@@ -82,9 +77,7 @@ TEST(CSE, add_add)
     auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
@@ -99,9 +92,7 @@ TEST(CSE, add_add_commutative)
     auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
@@ -118,9 +109,7 @@ TEST(CSE, add_add_negative)
     auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), add1);
     ASSERT_EQ(f->get_results().at(1)->get_argument(0), add2);
@@ -140,9 +129,7 @@ TEST(CSE, abs_add)
     auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
@@ -166,9 +153,7 @@ TEST(CSE, abs_add_abs_add)
     auto f = std::make_shared<Function>(NodeVector{add3, add4}, op::ParameterVector{A, B, C});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
@@ -193,9 +178,7 @@ TEST(CSE, abs_add_abs_add_negative)
     auto f = std::make_shared<Function>(NodeVector{add3, add4}, op::ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(f);
     auto oadd3 = f->get_results().at(0)->get_argument(0);
     auto oadd4 = f->get_results().at(1)->get_argument(0);
@@ -205,4 +188,3 @@ TEST(CSE, abs_add_abs_add_negative)
     ASSERT_EQ(oadd4->get_argument(1), D);
     ASSERT_EQ(oadd3->get_argument(0), oadd4->get_argument(0));
 }
-
