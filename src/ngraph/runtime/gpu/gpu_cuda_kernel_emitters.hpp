@@ -149,7 +149,7 @@ namespace ngraph
                     std::string kernel = writer.get_code();
                     compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
                 }
-                //convert runtime ptr to driver api ptr
+
                 void* args_list[] = {&inputs..., &out, &block_strides, &block_size, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               count,
