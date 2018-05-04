@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,22 +16,22 @@
 
 #pragma once
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class Liveness;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUShuffleFolding : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
     }
 }
-
-class ngraph::pass::Liveness : public FunctionPass
-{
-public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
-
-private:
-    void validate_liveness(const std::list<Node*>& ops);
-};

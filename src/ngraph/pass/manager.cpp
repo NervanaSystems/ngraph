@@ -39,10 +39,6 @@ ngraph::pass::Manager::Manager()
     }
 }
 
-ngraph::pass::Manager::Manager(bool to_set_is_output)
-{
-}
-
 ngraph::pass::Manager::~Manager()
 {
 }
