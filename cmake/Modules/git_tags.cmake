@@ -17,7 +17,7 @@
 function(NGRAPH_GET_CURRENT_HASH)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-parse --verify HEAD
+        COMMAND ${GIT_EXECUTABLE} -C ${CMAKE_CURRENT_SOURCE_DIR} rev-parse --verify HEAD
         RESULT_VARIABLE result
         OUTPUT_VARIABLE HASH)
     string(STRIP ${HASH} HASH)
@@ -27,7 +27,7 @@ endfunction()
 function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} ls-remote --tags
+        COMMAND ${GIT_EXECUTABLE} -C ${CMAKE_CURRENT_SOURCE_DIR} ls-remote --tags
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG_LIST)
     NGRAPH_GET_CURRENT_HASH()
@@ -43,7 +43,7 @@ endfunction()
 function(NGRAPH_GET_MOST_RECENT_TAG)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        COMMAND ${GIT_EXECUTABLE} -C ${CMAKE_CURRENT_SOURCE_DIR} describe --tags --abbrev=0
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG)
     string(STRIP ${TAG} TAG)
