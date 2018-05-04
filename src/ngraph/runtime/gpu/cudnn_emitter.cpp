@@ -116,6 +116,18 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                                         const Shape& input_shape,
                                                         const AxisSet& reduction_axes)
 {
+    std::stringstream ss;
+    ss << "reduce_op" << reduce_op << "_i" << join(input_shape, "_") << "_ra"
+       << join(reduction_axes, "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
     auto input_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(input_shape);
     auto output_shape = input_shape;
     // mark reduced axes of input tensor for output tensor descriptor
