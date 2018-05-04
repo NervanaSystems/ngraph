@@ -553,24 +553,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
-        writer << "{\n";
-        writer.indent++;
-
-        if (m_use_tbb)
-        {
-            // TODO: This should be static but we don't codegen statics correctly yet
-            writer << "tbb::flow::graph G;\n\n";
-        }
-
-        // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
-        {
-            writer << "cpu::Timestamp start_ts;\n"
-                   << "int profiler_count = 0;\n\n";
-        }
-
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
@@ -590,9 +572,33 @@ using namespace ngraph::runtime;
             writer << "// Allocate the memory pool\n";
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << s_memory_pool_alignment << ");\n";
-            writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
+            writer << "ngraph::runtime::AlignedBuffer " << current_function->get_name()
+                   << "_memory_handler(" << temp_pool_size << ", " << s_memory_pool_alignment
+                   << ");\n";
+        }
+
+        writer << "extern \"C\" void " << current_function->get_name();
+        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
+        writer << "{\n";
+        writer.indent++;
+
+        if (m_use_tbb)
+        {
+            // TODO: This should be static but we don't codegen statics correctly yet
+            writer << "tbb::flow::graph G;\n\n";
+        }
+
+        // Execution tracing support
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
+        {
+            writer << "cpu::Timestamp start_ts;\n"
+                   << "int profiler_count = 0;\n\n";
+        }
+
+        if (temporaries_used)
+        {
+            writer << "size_t pool_base_ptr = (size_t)" << current_function->get_name()
+                   << "_memory_handler.get_ptr();\n";
             writer << "\n";
 
             // Add temporaries to the variable name map
