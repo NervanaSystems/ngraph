@@ -49,7 +49,7 @@ public:
         construct_conv_bias();
         construct_batch_norm_relu();
         construct_conv_relu();
-//        construct_sigmoid_multiply();
+        construct_sigmoid_multiply();
     }
 
 private:

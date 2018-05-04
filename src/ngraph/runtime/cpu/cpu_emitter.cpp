@@ -3409,7 +3409,7 @@ namespace ngraph
             {
                 std::string func_block;
                 switch (type) {
-                    case ngraph::op::SigmoidMultiply::FunctionType::Sigmoid:
+                    case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
                         func_block = "auto ex = exp(" + input + ");\n";
                         func_block += output + " = ex/(ex+1.0);\n";
                         break;
@@ -3418,7 +3418,7 @@ namespace ngraph
                         func_block += output + " = (ex-1)/(ex+1);\n";
                         break;
                     default:
-                        throw ngraph_error("generate_sigmoid_mul_func input function type not supported");
+                        throw ngraph_error("generate_sigmoid_mul_func input function type is not supported");
                 }
                 return func_block;
             }
@@ -3431,11 +3431,6 @@ namespace ngraph
                 std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(), args[0].get_name()+"[i]", val_0);
                 std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(), args[1].get_name()+"[i]", val_1);
 
-//                const input_shape_1 = args[0].get_shape();
-//                const input_shape_2 = args[1].get_shape();
-//                auto result_shape = out[0].get_shape();
-//                int input_1_size = static_cast<int>(shape_size(input_shape_1));
-//                int result_1d_size = static_cast<int>(shape_size(result_shape));
                 writer.block_begin();
                 writer << "#pragma omp parallel for simd\n";
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";

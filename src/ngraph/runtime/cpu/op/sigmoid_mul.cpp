@@ -23,26 +23,18 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_args) const
-{
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("SigmoidMultiply incorrect number of new arguments");
-    }
-
-    return make_shared<SigmoidMultiply>(new_args.at(0), new_args.at(1));
-}
 op::SigmoidMultiply::FunctionType identify_node_fucntion(shared_ptr<Node> node) {
     if (std::dynamic_pointer_cast<op::Tanh>(node) != nullptr) {
         return op::SigmoidMultiply::FunctionType::Tanh;
     }
     else if (std::dynamic_pointer_cast<op::Sigmoid>(node) != nullptr) {
-        return op::SigmoidMultiply::FunctionType::Sigmoid;
+        return op::SigmoidMultiply::FunctionType::Logistic;
     }
     else {
         throw ngraph_error("SigmoidMultiply input function type not supported: " + node->get_name());
     }
 }
+
 op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_1, shared_ptr<Node> input_2)
         : RequiresTensorViewArgs("SigmoidMultiply", {input_1->get_argument(0), input_2->get_argument(0)})
 {
@@ -61,33 +53,12 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_1, shared_ptr<Node> 
     add_output(input_1->get_element_type(), input_1->get_shape());
 }
 
-//op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-//        : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
-//{
-//    if (arg->get_element_type() != delta->get_element_type())
-//    {
-//        throw ngraph_error("Argument and delta element types for Sigmoid backprop do not match");
-//    }
-//    if (arg->get_shape() != delta->get_shape())
-//    {
-//        throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
-//    }
-//    set_value_type_checked(delta->get_element_type(), delta->get_shape());
-//}
-//
-//shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
-//{
-//    if (new_args.size() != 2)
-//    {
-//        throw ngraph_error("Incorrect number of new arguments");
-//    }
-//    return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
-//}
-
-void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_args) const
 {
-//    auto delta = deltas.at(0);
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("SigmoidMultiply incorrect number of new arguments");
+    }
 
-//    auto backprop = make_shared<op::SigmoidMultiplyBackprop>(get_argument(0), delta);
-//    adjoints.add_delta(get_argument(0), backprop);
+    return make_shared<SigmoidMultiply>(new_args.at(0), new_args.at(1));
 }

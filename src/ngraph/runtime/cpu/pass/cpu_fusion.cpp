@@ -917,15 +917,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
             return false;
         }
 
-//        if (m.match_root()->get_outputs().size() != pattern_map[sigmoid_1]->get_outputs().size())
-//        {
-//            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
-//                         << "input= " << pattern_map[sigmoid_1]->get_name() << "size dont match!";
-//            return false;
-//        }
-
         auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(pattern_map[sigmoid_1], pattern_map[sigmoid_2]);
-//        auto sum_node = std::make_shared<op::Sum>(pattern_map[input], AxisSet{1});
         ngraph::replace_node(m.match_root(), sigmoid_mul_node);
         return true;
     };
