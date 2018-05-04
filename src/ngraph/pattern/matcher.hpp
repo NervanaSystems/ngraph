@@ -95,8 +95,8 @@ namespace ngraph
             bool process_match(graph_rewrite_callback callback = nullptr);
 
             void reset() {}
-            std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
-            std::shared_ptr<Node> match_root();
+            std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
+            std::shared_ptr<Node> get_match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
             /// \brief Low-level helper to match recurring patterns
             ///
