@@ -116,120 +116,44 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                                         const Shape& input_shape,
                                                         const AxisSet& reduction_axes)
 {
-    std::function<cudnnTensorDescriptor_t(void)> get_input_desc;
-    std::function<cudnnTensorDescriptor_t(void)> get_output_desc;
-    if (input_shape.size() <= 4)
+    auto input_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(input_shape);
+    auto output_shape = input_shape;
+    // mark reduced axes of input tensor for output tensor descriptor
+    for (auto const& idx_dim : reduction_axes)
     {
-        // construct input tensor descriptor rt impl.
-        std::array<int, 4> dimensions;
-        size_t pos = 0;
-        for (size_t i = input_shape.size(); i < 4; i++)
-        {
-            dimensions[pos++] = 1;
-        }
-        for (size_t i = 0; i < input_shape.size(); i++)
-        {
-            dimensions[pos++] = static_cast<int>(input_shape[i]);
-        }
-
-        get_input_desc = [dimensions]() {
-            cudnnTensorDescriptor_t desc;
-            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
-            CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
-                                                       CUDNN_TENSOR_NCHW,
-                                                       CUDNN_DATA_FLOAT,
-                                                       dimensions[0],
-                                                       dimensions[1],
-                                                       dimensions[2],
-                                                       dimensions[3]));
-            return desc;
-        };
-
-        // mark reduced axes of input tensor for output tensor descriptor
-        for (auto const& idx_dim : reduction_axes)
-        {
-            dimensions[(4 - input_shape.size()) + idx_dim] = 1;
-        }
-
-        get_output_desc = [dimensions]() {
-            cudnnTensorDescriptor_t desc;
-            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
-            CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
-                                                       CUDNN_TENSOR_NCHW,
-                                                       CUDNN_DATA_FLOAT,
-                                                       dimensions[0],
-                                                       dimensions[1],
-                                                       dimensions[2],
-                                                       dimensions[3]));
-            return desc;
-        };
+        output_shape[idx_dim] = 1;
     }
-    // descriptors for Nd tensors
-    else
-    {
-        auto dimensions = runtime::gpu::cudnn_util::get_vector_int_from_size_t(input_shape);
-        get_input_desc = [dimensions]() {
-            cudnnTensorDescriptor_t desc;
-            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
-            CUDNN_SAFE_CALL(
-                cudnnSetTensorNdDescriptor(desc,
-                                           CUDNN_DATA_FLOAT,
-                                           static_cast<int>(dimensions.size()),
-                                           dimensions.data(),
-                                           cudnn_util::compute_strides(dimensions).data()));
-            return desc;
-        };
+    auto output_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(output_shape);
 
-        // mark reduced axes of input tensor for output tensor descriptor
-        for (auto const& idx_dim : reduction_axes)
-        {
-            dimensions[idx_dim] = 1;
-        }
-
-        get_output_desc = [dimensions]() {
-            cudnnTensorDescriptor_t desc;
-            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
-            CUDNN_SAFE_CALL(
-                cudnnSetTensorNdDescriptor(desc,
-                                           CUDNN_DATA_FLOAT,
-                                           static_cast<int>(dimensions.size()),
-                                           dimensions.data(),
-                                           cudnn_util::compute_strides(dimensions).data()));
-            return desc;
-        };
-    }
-    // emit sum reduce operation
-    std::unique_ptr<gpu::primitive> reduce(new gpu::primitive{
-        [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
-            auto input_desc = get_input_desc();
-            auto output_desc = get_output_desc();
-            cudnnReduceTensorDescriptor_t reduceTensorDesc;
-            CUDNN_SAFE_CALL(cudnnCreateReduceTensorDescriptor(&reduceTensorDesc));
-            CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(reduceTensorDesc,
-                                                           reduce_op,
-                                                           CUDNN_DATA_FLOAT,
-                                                           CUDNN_NOT_PROPAGATE_NAN,
-                                                           CUDNN_REDUCE_TENSOR_NO_INDICES,
-                                                           CUDNN_32BIT_INDICES));
-            size_t workspace_size = 0;
-            CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
-                *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size));
-            auto workspace_ptr = create_gpu_buffer(workspace_size);
-            float alpha = 1.0, beta = 0.0;
-            CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
-                                              reduceTensorDesc,
-                                              nullptr,
-                                              0,
-                                              workspace_ptr,
-                                              workspace_size,
-                                              &alpha,
-                                              input_desc,
-                                              inputs[0],
-                                              &beta,
-                                              output_desc,
-                                              outputs[0]));
-            free_gpu_buffer(workspace_ptr);
-        }});
+    // emit reduce operation
+    std::unique_ptr<gpu::primitive> reduce(new gpu::primitive{[=](void** inputs, void** outputs) {
+        cudnnReduceTensorDescriptor_t reduceTensorDesc;
+        CUDNN_SAFE_CALL(cudnnCreateReduceTensorDescriptor(&reduceTensorDesc));
+        CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(reduceTensorDesc,
+                                                       reduce_op,
+                                                       CUDNN_DATA_FLOAT,
+                                                       CUDNN_NOT_PROPAGATE_NAN,
+                                                       CUDNN_REDUCE_TENSOR_NO_INDICES,
+                                                       CUDNN_32BIT_INDICES));
+        size_t workspace_size = 0;
+        CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
+            *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size));
+        auto workspace_ptr = create_gpu_buffer(workspace_size);
+        float alpha = 1.0, beta = 0.0;
+        CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
+                                          reduceTensorDesc,
+                                          nullptr,
+                                          0,
+                                          workspace_ptr,
+                                          workspace_size,
+                                          &alpha,
+                                          input_desc,
+                                          inputs[0],
+                                          &beta,
+                                          output_desc,
+                                          outputs[0]));
+        free_gpu_buffer(workspace_ptr);
+    }});
 
     return this->m_primitive_emitter->insert(std::move(reduce));
 }
