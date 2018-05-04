@@ -16,6 +16,18 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+include(cmake/Modules/git_tags.cmake)
+NGRAPH_GET_VERSION_LABEL()
+
+string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9]+)\.([0-9]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
+set(NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
+configure_file(VERSION.in VERSION)
+
+message(STATUS "NGRAPH_VERSION ${NGRAPH_VERSION}")
+message(STATUS "NGRAPH_VERSION_SHORT ${NGRAPH_VERSION_SHORT}")
+message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
+
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -133,6 +145,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security")
 if (NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z noexecstack")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z relro -z now")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
@@ -169,6 +182,8 @@ if(NGRAPH_GPU_ENABLE)
         "Please select a correct compiler version\n"
         )
     endif()
+elseif(NGRAPH_GPU_ENABLE)
+    message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
 
 #-----------------------------------------------------------------------------------------------

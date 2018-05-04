@@ -287,7 +287,6 @@ endif()
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
-
 endif()
 
 if (NGRAPH_NNP_ENABLE)
@@ -296,6 +295,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 add_library(ngraph SHARED ${SRC})
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -333,6 +333,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_link_libraries(ngraph PRIVATE dl)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
@@ -376,6 +377,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # NGraph
+install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
