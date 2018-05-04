@@ -3405,20 +3405,22 @@ namespace ngraph
             }
 
             std::string generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
-            const std::string& input, const std::string& output)
+                                                  const std::string& input, const std::string& out_numer, const std::string& out_denom)
             {
                 std::string func_block;
                 switch (type) {
                     case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
                         func_block = "auto ex = exp(" + input + ");\n";
-                        func_block += output + " = ex/(ex+1.0);\n";
+                        func_block += out_numer + " = ex;\n";
+                        func_block += out_denom + " = ex+1;\n";
                         break;
                     case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
                         func_block = "auto ex = exp(2.0*" + input + ");\n";
-                        func_block += output + " = (ex-1)/(ex+1);\n";
+                        func_block += out_numer + " = ex-1;\n";
+                        func_block += out_denom + " = ex+1;\n";
                         break;
                     default:
-                        throw ngraph_error("generate_sigmoid_mul_func input function type is not supported");
+                        throw ngraph_error("generate_sigmoid_mul_func input function type not supported");
                 }
                 return func_block;
             }
@@ -3426,24 +3428,29 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
             {
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
-                std::string val_0 = "val_0";
-                std::string val_1 = "val_1";
-                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(), args[0].get_name()+"[i]", val_0);
-                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(), args[1].get_name()+"[i]", val_1);
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(), args[0].get_name()+"[i]", numer_0, denom_0);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(), args[1].get_name()+"[i]", numer_1, denom_1);
 
                 writer.block_begin();
                 writer << "#pragma omp parallel for simd\n";
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << "float " << val_0 << ";\n";
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
                 writer.block_begin();
                 writer << input_0_func_string;
                 writer.block_end();
-                writer << "float " << val_1 << ";\n";
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
                 writer.block_begin();
                 writer << input_1_func_string;
                 writer.block_end();
-                writer << out[0].get_name() << "[i] = " + val_0 + " * " + val_1 + ";\n";
+                writer << out[0].get_name() << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" +
+                                               denom_0 + " * " + denom_1 + ");\n";
                 writer.block_end();
                 writer.block_end();
             }
