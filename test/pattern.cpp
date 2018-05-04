@@ -152,15 +152,16 @@ public:
 
         ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
-                         << m.match_root()->get_name();
-            assert(m.match_root()->get_arguments().size() == 2);
+                         << m.get_match_root()->get_name();
+            assert(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index =
+                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.match_root()->get_arguments().at(const_node_index);
+                m.get_match_root()->get_arguments().at(const_node_index));
+            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -181,7 +182,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
             return true;
         };
 
@@ -197,15 +198,16 @@ public:
 
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
-                         << m.match_root()->get_name();
-            assert(m.match_root()->get_arguments().size() == 2);
+                         << m.get_match_root()->get_name();
+            assert(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index =
+                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.match_root()->get_arguments().at(const_node_index);
+                m.get_match_root()->get_arguments().at(const_node_index));
+            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -226,7 +228,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
             return true;
         };
 
@@ -240,14 +242,14 @@ public:
 
         ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_sum_pattern against "
-                         << m.match_root()->get_name();
-            auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());
+                         << m.get_match_root()->get_name();
+            auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.get_match_root());
             auto reducee = reduce->get_inputs().at(0).get_output().get_node();
             NGRAPH_DEBUG << "reducee = " << reducee->get_name();
             auto sum =
                 std::shared_ptr<ngraph::Node>(new op::Sum(reducee, reduce->get_reduction_axes()));
 
-            ngraph::replace_node(m.match_root(), sum);
+            ngraph::replace_node(m.get_match_root(), sum);
             return true;
         };
 
