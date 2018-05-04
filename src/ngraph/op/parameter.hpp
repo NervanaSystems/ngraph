@@ -40,7 +40,7 @@ namespace ngraph
             ///
             /// \param element_type The element type of the parameter.
             /// \param shape The shape of the parameter.
-            /// \param memoizable True if parameter is not frequently updated
+            /// \param memoizable True if the parameter is not expected to be frequently updated.
             Parameter(const ngraph::element::Type& element_type,
                       const Shape& shape,
                       const bool memoizable = false);
