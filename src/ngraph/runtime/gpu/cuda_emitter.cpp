@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
+#include <ostream>
 #include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
@@ -28,31 +29,36 @@
 
 using namespace ngraph;
 
-inline namespace enums
+struct pooling_op_shape
 {
-    enum pooling_indices
-    {
-        N_,
-        C_,
-        D_,
-        H_,
-        W_,
-        K_,
-        M_,
-        P_,
-        Q_,
-        J_,
-        T_,
-        R_,
-        S_,
-        STRIDE_D,
-        STRIDE_H,
-        STRIDE_W,
-        PAD_D,
-        PAD_H,
-        PAD_W,
-        NUM_POOLING_INDICES
-    };
+    int N;
+    int C;
+    int D;
+    int H;
+    int W;
+    int K;
+    int M;
+    int P;
+    int Q;
+    int J;
+    int T;
+    int R;
+    int S;
+    int STRIDE_D;
+    int STRIDE_H;
+    int STRIDE_W;
+    int PAD_D;
+    int PAD_H;
+    int PAD_W;
+};
+
+std::ostream& operator<<(std::ostream& os, pooling_op_shape& shape)
+{
+    return os << shape.N << "_" << shape.C << "_" << shape.D << "_" << shape.H << "_" << shape.W
+              << "_" << shape.K << "_" << shape.M << "_" << shape.P << "_" << shape.Q << "_"
+              << shape.J << "_" << shape.T << "_" << shape.R << "_" << shape.S << "_"
+              << shape.STRIDE_D << "_" << shape.STRIDE_H << "_" << shape.STRIDE_W << "_"
+              << shape.PAD_D << "_" << shape.PAD_H << "_" << shape.PAD_W;
 }
 
 runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter)
@@ -308,73 +314,73 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     return primitive_index;
 }
 
-std::vector<int> get_avgpool_params(
+pooling_op_shape avgpool_shape(
     const Shape& in, const Shape& out, const Shape& window, const Shape& strides, const Shape& pad)
 {
-    std::vector<int> shape_params(NUM_POOLING_INDICES, 0);
-    shape_params[N_] = static_cast<int>(in[0]);
-    shape_params[C_] = static_cast<int>(in[1]);
-    shape_params[K_] = shape_params[C_]; // pooling feature maps is
-    shape_params[J_] = shape_params[C_]; // not currently supported
+    pooling_op_shape shape;
+    shape.N = static_cast<int>(in[0]);
+    shape.C = static_cast<int>(in[1]);
+    shape.K = shape.C; // pooling feature maps is
+    shape.J = shape.C; // not currently supported
     if (in.size() == 3)
     {
-        shape_params[D_] = 1;
-        shape_params[H_] = 1;
-        shape_params[W_] = static_cast<int>(in[2]);
-        shape_params[M_] = 1;
-        shape_params[P_] = 1;
-        shape_params[Q_] = static_cast<int>(out[2]);
-        shape_params[T_] = 1;
-        shape_params[R_] = 1;
-        shape_params[S_] = static_cast<int>(window[0]);
-        shape_params[STRIDE_D] = 0;
-        shape_params[STRIDE_H] = 0;
-        shape_params[STRIDE_W] = static_cast<int>(strides[0]);
-        shape_params[PAD_D] = 0;
-        shape_params[PAD_H] = 0;
-        shape_params[PAD_W] = static_cast<int>(pad[0]);
+        shape.D = 1;
+        shape.H = 1;
+        shape.W = static_cast<int>(in[2]);
+        shape.M = 1;
+        shape.P = 1;
+        shape.Q = static_cast<int>(out[2]);
+        shape.T = 1;
+        shape.R = 1;
+        shape.S = static_cast<int>(window[0]);
+        shape.STRIDE_D = 0;
+        shape.STRIDE_H = 0;
+        shape.STRIDE_W = static_cast<int>(strides[0]);
+        shape.PAD_D = 0;
+        shape.PAD_H = 0;
+        shape.PAD_W = static_cast<int>(pad[0]);
     }
     else if (in.size() == 4)
     {
-        shape_params[D_] = 1;
-        shape_params[H_] = static_cast<int>(in[2]);
-        shape_params[W_] = static_cast<int>(in[3]);
-        shape_params[M_] = 1;
-        shape_params[P_] = static_cast<int>(out[2]);
-        shape_params[Q_] = static_cast<int>(out[3]);
-        shape_params[T_] = 1;
-        shape_params[R_] = static_cast<int>(window[0]);
-        shape_params[S_] = static_cast<int>(window[1]);
-        shape_params[STRIDE_D] = 0;
-        shape_params[STRIDE_H] = static_cast<int>(strides[0]);
-        shape_params[STRIDE_W] = static_cast<int>(strides[1]);
-        shape_params[PAD_D] = 0;
-        shape_params[PAD_H] = static_cast<int>(pad[0]);
-        shape_params[PAD_W] = static_cast<int>(pad[1]);
+        shape.D = 1;
+        shape.H = static_cast<int>(in[2]);
+        shape.W = static_cast<int>(in[3]);
+        shape.M = 1;
+        shape.P = static_cast<int>(out[2]);
+        shape.Q = static_cast<int>(out[3]);
+        shape.T = 1;
+        shape.R = static_cast<int>(window[0]);
+        shape.S = static_cast<int>(window[1]);
+        shape.STRIDE_D = 0;
+        shape.STRIDE_H = static_cast<int>(strides[0]);
+        shape.STRIDE_W = static_cast<int>(strides[1]);
+        shape.PAD_D = 0;
+        shape.PAD_H = static_cast<int>(pad[0]);
+        shape.PAD_W = static_cast<int>(pad[1]);
     }
     else if (in.size() == 5)
     {
-        shape_params[D_] = static_cast<int>(in[2]);
-        shape_params[H_] = static_cast<int>(in[3]);
-        shape_params[W_] = static_cast<int>(in[4]);
-        shape_params[M_] = static_cast<int>(out[2]);
-        shape_params[P_] = static_cast<int>(out[3]);
-        shape_params[Q_] = static_cast<int>(out[4]);
-        shape_params[T_] = static_cast<int>(window[0]);
-        shape_params[R_] = static_cast<int>(window[1]);
-        shape_params[S_] = static_cast<int>(window[2]);
-        shape_params[STRIDE_D] = static_cast<int>(strides[0]);
-        shape_params[STRIDE_H] = static_cast<int>(strides[1]);
-        shape_params[STRIDE_W] = static_cast<int>(strides[2]);
-        shape_params[PAD_D] = static_cast<int>(pad[0]);
-        shape_params[PAD_H] = static_cast<int>(pad[1]);
-        shape_params[PAD_W] = static_cast<int>(pad[2]);
+        shape.D = static_cast<int>(in[2]);
+        shape.H = static_cast<int>(in[3]);
+        shape.W = static_cast<int>(in[4]);
+        shape.M = static_cast<int>(out[2]);
+        shape.P = static_cast<int>(out[3]);
+        shape.Q = static_cast<int>(out[4]);
+        shape.T = static_cast<int>(window[0]);
+        shape.R = static_cast<int>(window[1]);
+        shape.S = static_cast<int>(window[2]);
+        shape.STRIDE_D = static_cast<int>(strides[0]);
+        shape.STRIDE_H = static_cast<int>(strides[1]);
+        shape.STRIDE_W = static_cast<int>(strides[2]);
+        shape.PAD_D = static_cast<int>(pad[0]);
+        shape.PAD_H = static_cast<int>(pad[1]);
+        shape.PAD_W = static_cast<int>(pad[2]);
     }
     else
     {
         throw std::runtime_error("AvgPool currently supports up to 3 spatial dimensions.");
     }
-    return shape_params;
+    return shape;
 }
 
 size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
@@ -387,14 +393,12 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                                                  bool include_pad)
 {
     // assumes NCDHW format
-    auto input_width = input_shape.back();
-    auto output_width = output_shape.back();
-    auto s =
-        get_avgpool_params(input_shape, output_shape, window_shape, window_stride, padding_below);
+    pooling_op_shape shape =
+        avgpool_shape(input_shape, output_shape, window_shape, window_stride, padding_below);
 
     std::string kernel_name = "avgpool";
     std::stringstream ss;
-    ss << kernel_name << "_s" << join(s, "_") << "_st" << join(window_stride, "_") << "_ip"
+    ss << kernel_name << "_s" << shape << "_st" << join(window_stride, "_") << "_ip"
        << int(include_pad);
     auto hash = ss.str();
 
@@ -453,6 +457,8 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
 
                 writer << "float sum = 0.0f;\n";
                 writer << "float rcp_pool_size = 1.0f;\n";
+                // each warp operates on a single pooling window and
+                // reduces the contents of the window within the warp
                 writer << "for (int trs = tid; trs < TRS; trs += 32)\n";
                 writer.block_begin();
                 {
@@ -486,7 +492,13 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer.block_end();
 
                 writer << "rcp_pool_size = 1.0f / (float)pool_size;\n";
-                // warp reduce pooling window
+                // reduce pooling window within warp.
+                // this could be improved by calculating the
+                // pooling windows each thread can partake in to
+                // reduce loads and increase coalescing. in that case,
+                // multiple warps per block would be required and the
+                // warp reduced sums would need to be accumulated in
+                // shared memory
                 writer << "for (int i = 16; i > 0; i >>= 1)\n";
                 writer.block_begin();
                 {
@@ -508,41 +520,73 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
     }
 
     // precompute for fast constant memory access
-    int HW = s[H_] * s[W_];
-    int DHW = s[D_] * HW;
-    int CDHW = s[C_] * DHW;
-    int PQ = s[P_] * s[Q_];
-    int MPQ = s[M_] * PQ;
-    int KMPQ = s[K_] * MPQ;
-    int RS = s[R_] * s[S_];
-    int TRS = s[T_] * RS;
+    int HW = shape.H * shape.W;
+    int DHW = shape.D * HW;
+    int CDHW = shape.C * DHW;
+    int PQ = shape.P * shape.Q;
+    int MPQ = shape.M * PQ;
+    int KMPQ = shape.K * MPQ;
+    int RS = shape.R * shape.S;
+    int TRS = shape.T * RS;
 
     // precompute magic numbers and shifts for fast integer division
-    int magic_N, shift_N;
-    std::tie(magic_N, shift_N) = idiv_magic_u64(s[N_]);
-    int magic_P, shift_P;
-    std::tie(magic_P, shift_P) = idiv_magic_u64(s[P_]);
-    int magic_S, shift_S;
-    std::tie(magic_S, shift_S) = idiv_magic_u64(s[S_]);
-    int magic_RS, shift_RS;
+    int magic_N;
+    int shift_N;
+    std::tie(magic_N, shift_N) = idiv_magic_u64(shape.N);
+    int magic_P;
+    int shift_P;
+    std::tie(magic_P, shift_P) = idiv_magic_u64(shape.P);
+    int magic_S;
+    int shift_S;
+    std::tie(magic_S, shift_S) = idiv_magic_u64(shape.S);
+    int magic_RS;
+    int shift_RS;
     std::tie(magic_RS, shift_RS) = idiv_magic_u64(RS);
 
     // TODO: blending factors are not currently implemented
-    float alpha = 1.0f, beta = 0.0f;
+    float alpha = 1.0f;
+    float beta = 0.0f;
 
     std::unique_ptr<gpu::primitive> pool(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* args_list[] = {&inputs[0],   &outputs[0], &alpha,    &beta,        &s[N_],
-                                 &s[C_],       &s[D_],      &s[H_],    &s[W_],       &HW,
-                                 &DHW,         &CDHW,       &magic_N,  &shift_N,     &s[P_],
-                                 &s[Q_],       &magic_P,    &shift_P,  &PQ,          &MPQ,
-                                 &KMPQ,        &s[S_],      &RS,       &TRS,         &magic_S,
-                                 &shift_S,     &magic_RS,   &shift_RS, &s[STRIDE_D], &s[STRIDE_H],
-                                 &s[STRIDE_W], &s[PAD_D],   &s[PAD_H], &s[PAD_W]};
+            void* args_list[] = {&inputs[0],
+                                 &outputs[0],
+                                 &alpha,
+                                 &beta,
+                                 &shape.N,
+                                 &shape.C,
+                                 &shape.D,
+                                 &shape.H,
+                                 &shape.W,
+                                 &HW,
+                                 &DHW,
+                                 &CDHW,
+                                 &magic_N,
+                                 &shift_N,
+                                 &shape.P,
+                                 &shape.Q,
+                                 &magic_P,
+                                 &shift_P,
+                                 &PQ,
+                                 &MPQ,
+                                 &KMPQ,
+                                 &shape.S,
+                                 &RS,
+                                 &TRS,
+                                 &magic_S,
+                                 &shift_S,
+                                 &magic_RS,
+                                 &shift_RS,
+                                 &shape.STRIDE_D,
+                                 &shape.STRIDE_H,
+                                 &shape.STRIDE_W,
+                                 &shape.PAD_D,
+                                 &shape.PAD_H,
+                                 &shape.PAD_W};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          s[Q_],
-                                          s[M_] * s[P_],
-                                          s[N_] * s[K_],
+                                          shape.Q,
+                                          shape.M * shape.P,
+                                          shape.N * shape.K,
                                           32,
                                           1,
                                           1,
