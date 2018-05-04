@@ -218,7 +218,7 @@ static bool simplify_sum(std::shared_ptr<Node> n)
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    initialize_const_values_to_ops()
+    initialize_ops_to_simplifiers()
 {
     return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
         {TI(op::Add), simplify_add},
@@ -228,7 +228,7 @@ static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<No
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    ops_to_const_values = initialize_const_values_to_ops();
+    ops_to_simplifiers = initialize_ops_to_simplifiers();
 
 bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngraph::Function> f)
 {
@@ -241,8 +241,8 @@ bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngra
         }
 
         const Node& node = *n;
-        auto eh = ops_to_const_values.find(TI(node));
-        if (eh == ops_to_const_values.end())
+        auto eh = ops_to_simplifiers.find(TI(node));
+        if (eh == ops_to_simplifiers.end())
         {
             continue;
         }
