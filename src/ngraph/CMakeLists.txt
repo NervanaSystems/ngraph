@@ -334,6 +334,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_link_libraries(ngraph PRIVATE dl)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
