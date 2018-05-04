@@ -32,7 +32,7 @@ public:
     CoreFusion()
         : GraphRewrite()
     {
-        construct_relu_pattern();
+        construct_relu();
     }
-    void construct_relu_pattern();
+    void construct_relu();
 };
