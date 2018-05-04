@@ -31,6 +31,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -45,6 +46,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
@@ -1124,4 +1126,65 @@ TEST(cpu_fusion, weight_fusion)
     ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
                   new_convert_layout->get_argument(0)),
               cvt_lt_conv);
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    const size_t w = 2;
+    const size_t h = 2;
+    auto input1 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
+    auto input2 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input1->get_shape());
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, input2->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->create_tensor(element::f32, input1->get_shape());
+
+    vector<float> dataA{1, 2, 3, 4};
+    vector<float> dataB{5, 6, 7, 8};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    // test case 1
+    {
+        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input1);
+        auto sigmoid_node_2 = make_shared<op::Sigmoid>(input2);
+        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
+        backend->call(func, {result}, {a, b});
+        vector<float> expected{0.726166, 0.878619, 0.951706, 0.981684};
+        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+    }
+    // test case 2
+    {
+        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input1);
+        auto sigmoid_node_2 = make_shared<op::Tanh>(input2);
+        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
+        backend->call(func, {result}, {a, b});
+        vector<float> expected{0.730992, 0.880786, 0.952573, 0.982014};
+        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+    }
+    // test case 3
+    {
+        auto sigmoid_node_1 = make_shared<op::Tanh>(input1);
+        auto sigmoid_node_2 = make_shared<op::Sigmoid>(input2);
+        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
+        backend->call(func, {result}, {a, b});
+        vector<float> expected{0.756497, 0.961644, 0.994148, 0.998994};
+        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+    }
+    // test case 4
+    {
+        auto sigmoid_node_1 = make_shared<op::Tanh>(input1);
+        auto sigmoid_node_2 = make_shared<op::Tanh>(input2);
+        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
+        backend->call(func, {result}, {a, b});
+        vector<float> expected{0.761525, 0.964016, 0.995053, 0.999329};
+        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+    }
 }

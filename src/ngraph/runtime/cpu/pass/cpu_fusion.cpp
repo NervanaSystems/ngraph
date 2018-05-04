@@ -41,6 +41,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
@@ -49,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -941,5 +943,40 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
+{
+    //construct predicate to match sigmoid and tanh
+    auto sigmoid_pred = [](std::shared_ptr<Node> n) {
+        bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+                      (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
+        return result;
+    };
+    auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
+    auto sigmoid_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
+    auto elem_mul = std::make_shared<op::Multiply>(sigmoid_1, sigmoid_2);
+
+    //Define a call back that needs to called once the DFG matches the pattern
+    ngraph::pattern::graph_rewrite_callback callback = [sigmoid_1, sigmoid_2](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        auto sigmoid_mul_node =
+            std::make_shared<op::SigmoidMultiply>(pattern_map[sigmoid_1], pattern_map[sigmoid_2]);
+        ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(elem_mul, callback);
     this->add_matcher(m);
 }
