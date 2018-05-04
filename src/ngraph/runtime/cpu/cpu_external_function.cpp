@@ -37,6 +37,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -72,6 +73,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -96,6 +98,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
@@ -249,6 +252,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
+    {TI(ngraph::op::ConvolutionBiasRelu),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasRelu>},
     // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
@@ -276,6 +281,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidMultiply), &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiply>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
+    {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
+    {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -306,6 +313,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
@@ -334,6 +342,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
+#include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
@@ -344,6 +353,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
+#include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/reduce.hpp"
@@ -545,24 +555,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
-        writer << "{\n";
-        writer.indent++;
-
-        if (m_use_tbb)
-        {
-            // TODO: This should be static but we don't codegen statics correctly yet
-            writer << "tbb::flow::graph G;\n\n";
-        }
-
-        // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
-        {
-            writer << "cpu::Timestamp start_ts;\n"
-                   << "int profiler_count = 0;\n\n";
-        }
-
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
@@ -582,9 +574,33 @@ using namespace ngraph::runtime;
             writer << "// Allocate the memory pool\n";
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << s_memory_pool_alignment << ");\n";
-            writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
+            writer << "ngraph::runtime::AlignedBuffer " << current_function->get_name()
+                   << "_memory_handler(" << temp_pool_size << ", " << s_memory_pool_alignment
+                   << ");\n";
+        }
+
+        writer << "extern \"C\" void " << current_function->get_name();
+        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
+        writer << "{\n";
+        writer.indent++;
+
+        if (m_use_tbb)
+        {
+            // TODO: This should be static but we don't codegen statics correctly yet
+            writer << "tbb::flow::graph G;\n\n";
+        }
+
+        // Execution tracing support
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
+        {
+            writer << "cpu::Timestamp start_ts;\n"
+                   << "int profiler_count = 0;\n\n";
+        }
+
+        if (temporaries_used)
+        {
+            writer << "size_t pool_base_ptr = (size_t)" << current_function->get_name()
+                   << "_memory_handler.get_ptr();\n";
             writer << "\n";
 
             // Add temporaries to the variable name map

@@ -17,7 +17,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
 #include <stddef.h>
 #include <stdio.h>
 #include <string>
@@ -67,6 +66,11 @@ void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
 void runtime::gpu::cuda_memcpyHtD(void* dst, void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice);
+}
+
+void runtime::gpu::cuda_memcpyDtH(void* dst, void* src, size_t buffer_size)
+{
+    cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost);
 }
 
 void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)

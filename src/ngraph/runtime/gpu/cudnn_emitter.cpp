@@ -29,7 +29,7 @@ using namespace ngraph;
 cudnnTensorDescriptor_t runtime::gpu::cudnn_util::tensor_descriptor_from_shape(const Shape& shape)
 {
     cudnnTensorDescriptor_t desc;
-    cudnnCreateTensorDescriptor(&desc);
+    CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
 
     if (shape.size() < 4)
     {
@@ -43,23 +43,23 @@ cudnnTensorDescriptor_t runtime::gpu::cudnn_util::tensor_descriptor_from_shape(c
         {
             dimensions[pos++] = static_cast<int>(shape[i]);
         }
-        cudnnSetTensor4dDescriptor(desc,
-                                   CUDNN_TENSOR_NCHW,
-                                   CUDNN_DATA_FLOAT,
-                                   dimensions[0],
-                                   dimensions[1],
-                                   dimensions[2],
-                                   dimensions[3]);
+        CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
+                                                   CUDNN_TENSOR_NCHW,
+                                                   CUDNN_DATA_FLOAT,
+                                                   dimensions[0],
+                                                   dimensions[1],
+                                                   dimensions[2],
+                                                   dimensions[3]));
     }
     else if (shape.size() == 4)
     {
-        cudnnSetTensor4dDescriptor(desc,
-                                   CUDNN_TENSOR_NCHW,
-                                   CUDNN_DATA_FLOAT,
-                                   static_cast<int>(shape[0]),
-                                   static_cast<int>(shape[1]),
-                                   static_cast<int>(shape[2]),
-                                   static_cast<int>(shape[3]));
+        CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
+                                                   CUDNN_TENSOR_NCHW,
+                                                   CUDNN_DATA_FLOAT,
+                                                   static_cast<int>(shape[0]),
+                                                   static_cast<int>(shape[1]),
+                                                   static_cast<int>(shape[2]),
+                                                   static_cast<int>(shape[3])));
     }
     else
     {
@@ -68,11 +68,12 @@ cudnnTensorDescriptor_t runtime::gpu::cudnn_util::tensor_descriptor_from_shape(c
         {
             dimensions[i] = static_cast<int>(shape[i]);
         }
-        cudnnSetTensorNdDescriptor(desc,
-                                   CUDNN_DATA_FLOAT,
-                                   static_cast<int>(dimensions.size()),
-                                   dimensions.data(),
-                                   runtime::gpu::cudnn_util::compute_strides(dimensions).data());
+        CUDNN_SAFE_CALL(cudnnSetTensorNdDescriptor(
+            desc,
+            CUDNN_DATA_FLOAT,
+            static_cast<int>(dimensions.size()),
+            dimensions.data(),
+            runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
     }
 
     return desc;
@@ -133,14 +134,14 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
 
         get_input_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
-            cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensor4dDescriptor(desc,
-                                       CUDNN_TENSOR_NCHW,
-                                       CUDNN_DATA_FLOAT,
-                                       dimensions[0],
-                                       dimensions[1],
-                                       dimensions[2],
-                                       dimensions[3]);
+            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
+            CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
+                                                       CUDNN_TENSOR_NCHW,
+                                                       CUDNN_DATA_FLOAT,
+                                                       dimensions[0],
+                                                       dimensions[1],
+                                                       dimensions[2],
+                                                       dimensions[3]));
             return desc;
         };
 
@@ -152,14 +153,14 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
 
         get_output_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
-            cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensor4dDescriptor(desc,
-                                       CUDNN_TENSOR_NCHW,
-                                       CUDNN_DATA_FLOAT,
-                                       dimensions[0],
-                                       dimensions[1],
-                                       dimensions[2],
-                                       dimensions[3]);
+            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
+            CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
+                                                       CUDNN_TENSOR_NCHW,
+                                                       CUDNN_DATA_FLOAT,
+                                                       dimensions[0],
+                                                       dimensions[1],
+                                                       dimensions[2],
+                                                       dimensions[3]));
             return desc;
         };
     }
@@ -169,12 +170,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         auto dimensions = runtime::gpu::cudnn_util::get_vector_int_from_size_t(input_shape);
         get_input_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
-            cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(desc,
-                                       CUDNN_DATA_FLOAT,
-                                       static_cast<int>(dimensions.size()),
-                                       dimensions.data(),
-                                       cudnn_util::compute_strides(dimensions).data());
+            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
+            CUDNN_SAFE_CALL(
+                cudnnSetTensorNdDescriptor(desc,
+                                           CUDNN_DATA_FLOAT,
+                                           static_cast<int>(dimensions.size()),
+                                           dimensions.data(),
+                                           cudnn_util::compute_strides(dimensions).data()));
             return desc;
         };
 
@@ -186,52 +188,53 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
 
         get_output_desc = [dimensions]() {
             cudnnTensorDescriptor_t desc;
-            cudnnCreateTensorDescriptor(&desc);
-            cudnnSetTensorNdDescriptor(desc,
-                                       CUDNN_DATA_FLOAT,
-                                       static_cast<int>(dimensions.size()),
-                                       dimensions.data(),
-                                       cudnn_util::compute_strides(dimensions).data());
+            CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&desc));
+            CUDNN_SAFE_CALL(
+                cudnnSetTensorNdDescriptor(desc,
+                                           CUDNN_DATA_FLOAT,
+                                           static_cast<int>(dimensions.size()),
+                                           dimensions.data(),
+                                           cudnn_util::compute_strides(dimensions).data()));
             return desc;
         };
     }
     // emit sum reduce operation
-    auto* reduce = new gpu::primitive{
+    std::unique_ptr<gpu::primitive> reduce(new gpu::primitive{
         [ctx, reduce_op, get_input_desc, get_output_desc](void** inputs, void** outputs) {
             auto input_desc = get_input_desc();
             auto output_desc = get_output_desc();
             cudnnReduceTensorDescriptor_t reduceTensorDesc;
-            cudnnCreateReduceTensorDescriptor(&reduceTensorDesc);
-            cudnnSetReduceTensorDescriptor(reduceTensorDesc,
-                                           reduce_op,
-                                           CUDNN_DATA_FLOAT,
-                                           CUDNN_NOT_PROPAGATE_NAN,
-                                           CUDNN_REDUCE_TENSOR_NO_INDICES,
-                                           CUDNN_32BIT_INDICES);
+            CUDNN_SAFE_CALL(cudnnCreateReduceTensorDescriptor(&reduceTensorDesc));
+            CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(reduceTensorDesc,
+                                                           reduce_op,
+                                                           CUDNN_DATA_FLOAT,
+                                                           CUDNN_NOT_PROPAGATE_NAN,
+                                                           CUDNN_REDUCE_TENSOR_NO_INDICES,
+                                                           CUDNN_32BIT_INDICES));
             size_t workspace_size = 0;
-            cudnnGetReductionWorkspaceSize(
-                *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size);
+            CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
+                *ctx->cudnn_handle, reduceTensorDesc, input_desc, output_desc, &workspace_size));
             auto workspace_ptr = create_gpu_buffer(workspace_size);
             float alpha = 1.0, beta = 0.0;
-            cudnnReduceTensor(*ctx->cudnn_handle,
-                              reduceTensorDesc,
-                              nullptr,
-                              0,
-                              workspace_ptr,
-                              workspace_size,
-                              &alpha,
-                              input_desc,
-                              inputs[0],
-                              &beta,
-                              output_desc,
-                              outputs[0]);
+            CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
+                                              reduceTensorDesc,
+                                              nullptr,
+                                              0,
+                                              workspace_ptr,
+                                              workspace_size,
+                                              &alpha,
+                                              input_desc,
+                                              inputs[0],
+                                              &beta,
+                                              output_desc,
+                                              outputs[0]));
             free_gpu_buffer(workspace_ptr);
-        }};
+        }});
 
-    return this->m_primitive_emitter->insert(reduce);
+    return this->m_primitive_emitter->insert(std::move(reduce));
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
+size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
                                                  const cudnnPoolingMode_t& pool_op,
                                                  const Prop& direction,
                                                  const Shape& input_shape,
@@ -262,16 +265,16 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
     auto output_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(output_shape);
     if (input_shape.size() == 4)
     {
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPooling2dDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    static_cast<int>(window_shape[0]),
-                                    static_cast<int>(window_shape[1]),
-                                    static_cast<int>(padding_below[0]),
-                                    static_cast<int>(padding_below[1]),
-                                    static_cast<int>(window_strides[0]),
-                                    static_cast<int>(window_strides[1]));
+        CUDNN_SAFE_CALL(cudnnCreatePoolingDescriptor(&desc));
+        CUDNN_SAFE_CALL(cudnnSetPooling2dDescriptor(desc,
+                                                    pool_op,
+                                                    CUDNN_NOT_PROPAGATE_NAN,
+                                                    static_cast<int>(window_shape[0]),
+                                                    static_cast<int>(window_shape[1]),
+                                                    static_cast<int>(padding_below[0]),
+                                                    static_cast<int>(padding_below[1]),
+                                                    static_cast<int>(window_strides[0]),
+                                                    static_cast<int>(window_strides[1])));
     }
     else if (input_shape.size() == 5)
     {
@@ -284,62 +287,209 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const GPURuntimeContext* ctx,
             w_strides[i] = static_cast<int>(window_strides[i]);
             w_padding[i] = static_cast<int>(padding_below[i]);
         }
-        cudnnCreatePoolingDescriptor(&desc);
-        cudnnSetPoolingNdDescriptor(desc,
-                                    pool_op,
-                                    CUDNN_NOT_PROPAGATE_NAN,
-                                    3,
-                                    w_shape.data(),
-                                    w_padding.data(),
-                                    w_strides.data());
+        CUDNN_SAFE_CALL(cudnnCreatePoolingDescriptor(&desc));
+        CUDNN_SAFE_CALL(cudnnSetPoolingNdDescriptor(desc,
+                                                    pool_op,
+                                                    CUDNN_NOT_PROPAGATE_NAN,
+                                                    3,
+                                                    w_shape.data(),
+                                                    w_padding.data(),
+                                                    w_strides.data()));
     }
     else
     {
         throw std::runtime_error("Pooling currently supports up to 3 spatial dimensions only.");
     }
 
-    gpu::primitive* pool = nullptr;
-    if (direction == Prop::Forward)
+    std::unique_ptr<gpu::primitive> pool;
+
+    switch (direction)
     {
-        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
+    case (Prop::Inference):
+    case (Prop::Forward):
+    {
+        pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
-            cudnnPoolingForward(*ctx->cudnn_handle,
-                                desc,
-                                &alpha,
-                                input_desc,
-                                inputs[0],
-                                &beta,
-                                output_desc,
-                                outputs[0]);
-        }};
+            CUDNN_SAFE_CALL(cudnnPoolingForward(*ctx->cudnn_handle,
+                                                desc,
+                                                &alpha,
+                                                input_desc,
+                                                inputs[0],
+                                                &beta,
+                                                output_desc,
+                                                outputs[0]));
+        }});
+        break;
     }
-    else if (direction == Prop::Backward)
+    case (Prop::Backward):
     {
-        pool = new gpu::primitive{[=](void** inputs, void** outputs) {
+        pool.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
             // cuDNN requires the output tensor of the maxpool fprop to be passed even though
             // it is not mathematically necessary. It appears, however, that it is not actually
             // used as the adjoints are passed in place and the correct result is achieved.
-            cudnnPoolingBackward(*ctx->cudnn_handle,
-                                 desc,
-                                 &alpha,
-                                 // output (wrt maxpool) tensor
-                                 output_desc,
-                                 inputs[1],
-                                 // adjoint of output
-                                 output_desc,
-                                 inputs[1],
-                                 // input (wrt maxpool) tensor
-                                 input_desc,
-                                 inputs[0],
-                                 &beta,
-                                 // adjoint of input
-                                 input_desc,
-                                 outputs[0]);
-        }};
+            CUDNN_SAFE_CALL(cudnnPoolingBackward(*ctx->cudnn_handle,
+                                                 desc,
+                                                 &alpha,
+                                                 // output (wrt maxpool) tensor
+                                                 output_desc,
+                                                 inputs[1],
+                                                 // adjoint of output
+                                                 output_desc,
+                                                 inputs[1],
+                                                 // input (wrt maxpool) tensor
+                                                 input_desc,
+                                                 inputs[0],
+                                                 &beta,
+                                                 // adjoint of input
+                                                 input_desc,
+                                                 outputs[0]));
+        }});
+        break;
+    }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(pool);
+    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
+                                                   const cudnnBatchNormMode_t& bn_op,
+                                                   const Prop& direction,
+                                                   const Shape& tensor_shape,
+                                                   const Shape& param_shape,
+                                                   double epsilon)
+{
+    // Assumes NC{d1...dN} format
+    std::stringstream ss;
+    ss.precision(std::numeric_limits<double>::digits10 + 2);
+
+    ss << "bn_op" << bn_op << "_dir" << static_cast<int>(direction) << "_ts"
+       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon;
+    std::string hash = ss.str();
+    std::replace(hash.begin(), hash.end(), '.', '_');
+
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    if (epsilon < CUDNN_BN_MIN_EPSILON)
+    {
+        throw std::runtime_error("Batch Norm epsilon is less than CUDNN_BN_MIN_EPSILON");
+    }
+
+    cudnnTensorDescriptor_t derived_param_desc;
+    CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&derived_param_desc));
+    auto tensor_desc = runtime::gpu::cudnn_util::tensor_descriptor_from_shape(tensor_shape);
+    CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
+
+    float alpha = 1.0, beta = 0.0;
+    std::unique_ptr<gpu::primitive> batchnorm;
+    switch (direction)
+    {
+    case Prop::Inference:
+    {
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
+                                                                    bn_op,
+                                                                    &alpha,
+                                                                    &beta,
+                                                                    tensor_desc,
+                                                                    inputs[2], // tensor
+                                                                    tensor_desc,
+                                                                    outputs[0], // tensor
+                                                                    derived_param_desc,
+                                                                    inputs[0], // gain
+                                                                    inputs[1], // bias
+                                                                    inputs[3], // mean
+                                                                    inputs[4], // variance
+                                                                    epsilon));
+        }});
+        break;
+    }
+    case Prop::Forward:
+    {
+        cudnnOpTensorDescriptor_t op_desc;
+        CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&op_desc));
+        CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
+            op_desc, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+
+        // currently not using the cudnn moving average
+        // calculation so this factor needs to be set to 1.0
+        double exp_avg_factor = 1.0;
+
+        // factor to convert unbiased variance to biased variance estimate
+        // mini-batch statistics (variance of the sample) should be used
+        // in training and population statistics (sample variance) used
+        // during inference. see commit note for 3b081ce for more details.
+        float m = shape_size(tensor_shape) / tensor_shape[1];
+        float bias_factor = (m - 1) / m;
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
+                                                                   bn_op,
+                                                                   &alpha,
+                                                                   &beta,
+                                                                   tensor_desc,
+                                                                   inputs[2],
+                                                                   tensor_desc,
+                                                                   outputs[0],
+                                                                   derived_param_desc,
+                                                                   inputs[0],
+                                                                   inputs[1],
+                                                                   exp_avg_factor,
+                                                                   outputs[1],
+                                                                   outputs[2],
+                                                                   epsilon,
+                                                                   NULL,
+                                                                   NULL));
+
+            // convert to biased variance
+            CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
+                                          op_desc,
+                                          &beta,
+                                          derived_param_desc,
+                                          outputs[2],
+                                          &beta,
+                                          derived_param_desc,
+                                          outputs[2],
+                                          &bias_factor,
+                                          derived_param_desc,
+                                          outputs[2]));
+        }});
+        break;
+    }
+    case Prop::Backward:
+    {
+        batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
+                *ctx->cudnn_handle,
+                bn_op,
+                &alpha,
+                &beta,
+                &alpha,
+                &beta,
+                tensor_desc,
+                inputs[2 /* input tensor x */],
+                tensor_desc,
+                inputs[5 /* dy */],
+                tensor_desc,
+                outputs[0 /* dx */],
+                derived_param_desc,
+                inputs[0 /* gamma */],
+                outputs[1 /* dgamma */],
+                outputs[2 /* dbeta */],
+                epsilon,
+                NULL,   // inputs[3 /* mu batch mean*/],
+                NULL)); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
+        }});
+        break;
+    }
+    }
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }

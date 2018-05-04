@@ -29,6 +29,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -138,12 +139,14 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
 }
 
 void runtime::cpu::pass::CPULayout::set_default_layouts(
-    runtime::cpu::CPU_ExternalFunction* external_function, std::shared_ptr<Node> node)
+    runtime::cpu::CPU_ExternalFunction* external_function,
+    std::shared_ptr<Node> node,
+    bool use_replace = true)
 {
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
     uint index = 0;
-    for (const descriptor::Input& input : node->get_inputs())
+    for (descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
@@ -164,7 +167,14 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
-            replace_node = true;
+            if (use_replace)
+            {
+                replace_node = true;
+            }
+            else
+            {
+                input.replace_output(new_node->get_outputs().at(0));
+            }
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                          << output.get_node()->get_name()
                          << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
@@ -356,6 +366,25 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(
+                            node, prim_input_formats, prim_output_formats);
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBiasRelu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::ConvolutionBiasRelu, true>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -929,11 +958,19 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Result)
                 {
-                    auto input_layout =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                    vector<memory::format> prim_output_formats;
-                    prim_output_formats.push_back(input_layout);
-                    set_output_layouts(node, prim_output_formats);
+                    auto result = static_cast<const ngraph::op::Result*>(node.get());
+                    if (result->needs_default_layout())
+                    {
+                        set_default_layouts(external_function, node, false);
+                    }
+                    else
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
                 }
 
                 template <>
@@ -1086,17 +1123,30 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
 
-                        if (!bn->get_training_flag() || bn->get_inputs().size() != 3)
+                        if (bn->get_inputs().size() == 3)
                         {
-                            throw ngraph_error("Only training batchnorm should have been fused");
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_output_formats.push_back(input_layout);
+                            prim_output_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(memory::format::x);
                         }
-
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(memory::format::x);
-                        prim_input_formats.push_back(input_layout);
-                        prim_output_formats.push_back(input_layout);
-                        prim_output_formats.push_back(memory::format::x);
-                        prim_output_formats.push_back(memory::format::x);
+                        else if (bn->get_inputs().size() == 5)
+                        {
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(input_layout);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_input_formats.push_back(memory::format::x);
+                            prim_output_formats.push_back(input_layout);
+                        }
+                        else
+                        {
+                            throw ngraph_error(
+                                "In CPU Layout: unknown number of inputs for BatchNormRelu " +
+                                to_string(bn->get_inputs().size()));
+                        }
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1168,6 +1218,72 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto concat = static_cast<const ngraph::op::Concat*>(node.get());
+                        auto input0_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        size_t num_inputs = node->get_input_size();
+                        size_t concat_dim = concat->get_concatenation_axis();
+                        auto result_shape = node->get_output_shape(0);
+                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_input_element_type(0));
+                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                        auto result_desc =
+                            memory::desc(mkldnn_result_shape, et, memory::format::any);
+
+                        std::vector<mkldnn::memory::format> inputs_format;
+                        std::vector<mkldnn::memory::desc> inputs_data_desc;
+                        std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+                        vector<TensorViewWrapper> in;
+                        for (const descriptor::Input& input : node->get_inputs())
+                        {
+                            const descriptor::Output& output = input.get_output();
+                            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                            in.push_back(TensorViewWrapper(tv, "None"));
+                        }
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            inputs_format.push_back(
+                                runtime::cpu::mkldnn_utils::get_input_mkldnn_format(concat, i));
+                        }
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            inputs_data_desc.push_back(mkldnn::memory::desc(
+                                mkldnn::memory::dims(in[i].get_shape().begin(),
+                                                     in[i].get_shape().end()),
+                                mkldnn_utils::get_mkldnn_data_type(in[i].get_element_type()),
+                                inputs_format[i]));
+                        }
+                        for (size_t i = 0; i < inputs_data_desc.size(); i++)
+                        {
+                            inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                                inputs_data_desc[i],
+                                runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        }
+                        auto prim_desc = concat::primitive_desc(
+                            result_desc, static_cast<int>(concat_dim), inputs_pd);
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        for (size_t i = 0; i < num_inputs; i++)
+                        {
+                            prim_input_formats.push_back(input0_layout);
+                        }
+                        prim_output_formats.push_back(static_cast<memory::format>(
+                            prim_desc.dst_primitive_desc().desc().data.format));
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
             }
         }
     }
@@ -1177,6 +1293,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
+    {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
@@ -1192,6 +1309,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
+    {TI(ngraph::op::ConvolutionBiasRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasRelu>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},

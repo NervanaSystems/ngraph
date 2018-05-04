@@ -599,6 +599,83 @@ TEST(type_prop, subtract_bad_arguments)
                 });
 }
 
+//
+// Tests for binary elementwise logical ops.
+//
+void test_binary_logical(std::string node_type,
+                         shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
+{
+    // Check for bad arguments
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto tv0_2_4_param_3 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto tv0_4_2_param = make_shared<op::Parameter>(element::boolean, Shape{4, 2});
+
+    auto test_binary_bad_arguments_view_shapes = [&](const shared_ptr<Node>& x,
+                                                     const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+    test_binary_bad_arguments_view_shapes(tv0_2_4_param_0, tv0_4_2_param);
+
+    auto test_binary_bad_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                            const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_EQ(error.what(), std::string("Arguments must have boolean element type"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+
+    test_binary_bad_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
+    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
+
+    auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
+        auto node = f(x, y);
+        EXPECT_TRUE(node->has_same_type(node->get_arguments()[0]));
+    };
+    test_binary_good_arguments(tv0_2_4_param_0, tv0_2_4_param_1);
+}
+
+TEST(type_prop, and_bad_arguments)
+{
+    test_binary_logical(
+        "And", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+            return make_shared<op::And>(x, y);
+        });
+}
+
+TEST(type_prop, or_bad_arguments)
+{
+    test_binary_logical(
+        "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+            return make_shared<op::Or>(x, y);
+        });
+}
+
 TEST(type_prop, comparison_good)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});

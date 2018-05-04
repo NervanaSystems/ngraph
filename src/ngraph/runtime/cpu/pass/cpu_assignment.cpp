@@ -28,6 +28,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
@@ -74,6 +75,22 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
+                {
+                    auto concat = static_cast<op::Concat*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32 &&
+                        ((node->get_input_shape(0)).size() == 4 ||
+                         (node->get_input_shape(0)).size() == 2))
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        concat->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
                     auto convolution = static_cast<op::Convolution*>(node);
@@ -104,10 +121,48 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionRelu)
                 {
                     auto convolution = static_cast<op::ConvolutionRelu*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    convolution->set_op_annotations(op_annotations);
+
+                    auto arg0_rank = node->get_input_shape(0).size();
+                    auto arg1_rank = node->get_input_shape(1).size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBiasRelu)
+                {
+                    auto convolution = static_cast<op::ConvolutionBiasRelu*>(node);
+
+                    auto arg0_rank = node->get_input_shape(0).size();
+                    auto arg1_rank = node->get_input_shape(1).size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
                 }
 
                 template <>
@@ -412,6 +467,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
+    {TI(ngraph::op::Concat), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Concat>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
@@ -422,6 +478,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
+    {TI(ngraph::op::ConvolutionBiasRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasRelu>},
     {TI(ngraph::op::BatchNormRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormRelu>},
     {TI(ngraph::op::ConvolutionBackpropData),

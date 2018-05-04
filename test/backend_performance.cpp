@@ -27,7 +27,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
-#include "ngraph/runtime/manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/benchmark.hpp"

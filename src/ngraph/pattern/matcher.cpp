@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace pattern
     {
-        std::shared_ptr<Node> Matcher::match_root() { return m_match_root; }
+        std::shared_ptr<Node> Matcher::get_match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
                                     PatternMap& pattern_map)
@@ -71,9 +71,9 @@ namespace ngraph
             return is_match;
         }
 
-        bool Matcher::match_any(const std::shared_ptr<op::Any>& any,
-                                const std::shared_ptr<Node>& graph_node,
-                                PatternMap& pattern_map)
+        bool Matcher::match_skip(const std::shared_ptr<op::Skip>& any,
+                                 const std::shared_ptr<Node>& graph_node,
+                                 PatternMap& pattern_map)
         {
             auto predicate = any->get_predicate();
 
@@ -86,7 +86,7 @@ namespace ngraph
                 auto args = any->get_arguments();
                 if (args.size() != 1)
                 {
-                    throw ngraph_error("Any can only take one argument");
+                    throw ngraph_error("Skip can only take one argument");
                 }
 
                 return match_node(args.at(0), graph_node, pattern_map);
@@ -111,10 +111,10 @@ namespace ngraph
                 return match_pattern(label_node, graph_node, pattern_map);
             }
 
-            if (auto any_node = std::dynamic_pointer_cast<op::Any>(
+            if (auto any_node = std::dynamic_pointer_cast<op::Skip>(
                     pattern_node)) //matches PatternSkipOp semantics
             {
-                return match_any(any_node, graph_node, pattern_map);
+                return match_skip(any_node, graph_node, pattern_map);
             }
 
             auto p_pattern_node = pattern_node.get();
@@ -283,7 +283,7 @@ namespace ngraph
 
                 //pre-populate the pattern map for the next cell with the bound nodes
                 //from the current match. Only bound nodes whose labels are in
-                //correlated_patterns are pre-populated. Any other labels are
+                //correlated_patterns are pre-populated. Skip other labels are
                 //unbounded by default
                 for (auto cor_pat : m_correlated_patterns)
                 {

@@ -345,18 +345,18 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 //
 // This cannot be achieved by ngraph::replace_node().
 // With replace_node(), we could do:
-//     S           S
-//    / \          |
-//   /   \   =>    N
-//  /     \       / \
-// D0     D1    D0   D1
+// [     S           S      ]
+// [    / \          |      ]
+// [   /   \   =>    N      ]
+// [  /     \       / \     ]
+// [ D0     D1    D0   D1   ]
 //
 // But we want:
-//     S            S
-//    / \          / \
-//   /   \   =>   N0  N1
-//  /     \      /     \
-// D0     D1    D0     D1
+// [     S            S     ]
+// [    / \          / \    ]
+// [   /   \   =>   N0  N1  ]
+// [  /     \      /     \  ]
+// [ D0     D1    D0     D1 ]
 //
 // Typically new_node is connected to src_node already. The reason we don't create `new_node`
 // inside the function and return it (similar to ngraph::insert_result_parameter_split) is that
@@ -416,4 +416,16 @@ std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
 {
     auto cvals = std::vector<std::string>(shape_size(shape), val);
     return std::make_shared<op::Constant>(element_type, shape, cvals);
+}
+
+bool ngraph::is_zero(std::shared_ptr<Node> reduce_constant)
+{
+    auto result_bool = is_equal_to_const_value("0", reduce_constant);
+    return result_bool;
+}
+
+bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
+{
+    auto result_bool = is_equal_to_const_value("1", reduce_constant);
+    return result_bool;
 }

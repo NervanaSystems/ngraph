@@ -14,33 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/or.hpp"
 
-#include <memory>
-#include <vector>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/runtime/manager.hpp"
-
-namespace ngraph
+op::Or::Or(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+    : BinaryElementwiseLogical("Or", arg0, arg1)
 {
-    class Function;
+}
 
-    namespace runtime
+shared_ptr<Node> op::Or::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
     {
-        class ExternalFunction;
-
-        namespace interpreter
-        {
-            /// @brief Transformer for the interpreted backend
-            class INT_Manager : public Manager
-            {
-            public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
-
-                virtual std::vector<size_t> get_subdevices() const override;
-
-                static Factory factory;
-            };
-        };
+        throw ngraph_error("Incorrect number of new arguments");
     }
+    return make_shared<Or>(new_args.at(0), new_args.at(1));
 }

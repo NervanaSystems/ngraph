@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 namespace ngraph
 {
@@ -28,6 +29,14 @@ namespace ngraph
         {
         public:
             ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
+
+            ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
+                            const std::shared_ptr<Node>& filters,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides,
+                            const CoordinateDiff& padding_below,
+                            const CoordinateDiff& padding_above,
+                            const Strides& data_dilation_strides);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -45,15 +54,39 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
+        };
 
-        private:
-            ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
-                            const std::shared_ptr<Node>& filters,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides);
+        /// \brief Relu(Convolution) forward prop for batched convolution operation with bias
+        class ConvolutionBiasRelu : public util::RequiresTensorViewArgs
+        {
+        public:
+            ConvolutionBiasRelu(const std::shared_ptr<op::ConvolutionBias>& conv);
+
+            ConvolutionBiasRelu(const std::shared_ptr<Node>& data_batch,
+                                const std::shared_ptr<Node>& filters,
+                                const std::shared_ptr<Node>& bias,
+                                const Strides& window_movement_strides,
+                                const Strides& window_dilation_strides,
+                                const CoordinateDiff& padding_below,
+                                const CoordinateDiff& padding_above,
+                                const Strides& data_dilation_strides);
+
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
+            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+            const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+            std::shared_ptr<Node> get_filters() { return get_argument(1); }
+            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            Strides m_window_movement_strides;
+            Strides m_window_dilation_strides;
+            CoordinateDiff m_padding_below;
+            CoordinateDiff m_padding_above;
+            Strides m_data_dilation_strides;
         };
     }
 }

@@ -26,7 +26,6 @@
 #include <ngraph/pass/manager.hpp>
 #include <ngraph/pass/visualize_tree.hpp>
 #include <ngraph/runtime/backend.hpp>
-#include <ngraph/runtime/manager.hpp>
 #include <ngraph/util.hpp>
 
 #include "util/benchmark.hpp"

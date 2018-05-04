@@ -23,6 +23,14 @@
 using namespace ngraph;
 using namespace std;
 
+static bool static_init()
+{
+    runtime::Backend::register_backend("GPU", make_shared<runtime::gpu::GPU_Backend>());
+    return true;
+};
+
+bool runtime::gpu::GPU_Backend::init = static_init();
+
 shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
     const shared_ptr<GPU_ExternalFunction>& external_function)
 {

@@ -14,27 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
-#include <memory>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/runtime/manager.hpp"
-
-namespace ngraph
+op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
+                                                             const shared_ptr<Node>& arg0,
+                                                             const shared_ptr<Node>& arg1)
+    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
-    namespace runtime
+    if (arg0->get_element_type() != element::boolean ||
+        arg1->get_element_type() != element::boolean)
     {
-        namespace gpu
-        {
-            class GPU_Manager : public Manager
-            {
-            public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
-
-                virtual std::vector<size_t> get_subdevices() const override;
-
-                static Factory factory;
-            };
-        };
+        throw ngraph_error("Arguments must have boolean element type");
     }
 }

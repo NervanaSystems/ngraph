@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,13 +14,24 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#pragma once
 
-using namespace std;
+#include <cstddef>
 
-TEST(runtime_manager, invalidName)
+namespace ngraph
 {
-    ASSERT_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-MANAGER-NAME"),
-                 ngraph::ngraph_error);
+    namespace runtime
+    {
+        namespace reference
+        {
+            static inline void
+                logical_or(const char* arg0, const char* arg1, char* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg0[i] || arg1[i];
+                }
+            }
+        }
+    }
 }
