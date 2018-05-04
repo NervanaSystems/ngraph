@@ -43,6 +43,11 @@ namespace ngraph
             /// \return A set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             const Shape& get_broadcast_shape() const { return m_shape; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"shape", m_shape}, {"broadcast_axes", m_broadcast_axes}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

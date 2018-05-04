@@ -41,6 +41,11 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             const AxisSet& get_axes() const { return m_axes; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"axes", m_axes}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

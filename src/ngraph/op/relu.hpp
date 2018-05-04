@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
@@ -47,7 +48,7 @@ namespace ngraph
 
         /// \brief Elementwise ReluBackprop operation.
         ///
-        class ReluBackprop : public ngraph::op::util::RequiresTensorViewArgs
+        class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a ReluBackprop operation.

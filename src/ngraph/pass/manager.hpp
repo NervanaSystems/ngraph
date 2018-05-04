@@ -43,7 +43,7 @@ public:
     void initialize_default_passes();
 
     template <typename T, class... Args>
-    void register_pass(Args... args)
+    void register_pass(Args&&... args)
     {
         static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
         auto pass = std::make_shared<T>(args...);

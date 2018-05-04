@@ -43,6 +43,10 @@ namespace ngraph
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
 
+            // TODO(amprocte): it looks like this takes its attributes from the ops that it
+            // replaces, rather than reconstructing. Thus I *think* an empty map is actually
+            // correct.
+            AttributeMap get_attribute_map() const override { return AttributeMap{{}}; }
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
@@ -133,6 +137,18 @@ namespace ngraph
             const Strides& get_data_dilation_strides_backward() const
             {
                 return m_data_dilation_strides_backward;
+            }
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{
+                    {"filters_shape", m_filters_shape},
+                    {"bias_shape", m_bias_shape},
+                    {"window_movement_strides_forward", m_window_movement_strides_forward},
+                    {"window_dilation_strides_forward", m_window_dilation_strides_forward},
+                    {"padding_below_forward", m_padding_below_forward},
+                    {"padding_above_forward", m_padding_above_forward},
+                    {"data_dilation_strides_forward", m_data_dilation_strides_forward}};
             }
 
         protected:

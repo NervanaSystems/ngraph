@@ -57,6 +57,11 @@ namespace ngraph
 
             /// \return The set of axes to reverse.
             const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"reversed_axes", m_reversed_axes}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

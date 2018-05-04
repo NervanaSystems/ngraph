@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
@@ -94,6 +95,16 @@ namespace ngraph
                 return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
             }
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_shape", m_window_shape},
+                                    {"window_movement_strides", m_window_movement_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above},
+                                    {"include_padding_in_avg_computation",
+                                     BoxedAttribute<bool>(m_include_padding_in_avg_computation)}};
+            }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
@@ -124,6 +135,17 @@ namespace ngraph
             bool get_include_padding_in_avg_computation() const
             {
                 return m_include_padding_in_avg_computation;
+            }
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"forward_arg_shape", m_forward_arg_shape},
+                                    {"window_shape", m_window_shape},
+                                    {"window_movement_strides", m_window_movement_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above},
+                                    {"include_padding_in_avg_computation",
+                                     BoxedAttribute<bool>(m_include_padding_in_avg_computation)}};
             }
 
         protected:

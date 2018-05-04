@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -42,6 +43,15 @@ namespace ngraph
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"shape_w", m_shape_w},
+                                    {"shape_x", m_shape_x},
+                                    {"transpose_w", BoxedAttribute<bool>(m_transpose_w)},
+                                    {"transpose_x", BoxedAttribute<bool>(m_transpose_x)},
+                                    {"broadcast_axes", m_broadcast_axes}};
+            }
 
         private:
             Shape m_shape_w;

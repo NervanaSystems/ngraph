@@ -19,13 +19,14 @@
 #include <cstdio>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
 {
     /// \brief Shape for a tensor.
-    class Shape : public std::vector<size_t>
+    class Shape : public std::vector<size_t>, public Attribute
     {
     public:
         Shape(const std::initializer_list<size_t>& axis_lengths)
@@ -65,6 +66,9 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
+        Attribute* clone() const { return new Shape(*this); }
     };
 
     /// Number of elements in spanned by a shape

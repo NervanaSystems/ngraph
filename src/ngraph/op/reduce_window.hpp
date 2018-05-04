@@ -78,6 +78,13 @@ namespace ngraph
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            // TODO(amprocte): m_reduction_function?
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_shape", m_window_shape},
+                                    {"window_movement_strides", m_window_movement_strides}};
+            }
+
         protected:
             std::shared_ptr<Function> m_reduction_function;
             Shape m_window_shape;

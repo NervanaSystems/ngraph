@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -39,6 +40,12 @@ namespace ngraph
 
             /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{
+                    {"concatenation_axis", BoxedAttribute<size_t>(m_concatenation_axis)}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

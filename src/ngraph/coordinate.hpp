@@ -19,13 +19,15 @@
 #include <algorithm>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     /// \brief Coordinates for a tensor element
-    class Coordinate : public std::vector<size_t>
+    class Coordinate : public std::vector<size_t>, public Attribute
     {
     public:
         Coordinate() {}
@@ -71,6 +73,9 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+
+        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
+        Attribute* clone() const { return new Coordinate(*this); }
     };
 
     // Removes some values from a vector of axis values

@@ -18,6 +18,7 @@
 
 #include <utility>
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -59,6 +60,12 @@ namespace ngraph
                 }
                 return std::make_shared<Dot>(
                     new_args.at(0), new_args.at(1), m_reduction_axes_count);
+            }
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{
+                    {"reduction_axes_count", BoxedAttribute<size_t>(m_reduction_axes_count)}};
             }
 
         protected:

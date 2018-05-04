@@ -33,6 +33,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
+            AttributeMap get_attribute_map() const override { return AttributeMap{{}}; }
         private:
             Shape m_shape_input;
         };
@@ -49,6 +50,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            AttributeMap get_attribute_map() const override { return AttributeMap{{}}; }
         };
     }
 }

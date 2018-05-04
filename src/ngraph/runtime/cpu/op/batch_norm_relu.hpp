@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
@@ -51,6 +52,12 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             bool get_training_flag() const { return m_training; }
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"epsilon", BoxedAttribute<double>(m_epsilon)},
+                                    {"training", BoxedAttribute<bool>(m_training)}};
+            }
+
         private:
             Shape m_bn_input_shape;
             Shape m_bn_variance_shape;

@@ -18,45 +18,45 @@
 
 #include <cstddef>
 #include <set>
+#include <sstream>
+#include <type_traits>
 
 #include "ngraph/attribute.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
-    /// \brief A set of axes.
-    class AxisSet : public std::set<size_t>, public Attribute
+    /// \brief A boxing class to hold a primitive type (e.g., int, bool, double) as an attribute.
+    template <typename T>
+    class BoxedAttribute : public Attribute
     {
     public:
-        AxisSet() {}
-        AxisSet(const std::initializer_list<size_t>& axes)
-            : std::set<size_t>(axes)
+        BoxedAttribute(typename std::enable_if<std::is_fundamental<T>::value, T>::type value)
+            : m_value(value)
         {
         }
 
-        AxisSet(const std::set<size_t>& axes)
-            : std::set<size_t>(axes)
+        BoxedAttribute& operator=(T value)
         {
-        }
-
-        AxisSet(const AxisSet& axes)
-            : std::set<size_t>(axes)
-        {
-        }
-
-        AxisSet& operator=(const AxisSet& v)
-        {
-            static_cast<std::set<size_t>*>(this)->operator=(v);
+            m_value = value;
             return *this;
         }
 
-        AxisSet& operator=(AxisSet&& v)
+        BoxedAttribute& operator=(BoxedAttribute<T>&& v)
         {
-            static_cast<std::set<size_t>*>(this)->operator=(v);
+            m_value = v.m_valus;
             return *this;
         }
 
-        std::string to_string() const { return ("{" + ngraph::join(*this) + "}"); }
-        Attribute* clone() const { return new AxisSet(*this); }
+        T unbox() { return m_value; }
+        std::string to_string() const
+        {
+            std::stringstream ss;
+            ss << m_value;
+            return ss.str();
+        }
+
+        Attribute* clone() const { return new BoxedAttribute<T>(m_value); }
+    private:
+        T m_value;
     };
 }

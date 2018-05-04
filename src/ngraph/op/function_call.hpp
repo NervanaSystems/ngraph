@@ -38,6 +38,8 @@ namespace ngraph
             /// \return A singleton vector containing the function to be called.
             std::vector<std::shared_ptr<Function>> get_functions() const override;
 
+            // TODO(amprocte): m_function?
+            AttributeMap get_attribute_map() const override { return AttributeMap{}; }
         protected:
             std::shared_ptr<Function> m_function;
         };

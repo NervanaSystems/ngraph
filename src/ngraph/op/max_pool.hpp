@@ -72,6 +72,14 @@ namespace ngraph
                 return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
             }
 
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_shape", m_window_shape},
+                                    {"window_movement_strides", m_window_movement_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above}};
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -104,6 +112,15 @@ namespace ngraph
             ///         `nullptr` if no such pointer was provided at construction time, or if the
             ///         forward op has been freed due to graph rewriting.
             std::shared_ptr<op::MaxPool> get_forward_op() const;
+
+            // TODO(amprocte): m_forward_op?
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"window_shape", m_window_shape},
+                                    {"window_movement_strides", m_window_movement_strides},
+                                    {"padding_below", m_padding_below},
+                                    {"padding_above", m_padding_above}};
+            }
 
         protected:
             Shape m_window_shape;

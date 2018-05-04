@@ -182,7 +182,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
                                                  std::shared_ptr<ngraph::Node> variance,
                                                  std::shared_ptr<ngraph::Node> delta)
     : RequiresTensorViewArgs("BatchNormBackprop", {gamma, beta, input, mean, variance, delta})
-    , epsilon(eps)
+    , m_epsilon(eps)
 
 {
     if (input->get_shape().size() != 4)
@@ -237,7 +237,7 @@ std::shared_ptr<ngraph::Node>
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<op::BatchNormBackprop>(epsilon,
+    return std::make_shared<op::BatchNormBackprop>(m_epsilon,
                                                    new_args.at(0),
                                                    new_args.at(1),
                                                    new_args.at(2),

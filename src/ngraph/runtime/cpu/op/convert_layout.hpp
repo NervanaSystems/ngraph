@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
@@ -45,6 +46,13 @@ namespace ngraph
 
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
+
+                    // TODO(amprocte): output_layout?
+                    AttributeMap get_attribute_map() const override
+                    {
+                        return AttributeMap{
+                            {"arg_output_index", BoxedAttribute<size_t>(arg_output_index)}};
+                    }
 
                 protected:
                     size_t arg_output_index;

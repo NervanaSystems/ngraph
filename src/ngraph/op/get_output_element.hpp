@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/boxed_attribute.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
@@ -38,6 +39,11 @@ namespace ngraph
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
             virtual NodeVector get_arguments() override;
+
+            AttributeMap get_attribute_map() const override
+            {
+                return AttributeMap{{"n", BoxedAttribute<size_t>(m_n)}};
+            }
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

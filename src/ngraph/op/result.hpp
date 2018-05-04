@@ -40,6 +40,7 @@ namespace ngraph
             bool needs_copy() const { return m_needs_copy; }
             void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
             bool needs_default_layout() const { return m_needs_default_layout; }
+            AttributeMap get_attribute_map() const override { return AttributeMap{}; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

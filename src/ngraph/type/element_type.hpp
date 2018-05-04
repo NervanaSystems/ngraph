@@ -22,9 +22,11 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
+#include "ngraph/attribute.hpp"
 #include "ngraph/except.hpp"
 
 namespace ngraph
@@ -45,13 +47,20 @@ namespace ngraph
         extern const Type u32;
         extern const Type u64;
 
-        class Type
+        class Type : public Attribute
         {
         public:
             Type();
             Type(const Type&) = default;
             Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
-            Type& operator=(const Type&) = default;
+            Type& operator=(const Type& other)
+            {
+                m_bitwidth = other.m_bitwidth;
+                m_is_real = other.m_is_real;
+                m_is_signed = other.m_is_signed;
+                m_cname = other.m_cname;
+                return *this;
+            }
             virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
@@ -67,6 +76,16 @@ namespace ngraph
 
             /// Returns true if the type is floating point, else false.
             bool get_is_real() const { return m_is_real; }
+            std::string to_string() const
+            {
+                std::stringstream ss;
+                ss << (m_is_signed ? "" : "unsigned ");
+                ss << (m_is_real ? "float" : "int");
+                ss << m_bitwidth;
+                return ss.str();
+            }
+
+            Attribute* clone() const { return new Type(*this); }
         private:
             size_t m_bitwidth;
             bool m_is_real;

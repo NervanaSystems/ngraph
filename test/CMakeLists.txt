@@ -44,6 +44,7 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_pretty_print.cpp
     serialize.cpp
     pattern.cpp
     shape.cpp
