@@ -53,6 +53,7 @@ namespace ngraph
         class Negative;
         class Not;
         class Sqrt;
+        class Select;
     }
     namespace runtime
     {
@@ -266,6 +267,13 @@ namespace ngraph
             {
                 static constexpr const char* op = "not";
                 static constexpr const char* math_kernel = "!x0";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Select>
+            {
+                static constexpr const char* op = "select";
+                static constexpr const char* math_kernel = "(x0 == 0) ? x2 : x1";
             };
 
             template <>
