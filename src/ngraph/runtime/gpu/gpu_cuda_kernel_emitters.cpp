@@ -175,14 +175,14 @@ void runtime::gpu::emit_slice(const std::string& name,
 }
 
 void runtime::gpu::emit_reverse(const std::string& name,
-                              CUdeviceptr in,
-                              CUdeviceptr out,
-                              const std::array<std::string, 2>& data_types,
-                              GPURuntimeContext* ctx,
-                              CUdeviceptr input_shapes,
-                              CUdeviceptr reverse_axes,
-                              size_t rank,
-                              size_t count)
+                                CUdeviceptr in,
+                                CUdeviceptr out,
+                                const std::array<std::string, 2>& data_types,
+                                GPURuntimeContext* ctx,
+                                CUdeviceptr input_shapes,
+                                CUdeviceptr reverse_axes,
+                                size_t rank,
+                                size_t count)
 {
     std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
     std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
@@ -196,8 +196,7 @@ void runtime::gpu::emit_reverse(const std::string& name,
         compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
     }
 
-    void* args_list[] = {
-        &in, &out, &input_shapes, &reverse_axes, &rank, &count};
+    void* args_list[] = {&in, &out, &input_shapes, &reverse_axes, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                   static_cast<unsigned int>(count),
                                   1,

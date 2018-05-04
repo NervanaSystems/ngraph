@@ -167,11 +167,12 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
 }
 
 void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer,
-                                                   const std::string& name,
-                                                   const std::array<std::string, 2>& data_types)
+                                                     const std::string& name,
+                                                     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t* input_shape, size_t* reverse_axes, size_t rank, size_t n)\n";
+           << data_types[1]
+           << "* out, size_t* input_shape, size_t* reverse_axes, size_t rank, size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -181,18 +182,17 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
             writer << "size_t idx_in = tid;\n";
             writer << "size_t idx_out = 0;\n";
             writer << "size_t stride = 1;\n";
-            writer << "size_t i = rank - 1;\n";
-            writer << "do\n";
+            writer << "for(size_t i = rank; i > 0; i--)\n";
             writer.block_begin();
             {
-                writer << "size_t axes_i_in = idx_in % input_shape[i];\n";
-                writer << "idx_in /= input_shape[i];\n";
-                writer << "size_t axes_i_out = reverse_axes[i] ? input_shape[i] - axes_i_in - 1 : axes_i_in;\n";
+                writer << "size_t idx = i - 1;\n";
+                writer << "size_t axes_i_in = idx_in % input_shape[idx];\n";
+                writer << "idx_in /= input_shape[idx];\n";
+                writer << "size_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - axes_i_in - "
+                          "1 : axes_i_in;\n";
                 writer << "idx_out += axes_i_out * stride;\n";
-                writer << "stride *= input_shape[i];\n";
-                writer << "i--;\n";
+                writer << "stride *= input_shape[idx];\n";
             }
-            writer << "while(i > 0)\n";
             writer.block_end();
             writer << "out[idx_out] = in[tid];\n";
         }

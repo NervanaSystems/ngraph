@@ -77,14 +77,14 @@ namespace ngraph
                             size_t count);
 
             void emit_reverse(const std::string& name,
-                            CUdeviceptr in,
-                            CUdeviceptr out,
-                            const std::array<std::string, 2>& data_types,
-                            GPURuntimeContext* ctx,
-                            CUdeviceptr input_shape,
-                            CUdeviceptr reverse_axes,
-                            size_t rank,
-                            size_t count);
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              const std::array<std::string, 2>& data_types,
+                              GPURuntimeContext* ctx,
+                              CUdeviceptr input_shape,
+                              CUdeviceptr reverse_axes,
+                              size_t rank,
+                              size_t count);
 
             template <typename T, typename... Inputs>
             void emit_elementwise_op(const std::string& name,
