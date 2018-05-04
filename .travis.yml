@@ -5,6 +5,9 @@ language: cpp
 services:
   - docker
 
+git:
+  depth: false
+
 env:
   - TASK=cpp_test
   - TASK=python2_test
