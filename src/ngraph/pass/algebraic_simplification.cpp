@@ -24,8 +24,12 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
@@ -130,6 +134,24 @@ static bool simplify_add(std::shared_ptr<Node> n)
     return false;
 }
 
+//`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
+static bool simplify_log(std::shared_ptr<Node> n)
+{
+    if (auto div = std::dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
+    {
+        if (auto exp = std::dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
+        {
+            auto denom = div->get_argument(1);
+            auto diff = std::make_shared<op::Subtract>(exp->get_argument(0),
+                                                       std::make_shared<op::Log>(denom));
+            ngraph::replace_node(n, diff);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
 {
     size_t prod = 1;
@@ -224,6 +246,7 @@ static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<No
         {TI(op::Add), simplify_add},
         {TI(op::Multiply), simplify_multiply},
         {TI(op::Sum), simplify_sum},
+        {TI(op::Log), simplify_log},
     });
 }
 
