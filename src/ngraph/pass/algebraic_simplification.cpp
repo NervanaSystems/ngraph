@@ -59,6 +59,17 @@ static std::shared_ptr<pattern::op::Label>
     return std::dynamic_pointer_cast<pattern::op::Label>(matcher->pattern_node()->get_argument(1));
 }
 
+//`simplify_concat` identifies slices-concat sequences
+// that cancel each other. Namely it replaces subgraphs
+//similar to the one below with `arg`
+//
+//                 +----------+
+//            +----+slice(n/2..n)---+
+// +-------+  |    +----------+    |  +-----------+
+// |  arg  +--+                    +--+  concat   |
+// +-------+  |    +----------+    |  +-----------+
+//            +----+slice(0..n/2)---+
+//                 +----------+
 static bool simplify_concat(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
