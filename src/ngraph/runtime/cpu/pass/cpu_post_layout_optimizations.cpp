@@ -51,9 +51,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
 
     pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_weight against " << m.match_root()->get_name();
+        NGRAPH_DEBUG << "In a callback for construct_weight against "
+                     << m.get_match_root()->get_name();
 
-        auto m_cvt_lt = m.match_root()->get_argument(1);
+        auto m_cvt_lt = m.get_match_root()->get_argument(1);
         auto m_reshape_conv = m_cvt_lt->get_argument(0);
 
         std::shared_ptr<Node> m_conv_bprop;

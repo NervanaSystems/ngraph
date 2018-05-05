@@ -40,7 +40,7 @@ static shared_ptr<Node> construct_constant_node(int n)
     return op::Constant::create(element::f32, Shape{}, {n});
 }
 
-void pass::CoreFusion::construct_relu_pattern()
+void pass::CoreFusion::construct_relu()
 {
     auto iconst0 = construct_constant_node(0);
     auto val = make_shared<pattern::op::Label>(iconst0);
@@ -53,8 +53,8 @@ void pass::CoreFusion::construct_relu_pattern()
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
     pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
-                     << m.match_root()->get_name();
+        NGRAPH_DEBUG << "In a callback for construct_relu against "
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto mzero = m.get_pattern_map()[zero];
@@ -63,10 +63,10 @@ void pass::CoreFusion::construct_relu_pattern()
             NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
             return false;
         }
-        auto mpattern = m.match_root();
+        auto mpattern = m.get_match_root();
 
         auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
-        ngraph::replace_node(m.match_root(), cg);
+        ngraph::replace_node(m.get_match_root(), cg);
         return true;
     };
 

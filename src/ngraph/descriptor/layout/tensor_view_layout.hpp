@@ -41,6 +41,8 @@ namespace ngraph
             {
             protected:
                 TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view);
+                TensorViewLayout(const TensorViewLayout&) = delete;
+                TensorViewLayout& operator=(const TensorViewLayout&) = delete;
 
             public:
                 virtual ~TensorViewLayout() {}

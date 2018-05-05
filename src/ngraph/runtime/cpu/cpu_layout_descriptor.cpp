@@ -64,6 +64,7 @@ namespace ngraph
                 std::reverse(strides.begin(), strides.end());
             }
 
+            void LayoutDescriptor::set_axis_order(const AxisVector& perm) { axis_order = perm; }
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
                 if (indices.size() != strides.size())

@@ -52,7 +52,7 @@ static std::shared_ptr<pattern::Matcher>
 static std::shared_ptr<pattern::op::Label>
     get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
 {
-    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->pattern_node()->get_argument(1));
+    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
@@ -141,6 +141,36 @@ static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
     return prod;
 }
 
+template <typename T>
+static std::shared_ptr<Node>
+    multiply_by(element::Type type, size_t multiplier, std::shared_ptr<op::Constant> cnst)
+{
+    T sum_cnst = static_cast<T>(cnst->get_vector<T>().at(0) * multiplier);
+    return op::Constant::create<T>(type, Shape{}, {sum_cnst});
+}
+
+static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst, size_t multiplier)
+{
+    if (cnst->get_element_type() == element::i32)
+    {
+        return multiply_by<int>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::i8)
+    {
+        return multiply_by<char>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::f32)
+    {
+        return multiply_by<float>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::f64)
+    {
+        return multiply_by<double>(cnst->get_element_type(), multiplier, cnst);
+    }
+
+    return nullptr;
+}
+
 //`simplify_sum` optimizes the following case:
 //sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
 //where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
@@ -164,10 +194,15 @@ static bool simplify_sum(std::shared_ptr<Node> n)
     }
 
     auto multiplier = reduction_shape_size(sum->get_reduction_axes(), broadcast->get_shape());
-    double sum_const_value = cnst->get_vector<double>().at(0) * multiplier;
-    std::shared_ptr<Node> sum_cnst =
-        op::Constant::create(cnst->get_element_type(), Shape{}, {sum_const_value});
-    auto new_node = sum_cnst;
+    auto sum_cnst = get_sum_constant(cnst, multiplier);
+
+    //Unsupported type
+    if (!sum_cnst)
+    {
+        NGRAPH_DEBUG << "unsupported type";
+        return false;
+    }
+
     if (sum->get_shape().size() > 0)
     {
         ngraph::AxisSet axes{};
@@ -175,15 +210,15 @@ static bool simplify_sum(std::shared_ptr<Node> n)
         {
             axes.insert(i);
         }
-        new_node = std::make_shared<op::Broadcast>(sum_cnst, sum->get_shape(), axes);
+        sum_cnst = std::make_shared<op::Broadcast>(sum_cnst, sum->get_shape(), axes);
     }
 
-    ngraph::replace_node(n, new_node);
+    ngraph::replace_node(n, sum_cnst);
     return true;
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    initialize_const_values_to_ops()
+    initialize_ops_to_simplifiers()
 {
     return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
         {TI(op::Add), simplify_add},
@@ -193,7 +228,7 @@ static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<No
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    ops_to_const_values = initialize_const_values_to_ops();
+    ops_to_simplifiers = initialize_ops_to_simplifiers();
 
 bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngraph::Function> f)
 {
@@ -206,8 +241,8 @@ bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngra
         }
 
         const Node& node = *n;
-        auto eh = ops_to_const_values.find(TI(node));
-        if (eh == ops_to_const_values.end())
+        auto eh = ops_to_simplifiers.find(TI(node));
+        if (eh == ops_to_simplifiers.end())
         {
             continue;
         }

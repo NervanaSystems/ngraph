@@ -170,7 +170,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
         else
         {
-            type = op->get_element_type();
+            type = op->get_outputs().at(0).get_element_type();
         }
 
         if (instance.m_performance_counters_enabled)
@@ -298,7 +298,7 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         const element::Type& type = tv->get_tensor().get_element_type();
         if (type == element::f32)
         {
-            const float* data = reinterpret_cast<float*>(tv->get_data_ptr());
+            const float* data = tv->get_data_ptr<float>();
             for (size_t i = 0; i < tv->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
@@ -317,7 +317,7 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         }
         else if (type == element::f64)
         {
-            const double* data = reinterpret_cast<double*>(tv->get_data_ptr());
+            const double* data = tv->get_data_ptr<double>();
             for (size_t i = 0; i < tv->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
