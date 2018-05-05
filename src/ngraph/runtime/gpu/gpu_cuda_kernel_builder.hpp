@@ -55,6 +55,10 @@ namespace ngraph
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types);
 
+                static void get_reverse_op(codegen::CodeWriter& writer,
+                                           const std::string& name,
+                                           const std::array<std::string, 2>& data_types);
+
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
