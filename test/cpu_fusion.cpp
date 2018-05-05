@@ -838,7 +838,7 @@ template <typename T>
 static std::vector<std::vector<T>>
     execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
 {
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create(cbackend);
 
     auto parms = f->get_parameters();
 
@@ -910,6 +910,56 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
          -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
          0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
         {2., 2., 2., 2.}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
+{
+    Shape shape_a{2, 1, 6, 6};
+    Shape shape_weights{1, 1, 2, 2};
+    Shape shape_bias{1};
+
+    auto make_int_function = [shape_a, shape_weights, shape_bias]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv_bias =
+            conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+        auto relu = std::make_shared<op::Relu>(conv_bias);
+        auto f = make_shared<Function>(NodeVector{relu}, op::ParameterVector{A, weights, bias});
+        return f;
+    };
+
+    auto int_f = make_int_function();
+
+    auto make_cpu_function = [shape_a, shape_weights, shape_bias]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto conv_bias_relu = std::make_shared<op::ConvolutionBiasRelu>(
+            std::make_shared<op::ConvolutionBias>(conv, bias));
+        auto f = make_shared<Function>(NodeVector{conv_bias_relu},
+                                       op::ParameterVector{A, weights, bias});
+        return f;
+    };
+
+    auto cpu_f = make_cpu_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {2., 2., 2., 2.},
+        {0.1f}};
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
