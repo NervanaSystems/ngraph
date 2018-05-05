@@ -127,7 +127,6 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
-    runtime/interpreter/int_backend.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
@@ -217,8 +216,8 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 add_library(ngraph SHARED ${SRC})
-add_dependencies(ngraph ext_json)
-target_link_libraries(ngraph PUBLIC libjson)
+add_dependencies(ngraph ext_json int_backend)
+target_link_libraries(ngraph PUBLIC libjson int_backend)
 
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph PUBLIC cpu_backend)
@@ -259,10 +258,6 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
-
-if(NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
 endif()
 
 # Nvidia

@@ -14,8 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Add sources for the CPU backend
-# and all its dependencies
 set(SRC
     cpu_call_frame.cpp
     cpu_backend.cpp
@@ -73,6 +71,15 @@ endif()
 
 set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-add_library(cpu_backend SHARED ${SRC})
+add_library(cpu_backend STATIC ${SRC})
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+endif()
+
 add_dependencies(cpu_backend codegen libmkldnn libjson)
 target_link_libraries(cpu_backend PUBLIC codegen libmkldnn libjson ${TBB_IMPORTED_TARGETS})
