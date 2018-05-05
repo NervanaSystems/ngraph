@@ -14,8 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-message(STATUS "****************** CPU backend enabled")
-
 # Add sources for the CPU backend
 # and all its dependencies
 set(SRC
@@ -52,7 +50,29 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
 )
 
+if (NGRAPH_TBB_ENABLE)
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    if (NOT TBB_FOUND)
+        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    else()
+        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+    endif()
+endif()
+
+if (NGRAPH_TBB_ENABLE)
+    set_source_files_properties(runtime/cpu/cpu_external_function.cpp
+        PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
+        "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+        "NGRAPH_TBB_ENABLE"
+    )
+endif()
+
+set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
+
 add_library(cpu_backend SHARED ${SRC})
 add_dependencies(cpu_backend codegen libmkldnn libjson)
-target_link_libraries(cpu_backend PUBLIC codegen libmkldnn libjson)
-
+target_link_libraries(cpu_backend PUBLIC codegen libmkldnn libjson ${TBB_IMPORTED_TARGETS})

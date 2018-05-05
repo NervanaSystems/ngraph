@@ -30,3 +30,11 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
 )
+
+# add_library(libtbb INTERFACE)
+# target_include_directories(libtbb SYSTEM INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src/include)
+# target_link_libraries(libtbb INTERFACE
+#     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.so
+#     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.so
+#     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.so
+#     )
