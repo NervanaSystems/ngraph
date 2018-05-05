@@ -30,6 +30,15 @@ namespace ngraph
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
                             const std::shared_ptr<Node>& bias);
 
+            ConvolutionBias(const std::shared_ptr<Node>& data_batch,
+                            const std::shared_ptr<Node>& filters,
+                            const std::shared_ptr<Node>& bias,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides,
+                            const CoordinateDiff& padding_below,
+                            const CoordinateDiff& padding_above,
+                            const Strides& data_dilation_strides);
+
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
@@ -49,16 +58,6 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-
-        private:
-            ConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                            const std::shared_ptr<Node>& filters,
-                            const std::shared_ptr<Node>& bias,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides);
         };
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
