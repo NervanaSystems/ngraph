@@ -36,11 +36,12 @@ unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backe
     return backend_map;
 }
 
-runtime::Backend::~Backend() {}
+runtime::Backend::~Backend()
+{
+}
 
 void* runtime::Backend::open_shared_library(const string& type)
 {
-    NGRAPH_INFO;
     void* handle = nullptr;
     string name = "lib" + type + "_backend.so";
     handle = dlopen(name.c_str(), RTLD_NOW);
@@ -57,8 +58,6 @@ void* runtime::Backend::open_shared_library(const string& type)
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
-    NGRAPH_INFO << type;
-
     auto it = get_backend_map().find(type);
     if (it == get_backend_map().end())
     {
@@ -82,7 +81,9 @@ vector<string> runtime::Backend::get_registered_devices()
     return rc;
 }
 
-void runtime::Backend::remove_compiled_function(shared_ptr<Function> func) {}
+void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
+{
+}
 
 vector<ngraph::runtime::PerformanceCounter>
     runtime::Backend::get_performance_data(shared_ptr<Function> func) const
