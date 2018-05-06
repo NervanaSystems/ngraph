@@ -151,36 +151,17 @@ endif()
 
 add_executable(unit-test ${SRC})
 
-if(MPI_C_INCLUDE_PATH)
-    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
-endif()
-
-if(MKLDNN_INCLUDE_DIR)
-    target_link_libraries(unit-test mkldnn)
-    add_dependencies(unit-test ext_mkldnn)
-endif()
-
-if(LLVM_INCLUDE_DIR)
-    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
-    add_dependencies(unit-test ext_llvm)
-endif()
-
-if(CUDA_INCLUDE_DIRS)
-    find_library(CUDA_NVRTC_LIBRARY nvrtc /usr/local/cuda/lib64)
-    target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
-endif()
-
 target_link_libraries(unit-test ngraph gtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-if(NGRAPH_NNP_ENABLE)
-    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
-    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
-    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-endif()
+add_dependencies(unit-test ngraph ext_gtest ext_json int_backend)
+target_link_libraries(unit-test int_backend)
 
-add_dependencies(unit-test ngraph ext_gtest ext_json)
-include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+if (NGRAPH_CPU_ENABLE)
+    add_dependencies(unit-test cpu_backend)
+    target_link_libraries(unit-test cpu_backend)
+endif()
+# include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 add_custom_target(style-check
     COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

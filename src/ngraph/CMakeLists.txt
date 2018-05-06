@@ -216,13 +216,8 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 add_library(ngraph SHARED ${SRC})
-add_dependencies(ngraph ext_json int_backend)
-target_link_libraries(ngraph PUBLIC libjson int_backend)
-
-if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PUBLIC cpu_backend)
-    add_dependencies(ngraph cpu_backend)
-endif()
+add_dependencies(ngraph ext_json)
+target_link_libraries(ngraph PUBLIC libjson)
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -248,7 +243,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-target_link_libraries(ngraph PRIVATE dl)
+target_link_libraries(ngraph PUBLIC dl pthread)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})

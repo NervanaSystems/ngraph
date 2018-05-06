@@ -26,41 +26,37 @@ if (NGRAPH_CPU_ENABLE)
 
     # abc
     set (ABC_SRC
-        ${PROJECT_SOURCE_DIR}/doc/examples/abc.cpp
+        abc.cpp
     )
 
-    set_source_files_properties(${ABC_SRC} PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     add_executable(abc ${ABC_SRC})
     add_dependencies(abc ngraph)
     target_link_libraries(abc ngraph)
 
     # abc_op
     set (ABC_OP_SRC
-        ${PROJECT_SOURCE_DIR}/doc/examples/abc_operator.cpp
+        abc_operator.cpp
     )
 
-    set_source_files_properties(${ABC_OP_SRC} PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     add_executable(abc_op ${ABC_OP_SRC})
     add_dependencies(abc_op ngraph)
     target_link_libraries(abc_op ngraph)
 
     # update
     set (UPDATE_SRC
-        ${PROJECT_SOURCE_DIR}/doc/examples/update.cpp
+        update.cpp
     )
 
-    set_source_files_properties(${UPDATE_SRC} PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     add_executable(update ${UPDATE_SRC})
     add_dependencies(update ngraph)
     target_link_libraries(update ngraph)
 
     # mnist_mlp
     set(MNIST_SRC
-        ${PROJECT_SOURCE_DIR}/doc/examples/mnist_loader.cpp 
-        ${PROJECT_SOURCE_DIR}/doc/examples/mnist_mlp.cpp
+        mnist_loader.cpp
+        mnist_mlp.cpp
     )
 
-    set_source_files_properties(${MNIST_SRC} PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     add_executable(mnist_mlp ${MNIST_SRC})
     add_dependencies(mnist_mlp ngraph)
     target_link_libraries(mnist_mlp ngraph)

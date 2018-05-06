@@ -14,8 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(SRC
-    int_backend.cpp
-)
-
-add_library(int_backend STATIC ${SRC})
+add_library(int_backend SHARED int_backend.cpp)
+add_dependencies(int_backend ngraph)
+target_link_libraries(int_backend PUBLIC ngraph)

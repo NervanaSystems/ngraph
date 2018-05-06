@@ -45,6 +45,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_nop_elimination.cpp
     pass/cpu_rnn_mat_fusion.cpp
+    pass/cpu_shuffle_folding.cpp
     pass/cpu_post_layout_optimizations.cpp
 )
 
@@ -71,7 +72,7 @@ endif()
 
 set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-add_library(cpu_backend STATIC ${SRC})
+add_library(cpu_backend SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
@@ -81,5 +82,6 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-add_dependencies(cpu_backend codegen libmkldnn libjson)
-target_link_libraries(cpu_backend PUBLIC codegen libmkldnn libjson ${TBB_IMPORTED_TARGETS})
+add_dependencies(cpu_backend ngraph codegen libmkldnn libjson)
+target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libjson ${TBB_IMPORTED_TARGETS})
+target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
