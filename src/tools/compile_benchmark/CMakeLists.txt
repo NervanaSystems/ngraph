@@ -25,13 +25,13 @@ if (NGRAPH_CPU_ENABLE)
     )
 
     add_executable(compile_benchmark ${SRC})
-    add_dependencies(compile_benchmark ngraph)
+    add_dependencies(compile_benchmark ngraph cpu_backend)
 
     set(HEADER_SEARCH_DEFINES
         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
     )
 
-    target_link_libraries(compile_benchmark ngraph)
+    target_link_libraries(compile_benchmark ngraph cpu_backend)
     include_directories("${PROJECT_SOURCE_DIR}/test")
 
     set_source_files_properties(compile_benchmark.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")

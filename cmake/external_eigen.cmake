@@ -28,38 +28,41 @@ set(EIGEN_GIT_URL https://github.com/NervanaSystems/eigen)
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
         ext_eigen
+        PREFIX eigen
         GIT_REPOSITORY ${EIGEN_GIT_URL}
         GIT_TAG ${EIGEN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
+        TMP_DIR "eigen/tmp"
+        STAMP_DIR "eigen/stamp"
+        DOWNLOAD_DIR "eigen/download"
+        SOURCE_DIR "eigen/src"
+        BINARY_DIR "eigen/build"
+        INSTALL_DIR "eigen"
         )
 else()
     ExternalProject_Add(
         ext_eigen
+        PREFIX eigen
         GIT_REPOSITORY ${EIGEN_GIT_URL}
         GIT_TAG ${EIGEN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/eigen/src/Eigen/Core"
+        TMP_DIR "eigen/tmp"
+        STAMP_DIR "eigen/stamp"
+        DOWNLOAD_DIR "eigen/download"
+        SOURCE_DIR "eigen/src"
+        BINARY_DIR "eigen/build"
+        INSTALL_DIR "eigen"
+        BUILD_BYPRODUCTS "eigen/src/Eigen/Core"
         )
 endif()
 
 #----------------------------------------------------------------------------------------------------------
 
-set(EIGEN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src" PARENT_SCOPE)
+ExternalProject_Get_Property(ext_eigen SOURCE_DIR)
+set(EIGEN_INCLUDE_DIR "${SOURCE_DIR}")
