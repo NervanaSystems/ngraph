@@ -25,7 +25,7 @@ Attributes
 +------------------+------------------------------------------+
 | ``shape``        | The ``Shape`` of the parameter.          |
 +------------------+------------------------------------------+
-| ``memoizable``   | True if the parameter is not expected to |
+| ``cacheable``    | True if the parameter is not expected to |
 |                  | be frequently updated.                   |
 +------------------+------------------------------------------+
 

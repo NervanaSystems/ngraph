@@ -23,9 +23,9 @@ using namespace ngraph;
 
 op::Parameter::Parameter(const element::Type& element_type,
                          const Shape& shape,
-                         const bool memoizable)
+                         const bool cacheable)
     : Op("Parameter", {})
-    , m_memoizable(memoizable)
+    , m_cacheable(cacheable)
 {
     add_output(element_type, shape);
 }
