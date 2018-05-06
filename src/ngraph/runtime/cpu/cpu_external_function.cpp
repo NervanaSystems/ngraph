@@ -124,6 +124,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
@@ -251,6 +252,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
+    {TI(ngraph::op::ConvolutionBiasRelu),
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasRelu>},
     // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
@@ -315,6 +318,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();

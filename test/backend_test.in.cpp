@@ -4526,7 +4526,6 @@ TEST(${BACKEND_NAME}, not)
 
 TEST(${BACKEND_NAME}, reverse_0d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4544,7 +4543,6 @@ TEST(${BACKEND_NAME}, reverse_0d)
 
 TEST(${BACKEND_NAME}, reverse_1d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4562,7 +4560,6 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_1d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4580,7 +4577,6 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
 
 TEST(${BACKEND_NAME}, reverse_2d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4601,7 +4597,6 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_2d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4622,7 +4617,6 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
 
 TEST(${BACKEND_NAME}, reverse_2d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4643,7 +4637,6 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
 
 TEST(${BACKEND_NAME}, reverse_2d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4665,7 +4658,6 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
 
 TEST(${BACKEND_NAME}, reverse_3d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4689,7 +4681,6 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_3d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4713,7 +4704,6 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
 
 TEST(${BACKEND_NAME}, reverse_3d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4737,7 +4727,6 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
 
 TEST(${BACKEND_NAME}, reverse_3d_2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
@@ -4761,7 +4750,6 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
 
 TEST(${BACKEND_NAME}, reverse_3d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4786,7 +4774,6 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
 
 TEST(${BACKEND_NAME}, reverse_3d_02)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4811,7 +4798,6 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
 
 TEST(${BACKEND_NAME}, reverse_3d_12)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4836,7 +4822,6 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
 
 TEST(${BACKEND_NAME}, reverse_3d_012)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),

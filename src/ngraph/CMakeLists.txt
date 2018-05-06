@@ -222,6 +222,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
         runtime/cpu/pass/cpu_post_layout_optimizations.cpp
+        runtime/cpu/pass/cpu_shuffle_folding.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -333,6 +334,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_link_libraries(ngraph PRIVATE dl)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
