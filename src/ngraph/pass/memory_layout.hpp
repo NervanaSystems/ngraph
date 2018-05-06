@@ -35,11 +35,12 @@ namespace ngraph
 class ngraph::pass::MemoryLayout : public FunctionPass
 {
 public:
-    MemoryLayout(size_t alignment = 1);
+    MemoryLayout(size_t alignment = 1, bool free_temps = true);
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 
 private:
     size_t m_alignment;
+    bool m_free_temps;
 };
 
 class ngraph::pass::MemoryManager
