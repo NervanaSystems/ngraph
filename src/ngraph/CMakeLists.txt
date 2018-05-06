@@ -138,21 +138,6 @@ set (SRC
     cpio.cpp
     )
 
-# message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
-# file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
-# foreach(OP ${OPS})
-#     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
-#     foreach(LINE ${OP_CLASS})
-#         string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
-#         set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-#     endforeach(LINE ${OP_CLASS})
-# endforeach()
-# message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
-# string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
-# file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
-
-# find_program (GRAPHVIZ dot)
-# message (STATUS "graphviz '${GRAPHVIZ}'")
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
@@ -165,47 +150,6 @@ endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
-
-# if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
-#     find_package(ZLIB REQUIRED)
-
-#     if (NGRAPH_TBB_ENABLE)
-#         include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-#         tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-#                   tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-#         find_package(TBB REQUIRED tbb)
-#         if (NOT TBB_FOUND)
-#             message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-#         else()
-#             message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-#         endif()
-#     endif()
-
-#     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
-#     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
-
-#     set(HEADER_SEARCH_DEFINES
-#         "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
-#         "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-#         "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
-#         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-#         "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
-#     )
-
-#     if (NGRAPH_TBB_ENABLE)
-#         set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-#         set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
-#             "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
-#             "NGRAPH_TBB_ENABLE"
-#         )
-#     endif()
-#     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-
-#     if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
-#         include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-#         link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-#     endif()
-# endif()
 
 add_subdirectory(codegen)
 add_subdirectory(runtime)
