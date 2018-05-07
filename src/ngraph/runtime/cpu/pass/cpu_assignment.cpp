@@ -37,6 +37,7 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
@@ -420,6 +421,19 @@ namespace ngraph
                         batchnorm->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
+                {
+                    // TODO add conditions to determine when to make RNN as MKLDNN op
+                    {
+                        auto rnn_node = static_cast<op::Rnn*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        rnn_node->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -459,6 +473,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

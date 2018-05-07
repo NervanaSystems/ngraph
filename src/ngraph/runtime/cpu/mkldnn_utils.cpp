@@ -113,6 +113,10 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
     {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
     {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+    {memory::format::tnc, "memory::format::tnc"},
+    {memory::format::ldsnc, "memory::format::ldsnc"},
+    {memory::format::ldigo, "memory::format::ldigo"},
+    {memory::format::ldgo, "memory::format::ldgo"},
 };
 
 static const std::set<memory::format> s_filter_formats{

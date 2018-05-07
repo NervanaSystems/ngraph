@@ -43,6 +43,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
@@ -1265,6 +1266,35 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Rnn)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        // auto input_layout =
+                        //     runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+
+                        prim_input_formats.push_back(memory::format::tnc);
+                        prim_input_formats.push_back(memory::format::ldsnc);
+                        prim_input_formats.push_back(memory::format::ldigo);
+                        prim_input_formats.push_back(memory::format::ldigo);
+                        prim_input_formats.push_back(memory::format::ldgo);
+                        prim_output_formats.push_back(memory::format::tnc);
+                        prim_output_formats.push_back(memory::format::ldsnc);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Rnn fused Op only supported in MKLDNN for now");
+                    }
+                }
             }
         }
     }
@@ -1306,6 +1336,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

@@ -64,7 +64,7 @@
       "op" : "Constant",
       "outputs" : ["Constant_17_0"],
       "shape" : [],
-      "value" : ["0"]
+      "value" : ["1"]
     },
     {
       "element_type" : "float",
@@ -82,7 +82,7 @@
       "op" : "Constant",
       "outputs" : ["Constant_40_0"],
       "shape" : [],
-      "value" : ["0"]
+      "value" : ["1"]
     },
     {
       "element_type" : "float",

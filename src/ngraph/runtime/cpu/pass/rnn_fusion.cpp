@@ -23,37 +23,26 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/op/sqrt.hpp"
-#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
-#include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
-#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "rnn_fusion.hpp"
@@ -394,6 +383,12 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
         auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
+
+        if (num_of_lstm_matched == 1)
+        {
+            ngraph::replace_node(m.get_match_root(), rnn_ht_out);
+            return true;
+        }
 
         //slice the rnn ht's
         size_t start_index = 0;
