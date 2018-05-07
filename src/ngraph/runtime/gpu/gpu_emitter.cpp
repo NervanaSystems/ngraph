@@ -972,6 +972,62 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Reverse)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto reverse = static_cast<const op::Reverse*>(node);
+
+                const auto arg_shape = args[0].get_shape();
+                const auto arg_rank = arg_shape.size();
+                const auto result_shape = out[0].get_shape();
+                const auto reverse_axes = reverse->get_reversed_axes();
+                std::vector<size_t> reverse_axes_flag(arg_rank, 0);
+                for (auto a : reverse_axes)
+                {
+                    reverse_axes_flag[a] = 1;
+                }
+                writer.block_begin("  // " + node->get_name());
+                if (out[0].get_size() == 1)
+                {
+                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                }
+                else
+                {
+                    writer << "size_t rank = " << arg_rank << ";\n";
+                    writer << "std::vector<size_t> input_shapes_h = {" << join(arg_shape, "UL,")
+                           << "UL};\n";
+                    writer << "std::vector<size_t> reverse_axes_h = {"
+                           << join(reverse_axes_flag, "UL,") << "UL};\n";
+
+                    writer << "void* input_shapes_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "void* reverse_axes_d = "
+                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(input_shapes_d, input_shapes_h.data(), "
+                              "sizeof(size_t) * rank);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(reverse_axes_d, "
+                              "reverse_axes_h.data(), "
+                              "sizeof(size_t) * rank);\n";
+
+                    writer << "runtime::gpu::emit_reverse(\"" << node->description()
+                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
+                           << out[0].get_name() << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", "
+                           << "ctx, "
+                           << "CUdeviceptr(input_shapes_d), CUdeviceptr(reverse_axes_d), "
+                           << arg_rank << ", " << out[0].get_size() << ");\n";
+                    writer << "runtime::gpu::free_gpu_buffer(input_shapes_d);\n";
+                    writer << "runtime::gpu::free_gpu_buffer(reverse_axes_d);\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
             {
             }

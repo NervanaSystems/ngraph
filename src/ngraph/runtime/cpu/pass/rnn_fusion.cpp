@@ -65,24 +65,24 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     //Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name() << " type is not float!";
             return false;
         }
 
-        if (m.match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
         {
-            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return false;
         }
 
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.match_root(), sigmoid_node);
+        ngraph::replace_node(m.get_match_root(), sigmoid_node);
         return true;
     };
 
@@ -153,21 +153,21 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         [ct_label, param1_1, param1_2, param2_1, param2_2, bias1, bias2, ct_1](
             pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                         << m.match_root()->get_name();
+                         << m.get_match_root()->get_name();
 
             auto pattern_map = m.get_pattern_map();
             NGRAPH_DEBUG << "In Lstm fprop call back";
 
-            if (m.match_root()->get_element_type() != element::f32)
+            if (m.get_match_root()->get_element_type() != element::f32)
             {
-                NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name()
+                NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                              << " type is not float!";
                 return false;
             }
 
-            if (m.match_root()->get_shape() != pattern_map[param2_1]->get_shape())
+            if (m.get_match_root()->get_shape() != pattern_map[param2_1]->get_shape())
             {
-                NGRAPH_DEBUG << "matched_node_shape: " << join(m.match_root()->get_shape())
+                NGRAPH_DEBUG << "matched_node_shape: " << join(m.get_match_root()->get_shape())
                              << " hidden state shape: " << join(pattern_map[param2_1]->get_shape());
                 return false;
             }
@@ -211,7 +211,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                     new_args.clear();
                 }
             }
-            ngraph::replace_node(m.match_root(), ht_output);
+            ngraph::replace_node(m.get_match_root(), ht_output);
             return true;
         };
     auto m = std::make_shared<pattern::Matcher>(ht, callback);
