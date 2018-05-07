@@ -1272,27 +1272,10 @@ namespace ngraph
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // auto input_layout =
-                        //     runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
-
-                        vector<memory::format> prim_input_formats;
-                        vector<memory::format> prim_output_formats;
-
-                        prim_input_formats.push_back(memory::format::tnc);
-                        prim_input_formats.push_back(memory::format::ldsnc);
-                        prim_input_formats.push_back(memory::format::ldigo);
-                        prim_input_formats.push_back(memory::format::ldigo);
-                        prim_input_formats.push_back(memory::format::ldgo);
-                        prim_output_formats.push_back(memory::format::tnc);
-                        prim_output_formats.push_back(memory::format::ldsnc);
-
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats);
-                        set_output_layouts(node, prim_output_formats);
-                    }
-                    else
-                    {
-                        throw ngraph_error("Rnn fused Op only supported in MKLDNN for now");
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
+                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
+                        // if the format doesn't matches.
+                        set_default_layouts(external_function, node, false);
                     }
                 }
             }

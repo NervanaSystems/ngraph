@@ -384,12 +384,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
         auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
 
-        if (num_of_lstm_matched == 1)
-        {
-            ngraph::replace_node(m.get_match_root(), rnn_ht_out);
-            return true;
-        }
-
         //slice the rnn ht's
         size_t start_index = 0;
         size_t end_index = batch_size;

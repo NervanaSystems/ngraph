@@ -405,7 +405,7 @@ namespace ngraph
                     num_of_fused_rnn_layers, rnn_direction, rnn_cell_n_states, batch, feature_size};
                 mkldnn::memory::dims weights_layer_tz = {num_of_fused_rnn_layers,
                                                          rnn_direction,
-                                                         feature_size,
+                                                         rnn_node->get_src_layer_feature_size(),
                                                          rnn_cell_n_gates,
                                                          feature_size};
                 mkldnn::memory::dims weights_iter_tz = {num_of_fused_rnn_layers,
@@ -452,6 +452,7 @@ namespace ngraph
                                                                    dst_layer_md,
                                                                    dst_iter_md);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
