@@ -69,10 +69,10 @@ void ngraph::runtime::cpu::pass::CPUWorkspaceInsertion::construct_max_pool_with_
 
     pattern::graph_rewrite_callback callback = [data, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_max_pool_bprop = std::dynamic_pointer_cast<op::MaxPoolBackprop>(m.match_root());
+        auto m_max_pool_bprop = std::dynamic_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
         if (m_max_pool_bprop->get_shape().size() != 4 ||
             m_max_pool_bprop->get_window_shape().size() != 2 ||
