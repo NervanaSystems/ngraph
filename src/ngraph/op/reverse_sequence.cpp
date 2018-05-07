@@ -26,27 +26,21 @@ using namespace std;
 using namespace ngraph;
 
 op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
+                                     const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,
-                                     size_t seq_axis,
-                                     const Shape& seq_lengths)
-    : RequiresTensorViewArgs("ReverseSequence", {arg})
+                                     size_t seq_axis)
+    : RequiresTensorViewArgs("ReverseSequence", {arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
-    if (arg->get_shape().at(batch_axis) != seq_lengths.size())
+    if (seq_indices->get_shape().size() != 1)
     {
-        throw ngraph_error("Sequence length size should be equal to batch axis dimension");
+        throw ngraph_error("indices should be a 1-dimensional array");
     }
 
-    for (auto d : seq_lengths)
+    if (arg->get_shape().at(batch_axis) != seq_indices->get_shape().at(0))
     {
-        if (d > arg->get_shape().at(seq_axis))
-        {
-            throw ngraph_error(
-                "One of the elements of sequence lengths is greater than sequence axis dimension");
-        }
-        size_t min_seq_index = 1;
-        m_seq_lengths.push_back(std::max(min_seq_index, d));
+        throw ngraph_error("Sequence length size should be equal to batch axis dimension");
     }
 
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
@@ -54,13 +48,13 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
 
 shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
+    if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
     auto res =
-        make_shared<ReverseSequence>(new_args.at(0), m_batch_axis, m_seq_axis, m_seq_lengths);
+        make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
     return res;
 }
 

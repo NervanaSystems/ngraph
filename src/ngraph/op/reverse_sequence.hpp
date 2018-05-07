@@ -31,16 +31,15 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             ReverseSequence(const std::shared_ptr<Node> arg,
+                            const std::shared_ptr<Node> seq_lengths,
                             size_t batch_axis,
-                            size_t seq_axis,
-                            const Shape& seq_lengths);
+                            size_t seq_axis);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             size_t get_batch_axis() const { return m_batch_axis; }
             size_t get_sequence_axis() const { return m_seq_axis; }
-            Shape get_sequence_lengths() const { return m_seq_lengths; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -48,7 +47,6 @@ namespace ngraph
         private:
             size_t m_batch_axis{0};
             size_t m_seq_axis{0};
-            Shape m_seq_lengths;
         };
     }
 }

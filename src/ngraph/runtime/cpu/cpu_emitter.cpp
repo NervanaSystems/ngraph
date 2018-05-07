@@ -2752,13 +2752,13 @@ namespace ngraph
                 auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
                 auto arg_shape = args[0].get_shape();
 
-                writer << "reference::reverse_sequence<" << out[0].get_type() << ">("
-                       << args[0].get_name() << ",\n";
+                writer << "reference::reverse_sequence<" << out[0].get_type() << ","
+                       << args[1].get_type() << ">(" << args[0].get_name() << ",\n";
                 writer << "                " << out[0].get_name() << ",\n";
                 writer << "                {" << join(arg_shape) << "},\n";
                 writer << "                 " << rs->get_batch_axis() << ",\n";
                 writer << "                 " << rs->get_sequence_axis() << ",\n";
-                writer << "                {" << join(rs->get_sequence_lengths()) << "});\n";
+                writer << "                 " << args[1].get_name() << ");\n";
             }
 
             template <>

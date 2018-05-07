@@ -65,25 +65,31 @@ TEST(cpu_test, unhandled_op)
 TEST(cpu_test, reverse_sequence_n2c3h4w2)
 {
     Shape shape{2, 3, 4, 2};
+    Shape seq_len_shape{4};
     auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
 
     size_t batch_axis = 2;
     size_t sequence_axis = 1;
-    Shape sequence_lengths{1, 2, 1, 2};
-    auto rs = std::make_shared<op::ReverseSequence>(A, batch_axis, sequence_axis, sequence_lengths);
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A});
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
     shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
 
     std::vector<int> input{
         0,  0, 3,  0, 6,  0, 9,  0, 1,  0, 4,  0, 7,  0, 10, 0, 2,  0, 5,  0, 8,  0, 11, 0,
         12, 0, 15, 0, 18, 0, 21, 0, 13, 0, 16, 0, 19, 0, 22, 0, 14, 0, 17, 0, 20, 0, 23, 0,
     };
+
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
 
     std::vector<int> expected{
         0,  0, 4,  0, 6,  0, 10, 0, 1,  0, 3,  0, 7,  0, 9,  0, 2,  0, 5,  0, 8,  0, 11, 0,
@@ -92,7 +98,7 @@ TEST(cpu_test, reverse_sequence_n2c3h4w2)
 
     copy_data(a, input);
 
-    backend->call(f, {result}, {a});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -100,19 +106,26 @@ TEST(cpu_test, reverse_sequence_n4c3h2w2)
 {
     Shape shape{4, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{4};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
 
     size_t batch_axis = 0;
     size_t sequence_axis = 1;
-    Shape sequence_lengths{1, 2, 3, 3};
-    auto rs = std::make_shared<op::ReverseSequence>(A, batch_axis, sequence_axis, sequence_lengths);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A});
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
     shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> seq_lenghts{1, 2, 3, 3};
+    copy_data(b, seq_lenghts);
 
     std::vector<int> input{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
                            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -124,7 +137,7 @@ TEST(cpu_test, reverse_sequence_n4c3h2w2)
 
     copy_data(a, input);
 
-    backend->call(f, {result}, {a});
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -132,18 +145,22 @@ TEST(cpu_test, reverse_sequence_n4d2c3h2w2)
 {
     Shape shape{4, 2, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{4};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
 
     size_t batch_axis = 0;
     size_t sequence_axis = 2;
-    Shape sequence_lengths{1, 2, 1, 2};
-    auto rs = std::make_shared<op::ReverseSequence>(A, batch_axis, sequence_axis, sequence_lengths);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A});
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
     shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
     shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
 
     std::vector<int> input{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
@@ -162,6 +179,52 @@ TEST(cpu_test, reverse_sequence_n4d2c3h2w2)
 
     copy_data(a, input);
 
-    backend->call(f, {result}, {a});
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
+
+    backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
+
+/*
+
+TEST(cpu_test, backwards_reverse_sequence_n4_c1_hw4_2x2_max)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    Shape shape_a{1, 4, 4, 4}; //in CHWN
+    Shape maxpool_shape{1, 4, 3, 3};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
+    vector<int> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+
+    vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
+                          13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
+                          17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
+                          45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
+
+    vector<int> expected{//delta
+                         0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0, 4, 4,  4, 12, 0,
+                         0, 0, 0, 8, 0, 0, 4, 8, 0, 8, 0, 0, 8, 0, 0, 0, 0, 4, 16, 4, 16, 8,
+                         0, 0, 0, 4, 0, 4, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    backend->call(df, {output}, {input, ep});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+*/
