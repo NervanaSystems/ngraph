@@ -29,7 +29,7 @@ namespace ngraph
         namespace gpu
         {
             template <typename T>
-            class cudnn_descriptor;
+            struct cudnn_descriptor;
 
             class CUDNNDescriptors
             {
@@ -76,21 +76,6 @@ namespace ngraph
                     CUDNN_SAFE_CALL(cudnnDestroyLRNDescriptor(desc));
                 }
             };
-
-            /* Not implemented in cudnn_v7
-            template <>
-            struct cudnn_descriptor<cudnnAlgorithmDescriptor_t>
-            {
-                static void create(cudnnAlgorithmDescriptor_t& desc)
-                {
-                    CUDNN_SAFE_CALL(cudnnCreateAlgorithmDescriptor(&desc));
-                }
-                static void destroy(cudnnAlgorithmDescriptor_t& desc)
-                {
-                    CUDNN_SAFE_CALL(cudnnDestroyAlgorithmDescriptor(desc));
-                }
-            };
-            */
 
             template <>
             struct cudnn_descriptor<cudnnTensorDescriptor_t>
