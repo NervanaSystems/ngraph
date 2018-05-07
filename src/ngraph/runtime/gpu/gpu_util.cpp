@@ -80,7 +80,7 @@ void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
 
 namespace
 {
-    uint64_t _powU64(uint64_t base, uint64_t exp)
+    uint64_t powU64(uint64_t base, uint64_t exp)
     {
         uint64_t result = 1;
         do
@@ -100,7 +100,7 @@ namespace
         return result;
     }
 
-    uint32_t _msbDeBruijnU32(uint32_t v)
+    uint32_t msbDeBruijnU32(uint32_t v)
     {
         static const int multiply_de_Bruijn_bit_position[32] = {
             0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -115,28 +115,28 @@ namespace
         return multiply_de_Bruijn_bit_position[(uint32_t)(v * 0x07C4ACDDU) >> 27];
     }
 
-    int _msbU64(uint64_t val)
+    int msbU64(uint64_t val)
     {
         if (val > 0x00000000FFFFFFFFul)
         {
-            return 32 + _msbDeBruijnU32(static_cast<uint32_t>(val >> 32));
+            return 32 + msbDeBruijnU32(static_cast<uint32_t>(val >> 32));
         }
         // Number is no more than 32 bits,
         // so calculate number of bits in the bottom half.
-        return _msbDeBruijnU32(static_cast<uint32_t>(val & 0xFFFFFFFF));
+        return msbDeBruijnU32(static_cast<uint32_t>(val & 0xFFFFFFFF));
     }
 
     // Magic numbers and shift amounts for integer division
     // Suitable for when nmax*magic fits in 32 bits
     // Translated from http://www.hackersdelight.org/hdcodetxt/magicgu.py.txt
-    std::pair<uint64_t, uint64_t> _magicU32(uint64_t nmax, uint64_t d)
+    std::pair<uint64_t, uint64_t> magicU32(uint64_t nmax, uint64_t d)
     {
         uint64_t nc = ((nmax + 1) / d) * d - 1;
-        uint64_t nbits = _msbU64(nmax) + 1;
+        uint64_t nbits = msbU64(nmax) + 1;
 
         for (uint64_t p = 0; p < 2 * nbits + 1; p++)
         {
-            uint64_t pow2 = _powU64(2, p);
+            uint64_t pow2 = powU64(2, p);
             if (pow2 > nc * (d - 1 - (pow2 - 1) % d))
             {
                 uint64_t m = (pow2 + d - 1 - (pow2 - 1) % d) / d;
@@ -149,7 +149,7 @@ namespace
     // Magic numbers and shift amounts for integer division
     // Suitable for when nmax*magic fits in 64 bits and the shift
     // lops off the lower 32 bits
-    std::pair<uint64_t, uint64_t> _magicU64(uint64_t d)
+    std::pair<uint64_t, uint64_t> magicU64(uint64_t d)
     {
         // 3 is a special case that only ends up in the high bits
         // if the nmax is 0xffffffff
@@ -157,7 +157,7 @@ namespace
         // magic number
         uint64_t nmax = (d == 3) ? 0xffffffff : 0x7fffffff;
         uint64_t magic, shift;
-        std::tie(magic, shift) = _magicU32(nmax, d);
+        std::tie(magic, shift) = magicU32(nmax, d);
         if (magic != 1)
         {
             shift -= 32;
@@ -168,10 +168,10 @@ namespace
 
 std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u32(uint64_t max_numerator, uint64_t divisor)
 {
-    return _magicU32(max_numerator, divisor);
+    return magicU32(max_numerator, divisor);
 }
 
 std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u64(uint64_t divisor)
 {
-    return _magicU64(divisor);
+    return magicU64(divisor);
 }

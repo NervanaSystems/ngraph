@@ -1628,13 +1628,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& result_shape = out[0].get_shape();
                     auto padding_below = avg_pool->get_padding_below();
                     auto padding_above = avg_pool->get_padding_above();
-                    if (input_shape.size() < 3)
-                    {
-                        throw std::runtime_error(
-                            "AvgPool operation requested for a tensor of less than 3 dimensions. "
-                            "Tensors should have at least one spatial dimension, dim(NC{d1...dN}) "
-                            "<= 3");
-                    }
 
                     int num_nontrivial_dims = 0;
                     for (int64_t i = input_shape.size() - 1; i > 1; i--)
