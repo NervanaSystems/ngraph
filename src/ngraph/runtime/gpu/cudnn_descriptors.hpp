@@ -31,6 +31,8 @@ namespace ngraph
             template <typename T>
             struct cudnn_descriptor;
 
+            /// \brief A factory which builds cuDNN descriptors
+            /// and manages their creation and destruction.
             class CUDNNDescriptors
             {
                 class Descriptor
@@ -43,21 +45,25 @@ namespace ngraph
             public:
                 CUDNNDescriptors() = default;
                 ~CUDNNDescriptors() = default;
+
                 template <typename T>
                 T& build()
                 {
-                    class descriptor : public Descriptor
+                    // A function-local class for type erased storage of
+                    // various cudnn descriptor types which is templated
+                    // over function `build`'s specialization type
+                    class descriptor_ : public Descriptor
                     {
                     public:
-                        descriptor() { cudnn_descriptor<T>::create(stored_descriptor); }
-                        ~descriptor() { cudnn_descriptor<T>::destroy(stored_descriptor); }
+                        descriptor_() { cudnn_descriptor<T>::create(stored_descriptor); }
+                        ~descriptor_() { cudnn_descriptor<T>::destroy(stored_descriptor); }
                         T& get() { return stored_descriptor; }
                     private:
                         T stored_descriptor;
                     };
 
-                    m_descriptors.emplace_back(new descriptor);
-                    return static_cast<descriptor*>(m_descriptors.back().get())->get();
+                    m_descriptors.emplace_back(new descriptor_);
+                    return static_cast<descriptor_*>(m_descriptors.back().get())->get();
                 }
 
             private:
