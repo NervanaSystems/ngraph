@@ -167,7 +167,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         free_gpu_buffer(workspace_ptr);
     }});
 
-    return this->m_primitive_emitter->insert(std::move(reduce));
+    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
