@@ -53,8 +53,7 @@ void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& 
                                                            const std::string& mode,
                                                            const std::string& data_type)
 {
-    writer << "cudnnConvolutionDescriptor_t " << name << ";\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateConvolutionDescriptor(&" << name << "));\n";
+    writer << "auto& " << name << " = descriptors.build<cudnnConvolutionDescriptor_t>();\n";
 
     if (padding.size() == 2)
     {
@@ -91,8 +90,7 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
         dimensions[i] = shape[idx++];
     }
 
-    writer << "cudnnFilterDescriptor_t " << name << ";\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateFilterDescriptor(&" << name << "));\n";
+    writer << "auto& " << name << " = descriptors.build<cudnnFilterDescriptor_t>();\n";
 
     if (dimensions.size() <= 4)
     {
@@ -128,9 +126,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
         dimensions[i] = shape[idx++];
     }
 
-    writer << "cudnnTensorDescriptor_t " << name << ";\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&" << name << "));\n";
-
+    writer << "auto& " << name << " = descriptors.build<cudnnTensorDescriptor_t>();\n";
     if (dimensions.size() <= 4)
     {
         writer << "CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(" << name << ",\n";
@@ -160,8 +156,7 @@ void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& wri
                                                         const std::string& data_type,
                                                         const std::array<size_t, 4>& axes)
 {
-    writer << "cudnnTensorDescriptor_t " << name << ";\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&" << name << "));\n";
+    writer << "auto& " << name << " = descriptors.build<cudnnTensorDescriptor_t>();\n";
     writer << "CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(" << name << ",\n";
     writer << "                 /*format=*/" << format << ",\n";
     writer << "                 /*dataType=*/" << data_type;
@@ -181,8 +176,7 @@ void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& wri
 {
     writer << "const int " << name << "_axes[] = {" << join(axes) << "};\n";
     writer << "const int " << name << "_strides[] = {" << join(strides) << "};\n";
-    writer << "cudnnTensorDescriptor_t " << name << ";\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&" << name << "));\n";
+    writer << "auto& " << name << " = descriptors.build<cudnnTensorDescriptor_t>();\n";
     writer << "CUDNN_SAFE_CALL(cudnnSetTensorNdDescriptor(" << name << ",\n";
     writer << "                 /*dataType=*/" << data_type << ",\n";
     writer << "                 /*num_dimensions=*/" << num_axes << ",\n";
@@ -201,8 +195,7 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
                                                   const float& alpha,
                                                   const float& beta)
 {
-    writer << "cudnnReduceTensorDescriptor_t reduceTensorDesc;\n";
-    writer << "CUDNN_SAFE_CALL(cudnnCreateReduceTensorDescriptor(&reduceTensorDesc));\n";
+    writer << "auto& reduceTensorDesc = descriptors.build<cudnnReduceTensorDescriptor_t>();\n";
     writer << "CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(reduceTensorDesc,\n";
     writer << "                               " << reduce_op << ",\n";
     writer << "                               " << data_type << ",\n";
