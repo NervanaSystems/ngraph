@@ -1296,6 +1296,10 @@ namespace ngraph
                         // if the format doesn't matches.
                         set_default_layouts(external_function, node, false);
                     }
+                    else
+                    {
+                        throw ngraph_error("RNN fused op is only supported in MKLDNN for now.");
+                    }
                 }
             }
         }
