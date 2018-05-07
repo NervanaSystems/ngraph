@@ -64,8 +64,3 @@ const std::string& runtime::gpu::GPU_TensorViewWrapper::get_type() const
 {
     return get_element_type().c_type_string();
 }
-
-bool runtime::gpu::GPU_TensorViewWrapper::is_output() const
-{
-    return m_tensor_view->get_tensor().is_output();
-}
