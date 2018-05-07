@@ -18,15 +18,15 @@
 #include "graph.hpp"
 #include "onnx.pb.h"
 
-using namespace ngraph::onnx_import;
+using namespace ngraph;
 
-Node::Node(const onnx::NodeProto& node_proto, Graph* graph_ptr)
+onnx_import::Node::Node(const onnx::NodeProto& node_proto, onnx_import::Graph* graph_ptr)
     : m_node_proto(node_proto)
     , m_graph_ptr(graph_ptr)
 {
 }
 
-std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const Node& wrapper)
+std::ostream& onnx_import::operator<<(std::ostream& os, const onnx_import::Node& wrapper)
 {
     std::string name = wrapper.m_node_proto.name();
     std::string op_type = wrapper.m_node_proto.op_type();

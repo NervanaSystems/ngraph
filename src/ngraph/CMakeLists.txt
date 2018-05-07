@@ -31,11 +31,11 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
-    onnx_import/onnx.pb.cc
     onnx_import/graph.cpp
     onnx_import/mapping.cpp
     onnx_import/model.cpp
     onnx_import/node.cpp
+    onnx_import/onnx.pb.cc
     onnx_import/value_info.cpp
     onnx_util.cpp
     op/abs.cpp

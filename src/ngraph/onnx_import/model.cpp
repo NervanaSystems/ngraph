@@ -17,14 +17,14 @@
 #include "model.hpp"
 #include "onnx.pb.h"
 
-using namespace ngraph::onnx_import;
+using namespace ngraph;
 
-Model::Model(const onnx::ModelProto& model_proto)
+onnx_import::Model::Model(const onnx::ModelProto& model_proto)
     : m_model_proto(model_proto)
 {
 }
 
-std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const Model& wrapper)
+std::ostream& onnx_import::operator<<(std::ostream& os, const Model& wrapper)
 {
     os << "<Model: " << wrapper.m_model_proto.producer_name() << ">";
     return os;

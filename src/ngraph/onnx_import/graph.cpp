@@ -17,9 +17,9 @@
 #include "graph.hpp"
 #include "node.hpp"
 
-using namespace ngraph::onnx_import;
+using namespace ngraph;
 
-Graph::Graph(const onnx::GraphProto& graph_proto)
+onnx_import::Graph::Graph(const onnx::GraphProto& graph_proto)
     : m_graph_proto(graph_proto)
 {
     for (const auto& node : m_graph_proto.node())
@@ -29,18 +29,18 @@ Graph::Graph(const onnx::GraphProto& graph_proto)
         m_values.emplace_back(value, this);
 }
 
-std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const Graph& wrapper)
+std::ostream& onnx_import::operator<<(std::ostream& os, const Graph& wrapper)
 {
     os << "<Graph: " << wrapper.m_graph_proto.name() << ">";
     return os;
 }
 
-const std::vector<Node>& Graph::get_nodes() const
+const std::vector<onnx_import::Node>& onnx_import::Graph::get_nodes() const
 {
     return m_nodes;
 }
 
-const std::vector<ValueInfo>& Graph::get_values() const
+const std::vector<onnx_import::ValueInfo>& onnx_import::Graph::get_values() const
 {
     return m_values;
 }

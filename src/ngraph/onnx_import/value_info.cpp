@@ -21,22 +21,22 @@
 #include "onnx.pb.h"
 #include "value_info.hpp"
 
-using namespace ngraph::onnx_import;
+using namespace ngraph;
 
-ValueInfo::ValueInfo(const onnx::ValueInfoProto& proto, Graph* graph_ptr)
+onnx_import::ValueInfo::ValueInfo(const onnx::ValueInfoProto& proto, onnx_import::Graph* graph_ptr)
     : m_value_info_proto(proto)
     , m_graph_ptr(graph_ptr)
 {
 }
 
-std::ostream& ngraph::onnx_import::operator<<(std::ostream& os, const ValueInfo& wrapper)
+std::ostream& onnx_import::operator<<(std::ostream& os, const onnx_import::ValueInfo& wrapper)
 {
     std::string name = wrapper.m_value_info_proto.name();
     os << "<ValueInfo: " << name << ">";
     return os;
 }
 
-const ngraph::Shape ValueInfo::get_shape() const
+const ngraph::Shape onnx_import::ValueInfo::get_shape() const
 {
     onnx::TensorShapeProto tensor_shape_proto = m_value_info_proto.type().tensor_type().shape();
     std::vector<size_t> shape;
@@ -47,7 +47,7 @@ const ngraph::Shape ValueInfo::get_shape() const
     return ngraph::Shape(shape);
 }
 
-const ngraph::element::Type ValueInfo::get_element_type() const
+const ngraph::element::Type onnx_import::ValueInfo::get_element_type() const
 {
     onnx::TensorProto_DataType onnx_element_type =
         m_value_info_proto.type().tensor_type().elem_type();
