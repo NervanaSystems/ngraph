@@ -68,11 +68,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
     size_t i = m_outputs.size();
     auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-        tensor_view_type,
-        ngraph::descriptor::Tensor::make_tensor_name(this, i),
-        false,
-        is_parameter(),
-        is_constant());
+        tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
 }
 
