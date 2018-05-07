@@ -70,7 +70,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
         if (m.get_match_root()->get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
             return false;
         }
 
