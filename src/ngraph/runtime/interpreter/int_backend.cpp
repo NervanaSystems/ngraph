@@ -170,7 +170,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
         else
         {
-            type = op->get_element_type();
+            type = op->get_outputs().at(0).get_element_type();
         }
 
         if (instance.m_performance_counters_enabled)

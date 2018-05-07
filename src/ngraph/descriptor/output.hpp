@@ -50,8 +50,6 @@ namespace ngraph
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             Tensor& get_tensor() const;
 
-            void set_is_output() { get_tensor().set_is_output(); }
-            bool is_output() { return get_tensor().is_output(); }
         protected:
             /// @return the tensor view type for the output
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
