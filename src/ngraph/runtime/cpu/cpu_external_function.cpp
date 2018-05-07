@@ -86,6 +86,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
@@ -265,6 +266,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
     {TI(ngraph::op::MaxPoolWithIndices), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndices>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
+    {TI(ngraph::op::ReverseSequence), &runtime::cpu::CPU_Emitter::emit<op::ReverseSequence>},
     {TI(ngraph::op::Result), &runtime::cpu::CPU_Emitter::emit<op::Result>},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow>},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter>},
@@ -369,6 +371,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
