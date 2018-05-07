@@ -60,5 +60,8 @@ shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_a
 
 void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    throw ngraph_error("NYI");
+    auto x = get_argument(0);
+    auto rs_delta =
+        make_shared<ReverseSequence>(deltas.at(0), get_argument(1), m_batch_axis, m_seq_axis);
+    adjoints.add_delta(x, rs_delta);
 }
