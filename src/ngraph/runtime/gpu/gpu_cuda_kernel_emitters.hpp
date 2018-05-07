@@ -25,6 +25,7 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -75,15 +76,25 @@ namespace ngraph
                             size_t rank,
                             size_t count);
 
+            void emit_reverse(const std::string& name,
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              const std::array<std::string, 2>& data_types,
+                              GPURuntimeContext* ctx,
+                              CUdeviceptr input_shape,
+                              CUdeviceptr reverse_axes,
+                              size_t rank,
+                              size_t count);
+
             template <typename T, typename... Inputs>
             void emit_elementwise_op(const std::string& name,
-                                     const std::array<std::string, 2>& data_types,
+                                     const std::vector<std::string>& data_types,
                                      GPURuntimeContext* ctx,
                                      size_t count,
                                      CUdeviceptr out,
                                      Inputs&&... inputs)
             {
-                std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
+                std::string type_signature = "_" + join(data_types, "_");
                 std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
                 auto compiled_kernel = ctx->compiled_kernel_pool->get(name + type_signature);
                 if (compiled_kernel == nullptr)

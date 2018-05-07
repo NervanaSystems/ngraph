@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,33 +16,22 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/function.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace interpreter
+        namespace cpu
         {
-            class INT_CallFrame;
-
-            class ExternalFunction
+            namespace pass
             {
-            public:
-                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = false);
-                std::shared_ptr<INT_CallFrame> make_call_frame();
-
-            protected:
-                void compile();
-                void release_function() { m_function = nullptr; }
-                std::shared_ptr<ngraph::Function> m_function;
-                bool m_release_function;
-                bool m_is_compiled;
-                bool m_timing;
-            };
+                class CPUShuffleFolding : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
         }
     }
 }
