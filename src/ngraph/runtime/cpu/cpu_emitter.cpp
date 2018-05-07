@@ -3312,11 +3312,12 @@ namespace ngraph
             {
                 auto input_tvl =
                     node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
-                auto input_cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl);
-                auto input_format = input_cpu_tvl.get_mkldnn_format();
+                auto input_cpu_tvl =
+                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
+                auto input_format = input_cpu_tvl->get_mkldnn_format();
 
                 // Reorder input shape if needed
-                auto input_axis_order = input_cpu_tvl.get_axis_order();
+                auto input_axis_order = input_cpu_tvl->get_axis_order();
                 Shape input_shape(input_axis_order.size());
                 for (size_t idx = 0; idx < input_axis_order.size(); idx++)
                 {
