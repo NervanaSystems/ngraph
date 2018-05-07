@@ -33,11 +33,25 @@ namespace ngraph
             };
             SigmoidMultiply(std::shared_ptr<Node> input_1, std::shared_ptr<Node> input_2);
             virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override ;
             FunctionType get_input_1_func_type() const { return input_1_type; }
             FunctionType get_input_2_func_type() const { return input_2_type; }
         private:
             FunctionType input_1_type;
             FunctionType input_2_type;
+        };
+
+        /// \brief Elementwise SigmoidMultiplyBackprop operation.
+        ///
+        class SigmoidMultiplyBackprop : public util::RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs a SigmoidMultiplyBackprop operation.
+            ///
+            /// \param arg Node that produces the SigmoidMultiply forward input tensor.
+            SigmoidMultiplyBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }
