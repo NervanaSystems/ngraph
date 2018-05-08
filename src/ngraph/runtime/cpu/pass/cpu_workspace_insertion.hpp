@@ -16,22 +16,31 @@
 
 #pragma once
 
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class Liveness;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUWorkspaceInsertion;
+            }
+        }
     }
 }
 
-class ngraph::pass::Liveness : public FunctionPass
+class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::GraphRewrite
 {
 public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+    CPUWorkspaceInsertion()
+        : GraphRewrite()
+    {
+        construct_max_pool_with_indices();
+    }
 
 private:
-    void validate_liveness(const std::list<Node*>& ops);
+    void construct_max_pool_with_indices();
 };

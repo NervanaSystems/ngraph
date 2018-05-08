@@ -16,22 +16,23 @@
 
 #pragma once
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class Liveness;
+        class CommonSubexpressionElimination;
     }
 }
 
-class ngraph::pass::Liveness : public FunctionPass
+class ngraph::pass::CommonSubexpressionElimination : public FunctionPass
 {
 public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+    CommonSubexpressionElimination()
+        : FunctionPass()
+    {
+    }
 
-private:
-    void validate_liveness(const std::list<Node*>& ops);
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };
