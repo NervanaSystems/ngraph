@@ -34,6 +34,7 @@ set (SRC
     copy.cpp
     core_fusion.cpp
     cpio.cpp
+    cse.cpp
     element_type.cpp
     file_util.cpp
     inliner.cpp

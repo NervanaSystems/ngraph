@@ -16,33 +16,23 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
-
-namespace mkldnn
-{
-    class primitive;
-}
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
-
-            extern "C" {
-            struct CPURuntimeContext
-            {
-                int64_t* op_durations;
-                bool* p_en;
-                mkldnn::primitive* const* mkldnn_primitives;
-                char* const* mkldnn_workspaces;
-            };
-            }
-        }
+        class CommonSubexpressionElimination;
     }
 }
+
+class ngraph::pass::CommonSubexpressionElimination : public FunctionPass
+{
+public:
+    CommonSubexpressionElimination()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};
