@@ -43,7 +43,7 @@ runtime::Backend::~Backend()
 void* runtime::Backend::open_shared_library(const string& type)
 {
     void* handle = nullptr;
-    string name = "lib" + type + "_backend.so";
+    string name = "lib" + to_lower(type) + "_backend.so";
     handle = dlopen(name.c_str(), RTLD_NOW);
     if (handle)
     {
