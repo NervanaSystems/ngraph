@@ -63,6 +63,10 @@ nervana_aeon.egg-info/
 *.swo
 tags
 
+# CLion
+.idea/
+cmake-build-debug/
+
 build/
 scripts/
 
