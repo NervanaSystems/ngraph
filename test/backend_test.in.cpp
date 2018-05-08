@@ -1915,7 +1915,6 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
 // Trivial case with no reduction axes.
 TEST(${BACKEND_NAME}, reduce_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
@@ -1945,7 +1944,6 @@ TEST(${BACKEND_NAME}, reduce_trivial)
 
 TEST(${BACKEND_NAME}, reduce_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1978,7 +1976,6 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
 
 TEST(${BACKEND_NAME}, reduce_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -2014,7 +2011,6 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -2049,7 +2045,6 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
@@ -2085,7 +2080,6 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
 
 TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
@@ -2121,7 +2115,6 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
 
 TEST(${BACKEND_NAME}, reduce_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
@@ -2157,7 +2150,6 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
 
 TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
@@ -2193,7 +2185,6 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
 
 TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}"); // Correct values but need to handle precisions
 
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).

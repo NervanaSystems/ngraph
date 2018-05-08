@@ -1313,7 +1313,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
-                const ngraph::op::reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
+                const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
                 writer.block_begin("  // " + node->get_name());
                 {
                     if (out[0].get_size() != 0)
@@ -1333,7 +1333,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                         }
                         else
                         {
-                            auto& reduction_function = reduce->get_functions()[0];
+                            auto& reduction_function = reduce_op->get_functions()[0];
                             auto f_ptr = reduce_map.find(type_index(typeid(reduction_function)));
                             if(f_ptr == reduce_map.end())
                             {
