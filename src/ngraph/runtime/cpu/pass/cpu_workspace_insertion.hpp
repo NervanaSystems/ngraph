@@ -16,13 +16,7 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
-
-namespace mkldnn
-{
-    class primitive;
-}
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -30,19 +24,23 @@ namespace ngraph
     {
         namespace cpu
         {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
-
-            extern "C" {
-            struct CPURuntimeContext
+            namespace pass
             {
-                int64_t* op_durations;
-                bool* p_en;
-                mkldnn::primitive* const* mkldnn_primitives;
-                char* const* mkldnn_workspaces;
-            };
+                class CPUWorkspaceInsertion;
             }
         }
     }
 }
+
+class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUWorkspaceInsertion()
+        : GraphRewrite()
+    {
+        construct_max_pool_with_indices();
+    }
+
+private:
+    void construct_max_pool_with_indices();
+};

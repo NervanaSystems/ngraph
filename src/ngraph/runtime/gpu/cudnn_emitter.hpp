@@ -25,6 +25,7 @@
 #include <cudnn.h>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/runtime/gpu/cudnn_descriptors.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
@@ -39,7 +40,6 @@ namespace ngraph
                 std::vector<int> compute_strides(const Shape&);
                 std::vector<int> compute_strides(const std::vector<int>&);
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
-                cudnnTensorDescriptor_t tensor_descriptor_from_shape(const Shape& shape);
             }
             class GPUPrimitiveEmitter;
 
@@ -77,8 +77,12 @@ namespace ngraph
                                        const Shape& param_shape,
                                        double epsilon);
 
+                cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape);
+
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
+
+                CUDNNDescriptors m_descriptors;
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }
