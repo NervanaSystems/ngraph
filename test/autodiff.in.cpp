@@ -1579,3 +1579,92 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
+
+TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    Shape shape{3, 2, 3};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{2};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    size_t batch_axis = 1;
+    size_t sequence_axis = 0;
+
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> da = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> db = backend->create_tensor(element::i32, seq_len_shape);
+
+    //input values don't matter
+    vector<int> va(shape_size(shape), 0);
+
+    vector<int> vc{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+    vector<int> expected{13, 14, 15, 16, 17, 18, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6};
+
+    copy_data(c, vc);
+    copy_data(a, va);
+
+    std::vector<int> seq_lenghts{3, 3};
+    copy_data(b, seq_lenghts);
+
+    auto C = make_shared<op::Parameter>(element::i32, shape);
+    auto df = autodiff::backprop_function(f);
+    backend->call(df, {da, db}, {a, b, c});
+    ASSERT_EQ(read_vector<int>(da), expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    Shape shape{4, 2, 3, 2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{4};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    size_t batch_axis = 0;
+    size_t sequence_axis = 2;
+
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> da = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> db = backend->create_tensor(element::i32, seq_len_shape);
+
+    //input values don't matter
+    vector<int> va(shape_size(shape), 0);
+
+    std::vector<int> vc{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                        16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                        32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+                        48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                        64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                        80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95};
+
+    std::vector<int> expected{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                              16, 17, 18, 19, 20, 21, 22, 23, 28, 29, 30, 31, 24, 25, 26, 27,
+                              32, 33, 34, 35, 40, 41, 42, 43, 36, 37, 38, 39, 44, 45, 46, 47,
+                              48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                              64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79, 72, 73, 74, 75,
+                              80, 81, 82, 83, 88, 89, 90, 91, 84, 85, 86, 87, 92, 93, 94, 95};
+
+    copy_data(c, vc);
+    copy_data(a, va);
+
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
+
+    auto C = make_shared<op::Parameter>(element::i32, shape);
+    auto df = autodiff::backprop_function(f);
+    backend->call(df, {da, db}, {a, b, c});
+    ASSERT_EQ(read_vector<int>(da), expected);
+}

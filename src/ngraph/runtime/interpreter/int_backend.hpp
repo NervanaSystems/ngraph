@@ -796,9 +796,8 @@ private:
         }
         else if (node_op == "ReverseSequence")
         {
-            op::Reverse* reverse = dynamic_cast<op::ReverseSequence*>(&node);
+            op::ReverseSequence* reverse = dynamic_cast<op::ReverseSequence*>(&node);
 
-            template <typename T, typename U>
             if (args[1]->get_element_type() == element::i32)
             {
                 reference::reverse_sequence<T, int>(args[0]->get_data_ptr<T>(),
@@ -808,7 +807,10 @@ private:
                                                     reverse->get_sequence_axis(),
                                                     args[1]->get_data_ptr<int>());
             }
-            else { throw ngraph_error("only int32 indices are supported"); }
+            else
+            {
+                throw ngraph_error("only int32 indices are supported");
+            }
         }
         else if (node_op == "Select")
         {
