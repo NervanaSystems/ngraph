@@ -1333,16 +1333,17 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                         }
                         else
                         {
-                            auto& f = reduce_op->get_functions();
-                            if(reduce_map.find(type_index(typeid(f))) == reduce_map.end())
+                            auto& reduction_function = reduce->get_functions()[0];
+                            auto f_ptr = reduce_map.find(type_index(typeid(reduction_function)));
+                            if(f_ptr == reduce_map.end())
                             {
-                                throw std::runtime_error("reduce with function " + f->get_name() + " is not implement yet.");
+                                throw std::runtime_error("reduce with function " + reduction_function->get_name() + " is not implement yet.");
                             }
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto reduce_index =
                                 cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    CUDNN_REDUCE_TENSOR_MAX,
+                                                                    f_ptr->second,
                                                                     args[0].get_shape(),
                                                                     reduce_op->get_reduction_axes());
 
