@@ -307,6 +307,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/pass/manager.hpp"
     #include "ngraph/pass/memory_layout.hpp"
     #include "ngraph/runtime/aligned_buffer.hpp"
+    #include "ngraph/runtime/gpu/cudnn_descriptors.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
     #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
     #include "ngraph/runtime/gpu/gpu_invoke.hpp"
@@ -421,6 +422,10 @@ using namespace std;
             }
         }
     }
+    // Add cudnn descriptor factory for descriptor management.
+    // After the cuDNN code emitted in gpu_emitter.cc is refactored
+    // into the CUDNNEmitter class, this can be removed.
+    writer << "static runtime::gpu::CUDNNDescriptors descriptors;\n";
 
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
