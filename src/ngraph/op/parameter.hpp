@@ -45,7 +45,7 @@ namespace ngraph
                       const Shape& shape,
                       const bool cacheable = false);
 
-            const bool get_cacheable() const { return m_cacheable; }
+            bool get_cacheable() const { return m_cacheable; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
