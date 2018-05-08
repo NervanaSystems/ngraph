@@ -306,8 +306,8 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
     // check if the kernel has already been compiled. if so, create
     // a launch primitive for it based on the input tensor shape
-    // but do not recompile the kernel. if not, recompile the
-    // kernel and then create the primitive
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
     auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
