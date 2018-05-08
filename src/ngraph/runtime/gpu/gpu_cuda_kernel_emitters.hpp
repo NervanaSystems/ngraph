@@ -120,8 +120,47 @@ namespace ngraph
                     compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
                 }
 
-                //convert runtime ptr to driver api ptr
                 void* args_list[] = {&inputs..., &out, &count};
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                              count,
+                                              1,
+                                              1, // grid dim
+                                              1,
+                                              1,
+                                              1, // block dim
+                                              0,
+                                              NULL, // shared mem and stream
+                                              args_list,
+                                              0));  // arguments
+                CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+            }
+
+            template <typename... Inputs>
+            void emit_concat_op(const std::string& name,
+                                const std::vector<std::string>& data_types,
+                                GPURuntimeContext* ctx,
+                                size_t count,
+                                size_t block_size,
+                                CUdeviceptr block_strides,
+                                CUdeviceptr out,
+                                Inputs&&... inputs)
+            {
+                std::string type_signature = "_" + join(data_types, "_");
+                std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
+                auto compiled_kernel = ctx->compiled_kernel_pool->get(name + type_signature);
+                if (compiled_kernel == nullptr)
+                {
+                    codegen::CodeWriter writer;
+                    CudaKernelBuilder::add_pod_typedefs(writer);
+
+                    CudaKernelBuilder::get_concat_op(
+                        writer, name + type_signature, data_types, sizeof...(inputs));
+
+                    std::string kernel = writer.get_code();
+                    compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
+                }
+
+                void* args_list[] = {&inputs..., &out, &block_strides, &block_size, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               count,
                                               1,
