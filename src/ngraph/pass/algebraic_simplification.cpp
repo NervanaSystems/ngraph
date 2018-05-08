@@ -24,8 +24,12 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
@@ -130,6 +134,24 @@ static bool simplify_add(std::shared_ptr<Node> n)
     return false;
 }
 
+//`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
+static bool simplify_log(std::shared_ptr<Node> n)
+{
+    if (auto div = std::dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
+    {
+        if (auto exp = std::dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
+        {
+            auto denom = div->get_argument(1);
+            auto diff = std::make_shared<op::Subtract>(exp->get_argument(0),
+                                                       std::make_shared<op::Log>(denom));
+            ngraph::replace_node(n, diff);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
 {
     size_t prod = 1;
@@ -149,6 +171,19 @@ static std::shared_ptr<Node>
     return op::Constant::create<T>(type, Shape{}, {sum_cnst});
 }
 
+template <typename T>
+static std::shared_ptr<Node>
+    pow_by(element::Type type, size_t multiplier, std::shared_ptr<op::Constant> cnst)
+{
+    T prod = static_cast<T>(1);
+    T val = cnst->get_vector<T>().at(0);
+    for (size_t i = 0; i < multiplier; i++)
+    {
+        prod *= val;
+    }
+    return op::Constant::create<T>(type, Shape{}, {prod});
+}
+
 static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst, size_t multiplier)
 {
     if (cnst->get_element_type() == element::i32)
@@ -157,7 +192,7 @@ static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst
     }
     else if (cnst->get_element_type() == element::i8)
     {
-        return multiply_by<char>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<signed char>(cnst->get_element_type(), multiplier, cnst);
     }
     else if (cnst->get_element_type() == element::f32)
     {
@@ -171,13 +206,40 @@ static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst
     return nullptr;
 }
 
-//`simplify_sum` optimizes the following case:
+static std::shared_ptr<Node> get_prod_constant(std::shared_ptr<op::Constant> cnst,
+                                               size_t multiplier)
+{
+    if (cnst->get_element_type() == element::i32)
+    {
+        return pow_by<int>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::i8)
+    {
+        return pow_by<signed char>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::f32)
+    {
+        return pow_by<float>(cnst->get_element_type(), multiplier, cnst);
+    }
+    else if (cnst->get_element_type() == element::f64)
+    {
+        return pow_by<double>(cnst->get_element_type(), multiplier, cnst);
+    }
+
+    return nullptr;
+}
+
+//`simplify_reduction` optimizes the following case:
 //sum(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
 //where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
-static bool simplify_sum(std::shared_ptr<Node> n)
+//product(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
+//where constant2's values are equal to scalar_constant ^ shape_size(reduction_axes)
+template <typename T,
+          std::shared_ptr<Node> (*F)(std::shared_ptr<op::Constant> cnst, size_t multiplier)>
+static bool simplify_reduction(std::shared_ptr<Node> n)
 {
-    NGRAPH_DEBUG << "In simplify_sum for " << n->get_name();
-    auto sum = std::dynamic_pointer_cast<op::Sum>(n);
+    NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
+    auto reduction = std::dynamic_pointer_cast<T>(n);
 
     auto broadcast = std::dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
     if (!broadcast)
@@ -193,38 +255,44 @@ static bool simplify_sum(std::shared_ptr<Node> n)
         return false;
     }
 
-    auto multiplier = reduction_shape_size(sum->get_reduction_axes(), broadcast->get_shape());
-    auto sum_cnst = get_sum_constant(cnst, multiplier);
+    auto multiplier = reduction_shape_size(reduction->get_reduction_axes(), broadcast->get_shape());
+    auto reduction_cnst = F(cnst, multiplier);
 
     //Unsupported type
-    if (!sum_cnst)
+    if (!reduction_cnst)
     {
         NGRAPH_DEBUG << "unsupported type";
         return false;
     }
 
-    if (sum->get_shape().size() > 0)
+    if (reduction->get_shape().size() > 0)
     {
         ngraph::AxisSet axes{};
-        for (size_t i = 0; i < sum->get_shape().size(); i++)
+        for (size_t i = 0; i < reduction->get_shape().size(); i++)
         {
             axes.insert(i);
         }
-        sum_cnst = std::make_shared<op::Broadcast>(sum_cnst, sum->get_shape(), axes);
+        reduction_cnst =
+            std::make_shared<op::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
     }
 
-    ngraph::replace_node(n, sum_cnst);
+    ngraph::replace_node(n, reduction_cnst);
     return true;
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
     initialize_ops_to_simplifiers()
 {
-    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
-        {TI(op::Add), simplify_add},
-        {TI(op::Multiply), simplify_multiply},
-        {TI(op::Sum), simplify_sum},
-    });
+    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
+        {{TI(op::Add), simplify_add},
+         {TI(op::Multiply), simplify_multiply},
+         {TI(op::Sum),
+          std::function<bool(std::shared_ptr<Node>)>{
+              simplify_reduction<op::Sum, get_sum_constant>}},
+         {TI(op::Product),
+          std::function<bool(std::shared_ptr<Node>)>{
+              simplify_reduction<op::Product, get_prod_constant>}},
+         {TI(op::Log), simplify_log}});
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
