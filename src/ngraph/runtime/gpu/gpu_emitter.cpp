@@ -1275,6 +1275,88 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 return;
             }
 
+// CUDNN_REDUCE_TENSOR_ADD
+// The operation to be performed is addition
+
+// CUDNN_REDUCE_TENSOR_MUL
+// The operation to be performed is multiplication
+
+// CUDNN_REDUCE_TENSOR_MIN
+// The operation to be performed is a minimum comparison
+
+// CUDNN_REDUCE_TENSOR_MAX
+// The operation to be performed is a maximum comparison
+
+// CUDNN_REDUCE_TENSOR_AMAX
+// The operation to be performed is a maximum comparison of absolute values
+
+// CUDNN_REDUCE_TENSOR_AVG
+// The operation to be performed is averaging
+
+// CUDNN_REDUCE_TENSOR_NORM1
+// The operation to be performed is addition of absolute values
+
+// CUDNN_REDUCE_TENSOR_NORM2
+// The operation to be performed is a square root of sum of squares
+
+// CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
+// The operation to be performed is multiplication, not including elements of value zero
+
+#define TI(x) type_index(typeid(x))
+
+static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
+    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
+    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
+    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
+    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
+};
+           template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
+            {
+                const ngraph::op::reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args[] axes has zero size, zero output
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", -std::numeric_limits<float>::infinity());\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        else
+                        {
+                            auto& f = reduce_op->get_functions();
+                            if(reduce_map.find(type_index(typeid(f))) == reduce_map.end())
+                            {
+                                throw std::runtime_error("reduce with function " + f->get_name() + " is not implement yet.");
+                            }
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+                            auto reduce_index =
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_MAX,
+                                                                    args[0].get_shape(),
+                                                                    reduce_op->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Pad)
             {
