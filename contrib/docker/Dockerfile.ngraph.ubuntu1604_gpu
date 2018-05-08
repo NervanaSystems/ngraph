@@ -2,16 +2,22 @@
 
 FROM nvidia/cuda:8.0-cudnn7-devel-ubuntu16.04
 
-# set the proxies
-ENV http_proxy=http://proxy-us.intel.com:911
-ENV https_proxy=https://proxy-us.intel.com:911
+# try to get around issue with badsig
+#https://github.com/NVIDIA/nvidia-docker/issues/619 (with devel image) (based on this issue added this)
+RUN mv /etc/apt/sources.list.d/cuda.list /tmp/cuda.list
 
-# try to install cudnn-dev packages
-# RUN apt-get update && install -y libcudnn7-dev && apt-get clean autoclean && apt-get autoremove -y
-RUN apt-get update && apt-get install -y sudo curl && \
+# removing nvidia-ml.list file to avoid apt-get update error
+# "The method driver /usr/lib/apt/methods/https could not be found."
+RUN mv /etc/apt/sources.list.d/nvidia-ml.list /tmp/nvidia-ml.list
+
+RUN apt-get update && \
+    apt-get install -y sudo curl apt-transport-https && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 RUN curl http://developer.download.nvidia.com/compute/cuda/repos/GPGKEY | sudo apt-key add -
+
+RUN mv /tmp/cuda.list /etc/apt/sources.list.d/cuda.list
+RUN mv /tmp/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list
 
 # install standard python 2 and 3 environment stuff
 RUN apt-get update && \
@@ -35,7 +41,7 @@ RUN apt-get update && apt-get install -y \
         clang-3.9 clang-format-3.9 \
         git \
         wget patch diffutils zlib1g-dev libtinfo-dev \
-        doxygen && \
+        doxygen graphviz && \
         apt-get clean autoclean && \
         apt-get autoremove -y
 
@@ -52,5 +58,7 @@ RUN pip install sphinx
 # breathe package required to build documentation
 RUN pip install breathe
 
-WORKDIR /home
+# need numpy to successfully build docs for python_api
+RUN pip install numpy
 
+WORKDIR /home

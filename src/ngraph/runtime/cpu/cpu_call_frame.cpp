@@ -51,6 +51,7 @@ void runtime::cpu::CPU_CallFrame::call(
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        ctx->p_en[i] = tv->get_stale();
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
@@ -100,6 +101,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     {
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
+    ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
@@ -108,5 +110,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
     delete[] ctx->op_durations;
+    delete[] ctx->p_en;
     delete ctx;
 }

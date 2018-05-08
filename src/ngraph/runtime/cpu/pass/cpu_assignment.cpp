@@ -37,6 +37,7 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
@@ -343,9 +344,47 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolWithIndices)
+                {
+                    auto max_pool = static_cast<op::MaxPoolWithIndices*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        max_pool->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolBackprop)
                 {
                     auto max_pool = static_cast<op::MaxPoolBackprop*>(node);
+
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg1_rank = arg1_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                        node->get_input_element_type(1) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        max_pool->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::MaxPoolWithIndicesBackprop)
+                {
+                    auto max_pool = static_cast<op::MaxPoolWithIndicesBackprop*>(node);
 
                     auto arg1_shape = node->get_input_shape(1);
                     auto arg1_rank = arg1_shape.size();
@@ -487,8 +526,12 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPool>},
+    {TI(ngraph::op::MaxPoolWithIndices),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPoolWithIndices>},
     {TI(ngraph::op::MaxPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPoolBackprop>},
+    {TI(ngraph::op::MaxPoolWithIndicesBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::MaxPoolWithIndicesBackprop>},
     {TI(ngraph::op::ConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
