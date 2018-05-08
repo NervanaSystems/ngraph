@@ -44,11 +44,6 @@ The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME``
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
 
-The instructions below also presume cloning the nGraph source via an SSH-enabled 
-Github account. If you don't have SSH keys set up on your GitHub account, you can 
-still follow the instructions below and clone via HTTPS.
-
-
 .. _ubuntu:
 
 Ubuntu 16.04
@@ -69,11 +64,11 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
       $ sudo chown -R username:username /opt/libraries
       $ cd /opt/libraries
 
-#. Clone the `NervanaSystems` ``ngraph`` repo via SSH:
+#. Clone the `NervanaSystems` ``ngraph`` repo:
 
    .. code-block:: console
 
-      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph
 
 #. Create a build directory outside of the ``ngraph/src`` directory 
@@ -157,7 +152,7 @@ The process documented here will work on CentOS 7.4.
    .. code-block:: console
 
       $ cd /opt/libraries 
-      $ git clone git@github.com:NervanaSystems/ngraph.git
+      $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
       $ cmake ../ [-DNGRAPH_TARGET_ARCH=skylake-avx512]
       $ make && sudo make install 
