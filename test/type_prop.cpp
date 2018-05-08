@@ -4025,29 +4025,6 @@ TEST(type_prop, reverse_3d_deduce_oob)
     }
 }
 
-/*
-op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
-                                     const std::shared_ptr<Node> seq_indices,
-                                     size_t batch_axis,
-                                     size_t seq_axis)
-    : RequiresTensorViewArgs("ReverseSequence", {arg, seq_indices})
-    , m_batch_axis(batch_axis)
-    , m_seq_axis(seq_axis)
-{
-    if (seq_indices->get_shape().size() != 1)
-    {
-        throw ngraph_error("indices should be a 1-dimensional array");
-    }
-
-    if (arg->get_shape().at(batch_axis) != seq_indices->get_shape().at(0))
-    {
-        throw ngraph_error("Sequence length size should be equal to batch axis dimension");
-    }
-
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
-}
-*/
-
 TEST(type_prop, reverse_sequence_1_dim)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
