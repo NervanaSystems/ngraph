@@ -4526,7 +4526,6 @@ TEST(${BACKEND_NAME}, not)
 
 TEST(${BACKEND_NAME}, reverse_0d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4544,7 +4543,6 @@ TEST(${BACKEND_NAME}, reverse_0d)
 
 TEST(${BACKEND_NAME}, reverse_1d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4562,7 +4560,6 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_1d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4580,7 +4577,6 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
 
 TEST(${BACKEND_NAME}, reverse_2d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4601,7 +4597,6 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_2d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4622,7 +4617,6 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
 
 TEST(${BACKEND_NAME}, reverse_2d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4643,7 +4637,6 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
 
 TEST(${BACKEND_NAME}, reverse_2d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4665,7 +4658,6 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
 
 TEST(${BACKEND_NAME}, reverse_3d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4689,7 +4681,6 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
 
 TEST(${BACKEND_NAME}, reverse_3d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4713,7 +4704,6 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
 
 TEST(${BACKEND_NAME}, reverse_3d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4737,7 +4727,6 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
 
 TEST(${BACKEND_NAME}, reverse_3d_2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
@@ -4761,7 +4750,6 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
 
 TEST(${BACKEND_NAME}, reverse_3d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4786,7 +4774,6 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
 
 TEST(${BACKEND_NAME}, reverse_3d_02)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4811,7 +4798,6 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
 
 TEST(${BACKEND_NAME}, reverse_3d_12)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4836,7 +4822,6 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
 
 TEST(${BACKEND_NAME}, reverse_3d_012)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),
@@ -5850,6 +5835,48 @@ TEST(${BACKEND_NAME}, mkldnn_layouts)
     backend->call(f, {result}, {a, b});
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
+}
+
+TEST(${BACKEND_NAME}, computation_reuse)
+{
+    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
+
+    Shape shape_a{1, 16, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{32, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 32, 2, 2};
+    auto conv = make_shared<op::Convolution>(A,
+                                             B,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+    Shape pool_shape{1, 1};
+    auto pool = make_shared<op::AvgPool>(conv, pool_shape);
+    auto bias = make_shared<op::Broadcast>(
+        op::Constant::create(element::f32, Shape{}, {2.14}), shape_r, AxisSet{0, 1, 2, 3});
+    auto result_op = make_shared<op::Result>(pool + bias);
+    auto f = make_shared<Function>(ResultVector{result_op}, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    vector<float> input(64, 1.0f);
+    vector<float> weights(512, 0.5f);
+    vector<float> rv(128);
+
+    auto a = backend->create_tensor(element::f32, shape_a, input.data());
+    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
+    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
+
+    backend->call(f, {result}, {a, b});
+
+    vector<float> rv_saved(rv);
+
+    b->set_stale(false);
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(rv_saved, rv);
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)

@@ -3,14 +3,10 @@ ngraph.ops
 
 .. automodule:: ngraph.ops
 
-   
-   
-
    .. rubric:: Functions
 
    .. autosummary::
       :nosignatures:
-   
       absolute
       acos
       add
@@ -68,15 +64,3 @@ ngraph.ops
       sum
       tan
       tanh
-   
-   
-
-
-   
-   
-   
-
-
-   
-   
-   

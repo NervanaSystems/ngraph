@@ -65,11 +65,6 @@ const std::string& runtime::cpu::TensorViewWrapper::get_type() const
     return get_element_type().c_type_string();
 }
 
-bool runtime::cpu::TensorViewWrapper::is_output() const
-{
-    return m_tensor_view->get_tensor().is_output();
-}
-
 const std::shared_ptr<descriptor::TensorView>
     runtime::cpu::TensorViewWrapper::get_tensor_view() const
 {

@@ -3,7 +3,7 @@ ngraph.exceptions
 
 .. automodule:: ngraph.exceptions
 
-   
+
    
    
 
@@ -20,7 +20,7 @@ ngraph.exceptions
 
    .. autosummary::
      :nosignatures:
-   
+
       NgraphError
       NgraphTypeError
       UserInputError
