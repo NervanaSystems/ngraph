@@ -739,7 +739,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                node = make_shared<op::Parameter>(element_type, shape);
+                auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
+                node = make_shared<op::Parameter>(element_type, shape, cacheable);
             }
             else if (node_op == "Power")
             {

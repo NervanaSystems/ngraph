@@ -70,10 +70,7 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
             }
             for (descriptor::Tensor* tensor : tensors)
             {
-                if (tensor->is_persistent() == false)
-                {
-                    temp_max_size += tensor->size();
-                }
+                temp_max_size += tensor->size();
             }
 
             // file << "<table>\n";
@@ -244,27 +241,13 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<shared_p
 int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
 {
     int mass = 0;
-    // for input_decl in exop.input_decls:
-    //     tensor = input_decl.source_output_decl.tensor
-    //     if tensor.is_persistent is False:
-    //         mass += tensor->size()
-    // for output_decl in exop.output_decls:
-    //     tensor = output_decl.tensor
-    //     if tensor.is_persistent is False:
-    //         mass -= tensor->size()
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
-        if (tensor->is_persistent() == false)
-        {
-            mass += tensor->size();
-        }
+        mass += tensor->size();
     }
     for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
-        if (tensor->is_persistent() == false)
-        {
-            mass -= tensor->size();
-        }
+        mass -= tensor->size();
     }
     return mass;
 }

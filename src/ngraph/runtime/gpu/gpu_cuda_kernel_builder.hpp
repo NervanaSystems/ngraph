@@ -43,6 +43,11 @@ namespace ngraph
                                              const std::string& name,
                                              const std::array<std::string, 2>& data_types);
 
+                static void get_concat_op(codegen::CodeWriter& writer,
+                                          const std::string& name,
+                                          const std::vector<std::string>& data_types,
+                                          size_t num_inputs);
+
                 static void get_onehot_op(codegen::CodeWriter& writer,
                                           const std::string& name,
                                           const std::array<std::string, 2>& data_types);
@@ -54,6 +59,10 @@ namespace ngraph
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types);
+
+                static void get_reverse_op(codegen::CodeWriter& writer,
+                                           const std::string& name,
+                                           const std::array<std::string, 2>& data_types);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
