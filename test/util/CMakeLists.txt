@@ -26,3 +26,4 @@ include_directories(
 )
 
 add_library(ngraph_test_util SHARED ${SRC})
+install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph_test_util.so
