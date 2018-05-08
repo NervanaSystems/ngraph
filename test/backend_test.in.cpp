@@ -8059,7 +8059,6 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
 
 TEST(${BACKEND_NAME}, logical_and)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
@@ -8080,7 +8079,6 @@ TEST(${BACKEND_NAME}, logical_and)
 
 TEST(${BACKEND_NAME}, logical_or)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);

@@ -36,8 +36,7 @@ namespace ngraph
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
-                                               const std::vector<std::string>& data_types,
-                                               const size_t& num_inputs);
+                                               const std::vector<std::string>& data_types);
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
@@ -67,8 +66,7 @@ namespace ngraph
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
-                                              const std::vector<std::string>& data_types,
-                                              const size_t& num_inputs);
+                                              const std::vector<std::string>& data_types);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
             };
