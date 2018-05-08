@@ -151,8 +151,7 @@ namespace ngraph
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -161,8 +160,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
@@ -611,8 +609,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -621,8 +618,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MAX,
                             CUDNN_DATA_FLOAT,
@@ -651,8 +647,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -661,8 +656,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MIN,
                             CUDNN_DATA_FLOAT,
@@ -691,8 +685,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -701,8 +694,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
@@ -785,6 +777,58 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     throw std::runtime_error(node->get_name() + " is not implemented.");
                 }
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Concat)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                auto axis = concat->get_concatenation_axis();
+
+                std::vector<size_t> block_strides(args.size(), 1);
+                size_t block_size = 0;
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    auto arg_shape = args[i].get_shape();
+                    auto arg_rank = arg_shape.size();
+                    for (size_t j = axis; j < arg_rank; j++)
+                    {
+                        block_strides[i] *= arg_shape[j];
+                    }
+                    block_size += block_strides[i];
+                }
+
+                writer.block_begin("  // " + node->get_name());
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer << "int num_inputs = " << args.size() << ";\n";
+                writer << "std::vector<size_t> block_strides_h = {" << join(block_strides)
+                       << "};\n";
+                writer << "void* block_strides_d = "
+                          "runtime::gpu::create_gpu_buffer(sizeof(size_t) * num_inputs);\n";
+                writer << "runtime::gpu::cuda_memcpyHtD(block_strides_d, block_strides_h.data(), "
+                          "sizeof(size_t) * num_inputs);\n";
+
+                writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
+                       << ", std::vector<std::string>{";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << "\"" << args[i].get_type() << "\", ";
+                }
+                writer << "\"" << out[0].get_type() << "\"}"
+                       << ", ctx"
+                       << ", count"
+                       << ", " << block_size << ", CUdeviceptr(block_strides_d)"
+                       << ", CUdeviceptr(" << out[0].get_name() << ")";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
+                }
+                writer << ");\n";
+                writer.block_end();
             }
 
             template <>
@@ -1043,8 +1087,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -1053,8 +1096,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MUL,
                             CUDNN_DATA_FLOAT,
@@ -1114,8 +1156,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -1124,8 +1165,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_SQRT,
                             CUDNN_DATA_FLOAT,
