@@ -18,6 +18,7 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 namespace ngraph
 {
@@ -60,12 +61,26 @@ namespace ngraph
                                       const Shape& padding_below,
                                       bool include_pad = false);
 
+                template <typename T>
+                size_t build_elementwise(const GPURuntimeContext* ctx,
+                                         const std::vector<std::string>& dtypes,
+                                         const Shape& tensor_shape)
+                {
+                    return build_elementwise_n_to_1(
+                        ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                }
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,
                                            const Shape& shape);
                 std::string include_helpers();
+                size_t build_elementwise_n_to_1(const GPURuntimeContext* ctx,
+                                                const std::vector<std::string>& dtypes,
+                                                const Shape& tensor_shape,
+                                                const char* op,
+                                                const char* kernel);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };

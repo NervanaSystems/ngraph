@@ -106,40 +106,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            void GPU_Emitter::emit_elementwise(
-                GPU_ExternalFunction* external_function,
-                codegen::CodeWriter& writer,
-                const ngraph::Node* node,
-                const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-            {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-
-                writer.block_begin("  // " + node->get_name());
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "if(count == 0) return;\n";
-                writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
-                       << node->description() << ">(\"" << node->description() << "\""
-                       << ", std::vector<std::string>{";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << "\"" << args[i].get_type() << "\", ";
-                }
-                writer << "\"" << out[0].get_type() << "\"}"
-                       << ", ctx"
-                       << ", count"
-                       << ", CUdeviceptr(" << out[0].get_name() << ")";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
-                }
-                writer << ");\n";
-                writer.block_end();
-            }
-
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
