@@ -20,10 +20,6 @@ include_directories(
     ${EIGEN_INCLUDE_DIR}
     )
 
-include_directories(
-    ${NGRAPH_INCLUDE_DIR}
-    )
-
 set (SRC
     backend_api.cpp
     algebraic_simplification.cpp
@@ -51,9 +47,6 @@ set (SRC
     reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp
-    util/autodiff/backprop_function.cpp
-    util/test_tools.cpp
-    util/benchmark.cpp
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
@@ -61,6 +54,7 @@ set (SRC
 
 add_subdirectory(models)
 add_subdirectory(files)
+add_subdirectory(util)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this
@@ -151,6 +145,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 add_executable(unit-test ${SRC})
+target_link_libraries(unit-test ngraph_test_util)
+add_dependencies(unit-test ngraph_test_util)
 
 if(MPI_C_INCLUDE_PATH)
     target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
