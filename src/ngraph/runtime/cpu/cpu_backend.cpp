@@ -77,7 +77,11 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
         rc = compile(func);
     }
 
+    stopwatch timer;
+    timer.start();
     instance.m_call_frame->call(outputs, inputs);
+    timer.stop();
+    std::cout << "call time: " << timer.get_milliseconds() << std::endl;
 
     return rc;
 }

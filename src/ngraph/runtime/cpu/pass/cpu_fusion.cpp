@@ -952,7 +952,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     auto sigmoid_pred = [](std::shared_ptr<Node> n) {
         bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
                (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
-        std::cout << "sigmoid pred: " << result << std::endl;
         return result;
     };
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
@@ -962,17 +961,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     //Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [sigmoid_1, sigmoid_2](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
-                     << m.match_root()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.match_root()->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name() << " type is not float!";
             return false;
         }
 
         auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(pattern_map[sigmoid_1], pattern_map[sigmoid_2]);
-        ngraph::replace_node(m.match_root(), sigmoid_mul_node);
+        ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
         return true;
     };
 

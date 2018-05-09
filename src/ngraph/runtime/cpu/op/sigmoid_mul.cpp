@@ -114,6 +114,6 @@ shared_ptr<Node> op::SigmoidMultiplyBackprop::copy_with_new_args(const NodeVecto
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SigmoidMultiplyBackprop>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<SigmoidMultiplyBackprop>(new_args.at(0), new_args.at(1), new_args.at(2), m_input_type);
 }
 
