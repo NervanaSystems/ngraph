@@ -69,6 +69,11 @@ namespace ngraph
                     {
                         return;
                     }
+                    else if (out.size() > 1)
+                    {
+                        throw std::runtime_error(
+                            "Multi-output elementwise ops are not currently supported.");
+                    }
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
