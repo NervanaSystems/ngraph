@@ -239,7 +239,7 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests enabled")
 else()
     add_subdirectory(test/util)
-    message(STATUS "unit tests disabled, but libngraph_test_util.so will be built")
+    message(STATUS "unit tests disabled")
 endif()
 
 add_subdirectory(doc)
