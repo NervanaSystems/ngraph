@@ -50,8 +50,8 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
+#include "ngraph/runtime/cpu/pass/rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1425,4 +1425,3 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     cpu_vs_interpreter_rnn_fusion(file_name);
 }
-
