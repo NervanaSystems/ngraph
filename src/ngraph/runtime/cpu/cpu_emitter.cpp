@@ -3517,8 +3517,8 @@ namespace ngraph
                 std::string denom_0 = "denom_0";
                 std::string numer_1 = "numer_1";
                 std::string denom_1 = "denom_1";
-                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(), args[0].get_name()+"[i]", numer_0, denom_0);
-                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(), args[1].get_name()+"[i]", numer_1, denom_1);
+                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(0), args[0].get_name()+"[i]", numer_0, denom_0);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(1), args[1].get_name()+"[i]", numer_1, denom_1);
 
                 writer.block_begin();
                 writer << "#pragma omp parallel for simd\n";
@@ -3538,6 +3538,37 @@ namespace ngraph
                                                denom_0 + " * " + denom_1 + ");\n";
                 writer.block_end();
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiplyBackprop)
+            {
+                auto sigmoid_mul_backprop = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
+                const TensorViewWrapper& data_0 = args[0];
+                const TensorViewWrapper& data_1 = args[1];
+                const TensorViewWrapper& delta = args[2];
+                const TensorViewWrapper& input_0_delta = out[0];
+                const TensorViewWrapper& input_1_delta = out[1];
+
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << out[0].get_name() << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" +
+                                               denom_0 + " * " + denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
+
             }
 
             template <>

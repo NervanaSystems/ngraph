@@ -17,8 +17,10 @@
 #include "sigmoid_mul.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+
 
 using namespace std;
 using namespace ngraph;
@@ -47,8 +49,8 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_1, shared_ptr<Node> 
         vector_to_string(input_2->get_shape()));
     }
 
-    input_1_type = identify_node_fucntion(input_1);
-    input_2_type = identify_node_fucntion(input_2);
+    input_type[0] = identify_node_fucntion(input_1);
+    input_type[1] = identify_node_fucntion(input_2);
 
     add_output(input_1->get_element_type(), input_1->get_shape());
 }
@@ -66,23 +68,35 @@ shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_a
 void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
+    auto input_0 = get_argument(0);
+    auto input_1 = get_argument(1);
 
-    auto backprop = make_shared<op::SigmoidBackprop>(get_argument(0), delta);
-    adjoints.add_delta(get_argument(0), backprop);
+    auto sigmoid_mul_backprop =
+                       make_shared<op::SigmoidMultiplyBackprop>(input_0,
+                                                                input_1,
+                                                                delta);
+
+    auto input_0_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 0);
+    auto input_1_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 1);
+
+    adjoints.add_delta(input_0, input_0_delta);
+    adjoints.add_delta(input_1, input_1_delta);
 }
 
-op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
+op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(shared_ptr<Node> input_1, shared_ptr<Node> input_2, shared_ptr<Node> delta)
         : RequiresTensorViewArgs("SigmoidMultiplyBackprop", {arg, delta})
 {
     if (arg->get_element_type() != delta->get_element_type())
     {
-        throw ngraph_error("Argument and delta element types for Sigmoid backprop do not match");
+        throw ngraph_error("Argument and delta element types for SigmoidMultiply backprop do not match");
     }
     if (arg->get_shape() != delta->get_shape())
     {
-        throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
+        throw ngraph_error("Argument and delta shape for SigmoidMultiply backprop do not match");
     }
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
+    add_output(delta->get_element_type(),  get_input_element_type(0));
+    add_output(delta->get_element_type(),  get_input_element_type(0));
 }
 
 shared_ptr<Node> op::SigmoidMultiplyBackprop::copy_with_new_args(const NodeVector& new_args) const
@@ -91,6 +105,6 @@ shared_ptr<Node> op::SigmoidMultiplyBackprop::copy_with_new_args(const NodeVecto
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
+    return make_shared<SigmoidMultiplyBackprop>(new_args.at(0), new_args.at(1));
 }
 
