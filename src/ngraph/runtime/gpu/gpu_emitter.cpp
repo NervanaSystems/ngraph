@@ -1333,8 +1333,13 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                         }
                         else
                         {
-                            auto& reduction_function = reduce_op->get_functions()[0];
-                            auto f_ptr = reduce_map.find(type_index(typeid(reduction_function)));
+                            //this could be wrong, since the op we need might not be the last one, need to discuss
+                            auto reduction_function = *reduce_op->get_functions()[0]->get_ops().rbegin();
+                            // Work around a compiler warning (*node inside typeid may have effects
+                            // with shared pointers, which is fine here but clang doesn't like it.)
+                            auto& fn = *reduction_function;
+                            auto f_ptr = reduce_map.find(type_index(typeid(fn)));
+                           
                             if(f_ptr == reduce_map.end())
                             {
                                 throw std::runtime_error("reduce with function " + reduction_function->get_name() + " is not implement yet.");
