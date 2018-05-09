@@ -151,8 +151,7 @@ namespace ngraph
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -161,8 +160,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
@@ -611,8 +609,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -621,8 +618,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MAX,
                             CUDNN_DATA_FLOAT,
@@ -651,8 +647,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -661,8 +656,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MIN,
                             CUDNN_DATA_FLOAT,
@@ -691,8 +685,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -701,8 +694,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
@@ -785,6 +777,58 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     throw std::runtime_error(node->get_name() + " is not implemented.");
                 }
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Concat)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                auto axis = concat->get_concatenation_axis();
+
+                std::vector<size_t> block_strides(args.size(), 1);
+                size_t block_size = 0;
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    auto arg_shape = args[i].get_shape();
+                    auto arg_rank = arg_shape.size();
+                    for (size_t j = axis; j < arg_rank; j++)
+                    {
+                        block_strides[i] *= arg_shape[j];
+                    }
+                    block_size += block_strides[i];
+                }
+
+                writer.block_begin("  // " + node->get_name());
+                writer << "int count = " << out[0].get_size() << ";\n";
+                writer << "int num_inputs = " << args.size() << ";\n";
+                writer << "std::vector<size_t> block_strides_h = {" << join(block_strides)
+                       << "};\n";
+                writer << "void* block_strides_d = "
+                          "runtime::gpu::create_gpu_buffer(sizeof(size_t) * num_inputs);\n";
+                writer << "runtime::gpu::cuda_memcpyHtD(block_strides_d, block_strides_h.data(), "
+                          "sizeof(size_t) * num_inputs);\n";
+
+                writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
+                       << ", std::vector<std::string>{";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << "\"" << args[i].get_type() << "\", ";
+                }
+                writer << "\"" << out[0].get_type() << "\"}"
+                       << ", ctx"
+                       << ", count"
+                       << ", " << block_size << ", CUdeviceptr(block_strides_d)"
+                       << ", CUdeviceptr(" << out[0].get_name() << ")";
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
+                }
+                writer << ");\n";
+                writer.block_end();
             }
 
             template <>
@@ -1043,8 +1087,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -1053,8 +1096,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MUL,
                             CUDNN_DATA_FLOAT,
@@ -1114,8 +1156,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
-cudnnTensorDescriptor_t descriptor;
-CUDNN_SAFE_CALL(cudnnCreateTensorDescriptor(&descriptor));
+auto& descriptor = descriptors.build<cudnnTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*format=*/CUDNN_TENSOR_NCHW,
                             /*dataType=*/CUDNN_DATA_FLOAT,
@@ -1124,8 +1165,7 @@ CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(descriptor,
                             /*image_height=*/1,
                             /*image_width=*/count));
 
-cudnnOpTensorDescriptor_t opTensorDesc;
-CUDNN_SAFE_CALL(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+auto& opTensorDesc = descriptors.build<cudnnOpTensorDescriptor_t>();
 CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_SQRT,
                             CUDNN_DATA_FLOAT,
@@ -1615,6 +1655,125 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 return padded_shape;
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPool)
+            {
+                // assumes NC{d1,d2,...} format
+                auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto& input_shape = args[0].get_shape();
+                    auto& result_shape = out[0].get_shape();
+                    auto padding_below = avg_pool->get_padding_below();
+                    auto padding_above = avg_pool->get_padding_above();
+
+                    int num_nontrivial_dims = 0;
+                    for (int64_t i = input_shape.size() - 1; i > 1; i--)
+                    {
+                        if (input_shape[i] > 1)
+                        {
+                            num_nontrivial_dims++;
+                        }
+                    }
+
+                    size_t avg_pool_index = 0;
+
+                    // if 1d or has asymmetric padding, must handle pooling manually
+                    if (input_shape.size() == 3 || num_nontrivial_dims == 1 ||
+                        padding_below != padding_above)
+                    {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                        avg_pool_index =
+                            cuda_emitter->build_avg_pool(external_function->ctx().get(),
+                                                         {{args[0].get_type(), out[0].get_type()}},
+                                                         input_shape,
+                                                         result_shape,
+                                                         avg_pool->get_window_shape(),
+                                                         avg_pool->get_window_movement_strides(),
+                                                         padding_below);
+                    }
+                    else if (input_shape.size() <= 5)
+                    {
+                        // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
+                        if (input_shape.size() == 4 || input_shape.size() == 5)
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                            auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
+                                                      ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                      : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                            avg_pool_index = cudnn_emitter->build_pooling(
+                                external_function->ctx().get(),
+                                cudnn_avg_type,
+                                CUDNNEmitter::Prop::Forward,
+                                input_shape,
+                                result_shape,
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_window_shape(),
+                                padding_below,
+                                padding_above);
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "Pooling currently only supports up to 3 spatial dimensions.");
+                    }
+
+                    writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
+                }
+                writer.block_end();
+            }
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto output_shape = out[0].get_shape();
+                    auto delta_shape = args[0].get_shape();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    if (output_shape.size() >= 4)
+                    {
+                        auto cudnn_avg_type = apb->get_include_padding_in_avg_computation()
+                                                  ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                  : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                        auto avg_pool_bp_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         cudnn_avg_type,
+                                                         CUDNNEmitter::Prop::Backward,
+                                                         output_shape,
+                                                         delta_shape,
+                                                         apb->get_window_movement_strides(),
+                                                         apb->get_window_shape(),
+                                                         apb->get_padding_below(),
+                                                         apb->get_padding_above());
+
+                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_bp_index << ", ";
+                        // CUDNN backwards pooling requests input and output tensors from
+                        // the forward pass but does not use them. It also behaves differently
+                        // for max pool vs avg pool. The repetition of args below is to address
+                        // this interface in a way that supports both max and avg pooling
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                }
+                writer.block_end();
             }
         }
     }

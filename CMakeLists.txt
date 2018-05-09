@@ -238,8 +238,8 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     add_subdirectory(test)
     message(STATUS "unit tests enabled")
 else()
+    add_subdirectory(test/util)
     message(STATUS "unit tests disabled")
 endif()
 
 add_subdirectory(doc)
-

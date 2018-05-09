@@ -1,24 +1,120 @@
 .. graph-basics:
 
+#############
 Graph Basics
-============
+#############
 
-This section describes the basic concepts you need to know when 
-constructing a graph.
+Overview
+========
+
+This section provides a brief overview of some concepts used in the nGraph 
+Library. It also introduces new ideas regarding our unique departure from the 
+first generation of deep learning software design. 
+
+The historical dominance of GPUs at the beginning of the current 
+:abbr:`DL (Deep Learning)` boom means that many framework authors made 
+GPU-specific design decisions at a very deep level. Those assumptions created 
+an "ecosystem" of frameworks that all behave essentially the same at the
+framework's hardware abstraction layer: 
+
+* The framework expects to own memory allocation. 
+* The framework expects the execution device to be a GPU. 
+* The framework expects complete control of the GPU, and that the device doesn't 
+  need to be shared. 
+* The framework expects that developers will write things in a `SIMT-friendly`_ 
+  manner, thus requring only a limited set of data layout conventions.    
+  
+Some of these design decisions have implications that do not translate well to 
+the newer or more demanding generation of **adaptable software**. For example, 
+most frameworks that expect full control of the GPU devices experience their 
+own per-device inefficiency for resource utilization whenever the system 
+encounters a bottleneck. 
+
+Most framework owners will tell you to refactor the model in order to remove the 
+unimplemented copy, rather than attempt to run multiple models in parallel, or 
+attempt to figure out how to build graphs more efficiently. In other words, if 
+a model requires any operation that hasn't been implemented on GPU, it must wait 
+for copies to propagate from the CPU to the GPU(s). An effect of this 
+inefficiency is that it slows down the system. Data scientists who are facing a 
+large curve of uncertainty in how large (or how small) the compute-power needs 
+of their model will be, investing heavily in frameworks reliant upon GPUs may 
+not be the best decision.  
+
+Meanwhile, the shift toward greater diversity in deep learning **hardware devices** 
+requires that these assumptions be revisited. Incorporating direct support for 
+all of the different hardware targets out there, each of which has its own 
+preferences when it comes to the above factors, is a very heavy burden 
+on framework owners.
+
+Adding the nGraph compiler to the system lightens that burden by raising the 
+abstraction level, and by letting any hardware-specific backends make these 
+decisions automatically. The nGraph Compiler is designed to be able to take into 
+account the needs of each target hardware platform, and to achieve maximum 
+performance.
+
+This makes things easier on framework owners, but also (as new models are developed) 
+on data scientists, who will not have to keep in mind nearly as many low-level 
+hardware details when architecting their models with layers of complexity for 
+anything other than a :abbr:`Just-in-Time (JIT)` compilation.     
+
+While the first generation frameworks tended to need to make a tradeoff between 
+being "specialized" and "adaptable" (the trade-off between training and inference), 
+nGraph Library permits algorithms implemented in a DNN to be both specialized 
+and adaptable. The new generation of software design in and around AI ecosystems 
+can and should be much more flexible.   
 
 
-Framework Bridges
-------------------
+* :ref:`framework_bridges`
+* :ref:`about_transformers`
+* :ref:`graph_shaping`
+ 
 
-Frontends (or users who require the flexibility of constructing 
-Ops directly) can utilize a set of graph construction functions 
-to construct graphs. 
 
-A framework bridge constructs a function which is compiled/optimized
-by a sequence of graph transformations that replace subgraphs of the
-computation with more optimal subgraphs. Throughout this process, ops
-represent tensor operations.
+.. _framework_bridges:
 
+Framework bridges
+=================
+
+In the nGraph ecosystem, a framework is what the data scientist uses to solve 
+a specific (and usually large-scale) deep learning computational problem with 
+the use of a high-level, data science-oriented language. 
+
+A framework :term:`bridge` is a software layer (typically a plugin *for* or an 
+extension *to* a framework) that translates the data science-oriented language 
+into a compute-oriented language called a :term:`data-flow graph`. The bridge 
+can then present the problem to the nGraph :abbr:`Abstraction Layer (AL)` which 
+is responsible for execution on an optimized backend by performing graph 
+transformations that replace subgraphs of the computation with more optimal 
+(in terms of machine code) subgraphs. Throughout this process, ``ops`` represent 
+tensor operations. 
+
+Either the framework can provide its own graph of functions to be compiled and 
+optimized via :abbr:`Ahead-of-Time (AoT)` compilation to send back to the 
+framework, or an entity (framework or user) who requires the flexibility of 
+shaping ops directly can use our graph construction functions to experiment with 
+building runtime APIs for their framework, thus exposing more flexible multi-theaded compute 
+power options to 
+
+See the section on :doc:`howto/execute` for a detailed walk-through describing 
+how this translation can be programmed to happen automatically via a framework. 
+
+
+.. _about_transformers:
+
+Transformer ops
+================
+
+A framework bridge may define its own bridge-specific ops, as long as they can be 
+converted to transformer ops. This is usually achieved by them first being 
+converted to core ops on the way. For example, if a framework has a 
+``PaddedCell`` op, nGraph pattern replacement facilities can be used to convert 
+it into one of our core ops.  More detail on transformer ops will be coming soon.  
+
+
+.. _graph_shaping:
+
+Graph shaping
+=============
 
 Tensors
 -------
@@ -68,9 +164,9 @@ and results in a tensor with the same element type and shape:
   (A+B)_I = A_I + B_I
 
 Here, :math:`X_I` means the value of a coordinate :math:`I` for the tensor 
-:math:`X`. So the value of sum of two tensors is a tensor whose value at a 
-coordinate is the sum of the elements are that coordinate for the two inputs. 
-Unlike many frameworks, it says nothing about storage or arrays.
+:math:`X`. So the value of the sum of two tensors is a tensor whose value at a 
+coordinate is the sum of the elements' two inputs. Unlike many frameworks, it 
+says nothing about storage or arrays.
 
 An ``Add`` op is used to represent an elementwise tensor sum. To
 construct an Add op, each of the two inputs of the ``Add`` must be
@@ -117,8 +213,12 @@ corresponding to the array provided as the nth argument, and the outputs
 of all result ops will be written into the result arrays in row-major
 order.
 
+
+
+
+
 An Example
-----------
+==========
 
 ::
 
@@ -142,6 +242,7 @@ An Example
        auto f = std::make_shared<Function>(Nodes{t1}, Parameters{a, b, c});
    }
 
+
 We use shared pointers for all ops. For each parameter, we need to
 element type and shape attributes. When the function is called, each
 argument must conform to the corresponding parameter element type and
@@ -164,3 +265,5 @@ After the graph is constructed, we create the function, passing the
 `Function` constructor the nodes that are results and the parameters
 that are arguments.
 
+
+.. _SIMT-friendly: https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads
