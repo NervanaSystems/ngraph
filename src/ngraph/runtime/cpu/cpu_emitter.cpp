@@ -2835,11 +2835,12 @@ namespace ngraph
                 string si = iv_prefix + std::to_string(rs->get_sequence_axis());
                 auto arg_shape = args[0].get_shape();
 
+                //iterate over seq_lengths make sure indices aren't out of bounds and normalize
                 writer << "std::vector<size_t> norm_seq_lengths (" << arg_shape.at(ibi) << ");\n";
                 writer << emit_for_lt(iv_prefix, ibi, arg_shape.at(ibi));
                 writer.block_begin();
-                writer << "auto seq_len = static_cast<size_t>(" << args[1].get_name() << "["
-                       << bi << "]);\n";
+                writer << "auto seq_len = static_cast<size_t>(" << args[1].get_name() << "[" << bi
+                       << "]);\n";
                 writer << "if (seq_len > " << arg_shape.at(rs->get_sequence_axis()) << ")\n";
                 writer.block_begin();
                 writer << "throw \"One of the elements of sequence lengths is greater than "
@@ -2863,7 +2864,7 @@ namespace ngraph
                     sdims.push_back(std::to_string(d));
                 }
 
-                //float (&arr)[2][2] = *reinterpret_cast<float (*)[2][2]>(f);
+                //convert input and output into multidimensional arrays
                 auto isdims = emit_indices(sdims);
                 writer << args[0].get_type() << "(&src)" << isdims << " = *reinterpret_cast<"
                        << args[0].get_type() << " (*)" << isdims << ">(" << args[0].get_name()
@@ -2873,8 +2874,8 @@ namespace ngraph
                        << args[0].get_type() << " (*)" << isdims << ">(" << out[0].get_name()
                        << ");\n";
 
+                //reverse sequence
                 std::vector<std::string> source_indices;
-
                 for (size_t i = 0; i < arg_shape.size(); i++)
                 {
                     writer << emit_for_lt(iv_prefix, i, arg_shape.at(i));
@@ -3891,11 +3892,6 @@ static string format_name(const string& name)
     }
     return rc;
 }
-
-// static std::string pad(size_t num)
-// {
-//     return std::string(num, ' ');
-// }
 
 std::string runtime::cpu::CPU_Emitter::emit_indices(const std::vector<std::string> indices)
 {
