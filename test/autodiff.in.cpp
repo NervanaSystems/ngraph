@@ -110,7 +110,6 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape padding{1, 1};
@@ -147,7 +146,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 4, 4};
@@ -181,7 +179,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{2, 2, 4, 4};
@@ -281,7 +278,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
@@ -304,7 +300,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
@@ -327,7 +322,6 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 
 TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
