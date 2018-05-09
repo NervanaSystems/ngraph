@@ -1275,35 +1275,17 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 return;
             }
 
+// reduction function supported by GPU
 // CUDNN_REDUCE_TENSOR_ADD
-// The operation to be performed is addition
-
 // CUDNN_REDUCE_TENSOR_MUL
-// The operation to be performed is multiplication
-
 // CUDNN_REDUCE_TENSOR_MIN
-// The operation to be performed is a minimum comparison
-
 // CUDNN_REDUCE_TENSOR_MAX
-// The operation to be performed is a maximum comparison
-
 // CUDNN_REDUCE_TENSOR_AMAX
-// The operation to be performed is a maximum comparison of absolute values
-
 // CUDNN_REDUCE_TENSOR_AVG
-// The operation to be performed is averaging
-
 // CUDNN_REDUCE_TENSOR_NORM1
-// The operation to be performed is addition of absolute values
-
 // CUDNN_REDUCE_TENSOR_NORM2
-// The operation to be performed is a square root of sum of squares
-
 // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
-// The operation to be performed is multiplication, not including elements of value zero
-
 #define TI(x) type_index(typeid(x))
-
 static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
     {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
     {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
@@ -1318,11 +1300,14 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                 {
                     if (out[0].get_size() != 0)
                     {
-                        // one of args[] axes has zero size, zero output
+                        // one of args0 axes has zero size, zero output, use args1 value 
                         if (args[0].get_size() == 0)
                         {
+                            writer << "float init_value;\n";
+                            writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
+                                   << args[1].get_name() << " ," << args[1].get_element_type().size() << ");\n";
                             writer << "std::vector<float> temp(" << out[0].get_size()
-                                   << ", -std::numeric_limits<float>::infinity());\n";
+                                   << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
@@ -1333,7 +1318,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                         }
                         else
                         {
-                            //this could be wrong, since the op we need might not be the last one, need to discuss
+                            //this is a hack and could be wrong, since the op we need might not be the last one
                             auto reduction_function = *reduce_op->get_functions()[0]->get_ops().rbegin();
                             // Work around a compiler warning (*node inside typeid may have effects
                             // with shared pointers, which is fine here but clang doesn't like it.)
