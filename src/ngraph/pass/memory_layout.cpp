@@ -27,8 +27,9 @@
 using namespace std;
 using namespace ngraph;
 
-pass::MemoryLayout::MemoryLayout(size_t alignment)
+pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     : m_alignment(alignment)
+    , m_disable_memory_sharing(disable_memory_sharing)
 {
 }
 
@@ -42,9 +43,12 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             size_t offset = mm.allocate(tensor->size());
             tensor->set_pool_offset(offset);
         }
-        for (const descriptor::Tensor* tensor : node->liveness_free_list)
+        if (!m_disable_memory_sharing)
         {
-            mm.free(tensor->get_pool_offset());
+            for (const descriptor::Tensor* tensor : node->liveness_free_list)
+            {
+                mm.free(tensor->get_pool_offset());
+            }
         }
     }
     function->set_temporary_pool_size(mm.max_allocated());

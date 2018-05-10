@@ -50,7 +50,7 @@ public:
         construct_batch_norm_relu();
         construct_batch_norm_relu_global_stats();
         construct_conv_relu();
-//        construct_sigmoid_multiply();
+        construct_sigmoid_multiply();
     }
 
 private:
