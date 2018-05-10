@@ -1292,13 +1292,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 // CUDNN_REDUCE_TENSOR_NORM2
 // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
 #define TI(x) type_index(typeid(x))
-static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
-    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
-};
-           template <>
+            static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
+                {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
+                {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
+                {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
+                {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
+            };
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
@@ -1306,12 +1306,13 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                 {
                     if (out[0].get_size() != 0)
                     {
-                        // one of args0 axes has zero size, zero output, use args1 value 
+                        // one of args0 axes has zero size, zero output, use args1 value
                         if (args[0].get_size() == 0)
                         {
                             writer << "float init_value;\n";
                             writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
-                                   << args[1].get_name() << " ," << args[1].get_element_type().size() << ");\n";
+                                   << args[1].get_name() << " ,"
+                                   << args[1].get_element_type().size() << ");\n";
                             writer << "std::vector<float> temp(" << out[0].get_size()
                                    << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
@@ -1325,23 +1326,26 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
                         else
                         {
                             //this is a hack and could be wrong, since the op we need might not be the last one
-                            auto reduction_function = *reduce_op->get_functions()[0]->get_ops().rbegin();
+                            auto reduction_function =
+                                *reduce_op->get_functions()[0]->get_ops().rbegin();
                             // Work around a compiler warning (*node inside typeid may have effects
                             // with shared pointers, which is fine here but clang doesn't like it.)
                             auto& fn = *reduction_function;
                             auto f_ptr = reduce_map.find(type_index(typeid(fn)));
-                           
-                            if(f_ptr == reduce_map.end())
+
+                            if (f_ptr == reduce_map.end())
                             {
-                                throw std::runtime_error("reduce with function " + reduction_function->get_name() + " is not implement yet.");
+                                throw std::runtime_error("reduce with function " +
+                                                         reduction_function->get_name() +
+                                                         " is not implement yet.");
                             }
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto reduce_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    f_ptr->second,
-                                                                    args[0].get_shape(),
-                                                                    reduce_op->get_reduction_axes());
+                            auto reduce_index = cudnn_emitter->build_reduce_forward(
+                                external_function->ctx().get(),
+                                f_ptr->second,
+                                args[0].get_shape(),
+                                reduce_op->get_reduction_axes());
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
