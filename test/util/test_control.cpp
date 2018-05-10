@@ -20,7 +20,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
-#include "test_control.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,6 +31,7 @@ string ngraph::prepend_disabled(const string& test_case_name,
                                 const string& test_name,
                                 const string& manifest)
 {
+    NGRAPH_INFO << "manifest " << manifest;
     string rc = test_name;
     unordered_set<string>& blacklist = s_blacklists[test_case_name];
     if (blacklist.empty() && !manifest.empty())
