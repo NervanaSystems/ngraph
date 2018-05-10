@@ -46,7 +46,6 @@ set (SRC
     shape.cpp
     reshape_elimination.cpp
     tensor.cpp
-    test_control.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp

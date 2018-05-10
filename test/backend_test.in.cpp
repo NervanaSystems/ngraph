@@ -27,9 +27,9 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/serializer.hpp"
-#include "test_control.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
