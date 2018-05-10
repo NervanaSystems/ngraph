@@ -138,9 +138,6 @@ using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
 
-// Temporary Memory Pool alignment
-static const size_t s_memory_pool_alignment = 4096;
-
 static void
     generate_isnan_isinf_check(codegen::CodeWriter& writer,
                                std::shared_ptr<Node> node,
@@ -580,12 +577,7 @@ using namespace ngraph::runtime;
         if (temporaries_used)
         {
             size_t temp_pool_size = current_function->get_temporary_pool_size();
-            writer << "// Allocate the memory pool\n";
-            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer " << current_function->get_name()
-                   << "_memory_handler(" << temp_pool_size << ", " << s_memory_pool_alignment
-                   << ");\n";
+            m_memory_buffer_sizes.push_back(current_function->get_temporary_pool_size());
         }
 
         // Indexing for Control Flags
@@ -628,8 +620,8 @@ using namespace ngraph::runtime;
 
         if (temporaries_used)
         {
-            writer << "size_t pool_base_ptr = (size_t)" << current_function->get_name()
-                   << "_memory_handler.get_ptr();\n";
+            writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
+                   << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
 
             // Add temporaries to the variable name map
