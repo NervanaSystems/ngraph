@@ -23,10 +23,10 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
-#include "util/test_control.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
