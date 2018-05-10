@@ -3552,6 +3552,9 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiplyBackprop)
             {
+                // math: we have sigmoid functions f(x) and g(y) multiplied, z = f(x)g(y)
+                // dz/dx = dz/df * df/dx = g(y) * f'(x)
+                // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
                 auto sigmoid_mul_backprop = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
                 const TensorViewWrapper& data_0 = args[0];
                 const TensorViewWrapper& data_1 = args[1];
