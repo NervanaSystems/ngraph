@@ -38,6 +38,7 @@ namespace ngraph
             struct CPURuntimeContext
             {
                 int64_t* op_durations;
+                bool* p_en;
                 mkldnn::primitive* const* mkldnn_primitives;
                 char* const* mkldnn_workspaces;
             };
