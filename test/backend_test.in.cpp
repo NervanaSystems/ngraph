@@ -27,10 +27,10 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/serializer.hpp"
+#include "test_control.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
-#include "test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -1718,7 +1718,6 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 // Test hybrid mechanism after broadcast
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
 {
-
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
