@@ -1246,22 +1246,36 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
 {
     auto backend = runtime::Backend::create("CPU");
 
-    Shape data_shape{1, 1, 2000, 2000};
+    Shape data_shape{1, 1, 2, 2};
     auto input_0 = make_shared<op::Parameter>(element::f32, data_shape);
     auto input_1 = make_shared<op::Parameter>(element::f32, data_shape);
+    auto input_2 = make_shared<op::Parameter>(element::f32, Shape{1});
 
     shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0->get_shape());
     shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1->get_shape());
+    shared_ptr<runtime::TensorView> input_2_tensor = backend->create_tensor(element::f32, input_2->get_shape());
     shared_ptr<runtime::TensorView> result_tensor =
             backend->create_tensor(element::f32, input_0->get_shape());
 
-//    vector<float> input_0_data{1,2,3,4};
-//    vector<float> input_1_data{1.2,2.3,3.5,4.7};
-    vector<float> input_0_data(shape_size(data_shape), 1.1f);
-    vector<float> input_1_data(shape_size(data_shape), 2.2f);
+    vector<float> input_0_data{1,2,3,4};
+    vector<float> input_1_data{1.2,2.3,3.5,4.7};
+    vector<float> input_2_data{1.2};
+//    vector<float> input_0_data(shape_size(data_shape), 1.1f);
+//    vector<float> input_1_data(shape_size(data_shape), 2.2f);
     copy_data(input_0_tensor, input_0_data);
     copy_data(input_1_tensor, input_1_data);
-
+    copy_data(input_2_tensor, input_2_data);
+    // test case 1
+    {
+        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_0);
+        auto sigmoid_node_2 = make_shared<op::Broadcast>(input_2, data_shape, AxisSet{1,2,3});
+        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
+        auto func = make_shared<Function>(mul_node, op::ParameterVector{input_0, input_2});
+        backend->call(func, {result_tensor}, {input_0_tensor, input_2_tensor});
+        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
+//        vector<float> expected{0.561837, 0.800536, 0.924652, 0.973163};
+//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+    }
     // test case 1
     {
         auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_0);
@@ -1271,7 +1285,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
         backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
 //        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
         vector<float> expected{0.561837, 0.800536, 0.924652, 0.973163};
-//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
     }
     // test case 2
     {
@@ -1282,7 +1296,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
         backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
 //        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
         vector<float> expected{0.60945, 0.863266, 0.950838, 0.981851};
-//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
     }
     // test case 3
     {
@@ -1293,7 +1307,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
         backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
 //        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
         vector<float> expected{0.585304, 0.876182, 0.965887, 0.990322};
-//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
     }
     // test case 4
     {
@@ -1304,41 +1318,79 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
         backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
 //        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
         vector<float> expected{0.634907, 0.94484, 0.993242, 0.999164};
-//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
     }
 }
 TEST(cpu_fusion, sigmoid_multiply_fusion_backward_compute)
 {
     auto backend = runtime::Backend::create("CPU");
 
-    Shape data_shape{1, 1, 2000, 2000};
+    Shape data_shape{1, 1, 2, 2};
     auto input_0 = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_1 = make_shared<op::Parameter>(element::f32, data_shape);
+//    auto input_1 = make_shared<op::Parameter>(element::f32, data_shape);
+    auto input_1 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto delta = std::make_shared<op::Parameter>(element::f32, data_shape);
 
     shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0->get_shape());
     shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1->get_shape());
     shared_ptr<runtime::TensorView> d_input_0_tensor = backend->create_tensor(element::f32, input_0->get_shape());
-    shared_ptr<runtime::TensorView> d_input_1_tensor = backend->create_tensor(element::f32, input_1->get_shape());
+//    shared_ptr<runtime::TensorView> d_input_1_tensor = backend->create_tensor(element::f32, input_1->get_shape());
+    shared_ptr<runtime::TensorView> d_input_1_tensor = backend->create_tensor(element::f32, data_shape);
     shared_ptr<runtime::TensorView> delta_tensor = backend->create_tensor(element::f32, delta->get_shape());
 
-//    vector<float> input_0_data{1,2,3,4};
+    vector<float> input_0_data{1,2,3,4};
 //    vector<float> input_1_data{1.2,2.2,3.2,4.2};
-    vector<float> input_0_data(shape_size(data_shape), 1.1f);
-    vector<float> input_1_data(shape_size(data_shape), 2.2f);
+    vector<float> input_1_data{1.2};
+//    vector<float> input_0_data(shape_size(data_shape), 1.1f);
+//    vector<float> input_1_data(shape_size(data_shape), 2.2f);
     copy_data(input_0_tensor, input_0_data);
     copy_data(input_1_tensor, input_1_data);
     vector<float> delta_data(shape_size(data_shape), 20.0f);
     copy_data(delta_tensor, delta_data);
+    using FunctionType = op::SigmoidMultiply::FunctionType;
 
     // test case 1
     {
         auto sigmoid_node_0 = make_shared<op::Sigmoid>(input_0);
-        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_1);
+        auto sigmoid_node_1 = make_shared<op::Broadcast>(input_1, data_shape, AxisSet{1,2,3});
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_0);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_1);
 //        auto sigmoid_mul = sigmoid_node_0 * sigmoid_node_1;
-        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1);
 
-        auto f = make_shared<Function>(sigmoid_mul, op::ParameterVector{input_0, input_1});
+        auto input_0_node = (input_0_type == FunctionType::Identity) ? sigmoid_node_0 : sigmoid_node_0->get_argument(0);
+        auto input_1_node = (input_1_type == FunctionType::Identity) ? sigmoid_node_1 : sigmoid_node_1->get_argument(0);
+        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(input_0_node, input_1_node, input_0_type, input_1_type);
+
+        ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta});
+        auto d_input_0 = adjoints.backprop_node(input_0);
+        auto d_input_1 = adjoints.backprop_node(sigmoid_node_1);
+        auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1},
+                                        op::ParameterVector{input_0, input_1, delta});
+        stopwatch timer;
+        timer.start();
+        backend->call(df, {d_input_0_tensor, d_input_1_tensor}, {input_0_tensor, input_1_tensor, delta_tensor});
+        timer.stop();
+        std::cout << "time: " << timer.get_milliseconds() << std::endl;
+        vector<float> expected_0{3.02202, 1.89041, 0.868146, 0.348035};
+        vector<float> expected_1{2.60102, 1.58192, 0.716941, 0.285879};
+        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+    }
+#if 0
+    // test case 1
+    {
+        auto sigmoid_node_0 = make_shared<op::Sigmoid>(input_0);
+        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_1);
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_0);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_1);
+//        auto sigmoid_mul = sigmoid_node_0 * sigmoid_node_1;
+
+        auto input_0_node = (input_0_type == FunctionType::Identity) ? sigmoid_node_0 : sigmoid_node_0->get_argument(0);
+        auto input_1_node = (input_1_type == FunctionType::Identity) ? sigmoid_node_1 : sigmoid_node_1->get_argument(0);
+        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(input_0_node, input_1_node, input_0_type, input_1_type);
+
         ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta});
         auto d_input_0 = adjoints.backprop_node(input_0);
         auto d_input_1 = adjoints.backprop_node(input_1);
@@ -1351,19 +1403,20 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward_compute)
         std::cout << "time: " << timer.get_milliseconds() << std::endl;
         vector<float> expected_0{3.02202, 1.89041, 0.868146, 0.348035};
         vector<float> expected_1{2.60102, 1.58192, 0.716941, 0.285879};
-//        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
-//        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
     }
     // test case 2
     {
         auto sigmoid_node_0 = make_shared<op::Sigmoid>(input_0);
         auto sigmoid_node_1 = make_shared<op::Tanh>(input_1);
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_0);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_1);
 //        auto sigmoid_mul = sigmoid_node_0 * sigmoid_node_1;
-        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1);
+        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1, input_0_type, input_1_type);
 
-        auto f = make_shared<Function>(sigmoid_mul, op::ParameterVector{input_0, input_1});
         ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta});
         auto d_input_0 = adjoints.backprop_node(input_0);
         auto d_input_1 = adjoints.backprop_node(input_1);
@@ -1376,20 +1429,21 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward_compute)
         std::cout << "time: " << timer.get_milliseconds() << std::endl;
         vector<float> expected_0{3.27813, 2.04894, 0.900536, 0.353095};
         vector<float> expected_1{4.45975, 0.84425, 0.126201, 0.0176579};
-//        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
-//        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 
     }
     // test case 3
     {
         auto sigmoid_node_0 = make_shared<op::Tanh>(input_0);
         auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_1);
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_0);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_1);
 //        auto sigmoid_mul = sigmoid_node_0 * sigmoid_node_1;
-        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1);
+        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1, input_0_type, input_1_type);
 
-        auto f = make_shared<Function>(sigmoid_mul, op::ParameterVector{input_0, input_1});
         ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta});
         auto d_input_0 = adjoints.backprop_node(input_0);
         auto d_input_1 = adjoints.backprop_node(input_1);
@@ -1402,20 +1456,21 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward_compute)
         std::cout << "time: " << timer.get_milliseconds() << std::endl;
         vector<float> expected_0{6.45521, 1.27207, 0.189593, 0.0264228};
         vector<float> expected_1{2.70967, 1.7314, 0.748913, 0.29092};
-//        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
-//        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 
     }
     // test case 4
     {
         auto sigmoid_node_0 = make_shared<op::Tanh>(input_0);
         auto sigmoid_node_1 = make_shared<op::Tanh>(input_1);
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_0);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(sigmoid_node_1);
 //        auto sigmoid_mul = sigmoid_node_0 * sigmoid_node_1;
-        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1);
+        auto sigmoid_mul = make_shared<op::SigmoidMultiply>(sigmoid_node_0, sigmoid_node_1, input_0_type, input_1_type);
 
-        auto f = make_shared<Function>(sigmoid_mul, op::ParameterVector{input_0, input_1});
         ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta});
         auto d_input_0 = adjoints.backprop_node(input_0);
         auto d_input_1 = adjoints.backprop_node(input_1);
@@ -1428,10 +1483,11 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward_compute)
         std::cout << "time: " << timer.get_milliseconds() << std::endl;
         vector<float> expected_0{7.00227, 1.37874, 0.196666, 0.026807};
         vector<float> expected_1{4.64603, 0.924027, 0.131829, 0.0179692};
-//        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
-//        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
-//        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+        std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+        std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+        EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
     }
+#endif
 }
 

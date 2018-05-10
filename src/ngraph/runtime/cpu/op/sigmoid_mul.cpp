@@ -17,6 +17,7 @@
 #include "sigmoid_mul.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -25,20 +26,24 @@
 using namespace std;
 using namespace ngraph;
 
-op::SigmoidMultiply::FunctionType identify_node_fucntion(shared_ptr<Node> node) {
-    if (std::dynamic_pointer_cast<op::Tanh>(node) != nullptr) {
-        return op::SigmoidMultiply::FunctionType::Tanh;
+ngraph::op::SigmoidMultiply::FunctionType op::SigmoidMultiply::identify_node_type(const std::shared_ptr<ngraph::Node>& node) {
+    if (std::dynamic_pointer_cast<ngraph::op::Tanh>(node) != nullptr) {
+        return ngraph::op::SigmoidMultiply::FunctionType::Tanh;
     }
-    else if (std::dynamic_pointer_cast<op::Sigmoid>(node) != nullptr) {
-        return op::SigmoidMultiply::FunctionType::Logistic;
+    else if (std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) != nullptr) {
+        return ngraph::op::SigmoidMultiply::FunctionType::Logistic;
+    }
+    else if (std::dynamic_pointer_cast<ngraph::op::Broadcast>(node) != nullptr) {
+        return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
     else {
-        throw ngraph_error("SigmoidMultiply input function type not supported: " + node->get_name());
+        throw ngraph::ngraph_error("SigmoidMultiply input function type not supported: " + node->get_name());
     }
 }
 
-op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0, shared_ptr<Node> input_1)
-        : RequiresTensorViewArgs("SigmoidMultiply", {input_0->get_argument(0), input_1->get_argument(0)})
+op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0, shared_ptr<Node> input_1,
+                                     const FunctionType input_0_type, const FunctionType input_1_type)
+        : RequiresTensorViewArgs("SigmoidMultiply", {input_0, input_1})
 {
     if (input_0->get_element_type() != input_1->get_element_type())
     {
@@ -49,8 +54,8 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0, shared_ptr<Node> 
         vector_to_string(input_1->get_shape()));
     }
 
-    m_input_type[0] = identify_node_fucntion(input_0);
-    m_input_type[1] = identify_node_fucntion(input_1);
+    m_input_type[0] = input_0_type;
+    m_input_type[1] = input_1_type;
 
     add_output(input_0->get_element_type(), input_0->get_shape());
 }
@@ -62,7 +67,8 @@ shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_a
         throw ngraph_error("SigmoidMultiply incorrect number of new arguments");
     }
 
-    return make_shared<SigmoidMultiply>(new_args.at(0), new_args.at(1));
+    // WARNING: implicitly expecting new args must match the original input function types.
+    return make_shared<SigmoidMultiply>(new_args.at(0), new_args.at(1), m_input_type[0], m_input_type[1]);
 }
 
 void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

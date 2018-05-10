@@ -951,15 +951,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     //construct predicate to match sigmoid and tanh
     auto sigmoid_pred = [](std::shared_ptr<Node> n) {
         bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
-               (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
+                      (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
         return result;
     };
-    auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
-    auto sigmoid_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
-    auto elem_mul = std::make_shared<op::Multiply>(sigmoid_1, sigmoid_2);
+    auto other_pred = [](std::shared_ptr<Node> n) {
+        bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+                      (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr) ||
+                      (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+        return result;
+    };
+    auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
+    auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
+    auto elem_mul = std::make_shared<op::Multiply>(sigmoid_0, sigmoid_1);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [sigmoid_1, sigmoid_2](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [sigmoid_0, sigmoid_1](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -970,7 +976,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
             return false;
         }
 
-        auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(pattern_map[sigmoid_1], pattern_map[sigmoid_2]);
+        using FunctionType = op::SigmoidMultiply::FunctionType;
+        auto input_0_type = op::SigmoidMultiply::identify_node_type(pattern_map[sigmoid_0]);
+        auto input_1_type = op::SigmoidMultiply::identify_node_type(pattern_map[sigmoid_1]);
+        auto input_0 = (input_0_type == FunctionType::Identity) ? pattern_map[sigmoid_0] : pattern_map[sigmoid_0]->get_argument(0);
+        auto input_1 = (input_1_type == FunctionType::Identity) ? pattern_map[sigmoid_1] : pattern_map[sigmoid_1]->get_argument(0);
+        auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(input_0, input_1, input_0_type, input_1_type);
         ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
         return true;
     };

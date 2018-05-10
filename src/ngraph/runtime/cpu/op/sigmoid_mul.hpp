@@ -34,10 +34,13 @@ namespace ngraph
                 Tanh,
                 Identity
             };
-            SigmoidMultiply(std::shared_ptr<Node> input_0, std::shared_ptr<Node> input_1);
+            SigmoidMultiply(std::shared_ptr<Node> input_0, std::shared_ptr<Node> input_1,
+                            const FunctionType input_0_type, const FunctionType input_1_type);
+            // WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
             virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override ;
             FunctionType get_input_func_type(const unsigned int index) const { return m_input_type[index]; }
+            static FunctionType identify_node_type(const std::shared_ptr<ngraph::Node>& node);
         private:
             std::array<FunctionType, 2> m_input_type;
         };
