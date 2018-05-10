@@ -112,7 +112,7 @@ namespace
         v |= v >> 8;
         v |= v >> 16;
 
-        return multiply_de_Bruijn_bit_position[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+        return multiply_de_Bruijn_bit_position[static_cast<uint32_t>(v * 0x07C4ACDDU) >> 27];
     }
 
     int msbU64(uint64_t val)
