@@ -318,11 +318,14 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    //not used in runtime::cpu::CPU_ExternalFunction::compile
+    //utilized by frontends
+    NodeVector nv_cwi;
     pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();

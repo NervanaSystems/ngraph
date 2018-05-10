@@ -42,10 +42,10 @@ public:
     void initialize_default_passes();
 
     template <typename T, class... Args>
-    void register_pass(Args... args)
+    void register_pass(Args&&... args)
     {
         static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
-        auto pass = std::make_shared<T>(args...);
+        auto pass = std::make_shared<T>(std::forward<Args>(args)...);
         auto pass_base = std::static_pointer_cast<PassBase>(pass);
         m_pass_list.push_back(pass_base);
         if (m_visualize)
