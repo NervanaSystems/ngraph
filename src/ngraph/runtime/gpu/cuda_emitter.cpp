@@ -643,7 +643,6 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
         CudaKernelBuilder::get_elementwise_op(writer, kernel_name.str(), op, dtypes);
 
-        std::string kernel = writer.get_code();
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     size_t nthreads = shape_size(tensor_shape);
