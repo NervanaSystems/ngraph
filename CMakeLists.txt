@@ -155,8 +155,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 
+include(unit_test_control)
+set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
+unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+
 # Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)
+    unit_test_control(BACKEND CPU MANIFEST src/ngraph/runtime/cpu/unit_test.manifest)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
@@ -182,6 +187,7 @@ if(NGRAPH_GPU_ENABLE)
         "Please select a correct compiler version\n"
         )
     endif()
+    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
 elseif(NGRAPH_GPU_ENABLE)
     message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
