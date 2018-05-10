@@ -84,6 +84,7 @@ set (SRC
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
+    op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
     op/sign.cpp
@@ -106,6 +107,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -166,8 +168,7 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     if (NGRAPH_TBB_ENABLE)
@@ -215,9 +216,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp

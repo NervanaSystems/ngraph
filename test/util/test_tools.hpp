@@ -26,20 +26,6 @@
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
 
-#define SKIP_TEST_FOR(backend_to_skip, current_backend)                                            \
-    if (backend_to_skip == current_backend)                                                        \
-    {                                                                                              \
-        NGRAPH_INFO << "Skipped test for " << current_backend;                                     \
-        return;                                                                                    \
-    }
-
-#define ONLY_ENABLE_TEST_FOR(backend_to_enable, current_backend)                                   \
-    if (backend_to_enable != current_backend)                                                      \
-    {                                                                                              \
-        NGRAPH_INFO << "Skipped test for " << current_backend;                                     \
-        return;                                                                                    \
-    }
-
 namespace ngraph
 {
     class Node;
