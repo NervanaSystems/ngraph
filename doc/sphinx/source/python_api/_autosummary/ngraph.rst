@@ -1,38 +1,36 @@
-.. ngraph.rst
-
-######
-ngraph
-######
-
+ngraph package
+==============
 
 .. automodule:: ngraph
-   :members:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Submodules
-==========
-
-
-Exceptions
 ----------
 
-.. automodule:: ngraph.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
+ngraph.exceptions module
+------------------------
 
-Ops
----
+.. automodule:: ngraph.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+ngraph.ops module
+-----------------
 
 .. automodule:: ngraph.ops
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-Runtime
---------
+ngraph.runtime module
+---------------------
 
 .. automodule:: ngraph.runtime
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

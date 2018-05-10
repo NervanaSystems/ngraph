@@ -393,7 +393,6 @@ TEST(${BACKEND_NAME}, ceiling)
 
 TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 3};
@@ -422,7 +421,6 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
 
 TEST(${BACKEND_NAME}, concat_matrix_rowwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{3, 2};
@@ -480,7 +478,6 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
 
 TEST(${BACKEND_NAME}, concat_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{6};
@@ -508,7 +505,6 @@ TEST(${BACKEND_NAME}, concat_vector)
 
 TEST(${BACKEND_NAME}, concat_4d_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -534,7 +530,6 @@ TEST(${BACKEND_NAME}, concat_4d_tensor)
 
 TEST(${BACKEND_NAME}, concat_2d_tensor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -605,7 +600,6 @@ TEST(${BACKEND_NAME}, concat_2d_tensor)
 //   2069.  2070.  2071.  2072.]
 TEST(${BACKEND_NAME}, concat_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 4 * 3 * 2);
     for (int i = 0; i < 2 * 3 * 4 * 3 * 2; i++)
     {
@@ -5881,7 +5875,6 @@ TEST(${BACKEND_NAME}, computation_reuse)
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5900,25 +5893,24 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5939,37 +5931,36 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}},
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}},
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5993,62 +5984,61 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom},
-                                         {0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          4 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          1 / denom}},
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom},
+                                                          {0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           4 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           1 / denom}},
 
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom},
-                                         {3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom,
-                                          1 / denom,
-                                          2 / denom,
-                                          4 / denom,
-                                          3 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom},
+                                                          {3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom,
+                                                           1 / denom,
+                                                           2 / denom,
+                                                           4 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6090,32 +6080,33 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
     float denom = 2 * 3;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
-                                          {7 / denom, 5 / denom, 3 / denom},
-                                          {5 / denom, 2 / denom, 5 / denom},
-                                          {6 / denom, 5 / denom, 5 / denom}},
 
-                                         {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
-                                          {8 / denom, 6 / denom, 7 / denom},
-                                          {7 / denom, 2 / denom, 3 / denom},
-                                          {6 / denom, 1 / denom, 0 / denom}}},
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
+                                   {7 / denom, 5 / denom, 3 / denom},
+                                   {5 / denom, 2 / denom, 5 / denom},
+                                   {6 / denom, 5 / denom, 5 / denom}},
 
-                                        {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
-                                          {3 / denom, 5 / denom, 9 / denom},
-                                          {3 / denom, 6 / denom, 9 / denom},
-                                          {2 / denom, 3 / denom, 3 / denom}},
+                                  {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
+                                   {8 / denom, 6 / denom, 7 / denom},
+                                   {7 / denom, 2 / denom, 3 / denom},
+                                   {6 / denom, 1 / denom, 0 / denom}}},
 
-                                         {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
-                                          {6 / denom, 5 / denom, 4 / denom},
-                                          {7 / denom, 5 / denom, 6 / denom},
-                                          {4 / denom, 2 / denom, 4 / denom}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                 {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
+                                   {3 / denom, 5 / denom, 9 / denom},
+                                   {3 / denom, 6 / denom, 9 / denom},
+                                   {2 / denom, 3 / denom, 3 / denom}},
+
+                                  {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
+                                   {6 / denom, 5 / denom, 4 / denom},
+                                   {7 / denom, 5 / denom, 6 / denom},
+                                   {4 / denom, 2 / denom, 4 / denom}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
@@ -6143,16 +6134,15 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
     float denom = 2 * 3;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
-                                          {6 / denom, 5 / denom, 8 / denom},
-                                          {6 / denom, 2 / denom, 4 / denom}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
+                                                           {6 / denom, 5 / denom, 8 / denom},
+                                                           {6 / denom, 2 / denom, 4 / denom}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6173,17 +6163,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6207,21 +6197,21 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                  {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
+                                                   {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                   {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                   {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6245,19 +6235,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
+                                                           {0.0f / 2, 4.0f / 4, 6.0f / 4},
+                                                           {2.0f / 2, 5.0f / 4, 5.0f / 4}},
+                                                          {{3.0f / 1, 8.0f / 2, 7.0f / 2},
+                                                           {5.0f / 2, 10.0f / 4, 16.0f / 4},
+                                                           {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6281,19 +6270,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                           {5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                           {2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                          {{10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                           {11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                           {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -6317,23 +6305,23 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
-                                          {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
-                                          {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
-                                          {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
+                                   {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
+                                   {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
+                                   {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
+                                   {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
+                                  {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
+                                   {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
+                                   {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
+                                   {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
+                                   {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
@@ -6357,19 +6345,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
-                                          {2.0f / 3, 8.0f / 9, 2.0f / 3},
-                                          {2.0f / 1, 2.0f / 3, 0.0f / 1}},
-                                         {{3.0f / 1, 10.0f / 3, 2.0f / 1},
-                                          {8.0f / 3, 35.0f / 9, 16.0f / 3},
-                                          {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
+                                                           {2.0f / 3, 8.0f / 9, 2.0f / 3},
+                                                           {2.0f / 1, 2.0f / 3, 0.0f / 1}},
+                                                          {{3.0f / 1, 10.0f / 3, 2.0f / 1},
+                                                           {8.0f / 3, 35.0f / 9, 16.0f / 3},
+                                                           {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 3};
@@ -6393,11 +6380,12 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>(
-                   {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
-                     {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>(
+            {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
+              {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, pad_interior_1d)
@@ -8065,7 +8053,6 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
 
 TEST(${BACKEND_NAME}, logical_and)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
@@ -8086,7 +8073,6 @@ TEST(${BACKEND_NAME}, logical_and)
 
 TEST(${BACKEND_NAME}, logical_or)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
