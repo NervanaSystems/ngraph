@@ -42,6 +42,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -77,6 +78,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -170,54 +172,55 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
     {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::nop},
-    {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>},
     {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Concat>},
-    {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Divide>},
+    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Equal>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::gpu::GPU_Emitter::emit<ngraph::op::GetOutputElement>},
-    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::GreaterEq), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Greater>},
+    {TI(ngraph::op::GreaterEq),
+     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::GreaterEq>},
+    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>},
+    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>},
+    {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>},
     {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Maximum>},
     {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Minimum>},
     {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Negative>},
-    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>},
+    {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>},
+    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Select>},
+    {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Subtract>},
     {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
-    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Convert>},
     {TI(ngraph::op::Constant), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Constant>},
     {TI(ngraph::op::Reshape), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reshape>},
     {TI(ngraph::op::FunctionCall), &runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
     {TI(ngraph::op::Reduce), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reduce>},
-    {TI(ngraph::op::Sign), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Sign), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sign>},
     {TI(ngraph::op::Slice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Slice>},
     {TI(ngraph::op::Sum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Sum>},
-    {TI(ngraph::op::Exp), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Sin), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Sinh), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Cos), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Cosh), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Tan), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Tanh), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Asin), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Acos), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Atan), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Exp), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Exp>},
+    {TI(ngraph::op::Sin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sin>},
+    {TI(ngraph::op::Sinh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sinh>},
+    {TI(ngraph::op::Cos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cos>},
+    {TI(ngraph::op::Cosh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cosh>},
+    {TI(ngraph::op::Tan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>},
+    {TI(ngraph::op::Tanh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tanh>},
+    {TI(ngraph::op::Asin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Asin>},
+    {TI(ngraph::op::Acos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Acos>},
+    {TI(ngraph::op::Atan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Atan>},
     {TI(ngraph::op::ReplaceSlice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::OneHot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::OneHot>},
-    {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>},
+    {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>},
     {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Sqrt>},
     {TI(ngraph::op::Convolution), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropData>},
-    {TI(ngraph::op::Not), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Not), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPool>},
     {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reverse>},
     {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Result>},
@@ -236,10 +239,12 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Product), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Product>},
     {TI(ngraph::op::Max), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
     {TI(ngraph::op::Min), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
-    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise},
-    {TI(ngraph::op::ReluBackprop), &runtime::gpu::GPU_Emitter::emit_elementwise},
+    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>},
+    {TI(ngraph::op::ReluBackprop),
+     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
-};
+    {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
+    {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)

@@ -86,55 +86,6 @@ namespace ngraph
                               size_t rank,
                               size_t count);
 
-            template <typename T, typename... Inputs>
-            void emit_elementwise_op(const std::string& name,
-                                     const std::vector<std::string>& data_types,
-                                     GPURuntimeContext* ctx,
-                                     size_t count,
-                                     CUdeviceptr out,
-                                     Inputs&&... inputs)
-            {
-                std::string type_signature = "_" + join(data_types, "_");
-                std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
-                auto compiled_kernel = ctx->compiled_kernel_pool->get(name + type_signature);
-                if (compiled_kernel == nullptr)
-                {
-                    codegen::CodeWriter writer;
-                    CudaKernelBuilder::add_pod_typedefs(writer);
-
-                    std::string op_name = CudaOpMap<T>::op;
-                    if (CudaOpMap<T>::math_kernel)
-                    {
-                        op_name += type_signature;
-                        CudaKernelBuilder::get_device_helper(writer,
-                                                             op_name,
-                                                             CudaOpMap<T>::math_kernel,
-                                                             data_types,
-                                                             sizeof...(inputs));
-                    }
-
-                    CudaKernelBuilder::get_elementwise_op(
-                        writer, name + type_signature, op_name, data_types, sizeof...(inputs));
-
-                    std::string kernel = writer.get_code();
-                    compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
-                }
-
-                void* args_list[] = {&inputs..., &out, &count};
-                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                              count,
-                                              1,
-                                              1, // grid dim
-                                              1,
-                                              1,
-                                              1, // block dim
-                                              0,
-                                              NULL, // shared mem and stream
-                                              args_list,
-                                              0));  // arguments
-                CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-            }
-
             template <typename... Inputs>
             void emit_concat_op(const std::string& name,
                                 const std::vector<std::string>& data_types,
