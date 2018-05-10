@@ -100,6 +100,42 @@
 #include "ngraph/util.hpp"
 
 using namespace std;
+
+// reduction function supported by GPU
+// CUDNN_REDUCE_TENSOR_ADD
+// CUDNN_REDUCE_TENSOR_MUL
+// CUDNN_REDUCE_TENSOR_MIN
+// CUDNN_REDUCE_TENSOR_MAX
+// CUDNN_REDUCE_TENSOR_AMAX
+// CUDNN_REDUCE_TENSOR_AVG
+// CUDNN_REDUCE_TENSOR_NORM1
+// CUDNN_REDUCE_TENSOR_NORM2
+// CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
+#define TI(x) type_index(typeid(x))
+
+static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
+    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
+    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
+    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
+    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
+};
+
+// cudnn support elementwised op
+// CUDNN_OP_TENSOR_ADD
+// CUDNN_OP_TENSOR_MUL
+// CUDNN_OP_TENSOR_MIN
+// CUDNN_OP_TENSOR_MAX
+// CUDNN_OP_TENSOR_SQRT
+// CUDNN_OP_TENSOR_NOT
+
+static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> element_op_map{
+    {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
+    {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
+    {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
+    {TI(ngraph::op::Minimum), CUDNN_OP_TENSOR_MIN},
+    {TI(ngraph::op::Sqrt), CUDNN_OP_TENSOR_SQRT}
+};
+
 namespace ngraph
 {
     namespace runtime
@@ -1281,23 +1317,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 return;
             }
 
-// reduction function supported by GPU
-// CUDNN_REDUCE_TENSOR_ADD
-// CUDNN_REDUCE_TENSOR_MUL
-// CUDNN_REDUCE_TENSOR_MIN
-// CUDNN_REDUCE_TENSOR_MAX
-// CUDNN_REDUCE_TENSOR_AMAX
-// CUDNN_REDUCE_TENSOR_AVG
-// CUDNN_REDUCE_TENSOR_NORM1
-// CUDNN_REDUCE_TENSOR_NORM2
-// CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
-#define TI(x) type_index(typeid(x))
-            static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
-                {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-                {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-                {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-                {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
-            };
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
