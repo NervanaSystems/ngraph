@@ -108,10 +108,16 @@ if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
     foreach(BACKEND_NAME ${BACKEND_NAMES})
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
         set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
-endforeach()
+    endforeach()
 endif()
 
-foreach(BACKEND_NAME ${BACKEND_NAMES})
+
+foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
+    string(FIND ${TEST_CONFIG} "@" OFFSET)
+    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
+    math(EXPR OFFSET ${OFFSET}+1)
+    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
+
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)

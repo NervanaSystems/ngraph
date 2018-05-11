@@ -18,12 +18,18 @@ set (SRC
     autodiff/backprop_function.cpp
     test_tools.cpp
     benchmark.cpp
+    test_control.cpp
 )
 
 include_directories(
+    SYSTEM
     ${NGRAPH_INCLUDE_PATH}
+    ${GTEST_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 add_library(ngraph_test_util SHARED ${SRC})
+target_link_libraries(ngraph_test_util libgtest)
+add_dependencies(ngraph_test_util libgtest)
+
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})

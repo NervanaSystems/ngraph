@@ -106,40 +106,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            void GPU_Emitter::emit_elementwise(
-                GPU_ExternalFunction* external_function,
-                codegen::CodeWriter& writer,
-                const ngraph::Node* node,
-                const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-            {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-
-                writer.block_begin("  // " + node->get_name());
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "if(count == 0) return;\n";
-                writer << "ngraph::runtime::gpu::emit_elementwise_op<ngraph::op::"
-                       << node->description() << ">(\"" << node->description() << "\""
-                       << ", std::vector<std::string>{";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << "\"" << args[i].get_type() << "\", ";
-                }
-                writer << "\"" << out[0].get_type() << "\"}"
-                       << ", ctx"
-                       << ", count"
-                       << ", CUdeviceptr(" << out[0].get_name() << ")";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
-                }
-                writer << ");\n";
-                writer.block_end();
-            }
-
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
@@ -1655,6 +1621,125 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 return padded_shape;
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPool)
+            {
+                // assumes NC{d1,d2,...} format
+                auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto& input_shape = args[0].get_shape();
+                    auto& result_shape = out[0].get_shape();
+                    auto padding_below = avg_pool->get_padding_below();
+                    auto padding_above = avg_pool->get_padding_above();
+
+                    int num_nontrivial_dims = 0;
+                    for (int64_t i = input_shape.size() - 1; i > 1; i--)
+                    {
+                        if (input_shape[i] > 1)
+                        {
+                            num_nontrivial_dims++;
+                        }
+                    }
+
+                    size_t avg_pool_index = 0;
+
+                    // if 1d or has asymmetric padding, must handle pooling manually
+                    if (input_shape.size() == 3 || num_nontrivial_dims == 1 ||
+                        padding_below != padding_above)
+                    {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                        avg_pool_index =
+                            cuda_emitter->build_avg_pool(external_function->ctx().get(),
+                                                         {{args[0].get_type(), out[0].get_type()}},
+                                                         input_shape,
+                                                         result_shape,
+                                                         avg_pool->get_window_shape(),
+                                                         avg_pool->get_window_movement_strides(),
+                                                         padding_below);
+                    }
+                    else if (input_shape.size() <= 5)
+                    {
+                        // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
+                        if (input_shape.size() == 4 || input_shape.size() == 5)
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                            auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
+                                                      ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                      : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                            avg_pool_index = cudnn_emitter->build_pooling(
+                                external_function->ctx().get(),
+                                cudnn_avg_type,
+                                CUDNNEmitter::Prop::Forward,
+                                input_shape,
+                                result_shape,
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_window_shape(),
+                                padding_below,
+                                padding_above);
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "Pooling currently only supports up to 3 spatial dimensions.");
+                    }
+
+                    writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
+                }
+                writer.block_end();
+            }
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto output_shape = out[0].get_shape();
+                    auto delta_shape = args[0].get_shape();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    if (output_shape.size() >= 4)
+                    {
+                        auto cudnn_avg_type = apb->get_include_padding_in_avg_computation()
+                                                  ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                                  : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+                        auto avg_pool_bp_index =
+                            cudnn_emitter->build_pooling(external_function->ctx().get(),
+                                                         cudnn_avg_type,
+                                                         CUDNNEmitter::Prop::Backward,
+                                                         output_shape,
+                                                         delta_shape,
+                                                         apb->get_window_movement_strides(),
+                                                         apb->get_window_shape(),
+                                                         apb->get_padding_below(),
+                                                         apb->get_padding_above());
+
+                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_bp_index << ", ";
+                        // CUDNN backwards pooling requests input and output tensors from
+                        // the forward pass but does not use them. It also behaves differently
+                        // for max pool vs avg pool. The repetition of args below is to address
+                        // this interface in a way that supports both max and avg pooling
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[0].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                }
+                writer.block_end();
             }
         }
     }
