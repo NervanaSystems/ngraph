@@ -76,6 +76,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
@@ -97,6 +98,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -2511,6 +2513,11 @@ namespace ngraph
                     auto data_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
                     auto weights_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
                     auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    // HACK to help MKLDNN pick the right implementation
+                    if (weights_format == mkldnn::memory::format::nchw)
+                    {
+                        weights_format = mkldnn::memory::format::oihw;
+                    }
                     auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2556,6 +2563,82 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasRelu)
+            {
+                auto convolution = static_cast<const ngraph::op::ConvolutionBiasRelu*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    // HACK to help MKLDNN pick the right implementation
+                    if (weights_format == mkldnn::memory::format::nchw)
+                    {
+                        weights_format = mkldnn::memory::format::oihw;
+                    }
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(args[2], bias_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    size_t conv_index = 0;
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    ops.append_eltwise(
+                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above(),
+                        ops);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
                 }
             }
 
@@ -2687,6 +2770,45 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices)
+            {
+                auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[1].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("MaxPoolWithIndices isn't supported");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reverse)
             {
                 auto reverse = static_cast<const ngraph::op::Reverse*>(node);
@@ -2700,6 +2822,21 @@ namespace ngraph
                 writer << "                {" << join(arg_shape) << "},\n";
                 writer << "                {" << join(result_shape) << "},\n";
                 writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReverseSequence)
+            {
+                auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
+                auto arg_shape = args[0].get_shape();
+
+                writer << "reference::reverse_sequence<" << out[0].get_type() << ","
+                       << args[1].get_type() << ">(" << args[0].get_name() << ",\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                {" << join(arg_shape) << "},\n";
+                writer << "                 " << rs->get_batch_axis() << ",\n";
+                writer << "                 " << rs->get_sequence_axis() << ",\n";
+                writer << "                 " << args[1].get_name() << ");\n";
             }
 
             template <>
@@ -3011,6 +3148,46 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndicesBackprop)
+            {
+                auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_backward(
+                        mkldnn::algorithm::pooling_max,
+                        diff_dst_desc,
+                        diff_src_desc,
+                        mpb->get_window_movement_strides(),
+                        mpb->get_window_shape(),
+                        mpb->get_padding_below(),
+                        mpb->get_padding_above());
+
+                    auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[0])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[1])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("MaxPoolWithIndicesBackprop isn't supported");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Product)
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
@@ -3231,9 +3408,19 @@ namespace ngraph
             {
                 auto input_tvl =
                     node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto input_cpu_tvl =
+                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
+                auto input_format = input_cpu_tvl->get_mkldnn_format();
+
+                // Reorder input shape if needed
+                auto input_axis_order = input_cpu_tvl->get_axis_order();
+                Shape input_shape(input_axis_order.size());
+                for (size_t idx = 0; idx < input_axis_order.size(); idx++)
+                {
+                    input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
+                }
+
                 auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                auto input_format =
-                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
@@ -3251,7 +3438,9 @@ namespace ngraph
                 }
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                    input_shape, args[0].get_element_type(), input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);

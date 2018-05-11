@@ -71,6 +71,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                        -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
                 BUILD_ALWAYS 1
             )
         else()
@@ -89,6 +90,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                        -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
                 BUILD_ALWAYS 1
             )
         endif()
@@ -108,6 +110,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                        -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
                 BUILD_BYPRODUCTS ${NNP_TRANSFORMER_PREFIX}
                 BUILD_ALWAYS 1
             )
@@ -127,6 +130,7 @@ if (NGRAPH_NNP_ENABLE)
                         -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                         -DINSTALLED_HEADERS_PATH=${CMAKE_INSTALL_PREFIX}/include
                         -DMKLDNN_INCLUDE_DIR=${MKLDNN_INCLUDE_DIR}
+                        -DNGRAPH_DISTRIBUTED_ENABLE=${NGRAPH_DISTRIBUTED_ENABLE}
                 BUILD_BYPRODUCTS ${NNP_TRANSFORMER_PREFIX}
                 BUILD_ALWAYS 1
             )

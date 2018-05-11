@@ -18,24 +18,23 @@
 import numpy as np
 import ngraph as ng
 
-shape = [2, 2]
-A = ng.parameter(shape, name='A')
-B = ng.parameter(shape, name='B')
-C = ng.parameter(shape, name='C')
+A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
+B = ng.parameter(shape=[2, 2], name='B')
+C = ng.parameter(shape=[2, 2], name='C')
 # >>> print(A)
-# <Parameter: 'A' (2, 2, float)>
+# <Parameter: 'A' ([2, 2], float)>
 
 model = (A + B) * C
 # >>> print(model)
-# <Node: 'Multiply_6'>
+# <Multiply: 'Multiply_14' ([2, 2])>
 
-runtime = ng.runtime(backend_name='INTERPRETER')
+runtime = ng.runtime(backend_name='CPU')
 # >>> print(runtime)
-# <Runtime: Manager='INTERPRETER'>
+# <Runtime: Backend='CPU'>
 
 computation = runtime.computation(model, A, B, C)
 # >>> print(computation)
-# <Computation: Multiply_6(A, B, C)>
+# <Computation: Multiply_14(A, B, C)>
 
 value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
 value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)

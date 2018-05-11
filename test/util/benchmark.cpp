@@ -205,11 +205,13 @@ void run_benchmark(shared_ptr<Function> f,
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::TensorView>> args;
+    vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
+        args_cacheable.push_back(param->get_cacheable());
     }
     vector<shared_ptr<runtime::TensorView>> results;
     for (shared_ptr<Node> out : f->get_results())
@@ -218,6 +220,13 @@ void run_benchmark(shared_ptr<Function> f,
         results.push_back(result);
     }
 
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        if (args_cacheable[i])
+        {
+            args[i]->set_stale(false);
+        }
+    }
     stopwatch t1;
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
