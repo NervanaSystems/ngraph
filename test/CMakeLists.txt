@@ -38,6 +38,7 @@ set (SRC
     main.cpp
     op.cpp
     graph_partition.cpp
+    nop_elimination.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp

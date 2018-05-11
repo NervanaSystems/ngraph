@@ -20,7 +20,9 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "cpu_nop_elimination.hpp"
+#include "nop_elimination.hpp"
+
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
@@ -76,16 +78,27 @@ HANDLER_DECL(eliminate_slice)
     return false;
 }
 
+HANDLER_DECL(eliminate_broadcast)
+{
+    auto broadcast = std::dynamic_pointer_cast<ngraph::op::Broadcast>(node);
+    if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
+    {
+        function->replace_node(node, node->get_argument(0));
+        return true;
+    }
+    return false;
+}
+
 static const std::unordered_map<std::type_index,
                                 std::function<bool(const std::shared_ptr<ngraph::Function>&,
                                                    const std::shared_ptr<ngraph::Node>&)>>
     dispatcher{{TI(ngraph::op::Pad), &eliminate_pad},
                {TI(ngraph::op::Sum), &eliminate_sum},
                {TI(ngraph::op::Convert), &eliminate_convert},
-               {TI(ngraph::op::Slice), &eliminate_slice}};
+               {TI(ngraph::op::Slice), &eliminate_slice},
+               {TI(ngraph::op::Broadcast), &eliminate_broadcast}};
 
-bool ngraph::runtime::cpu::pass::CPUNopElimination::run_on_function(
-    std::shared_ptr<ngraph::Function> function)
+bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Function> function)
 {
     bool clobbered = false;
 
