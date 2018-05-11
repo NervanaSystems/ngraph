@@ -503,9 +503,38 @@ namespace ngraph
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    throw ngraph_error("BatchNorm is only supported with 4-D MKLDNN kernel.");
+                    const ngraph::op::BatchNorm* batchnorm =
+                        static_cast<const ngraph::op::BatchNorm*>(node);
+
+                    if (batchnorm->get_training_flag() && args.size() == 3)
+                    {
+                        writer << "reference::batch_norm_three_outputs("
+                               << batchnorm->get_eps_value() << ",\n";
+                        writer << "            " << args[0].get_name() << ",\n";
+                        writer << "            " << args[1].get_name() << ",\n";
+                        writer << "            " << args[2].get_name() << ",\n";
+                        writer << "            " << out[0].get_name() << ",\n";
+                        writer << "            " << out[1].get_name() << ",\n";
+                        writer << "            " << out[2].get_name() << ",\n";
+                        writer << "            {" << join(args[2].get_shape()) << "});\n";
+                    }
+                    else
+                    {
+                        writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                               << ",\n";
+                        writer << "            " << args[0].get_name() << ",\n";
+                        writer << "            " << args[1].get_name() << ",\n";
+                        writer << "            " << args[2].get_name() << ",\n";
+                        writer << "            " << args[3].get_name() << ",\n";
+                        writer << "            " << args[4].get_name() << ",\n";
+                        writer << "            " << out[0].get_name() << ",\n";
+                        writer << "            {" << join(args[2].get_shape()) << "});\n";
+                    }
                 }
-                emitBatchNorm(external_function, writer, node, args, out, false);
+                else
+                {
+                    emitBatchNorm(external_function, writer, node, args, out, false);
+                }
             }
 
             template <>
