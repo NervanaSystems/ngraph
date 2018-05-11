@@ -29,7 +29,7 @@ include_directories(
 )
 
 add_library(ngraph_test_util SHARED ${SRC})
-target_link_libraries(ngraph_test_util libgtest)
-add_dependencies(ngraph_test_util libgtest)
+target_link_libraries(ngraph_test_util ngraph libgtest)
+add_dependencies(ngraph_test_util ngraph libgtest)
 
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})
