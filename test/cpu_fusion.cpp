@@ -1241,40 +1241,54 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
 //    ASSERT_EQ(ccg, 1);
 }
 
+void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backend,
+                                             const vector<float> input_0_data,
+                                             const vector<float> input_1_data,
+                                             const Shape& input_0_shape,
+                                             const Shape& input_1_shape,
+                                             const Shape& result_shape,
+                                             shared_ptr<Node> input_0_node,
+                                             shared_ptr<Node> input_1_node,
+                                             const vector<float>& expected)
+{
+    auto input_0 = make_shared<op::Parameter>(element::f32, input_0_shape);
+    auto input_1 = make_shared<op::Parameter>(element::f32, input_1_shape);
 
-TEST(cpu_fusion, sigmoid_multiply_fusion_forward_compute)
+    shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0_shape);
+    shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1_shape);
+    shared_ptr<runtime::TensorView> result_tensor = backend->create_tensor(element::f32, result_shape);
+
+    copy_data(input_0_tensor, input_0_data);
+    copy_data(input_1_tensor, input_1_data);
+
+    auto mul_node = input_0_node * input_1_node;
+    auto func = make_shared<Function>(mul_node, op::ParameterVector{input_0, input_1});
+    backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
+    std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
+//    EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
 {
     auto backend = runtime::Backend::create("CPU");
 
     Shape data_shape{1, 1, 2, 2};
-    auto input_0 = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_1 = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_2 = make_shared<op::Parameter>(element::f32, Shape{1});
-
-    shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0->get_shape());
-    shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1->get_shape());
-    shared_ptr<runtime::TensorView> input_2_tensor = backend->create_tensor(element::f32, input_2->get_shape());
-    shared_ptr<runtime::TensorView> result_tensor =
-            backend->create_tensor(element::f32, input_0->get_shape());
+    Shape const_shape{1};
 
     vector<float> input_0_data{1,2,3,4};
     vector<float> input_1_data{1.2,2.3,3.5,4.7};
     vector<float> input_2_data{1.2};
 //    vector<float> input_0_data(shape_size(data_shape), 1.1f);
 //    vector<float> input_1_data(shape_size(data_shape), 2.2f);
-    copy_data(input_0_tensor, input_0_data);
-    copy_data(input_1_tensor, input_1_data);
-    copy_data(input_2_tensor, input_2_data);
     // test case 1
     {
-        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input_0);
-        auto sigmoid_node_2 = make_shared<op::Broadcast>(input_2, data_shape, AxisSet{1,2,3});
-        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-        auto func = make_shared<Function>(mul_node, op::ParameterVector{input_0, input_2});
-        backend->call(func, {result_tensor}, {input_0_tensor, input_2_tensor});
-        std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0);
+        auto sigmoid_1 = make_shared<op::Broadcast>(input_2, data_shape, AxisSet{1,2,3});
 //        vector<float> expected{0.561837, 0.800536, 0.924652, 0.973163};
-//        EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_data,
+                                                input_1_data,
+                                                sigmoid_0, sigmoid_1)
     }
     // test case 1
     {

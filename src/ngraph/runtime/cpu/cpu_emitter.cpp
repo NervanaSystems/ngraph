@@ -3706,10 +3706,10 @@ namespace ngraph
                 writer.block_begin();
                 writer << input_1_func_string;
                 writer.block_end();
-                writer << out[0].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + " * " + d_numer_0 + ") / (" +
-                    denom_1 + " * " + d_denom_0 + ");\n";
-                writer << out[1].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + " * " + d_numer_1 + ") / (" +
-                                               denom_0 + " * " + d_denom_1 + ");\n";
+                writer << out[0].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + "*" + d_numer_0 + ")/(" +
+                    denom_1 + "*" + d_denom_0 + ");\n";
+                writer << out[1].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + "*" + d_numer_1 + ")/(" +
+                                               denom_0 + "*" + d_denom_1 + ");\n";
                 writer.block_end();
                 writer.block_end();
             }
