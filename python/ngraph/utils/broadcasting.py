@@ -63,8 +63,9 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     if len(shapes) > 1:
         log.warning('More than one different shape in input nodes %s.', input_nodes)
 
-    types = {node.get_element_type() for node in input_nodes}
-    if len(types) > 1:
+    types = [node.get_element_type() for node in input_nodes]
+    unique_types = {repr(type) for type in types}
+    if len(unique_types) > 1:
         log.warning('More than one different data type in input nodes %s.', input_nodes)
 
     sorted_shapes = sorted(shapes, key=len)

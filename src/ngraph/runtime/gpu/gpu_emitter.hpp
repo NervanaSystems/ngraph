@@ -58,11 +58,47 @@ namespace ngraph
                 {
                 }
 
+                template <typename T>
                 static void emit_elementwise(GPU_ExternalFunction* external_function,
                                              codegen::CodeWriter& writer,
                                              const ngraph::Node* node,
                                              const std::vector<GPU_TensorViewWrapper>& args,
-                                             const std::vector<GPU_TensorViewWrapper>& out);
+                                             const std::vector<GPU_TensorViewWrapper>& out)
+                {
+                    if (out[0].get_size() == 0)
+                    {
+                        return;
+                    }
+                    else if (out.size() > 1)
+                    {
+                        throw std::runtime_error(
+                            "Multi-output elementwise ops are not currently supported.");
+                    }
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                    writer.block_begin("  // " + node->get_name());
+                    {
+                        std::vector<std::string> dtypes;
+                        for (auto& arg : args)
+                        {
+                            dtypes.push_back(arg.get_type());
+                        }
+                        dtypes.push_back(out[0].get_type());
+                        auto ew_index = cuda_emitter->build_elementwise<T>(
+                            external_function->ctx().get(), dtypes, out[0].get_shape());
+                        writer << "gpu::invoke_primitive(ctx, " << ew_index << ", ";
+                        writer << "std::vector<void*>{" << args.front().get_name();
+                        for (size_t i = 1; i < args.size(); i++)
+                        {
+                            writer << ", " << args[i].get_name();
+                        }
+                        writer << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                    writer.block_end();
+                }
             };
             Shape get_padded_shape(const Shape& input_shape,
                                    const Shape& padding_below,

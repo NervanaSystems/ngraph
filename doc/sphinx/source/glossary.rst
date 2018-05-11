@@ -17,6 +17,12 @@ Glossary
       A component of nGraph that acts as a backend for a framework,
       allowing the framework to define and execute computations.
 
+   data-flow graph
+
+      Data-flow graphs are used to implement deep learning models. In  
+      a data-flow graph, nodes represent operations on data and edges 
+      represent data flowing between those operations. 
+
    framework
 
       A machine learning environment, such as TensorFlow, MXNet, or
