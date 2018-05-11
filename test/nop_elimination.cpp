@@ -14,27 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include <algorithm>
-#include <cstdio>
-#include <iostream>
-#include <list>
 #include <memory>
 
 #include "gtest/gtest.h"
-#include "ngraph/file_util.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/label.hpp"
-#include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/serializer.hpp"
-#include "util/matcher.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -54,10 +39,7 @@ TEST(nop_elimination, eliminate_pad)
         op::ParameterVector{A, B});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
@@ -70,10 +52,7 @@ TEST(nop_elimination, eliminate_sum)
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
@@ -84,14 +63,11 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto f = std::make_shared<Function>(make_shared<op::Convert>(A, element::f32),
-                                        op::ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
@@ -105,10 +81,7 @@ TEST(nop_elimination, eliminate_slice)
                                    op::ParameterVector{A});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
@@ -122,10 +95,7 @@ TEST(nop_elimination, eliminate_broadcast)
                                    op::ParameterVector{A});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
