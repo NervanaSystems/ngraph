@@ -115,6 +115,16 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         auto it = carg;
         while (it != goe)
         {
+            if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+            {
+                Shape default_shape(rcarg->get_argument(0)->get_shape().size());
+                std::iota(begin(default_shape), end(default_shape), 0);
+                if (default_shape != rcarg->get_input_order())
+                {
+                    NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                    return false;
+                }
+            }
             if (carg->get_users().size() > 1)
             {
                 NGRAPH_DEBUG << carg->get_name() << " has more than one user";
@@ -131,7 +141,16 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         return false;
     }
 
-    ngraph::replace_node(n, goe);
+    auto replacement = goe;
+    if (goe->get_shape().size() < n->get_shape().size())
+    {
+        Shape default_shape(goe->get_shape().size());
+        std::iota(begin(default_shape), end(default_shape), 0);
+        auto reshape = std::make_shared<op::Reshape>(goe, default_shape, n->get_shape());
+        replacement = reshape;
+    }
+
+    ngraph::replace_node(n, replacement);
     return true;
 }
 
