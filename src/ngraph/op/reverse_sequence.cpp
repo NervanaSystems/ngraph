@@ -38,6 +38,16 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
         throw ngraph_error("indices should be a 1-dimensional array");
     }
 
+    if (batch_axis >= arg->get_shape().size())
+    {
+        throw ngraph_error("batch axis index is out of bounds");
+    }
+
+    if (seq_axis >= arg->get_shape().size())
+    {
+        throw ngraph_error("sequence axis index is out of bounds");
+    }
+
     if (arg->get_shape().at(batch_axis) != seq_indices->get_shape().at(0))
     {
         throw ngraph_error("Sequence length size should be equal to batch axis dimension");
