@@ -20,7 +20,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
-#include "test_control.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
