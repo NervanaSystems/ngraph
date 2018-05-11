@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include "gtest/gtest.h"
-#include "ngraph/onnx_import/onnx.pb.h"
+#include "onnx.pb.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/onnx_util.hpp"
 #include "ngraph/onnx_import/graph.hpp"

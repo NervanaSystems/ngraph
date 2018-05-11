@@ -24,6 +24,10 @@ include_directories(
     ${NGRAPH_INCLUDE_DIR}
     )
 
+include_directories(
+    ${NGRAPH_ONNX_INCLUDE_DIR}
+    )
+
 set (SRC
     backend_api.cpp
     backend_debug_api.cpp
@@ -39,7 +43,6 @@ set (SRC
     inliner.cpp
     input_output_assign.cpp
     main.cpp
-    onnx_import.cpp
     op.cpp
     graph_partition.cpp
     includes.cpp
@@ -60,6 +63,10 @@ set (SRC
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if (NGRAPH_ONNX_IMPORT)
+    list(APPEND SRC onnx_import.cpp)
+endif()
 
 add_subdirectory(models)
 add_subdirectory(files)
@@ -174,11 +181,9 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-# ONNX requires Protobuf
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-link_directories(${PROTOBUF_LIBRARY_DIRS})
-target_link_libraries(unit-test Protobuf)
+if(NGRAPH_ONNX_IMPORT)
+    target_link_libraries(unit-test ${Protobuf_LIBRARIES})
+endif()
 
 if(NGRAPH_NNP_ENABLE)
     # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.

@@ -19,3 +19,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
 add_subdirectory(resource)
 add_subdirectory(ngraph)
 add_subdirectory(tools)
+
+if (NGRAPH_ONNX_IMPORT)
+    set(NGRAPH_ONNX_INCLUDE_DIR ${NGRAPH_ONNX_INCLUDE_DIR} PARENT_SCOPE)
+endif()

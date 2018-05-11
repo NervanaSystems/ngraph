@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "ngraph/onnx_import/onnx.pb.h"
+#include "onnx.pb.h"
 
 namespace ngraph
 {

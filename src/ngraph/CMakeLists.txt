@@ -31,13 +31,6 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
-    onnx_import/graph.cpp
-    onnx_import/mapping.cpp
-    onnx_import/model.cpp
-    onnx_import/node.cpp
-    onnx_import/onnx.pb.cc
-    onnx_import/value_info.cpp
-    onnx_util.cpp
     op/abs.cpp
     op/acos.cpp
     op/add.cpp
@@ -146,6 +139,30 @@ set (SRC
     placement.cpp
     cpio.cpp
 )
+
+if (NGRAPH_ONNX_IMPORT)
+    set(ONNX_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/onnx_import")
+    set(ONNX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/onnx_import")
+    set(ONNX_PROTO ${ONNX_SOURCE_DIR}/onnx.proto)
+    set(ONNX_PB_H ${ONNX_OUTPUT_DIR}/onnx.pb.h)
+    set(ONNX_PB_CC ${ONNX_OUTPUT_DIR}/onnx.pb.cc)
+    set(NGRAPH_ONNX_INCLUDE_DIR ${ONNX_OUTPUT_DIR} PARENT_SCOPE)
+    set_source_files_properties(${ONNX_PB_H} ${ONNX_PB_CC} PROPERTIES GENERATED TRUE)
+    file(MAKE_DIRECTORY ${ONNX_OUTPUT_DIR})
+    exec_program(${Protobuf_PROTOC_EXECUTABLE} ARGS --cpp_out ${ONNX_OUTPUT_DIR} --proto_path ${ONNX_SOURCE_DIR} ${ONNX_PROTO})
+    include_directories(${ONNX_OUTPUT_DIR})
+    list(APPEND SRC
+        ${ONNX_PROTO}
+        ${ONNX_PB_H}
+        ${ONNX_PB_CC}
+        onnx_import/graph.cpp
+        onnx_import/mapping.cpp
+        onnx_import/model.cpp
+        onnx_import/node.cpp
+        onnx_import/onnx.pb.cc
+        onnx_import/value_info.cpp
+        onnx_util.cpp)
+endif()
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
 file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
@@ -314,6 +331,10 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
 
+if (NGRAPH_ONNX_IMPORT)
+    target_link_libraries(ngraph PRIVATE ${Protobuf_LIBRARIES})
+endif()
+
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
@@ -375,12 +396,6 @@ if (NGRAPH_NNP_ENABLE)
     add_dependencies(ngraph ext_nnp_transformer)
     add_dependencies(ext_nnp_transformer ext_llvm)
 endif()
-
-# ONNX requires Protobuf
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-link_directories(${PROTOBUF_LIBRARY_DIRS})
-target_link_libraries(ngraph PRIVATE Protobuf)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

@@ -26,6 +26,8 @@ endif()
 
 project (ngraph)
 
+option(NGRAPH_ONNX_IMPORT "Enable ONNX importer" ON)
+
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
 SET(APPLE_CLANG_MIN_VERSION 9.0)
@@ -198,6 +200,12 @@ endif()
 #     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
+if (NGRAPH_ONNX_IMPORT)
+    find_package(Protobuf REQUIRED)
+    include_directories(${Protobuf_INCLUDE_DIR})
+    link_directories(${Protobuf_LIBRARY_DIR})
+endif()
+
 # The following 'add_subdirectory' call:
 # - defines the 'libgtest' target.
 # - defines the 'GTEST_INCLUDE_DIR' cmake variable.
@@ -213,4 +221,6 @@ add_subdirectory(src)
 add_subdirectory(test)
 
 add_subdirectory(doc)
+
+unset(NGRAPH_ONNX_IMPORT CACHE)
 
