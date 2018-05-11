@@ -26,6 +26,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"

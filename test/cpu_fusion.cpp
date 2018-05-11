@@ -1223,3 +1223,62 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
+
+TEST(cpu_fusion, batch_norm_folding)
+{
+    Shape shape_input{1, 8, 3, 3};
+    Shape shape_weights{2, 8, 1, 1};
+    Shape shape_norm{2};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        double eps = 0.001;
+        auto gamma = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto beta = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto mean = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto var = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, conv, mean, var);
+        auto f = make_shared<Function>(NodeVector{bn},
+                                       op::ParameterVector{input, weights, gamma, beta, mean, var});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {1.25f,
+         2.25f,
+         5.25f,
+         6.25f,
+         -1.25f,
+         -1.25f,
+         3.25f,
+         -4.25f,
+         7.25f,
+         8.25f,
+         -1.25f,
+         0.f,
+         0.f,
+         0.f,
+         0.f,
+         -2.f},
+        {-0.9384f, 0.01875f},
+        {11.0f, 1.3f},
+        {0.12f, 0.31f},
+        {0.01f, 0.11f},
+    };
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}

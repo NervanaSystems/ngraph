@@ -50,6 +50,7 @@ public:
         construct_batch_norm_relu();
         construct_batch_norm_relu_global_stats();
         construct_conv_relu();
+        construct_conv_bias_relu();
     }
 
 private:
@@ -65,4 +66,5 @@ private:
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
     void construct_conv_relu();
+    void construct_conv_bias_relu();
 };
