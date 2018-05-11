@@ -133,8 +133,7 @@ static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> element_op_m
     {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
     {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
     {TI(ngraph::op::Minimum), CUDNN_OP_TENSOR_MIN},
-    {TI(ngraph::op::Sqrt), CUDNN_OP_TENSOR_SQRT}
-};
+    {TI(ngraph::op::Sqrt), CUDNN_OP_TENSOR_SQRT}};
 
 namespace ngraph
 {
