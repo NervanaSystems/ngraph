@@ -36,7 +36,7 @@ multiple models in parallel, or attempt to figure out how to build graphs
 more efficiently. In other words, if a model requires any operation that 
 hasn't been implemented on GPU, it must wait for copies to propagate from 
 the CPU to the GPU(s). An effect of this inefficiency is that it slows down 
-the system. Data scientists who are facing a large curve of uncertainty in 
+the system. For data scientists who are facing a large curve of uncertainty in 
 how large (or how small) the compute-power needs of their model will be, 
 investing heavily in frameworks reliant upon GPUs may not be the best decision.  
 
