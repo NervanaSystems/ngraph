@@ -142,15 +142,16 @@ set (SRC
 )
 
 if (NGRAPH_ONNX_IMPORT)
-    set(ONNX_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/onnx_import")
+    set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onnx.proto")
     set(ONNX_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/onnx_import")
-    set(ONNX_PROTO ${ONNX_SOURCE_DIR}/onnx.proto)
+    set(ONNX_PROTO ${ONNX_OUTPUT_DIR}/onnx.proto)
     set(ONNX_PB_H ${ONNX_OUTPUT_DIR}/onnx.pb.h)
     set(ONNX_PB_CC ${ONNX_OUTPUT_DIR}/onnx.pb.cc)
     set(NGRAPH_ONNX_INCLUDE_DIR ${ONNX_OUTPUT_DIR} PARENT_SCOPE)
     set_source_files_properties(${ONNX_PB_H} ${ONNX_PB_CC} PROPERTIES GENERATED TRUE)
     file(MAKE_DIRECTORY ${ONNX_OUTPUT_DIR})
-    exec_program(${Protobuf_PROTOC_EXECUTABLE} ARGS --cpp_out ${ONNX_OUTPUT_DIR} --proto_path ${ONNX_SOURCE_DIR} ${ONNX_PROTO})
+    file(DOWNLOAD ${ONNX_SOURCE_URL} ${ONNX_PROTO} SHOW_PROGRESS)
+    exec_program(${Protobuf_PROTOC_EXECUTABLE} ARGS --cpp_out ${ONNX_OUTPUT_DIR} --proto_path ${ONNX_OUTPUT_DIR} ${ONNX_PROTO})
     include_directories(${ONNX_OUTPUT_DIR})
     list(APPEND SRC
         ${ONNX_PROTO}
