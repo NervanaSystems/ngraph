@@ -362,7 +362,7 @@ def main():
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
-#include "test_control.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
