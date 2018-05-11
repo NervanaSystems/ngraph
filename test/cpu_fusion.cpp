@@ -28,6 +28,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
@@ -50,6 +51,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1128,63 +1130,439 @@ TEST(cpu_fusion, weight_fusion)
               cvt_lt_conv);
 }
 
-TEST(cpu_fusion, sigmoid_multiply_fusion_compute)
+TEST(cpu_fusion, max_pool_with_indices)
+{
+    Shape shape_a{10, 3, 28, 28};
+    auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
+    auto C = std::make_shared<op::Parameter>(element::f32, max_pool->get_shape());
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{max_pool}, NodeVector{C});
+
+    auto dinput = adjoints.backprop_node(input);
+
+    auto df = std::make_shared<Function>(NodeVector{dinput}, op::ParameterVector{input, C});
+
+    auto f = std::make_shared<Function>(NodeVector{max_pool}, op::ParameterVector{input});
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    auto maxpool_goe_output =
+        std::dynamic_pointer_cast<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(maxpool_goe_output);
+    ASSERT_EQ(maxpool_goe_output->get_n(), 0);
+    auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
+    auto maxpool_goe_indices =
+        std::dynamic_pointer_cast<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
+    ASSERT_TRUE(maxpool_goe_indices);
+    ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
+}
+
+TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
+{
+    Shape shape_a{1, 4, 4, 4};
+    Shape maxpool_shape{1, 4, 3, 3};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = std::make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
+    auto f = std::make_shared<Function>(maxpool, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+
+    vector<float> dataInput{11.f, 31.f, 40.f, 47.f, 13.f, 61.f, 48.f, 59.f, 17.f, 39.f, 64.f,
+                            62.f, 45.f, 55.f, 36.f, 19.f, 65.f, 33.f, 49.f, 30.f, 56.f, 41.f,
+                            53.f, 58.f, 22.f, 35.f, 52.f, 50.f, 63.f, 54.f, 12.f, 26.f, 44.f,
+                            21.f, 69.f, 24.f, 46.f, 25.f, 51.f, 29.f, 72.f, 15.f, 73.f, 10.f,
+                            16.f, 37.f, 70.f, 32.f, 28.f, 66.f, 57.f, 27.f, 60.f, 42.f, 43.f,
+                            71.f, 18.f, 38.f, 67.f, 68.f, 14.f, 20.f, 34.f, 23.f};
+
+    vector<float> expected{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 12.0f, 0.0f, 4.0f, 0.0f, 0.0f,  16.0f,
+                           0.0f, 0.0f, 4.0f, 0.0f, 0.0f, 4.0f,  0.0f, 0.0f, 0.0f, 4.0f,  0.0f,
+                           8.0f, 8.0f, 0.0f, 0.0f, 4.0f, 0.0f,  4.0f, 4.0f, 0.0f, 0.0f,  0.0f,
+                           0.0f, 8.0f, 0.0f, 4.0f, 0.0f, 0.0f,  0.0f, 8.0f, 0.0f, 16.0f, 0.0f,
+                           0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 8.0f,  0.0f, 0.0f, 4.0f, 0.0f,  0.0f,
+                           8.0f, 0.0f, 4.0f, 8.0f, 4.0f, 0.0f,  0.0f, 0.0f, 0.0f};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = std::make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    backend->call(df, {output}, {input, ep});
+    ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_before.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("sigmoid_mul_after.pdf");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::SigmoidMultiply>(func);
+    std::cout << "sigmoid mulitply " << ccg << std::endl;
+//    ASSERT_EQ(ccg, 1);
+}
+
+void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backend,
+                                             shared_ptr<op::Parameter> input_0_param,
+                                             shared_ptr<op::Parameter> input_1_param,
+                                             const vector<float> input_0_data,
+                                             const vector<float> input_1_data,
+                                             const Shape& input_0_shape,
+                                             const Shape& input_1_shape,
+                                             const Shape& result_shape,
+                                             shared_ptr<Node> input_0_node,
+                                             shared_ptr<Node> input_1_node,
+                                             const vector<float>& expected)
+{
+    shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0_shape);
+    shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1_shape);
+    shared_ptr<runtime::TensorView> result_tensor = backend->create_tensor(element::f32, result_shape);
+
+    copy_data(input_0_tensor, input_0_data);
+    copy_data(input_1_tensor, input_1_data);
+
+    auto mul_node = input_0_node * input_1_node;
+    auto func = make_shared<Function>(mul_node, op::ParameterVector{input_0_param, input_1_param});
+    backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
+    std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
+//    EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
 {
     auto backend = runtime::Backend::create("CPU");
 
-    const size_t w = 2;
-    const size_t h = 2;
-    auto input1 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
-    auto input2 = make_shared<op::Parameter>(element::f32, Shape{1, 1, w, h});
+    Shape data_shape{1, 1, 2, 2};
+    Shape const_shape{1};
 
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input1->get_shape());
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, input2->get_shape());
-    shared_ptr<runtime::TensorView> result =
-        backend->create_tensor(element::f32, input1->get_shape());
-
-    vector<float> dataA{1, 2, 3, 4};
-    vector<float> dataB{5, 6, 7, 8};
-    copy_data(a, dataA);
-    copy_data(b, dataB);
-
-    // test case 1
+    vector<float> input_0_data{1,2,3,4};
+    vector<float> input_1_data{1.2,2.3,3.5,4.7};
+    vector<float> const_data{1.2};
+//    vector<float> input_0_data(shape_size(data_shape), 1.1f);
+//    vector<float> input_1_data(shape_size(data_shape), 2.2f);
     {
-        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input1);
-        auto sigmoid_node_2 = make_shared<op::Sigmoid>(input2);
-        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
-        backend->call(func, {result}, {a, b});
-        vector<float> expected{0.726166, 0.878619, 0.951706, 0.981684};
-        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, const_shape);
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Broadcast>(input_1_param, data_shape, AxisSet{1,2,3});
+        vector<float> expected{0.87727, 1.05696, 1.14309, 1.17842};
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_param,
+                                                input_1_param,
+                                                input_0_data,
+                                                const_data,
+                                                data_shape,
+                                                const_shape,
+                                                data_shape,
+                                                sigmoid_0, 
+                                                sigmoid_1,
+                                                expected);
     }
-    // test case 2
     {
-        auto sigmoid_node_1 = make_shared<op::Sigmoid>(input1);
-        auto sigmoid_node_2 = make_shared<op::Tanh>(input2);
-        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
-        backend->call(func, {result}, {a, b});
-        vector<float> expected{0.730992, 0.880786, 0.952573, 0.982014};
-        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Sigmoid>(input_1_param);
+        vector<float> expected{0.561837, 0.800536, 0.924652, 0.973163};
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_param,
+                                                input_1_param,
+                                                input_0_data,
+                                                input_1_data,
+                                                data_shape,
+                                                data_shape,
+                                                data_shape,
+                                                sigmoid_0, 
+                                                sigmoid_1,
+                                                expected);
     }
-    // test case 3
     {
-        auto sigmoid_node_1 = make_shared<op::Tanh>(input1);
-        auto sigmoid_node_2 = make_shared<op::Sigmoid>(input2);
-        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
-        backend->call(func, {result}, {a, b});
-        vector<float> expected{0.756497, 0.961644, 0.994148, 0.998994};
-        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Tanh>(input_1_param);
+        vector<float> expected{0.60945, 0.863266, 0.950838, 0.981851};
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_param,
+                                                input_1_param,
+                                                input_0_data,
+                                                input_1_data,
+                                                data_shape,
+                                                data_shape,
+                                                data_shape,
+                                                sigmoid_0, 
+                                                sigmoid_1,
+                                                expected);
     }
-    // test case 4
     {
-        auto sigmoid_node_1 = make_shared<op::Tanh>(input1);
-        auto sigmoid_node_2 = make_shared<op::Tanh>(input2);
-        auto mul_node = sigmoid_node_1 * sigmoid_node_2;
-        auto func = make_shared<Function>(mul_node, op::ParameterVector{input1, input2});
-        backend->call(func, {result}, {a, b});
-        vector<float> expected{0.761525, 0.964016, 0.995053, 0.999329};
-        EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Tanh>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Sigmoid>(input_1_param);
+        vector<float> expected{0.585304, 0.876182, 0.965887, 0.990322};
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_param,
+                                                input_1_param,
+                                                input_0_data,
+                                                input_1_data,
+                                                data_shape,
+                                                data_shape,
+                                                data_shape,
+                                                sigmoid_0, 
+                                                sigmoid_1,
+                                                expected);
+    }
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Tanh>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Tanh>(input_1_param);
+        vector<float> expected{0.634907, 0.94484, 0.993242, 0.999164};
+        sigmoid_multiply_fusion_forward_compute(backend,
+                                                input_0_param,
+                                                input_1_param,
+                                                input_0_data,
+                                                input_1_data,
+                                                data_shape,
+                                                data_shape,
+                                                data_shape,
+                                                sigmoid_0, 
+                                                sigmoid_1,
+                                                expected);
     }
 }
+
+void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& backend,
+                                             shared_ptr<op::Parameter> input_0_param,
+                                             shared_ptr<op::Parameter> input_1_param,
+                                             const vector<float> input_0_data,
+                                             const vector<float> input_1_data,
+                                             const vector<float> delta_data,
+                                             const Shape& input_0_shape,
+                                             const Shape& input_1_shape,
+                                             const Shape& delta_shape,
+                                             const Shape& d_input_0_shape,
+                                             const Shape& d_input_1_shape,
+                                             shared_ptr<Node> input_0_node,
+                                             shared_ptr<Node> input_1_node,
+                                             shared_ptr<Node> input_0_adjoint,
+                                             shared_ptr<Node> input_1_adjoint,
+                                             const vector<float>& expected_0,
+                                             const vector<float>& expected_1)
+{
+    auto delta_param = make_shared<op::Parameter>(element::f32, delta_shape);
+
+    shared_ptr<runtime::TensorView> input_0_tensor = backend->create_tensor(element::f32, input_0_shape);
+    shared_ptr<runtime::TensorView> input_1_tensor = backend->create_tensor(element::f32, input_1_shape);
+    shared_ptr<runtime::TensorView> delta_tensor = backend->create_tensor(element::f32, delta_shape);
+    shared_ptr<runtime::TensorView> d_input_0_tensor = backend->create_tensor(element::f32, d_input_0_shape);
+    shared_ptr<runtime::TensorView> d_input_1_tensor = backend->create_tensor(element::f32, d_input_1_shape);
+
+    copy_data(input_0_tensor, input_0_data);
+    copy_data(input_1_tensor, input_1_data);
+    copy_data(delta_tensor, delta_data);
+
+    using FunctionType = op::SigmoidMultiply::FunctionType;
+    auto input_0_type = op::SigmoidMultiply::identify_node_type(input_0_node);
+    auto input_1_type = op::SigmoidMultiply::identify_node_type(input_1_node);
+    auto input_0_alt = (input_0_type == FunctionType::Identity) ? input_0_node : input_0_node->get_argument(0);
+    auto input_1_alt = (input_1_type == FunctionType::Identity) ? input_1_node : input_1_node->get_argument(0);
+    auto sigmoid_mul = make_shared<op::SigmoidMultiply>(input_0_alt, input_1_alt, input_0_type, input_1_type);
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta_param});
+    auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
+    auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
+    auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1},
+                                    op::ParameterVector{input_0_param, input_1_param, delta_param});
+    stopwatch timer;
+    timer.start();
+    backend->call(df, {d_input_0_tensor, d_input_1_tensor}, {input_0_tensor, input_1_tensor, delta_tensor});
+    timer.stop();
+    std::cout << "time: " << timer.get_milliseconds() << std::endl;
+    std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
+    std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
+    EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
+    EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
+}
+
+TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    Shape data_shape{1, 1, 2, 2};
+    Shape const_shape{1};
+
+    vector<float> input_0_data{1,2,3,4};
+    vector<float> input_1_data{1.2,2.2,3.2,4.2};
+    vector<float> const_data{1.2};
+    vector<float> delta_data(shape_size(data_shape), 20.0f);
+
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, const_shape);
+        auto sigmoid_0 = make_shared<op::Tanh>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Broadcast>(input_1_param, data_shape, AxisSet{1, 2, 3});
+        vector<float> expected_0{10.0794, 1.69562, 0.236785, 0.0321828};
+        vector<float> expected_1{15.2319, 19.2806, 19.9011, 19.9866};
+        sigmoid_multiply_fusion_backward_compute(backend,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 input_0_data,
+                                                 const_data,
+                                                 delta_data,
+                                                 data_shape,
+                                                 const_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 sigmoid_0,
+                                                 sigmoid_1,
+                                                 input_0_param,
+                                                 sigmoid_1,
+                                                 expected_0,
+                                                 expected_1);
+    }
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Sigmoid>(input_1_param);
+        vector<float> expected_0{3.02202, 1.89041, 0.868146, 0.348035};
+        vector<float> expected_1{2.60102, 1.58192, 0.716941, 0.285879};
+        sigmoid_multiply_fusion_backward_compute(backend,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 input_0_data,
+                                                 input_1_data,
+                                                 delta_data,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 sigmoid_0,
+                                                 sigmoid_1,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 expected_0,
+                                                 expected_1);
+    }
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Tanh>(input_1_param);
+        vector<float> expected_0{3.27813, 2.04894, 0.900536, 0.353095};
+        vector<float> expected_1{4.45975, 0.84425, 0.126201, 0.0176579};
+        sigmoid_multiply_fusion_backward_compute(backend,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 input_0_data,
+                                                 input_1_data,
+                                                 delta_data,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 sigmoid_0,
+                                                 sigmoid_1,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 expected_0,
+                                                 expected_1);
+
+    }
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Tanh>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Sigmoid>(input_1_param);
+        vector<float> expected_0{6.45521, 1.27207, 0.189593, 0.0264228};
+        vector<float> expected_1{2.70967, 1.7314, 0.748913, 0.29092};
+        sigmoid_multiply_fusion_backward_compute(backend,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 input_0_data,
+                                                 input_1_data,
+                                                 delta_data,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 sigmoid_0,
+                                                 sigmoid_1,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 expected_0,
+                                                 expected_1);
+
+    }
+    {
+        auto input_0_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
+        auto sigmoid_0 = make_shared<op::Tanh>(input_0_param);
+        auto sigmoid_1 = make_shared<op::Tanh>(input_1_param);
+        vector<float> expected_0{7.00227, 1.37874, 0.196666, 0.026807};
+        vector<float> expected_1{4.64603, 0.924027, 0.131829, 0.0179692};
+        sigmoid_multiply_fusion_backward_compute(backend,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 input_0_data,
+                                                 input_1_data,
+                                                 delta_data,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 data_shape,
+                                                 sigmoid_0,
+                                                 sigmoid_1,
+                                                 input_0_param,
+                                                 input_1_param,
+                                                 expected_0,
+                                                 expected_1);
+    }
+}
+

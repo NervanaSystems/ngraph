@@ -19,6 +19,8 @@
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
 #include "ngraph/util.hpp"
 
+#include <array>
+
 namespace ngraph
 {
     namespace op
@@ -27,19 +29,37 @@ namespace ngraph
         class SigmoidMultiply : public util::RequiresTensorViewArgs
         {
         public:
-            enum class FunctionType
-            {
+            enum class FunctionType {
                 Logistic,
-                Tanh
+                Tanh,
+                Identity
             };
-            SigmoidMultiply(std::shared_ptr<Node> input_1, std::shared_ptr<Node> input_2);
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            FunctionType get_input_1_func_type() const { return input_1_type; }
-            FunctionType get_input_2_func_type() const { return input_2_type; }
+            SigmoidMultiply(std::shared_ptr<Node> input_0, std::shared_ptr<Node> input_1,
+                            const FunctionType input_0_type, const FunctionType input_1_type);
+            // WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override ;
+            FunctionType get_input_func_type(const unsigned int index) const { return m_input_type[index]; }
+            static FunctionType identify_node_type(const std::shared_ptr<ngraph::Node>& node);
         private:
-            FunctionType input_1_type;
-            FunctionType input_2_type;
+            std::array<FunctionType, 2> m_input_type;
+        };
+
+        /// \brief Elementwise SigmoidMultiplyBackprop operation.
+        ///
+        class SigmoidMultiplyBackprop : public util::RequiresTensorViewArgs
+        {
+        public:
+            typedef SigmoidMultiply::FunctionType FunctionType;
+            /// \brief Constructs a SigmoidMultiplyBackprop operation.
+            ///
+            /// \param arg Node that produces the SigmoidMultiply forward input tensor.
+            SigmoidMultiplyBackprop(std::shared_ptr<Node> input_0, std::shared_ptr<Node> input_1, std::shared_ptr<ngraph::Node> delta,
+                                    const std::array<FunctionType, 2>& input_type);
+            virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            FunctionType get_input_func_type(const unsigned int index) const { return m_input_type[index]; }
+        private:
+            std::array<FunctionType, 2> m_input_type;
         };
     }
 }

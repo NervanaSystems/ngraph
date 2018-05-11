@@ -76,6 +76,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
@@ -97,6 +98,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -2769,6 +2771,45 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices)
+            {
+                auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[1].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("MaxPoolWithIndices isn't supported");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reverse)
             {
                 auto reverse = static_cast<const ngraph::op::Reverse*>(node);
@@ -2782,6 +2823,21 @@ namespace ngraph
                 writer << "                {" << join(arg_shape) << "},\n";
                 writer << "                {" << join(result_shape) << "},\n";
                 writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReverseSequence)
+            {
+                auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
+                auto arg_shape = args[0].get_shape();
+
+                writer << "reference::reverse_sequence<" << out[0].get_type() << ","
+                       << args[1].get_type() << ">(" << args[0].get_name() << ",\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                {" << join(arg_shape) << "},\n";
+                writer << "                 " << rs->get_batch_axis() << ",\n";
+                writer << "                 " << rs->get_sequence_axis() << ",\n";
+                writer << "                 " << args[1].get_name() << ");\n";
             }
 
             template <>
@@ -3093,6 +3149,46 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndicesBackprop)
+            {
+                auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_backward(
+                        mkldnn::algorithm::pooling_max,
+                        diff_dst_desc,
+                        diff_src_desc,
+                        mpb->get_window_movement_strides(),
+                        mpb->get_window_shape(),
+                        mpb->get_padding_below(),
+                        mpb->get_padding_above());
+
+                    auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[0])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[1])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(max_pool_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("MaxPoolWithIndicesBackprop isn't supported");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Product)
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
@@ -3313,9 +3409,19 @@ namespace ngraph
             {
                 auto input_tvl =
                     node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto input_cpu_tvl =
+                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
+                auto input_format = input_cpu_tvl->get_mkldnn_format();
+
+                // Reorder input shape if needed
+                auto input_axis_order = input_cpu_tvl->get_axis_order();
+                Shape input_shape(input_axis_order.size());
+                for (size_t idx = 0; idx < input_axis_order.size(); idx++)
+                {
+                    input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
+                }
+
                 auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                auto input_format =
-                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*input_tvl).get_mkldnn_format();
                 auto output_format =
                     dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
 
@@ -3333,7 +3439,9 @@ namespace ngraph
                 }
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+
+                auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                    input_shape, args[0].get_element_type(), input_format);
                 auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
@@ -3489,49 +3597,54 @@ namespace ngraph
                        << to_string(sigmoid_index) << ");\n";
             }
 
-            std::string
-                generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
-                                          const std::string& input,
-                                          const std::string& out_numer,
-                                          const std::string& out_denom)
+            std::string generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
+                                                  const std::string& input, const std::string& out_numer, const std::string& out_denom,
+                                                  bool derivative)
             {
                 std::string func_block;
-                switch (type)
-                {
-                case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
-                    func_block = "auto ex = exp(" + input + ");\n";
-                    func_block += out_numer + " = ex;\n";
-                    func_block += out_denom + " = ex+1;\n";
-                    break;
-                case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
-                    func_block = "auto ex = exp(2.0*" + input + ");\n";
-                    func_block += out_numer + " = ex-1;\n";
-                    func_block += out_denom + " = ex+1;\n";
-                    break;
-                default:
-                    throw ngraph_error(
-                        "generate_sigmoid_mul_func input function type not supported");
+                switch (type) {
+                    case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
+                        func_block = "auto e_x = exp(" + input + ");\n";
+                        func_block += out_numer + " = e_x;\n";
+                        func_block += out_denom + " = e_x+1;\n";
+                        if (derivative) {
+                            func_block += "d_" + out_numer + " = " + out_numer + ";\n";
+                            func_block += "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                        }
+                        break;
+                    case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
+                        func_block = "auto e_2x = exp(2.0*" + input + ");\n";
+                        func_block += out_numer + " = e_2x-1;\n";
+                        func_block += out_denom + " = e_2x+1;\n";
+                        if (derivative) {
+                            func_block += "d_" + out_numer + " = 4.0*e_2x;\n";
+                            func_block += "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                        }
+                        break;
+                    case ngraph::op::SigmoidMultiply::FunctionType::Identity:
+                        func_block =  out_numer + " = " + input + ";\n";
+                        func_block += out_denom + " = 1;\n";
+                        if (derivative) {
+                            func_block += "d_" + out_numer + " = 1;\n";
+                            func_block += "d_" + out_denom + " = 1;\n";
+                        }
+                        break;
+                    default:
+                        throw ngraph_error("generate_sigmoid_mul_func input function type not supported");
                 }
                 return func_block;
             }
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
             {
+                using FunctionType =  ngraph::op::SigmoidMultiply::FunctionType;
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
                 std::string numer_0 = "numer_0";
                 std::string denom_0 = "denom_0";
                 std::string numer_1 = "numer_1";
                 std::string denom_1 = "denom_1";
-                std::string input_0_func_string =
-                    generate_sigmoid_mul_func(sigmoid_mul->get_input_1_func_type(),
-                                              args[0].get_name() + "[i]",
-                                              numer_0,
-                                              denom_0);
-                std::string input_1_func_string =
-                    generate_sigmoid_mul_func(sigmoid_mul->get_input_2_func_type(),
-                                              args[1].get_name() + "[i]",
-                                              numer_1,
-                                              denom_1);
+                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(0), args[0].get_name()+"[i]", numer_0, denom_0, false);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(1), args[1].get_name()+"[i]", numer_1, denom_1, false);
 
                 writer.block_begin();
                 writer << "#pragma omp parallel for simd\n";
@@ -3547,9 +3660,56 @@ namespace ngraph
                 writer.block_begin();
                 writer << input_1_func_string;
                 writer.block_end();
-                writer << out[0].get_name()
-                       << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" + denom_0 + " * " +
-                              denom_1 + ");\n";
+                writer << out[0].get_name() << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" +
+                                               denom_0 + " * " + denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiplyBackprop)
+            {
+                // math: we have sigmoid functions f(x) and g(y) multiplied, z = f(x)g(y)
+                // dz/dx = dz/df * df/dx = g(y) * f'(x)
+                // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
+                auto sigmoid_mul_backprop = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
+                const TensorViewWrapper& data_0 = args[0];
+                const TensorViewWrapper& data_1 = args[1];
+                const TensorViewWrapper& delta = args[2];
+                const TensorViewWrapper& input_0_delta = out[0];
+                const TensorViewWrapper& input_1_delta = out[1];
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string d_numer_0 = "d_numer_0";
+                std::string d_denom_0 = "d_denom_0";
+                std::string d_numer_1 = "d_numer_1";
+                std::string d_denom_1 = "d_denom_1";
+                std::string input_0_func_string = generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(0), data_0.get_name()+"[i]", numer_0, denom_0, true);
+                std::string input_1_func_string = generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(1), data_1.get_name()+"[i]", numer_1, denom_1, true);
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << input_0_delta.get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer << "float " << d_numer_0 << ";\n";
+                writer << "float " << d_denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer << "float " << d_numer_1 << ";\n";
+                writer << "float " << d_denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << out[0].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + "*" + d_numer_0 + ")/(" +
+                    denom_1 + "*" + d_denom_0 + ");\n";
+                writer << out[1].get_name() << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + "*" + d_numer_1 + ")/(" +
+                                               denom_0 + "*" + d_denom_1 + ");\n";
                 writer.block_end();
                 writer.block_end();
             }
