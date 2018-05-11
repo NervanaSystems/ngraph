@@ -1264,8 +1264,7 @@ void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backe
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, op::ParameterVector{input_0_param, input_1_param});
     backend->call(func, {result_tensor}, {input_0_tensor, input_1_tensor});
-    std::cout << "r: " << vector_to_string(read_vector<float>(result_tensor)) << std::endl;
-//    EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
 TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
@@ -1414,13 +1413,7 @@ void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& back
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1},
                                     op::ParameterVector{input_0_param, input_1_param, delta_param});
-    stopwatch timer;
-    timer.start();
     backend->call(df, {d_input_0_tensor, d_input_1_tensor}, {input_0_tensor, input_1_tensor, delta_tensor});
-    timer.stop();
-    std::cout << "time: " << timer.get_milliseconds() << std::endl;
-    std::cout << "0: " << vector_to_string(read_vector<float>(d_input_0_tensor)) << std::endl;
-    std::cout << "1: " << vector_to_string(read_vector<float>(d_input_1_tensor)) << std::endl;
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }
