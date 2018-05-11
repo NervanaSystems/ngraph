@@ -1343,9 +1343,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                         else
                         {
-                            //here we only implemented reducetion function with one op
-                            //the op should be in the op_map
-                            //otherwise, throw an error message
+                            // in current implementation:
+                            // 1. reduction function should only have one op
+                            // 2. the op should be in the op_map
+                            // otherwise, throw an error message
                             auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             cudnnReduceTensorOp_t reduce_tensor_op;
                             int op_count = 0;
