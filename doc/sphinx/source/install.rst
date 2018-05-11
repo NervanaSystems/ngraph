@@ -4,6 +4,10 @@
 Install 
 ########
 
+* :ref:`ubuntu`
+* :ref:`centos`
+
+
 Build Environments
 ==================
 
@@ -20,10 +24,10 @@ with the following packages and prerequisites:
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but should be considered experimental with
-limited support. On Ubuntu 16.04 with ``gcc-5.4.0`` or ``clang-3.9``, for 
-example, we recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the 
-:command:`cmake` command in step 4 below. This fetches a pre-built tarball 
-of LLVM+Clang from `llvm.org`_, and will substantially reduce build time.
+limited support. On Ubuntu 16.04 with gcc-5.4.0 or clang-3.9, for example, we 
+recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the cmake command in 
+step 4 below. This fetches a pre-built tarball of LLVM+Clang from llvm.org, 
+and it will substantially reduce build time.
 
 If using ``gcc`` version 4.8, it may be necessary to add symlinks from ``gcc`` 
 to ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
@@ -40,13 +44,10 @@ The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME``
 directory as the default location. See the :file:`CMakeLists.txt` file for 
 details about how to change or customize the install location.
 
-The instructions below also presume cloning the nGraph source via an SSH-enabled 
-Github account. If you don't have SSH keys set up on your GitHub account, you can 
-still follow the instructions below and clone via HTTPS.
+.. _ubuntu:
 
-
-Ubuntu
-------
+Ubuntu 16.04
+-------------
 
 The process documented here will work on Ubuntu\* 16.04 (LTS)
 
@@ -77,7 +78,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
       $ mkdir build && cd build
 
-#. Generate the GNUMakefiles in the customary manner (from within the 
+#. Generate the GNU Makefiles in the customary manner (from within the 
    ``build`` directory). If running ``gcc-5.4.0`` or ``clang-3.9``, remember 
    that you can also append ``cmake`` with the prebuilt LLVM option to 
    speed-up the build. Another option if your deployment system has Intel®
@@ -87,7 +88,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
    .. code-block:: console
 
-      $ cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE]
+      $ cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``$HOME/ngraph_dist``:
@@ -100,11 +101,15 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
-   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
+   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory. 
+   See the :doc:`project/doc-contributor-README` for more details about how to 
+   build documentation for nGraph. 
 
 
-CentOS
-------
+.. _centos: 
+
+CentOS 7.4
+-----------
 
 The process documented here will work on CentOS 7.4.
 
@@ -138,23 +143,26 @@ The process documented here will work on CentOS 7.4.
       $ ./bootstrap
       $ make && sudo make install  
 
-#. Clone the `NervanaSystems` ``ngraph`` repo and use Cmake 3.4.3 to 
-   install the nGraph libraries to ``$HOME/ngraph_dist``.
+#. Clone the `NervanaSystems` ``ngraph`` repo via SSH and use Cmake 3.4.3 to 
+   install the nGraph libraries to ``$HOME/ngraph_dist``. Another option, if your 
+   deployment system has Intel® Advanced Vector Extensions (Intel® AVX), is to 
+   target the accelerations available directly by compiling the build as follows 
+   during the cmake step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.
 
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ cmake ../
+      $ cmake ../ [-DNGRAPH_TARGET_ARCH=skylake-avx512]
       $ make && sudo make install 
 
 
 macOS\* development
 --------------------
 
-.. note:: Although we do not offer support for the macOS platform; some 
-   configurations and features may work.
+.. note:: Although we do not currently offer full support for the macOS platform, 
+   some configurations and features may work.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 
@@ -203,9 +211,10 @@ on an Intel nGraph-enabled backend.
 For the former case, this early |version|, :doc:`framework-integration-guides`, 
 can help you get started with a training a model on a supported framework. 
 
-* :doc:`neon<framework-integration-guides>` framework,  
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
+* :doc:`neon<framework-integration-guides>` framework,  
+
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go directly

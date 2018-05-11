@@ -23,9 +23,9 @@ using namespace ngraph;
 void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
                                                          const std::string& name,
                                                          const std::string& op,
-                                                         const std::vector<std::string>& data_types,
-                                                         const size_t& num_inputs)
+                                                         const std::vector<std::string>& data_types)
 {
+    auto num_inputs = data_types.size() - 1;
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
     {
@@ -135,6 +135,47 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::vector<std::string>& data_types,
+                                                    size_t num_inputs)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for (size_t i = 0; i < num_inputs; i++)
+    {
+        writer << data_types[i] << "* in" << i << ", ";
+    }
+    writer << data_types[num_inputs]
+           << "* out, size_t* block_strides, size_t block_size, size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if(tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "out[tid] = 1;\n";
+            writer << "size_t idx_out = tid;\n";
+            writer << "size_t block_id = tid / block_size;\n";
+            writer << "size_t block_idx = tid % block_size;\n";
+            writer << "bool processed = false;\n";
+            for (size_t i = 0; i < num_inputs; i++)
+            {
+                writer << "if(!processed && (block_idx < block_strides[" << i << "]))\n";
+                writer.block_begin();
+                {
+                    writer << "out[idx_out] = in" << i << "[block_id * block_strides[" << i
+                           << "] + block_idx];";
+                    writer << "processed = true;\n";
+                }
+                writer.block_end();
+                writer << "block_idx -= block_strides[" << i << "];\n";
+            }
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
                                                    const std::array<std::string, 2>& data_types)
@@ -204,12 +245,12 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& math_kernel,
-                                                        const std::vector<std::string>& data_types,
-                                                        const size_t& num_inputs)
+                                                        const std::vector<std::string>& data_types)
 {
     if (math_kernel.size())
     {
-        writer << "__device__ " << data_types[num_inputs] << " " << name << "(";
+        auto num_inputs = data_types.size() - 1;
+        writer << "__device__ __forceinline__ " << data_types[num_inputs] << " " << name << "(";
         for (size_t i = 0; i < num_inputs - 1; i++)
         {
             writer << data_types[i] << " x" << i << ", ";

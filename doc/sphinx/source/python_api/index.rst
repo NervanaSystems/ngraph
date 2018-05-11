@@ -16,6 +16,7 @@ of the API usage below.
 
 .. toctree::
    :maxdepth: 1
+   :titlesonly:
 
    structure
-   supported_ops
+   List of operations <_autosummary/ngraph.ops.rst>

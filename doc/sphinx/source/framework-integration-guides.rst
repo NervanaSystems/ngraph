@@ -4,77 +4,9 @@
 Integrate Supported Frameworks
 ###############################
 
-* :ref:`neon_intg`
 * :ref:`mxnet_intg`
 * :ref:`tensorflow_intg`
-
-.. _neon_intg:
-
-neon |trade|
-============
-
-Use ``neon`` as a frontend for nGraph backends
------------------------------------------------
-
-``neon`` is an open source Deep Learning framework that has a history 
-of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
-Detailed info about neon's features and functionality can be found in the 
-`neon docs`_. This section covers installing neon on an existing 
-system that already has an ``ngraph_dist`` installed. 
-
-.. important:: The numbered instructions below pick up from where 
-   the :doc:`install` instructions left off, and they presume that your system 
-   already has the ngraph library installed installed at ``$HOME/ngraph_dist`` 
-   as the default location. If the |nGl| code has not yet been installed to 
-   your system, you can follow the instructions on the `ngraph-neon python README`_ 
-   to install everything at once.  
-
-
-#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
-   location where you built the nGraph libraries. (This example shows the default 
-   location):
-
-   .. code-block:: bash
-
-      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
-
-      
-#. The neon framework uses the :command:`pip` package manager during installation; 
-   install it with Python version 3.5 or higher:
-
-   .. code-block:: console
-
-      $ sudo apt-get install python3-pip python3-venv
-      $ python3 -m venv frameworks
-      $ cd frameworks 
-      $ . bin/activate
-      (frameworks) ~/frameworks$ 
-
-#. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
-   previous :doc:`install`, and complete these actions: 
-
-   .. code-block:: console
-
-      (frameworks)$ cd /opt/libraries/ngraph/python
-      (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-      (frameworks)$ export PYBIND_HEADERS_PATH=/opt/libraries/ngraph/python/pybind11
-      (frameworks)$ pip install -U . 
-
-#. Finally we're ready to install the `neon` integration: 
-
-   .. code-block:: console
-
-      (frameworks)$ git clone git@github.com:NervanaSystems/ngraph-neon
-      (frameworks)$ cd ngraph-neon
-      (frameworks)$ make install
-
-#. To test a training example, you can run the following from ``ngraph-neon/examples/cifar10``
-   
-   .. code-block:: console
-
-      (frameworks)$ python cifar10_conv.py
-
+* :ref:`neon_intg`
 
 
 .. _mxnet_intg:
@@ -170,6 +102,77 @@ TensorFlow\*
 
 See the `ngraph tensorflow bridge README`_ for how to install the 
 nGraph-TensorFlow bridge.
+
+
+
+.. _neon_intg:
+
+neon |trade|
+============
+
+Use ``neon`` as a frontend for nGraph backends
+-----------------------------------------------
+
+``neon`` is an open source Deep Learning framework that has a history 
+of `being the fastest`_ framework `for training CNN-based models with GPUs`_. 
+Detailed info about neon's features and functionality can be found in the 
+`neon docs`_. This section covers installing neon on an existing 
+system that already has an ``ngraph_dist`` installed. 
+
+.. important:: The numbered instructions below pick up from where 
+   the :doc:`install` instructions left off, and they presume that your system 
+   already has the ngraph library installed installed at ``$HOME/ngraph_dist`` 
+   as the default location. If the |nGl| code has not yet been installed to 
+   your system, you can follow the instructions on the `ngraph-neon python README`_ 
+   to install everything at once.  
+
+
+#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
+   location where you built the nGraph libraries. (This example shows the default 
+   location):
+
+   .. code-block:: bash
+
+      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
+      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
+
+      
+#. The neon framework uses the :command:`pip` package manager during installation; 
+   install it with Python version 3.5 or higher:
+
+   .. code-block:: console
+
+      $ sudo apt-get install python3-pip python3-venv
+      $ python3 -m venv frameworks
+      $ cd frameworks 
+      $ . bin/activate
+      (frameworks) ~/frameworks$ 
+
+#. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
+   previous :doc:`install`, and complete these actions: 
+
+   .. code-block:: console
+
+      (frameworks)$ cd /opt/libraries/ngraph/python
+      (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      (frameworks)$ export PYBIND_HEADERS_PATH=/opt/libraries/ngraph/python/pybind11
+      (frameworks)$ pip install -U . 
+
+#. Finally we're ready to install the `neon` integration: 
+
+   .. code-block:: console
+
+      (frameworks)$ git clone git@github.com:NervanaSystems/ngraph-neon
+      (frameworks)$ cd ngraph-neon
+      (frameworks)$ make install
+
+#. To test a training example, you can run the following from ``ngraph-neon/examples/cifar10``
+   
+   .. code-block:: console
+
+      (frameworks)$ python cifar10_conv.py
+
+
 
 
 .. _MXNet: http://mxnet.incubator.apache.org

@@ -44,7 +44,7 @@ void* runtime::Backend::open_shared_library(const string& type)
 {
     void* handle = nullptr;
     string name = "lib" + to_lower(type) + "_backend.so";
-    handle = dlopen(name.c_str(), RTLD_NOW);
+    handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
         function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
