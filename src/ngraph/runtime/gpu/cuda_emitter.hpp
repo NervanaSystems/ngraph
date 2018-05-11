@@ -18,6 +18,7 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 namespace ngraph
@@ -69,6 +70,14 @@ namespace ngraph
                     return build_elementwise_n_to_1(
                         ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
+
+                size_t build_replace_slice(const GPURuntimeContext* ctx,
+                                           const std::array<std::string, 3>& dtypes,
+                                           const Shape& tensor_shape,
+                                           const Shape& source_shape,
+                                           const Coordinate& lower_bounds,
+                                           const Coordinate& upper_bounds,
+                                           const Strides& slice_stride);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
