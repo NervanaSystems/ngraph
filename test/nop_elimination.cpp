@@ -42,7 +42,7 @@ using namespace std;
 
 TEST(nop_elimination, eliminate_pad)
 {
-    Shape shape_a{};
+    Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
