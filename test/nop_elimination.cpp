@@ -18,8 +18,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;

@@ -20,13 +20,12 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "nop_elimination.hpp"
-
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "nop_elimination.hpp"
 
 #define TI(x) std::type_index(typeid(x))
 
