@@ -28,6 +28,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
@@ -36,15 +37,19 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -80,8 +85,8 @@ TEST(cpu_fusion, gemm_pattern)
         return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
     };
 
-    auto skip_w = std::make_shared<pattern::op::Any>(W, reshape_pred);
-    auto skip_x = std::make_shared<pattern::op::Any>(x, reshape_pred);
+    auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
+    auto skip_x = std::make_shared<pattern::op::Skip>(x, reshape_pred);
 
     auto pdot = make_shared<op::Dot>(skip_w, skip_x);
     auto b = std::make_shared<pattern::op::Label>(C);
@@ -835,7 +840,7 @@ template <typename T>
 static std::vector<std::vector<T>>
     execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
 {
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create(cbackend);
 
     auto parms = f->get_parameters();
 
@@ -907,6 +912,56 @@ TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
          -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
          0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
         {2., 2., 2., 2.}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
+{
+    Shape shape_a{2, 1, 6, 6};
+    Shape shape_weights{1, 1, 2, 2};
+    Shape shape_bias{1};
+
+    auto make_int_function = [shape_a, shape_weights, shape_bias]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv_bias =
+            conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+        auto relu = std::make_shared<op::Relu>(conv_bias);
+        auto f = make_shared<Function>(NodeVector{relu}, op::ParameterVector{A, weights, bias});
+        return f;
+    };
+
+    auto int_f = make_int_function();
+
+    auto make_cpu_function = [shape_a, shape_weights, shape_bias]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
+        auto conv_bias_relu = std::make_shared<op::ConvolutionBiasRelu>(
+            std::make_shared<op::ConvolutionBias>(conv, bias));
+        auto f = make_shared<Function>(NodeVector{conv_bias_relu},
+                                       op::ParameterVector{A, weights, bias});
+        return f;
+    };
+
+    auto cpu_f = make_cpu_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {2., 2., 2., 2.},
+        {0.1f}};
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
@@ -1024,4 +1079,147 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
     auto mmbs = get_ops_of_type<op::MatmulBias>(func);
     ASSERT_TRUE(std::any_of(begin(mmbs), end(mmbs), mmb_predicate));
+}
+
+TEST(cpu_fusion, weight_fusion)
+{
+    auto param = std::make_shared<op::Parameter>(element::f32, Shape{64});
+    auto reshape_conv =
+        std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
+    auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
+    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_view().get();
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt, AxisVector{0, 1, 2, 3});
+    auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
+    auto conv = std::make_shared<ngraph::op::Convolution>(
+        data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
+
+    auto reshape_conv_bprop =
+        std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
+    auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
+    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_view().get();
+    auto lt_desc_bprop =
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop, AxisVector{0, 1, 2, 3});
+    auto cvt_lt_conv_bprop =
+        std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
+    auto conv_bprop = std::make_shared<op::ConvolutionBackpropData>(Shape{1, 4, 7, 7},
+                                                                    cvt_lt_conv_bprop,
+                                                                    dummy_arg_conv_bprop,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+
+    auto conv_relu = std::make_shared<op::Relu>(conv);
+    auto conv_bprop_abs = std::make_shared<op::Abs>(conv_bprop);
+
+    auto f = make_shared<Function>(NodeVector{conv_relu, conv_bprop_abs},
+                                   op::ParameterVector{param, data_conv, dummy_arg_conv_bprop});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.run_passes(f);
+
+    auto new_conv_bprop_data = conv_bprop_abs->get_argument(0);
+    auto new_convert_layout = new_conv_bprop_data->get_argument(0);
+
+    ASSERT_EQ(std::dynamic_pointer_cast<runtime::cpu::op::ConvertLayout>(
+                  new_convert_layout->get_argument(0)),
+              cvt_lt_conv);
+}
+
+TEST(cpu_fusion, max_pool_with_indices)
+{
+    Shape shape_a{10, 3, 28, 28};
+    auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
+    auto C = std::make_shared<op::Parameter>(element::f32, max_pool->get_shape());
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{max_pool}, NodeVector{C});
+
+    auto dinput = adjoints.backprop_node(input);
+
+    auto df = std::make_shared<Function>(NodeVector{dinput}, op::ParameterVector{input, C});
+
+    auto f = std::make_shared<Function>(NodeVector{max_pool}, op::ParameterVector{input});
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.run_passes(f);
+    }
+
+    auto maxpool_goe_output =
+        std::dynamic_pointer_cast<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(maxpool_goe_output);
+    ASSERT_EQ(maxpool_goe_output->get_n(), 0);
+    auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
+    auto maxpool_goe_indices =
+        std::dynamic_pointer_cast<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
+    ASSERT_TRUE(maxpool_goe_indices);
+    ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
+}
+
+TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
+{
+    Shape shape_a{1, 4, 4, 4};
+    Shape maxpool_shape{1, 4, 3, 3};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = std::make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
+    auto f = std::make_shared<Function>(maxpool, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+
+    vector<float> dataInput{11.f, 31.f, 40.f, 47.f, 13.f, 61.f, 48.f, 59.f, 17.f, 39.f, 64.f,
+                            62.f, 45.f, 55.f, 36.f, 19.f, 65.f, 33.f, 49.f, 30.f, 56.f, 41.f,
+                            53.f, 58.f, 22.f, 35.f, 52.f, 50.f, 63.f, 54.f, 12.f, 26.f, 44.f,
+                            21.f, 69.f, 24.f, 46.f, 25.f, 51.f, 29.f, 72.f, 15.f, 73.f, 10.f,
+                            16.f, 37.f, 70.f, 32.f, 28.f, 66.f, 57.f, 27.f, 60.f, 42.f, 43.f,
+                            71.f, 18.f, 38.f, 67.f, 68.f, 14.f, 20.f, 34.f, 23.f};
+
+    vector<float> expected{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 12.0f, 0.0f, 4.0f, 0.0f, 0.0f,  16.0f,
+                           0.0f, 0.0f, 4.0f, 0.0f, 0.0f, 4.0f,  0.0f, 0.0f, 0.0f, 4.0f,  0.0f,
+                           8.0f, 8.0f, 0.0f, 0.0f, 4.0f, 0.0f,  4.0f, 4.0f, 0.0f, 0.0f,  0.0f,
+                           0.0f, 8.0f, 0.0f, 4.0f, 0.0f, 0.0f,  0.0f, 8.0f, 0.0f, 16.0f, 0.0f,
+                           0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 8.0f,  0.0f, 0.0f, 4.0f, 0.0f,  0.0f,
+                           8.0f, 0.0f, 4.0f, 8.0f, 4.0f, 0.0f,  0.0f, 0.0f, 0.0f};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = std::make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.run_passes(df);
+    }
+
+    backend->call(df, {output}, {input, ep});
+    ASSERT_TRUE(read_vector<float>(output) == expected);
 }

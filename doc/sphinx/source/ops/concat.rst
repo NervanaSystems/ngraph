@@ -12,9 +12,8 @@ Concat
 Description
 ===========
 
-Produces a single output tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the absoloute value of the
-value at each ``arg`` coordinate.
+Produce from ``Nodes`` of ``args`` some outputs with the same attributes
+
 
 Inputs
 ------
@@ -56,13 +55,13 @@ Let
 
 .. math::
 
-   s(i) &= \sum_{j<i} \texttt{args}[i].\texttt{shape}\left[\texttt{concatenation_axis}\right]\\
+   s(i) &= \sum_{j<i} \mathtt{args}[i].\mathtt{shape}\left[\mathtt{concatenation_axis}\right]\\
    t(i) &= \text{The greatest }j\text{ such that }i \ge s(j)\\
    p(C)_i &= \begin{cases}
-   C_i-s(t(i))&\text{if }i==\texttt{concatenation_axis}\\
+   C_i-s(t(i))&\text{if }i==\mathtt{concatenation_axis}\\
    C_i&\text{otherwise}
    \end{cases}\\
-   \texttt{output}_C&=\texttt{args}[t(C_i)]_{p(C)}
+   \mathtt{output}_C&=\mathtt{args}[t(C_i)]_{p(C)}
 
 
 

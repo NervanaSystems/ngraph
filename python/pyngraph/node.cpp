@@ -69,6 +69,6 @@ void regclass_pyngraph_Node(py::module m)
     node.def("get_shape", &ngraph::Node::get_shape);
     node.def("get_argument", &ngraph::Node::get_argument);
 
-    node.def_property("name", &ngraph::Node::get_name, &ngraph::Node::set_name);
+    node.def_property("name", &ngraph::Node::get_friendly_name, &ngraph::Node::set_name);
     node.def_property_readonly("shape", &ngraph::Node::get_shape);
 }

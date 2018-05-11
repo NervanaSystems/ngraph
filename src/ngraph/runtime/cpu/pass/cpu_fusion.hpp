@@ -48,6 +48,7 @@ public:
         construct_sigmoid_bprop();
         construct_conv_bias();
         construct_batch_norm_relu();
+        construct_batch_norm_relu_global_stats();
         construct_conv_relu();
     }
 
@@ -62,5 +63,6 @@ private:
     void construct_zero_padded_conv();
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
+    void construct_batch_norm_relu_global_stats();
     void construct_conv_relu();
 };

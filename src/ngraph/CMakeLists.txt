@@ -35,6 +35,7 @@ set (SRC
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
+    op/and.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,6 +71,7 @@ set (SRC
     op/not_equal.cpp
     op/one_hot.cpp
     op/op.cpp
+    op/or.cpp
     op/pad.cpp
     op/parameter.cpp
     op/power.cpp
@@ -82,6 +84,7 @@ set (SRC
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
+    op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
     op/sign.cpp
@@ -97,11 +100,14 @@ set (SRC
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
+    op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
+    pass/algebraic_simplification.cpp
+    pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -124,11 +130,6 @@ set (SRC
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
-    runtime/interpreter/int_call_frame.cpp
-    runtime/interpreter/int_external_function.cpp
-    runtime/interpreter/int_kernels.cpp
-    runtime/interpreter/int_manager.cpp
-    runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
@@ -191,8 +192,7 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     if (NGRAPH_TBB_ENABLE)
@@ -218,7 +218,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         codegen/execution_engine.cpp
         runtime/cpu/cpu_call_frame.cpp
         runtime/cpu/cpu_backend.cpp
-        runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/cpu_kernel_emitters.cpp
         runtime/cpu/cpu_kernel_utils.cpp
@@ -241,12 +240,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
+        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
+        runtime/cpu/pass/cpu_shuffle_folding.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -292,7 +295,6 @@ endif()
             runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
             runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
@@ -306,11 +308,13 @@ endif()
             runtime/gpu/gpu_invoke.cpp
             runtime/gpu/cudnn_emitter.cpp
             runtime/gpu/cuda_emitter.cpp
+            runtime/gpu/type_info.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
-
 endif()
 
 if (NGRAPH_NNP_ENABLE)
@@ -319,6 +323,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 add_library(ngraph SHARED ${SRC})
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -326,10 +331,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource ext_json)
+    add_dependencies(ngraph header_resource)
     include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
+add_dependencies(ngraph ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 if (NGRAPH_ONNX_IMPORT)
     target_link_libraries(ngraph PRIVATE ${Protobuf_LIBRARIES})
@@ -359,6 +365,7 @@ if (NGRAPH_NNP_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_link_libraries(ngraph PRIVATE dl)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
@@ -402,6 +409,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # NGraph
+install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
@@ -409,10 +417,12 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+if(MKLDNN_LIB_DIR)
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/

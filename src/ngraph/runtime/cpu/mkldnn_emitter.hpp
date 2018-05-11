@@ -86,7 +86,8 @@ namespace ngraph
                                                  const ngraph::Strides& strides,
                                                  const ngraph::Strides& dilation_strides,
                                                  const ngraph::CoordinateDiff& padding_below,
-                                                 const ngraph::CoordinateDiff& padding_above);
+                                                 const ngraph::CoordinateDiff& padding_above,
+                                                 const mkldnn::post_ops& pops = mkldnn::post_ops());
 
                 size_t
                     build_convolution_backward_weights(const mkldnn::memory::desc& input_desc,
@@ -132,6 +133,14 @@ namespace ngraph
                                               const ngraph::Shape& padding_below,
                                               const ngraph::Shape& padding_above);
 
+                size_t build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
+                                                              const mkldnn::memory::desc& src_desc,
+                                                              const mkldnn::memory::desc& dst_desc,
+                                                              const ngraph::Strides& window_strides,
+                                                              const ngraph::Shape& window_shape,
+                                                              const ngraph::Shape& padding_below,
+                                                              const ngraph::Shape& padding_above);
+
                 size_t build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
                                                   const mkldnn::memory::desc& fprop_src_desc,
                                                   const mkldnn::memory::desc& diff_dst_desc,
@@ -140,6 +149,15 @@ namespace ngraph
                                                   const ngraph::Shape& window_shape,
                                                   const ngraph::Shape& padding_below,
                                                   const ngraph::Shape& padding_above);
+
+                size_t build_max_pooling_with_indices_backward(
+                    mkldnn::algorithm pooling_algorithm,
+                    const mkldnn::memory::desc& diff_dst_desc,
+                    const mkldnn::memory::desc& diff_src_desc,
+                    const ngraph::Strides& window_strides,
+                    const ngraph::Shape& window_shape,
+                    const ngraph::Shape& padding_below,
+                    const ngraph::Shape& padding_above);
 
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
@@ -183,6 +201,10 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dinput_desc,
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
+
+                size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                                    const mkldnn::memory::desc& result_desc,
+                                    const size_t concat_dim);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

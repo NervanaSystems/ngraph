@@ -20,8 +20,8 @@
 #include <memory.h>
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/skip.hpp"
 
 namespace ngraph
 {
@@ -95,8 +95,8 @@ namespace ngraph
             bool process_match(graph_rewrite_callback callback = nullptr);
 
             void reset() {}
-            std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
-            std::shared_ptr<Node> match_root();
+            std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
+            std::shared_ptr<Node> get_match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
             /// \brief Low-level helper to match recurring patterns
             ///
@@ -127,9 +127,9 @@ namespace ngraph
             bool match_pattern(const std::shared_ptr<op::Label>& pattern_node,
                                const std::shared_ptr<Node>& graph_node,
                                PatternMap& pattern_map);
-            bool match_any(const std::shared_ptr<op::Any>& pattern_node,
-                           const std::shared_ptr<Node>& graph_node,
-                           PatternMap& pattern_map);
+            bool match_skip(const std::shared_ptr<op::Skip>& pattern_node,
+                            const std::shared_ptr<Node>& graph_node,
+                            PatternMap& pattern_map);
 
             graph_rewrite_callback m_callback;
             size_t m_depth;

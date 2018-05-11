@@ -13,7 +13,7 @@ Description
 ===========
 
 Produces a single output tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the absoloute value of the
+where the value at each coordinate of ``output`` is the absolute value of the
 value at each ``arg`` coordinate.
 
 Inputs
@@ -48,7 +48,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \Delta\ \mathrm{sgn}(\texttt{arg})
+   \overline{\mathtt{arg}} \leftarrow \Delta\ \mathrm{sgn}(\mathtt{arg})
 
 
 C++ Interface

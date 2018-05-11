@@ -25,13 +25,17 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static string s_manifest = "${MANIFEST}";
 
 static const vector<element::Type> s_known_element_types = {element::from<float>(),
                                                             element::from<double>(),
@@ -44,7 +48,7 @@ static const vector<element::Type> s_known_element_types = {element::from<float>
                                                             element::from<uint32_t>(),
                                                             element::from<uint64_t>()};
 
-TEST(${BACKEND_NAME}, function_name)
+NGRAPH_TEST(${BACKEND_NAME}, function_name)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -66,7 +70,7 @@ TEST(${BACKEND_NAME}, function_name)
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
-TEST(${BACKEND_NAME}, node_name)
+NGRAPH_TEST(${BACKEND_NAME}, node_name)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -90,9 +94,8 @@ TEST(${BACKEND_NAME}, node_name)
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
-TEST(${BACKEND_NAME}, aliased_output)
+NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -130,10 +133,8 @@ TEST(${BACKEND_NAME}, aliased_output)
     EXPECT_EQ(expectedE, read_vector<float>(out7));
 }
 
-TEST(${BACKEND_NAME}, parameter_as_output)
+NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     Shape shape{3, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(A, op::ParameterVector{A});
@@ -152,7 +153,7 @@ TEST(${BACKEND_NAME}, parameter_as_output)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, ab)
+NGRAPH_TEST(${BACKEND_NAME}, ab)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -174,7 +175,7 @@ TEST(${BACKEND_NAME}, ab)
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
-TEST(${BACKEND_NAME}, abc)
+NGRAPH_TEST(${BACKEND_NAME}, abc)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -207,9 +208,8 @@ TEST(${BACKEND_NAME}, abc)
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
 
-TEST(${BACKEND_NAME}, abc_int64)
+NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
@@ -238,7 +238,7 @@ TEST(${BACKEND_NAME}, abc_int64)
 }
 
 // Multiple retrive values
-TEST(${BACKEND_NAME}, multiple_result)
+NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -268,7 +268,7 @@ TEST(${BACKEND_NAME}, multiple_result)
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
 }
 
-TEST(${BACKEND_NAME}, abs)
+NGRAPH_TEST(${BACKEND_NAME}, abs)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -285,7 +285,89 @@ TEST(${BACKEND_NAME}, abs)
     EXPECT_EQ((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, ceiling)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_one_output)
+{
+    auto shape_in = Shape{2, 3};
+    auto shape_mean = Shape{3};
+
+    auto A = make_shared<op::Parameter>(element::f64, shape_in);
+    auto Mean =
+        op::Constant::create(element::f64, shape_mean, {0.00396654, -1.25294404, 1.16651872});
+    auto Variance =
+        op::Constant::create(element::f64, shape_mean, {2.40871689, 1.44969511, 0.23469392});
+    auto Beta =
+        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
+    auto Gamma =
+        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
+
+    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A, Mean, Variance, false);
+    auto f = make_shared<Function>(BN, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape_in);
+    copy_data(
+        a,
+        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
+
+    auto result = backend->create_tensor(element::f64, shape_in);
+    vector<double> expected_result{
+        -0.09365749, -1.01327395, -1.04269195, 5.00118923, -0.43295258, -1.24840283};
+
+    backend->call(f, {result}, {a});
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result}, read_vector<double>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
+{
+    auto shape_in = Shape{2, 3};
+    auto shape_mean = Shape{3};
+
+    auto A = make_shared<op::Parameter>(element::f64, shape_in);
+    auto Beta =
+        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
+    auto Gamma =
+        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
+
+    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A);
+
+    auto f0 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), op::ParameterVector{A});
+    auto f1 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 1), op::ParameterVector{A});
+    auto f2 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 2), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape_in);
+    copy_data(
+        a,
+        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
+
+    auto result0 = backend->create_tensor(element::f64, shape_in);
+    vector<double> expected_result0{
+        0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
+
+    backend->call(f0, {result0}, {a});
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result0}, read_vector<double>(result0)));
+
+    auto result1 = backend->create_tensor(element::f64, shape_mean);
+    vector<double> expected_result1{0.27972114, -1.14431989, 0.49731493};
+
+    backend->call(f1, {result1}, {a});
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result1}, read_vector<double>(result1)));
+
+    auto result2 = backend->create_tensor(element::f64, shape_mean);
+    vector<double> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
+
+    backend->call(f2, {result2}, {a});
+    EXPECT_TRUE(test::all_close(vector<double>{expected_result2}, read_vector<double>(result2)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, ceiling)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -302,9 +384,8 @@ TEST(${BACKEND_NAME}, ceiling)
     EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, concat_matrix_colwise)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 3};
@@ -331,9 +412,8 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, concat_matrix_rowwise)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{3, 2};
@@ -360,9 +440,8 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, concat_matrix_int64)
+NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     Shape shape_b{3, 2};
@@ -389,9 +468,8 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
               read_vector<int64_t>(result));
 }
 
-TEST(${BACKEND_NAME}, concat_vector)
+NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{6};
@@ -415,6 +493,56 @@ TEST(${BACKEND_NAME}, concat_vector)
 
     backend->call(f, {result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
+{
+    Shape shape{1, 1, 1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1, 1, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape_r{3, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
+                                   op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
 // from numpy import *
@@ -462,9 +590,8 @@ TEST(${BACKEND_NAME}, concat_vector)
 //   1097.  1098.  1099.  1100.  1101.  1102.  1103.  1104.  1105.  1106.
 //   1107.  1108.  2061.  2062.  2063.  2064.  2065.  2066.  2067.  2068.
 //   2069.  2070.  2071.  2072.]
-TEST(${BACKEND_NAME}, concat_5d)
+NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 4 * 3 * 2);
     for (int i = 0; i < 2 * 3 * 4 * 3 * 2; i++)
     {
@@ -539,7 +666,7 @@ TEST(${BACKEND_NAME}, concat_5d)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, divide)
+NGRAPH_TEST(${BACKEND_NAME}, divide)
 {
     Shape shape{2, 2};
 
@@ -560,9 +687,8 @@ TEST(${BACKEND_NAME}, divide)
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, divide_adjoint_stability)
+NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape{2, 2};
@@ -607,11 +733,8 @@ TEST(${BACKEND_NAME}, divide_adjoint_stability)
     EXPECT_EQ((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb));
 }
 
-TEST(${BACKEND_NAME}, divide_by_zero_float32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{2, 2};
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -635,11 +758,8 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, divide_by_zero_int32)
+NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{2, 2};
 
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -658,7 +778,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
     EXPECT_ANY_THROW({ backend->call(f, {result}, {a, b}); });
 }
 
-TEST(${BACKEND_NAME}, equal)
+NGRAPH_TEST(${BACKEND_NAME}, equal)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -678,7 +798,7 @@ TEST(${BACKEND_NAME}, equal)
     EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, floor)
+NGRAPH_TEST(${BACKEND_NAME}, floor)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -695,10 +815,8 @@ TEST(${BACKEND_NAME}, floor)
     EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_0_0)
+NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -721,10 +839,8 @@ TEST(${BACKEND_NAME}, dot_0_0)
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{2, 0};
     Shape shape_b{0, 2};
     Shape shape_r{2, 2};
@@ -749,10 +865,8 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     EXPECT_EQ((vector<float>{0, 0, 0, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 2};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -774,10 +888,8 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 2};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -799,10 +911,8 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_scalar_0x2)
+NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_0x2)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{0, 2};
@@ -823,10 +933,8 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_2x0_0)
+NGRAPH_TEST(${BACKEND_NAME}, dot_2x0_0)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{2, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{0};
@@ -850,7 +958,7 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot1d)
+NGRAPH_TEST(${BACKEND_NAME}, dot1d)
 {
     Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -871,7 +979,7 @@ TEST(${BACKEND_NAME}, dot1d)
     EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot2d)
+NGRAPH_TEST(${BACKEND_NAME}, dot2d)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -915,7 +1023,7 @@ TEST(${BACKEND_NAME}, dot2d)
 //         [[ 47.,  62.],
 //          [ 77.,  92.]]]])
 //
-TEST(${BACKEND_NAME}, dot3d_3d)
+NGRAPH_TEST(${BACKEND_NAME}, dot3d_3d)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -960,7 +1068,7 @@ TEST(${BACKEND_NAME}, dot3d_3d)
 //        [[ 236.,  293.,  350.,  407.],
 //         [ 272.,  338.,  404.,  470.]]])
 //
-TEST(${BACKEND_NAME}, dot3d_2d)
+NGRAPH_TEST(${BACKEND_NAME}, dot3d_2d)
 {
     Shape shape_a{4, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -986,7 +1094,7 @@ TEST(${BACKEND_NAME}, dot3d_2d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
+NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 {
     Shape shape_a{};
     Shape shape_b{2, 2, 2};
@@ -1007,7 +1115,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
+NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 {
     Shape shape_a{2, 2, 2};
     Shape shape_b{};
@@ -1028,7 +1136,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_scalar_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1048,7 +1156,7 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_matrix_vector)
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
 {
     Shape shape_a{4, 4};
     Shape shape_b{4};
@@ -1070,9 +1178,8 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     EXPECT_EQ((vector<float>{190, 486, 782, 1078}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
@@ -1093,7 +1200,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), read_vector<int64_t>(result));
 }
 
-TEST(${BACKEND_NAME}, greater)
+NGRAPH_TEST(${BACKEND_NAME}, greater)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1113,7 +1220,7 @@ TEST(${BACKEND_NAME}, greater)
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, greatereq)
+NGRAPH_TEST(${BACKEND_NAME}, greatereq)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1133,7 +1240,7 @@ TEST(${BACKEND_NAME}, greatereq)
     EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, less)
+NGRAPH_TEST(${BACKEND_NAME}, less)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1153,7 +1260,7 @@ TEST(${BACKEND_NAME}, less)
     EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, lesseq)
+NGRAPH_TEST(${BACKEND_NAME}, lesseq)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1173,7 +1280,7 @@ TEST(${BACKEND_NAME}, lesseq)
     EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, lesseq_bool)
+NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
@@ -1196,7 +1303,7 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, log)
+NGRAPH_TEST(${BACKEND_NAME}, log)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1219,7 +1326,7 @@ TEST(${BACKEND_NAME}, log)
     EXPECT_TRUE(test::all_close(loga, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, maximum)
+NGRAPH_TEST(${BACKEND_NAME}, maximum)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1239,7 +1346,7 @@ TEST(${BACKEND_NAME}, maximum)
     EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, minimum)
+NGRAPH_TEST(${BACKEND_NAME}, minimum)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1259,9 +1366,8 @@ TEST(${BACKEND_NAME}, minimum)
     EXPECT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, negative)
+NGRAPH_TEST(${BACKEND_NAME}, negative)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(A), op::ParameterVector{A});
@@ -1277,7 +1383,7 @@ TEST(${BACKEND_NAME}, negative)
     EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, notequal)
+NGRAPH_TEST(${BACKEND_NAME}, notequal)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1297,9 +1403,8 @@ TEST(${BACKEND_NAME}, notequal)
     EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, select)
+NGRAPH_TEST(${BACKEND_NAME}, select)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -1321,7 +1426,7 @@ TEST(${BACKEND_NAME}, select)
     EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, subtract)
+NGRAPH_TEST(${BACKEND_NAME}, subtract)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1341,9 +1446,8 @@ TEST(${BACKEND_NAME}, subtract)
     EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, tensor_constant)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto f = make_shared<Function>(A, op::ParameterVector{});
@@ -1357,9 +1461,8 @@ TEST(${BACKEND_NAME}, tensor_constant)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, tensor_constant_with_op)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
     auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{});
@@ -1373,9 +1476,8 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, constant_broadcast)
+NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     const string js =
         R"([{
        "name" : "Function_0",
@@ -1451,9 +1553,8 @@ TEST(${BACKEND_NAME}, constant_broadcast)
     // If this compiles it works
 }
 
-TEST(${BACKEND_NAME}, function_call)
+NGRAPH_TEST(${BACKEND_NAME}, function_call)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First create "f(A,B,C) = (A+B)*C".
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1491,7 +1592,7 @@ TEST(${BACKEND_NAME}, function_call)
     EXPECT_EQ((vector<float>{194, 296, 418, 560}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_scalar_vector)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1510,7 +1611,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1520,7 +1621,7 @@ TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
                  ngraph_error);
 }
 
-TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1539,7 +1640,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1558,7 +1659,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_trivial)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1576,7 +1677,7 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_vector_colwise)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 {
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1595,7 +1696,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 {
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1615,10 +1716,8 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 }
 
 // Test hybrid mechanism after broadcast
-TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
@@ -1637,9 +1736,8 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
     EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     Shape shape_r{3, 4};
@@ -1657,7 +1755,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_0)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1676,7 +1774,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_1)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1695,7 +1793,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
     EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_2)
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1714,7 +1812,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
     EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, convert_int32_float32)
+NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -1732,7 +1830,7 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, convert_int32_bool)
+NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -1750,7 +1848,7 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, convert_float32_bool)
+NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -1769,11 +1867,8 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
 }
 
 // Trivial case with no reduction axes.
-TEST(${BACKEND_NAME}, reduce_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1799,9 +1894,8 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reduce_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1832,9 +1926,8 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_matrix_columns)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1868,9 +1961,8 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_matrix_rows)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1903,11 +1995,8 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1939,11 +2028,8 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     EXPECT_EQ((vector<float>{66}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -1975,11 +2061,8 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     EXPECT_EQ((vector<float>{77}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_vector_zero)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -2011,11 +2094,8 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     EXPECT_EQ((vector<float>{88}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -2047,11 +2127,8 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{99}), read_vector<float>(b));
 }
 
-TEST(${BACKEND_NAME}, reduce_3d_to_vector)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}"); // Correct values but need to handle precisions
-
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
@@ -2083,7 +2160,7 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_t2v_012)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     Shape shape_a{2, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2102,7 +2179,7 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_t2s_012)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_012)
 {
     Shape shape_a{1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2121,7 +2198,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_t2s_120)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_120)
 {
     Shape shape_a{1, 1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2140,7 +2217,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_s2t)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2159,7 +2236,7 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     EXPECT_EQ((vector<float>{42}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_v2m_col)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2178,7 +2255,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_v2m_row)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2197,7 +2274,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_v2t_middle)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_v2t_middle)
 {
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2216,7 +2293,7 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_m2m_same)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2235,7 +2312,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_m2m_transpose)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2254,7 +2331,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     EXPECT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2314,7 +2391,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 //         198.,  270.,  206.,  278.,  214.,  286.,  199.,  271.,  207.,
 //         279.,  215.,  287.,  200.,  272.,  208.,  280.,  216.,  288.])
 //
-TEST(${BACKEND_NAME}, reshape_6d)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
 {
     vector<float> a_data(2 * 2 * 3 * 3 * 2 * 4);
     for (int i = 0; i < 2 * 2 * 3 * 3 * 2 * 4; i++)
@@ -2364,7 +2441,7 @@ TEST(${BACKEND_NAME}, reshape_6d)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sin)
+NGRAPH_TEST(${BACKEND_NAME}, sin)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2386,7 +2463,7 @@ TEST(${BACKEND_NAME}, sin)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, cos)
+NGRAPH_TEST(${BACKEND_NAME}, cos)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2408,7 +2485,7 @@ TEST(${BACKEND_NAME}, cos)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, tan)
+NGRAPH_TEST(${BACKEND_NAME}, tan)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2430,7 +2507,7 @@ TEST(${BACKEND_NAME}, tan)
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, asin)
+NGRAPH_TEST(${BACKEND_NAME}, asin)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2451,7 +2528,7 @@ TEST(${BACKEND_NAME}, asin)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, acos)
+NGRAPH_TEST(${BACKEND_NAME}, acos)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2472,7 +2549,7 @@ TEST(${BACKEND_NAME}, acos)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, atan)
+NGRAPH_TEST(${BACKEND_NAME}, atan)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2493,7 +2570,7 @@ TEST(${BACKEND_NAME}, atan)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sinh)
+NGRAPH_TEST(${BACKEND_NAME}, sinh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2514,7 +2591,7 @@ TEST(${BACKEND_NAME}, sinh)
     EXPECT_EQ(input, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, cosh)
+NGRAPH_TEST(${BACKEND_NAME}, cosh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2535,7 +2612,7 @@ TEST(${BACKEND_NAME}, cosh)
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, tanh)
+NGRAPH_TEST(${BACKEND_NAME}, tanh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2556,7 +2633,7 @@ TEST(${BACKEND_NAME}, tanh)
     EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, exp)
+NGRAPH_TEST(${BACKEND_NAME}, exp)
 {
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2575,7 +2652,7 @@ TEST(${BACKEND_NAME}, exp)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2594,7 +2671,7 @@ TEST(${BACKEND_NAME}, slice_scalar)
     EXPECT_EQ((vector<float>{312}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_matrix)
+NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2613,7 +2690,7 @@ TEST(${BACKEND_NAME}, slice_matrix)
     EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_vector)
+NGRAPH_TEST(${BACKEND_NAME}, slice_vector)
 {
     Shape shape_a{16};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2632,10 +2709,8 @@ TEST(${BACKEND_NAME}, slice_vector)
     EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_matrix_strided)
+NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
@@ -2653,7 +2728,7 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
     EXPECT_EQ((vector<float>{4, 7, 12, 15}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_3d)
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d)
 {
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2678,10 +2753,8 @@ TEST(${BACKEND_NAME}, slice_3d)
     EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_3d_strided)
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -2705,10 +2778,8 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
     EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
@@ -2732,9 +2803,8 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, scalar_constant_float32)
+NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto r = op::Constant::create(element::f32, Shape{}, {4.75});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
@@ -2747,9 +2817,8 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     EXPECT_EQ(vector<float>{4.75f}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, scalar_constant_int64)
+NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
@@ -2762,9 +2831,8 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
 }
 
-TEST(${BACKEND_NAME}, tensor_constant_float32)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto r = op::Constant::create(element::f32, shape, {4.75, 4.7, -5.3, 0.0});
     auto f = make_shared<Function>(r, op::ParameterVector{});
@@ -2778,9 +2846,8 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     EXPECT_EQ((vector<float>{4.75f, 4.7f, -5.3f, 0.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, tensor_constant_int64)
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
     auto f = make_shared<Function>(r, op::ParameterVector{});
@@ -2795,7 +2862,7 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
 }
 
 // Trivial case with no summed axes.
-TEST(${BACKEND_NAME}, sum_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, sum_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2813,7 +2880,7 @@ TEST(${BACKEND_NAME}, sum_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, sum_trivial_5d)
+NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2833,7 +2900,7 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -2854,7 +2921,7 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_matrix_columns)
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_columns)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2876,7 +2943,7 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_matrix_rows)
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_rows)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2898,10 +2965,8 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -2923,9 +2988,8 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2948,10 +3012,8 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_vector_zero)
+NGRAPH_TEST(${BACKEND_NAME}, sum_vector_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -2973,10 +3035,8 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -2998,7 +3058,7 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3026,7 +3086,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3054,7 +3114,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_to_vector)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3076,7 +3136,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3098,10 +3158,8 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
@@ -3121,10 +3179,8 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_to_scalar_stable)
+NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar_stable)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
@@ -3141,10 +3197,8 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
     // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -3163,7 +3217,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
         test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
 }
 
-TEST(${BACKEND_NAME}, sum_5d_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
 {
     Shape shape_a{3, 3, 3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3182,7 +3236,7 @@ TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sign)
+NGRAPH_TEST(${BACKEND_NAME}, sign)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -3199,7 +3253,7 @@ TEST(${BACKEND_NAME}, sign)
     EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, power)
+NGRAPH_TEST(${BACKEND_NAME}, power)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -3219,9 +3273,8 @@ TEST(${BACKEND_NAME}, power)
     EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, constant_equality_bool)
+NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4};
     // auto A = make_shared<op::Parameter>(element::boolean, shape);
     // auto B = make_shared<op::Parameter>(element::boolean, shape);
@@ -3240,7 +3293,7 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     EXPECT_EQ((vector<char>{true, false, true, false}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, sqrt)
+NGRAPH_TEST(${BACKEND_NAME}, sqrt)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -3257,9 +3310,8 @@ TEST(${BACKEND_NAME}, sqrt)
     EXPECT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, replace_slice_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -3281,9 +3333,8 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
     EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, replace_slice_matrix)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{3, 2};
@@ -3306,9 +3357,8 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, replace_slice_vector)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{16};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{12};
@@ -3332,7 +3382,7 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3351,7 +3401,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     EXPECT_EQ((vector<int32_t>{0, 0, 1}), read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3370,7 +3420,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     EXPECT_EQ((vector<int32_t>{0, 1, 0}), read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3389,9 +3439,8 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3};
@@ -3419,11 +3468,8 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     }
 }
 
-TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
@@ -3451,7 +3497,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     }
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_0)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3472,7 +3518,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
         read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_1)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
 {
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3493,9 +3539,8 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
         read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
@@ -3523,11 +3568,8 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     }
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
@@ -3555,7 +3597,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     }
 }
 
-TEST(${BACKEND_NAME}, one_hot_matrix_0)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3582,7 +3624,7 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
               read_vector<int32_t>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 {
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -3603,9 +3645,8 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
@@ -3633,9 +3674,8 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     }
 }
 
-TEST(${BACKEND_NAME}, replace_slice_3d)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 2};
@@ -3670,9 +3710,8 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, replace_slice_3d_strided)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 2};
@@ -3708,9 +3747,8 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 2};
@@ -3762,9 +3800,8 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 //
 // Disabled because it doesn't work on CPU yet.
 //
-TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 4; i++)
     {
@@ -3821,9 +3858,8 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
 //
 // Disabled because it doesn't work on CPU yet.
 //
-TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data{6,  61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2,
                          35, 67, 1, 2, 9, 16, 2,  3,  6,  1, 8,  0};
     vector<float> b_data{9, 1,  4,  6, 3, 5, 1, 36, 7, 3, 5, 0,
@@ -3883,9 +3919,8 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 //
 // Disabled because it doesn't work on CPU yet.
 //
-TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
     {
@@ -3945,9 +3980,8 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
 //
 // Disabled because it doesn't work on CPU yet.
 //
-TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
     {
@@ -4008,9 +4042,8 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 //
 // Disabled because this test is very slow.
 //
-TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     vector<double> a_data(20 * 30 * 30 * 40);
     for (int i = 0; i < 20 * 30 * 30 * 40; i++)
     {
@@ -4055,7 +4088,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
         read_vector<double>(result)));
 }
 
-TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 {
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
@@ -4077,7 +4110,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
 {
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
@@ -4103,7 +4136,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 {
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
@@ -4134,7 +4167,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
@@ -4198,11 +4231,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{1, 1, 5, 5};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -4230,21 +4260,19 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 
     backend->call(f, {result}, {a});
     auto min = std::numeric_limits<float>::lowest();
-    EXPECT_EQ((test::NDArray<float, 4>({{{{min, min, min, min, min},
-                                          {1, 2, 2, 2, 1},
-                                          {3, 3, 2, 2, 1},
-                                          {3, 3, 2, 1, 1},
-                                          {2, 1, 2, 2, 2},
-                                          {2, 2, 2, 2, 2},
-                                          {2, 2, 1, 0, 0}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{min, min, min, min, min},
+                                                           {1, 2, 2, 2, 1},
+                                                           {3, 3, 2, 2, 1},
+                                                           {3, 3, 2, 1, 1},
+                                                           {2, 1, 2, 2, 2},
+                                                           {2, 2, 2, 2, 2},
+                                                           {2, 2, 1, 0, 0}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{1, 1, 5, 5};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -4284,11 +4312,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
 // Test to make sure that negative elements and padding are handled properly. Added this because
 // mkldnn calls its padding "zero padding" but apparently that is not technically true (negative
 // values still "win" versus out-of-bounds values), which is good.
-TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto shape_a = Shape{
         1,
         1,
@@ -4321,7 +4346,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 {
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
@@ -4352,9 +4377,8 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, not)
+NGRAPH_TEST(${BACKEND_NAME}, not)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
@@ -4370,9 +4394,8 @@ TEST(${BACKEND_NAME}, not)
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_0d)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4388,9 +4411,8 @@ TEST(${BACKEND_NAME}, reverse_0d)
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_1d_nochange)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4406,9 +4428,8 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
     EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_1d_0)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4424,9 +4445,8 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
     EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_nochange)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4445,9 +4465,8 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_0)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4466,9 +4485,8 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_1)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4487,9 +4505,8 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_01)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4509,9 +4526,8 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
         read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_nochange)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_nochange)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
@@ -4533,9 +4549,8 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_0)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
@@ -4557,9 +4572,8 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_1)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
@@ -4581,9 +4595,8 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_2)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
@@ -4605,9 +4618,8 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_01)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_01)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4630,9 +4642,8 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_02)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_02)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4655,9 +4666,8 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_12)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_12)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -4680,9 +4690,8 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_012)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),
@@ -4705,11 +4714,8 @@ TEST(${BACKEND_NAME}, reverse_3d_012)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, numeric_float_nan)
+NGRAPH_TEST(${BACKEND_NAME}, numeric_float_nan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
@@ -4723,11 +4729,8 @@ TEST(${BACKEND_NAME}, numeric_float_nan)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, numeric_double_nan)
+NGRAPH_TEST(${BACKEND_NAME}, numeric_double_nan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
@@ -4741,11 +4744,8 @@ TEST(${BACKEND_NAME}, numeric_double_nan)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, numeric_float_inf)
+NGRAPH_TEST(${BACKEND_NAME}, numeric_float_inf)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
@@ -4759,11 +4759,8 @@ TEST(${BACKEND_NAME}, numeric_float_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, numeric_double_inf)
+NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
@@ -4777,10 +4774,8 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-TEST(${BACKEND_NAME}, abc_tbb)
+NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
 {
-    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
-
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
     bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
@@ -4828,11 +4823,8 @@ TEST(${BACKEND_NAME}, abc_tbb)
 //
 // The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
 //
-TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
@@ -4868,11 +4860,8 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
@@ -4912,11 +4901,8 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
@@ -4961,11 +4947,8 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
@@ -5043,11 +5026,8 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_strided)
+NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_ra{};
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
@@ -5094,9 +5074,8 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
 //
 // From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
 //
-TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
+NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
@@ -5148,9 +5127,8 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
 //
 // From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
 //
-TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
+NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
@@ -5202,9 +5180,8 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
 //
 // Adapted from the XLA docs to provide an example in >2D: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
 //
-TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
+NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_sel_a{};
     auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
     Shape shape_sel_b{};
@@ -5382,52 +5359,37 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
     }
 }
 
-TEST(${BACKEND_NAME}, zero_sized_abs)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_abs)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Abs>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_ceiling)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_ceiling)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Ceiling>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_exp)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-    make_unary_empty_test<op::Exp>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_floor)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_floor)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Floor>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_log)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_log)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Log>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_negative)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_negative)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Negative>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_not)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::from<char>(), shape);
     auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
@@ -5446,170 +5408,127 @@ TEST(${BACKEND_NAME}, zero_sized_not)
     EXPECT_EQ(out_vec.size(), 0);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_sign)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sign)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sign>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_sqrt)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sqrt)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sqrt>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_sin)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sin>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_sinh)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_sinh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Sinh>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_cos)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Cos>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_cosh)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_cosh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Cosh>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_tan)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Tan>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_tanh)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_tanh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Tanh>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_asin)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_asin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Asin>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_acos)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_acos)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Acos>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_atan)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_atan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_unary_empty_test<op::Atan>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_add)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_add)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Add>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_divide)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_divide)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Divide>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_eq)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Equal>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_greater)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Greater>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_greatereq)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_less)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Less>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_lesseq)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::LessEq>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_maximum)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Maximum>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_minimum)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_minimum)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Minimum>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_multiply)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Multiply>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_not_equal)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}", true);
 }
 
-TEST(${BACKEND_NAME}, zero_sized_power)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_power)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Power>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, zero_sized_subtract)
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_subtract)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
     make_binary_empty_test<op::Subtract>("${BACKEND_NAME}");
 }
 
-TEST(${BACKEND_NAME}, convolution_outlining)
+NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
 {
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5647,10 +5566,8 @@ TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, mkldnn_layouts)
+NGRAPH_TEST(${BACKEND_NAME}, mkldnn_layouts)
 {
-    ONLY_ENABLE_TEST_FOR("CPU", "${BACKEND_NAME}");
-
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
@@ -5665,28 +5582,78 @@ TEST(${BACKEND_NAME}, mkldnn_layouts)
                                               Strides{1, 1});
     Shape pool_shape{1, 1};
     auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
-    auto f = make_shared<Function>(pool1, op::ParameterVector{A, B});
+    auto pool1_result = make_shared<op::Result>(pool1);
+    // Request result in default layout
+    pool1_result->set_needs_default_layout(true);
+    auto f = make_shared<Function>(ResultVector{pool1_result}, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
     vector<float> input(64, 1.0f);
-    copy_data(a, input);
-    auto b = backend->create_tensor(element::f32, shape_b);
-    vector<float> weights(512, 1.0f);
-    copy_data(b, weights);
-    auto result = backend->create_tensor(element::f32, shape_r);
+    vector<float> weights;
+    vector<float> rv(128);
+    for (int i = 0; i < 128; i++)
+        weights.push_back(0.0f);
+    for (int i = 0; i < 384; i++)
+        weights.push_back(1.0f);
 
-    vector<float> expected_result(128, 16.0f);
+    auto a = backend->create_tensor(element::f32, shape_a, input.data());
+    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
+    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
+
+    vector<float> expected_result;
+    for (int i = 0; i < 32; i++)
+        expected_result.push_back(0.0f);
+    for (int i = 0; i < 96; i++)
+        expected_result.push_back(16.0f);
 
     backend->call(f, {result}, {a, b});
-    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+
+    EXPECT_EQ(vector<float>{expected_result}, rv);
 }
 
-TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
+NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    Shape shape_a{1, 16, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{32, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 32, 2, 2};
+    auto conv = make_shared<op::Convolution>(A,
+                                             B,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+    Shape pool_shape{1, 1};
+    auto pool = make_shared<op::AvgPool>(conv, pool_shape);
+    auto bias = make_shared<op::Broadcast>(
+        op::Constant::create(element::f32, Shape{}, {2.14}), shape_r, AxisSet{0, 1, 2, 3});
+    auto result_op = make_shared<op::Result>(pool + bias);
+    auto f = make_shared<Function>(ResultVector{result_op}, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    vector<float> input(64, 1.0f);
+    vector<float> weights(512, 0.5f);
+    vector<float> rv(128);
+
+    auto a = backend->create_tensor(element::f32, shape_a, input.data());
+    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
+    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
+
+    backend->call(f, {result}, {a, b});
+
+    vector<float> rv_saved(rv);
+
+    b->set_stale(false);
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(rv_saved, rv);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
+{
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5705,25 +5672,24 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5744,37 +5710,36 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom}},
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom}},
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5798,62 +5763,61 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
     float denom = 3.0;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          4 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom},
-                                         {0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          5 / denom,
-                                          5 / denom,
-                                          4 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          3 / denom,
-                                          1 / denom}},
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 3>({{{1 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           4 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom},
+                                                          {0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           5 / denom,
+                                                           5 / denom,
+                                                           4 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           3 / denom,
+                                                           1 / denom}},
 
-                                        {{3 / denom,
-                                          4 / denom,
-                                          2 / denom,
-                                          1 / denom,
-                                          0 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom},
-                                         {3 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          1 / denom,
-                                          3 / denom,
-                                          2 / denom,
-                                          2 / denom,
-                                          0 / denom,
-                                          1 / denom,
-                                          2 / denom,
-                                          4 / denom,
-                                          3 / denom}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                                         {{3 / denom,
+                                                           4 / denom,
+                                                           2 / denom,
+                                                           1 / denom,
+                                                           0 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom},
+                                                          {3 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           1 / denom,
+                                                           3 / denom,
+                                                           2 / denom,
+                                                           2 / denom,
+                                                           0 / denom,
+                                                           1 / denom,
+                                                           2 / denom,
+                                                           4 / denom,
+                                                           3 / denom}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -5895,32 +5859,33 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
     float denom = 2 * 3;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
-                                          {7 / denom, 5 / denom, 3 / denom},
-                                          {5 / denom, 2 / denom, 5 / denom},
-                                          {6 / denom, 5 / denom, 5 / denom}},
 
-                                         {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
-                                          {8 / denom, 6 / denom, 7 / denom},
-                                          {7 / denom, 2 / denom, 3 / denom},
-                                          {6 / denom, 1 / denom, 0 / denom}}},
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
+                                   {7 / denom, 5 / denom, 3 / denom},
+                                   {5 / denom, 2 / denom, 5 / denom},
+                                   {6 / denom, 5 / denom, 5 / denom}},
 
-                                        {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
-                                          {3 / denom, 5 / denom, 9 / denom},
-                                          {3 / denom, 6 / denom, 9 / denom},
-                                          {2 / denom, 3 / denom, 3 / denom}},
+                                  {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
+                                   {8 / denom, 6 / denom, 7 / denom},
+                                   {7 / denom, 2 / denom, 3 / denom},
+                                   {6 / denom, 1 / denom, 0 / denom}}},
 
-                                         {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
-                                          {6 / denom, 5 / denom, 4 / denom},
-                                          {7 / denom, 5 / denom, 6 / denom},
-                                          {4 / denom, 2 / denom, 4 / denom}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                 {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
+                                   {3 / denom, 5 / denom, 9 / denom},
+                                   {3 / denom, 6 / denom, 9 / denom},
+                                   {2 / denom, 3 / denom, 3 / denom}},
+
+                                  {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
+                                   {6 / denom, 5 / denom, 4 / denom},
+                                   {7 / denom, 5 / denom, 6 / denom},
+                                   {4 / denom, 2 / denom, 4 / denom}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
@@ -5948,16 +5913,15 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
     float denom = 2 * 3;
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
-                                          {6 / denom, 5 / denom, 8 / denom},
-                                          {6 / denom, 2 / denom, 4 / denom}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
+                                                           {6 / denom, 5 / denom, 8 / denom},
+                                                           {6 / denom, 2 / denom, 4 / denom}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{1, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -5978,17 +5942,17 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6012,21 +5976,21 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                                   {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                   {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                   {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                  {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
+                                                   {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                   {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                   {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                            .get_vector(),
+                        read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6050,19 +6014,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 4},
-                                          {2.0f / 2, 5.0f / 4, 5.0f / 4}},
-                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2},
-                                          {5.0f / 2, 10.0f / 4, 16.0f / 4},
-                                          {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
+                                                           {0.0f / 2, 4.0f / 4, 6.0f / 4},
+                                                           {2.0f / 2, 5.0f / 4, 5.0f / 4}},
+                                                          {{3.0f / 1, 8.0f / 2, 7.0f / 2},
+                                                           {5.0f / 2, 10.0f / 4, 16.0f / 4},
+                                                           {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
@@ -6086,19 +6049,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
-                                          {5.0f / 4, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 2, 0.0f / 2, 0.0f / 1}},
-                                         {{10.0f / 4, 16.0f / 4, 11.0f / 2},
-                                          {11.0f / 4, 20.0f / 4, 14.0f / 2},
-                                          {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                                           {5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                                           {2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                                          {{10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                                           {11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                                           {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -6122,23 +6084,23 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
-                                          {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
-                                          {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
-                                          {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
-                                          {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
-                                         {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
-                                          {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
-                                          {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
-                                          {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
-                                          {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
+                                   {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
+                                   {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
+                                   {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
+                                   {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
+                                  {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
+                                   {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
+                                   {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
+                                   {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
+                                   {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
@@ -6162,19 +6124,18 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
-                                          {2.0f / 3, 8.0f / 9, 2.0f / 3},
-                                          {2.0f / 1, 2.0f / 3, 0.0f / 1}},
-                                         {{3.0f / 1, 10.0f / 3, 2.0f / 1},
-                                          {8.0f / 3, 35.0f / 9, 16.0f / 3},
-                                          {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
+                                                           {2.0f / 3, 8.0f / 9, 2.0f / 3},
+                                                           {2.0f / 1, 2.0f / 3, 0.0f / 1}},
+                                                          {{3.0f / 1, 10.0f / 3, 2.0f / 1},
+                                                           {8.0f / 3, 35.0f / 9, 16.0f / 3},
+                                                           {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
+                                    .get_vector(),
+                                read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 3};
@@ -6198,16 +6159,16 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>(
-                   {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
-                     {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(
+        test::NDArray<float, 4>(
+            {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
+              {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
+            .get_vector(),
+        read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, pad_interior_1d)
+NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6236,9 +6197,8 @@ TEST(${BACKEND_NAME}, pad_interior_1d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_exterior_1d)
+NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6267,9 +6227,8 @@ TEST(${BACKEND_NAME}, pad_exterior_1d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
+NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6299,9 +6258,8 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
+NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6335,11 +6293,8 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
+NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6371,11 +6326,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
+NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6407,11 +6359,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
+NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6443,11 +6392,8 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
+NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6513,11 +6459,8 @@ TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
 // zero-length axis with interior padding. Rather than subtract 1 from the
 // source shape and multiply by the interior padding (which causes underflow),
 // we should just count the pre-interior-padding length as zero.
-TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
+NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{2, 0, 3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
@@ -6546,9 +6489,8 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 }
 
 // Trivial case with no reduced axes.
-TEST(${BACKEND_NAME}, product_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, product_trivial)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
@@ -6565,9 +6507,8 @@ TEST(${BACKEND_NAME}, product_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, product_trivial_5d)
+NGRAPH_TEST(${BACKEND_NAME}, product_trivial_5d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
@@ -6586,9 +6527,8 @@ TEST(${BACKEND_NAME}, product_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, product_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -6609,9 +6549,8 @@ TEST(${BACKEND_NAME}, product_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_matrix_columns)
+NGRAPH_TEST(${BACKEND_NAME}, product_matrix_columns)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
@@ -6632,9 +6571,8 @@ TEST(${BACKEND_NAME}, product_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_matrix_rows)
+NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -6655,11 +6593,8 @@ TEST(${BACKEND_NAME}, product_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_matrix_rows_zero)
+NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -6681,11 +6616,8 @@ TEST(${BACKEND_NAME}, product_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_matrix_cols_zero)
+NGRAPH_TEST(${BACKEND_NAME}, product_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6708,11 +6640,8 @@ TEST(${BACKEND_NAME}, product_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_vector_zero)
+NGRAPH_TEST(${BACKEND_NAME}, product_vector_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -6734,11 +6663,8 @@ TEST(${BACKEND_NAME}, product_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
+NGRAPH_TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -6761,9 +6687,8 @@ TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
+NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -6790,9 +6715,8 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
+NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
@@ -6819,11 +6743,8 @@ TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, product_3d_to_vector)
+NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}"); // Correct values but OOB
-
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -6845,11 +6766,8 @@ TEST(${BACKEND_NAME}, product_3d_to_vector)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, product_3d_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}"); // Correct values but OOB
-
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -6871,11 +6789,8 @@ TEST(${BACKEND_NAME}, product_3d_to_scalar)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
+NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
@@ -6896,7 +6811,7 @@ TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 }
 
 // Trivial case with no reduced axes.
-TEST(${BACKEND_NAME}, max_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -6914,7 +6829,7 @@ TEST(${BACKEND_NAME}, max_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, max_trivial_5d)
+NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -6934,7 +6849,7 @@ TEST(${BACKEND_NAME}, max_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -6955,7 +6870,7 @@ TEST(${BACKEND_NAME}, max_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_matrix_columns)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_columns)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6977,7 +6892,7 @@ TEST(${BACKEND_NAME}, max_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_matrix_rows)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -6999,10 +6914,8 @@ TEST(${BACKEND_NAME}, max_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_matrix_rows_zero)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7027,10 +6940,8 @@ TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_matrix_cols_zero)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7055,10 +6966,8 @@ TEST(${BACKEND_NAME}, max_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_vector_zero)
+NGRAPH_TEST(${BACKEND_NAME}, max_vector_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7080,10 +6989,8 @@ TEST(${BACKEND_NAME}, max_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7105,7 +7012,7 @@ TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7124,7 +7031,7 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
     EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7143,7 +7050,7 @@ TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
     EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_3d_to_vector)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7162,7 +7069,7 @@ TEST(${BACKEND_NAME}, max_3d_to_vector)
     EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_3d_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7182,10 +7089,8 @@ TEST(${BACKEND_NAME}, max_3d_to_scalar)
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
@@ -7208,7 +7113,7 @@ TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
 }
 
 // Trivial case with no reduced axes.
-TEST(${BACKEND_NAME}, min_trivial)
+NGRAPH_TEST(${BACKEND_NAME}, min_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -7226,7 +7131,7 @@ TEST(${BACKEND_NAME}, min_trivial)
 }
 
 // Failure has been reported at 5D for some reason
-TEST(${BACKEND_NAME}, min_trivial_5d)
+NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -7246,7 +7151,7 @@ TEST(${BACKEND_NAME}, min_trivial_5d)
               read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -7267,7 +7172,7 @@ TEST(${BACKEND_NAME}, min_to_scalar)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_matrix_columns)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_columns)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7289,7 +7194,7 @@ TEST(${BACKEND_NAME}, min_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_matrix_rows)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7311,10 +7216,8 @@ TEST(${BACKEND_NAME}, min_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_matrix_rows_zero)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
@@ -7339,10 +7242,8 @@ TEST(${BACKEND_NAME}, min_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_matrix_cols_zero)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7367,10 +7268,8 @@ TEST(${BACKEND_NAME}, min_matrix_cols_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_vector_zero)
+NGRAPH_TEST(${BACKEND_NAME}, min_vector_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7392,10 +7291,8 @@ TEST(${BACKEND_NAME}, min_vector_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
@@ -7417,7 +7314,7 @@ TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7436,7 +7333,7 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7455,7 +7352,7 @@ TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
     EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_3d_to_vector)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7474,7 +7371,7 @@ TEST(${BACKEND_NAME}, min_3d_to_vector)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_3d_to_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7494,10 +7391,8 @@ TEST(${BACKEND_NAME}, min_3d_to_scalar)
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
@@ -7519,7 +7414,7 @@ TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, relu_2Dfprop)
+NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7538,7 +7433,7 @@ TEST(${BACKEND_NAME}, relu_2Dfprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, relu_4Dfprop)
+NGRAPH_TEST(${BACKEND_NAME}, relu_4Dfprop)
 {
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7557,7 +7452,7 @@ TEST(${BACKEND_NAME}, relu_4Dfprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
+NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
 {
     auto shape_a = Shape{2, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
@@ -7577,7 +7472,7 @@ TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, relu_2Dbackprop)
+NGRAPH_TEST(${BACKEND_NAME}, relu_2Dbackprop)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7599,7 +7494,7 @@ TEST(${BACKEND_NAME}, relu_2Dbackprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, relu_4Dbackprop)
+NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
 {
     auto shape_a = Shape{2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -7621,9 +7516,8 @@ TEST(${BACKEND_NAME}, relu_4Dbackprop)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, softmax_all)
+NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
@@ -7650,9 +7544,8 @@ TEST(${BACKEND_NAME}, softmax_all)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, softmax_axis)
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
@@ -7676,11 +7569,8 @@ TEST(${BACKEND_NAME}, softmax_axis)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, softmax_underflow)
+NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
@@ -7703,7 +7593,7 @@ TEST(${BACKEND_NAME}, softmax_underflow)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
-TEST(${BACKEND_NAME}, multiple_backends)
+NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
 {
     Shape shape{2, 2};
     auto A1 = make_shared<op::Parameter>(element::f32, shape);
@@ -7742,9 +7632,8 @@ TEST(${BACKEND_NAME}, multiple_backends)
               (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
 }
 
-TEST(${BACKEND_NAME}, tensorview_custom_mem)
+NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape{2, 2};
@@ -7774,7 +7663,7 @@ TEST(${BACKEND_NAME}, tensorview_custom_mem)
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
 }
 
-TEST(${BACKEND_NAME}, validate_call_input_count)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7791,7 +7680,7 @@ TEST(${BACKEND_NAME}, validate_call_input_count)
     EXPECT_ANY_THROW(backend->call(f, {c}, {a}));
 }
 
-TEST(${BACKEND_NAME}, validate_call_input_type)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7808,7 +7697,7 @@ TEST(${BACKEND_NAME}, validate_call_input_type)
     EXPECT_ANY_THROW(backend->call(f, {c}, {a, b}));
 }
 
-TEST(${BACKEND_NAME}, validate_call_input_shape)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7825,7 +7714,7 @@ TEST(${BACKEND_NAME}, validate_call_input_shape)
     EXPECT_ANY_THROW(backend->call(f, {c}, {a, b}));
 }
 
-TEST(${BACKEND_NAME}, validate_call_output_count)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7843,7 +7732,7 @@ TEST(${BACKEND_NAME}, validate_call_output_count)
     EXPECT_ANY_THROW(backend->call(f, {c, d}, {a, b}));
 }
 
-TEST(${BACKEND_NAME}, validate_call_output_type)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7860,7 +7749,7 @@ TEST(${BACKEND_NAME}, validate_call_output_type)
     EXPECT_ANY_THROW(backend->call(f, {a}, {b, c}));
 }
 
-TEST(${BACKEND_NAME}, validate_call_output_shape)
+NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -7875,4 +7764,352 @@ TEST(${BACKEND_NAME}, validate_call_output_shape)
     auto c = backend->create_tensor(element::f32, shape);
 
     EXPECT_ANY_THROW(backend->call(f, {a}, {c, b}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, logical_and)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::And>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{0, 0, 1, 0, 0, 0, 1, 0}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, logical_or)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Or>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 1, 1, 1, 0, 1, 0});
+    auto b = backend->create_tensor(element::boolean, shape);
+    copy_data(b, vector<char>{0, 0, 1, 0, 0, 1, 1, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
+{
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
+
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
+    vector<float> expected_result{-0.71498716f,
+                                  1.48388731f,
+                                  -0.00196938f,
+                                  -0.76693159f,
+                                  -0.91316032f,
+                                  0.23943391f,
+                                  -0.84090298f,
+                                  1.51462936f};
+    vector<float> expected_mean{0.602912f, 0.599727f};
+    vector<float> expected_variance{0.00472505f, 0.0361782f};
+
+    backend->call(f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output), 1e-5f, 1e-6f));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean), 1e-5f, 1e-6f));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
+    vector<float> expected_result{
+        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
+    vector<float> expected_mean{0.583388f, 0.619252f};
+    vector<float> expected_variance{0.0119972f, 0.0282681f};
+    backend->call(f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
+{
+    auto input_shape = Shape{4, 3, 2, 2};
+    auto shape_mean = Shape{3};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{3};
+    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto var_shape = Shape{3};
+    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto gamma_shape = Shape{3};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{3};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{4, 3, 2, 2};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn_dx = make_shared<op::GetOutputElement>(bn, 0);
+    auto bn_dgamma = make_shared<op::GetOutputElement>(bn, 1);
+    auto bn_dbeta = make_shared<op::GetOutputElement>(bn, 2);
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    vector<float> dataInput{
+        10.76331902f, 11.51178265f, 10.31018162f, 12.2993021f,  14.17626667f, 14.63498497f,
+        13.63494492f, 13.84248161f, 11.34602547f, 13.22014618f, 10.46686649f, 10.39842987f,
+        12.94806862f, 11.71670246f, 14.94438076f, 13.13236618f, 13.40889645f, 12.76128387f,
+        11.34430027f, 11.86629677f, 11.11464024f, 10.93221283f, 11.95324039f, 10.96581173f,
+        13.05455494f, 14.41404247f, 13.11169434f, 11.26559448f, 10.89965153f, 14.08202171f,
+        11.12685776f, 12.58428574f, 12.59247875f, 13.00187492f, 12.66310215f, 10.06655025f,
+        12.62048626f, 14.47942352f, 13.84950638f, 10.61425877f, 11.47936344f, 13.06011772f,
+        13.63069057f, 12.31748772f, 13.84555244f, 10.95815468f, 12.78933334f, 12.75389099f};
+    copy_data(_input, dataInput);
+    auto _mean = backend->create_tensor(element::f32, mean_shape);
+    copy_data(_mean, vector<float>{12.56472874f, 12.80312157f, 11.81676865f});
+    auto _var = backend->create_tensor(element::f32, var_shape);
+    copy_data(_var, vector<float>{1.94557643f, 1.32772446f, 1.28163588f});
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{2.0f, 2.0f, 2.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{1.0f, 1.0f, 1.0f});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    shared_ptr<runtime::TensorView> _delta = backend->create_tensor(element::f32, shape_r);
+    vector<float> deltaData(shape_size(shape_r), 20.0f);
+    copy_data(_delta, deltaData);
+
+    auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
+                                   op::ParameterVector{mean, var, input, gamma, beta});
+
+    auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
+
+    auto zero = ngraph::make_zero(bn_dgamma->get_element_type(), bn_dgamma->get_shape());
+    ngraph::autodiff::Adjoints adjoints(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
+                                        NodeVector{C, zero, zero});
+
+    auto dinput = adjoints.backprop_node(input);
+    auto dgamma = adjoints.backprop_node(gamma);
+    auto dbeta = adjoints.backprop_node(beta);
+
+    auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
+                                    op::ParameterVector{mean, var, input, gamma, beta, C});
+
+    //roundtrip serialization
+    string js = serialize(df, 4);
+    istringstream in(js);
+    df = deserialize(in);
+
+    shared_ptr<runtime::TensorView> _dinput = backend->create_tensor(element::f32, shape_r);
+    shared_ptr<runtime::TensorView> _dgamma = backend->create_tensor(element::f32, gamma_shape);
+    shared_ptr<runtime::TensorView> _dbeta = backend->create_tensor(element::f32, beta_shape);
+
+    backend->call(df, {_dinput, _dgamma, _dbeta}, {_mean, _var, _input, _gamma, _beta, _delta});
+
+    vector<float> expected_input{
+        8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
+        3.84632768e-06f,  -1.07932050e-05f, -2.57458956e-06f, -2.22166714e-06f, -8.38779043e-06f,
+        -2.48082982e-06f, 5.89238360e-06f,  -2.52895109e-07f, -8.68433445e-06f, -5.82726737e-06f,
+        8.84659658e-06f,  3.03944108e-05f,  4.05480879e-05f,  1.84123158e-05f,  2.30061178e-05f,
+        1.34087590e-05f,  -9.26072571e-07f, -3.22908454e-05f, -2.07365116e-05f, -4.21330941e-05f,
+        2.83083100e-05f,  -3.71039101e-05f, -4.84390640e-06f, -2.93012376e-05f, 5.68858087e-06f,
+        1.83181458e-05f,  -1.07494506e-05f, -2.32429103e-06f, 6.92914809e-06f,  -6.66512321e-06f,
+        -7.00302840e-06f, -3.46675184e-06f, -4.36748381e-06f, 6.73822226e-07f,  -4.20158993e-06f,
+        3.83005061e-06f,  5.85143729e-06f,  4.17875243e-06f,  -8.64167783e-06f, 1.00170803e-05f,
+        -4.23939666e-06f, 4.80201680e-06f,  4.62702078e-06f};
+
+    ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dinput), expected_input, 1e-3f, 1e-4f));
+    vector<float> expected_dgamma{7.06315041e-05f, -2.35289335e-04f, -5.06639481e-05f};
+    ASSERT_TRUE(
+        ngraph::test::all_close(read_vector<float>(_dgamma), expected_dgamma, 1e-2f, 1e-3f));
+    vector<float> expected_dbeta{320.f, 320.f, 320.f};
+    ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dbeta), expected_dbeta, 1e-4f, 1e-8f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto var_shape = Shape{2};
+    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+
+    auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto _mean = backend->create_tensor(element::f32, mean_shape);
+    copy_data(_mean, vector<float>{0.583388f, 0.619252f});
+    auto _var = backend->create_tensor(element::f32, var_shape);
+    copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+    vector<float> expected_result{
+        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
+    backend->call(f, {bn_output}, {_input, _gamma, _beta, _mean, _var});
+
+    ASSERT_TRUE(
+        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto var_shape = Shape{2};
+    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, true);
+
+    auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto _mean = backend->create_tensor(element::f32, mean_shape);
+    copy_data(_mean, vector<float>{0.583388f, 0.619252f});
+    auto _var = backend->create_tensor(element::f32, var_shape);
+    copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+    vector<float> expected_result{
+        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
+    backend->call(f, {bn_output}, {_gamma, _beta, _input, _mean, _var});
+
+    ASSERT_TRUE(
+        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }

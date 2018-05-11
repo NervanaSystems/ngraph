@@ -53,6 +53,7 @@ Not currently a comprehensive list.
    acos.rst
    add.rst
    allreduce.rst
+   and.rst
    asin.rst
    atan.rst
    avg_pool.rst
@@ -72,17 +73,28 @@ Not currently a comprehensive list.
    exp.rst
    floor.rst
    function_call.rst
+   get_output_element.rst
    greater_eq.rst
    greater.rst
    less_eq.rst
    less.rst
    log.rst
+   max.rst
    maximum.rst
+   max_pool.rst 
+   min.rst
    minimum.rst
    multiply.rst
    negative.rst
    not_equal.rst
    not.rst
+   one_hot.rst
+   or.rst
+   pad.rst
+   parameter.rst
+   power.rst
+   product.rst
+   relu.rst
    softmax.rst
 
    

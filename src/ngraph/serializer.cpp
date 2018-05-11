@@ -24,6 +24,7 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -373,6 +375,10 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "AllReduce")
             {
                 node = make_shared<op::AllReduce>(args[0]);
+            }
+            else if (node_op == "And")
+            {
+                node = make_shared<op::And>(args[0], args[1]);
             }
             else if (node_op == "Asin")
             {
@@ -715,6 +721,10 @@ static shared_ptr<ngraph::Function>
                 auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
                 node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
             }
+            else if (node_op == "Or")
+            {
+                node = make_shared<op::Or>(args[0], args[1]);
+            }
             else if (node_op == "Pad")
             {
                 auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
@@ -729,7 +739,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                node = make_shared<op::Parameter>(element_type, shape);
+                auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
+                node = make_shared<op::Parameter>(element_type, shape, cacheable);
             }
             else if (node_op == "Power")
             {
