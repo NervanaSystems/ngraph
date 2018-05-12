@@ -104,6 +104,7 @@ void ngraph::runtime::cpu::pass::CPUWorkspaceInsertion::construct_max_pool_with_
         {
             NGRAPH_DEBUG << "MaxPool for " << pattern_map[data]->get_name() << " and "
                          << m_max_pool_bprop->get_name() << " not found";
+            return false;
         }
 
         auto max_pool_with_indices =
