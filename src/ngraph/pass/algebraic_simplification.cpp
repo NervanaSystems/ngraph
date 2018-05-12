@@ -146,7 +146,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     }
 
     auto replacement = goe;
-    if (goe->get_shape().size() < n->get_shape().size())
+    if (goe->get_shape().size() != n->get_shape().size())
     {
         Shape default_shape(goe->get_shape().size());
         std::iota(begin(default_shape), end(default_shape), 0);
