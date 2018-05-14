@@ -196,33 +196,35 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
             auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
 
+            // Now identify the nodes which consumes the output of LSTM nodes
+            // and replace them accordingly
             std::vector<std::shared_ptr<Node>> new_args;
+
+            // find the user's for {ht|ct} and replace them with lstm_goe_1
             for (auto node : pattern_map[ct_label]->get_users())
             {
-                if (std::dynamic_pointer_cast<op::Multiply>(node))
+                NGRAPH_DEBUG << "node_name: " << node->get_name();
+                for (size_t i = 0; i < node->get_input_size(); i++)
                 {
-                    NGRAPH_DEBUG << "node_name: " << node->get_name();
-                    for (size_t i = 0; i < node->get_input_size(); i++)
+                    if (node->get_argument(i) == pattern_map[ct_label])
                     {
-                        if (node->get_argument(i) == pattern_map[ct_label])
-                        {
-                            new_args.push_back(ct_output);
-                        }
-                        else
-                        {
-                            new_args.push_back(node->get_argument(i));
-                        }
-                        NGRAPH_DEBUG << "Multiply_input's shape: " << join(new_args[i]->get_shape())
-                                     << " " << new_args[i]->get_name();
+                        new_args.push_back(ct_output);
                     }
-                    auto new_ct_node = node->copy_with_new_args(new_args);
-                    NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
-                                 << new_ct_node->get_name();
-                    ;
-                    ngraph::replace_node(node, new_ct_node);
-                    new_args.clear();
+                    else
+                    {
+                        new_args.push_back(node->get_argument(i));
+                    }
+                    NGRAPH_DEBUG << "Multiply_input's shape: " << join(new_args[i]->get_shape())
+                                 << " " << new_args[i]->get_name();
                 }
+                auto new_ct_node = node->copy_with_new_args(new_args);
+                NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
+                             << new_ct_node->get_name();
+                ngraph::replace_node(node, new_ct_node);
+                new_args.clear();
             }
+
+            // find the user's for {ht} and replace them with lstm_goe_0
             ngraph::replace_node(m.get_match_root(), ht_output);
             return true;
         };
