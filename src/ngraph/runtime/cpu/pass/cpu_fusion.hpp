@@ -35,18 +35,18 @@ namespace ngraph
 class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    //30 different fusion groups
-    //that we can nest/mix&match/etc
-    //should be good enough
-    //for quite a while
+    //30 different fusion groups that we can nest/mix&match/etc
+    //should be good enough for quite a while
     enum fusions
     {
+        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+        //i.e. implement `generate_adjoints`
         DIFFERENTIABLE_FUSIONS = 0x1,
         REGULAR_FUSIONS = 0x2,
         ALL = 0xFFFFFFFF
     };
 
-    CPUFusion(int fusions)
+    CPUFusion(int fusions = ALL)
         : GraphRewrite()
     {
         if (fusions & REGULAR_FUSIONS)
