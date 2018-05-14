@@ -174,7 +174,12 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
 if(NGRAPH_GPU_ENABLE)
-    find_package(CUDA 8 REQUIRED)
+    find_package(CUDA 9 QUIET)
+    if (CUDA_FOUND)
+      set(CUDA9_FOUND TRUE)
+    else()
+      find_package(CUDA 8 REQUIRED)
+    endif()
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
     find_package(CUDNN 7 REQUIRED)
@@ -198,6 +203,12 @@ if(NGRAPH_GPU_ENABLE)
       -gencode=arch=compute_60,code=sm_60;
       -gencode=arch=compute_61,code=sm_61;
       -gencode=arch=compute_61,code=compute_61)
+    if (CUDA9_FOUND)
+      set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
+	-gencode=arch=compute_62,code=sm_62;
+	-gencode=arch=compute_70,code=sm_70;
+	-gencode=arch=compute_70,code=compute_70)
+    endif()
 elseif(NGRAPH_GPU_ENABLE)
     message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
