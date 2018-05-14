@@ -483,7 +483,8 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                     if (include_pad == false)
                     {
                         // count the number of (non-padded) elements
-                        writer << "pool_size += __popc(__ballot(within_tensor_bounds));\n";
+                        writer << "pool_size += __popc(__ballot_sync(0xffffffff, "
+                                  "within_tensor_bounds));\n";
                     }
                     // this will need to change to k->c once
                     // feature pooling support is added
@@ -503,7 +504,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer << "for (int i = 16; i > 0; i >>= 1)\n";
                 writer.block_begin();
                 {
-                    writer << "sum += __shfl_xor(sum,i);\n";
+                    writer << "sum += __shfl_xor_sync(0xffffffff,sum,i);\n";
                 }
                 writer.block_end();
                 // write result to output
@@ -719,6 +720,12 @@ std::string runtime::gpu::CUDAEmitter::include_helpers()
     // load: helper to load from constant memory for fast access
     std::stringstream ss;
     ss << R"(
+#if defined(CUDA_VERSION) && CUDA_VERSION < 9000
+    #define __ballot_sync(mask, predicate) __ballot(predicate)
+    #define __shfl_down_sync(mask, val, delta, width) __shfl_down(val, delta, width)
+    #define __shfl_xor_sync(mask, val, laneMask, width) __shfl_xor(val, laneMask, width)
+#endif
+
 __device__ __forceinline__ int div64(int value, int magic, int shift)
 {
     int result;
