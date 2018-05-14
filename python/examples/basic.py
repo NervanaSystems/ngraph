@@ -45,3 +45,4 @@ result = computation(value_a, value_b, value_c)
 # [[ 54.  80.]
 #  [110. 144.]]
 print('Result = ', result)
+
