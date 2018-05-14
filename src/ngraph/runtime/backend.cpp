@@ -59,7 +59,8 @@ void* runtime::Backend::open_shared_library(const string& type)
     }
     else
     {
-        throw runtime_error("Failed to find Backend library '" + name + "'");
+        string err = dlerror();
+        throw runtime_error("Failed to find Backend library '" + name + "'\n" + err);
     }
     return handle;
 }
