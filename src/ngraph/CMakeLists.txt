@@ -117,6 +117,7 @@ set (SRC
     pass/manager_state.cpp
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
+    pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
@@ -168,8 +169,7 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     if (NGRAPH_TBB_ENABLE)
@@ -226,7 +226,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/pass/rnn_fusion.cpp
         runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
-        runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
         runtime/cpu/pass/cpu_post_layout_optimizations.cpp
         runtime/cpu/pass/cpu_shuffle_folding.cpp

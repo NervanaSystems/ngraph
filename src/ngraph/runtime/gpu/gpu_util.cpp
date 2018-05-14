@@ -80,6 +80,8 @@ void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
 
 namespace
 {
+    // Unsigned integer exponentiation by squaring adapted
+    // from https://stackoverflow.com/a/101613/882253
     uint64_t powU64(uint64_t base, uint64_t exp)
     {
         uint64_t result = 1;
@@ -100,6 +102,9 @@ namespace
         return result;
     }
 
+    // Most significant bit search via de bruijn multiplication
+    // Adopted from https://stackoverflow.com/a/31718095/882253
+    // Additional ref: http://supertech.csail.mit.edu/papers/debruijn.pdf
     uint32_t msbDeBruijnU32(uint32_t v)
     {
         static const int multiply_de_Bruijn_bit_position[32] = {
@@ -112,9 +117,11 @@ namespace
         v |= v >> 8;
         v |= v >> 16;
 
-        return multiply_de_Bruijn_bit_position[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+        return multiply_de_Bruijn_bit_position[static_cast<uint32_t>(v * 0x07C4ACDDU) >> 27];
     }
 
+    // perform msb on upper 32 bits if the first 32 bits are filled
+    // otherwise do normal de bruijn mutliplication on the 32 bit word
     int msbU64(uint64_t val)
     {
         if (val > 0x00000000FFFFFFFFul)
