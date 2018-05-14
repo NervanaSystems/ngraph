@@ -136,7 +136,7 @@ To select the ``"CPU"`` backend,
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 39-40
+   :lines: 38-39
 
 
 .. _compile_cmp:
@@ -177,7 +177,7 @@ the three parameters and the return value as follows:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 46-51
+   :lines: 41-46
 
 Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
 backends implement for tensor use. When there are no more references to the 
@@ -192,7 +192,7 @@ Next we need to copy some data into the tensors.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 53-60
+   :lines: 48-55
 
 The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
@@ -207,7 +207,7 @@ call frame:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 63
+   :lines: 57-58
 
 
 .. _access_outputs:
@@ -219,7 +219,7 @@ We can use the ``read`` method to access the result:
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 65-67
+   :lines: 60-77
 
 .. _all_together:
 
