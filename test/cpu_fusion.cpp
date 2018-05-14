@@ -1227,7 +1227,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-static std::shared_ptr<ngraph::Function> MakeForwardFunction()
+static std::shared_ptr<ngraph::Function> make_forward_function()
 {
     Shape shape_a{10, 3, 28, 28};
     auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
@@ -1239,7 +1239,7 @@ static std::shared_ptr<ngraph::Function> MakeForwardFunction()
 }
 
 static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<ngraph::Node>>>
-    MakeBackwardFunction(std::shared_ptr<ngraph::Function> f)
+    make_backward_function(std::shared_ptr<ngraph::Function> f)
 {
     // get parameters
     std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = f->get_parameters();
@@ -1273,7 +1273,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<
     return {std::make_shared<ngraph::Function>(dYdXs, back_parameters), adjoints};
 }
 
-void OptimizeGraph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph::Function> bf)
+void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph::Function> bf)
 {
     // start by removing excess reshapes
     NodeVector nv_cwi;
@@ -1327,11 +1327,11 @@ void OptimizeGraph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph:
 
 TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
 {
-    auto f = MakeForwardFunction();
-    auto bfa = MakeBackwardFunction(f);
+    auto f = make_forward_function();
+    auto bfa = make_backward_function(f);
     auto maybe_bf = bfa.first;
     auto adjoints = bfa.second;
-    OptimizeGraph(f, maybe_bf);
+    optimize_graph(f, maybe_bf);
     auto fprop_cache = ngraph::cache_fprop(f, maybe_bf, adjoints);
 
     auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
