@@ -25,6 +25,7 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -75,15 +76,27 @@ namespace ngraph
                             size_t rank,
                             size_t count);
 
-            template <typename T, typename... Inputs>
-            void emit_elementwise_op(const std::string& name,
-                                     const std::array<std::string, 2>& data_types,
-                                     GPURuntimeContext* ctx,
-                                     size_t count,
-                                     CUdeviceptr out,
-                                     Inputs&&... inputs)
+            void emit_reverse(const std::string& name,
+                              CUdeviceptr in,
+                              CUdeviceptr out,
+                              const std::array<std::string, 2>& data_types,
+                              GPURuntimeContext* ctx,
+                              CUdeviceptr input_shape,
+                              CUdeviceptr reverse_axes,
+                              size_t rank,
+                              size_t count);
+
+            template <typename... Inputs>
+            void emit_concat_op(const std::string& name,
+                                const std::vector<std::string>& data_types,
+                                GPURuntimeContext* ctx,
+                                size_t count,
+                                size_t block_size,
+                                CUdeviceptr block_strides,
+                                CUdeviceptr out,
+                                Inputs&&... inputs)
             {
-                std::string type_signature = "_" + data_types[0] + "_" + data_types[1];
+                std::string type_signature = "_" + join(data_types, "_");
                 std::replace(type_signature.begin(), type_signature.end(), ' ', '_');
                 auto compiled_kernel = ctx->compiled_kernel_pool->get(name + type_signature);
                 if (compiled_kernel == nullptr)
@@ -91,26 +104,14 @@ namespace ngraph
                     codegen::CodeWriter writer;
                     CudaKernelBuilder::add_pod_typedefs(writer);
 
-                    std::string op_name = CudaOpMap<T>::op;
-                    if (CudaOpMap<T>::math_kernel)
-                    {
-                        op_name += type_signature;
-                        CudaKernelBuilder::get_device_helper(writer,
-                                                             op_name,
-                                                             CudaOpMap<T>::math_kernel,
-                                                             data_types,
-                                                             sizeof...(inputs));
-                    }
-
-                    CudaKernelBuilder::get_elementwise_op(
-                        writer, name + type_signature, op_name, data_types, sizeof...(inputs));
+                    CudaKernelBuilder::get_concat_op(
+                        writer, name + type_signature, data_types, sizeof...(inputs));
 
                     std::string kernel = writer.get_code();
                     compiled_kernel = ctx->compiled_kernel_pool->set(name + type_signature, kernel);
                 }
 
-                //convert runtime ptr to driver api ptr
-                void* args_list[] = {&inputs..., &out, &count};
+                void* args_list[] = {&inputs..., &out, &block_strides, &block_size, &count};
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               count,
                                               1,

@@ -26,11 +26,14 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
+static string s_manifest = "${MANIFEST}";
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -70,7 +73,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -108,9 +111,8 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape padding{1, 1};
@@ -145,9 +147,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{1, 1, 4, 4};
@@ -179,9 +180,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape_a{2, 2, 4, 4};
@@ -279,9 +279,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
@@ -302,9 +301,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
@@ -325,9 +323,8 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
@@ -350,7 +347,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_abs)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_abs)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -378,7 +375,23 @@ TEST(${BACKEND_NAME}, backwards_abs)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_add)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_acos)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-0.9f, 0.9f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Acos>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_add)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -395,7 +408,7 @@ TEST(${BACKEND_NAME}, backwards_add)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_add_nested)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_add_nested)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -413,9 +426,40 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_broadcast0)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_asin)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-0.9f, 0.9f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Asin>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_atan)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    Shape shape{2, 3};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Atan>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_broadcast0)
+{
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -430,9 +474,8 @@ TEST(${BACKEND_NAME}, backwards_broadcast0)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_broadcast1)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_broadcast1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -447,11 +490,8 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_concat_vector)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -472,11 +512,8 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_concat_axis_0)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -497,11 +534,8 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_concat_axis_1)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -522,10 +556,8 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_ceiling)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_ceiling)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
@@ -557,7 +589,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_cos)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_cos)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -577,10 +609,8 @@ TEST(${BACKEND_NAME}, backwards_cos)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_cosh)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_cosh)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -599,11 +629,8 @@ TEST(${BACKEND_NAME}, backwards_cosh)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_divide)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_divide)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -623,7 +650,7 @@ TEST(${BACKEND_NAME}, backwards_divide)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -642,7 +669,7 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -661,7 +688,7 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -680,7 +707,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -699,9 +726,8 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -719,9 +745,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -739,9 +764,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -759,7 +783,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_exp)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -775,10 +799,8 @@ TEST(${BACKEND_NAME}, backwards_exp)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_floor)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_floor)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
@@ -810,9 +832,8 @@ TEST(${BACKEND_NAME}, backwards_floor)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_log)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_log)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(1.0f, 2.0f);
@@ -827,7 +848,7 @@ TEST(${BACKEND_NAME}, backwards_log)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_maximum)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maximum)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -845,7 +866,7 @@ TEST(${BACKEND_NAME}, backwards_maximum)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_minimum)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_minimum)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -863,7 +884,7 @@ TEST(${BACKEND_NAME}, backwards_minimum)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_multiply)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_multiply)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -880,7 +901,7 @@ TEST(${BACKEND_NAME}, backwards_multiply)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_negative)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_negative)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -895,7 +916,7 @@ TEST(${BACKEND_NAME}, backwards_negative)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_parameter)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_parameter)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -909,11 +930,8 @@ TEST(${BACKEND_NAME}, backwards_parameter)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_power)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_power)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng_neg(-5.0f, -0.5f);
@@ -943,9 +961,8 @@ TEST(${BACKEND_NAME}, backwards_power)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_relu)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_relu)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng_neg(-1.0f, -0.01f);
@@ -972,11 +989,8 @@ TEST(${BACKEND_NAME}, backwards_relu)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_replace_slice)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_replace_slice)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -999,7 +1013,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_reshape)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_reshape)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1015,11 +1029,8 @@ TEST(${BACKEND_NAME}, backwards_reshape)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_select)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_select)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -1044,11 +1055,8 @@ TEST(${BACKEND_NAME}, backwards_select)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_select_nested)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -1073,10 +1081,8 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_sign)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sign)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
@@ -1103,7 +1109,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_sin)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sin)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1123,10 +1129,8 @@ TEST(${BACKEND_NAME}, backwards_sin)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_sinh)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sinh)
 {
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -1145,11 +1149,8 @@ TEST(${BACKEND_NAME}, backwards_sinh)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_slice)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_slice)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     test::Uniform<float> rng(-10.0f, 10.0f);
     Shape shape{5, 5};
@@ -1167,9 +1168,8 @@ TEST(${BACKEND_NAME}, backwards_slice)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_softmax_all)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_all)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1184,9 +1184,8 @@ TEST(${BACKEND_NAME}, backwards_softmax_all)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_softmax_axis)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_axis)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1201,9 +1200,8 @@ TEST(${BACKEND_NAME}, backwards_softmax_axis)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_softmax_underflow)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_underflow)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto low = std::numeric_limits<float>::lowest();
@@ -1220,9 +1218,8 @@ TEST(${BACKEND_NAME}, backwards_softmax_underflow)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_softmax_3d)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_3d)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1279,9 +1276,8 @@ TEST(${BACKEND_NAME}, backwards_softmax_3d)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph012, {x0}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_subtract)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_subtract)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1297,9 +1293,8 @@ TEST(${BACKEND_NAME}, backwards_subtract)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_sum_v2s)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_v2s)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1314,9 +1309,8 @@ TEST(${BACKEND_NAME}, backwards_sum_v2s)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_sum_m2s)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2s)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1331,9 +1325,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2s)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1348,9 +1341,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1365,11 +1357,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_tan)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_tan)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto pi = 3.14159f;
@@ -1399,11 +1388,8 @@ TEST(${BACKEND_NAME}, backwards_tan)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_tanh)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_tanh)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -1422,7 +1408,7 @@ TEST(${BACKEND_NAME}, backwards_tanh)
     }
 }
 
-TEST(${BACKEND_NAME}, backwards_abc)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_abc)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1442,9 +1428,8 @@ TEST(${BACKEND_NAME}, backwards_abc)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
 {
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1459,7 +1444,7 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_a{4, 1, 4, 4}; //in NCHW
@@ -1495,7 +1480,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

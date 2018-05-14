@@ -84,6 +84,7 @@ set (SRC
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
+    op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
     op/sign.cpp
@@ -106,6 +107,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -115,6 +117,7 @@ set (SRC
     pass/manager_state.cpp
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
+    pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
@@ -127,10 +130,7 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
-    runtime/ie/ie_backend.cpp
     runtime/interpreter/int_backend.cpp
-    runtime/interpreter/int_call_frame.cpp
-    runtime/interpreter/int_external_function.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     shape.cpp
@@ -169,8 +169,7 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     if (NGRAPH_TBB_ENABLE)
@@ -218,13 +217,15 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
-        runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
         runtime/cpu/pass/cpu_post_layout_optimizations.cpp
+        runtime/cpu/pass/cpu_shuffle_folding.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
@@ -286,26 +287,22 @@ endif()
             runtime/gpu/type_info.cpp
             )
 
-	  # compile cuda sources seperately
-	  # via nvcc
-	  set (CUDA_SRC
-	  #  runtime/gpu/kernels/example.cu.cpp
+	# compile cuda sources seperately
+        set (CUDA_SRC
+        #  runtime/gpu/kernels/example.cu.cpp
 	    )
-	  set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
-	  cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+	set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+	cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
 
-          set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-            "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
     endif()
-
-endif()
-
-if (NGRAPH_NNP_ENABLE)
-    link_directories(${NNP_TRANSFORMER_LIB_DIR})
-    include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC} ${CUDA_OBJ})
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -313,10 +310,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
-    add_dependencies(ngraph header_resource ext_json)
+    add_dependencies(ngraph header_resource)
     include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-    include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 endif()
+add_dependencies(ngraph ext_json)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -337,11 +335,8 @@ if (NOT APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-if (NGRAPH_NNP_ENABLE)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_NNP_ENABLE)
-endif()
-
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_link_libraries(ngraph PRIVATE dl)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
@@ -373,19 +368,12 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-# NNP
-if (NGRAPH_NNP_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-    target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
-    add_dependencies(ngraph ext_nnp_transformer)
-    add_dependencies(ext_nnp_transformer ext_llvm)
-endif()
-
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
 # NGraph
+install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
@@ -393,10 +381,12 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+if(MKLDNN_LIB_DIR)
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
@@ -406,20 +396,5 @@ if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-endif()
-
-if (NGRAPH_NNP_ENABLE)
-    install(DIRECTORY ${NNP_TRANSFORMER_LIB_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "*.so"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.hpp"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.h"
     )
 endif()

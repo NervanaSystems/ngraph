@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace pattern
     {
-        std::shared_ptr<Node> Matcher::match_root() { return m_match_root; }
+        std::shared_ptr<Node> Matcher::get_match_root() { return m_match_root; }
         bool Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node,
                                     PatternMap& pattern_map)
