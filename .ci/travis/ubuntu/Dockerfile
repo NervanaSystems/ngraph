@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
   clang-format-3.9 \
   git \
   curl \
+  protobuf-compiler \
   libprotoc-dev \
   zlib1g \
   zlib1g-dev \
