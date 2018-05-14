@@ -23,9 +23,9 @@ using namespace ngraph;
 void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
                                                          const std::string& name,
                                                          const std::string& op,
-                                                         const std::vector<std::string>& data_types,
-                                                         const size_t& num_inputs)
+                                                         const std::vector<std::string>& data_types)
 {
+    auto num_inputs = data_types.size() - 1;
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
     {
@@ -245,12 +245,12 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& math_kernel,
-                                                        const std::vector<std::string>& data_types,
-                                                        const size_t& num_inputs)
+                                                        const std::vector<std::string>& data_types)
 {
     if (math_kernel.size())
     {
-        writer << "__device__ " << data_types[num_inputs] << " " << name << "(";
+        auto num_inputs = data_types.size() - 1;
+        writer << "__device__ __forceinline__ " << data_types[num_inputs] << " " << name << "(";
         for (size_t i = 0; i < num_inputs - 1; i++)
         {
             writer << data_types[i] << " x" << i << ", ";
