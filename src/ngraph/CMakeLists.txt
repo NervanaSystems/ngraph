@@ -152,7 +152,7 @@ if (NGRAPH_ONNX_IMPORT)
     set_source_files_properties(${ONNX_PB_H} ${ONNX_PB_CC} PROPERTIES GENERATED TRUE)
     file(MAKE_DIRECTORY ${ONNX_OUTPUT_DIR})
     file(DOWNLOAD ${ONNX_SOURCE_URL} ${ONNX_PROTO} SHOW_PROGRESS)
-    exec_program(${Protobuf_PROTOC_EXECUTABLE} ARGS --cpp_out ${ONNX_OUTPUT_DIR} --proto_path ${ONNX_OUTPUT_DIR} ${ONNX_PROTO})
+    exec_program(${PROTOBUF_PROTOC_EXECUTABLE} ARGS --cpp_out ${ONNX_OUTPUT_DIR} --proto_path ${ONNX_OUTPUT_DIR} ${ONNX_PROTO})
     include_directories(${ONNX_OUTPUT_DIR})
     list(APPEND SRC
         ${ONNX_PROTO}
@@ -339,7 +339,7 @@ add_dependencies(ngraph ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
 if (NGRAPH_ONNX_IMPORT)
-    target_link_libraries(ngraph PRIVATE ${Protobuf_LIBRARIES})
+  target_link_libraries(ngraph PRIVATE ${PROTOBUF_LIBRARIES})
 endif()
 
 if (NOT APPLE)

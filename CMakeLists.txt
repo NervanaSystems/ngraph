@@ -232,8 +232,8 @@ set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 if (NGRAPH_ONNX_IMPORT)
     find_package(Protobuf REQUIRED)
-    include_directories(${Protobuf_INCLUDE_DIR})
-    link_directories(${Protobuf_LIBRARY_DIR})
+    include_directories(${PROTOBUF_INCLUDE_DIR})
+    link_directories(${PROTOBUF_LIBRARY_DIR})
 endif()
 
 # The following 'add_subdirectory' call:
