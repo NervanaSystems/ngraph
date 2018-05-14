@@ -27,7 +27,8 @@ def random_array_float_literals(length,seed=8086):
 
     random.seed(seed)
 
-    for i in range(0,length):
+    for i in range(0, length):
+        # generate numbers that can be exactly represented in binary
         literal_n = np.float32(random.randint(-64, 64)) / 64.0
         literals.append(str(literal_n))
 
