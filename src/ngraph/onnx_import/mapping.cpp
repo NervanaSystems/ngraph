@@ -29,7 +29,8 @@ element::Type onnx_import::mapping::onnx_to_ng_type(onnx::TensorProto_DataType o
     {
     case onnx::TensorProto_DataType_BOOL: return element::boolean;
     case onnx::TensorProto_DataType_DOUBLE: return element::f64;
-    case onnx::TensorProto_DataType_FLOAT16: return element::f32; // note 16->32
+    case onnx::TensorProto_DataType_FLOAT16:
+        return element::f32; // note 16->32
     case onnx::TensorProto_DataType_FLOAT: return element::f32;
     case onnx::TensorProto_DataType_INT16: return element::i16;
     case onnx::TensorProto_DataType_INT32: return element::i32;

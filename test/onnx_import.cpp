@@ -18,13 +18,12 @@
 #include <sstream>
 
 #include "gtest/gtest.h"
-#include "onnx.pb.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/onnx_util.hpp"
 #include "ngraph/onnx_import/graph.hpp"
 #include "ngraph/onnx_import/model.hpp"
+#include "ngraph/onnx_util.hpp"
+#include "onnx.pb.h"
 #include "util/test_tools.hpp"
-
 
 using namespace std;
 using namespace ngraph;
@@ -52,5 +51,4 @@ TEST(onnx, basic)
     value_stream << value;
     ASSERT_EQ("<ValueInfo: Parameter15>", value_stream.str());
     ASSERT_EQ(element::f32, value.get_element_type());
-
 }
