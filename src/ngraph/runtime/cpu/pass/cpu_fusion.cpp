@@ -952,13 +952,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
 
     auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
-                                                       filters,
-                                                       bias,
-                                                       Strides{1, 1},
-                                                       Strides{1, 1},
-                                                       CoordinateDiff{0, 0},
-                                                       CoordinateDiff{0, 0},
-                                                       Strides{1, 1});
+                                                           filters,
+                                                           bias,
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{0, 0},
+                                                           Strides{1, 1});
 
     auto prelu = std::make_shared<op::Relu>(conv_bias);
 
