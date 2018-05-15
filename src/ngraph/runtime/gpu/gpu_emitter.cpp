@@ -1424,27 +1424,49 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                         else
                         {
-                            //this is a hack and could be wrong, since the op we need might not be the last one
-                            auto reduction_function =
-                                *reduce_window_op->get_functions()[0]->get_ops().rbegin();
-                            // Work around a compiler warning (*node inside typeid may have effects
-                            // with shared pointers, which is fine here but clang doesn't like it.)
-                            auto& fn = *reduction_function;
-                            auto f_ptr = reduce_map.find(type_index(typeid(fn)));
-
-                            if (f_ptr == reduce_map.end())
+                            // in current implementation:
+                            // 1. reduction function should only have one op
+                            // 2. the op should be in the op_map
+                            // otherwise, throw an error message
+                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
+                            cudnnReduceTensorOp_t reduce_tensor_op;
+                            int op_count = 0;
+                            for (auto op : reduction_function_ops)
                             {
-                                throw std::runtime_error("reduce with function " +
-                                                         reduction_function->get_name() +
-                                                         " is not implement yet.");
+                                if (op->is_constant() || op->is_parameter() || op->is_output())
+                                {
+                                    continue;
+                                }
+                                op_count++;
+                                // Work around a compiler warning (*node inside typeid may have effects
+                                // with shared pointers, which is fine here but clang doesn't like it.)
+                                auto& fn = *op;
+                                auto f_ptr = reduce_map.find(type_index(typeid(fn)));
+                                if (f_ptr == reduce_map.end())
+                                {
+                                    throw std::runtime_error("reduce with function " +
+                                                             fn.get_name() +
+                                                             " is not implement yet.");
+                                }
+                                else if (op_count != 1)
+                                {
+                                    throw std::runtime_error(
+                                        "reduce with more than one op is not implement yet.");
+                                }
+                                else
+                                {
+                                    reduce_tensor_op = f_ptr->second;
+                                }
                             }
-                            auto& cudnn_emitter =
-                                external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto reduce_index = cudnn_emitter->build_reduce_forward(
+
+                            auto& cuda_emitter =
+                                external_function->get_primitive_emitter()->get_cuda_emitter();
+                            auto reduce_index = cuda_emitter->build_reduce_window(
                                 external_function->ctx().get(),
                                 f_ptr->second,
-                                args[0].get_shape(),
-                                reduce_op->get_reduction_axes());
+                                out[0].get_shape(),
+                                reduce_window_op->get_window_shape(),
+                                reduce_window_op->get_window_movement_strides());
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

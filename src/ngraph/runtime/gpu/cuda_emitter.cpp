@@ -676,6 +676,96 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_reduce_window_function(const GPURuntimeContext* ctx,
+                                                           const std::vector<std::string>& dtypes,
+                                                           const Shape& input_shape,
+                                                           const Shape& output_shape,
+                                                           const Shape& reduce_window_shape,
+                                                           const Strides& reduce_window_strides,
+                                                           const char* op,
+                                                           const char* kernel)
+{
+    // kernel_name is used to check if the cuda kernel has been previously compiled
+    size_t rank = input_strides.size();
+    std::stringstream kernel_name;
+    kernel_name << "reduce_window"
+                << "_" << op << "_" << join(dtypes, "_") << rank;
+
+    // hash is used to check if the emitted primitive already exists
+    std::stringstream ss;
+    ss << kernel_name.str() << "_s" << join(output_shape, "_");
+    auto hash = ss.str();
+
+    // if the primitive exists, we are done
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        if (kernel)
+        {
+            CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
+        }
+
+        CudaKernelBuilder::get_reduce_window_op(writer, kernel_name.str(), op, dtypes, rank);
+
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+    size_t nthreads = shape_size(tensor_shape);
+    auto input_strides = row_major_strides(input_shape);
+    void* input_strides_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
+    void* output_shape_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
+    void* reduce_window_shape_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
+    void* reduce_window_stride_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides.data(), sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(output_shape_d, output_shape.data(), sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(reduce_window_shape_d, reduce_window_shape.data(), sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(reduce_window_stride_d, reduce_window_stride.data(), sizeof(size_t) * rank);
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> f(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            std::vector<void*> args_list;
+            for (auto i = 0u; i < dtypes.size() - 1; i++)
+            {
+                args_list.push_back(&inputs[i]);
+            }
+            args_list.push_back(&outputs[0]);
+            args_list.push_back(&CUdeviceptr(input_strides_d));
+            args_list.push_back(&CUdeviceptr(output_shape_d));
+            args_list.push_back(&CUdeviceptr(reduce_window_shape_d));
+            args_list.push_back(&CUdeviceptr(reduce_window_stride_d));
+            args_list.push_back(&nthreads);
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<unsigned int>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(f));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
                                                       const std::string& tensor_name,
                                                       const Shape& shape)

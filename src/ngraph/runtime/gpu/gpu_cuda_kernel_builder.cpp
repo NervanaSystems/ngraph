@@ -242,6 +242,63 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(codegen::CodeWriter& writer,
+                                                     const std::string& name,
+                                                     const std::string& op,
+                                                     const std::vector<std::string>& data_types,
+                                                     const size_t rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1]
+           << "* out, size_t* input_strides, size_t* output_shape, size_t* reduce_window_shape, size_t* reduce_window_strides, size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "size_t idx_out = tid;\n";
+            writer << "size_t idx_in = 0;\n";
+            writer << "size_t idx_init = 0;\n";
+            for(int i = (int)rank; i > 0; i--)
+            {
+                writer << "size_t idx_out_" << i << " = idx_out % output_shape[" << i << "];\n";
+                writer << "size_t idx_in_start_" << i
+                       << " = idx_out_" << i << " * reduce_window_strides[" << i << "];\n";
+                writer << "size_t idx_in_end_" << i
+                       << " = idx_in_start_" << i << " + reduce_window_shape[" << i << "] - 1;\n";
+                writer << "idx_init += idx_in_start_" << i << " * input_strides[" << i <<"];\n";
+                writer << "idx_out /= output_shape[i];\n";
+            }
+
+            writer << data_type[1] << " result = in[idx_init];\n"
+
+            for(int i = 0; i < rank - 1; i++)
+            {
+                writer << "for(size_t i_" << i << " = idx_in_start_" << i
+                       << "; i_" << i << " < idx_in_end_" << i << "; i_" << i << "++)\n";
+                writer.block_begin();
+            }
+            writer << "for(size_t i_" << rank - 1 << " = idx_in_start_" << rank - 1
+                   << " + 1; i_" << rank - 1 << " < idx_in_end_" << rank - 1 << "; i_" << rank - 1 << "++)\n";
+            writer.block_begin();
+
+            for(int i = 0; i < rank; i++)
+            {
+                writer << "idx_in += i" << i << " * input_strides[" << i <<"];\n";
+            }
+            writer << "result = " << op << "(result, in[idx_in]);\n";
+            for(int i = 0; i < rank; i++)
+            {
+                writer.block_end();
+            }
+            writer << "out[tid] = result;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& math_kernel,

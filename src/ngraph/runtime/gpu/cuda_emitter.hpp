@@ -70,6 +70,18 @@ namespace ngraph
                         ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                template <typename T>
+                size_t build_reduce_window(const GPURuntimeContext* ctx,
+                                         const std::vector<std::string>& dtypes,
+                                         const Shape& input_shape,
+                                         const Shape& output_shape,
+                                         const Shape& reduce_window_shape,
+                                         const Strides& reduce_window_strids)
+                {
+                    return build_reduce_window_function(
+                        ctx, dtypes, input_shape, output_shape, reduce_window_shape, reduce_window_strids, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                }
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
@@ -82,6 +94,14 @@ namespace ngraph
                                                 const char* op,
                                                 const char* kernel);
 
+                size_t build_reduce_window_function(const GPURuntimeContext* ctx,
+                                                const std::vector<std::string>& dtypes,
+                                                const Shape& input_shape,
+                                                const Shape& output_shape,
+                                                const Shape& reduce_window_shape,
+                                                const Strides& reduce_window_strids,
+                                                const char* op,
+                                                const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }
