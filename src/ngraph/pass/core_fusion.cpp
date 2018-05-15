@@ -121,11 +121,6 @@ void pass::CoreFusion::construct_folded_batch_norm()
             return false;
         }
 
-        if (m_conv->get_element_type() != m_bn->get_element_type())
-        {
-            return false;
-        }
-
         if (m_conv->get_shape().size() != 4)
         {
             return false;
@@ -144,13 +139,13 @@ void pass::CoreFusion::construct_folded_batch_norm()
         auto new_biases = std::make_shared<op::Subtract>(
             pattern_map[beta], std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
         auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
-        auto new_filters = std::make_shared<op::Multiply>(
+        auto new_weights = std::make_shared<op::Multiply>(
             pattern_map[filters],
             std::make_shared<op::Broadcast>(
                 weight_scaling, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
 
         auto conv = std::make_shared<op::Convolution>(pattern_map[input],
-                                                      new_filters,
+                                                      new_weights,
                                                       m_conv->get_window_movement_strides(),
                                                       m_conv->get_window_dilation_strides(),
                                                       m_conv->get_padding_below(),

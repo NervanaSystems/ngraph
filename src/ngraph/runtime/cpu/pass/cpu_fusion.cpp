@@ -951,7 +951,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
 
-    auto pconv = std::make_shared<op::ConvolutionBias>(data_batch,
+    auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
                                                        filters,
                                                        bias,
                                                        Strides{1, 1},
@@ -960,7 +960,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
                                                        CoordinateDiff{0, 0},
                                                        Strides{1, 1});
 
-    auto prelu = std::make_shared<op::Relu>(pconv);
+    auto prelu = std::make_shared<op::Relu>(conv_bias);
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
