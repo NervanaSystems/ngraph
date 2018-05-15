@@ -579,7 +579,6 @@ using namespace ngraph::runtime;
         }
         if (temporaries_used)
         {
-            size_t temp_pool_size = current_function->get_temporary_pool_size();
             m_memory_buffer_sizes.push_back(current_function->get_temporary_pool_size());
         }
 
