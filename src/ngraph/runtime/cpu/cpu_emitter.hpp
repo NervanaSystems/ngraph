@@ -72,6 +72,9 @@ namespace ngraph
                                                 const std::string& name = "");
                 static std::string emit_matrix(const TensorViewWrapper&,
                                                const std::string& name = "");
+
+                static std::string emit_for_lt(const std::string& prefix, size_t index, size_t to);
+                static std::string emit_indices(const std::vector<std::string> indices);
             };
         }
     }
