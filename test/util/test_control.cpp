@@ -31,7 +31,6 @@ string ngraph::prepend_disabled(const string& test_case_name,
                                 const string& test_name,
                                 const string& manifest)
 {
-    NGRAPH_INFO << "manifest " << manifest;
     string rc = test_name;
     unordered_set<string>& blacklist = s_blacklists[test_case_name];
     if (blacklist.empty() && !manifest.empty())
@@ -40,9 +39,11 @@ string ngraph::prepend_disabled(const string& test_case_name,
         string line;
         while (getline(f, line))
         {
-            if (line.size() > 1 && line[0] != '#')
+            size_t pound_pos = line.find('#');
+            line = (pound_pos > line.size()) ? line : line.substr(0, pound_pos);
+            line = trim(line);
+            if (line.size() > 1)
             {
-                line = trim(line);
                 blacklist.insert(line);
             }
         }
