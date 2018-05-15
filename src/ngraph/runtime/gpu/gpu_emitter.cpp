@@ -117,8 +117,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
     {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
     {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
     {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
-};
+    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
 
 // cudnn support elementwised op
 // CUDNN_OP_TENSOR_ADD
@@ -128,7 +127,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
 // CUDNN_OP_TENSOR_SQRT
 // CUDNN_OP_TENSOR_NOT
 
-static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_window_map{
+static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> reduce_window_map{
     {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
     {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
     {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
@@ -1400,7 +1399,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::ReduceWindow)
             {
-                const ngraph::op::Reduce* reduce_window_op = static_cast<const ngraph::op::ReduceWindow*>(node);
+                const ngraph::op::ReduceWindow* reduce_window_op =
+                    static_cast<const ngraph::op::ReduceWindow*>(node);
                 writer.block_begin("  // " + node->get_name());
                 {
                     if (out[0].get_size() != 0)
@@ -1428,7 +1428,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             // 1. reduction function should only have one op
                             // 2. the op should be in the op_map
                             // otherwise, throw an error message
-                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
+                            auto reduction_function_ops =
+                                reduce_window_op->get_functions()[0]->get_ops();
                             cudnnReduceTensorOp_t reduce_tensor_op;
                             int op_count = 0;
                             for (auto op : reduction_function_ops)
@@ -1462,42 +1463,54 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             size_t reduce_index;
-                            switch(reduce_tensor_op)
+                            std::vector<std::string> dtypes;
+                            for (auto& arg : args)
                             {
-                                case CUDNN_REDUCE_TENSOR_ADD:
-                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Add>(
-                                                    external_function->ctx().get(),
-                                                    args[0].get_shape(),
-                                                    out[0].get_shape(),
-                                                    reduce_window_op->get_window_shape(),
-                                                    reduce_window_op->get_window_movement_strides());
-                                    break;
-                                case CUDNN_REDUCE_TENSOR_MUL:
-                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Multiply>(
-                                                    external_function->ctx().get(),
-                                                    args[0].get_shape(),
-                                                    out[0].get_shape(),
-                                                    reduce_window_op->get_window_shape(),
-                                                    reduce_window_op->get_window_movement_strides());
-                                    break;
-                                case CUDNN_REDUCE_TENSOR_MAX:
-                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Maximum>(
-                                                    external_function->ctx().get(),
-                                                    args[0].get_shape(),
-                                                    out[0].get_shape(),
-                                                    reduce_window_op->get_window_shape(),
-                                                    reduce_window_op->get_window_movement_strides());
-                                    break;
-                                case CUDNN_REDUCE_TENSOR_MIN:
-                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Minimum>(
-                                                    external_function->ctx().get(),
-                                                    args[0].get_shape(),
-                                                    out[0].get_shape(),
-                                                    reduce_window_op->get_window_shape(),
-                                                    reduce_window_op->get_window_movement_strides());
-                                    break;
-                                default:
-                                    break;
+                                dtypes.push_back(arg.get_type());
+                            }
+                            dtypes.push_back(out[0].get_type());
+                            switch (reduce_tensor_op)
+                            {
+                            case CUDNN_REDUCE_TENSOR_ADD:
+                                reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Add>(
+                                    external_function->ctx().get(),
+                                    dtypes,
+                                    args[0].get_shape(),
+                                    out[0].get_shape(),
+                                    reduce_window_op->get_window_shape(),
+                                    reduce_window_op->get_window_movement_strides());
+                                break;
+                            case CUDNN_REDUCE_TENSOR_MUL:
+                                reduce_index =
+                                    cuda_emitter->build_reduce_window<ngraph::op::Multiply>(
+                                        external_function->ctx().get(),
+                                        dtypes,
+                                        args[0].get_shape(),
+                                        out[0].get_shape(),
+                                        reduce_window_op->get_window_shape(),
+                                        reduce_window_op->get_window_movement_strides());
+                                break;
+                            case CUDNN_REDUCE_TENSOR_MAX:
+                                reduce_index =
+                                    cuda_emitter->build_reduce_window<ngraph::op::Maximum>(
+                                        external_function->ctx().get(),
+                                        dtypes,
+                                        args[0].get_shape(),
+                                        out[0].get_shape(),
+                                        reduce_window_op->get_window_shape(),
+                                        reduce_window_op->get_window_movement_strides());
+                                break;
+                            case CUDNN_REDUCE_TENSOR_MIN:
+                                reduce_index =
+                                    cuda_emitter->build_reduce_window<ngraph::op::Minimum>(
+                                        external_function->ctx().get(),
+                                        dtypes,
+                                        args[0].get_shape(),
+                                        out[0].get_shape(),
+                                        reduce_window_op->get_window_shape(),
+                                        reduce_window_op->get_window_movement_strides());
+                                break;
+                            default: break;
                             }
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";

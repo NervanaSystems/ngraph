@@ -30,7 +30,7 @@
 using namespace ngraph;
 using namespace std;
 
-void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
+void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size)
 {
     std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
@@ -58,17 +58,17 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
     }
 }
 
-void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice);
 }
 
-void runtime::gpu::cuda_memcpyHtD(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice);
 }
 
-void runtime::gpu::cuda_memcpyDtH(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost);
 }

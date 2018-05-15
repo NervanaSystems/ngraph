@@ -677,13 +677,13 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeContext* ctx,
-                                                           const std::vector<std::string>& dtypes,
-                                                           const Shape& input_shape,
-                                                           const Shape& output_shape,
-                                                           const Shape& reduce_window_shape,
-                                                           const Strides& reduce_window_strides,
-                                                           const char* op,
-                                                           const char* kernel)
+                                                             const std::vector<std::string>& dtypes,
+                                                             const Shape& input_shape,
+                                                             const Shape& output_shape,
+                                                             const Shape& reduce_window_shape,
+                                                             const Strides& reduce_window_strides,
+                                                             const char* op,
+                                                             const char* kernel)
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
     size_t rank = input_shape.size();
@@ -721,7 +721,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
 
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    size_t nthreads = shape_size(tensor_shape);
+    size_t nthreads = shape_size(output_shape);
     auto input_strides = row_major_strides(input_shape);
     void* input_strides_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
     void* output_shape_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
@@ -729,9 +729,15 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
     void* reduce_window_stride_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
     runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides.data(), sizeof(size_t) * rank);
     runtime::gpu::cuda_memcpyHtD(output_shape_d, output_shape.data(), sizeof(size_t) * rank);
-    runtime::gpu::cuda_memcpyHtD(reduce_window_shape_d, reduce_window_shape.data(), sizeof(size_t) * rank);
-    runtime::gpu::cuda_memcpyHtD(reduce_window_stride_d, reduce_window_stride.data(), sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(
+        reduce_window_shape_d, reduce_window_shape.data(), sizeof(size_t) * rank);
+    runtime::gpu::cuda_memcpyHtD(
+        reduce_window_stride_d, reduce_window_strides.data(), sizeof(size_t) * rank);
 
+    CUdeviceptr input_strides_d_ptr = CUdeviceptr(input_strides_d);
+    CUdeviceptr output_shape_d_ptr = CUdeviceptr(output_shape_d);
+    CUdeviceptr reduce_window_shape_d_ptr = CUdeviceptr(reduce_window_shape_d);
+    CUdeviceptr reduce_window_stride_d_ptr = CUdeviceptr(reduce_window_stride_d);
     // create the launch primitive
     std::unique_ptr<gpu::primitive> f(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -741,10 +747,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
                 args_list.push_back(&inputs[i]);
             }
             args_list.push_back(&outputs[0]);
-            args_list.push_back(&CUdeviceptr(input_strides_d));
-            args_list.push_back(&CUdeviceptr(output_shape_d));
-            args_list.push_back(&CUdeviceptr(reduce_window_shape_d));
-            args_list.push_back(&CUdeviceptr(reduce_window_stride_d));
+            args_list.push_back(&input_strides_d_ptr);
+            args_list.push_back(&output_shape_d_ptr);
+            args_list.push_back(&reduce_window_shape_d_ptr);
+            args_list.push_back(&reduce_window_stride_d_ptr);
             args_list.push_back(&nthreads);
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),

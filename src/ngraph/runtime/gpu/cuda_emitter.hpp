@@ -73,14 +73,20 @@ namespace ngraph
 
                 template <typename T>
                 size_t build_reduce_window(const GPURuntimeContext* ctx,
-                                         const std::vector<std::string>& dtypes,
-                                         const Shape& input_shape,
-                                         const Shape& output_shape,
-                                         const Shape& reduce_window_shape,
-                                         const Strides& reduce_window_strides)
+                                           const std::vector<std::string>& dtypes,
+                                           const Shape& input_shape,
+                                           const Shape& output_shape,
+                                           const Shape& reduce_window_shape,
+                                           const Strides& reduce_window_strides)
                 {
-                    return build_reduce_window_helper(
-                        ctx, dtypes, input_shape, output_shape, reduce_window_shape, reduce_window_strides, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                    return build_reduce_window_helper(ctx,
+                                                      dtypes,
+                                                      input_shape,
+                                                      output_shape,
+                                                      reduce_window_shape,
+                                                      reduce_window_strides,
+                                                      CudaOpMap<T>::op,
+                                                      CudaOpMap<T>::math_kernel);
                 }
 
             private:
@@ -96,13 +102,14 @@ namespace ngraph
                                                 const char* kernel);
 
                 size_t build_reduce_window_helper(const GPURuntimeContext* ctx,
-                                                const std::vector<std::string>& dtypes,
-                                                const Shape& input_shape,
-                                                const Shape& output_shape,
-                                                const Shape& reduce_window_shape,
-                                                const Strides& reduce_window_strides,
-                                                const char* op,
-                                                const char* kernel);
+                                                  const std::vector<std::string>& dtypes,
+                                                  const Shape& input_shape,
+                                                  const Shape& output_shape,
+                                                  const Shape& reduce_window_shape,
+                                                  const Strides& reduce_window_strides,
+                                                  const char* op,
+                                                  const char* kernel);
+
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }

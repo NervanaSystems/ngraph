@@ -91,13 +91,13 @@ namespace ngraph
     {
         namespace gpu
         {
-            void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
+            void print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size);
             void free_gpu_buffer(void* buffer);
-            void cuda_memcpyDtD(void* dst, void* src, size_t buffer_size);
-            void cuda_memcpyHtD(void* dst, void* src, size_t buffer_size);
-            void cuda_memcpyDtH(void* dst, void* src, size_t buffer_size);
+            void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
+            void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
+            void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
             void cuda_memset(void* dst, int value, size_t buffer_size);
             std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
             std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);
