@@ -1318,8 +1318,8 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
     EXPECT_EQ(rnn_ops.size(), count);
     for (auto& node : rnn_ops)
     {
-        EXPECT_EQ(node->get_num_of_lstm_cells_fused(), node->get_src_sequence_length());
-        EXPECT_EQ(node->get_num_rnn_cell_states(), node->get_argument(1)->get_arguments().size());
+        EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
     }
 }
 
@@ -1340,88 +1340,82 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     EXPECT_EQ(rnn_ops.size(), count);
     for (auto& node : rnn_ops)
     {
-        EXPECT_EQ(node->get_num_of_lstm_cells_fused(), node->get_src_sequence_length());
-        EXPECT_EQ(node->get_num_rnn_cell_states(), node->get_argument(1)->get_arguments().size());
+        EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
     }
 }
 
-static void cpu_vs_interpreter_rnn_fusion(const std::string& file_name)
+static std::shared_ptr<Function> make_function(const std::string& file_name)
 {
-    auto make_cpu_function = [file_name]() {
-        const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-        const string json_string = file_util::read_file_to_string(json_path);
-        stringstream ss(json_string);
-        shared_ptr<Function> func = ngraph::deserialize(ss);
-        return func;
-    };
-
-    // CPU backend to compute the result using fused graph
-    auto backend_cpu = runtime::Backend::create("CPU");
-    auto cpu_f = make_cpu_function();
-    vector<shared_ptr<runtime::TensorView>> args_tv_cpu;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
-    {
-        auto tensor = backend_cpu->create_tensor(param->get_element_type(), param->get_shape());
-        copy_data(tensor, vector<float>(shape_size(param->get_shape()), 1));
-        args_tv_cpu.push_back(tensor);
-    }
-    vector<shared_ptr<runtime::TensorView>> cpu_results;
-    for (shared_ptr<Node> out : cpu_f->get_results())
-    {
-        auto result = backend_cpu->create_tensor(out->get_element_type(), out->get_shape());
-        cpu_results.push_back(result);
-    }
-
-    // Interpreter backend to compute the result using unfused graph
-    auto make_interpreter_function = [file_name]() {
-        const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-        const string json_string = file_util::read_file_to_string(json_path);
-        stringstream ss(json_string);
-        shared_ptr<Function> func = ngraph::deserialize(ss);
-        return func;
-    };
-    auto int_f = make_interpreter_function();
-    auto backend_inter = runtime::Backend::create("INTERPRETER");
-
-    vector<shared_ptr<runtime::TensorView>> args_tv;
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
-    {
-        auto tensor = backend_inter->create_tensor(param->get_element_type(), param->get_shape());
-        copy_data(tensor, vector<float>(shape_size(param->get_shape()), 1));
-        args_tv.push_back(tensor);
-    }
-
-    vector<shared_ptr<runtime::TensorView>> interpreter_results;
-    for (shared_ptr<Node> out : int_f->get_results())
-    {
-        auto result = backend_inter->create_tensor(out->get_element_type(), out->get_shape());
-        interpreter_results.push_back(result);
-    }
-
-    backend_inter->call(int_f, interpreter_results, args_tv);
-    backend_cpu->call(cpu_f, cpu_results, args_tv_cpu);
-
-    for (size_t i = 0; i < int_f->get_results().size(); i++)
-    {
-        EXPECT_EQ(read_vector<float>(interpreter_results.at(i)).size(),
-                  read_vector<float>(cpu_results.at(i)).size());
-    }
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
 }
 
 TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    cpu_vs_interpreter_rnn_fusion(file_name);
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(param->get_shape().size());
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }
 
 TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    cpu_vs_interpreter_rnn_fusion(file_name);
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(param->get_shape().size());
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }
 
 TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    cpu_vs_interpreter_rnn_fusion(file_name);
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(param->get_shape().size());
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }

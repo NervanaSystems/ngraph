@@ -165,7 +165,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
             // reliablily in the RNN fusion.
             std::shared_ptr<op::Lstm> lstm = nullptr;
-            Shape ct_shape{pattern_map[ct_label]->get_shape()};
             if (m.get_match_root()->get_shape() == pattern_map[param2_1]->get_shape())
             {
                 NGRAPH_DEBUG << "matched_node_shape: " << join(m.get_match_root()->get_shape())
@@ -176,8 +175,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[param2_2],
                                                   pattern_map[bias1],
                                                   pattern_map[bias2],
-                                                  pattern_map[ct_1],
-                                                  ct_shape);
+                                                  pattern_map[ct_1]);
             }
             else
             {
@@ -189,8 +187,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[param1_2],
                                                   pattern_map[bias2],
                                                   pattern_map[bias1],
-                                                  pattern_map[ct_1],
-                                                  ct_shape);
+                                                  pattern_map[ct_1]);
             }
 
             auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
@@ -315,8 +312,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm = std::make_shared<op::Lstm>(
-        xt, weights_i2h, rpattern_ht_1, weights_h2h, bias1, bias2, ct_1, Shape{32, 100});
+    auto lstm =
+        std::make_shared<op::Lstm>(xt, weights_i2h, rpattern_ht_1, weights_h2h, bias1, bias2, ct_1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
@@ -388,8 +385,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         size_t src_layer_feature_size = src_layer->get_shape()[1];
         size_t feature_size = ht_1_label[0]->get_shape()[1];
         // number of states for LSTM is 2
-        size_t num_rnn_cell_states = 2;
-        size_t rnn_direction = 1;
+        size_t num_cell_states = 2;
+        size_t direction = 1;
         size_t num_fused_rnn_layers = 1;
 
         NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
@@ -408,10 +405,37 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 "src_sequence_length");
         }
 
-        if ((src_iter->get_arguments().size()) != num_rnn_cell_states)
+        if ((src_iter->get_arguments().size()) != num_cell_states)
         {
             throw ngraph_error("number of states for RNN op is not equal to (ht_1|ct_1)");
         }
+
+        auto src_layer_rank = src_layer->get_shape().size();
+        auto src_iter_rank = src_iter->get_shape().size();
+        auto weights_layer_rank = weights_layer->get_shape().size();
+        auto weights_iter_rank = weights_iter->get_shape().size();
+        auto bias_rank = bias->get_shape().size();
+        if (src_layer_rank != 2 || src_iter_rank != 2 || weights_layer_rank != 2 ||
+            weights_iter_rank != 2)
+        {
+            throw ngraph_error(
+                "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
+                "have rank 2 for MKLDNN RNN op");
+        }
+
+        if (bias_rank != 1)
+        {
+            throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
+        }
+
+        if (src_layer->get_element_type() != element::f32 ||
+            src_iter->get_element_type() != element::f32)
+        {
+            throw ngraph_error(
+                "input tensor type and input recurrent state tensor type for MKLDNN RNN op should "
+                "be float32");
+        }
+
         auto rnn = std::make_shared<op::Rnn>(src_layer,
                                              src_iter,
                                              weights_layer,
@@ -422,8 +446,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                              sequence_len,
                                              src_layer_feature_size,
                                              feature_size,
-                                             num_rnn_cell_states,
-                                             rnn_direction,
+                                             num_cell_states,
+                                             direction,
                                              num_fused_rnn_layers);
 
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
@@ -523,9 +547,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             if (!std::dynamic_pointer_cast<op::Result>(node))
             {
                 ngraph::replace_node(node, new_node);
+                NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
+                             << new_node->get_name();
             }
-            NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
-                         << new_node->get_name();
             new_args.clear();
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "

@@ -33,11 +33,11 @@ namespace ngraph
         // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
         // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias + hbh_bias)
         // number_of_timesteps - number of unrolled cells up to timestep t.
-        // number_of_gates_per_cell - number of gates per RNN cell, LSTM = 4, GRU = 3, vanilla RNN = 1
+        // num_gates_per_cell - number of gates per RNN cell, LSTM = 4, GRU = 3, vanilla RNN = 1
         // src_seq_length - this will be same as number_of_timesteps
         // src_layer_feature_size - feature size w.r.to input tensor
         // src_iter_feature_size - feature size w.r.to hidden state
-        // num_rnn_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1
+        // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1
 
         // OUTPUT VALUE: A tuple with the following structure:
         //   [0] - ht, output tensor with shape (sequence_length*batch_size, feature_size) .
@@ -52,34 +52,34 @@ namespace ngraph
                 std::shared_ptr<Node> weights_iter,
                 std::shared_ptr<Node> bias,
                 const int number_of_timesteps,
-                const int number_of_gates_per_cell,
-                const int src_seq_length,
+                const int num_gates_per_cell,
+                const int src_sequence_length,
                 const int src_layer_feature_size,
                 const int src_iter_feature_size,
-                const int num_rnn_cell_states,
-                const int rnn_direction,
-                const int num_of_fused_rnn_layers);
+                const int num_cell_states,
+                const int direction,
+                const int num_fused_layers);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            int get_num_of_lstm_cells_fused() const { return m_number_of_timesteps; }
-            int get_src_sequence_length() const { return m_src_seq_length; }
-            int get_gates_per_cell() const { return m_number_of_gates_per_cell; }
+            int get_num_timesteps() const { return m_num_timesteps; }
+            int get_src_sequence_length() const { return m_src_sequence_length; }
+            int get_gates_per_cell() const { return m_num_gates_per_cell; }
             int get_batch_size() const { return m_batch_size; }
             int get_src_layer_feature_size() const { return m_src_layer_feature_size; }
             int get_src_iter_feature_size() const { return m_src_iter_feature_size; }
-            int get_num_rnn_cell_states() const { return m_num_rnn_cell_states; }
-            int get_rnn_direction() const { return m_rnn_direction; }
-            int get_num_of_fused_rnn_layers() const { return m_num_of_fused_rnn_layers; }
+            int get_num_cell_states() const { return m_num_cell_states; }
+            int get_direction() const { return m_direction; }
+            int get_num_fused_layers() const { return m_num_fused_layers; }
         private:
-            int m_number_of_timesteps;
-            int m_number_of_gates_per_cell;
-            int m_src_seq_length;
+            int m_num_timesteps;
+            int m_num_gates_per_cell;
+            int m_src_sequence_length;
             int m_batch_size;
             int m_src_layer_feature_size;
             int m_src_iter_feature_size;
-            int m_num_rnn_cell_states;
-            int m_rnn_direction;
-            int m_num_of_fused_rnn_layers;
+            int m_num_cell_states;
+            int m_direction;
+            int m_num_fused_layers;
         };
     }
 }

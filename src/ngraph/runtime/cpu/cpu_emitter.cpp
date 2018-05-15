@@ -375,10 +375,10 @@ namespace ngraph
                 const ngraph::op::Rnn* rnn_node = static_cast<const ngraph::op::Rnn*>(node);
 
                 const int src_seq_length_max = rnn_node->get_src_sequence_length();
-                const int rnn_direction = rnn_node->get_rnn_direction();
-                const int num_of_fused_rnn_layers = rnn_node->get_num_of_fused_rnn_layers();
+                const int direction = rnn_node->get_direction();
+                const int num_fused_layers = rnn_node->get_num_fused_layers();
                 const int rnn_cell_n_gates = rnn_node->get_gates_per_cell();
-                const int rnn_cell_n_states = rnn_node->get_num_rnn_cell_states();
+                const int rnn_cell_n_states = rnn_node->get_num_cell_states();
                 const int feature_size = rnn_node->get_src_iter_feature_size();
                 const int batch = rnn_node->get_batch_size();
 
@@ -388,8 +388,7 @@ namespace ngraph
                         "input slc{ht} feature size is not equal to output dlc{ht} feature size ");
                 }
 
-                if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
-                    rnn_node->get_num_of_lstm_cells_fused() != 1)
+                if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size))
                 {
                     throw ngraph_error(
                         "input sic{ht_1|ct_1} feature size is not equal to output dlc{ht_1|ct_1} "
@@ -404,22 +403,19 @@ namespace ngraph
                 mkldnn::memory::dims src_layer_tz = {
                     src_seq_length_max, batch, rnn_node->get_src_layer_feature_size()};
                 mkldnn::memory::dims src_iter_tz = {
-                    num_of_fused_rnn_layers, rnn_direction, rnn_cell_n_states, batch, feature_size};
-                mkldnn::memory::dims weights_layer_tz = {num_of_fused_rnn_layers,
-                                                         rnn_direction,
+                    num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                mkldnn::memory::dims weights_layer_tz = {num_fused_layers,
+                                                         direction,
                                                          rnn_node->get_src_layer_feature_size(),
                                                          rnn_cell_n_gates,
                                                          feature_size};
-                mkldnn::memory::dims weights_iter_tz = {num_of_fused_rnn_layers,
-                                                        rnn_direction,
-                                                        feature_size,
-                                                        rnn_cell_n_gates,
-                                                        feature_size};
+                mkldnn::memory::dims weights_iter_tz = {
+                    num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                 mkldnn::memory::dims bias_tz = {
-                    num_of_fused_rnn_layers, rnn_direction, rnn_cell_n_gates, feature_size};
+                    num_fused_layers, direction, rnn_cell_n_gates, feature_size};
                 mkldnn::memory::dims dst_layer_tz = {src_seq_length_max, batch, feature_size};
                 mkldnn::memory::dims dst_iter_tz = {
-                    num_of_fused_rnn_layers, rnn_direction, rnn_cell_n_states, batch, feature_size};
+                    num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
                 // We create the memory descriptors used by the user
                 auto src_layer_md = mkldnn::memory::desc(
