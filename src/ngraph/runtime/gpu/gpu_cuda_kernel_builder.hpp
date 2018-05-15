@@ -63,7 +63,7 @@ namespace ngraph
                                         const std::string& name,
                                         const std::string& op,
                                         const std::array<std::string, 2>& data_types,
-                                        const size_t rank)
+                                        const size_t rank);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,

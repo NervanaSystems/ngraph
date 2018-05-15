@@ -128,7 +128,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
 // CUDNN_OP_TENSOR_SQRT
 // CUDNN_OP_TENSOR_NOT
 
-static const std::unordered_map<std::type_index, OpFunction> reduce_window_map{
+static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_window_map{
     {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
     {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
     {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},

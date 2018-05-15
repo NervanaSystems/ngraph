@@ -686,7 +686,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
                                                            const char* kernel)
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
-    size_t rank = input_strides.size();
+    size_t rank = input_shape.size();
     std::stringstream kernel_name;
     kernel_name << "reduce_window"
                 << "_" << op << "_" << join(dtypes, "_") << rank;
