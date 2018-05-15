@@ -92,17 +92,6 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
-if(NGRAPH_NNP_ENABLE)
-    include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI")
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI_TESTER")
-    set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
-    # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
-    set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
-endif()
-
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
@@ -176,12 +165,6 @@ endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
-
-if(NGRAPH_NNP_ENABLE)
-    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
-    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
-    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-endif()
 
 add_dependencies(unit-test ngraph libgtest ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})

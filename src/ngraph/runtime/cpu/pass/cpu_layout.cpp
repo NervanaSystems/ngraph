@@ -1173,7 +1173,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Batchnorm only supported in MKLDNN for now");
+                        set_default_layouts(external_function, node);
                     }
                 }
 
