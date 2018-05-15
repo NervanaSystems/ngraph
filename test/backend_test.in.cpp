@@ -8116,10 +8116,6 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
 
 TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     Shape shape{2, 3, 4, 2};
     Shape seq_len_shape{4};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -8160,10 +8156,6 @@ TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 
 TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     Shape shape{4, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     Shape seq_len_shape{4};
@@ -8203,10 +8195,6 @@ TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
 
 TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
 {
-    SKIP_TEST_FOR("IE", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("NNP_TESTER", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     Shape shape{4, 2, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     Shape seq_len_shape{4};

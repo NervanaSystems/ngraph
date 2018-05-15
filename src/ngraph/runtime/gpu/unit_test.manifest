@@ -33,6 +33,8 @@ backwards_power
 backwards_relu
 backwards_replace_slice
 backwards_reverse_3d_02
+backwards_reverse_sequence_n4d2c3h2w2
+backwards_reverse_sequence_n3_c2_h3
 backwards_select
 backwards_select_nested
 backwards_sign
@@ -129,6 +131,9 @@ replace_slice_3d_strided_different_strides
 replace_slice_matrix
 replace_slice_scalar
 replace_slice_vector
+reverse_sequence_n4d2c3h2w2
+reverse_sequence_n4c3h2w2
+reverse_sequence_n2c3h4w2
 scalar_constant_float32
 scalar_constant_int64
 select_and_scatter_3d_without_overlap
