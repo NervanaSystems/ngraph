@@ -17,8 +17,8 @@
 #include <fstream>
 #include <string>
 
-#include "except.hpp"
-#include "ngraph/onnx_util.hpp"
+#include "ngraph/except.hpp"
+#include "onnx_util.hpp"
 
 onnx::ModelProto ngraph::onnx_util::load_model_file(const std::string& filepath)
 {

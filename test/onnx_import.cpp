@@ -21,7 +21,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/onnx_import/graph.hpp"
 #include "ngraph/onnx_import/model.hpp"
-#include "ngraph/onnx_util.hpp"
+#include "ngraph/onnx_import/onnx_util.hpp"
 #include "onnx.pb.h"
 #include "util/test_tools.hpp"
 

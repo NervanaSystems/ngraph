@@ -20,10 +20,6 @@ include_directories(
     ${EIGEN_INCLUDE_DIR}
     )
 
-include_directories(
-    ${NGRAPH_ONNX_INCLUDE_DIR}
-    )
-
 set (SRC
     backend_api.cpp
     algebraic_simplification.cpp
@@ -58,6 +54,7 @@ set (SRC
 )
 
 if (NGRAPH_ONNX_IMPORT)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/../src/ngraph/onnx_import)
     list(APPEND SRC onnx_import.cpp)
 endif()
 
@@ -163,6 +160,10 @@ add_executable(unit-test ${SRC})
 target_link_libraries(unit-test ngraph_test_util)
 add_dependencies(unit-test ngraph_test_util)
 
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-zero-as-null-pointer-constant)
+endif()
+
 if(MPI_C_INCLUDE_PATH)
     target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
 endif()
@@ -186,7 +187,8 @@ target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 if(NGRAPH_ONNX_IMPORT)
-    target_link_libraries(unit-test ${Protobuf_LIBRARIES})
+    add_dependencies(unit-test onnx_import)
+    target_link_libraries(unit-test onnx_import ${PROTOBUF_LIBRARIES})
 endif()
 
 if(NGRAPH_NNP_ENABLE)

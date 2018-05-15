@@ -97,4 +97,6 @@ namespace ngraph
         std::string m_name;
         const std::string m_unique_name;
     };
+
+    std::ostream& operator << (std::ostream&, const Function&);
 }
