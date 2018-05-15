@@ -49,6 +49,7 @@ namespace ngraph
         void init();
 
         virtual ~Function() {}
+
     public:
         /// Return the number of outputs for this function.
         size_t get_output_size() const;
@@ -98,5 +99,5 @@ namespace ngraph
         const std::string m_unique_name;
     };
 
-    std::ostream& operator << (std::ostream&, const Function&);
-}
+    std::ostream& operator<<(std::ostream&, const Function&);
+} // namespace ngraph
