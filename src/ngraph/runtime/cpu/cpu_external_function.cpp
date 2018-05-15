@@ -351,6 +351,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
