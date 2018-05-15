@@ -676,7 +676,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_reduce_window_function(const GPURuntimeContext* ctx,
+size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeContext* ctx,
                                                            const std::vector<std::string>& dtypes,
                                                            const Shape& input_shape,
                                                            const Shape& output_shape,

@@ -128,7 +128,7 @@ static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_m
 // CUDNN_OP_TENSOR_SQRT
 // CUDNN_OP_TENSOR_NOT
 
-static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> element_op_map{
+static const std::unordered_map<std::type_index, OpFunction> reduce_window_map{
     {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
     {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
     {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
@@ -1461,12 +1461,44 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
-                            auto reduce_index = cuda_emitter->build_reduce_window(
-                                external_function->ctx().get(),
-                                f_ptr->second,
-                                out[0].get_shape(),
-                                reduce_window_op->get_window_shape(),
-                                reduce_window_op->get_window_movement_strides());
+                            size_t reduce_index;
+                            switch(reduce_tensor_op)
+                            {
+                                case CUDNN_REDUCE_TENSOR_ADD:
+                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Add>(
+                                                    external_function->ctx().get(),
+                                                    args[0].get_shape(),
+                                                    out[0].get_shape(),
+                                                    reduce_window_op->get_window_shape(),
+                                                    reduce_window_op->get_window_movement_strides());
+                                    break;
+                                case CUDNN_REDUCE_TENSOR_MUL:
+                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Multiply>(
+                                                    external_function->ctx().get(),
+                                                    args[0].get_shape(),
+                                                    out[0].get_shape(),
+                                                    reduce_window_op->get_window_shape(),
+                                                    reduce_window_op->get_window_movement_strides());
+                                    break;
+                                case CUDNN_REDUCE_TENSOR_MAX:
+                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Maximum>(
+                                                    external_function->ctx().get(),
+                                                    args[0].get_shape(),
+                                                    out[0].get_shape(),
+                                                    reduce_window_op->get_window_shape(),
+                                                    reduce_window_op->get_window_movement_strides());
+                                    break;
+                                case CUDNN_REDUCE_TENSOR_MIN:
+                                    reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Minimum>(
+                                                    external_function->ctx().get(),
+                                                    args[0].get_shape(),
+                                                    out[0].get_shape(),
+                                                    reduce_window_op->get_window_shape(),
+                                                    reduce_window_op->get_window_movement_strides());
+                                    break;
+                                default:
+                                    break;
+                            }
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

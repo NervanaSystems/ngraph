@@ -76,9 +76,9 @@ namespace ngraph
                                          const Shape& input_shape,
                                          const Shape& output_shape,
                                          const Shape& reduce_window_shape,
-                                         const Strides& reduce_window_strids)
+                                         const Strides& reduce_window_strides)
                 {
-                    return build_reduce_window_function(
+                    return build_reduce_window_helper(
                         ctx, dtypes, input_shape, output_shape, reduce_window_shape, reduce_window_strids, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
@@ -94,7 +94,7 @@ namespace ngraph
                                                 const char* op,
                                                 const char* kernel);
 
-                size_t build_reduce_window_function(const GPURuntimeContext* ctx,
+                size_t build_reduce_window_helper(const GPURuntimeContext* ctx,
                                                 const std::vector<std::string>& dtypes,
                                                 const Shape& input_shape,
                                                 const Shape& output_shape,
