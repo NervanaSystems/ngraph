@@ -261,7 +261,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
             writer << "size_t idx_out = tid;\n";
             writer << "size_t idx_in = 0;\n";
             writer << "size_t idx_init = 0;\n";
-            for (int i = (int)rank; i > 0; i--)
+            for (int i = static_cast<int>(rank)-1; i >= 0; i--)
             {
                 writer << "size_t idx_out_" << i << " = idx_out % output_shape[" << i << "];\n";
                 writer << "size_t idx_in_start_" << i << " = idx_out_" << i
@@ -269,31 +269,31 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
                 writer << "size_t idx_in_end_" << i << " = idx_in_start_" << i
                        << " + reduce_window_shape[" << i << "] - 1;\n";
                 writer << "idx_init += idx_in_start_" << i << " * input_strides[" << i << "];\n";
-                writer << "idx_out /= output_shape[i];\n";
+                writer << "idx_out /= output_shape[" << i << "];\n";
             }
 
-            writer << data_types[1] << " result = in[idx_init];\n";
-
-            for (int i = 0; i < rank - 1; i++)
+            //writer << data_types[1] << " result = in[idx_init];\n";
+/*
+            for (int i = 0; i < rank; i++)
             {
                 writer << "for(size_t i_" << i << " = idx_in_start_" << i << "; i_" << i
                        << " < idx_in_end_" << i << "; i_" << i << "++)\n";
                 writer.block_begin();
             }
-            writer << "for(size_t i_" << rank - 1 << " = idx_in_start_" << rank - 1 << " + 1; i_"
-                   << rank - 1 << " < idx_in_end_" << rank - 1 << "; i_" << rank - 1 << "++)\n";
-            writer.block_begin();
 
             for (int i = 0; i < rank; i++)
             {
-                writer << "idx_in += i" << i << " * input_strides[" << i << "];\n";
+                writer << "idx_in += i_" << i << " * input_strides[" << i << "];\n";
             }
-            writer << "result = " << op << "(result, in[idx_in]);\n";
+            writer << "printf(\"idx in is %d.\\n\", idx_in);\n";
+            writer << "result = (idx_in == idx_init) ? result : " << op << "(result, in[idx_in]);\n";
             for (int i = 0; i < rank; i++)
             {
                 writer.block_end();
             }
-            writer << "out[tid] = result;\n";
+*/
+            //writer << "out[tid] = result;\n";
+            writer << "out[tid] = idx_init;\n";
         }
         writer.block_end();
     }

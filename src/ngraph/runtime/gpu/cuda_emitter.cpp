@@ -722,6 +722,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     size_t nthreads = shape_size(output_shape);
+    std::cout << nthreads << std::endl;
+    std::cout << rank << std::endl;
     auto input_strides = row_major_strides(input_shape);
     void* input_strides_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
     void* output_shape_d = runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);
