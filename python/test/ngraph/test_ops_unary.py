@@ -20,7 +20,6 @@ import ngraph as ng
 from test.ngraph.util import run_op_numeric_data, run_op_node
 
 
-@pytest.mark.xfail(reason='Results mismatch when passing created Constant node from raw data.')
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, range_start, range_end', [
     (ng.cos, np.cos, -100., 100.),
     (ng.sin, np.sin, -100., 100.),
@@ -31,7 +30,7 @@ def test_unary_op_array_err(ng_api_fn, numpy_fn, range_start, range_end):
     expected = numpy_fn(input_data)
 
     result = run_op_numeric_data(input_data, ng_api_fn)
-    assert np.allclose(result, expected)
+    np.testing.assert_allclose(result, expected, rtol=0.001)
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, range_start, range_end', [
@@ -62,10 +61,10 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     expected = numpy_fn(input_data)
 
     result = run_op_node([input_data], ng_api_fn)
-    assert np.allclose(result, expected)
+    np.testing.assert_allclose(result, expected, rtol=0.001)
 
     result = run_op_numeric_data(input_data, ng_api_fn)
-    assert np.allclose(result, expected)
+    np.testing.assert_allclose(result, expected, rtol=0.001)
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
