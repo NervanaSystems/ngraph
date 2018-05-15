@@ -318,11 +318,6 @@ endif()
     endif()
 endif()
 
-if (NGRAPH_NNP_ENABLE)
-    link_directories(${NNP_TRANSFORMER_LIB_DIR})
-    include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
-endif()
-
 add_library(ngraph SHARED ${SRC})
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
@@ -361,10 +356,6 @@ if (NOT APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-if (NGRAPH_NNP_ENABLE)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_NNP_ENABLE)
-endif()
-
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PRIVATE dl)
 
@@ -397,14 +388,6 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-# NNP
-if (NGRAPH_NNP_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-    target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
-    add_dependencies(ngraph ext_nnp_transformer)
-    add_dependencies(ext_nnp_transformer ext_llvm)
-endif()
-
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -433,20 +416,5 @@ if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-endif()
-
-if (NGRAPH_NNP_ENABLE)
-    install(DIRECTORY ${NNP_TRANSFORMER_LIB_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "*.so"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.hpp"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.h"
     )
 endif()
