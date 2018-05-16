@@ -18,8 +18,8 @@
 
 #include <map>
 #include <ostream>
-#include "ngraph/shape.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
 #include "onnx.pb.h"

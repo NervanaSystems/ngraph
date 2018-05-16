@@ -20,8 +20,8 @@
 #include <ostream>
 #include "ngraph/node_vector.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "onnx.pb.h"
 #include "node.hpp"
+#include "onnx.pb.h"
 
 namespace ngraph
 {
@@ -30,7 +30,6 @@ namespace ngraph
         struct ops_bridge
         {
             static ngraph::NodeVector make_ng_nodes(ngraph::onnx_import::Node* onnx_node);
-
         };
 
     } // namespace onnx_import

@@ -18,10 +18,9 @@
 
 using namespace ngraph;
 
-
-onnx_import::Tensor::Tensor(const onnx::TensorProto& proto, const onnx_import::Graph *graph_ptr)
-        : m_tensor_proto(proto)
-        , m_graph_ptr(graph_ptr)
+onnx_import::Tensor::Tensor(const onnx::TensorProto& proto, const onnx_import::Graph* graph_ptr)
+    : m_tensor_proto(proto)
+    , m_graph_ptr(graph_ptr)
 {
 }
 
@@ -31,7 +30,6 @@ std::ostream& onnx_import::operator<<(std::ostream& os, const onnx_import::Tenso
     os << "<Tensor: " << name << ">";
     return os;
 }
-
 
 template <typename T>
 std::vector<T> onnx_import::Tensor::get_vector() const

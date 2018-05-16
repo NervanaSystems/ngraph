@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ops_bridge.hpp"
+#include "graph.hpp"
 #include "ngraph/op/add.hpp"
 #include "node.hpp"
-#include "graph.hpp"
-#include "ops_bridge.hpp"
 
 using namespace ngraph;
 
@@ -33,7 +33,8 @@ NodeVector ngraph::onnx_import::ops_bridge::make_ng_nodes(ngraph::onnx_import::N
     std::string op_type = onnx_node->get_proto().op_type();
     ngraph::NodeVector ng_inputs = onnx_node->get_ng_inputs();
 
-    if(op_type == "Add") return Add(onnx_node, ng_inputs);
+    if (op_type == "Add")
+        return Add(onnx_node, ng_inputs);
 
     throw ngraph::ngraph_error("Unknown operation: " + op_type);
 }

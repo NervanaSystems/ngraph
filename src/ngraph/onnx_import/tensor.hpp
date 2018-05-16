@@ -34,12 +34,11 @@ namespace ngraph
             friend std::ostream& operator<<(std::ostream& os, const Tensor& wrapper);
 
         public:
-            Tensor(const onnx::TensorProto& proto, const Graph *graph_ptr);
+            Tensor(const onnx::TensorProto& proto, const Graph* graph_ptr);
 
             template <typename T>
             std::vector<T> get_vector() const;
         };
 
-//        std::ostream& operator<<(std::ostream& os, const ValueInfo& wrapper);
     } // namespace onnx_import
 } // namespace ngraph

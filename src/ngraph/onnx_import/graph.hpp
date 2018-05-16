@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include <ostream>
-#include <vector>
 #include <map>
+#include <ostream>
 #include <string>
+#include <vector>
 #include "node.hpp"
 #include "onnx.pb.h"
-#include "value_info.hpp"
 #include "tensor.hpp"
+#include "value_info.hpp"
 
 namespace ngraph
 {
