@@ -42,12 +42,10 @@ bash_lib_status "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CL
 
 pushd "${THIS_SCRIPT_DIR}/.."
 
-declare NNP_SRC_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/src"
-declare NNP_TEST_DIR="build/third-party/nnp_transformer/src/ext_nnp_transformer/test"
 declare PYBIND_WRAPPER="python/pyngraph"
 
 declare ROOT_SUBDIR
-for ROOT_SUBDIR in src doc/examples test ${NNP_SRC_DIR} ${NNP_TEST_DIR} ${PYBIND_WRAPPER}; do
+for ROOT_SUBDIR in src doc/examples test ${PYBIND_WRAPPER}; do
     if ! [[ -d "${ROOT_SUBDIR}" ]]; then
 	    bash_lib_status "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
     else
