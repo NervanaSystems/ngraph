@@ -79,7 +79,10 @@ namespace ngraph
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
-
+                const std::vector<size_t>& get_memory_buffer_sizes() const
+                {
+                    return m_memory_buffer_sizes;
+                }
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
                 const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
                 {
@@ -88,6 +91,9 @@ namespace ngraph
 
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
+                // Temporary Memory Pool alignment
+                static const size_t s_memory_pool_alignment = 4096;
+
             protected:
                 void compile();
 
@@ -130,6 +136,7 @@ namespace ngraph
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
+                std::vector<size_t> m_memory_buffer_sizes;
                 std::vector<OpAttributes> m_op_attrs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
