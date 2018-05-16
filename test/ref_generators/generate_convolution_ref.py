@@ -27,11 +27,10 @@ def random_array_float_literals(length,seed=8086):
 
     random.seed(seed)
 
-    for i in range(0,length):
-        literal_n = random.randint(0,99)
-        literal_sign = random.randint(0,1)
-        literal_str = ('-' if literal_sign==1 else '') + '.' + ('%02d' % literal_n)
-        literals.append(literal_str)
+    for i in range(0, length):
+        # generate numbers that can be exactly represented in binary
+        literal_n = np.float32(random.randint(-64, 64)) / 64.0
+        literals.append(str(literal_n))
 
     return literals
 
@@ -198,7 +197,7 @@ def emit_test(t,f):
     test_name, input_batch_shape, filters_shape, move_strides, filter_dilation, below_pads, above_pads, data_dilation, bprop = t
 
     input_batch_literals = random_array_float_literals(reduce(mul,input_batch_shape))
-    filters_literals = random_array_float_literals(reduce(mul,filters_shape))
+    filters_literals = random_array_float_literals(reduce(mul, filters_shape))
 
     input_batch_array = np.array(map(lambda s: np.float32(s),input_batch_literals))
     input_batch_array.shape = input_batch_shape
@@ -362,7 +361,7 @@ def main():
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
-#include "test_control.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;

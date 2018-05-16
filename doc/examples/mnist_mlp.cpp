@@ -146,7 +146,7 @@ int main(int argc, const char* argv[])
     auto l1_dot = std::make_shared<op::Dot>(l0, W1, 1);
     auto b1_broadcast = std::make_shared<op::Broadcast>(
         b1, Shape{batch_size, l1_size}, AxisSet{0});
-    auto l1 = std::make_shared<op::Relu>(l1_dot + b1_broadcast);
+    auto l1 = l1_dot + b1_broadcast;
 
     // Softmax
     auto softmax = std::make_shared<op::Softmax>(l1, AxisSet{1});

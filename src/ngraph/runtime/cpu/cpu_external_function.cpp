@@ -101,11 +101,13 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -125,7 +127,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_nop_elimination.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -138,9 +139,6 @@ using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
-
-// Temporary Memory Pool alignment
-static const size_t s_memory_pool_alignment = 4096;
 
 static void
     generate_isnan_isinf_check(codegen::CodeWriter& writer,
@@ -321,8 +319,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
-    pass_manager.register_pass<runtime::cpu::pass::CPUNopElimination>();
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
@@ -583,12 +582,7 @@ using namespace ngraph::runtime;
         if (temporaries_used)
         {
             size_t temp_pool_size = current_function->get_temporary_pool_size();
-            writer << "// Allocate the memory pool\n";
-            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer " << current_function->get_name()
-                   << "_memory_handler(" << temp_pool_size << ", " << s_memory_pool_alignment
-                   << ");\n";
+            m_memory_buffer_sizes.push_back(current_function->get_temporary_pool_size());
         }
 
         // Indexing for Control Flags
@@ -631,8 +625,8 @@ using namespace ngraph::runtime;
 
         if (temporaries_used)
         {
-            writer << "size_t pool_base_ptr = (size_t)" << current_function->get_name()
-                   << "_memory_handler.get_ptr();\n";
+            writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
+                   << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
 
             // Add temporaries to the variable name map

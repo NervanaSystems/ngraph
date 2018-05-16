@@ -99,7 +99,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     return false;
 }
 
-//`simplify_multiply` optimizes the following 2 *base* cases
+//`simplify_add` optimizes the following 2 *base* cases
 //(4 cases in total including variants due to commutativity)
 //
 //a + 0 -> a
