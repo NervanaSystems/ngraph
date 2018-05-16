@@ -16,6 +16,7 @@
 #include <exception>
 #include <ostream>
 #include <vector>
+#include <ngraph/op/parameter.hpp>
 
 #include "mapping.hpp"
 #include "onnx.pb.h"
@@ -60,4 +61,19 @@ const ngraph::element::Type onnx_import::ValueInfo::get_element_type() const
     {
         throw ngraph::ngraph_error("ValueInfo(" + m_value_info_proto.name() + "): " + e.what());
     }
+}
+
+std::shared_ptr<ngraph::op::Parameter> onnx_import::ValueInfo::get_ng_parameter() const {
+    return std::make_shared<op::Parameter>(get_element_type(), get_shape());
+}
+
+std::shared_ptr<ngraph::Node> onnx_import::ValueInfo::get_ng_node() const {
+    // @TODO: Add support for values with initializers (constants)
+    return get_ng_parameter();
+}
+
+
+bool onnx_import::ValueInfo::has_initializer() const {
+    // @ TODO: Implement
+    return false;
 }

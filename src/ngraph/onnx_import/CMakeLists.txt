@@ -25,8 +25,10 @@ set(ONNX_IMPORT_SOURCE_FILES
         mapping.cpp
         model.cpp
         node.cpp
-        value_info.cpp
-        onnx_util.cpp)
+        ops_bridge.cpp
+        onnx_util.cpp
+        tensor.cpp
+        value_info.cpp)
 
 set(ONNX_IMPORT_HEADER_FILES
         ${ONNX_PB_H}
@@ -34,8 +36,10 @@ set(ONNX_IMPORT_HEADER_FILES
         mapping.hpp
         model.hpp
         node.hpp
-        value_info.hpp
-        onnx_util.hpp)
+        ops_bridge.hpp
+        onnx_util.hpp
+        tensor.hpp
+        value_info.hpp)
 
 set_source_files_properties(${ONNX_PB_H} ${ONNX_PB_CC} PROPERTIES GENERATED TRUE)
 file(DOWNLOAD ${ONNX_SOURCE_URL} ${ONNX_PROTO})

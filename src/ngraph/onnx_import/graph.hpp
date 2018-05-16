@@ -18,9 +18,12 @@
 
 #include <ostream>
 #include <vector>
+#include <map>
+#include <string>
 #include "node.hpp"
 #include "onnx.pb.h"
 #include "value_info.hpp"
+#include "tensor.hpp"
 
 namespace ngraph
 {
@@ -30,14 +33,21 @@ namespace ngraph
         {
             onnx::GraphProto m_graph_proto;
             std::vector<Node> m_nodes;
-            std::vector<ValueInfo> m_values;
+            std::vector<ValueInfo> m_inputs;
+            std::vector<ValueInfo> m_outputs;
+            ngraph::op::ParameterVector m_parameters;
+            std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
 
             friend std::ostream& operator<<(std::ostream& os, const Graph& wrapper);
 
         public:
             explicit Graph(const onnx::GraphProto& proto);
             const std::vector<Node>& get_nodes() const;
-            const std::vector<ValueInfo>& get_values() const;
+            const std::vector<ValueInfo>& get_inputs() const;
+            const std::vector<ValueInfo>& get_outputs() const;
+            const Tensor get_initializer(std::string) const;
+            const ngraph::op::ParameterVector get_ng_parameters();
+            const std::shared_ptr<ngraph::Node> get_ng_node_from_cache(std::string);
         };
 
         std::ostream& operator<<(std::ostream& os, const Graph& wrapper);

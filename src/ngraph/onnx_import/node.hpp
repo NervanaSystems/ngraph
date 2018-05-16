@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include <string>
 #include <ostream>
+#include <ngraph/graph_util.hpp>
 #include "onnx.pb.h"
 
 namespace ngraph
@@ -34,6 +36,13 @@ namespace ngraph
 
         public:
             Node(const onnx::NodeProto& node_proto, Graph* graph_ptr);
+
+            onnx::NodeProto get_proto() {
+                return m_node_proto;
+            }
+
+            ngraph::NodeVector get_ng_nodes();
+            ngraph::NodeVector get_ng_inputs();
         };
 
         std::ostream& operator<<(std::ostream& os, const Node& wrapper);

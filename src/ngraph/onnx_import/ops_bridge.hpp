@@ -18,34 +18,20 @@
 
 #include <map>
 #include <ostream>
-#include "ngraph/shape.hpp"
-#include "ngraph/op/parameter.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "node.hpp"
 #include "onnx.pb.h"
+#include "node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        class ValueInfo
+        struct ops_bridge
         {
-            onnx::ValueInfoProto m_value_info_proto;
-            Graph* m_graph_ptr;
+            static ngraph::NodeVector make_ng_nodes(ngraph::onnx_import::Node* onnx_node);
 
-            friend std::ostream& operator<<(std::ostream& os, const ValueInfo& wrapper);
-
-        public:
-            ValueInfo(const onnx::ValueInfoProto& proto, Graph* graph_ptr);
-
-            const ngraph::Shape get_shape() const;
-            const ngraph::element::Type get_element_type() const;
-            std::shared_ptr<op::Parameter> get_ng_parameter() const;
-
-            std::shared_ptr<ngraph::Node> get_ng_node() const;
-            bool has_initializer() const;
         };
 
-        std::ostream& operator<<(std::ostream& os, const ValueInfo& wrapper);
     } // namespace onnx_import
 } // namespace ngraph

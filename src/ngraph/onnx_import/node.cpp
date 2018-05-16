@@ -14,16 +14,36 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include "ngraph/op/add.hpp"
 #include "node.hpp"
 #include "graph.hpp"
 #include "onnx.pb.h"
+#include "ops_bridge.hpp"
 
 using namespace ngraph;
 
 onnx_import::Node::Node(const onnx::NodeProto& node_proto, onnx_import::Graph* graph_ptr)
-    : m_node_proto(node_proto)
-    , m_graph_ptr(graph_ptr)
+        : m_node_proto(node_proto)
+        , m_graph_ptr(graph_ptr)
 {
+}
+
+ngraph::NodeVector onnx_import::Node::get_ng_nodes()
+{
+    return onnx_import::ops_bridge::make_ng_nodes(this);
+}
+
+ngraph::NodeVector onnx_import::Node::get_ng_inputs()
+{
+    ngraph::NodeVector input_nodes;
+
+    auto input_names = get_proto().input();
+
+    for (auto& name : input_names) {
+        input_nodes.emplace_back(m_graph_ptr->get_ng_node_from_cache(name));
+    }
+
+    return input_nodes;
 }
 
 std::ostream& onnx_import::operator<<(std::ostream& os, const onnx_import::Node& wrapper)
