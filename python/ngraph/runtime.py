@@ -107,6 +107,8 @@ class Computation:
     def _write_ndarray_to_tensor_view(value, tensor_view):
         # type: (np.ndarray, TensorViewType) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
+        if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
+            raise ValueError('Input data shape dont match node expected shape')
         if value.dtype != tensor_view_dtype:
             log.warning(
                 'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
