@@ -637,7 +637,6 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},
         op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
-
     backend->call(
         df,
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
@@ -649,6 +648,39 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
                                 read_vector<float>(conv_test.d_weights_val)));
     EXPECT_TRUE(
         test::all_close(conv_test.expected_d_bias_val, read_vector<float>(conv_test.d_bias_val)));
+}
+
+TEST(cpu_fusion, conv_bias_bprop)
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<op::Parameter>(element::f32, shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, shape);
+    auto delta = std::make_shared<op::Parameter>(element::f32, shape); 
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{}); 
+    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{0, 1, 2, 3});
+    auto conv = std::make_shared<op::Convolution>(data_batch,
+                                                  filters);
+    auto conv_bias = std::make_shared<op::Add>(conv, pbroadcast);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("conv_bias_bprop_fusion");
+    auto f = make_shared<Function>(
+        conv_bias, op::ParameterVector{data_batch, filters, bias});
+    
+    ngraph::autodiff::Adjoints adjoints(NodeVector{conv_bias}, NodeVector{delta});
+    
+    auto d_data = adjoints.backprop_node(data_batch);
+    auto d_weights = adjoints.backprop_node(filters);
+    auto d_bias = adjoints.backprop_node(bias);
+
+    auto df = make_shared<Function>(
+        NodeVector{d_data, d_weights, d_bias},
+        op::ParameterVector{data_batch, filters, bias, delta});
+
+    pass_manager.run_passes(df); 
+    size_t ccg = count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(df);
+    ASSERT_EQ(ccg, 1);
 }
 
 TEST(cpu_fusion, sigmoid_fprop_fusion)
