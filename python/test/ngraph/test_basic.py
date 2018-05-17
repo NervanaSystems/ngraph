@@ -169,9 +169,5 @@ def test_bad_data_shape():
 
     value_a = np.array([[1, 2]], dtype=np.float32)
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
-    try:
+    with pytest.raises(UserInputError):
         computation(value_a, value_b)
-    except UserInputError:
-        return
-
-    assert False, 'Bad shape uncaught!!!'
