@@ -950,17 +950,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 {
     // Construct predicate to match sigmoid and tanh
     auto sigmoid_pred = [](std::shared_ptr<Node> n) {
-        bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
-                      (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
-        return result;
+        return (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
     };
     // Construct predicate to match other valid nodes
     auto other_pred = [](std::shared_ptr<Node> n) {
-        bool result = (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
-                      (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr) ||
-                      (std::dynamic_pointer_cast<op::Add>(n) != nullptr) ||
-                      (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
-        return result;
+        return (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Add>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
     };
     auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
