@@ -47,6 +47,12 @@ if (NGRAPH_GPU_ENABLE)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     find_package(CUDA 8 REQUIRED)
     find_package(CUDNN 7 REQUIRED)
-    target_link_libraries(gpu_backend PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+    target_link_libraries(gpu_backend PUBLIC
+        ${CUDA_cuda_LIBRARY}
+        ${CUDA_nvrtc_LIBRARY}
+        ${CUDA_LIBRARIES}
+        ${CUDA_CUBLAS_LIBRARIES}
+        ${CUDNN_LIBRARIES})
 endif()
 

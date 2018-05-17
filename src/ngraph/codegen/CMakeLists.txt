@@ -36,8 +36,12 @@ set(HEADER_SEARCH_DEFINES
     "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
 )
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND HEADER_SEARCH_DEFINES "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\"")
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
+    find_package(MPI REQUIRED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    set_property(SOURCE compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
+        "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
 
 list(APPEND HEADER_SEARCH_DEFINES "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\"")
@@ -55,5 +59,4 @@ add_custom_target(header_resource
 add_library(codegen SHARED ${SRC})
 add_dependencies(codegen header_resource)
 target_include_directories(codegen PUBLIC ${CMAKE_BINARY_DIR})
-# target_include_directories(codegen SYSTEM PUBLIC ${LLVM_INCLUDE_DIR})
 target_link_libraries(codegen PUBLIC libllvm libmkldnn libeigen pthread dl)
