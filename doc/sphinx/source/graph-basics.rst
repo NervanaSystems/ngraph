@@ -22,23 +22,23 @@ framework's hardware abstraction layer:
 * The framework expects complete control of the GPU, and that the device doesn't 
   need to be shared. 
 * The framework expects that developers will write things in a `SIMT-friendly`_ 
-  manner, thus requring only a limited set of data layout conventions.    
+  manner.    
   
 Some of these design decisions have implications that do not translate well to 
-the newer or more demanding generation of **adaptable software**. For example, 
+the newer, more demanding generation of **adaptable software**. For example, 
 most frameworks that expect full control of the GPU devices experience their 
-own per-device inefficiency for resource utilization whenever the system 
-encounters a bottleneck. 
+own per-device inefficiency for resource utilization whenever the system is 
+oversubscribed. 
 
-Most framework owners will tell you to refactor the model in order to remove the 
-unimplemented copy, rather than attempt to run multiple models in parallel, or 
-attempt to figure out how to build graphs more efficiently. In other words, if 
-a model requires any operation that hasn't been implemented on GPU, it must wait 
-for copies to propagate from the CPU to the GPU(s). An effect of this 
-inefficiency is that it slows down the system. Data scientists who are facing a 
-large curve of uncertainty in how large (or how small) the compute-power needs 
-of their model will be, investing heavily in frameworks reliant upon GPUs may 
-not be the best decision.  
+Most framework owners will tell you to refactor the model in order to remove 
+operations that are not implemented on the GPU, rather than attempt to run 
+multiple models in parallel, or attempt to figure out how to build graphs 
+more efficiently. In other words, if a model requires any operation that 
+hasn't been implemented on GPU, it must wait for copies to propagate from 
+the CPU to the GPU(s). An effect of this inefficiency is that it slows down 
+the system. For data scientists who are facing a large curve of uncertainty in 
+how large (or how small) the compute-power needs of their model will be, 
+investing heavily in frameworks reliant upon GPUs may not be the best decision.  
 
 Meanwhile, the shift toward greater diversity in deep learning **hardware devices** 
 requires that these assumptions be revisited. Incorporating direct support for 
@@ -166,7 +166,8 @@ and results in a tensor with the same element type and shape:
 Here, :math:`X_I` means the value of a coordinate :math:`I` for the tensor 
 :math:`X`. So the value of the sum of two tensors is a tensor whose value at a 
 coordinate is the sum of the elements' two inputs. Unlike many frameworks, it 
-says nothing about storage or arrays.
+does not require the user or the framework bridge to specify anything about 
+storage or arrays.
 
 An ``Add`` op is used to represent an elementwise tensor sum. To
 construct an Add op, each of the two inputs of the ``Add`` must be

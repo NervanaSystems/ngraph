@@ -16,6 +16,7 @@
 
 #include <algorithm>
 
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -102,6 +103,13 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+    // Create temporary buffer pools
+    size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
+    for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
+    {
+        auto buffer = new AlignedBuffer(buffer_size, alignment);
+        ctx->memory_buffers.push_back(buffer);
+    }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
@@ -111,5 +119,9 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
     delete[] ctx->op_durations;
     delete[] ctx->p_en;
+    for (auto buffer : ctx->memory_buffers)
+    {
+        delete buffer;
+    }
     delete ctx;
 }
