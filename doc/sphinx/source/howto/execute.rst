@@ -13,7 +13,7 @@ that make by-hand graph construction simpler tend to make automatic construction
 more difficult, and vice versa.
 
 Here we will do all the bridge steps manually. The :term:`model description` 
-we're explaining is based on the :file:`abc.cpp` file in the ``/doc/examples/`` 
+walk-through below is based on the :file:`abc.cpp` code in the ``/doc/examples/`` 
 directory. We'll be deconstructing the steps that an entity (framework or 
 user) must be able to carry out in order to successfully execute a computation:
 
@@ -34,42 +34,37 @@ Define the computation
 ======================
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
-outputs. While a *framework bridge* can programmatically construct the graph 
+outputs. While a :term:`bridge` can programmatically construct the graph 
 from a framework's representation of the computation, graph construction can be 
 somewhat more tedious for users. To a user, who is usually interested in 
 specific nodes (vertices) or edges of a computation that reveal "what is 
 happening where", it can be helpful to think of a computation as a zoomed-out 
-and *stateless* dataflow graph where all of the nodes are well-defined tensor 
-operations and all of the edges denote use of an output from one operation as 
-an input for another operation.
-
-.. TODO
-
-.. image for representing nodes and edges of (a+b)*c
-
+and *stateless* :term:`data-flow graph` where all of the nodes are well-defined 
+tensor operations and all of the edges denote use of an output from one 
+operation as an input for another operation.
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
 namespaces in ``ngraph``. For example, the ``op::Add`` is assumed to refer to 
-``ngraph::op::Add``.
-
-A computation's graph is constructed from ops; each is a member of a subclass of 
-``op::Op``, which, in turn, is a subclass of ``Node``. Not all graphs are 
-computation, but all graphs are composed entirely of instances of ``Node``.  
-Computation graphs contain only ``op::Op`` nodes.
+``ngraph::op::Add``. A computation's graph is constructed from ops; each is a 
+member of a subclass of ``op::Op``, which, in turn, is a subclass of ``Node``. 
+Not all graphs are computation, but all graphs are composed entirely of 
+instances of ``Node``.  Computation graphs contain only ``op::Op`` nodes.
 
 We mostly use :term:`shared pointers<shared pointer>` for nodes, i.e.
-``std::shared_ptr<Node>`` so that they will be automatically
-deallocated when they are no longer needed. A brief summary of shared
-pointers is given in the glossary.
+``std::shared_ptr<Node>`` so that they will be automatically deallocated when 
+they are no longer needed. More detail on shared pointers is given in the 
+glossary.
 
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
-*attributes*.  The specifics for each ``type`` permitted on a core ``Op``-specific 
-basis can be discovered in our :doc:`../ops/index` docs. For our 
-purpose to :ref:`define a computation <define_cmp>`, nodes should be thought of 
-as essentially immutable; that is, when constructing a node, we need to supply 
-all of its inputs. We get this process started with ops that have no inputs, 
-since any op with no inputs is going to first need some inputs.
+*attributes*. 
+
+The specifics for each ``type`` permitted on a core ``Op``-specific basis can be 
+discovered in our :doc:`../ops/index` docs. For our purpose to 
+:ref:`define a computation <define_cmp>`, nodes should be thought of as essentially 
+immutable; that is, when constructing a node, we need to supply all of its 
+inputs. We get this process started with ops that have no inputs, since any op 
+with no inputs is going to first need some inputs.
 
 ``op::Parameter`` specifes the tensors that will be passed to the computation. 
 They receive their values from outside of the graph, so they have no inputs. 
@@ -80,10 +75,10 @@ be passed to them.
    :language: cpp
    :lines: 26-29
 
-Here we have made three parameter nodes, each a 32-bit float of shape ``(2, 3)`` 
-using a row-major element layout.
+The above code makes three parameter nodes where each is a 32-bit float of 
+shape ``(2, 3)`` and a row-major element layout.
 
-We can create a graph for ``(a+b)*c`` by creating an ``op::Add`` node with inputs 
+To create a graph for ``(a + b) * c``, first make an ``op::Add`` node with inputs 
 from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
 .. literalinclude:: ../../../examples/abc.cpp
@@ -228,6 +223,7 @@ Put it all together
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
+   :linenos:
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 
 
