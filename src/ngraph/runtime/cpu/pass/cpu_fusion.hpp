@@ -35,21 +35,40 @@ namespace ngraph
 class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusion()
+    //30 different fusion groups that we can nest/mix&match/etc
+    //should be good enough for quite a while
+    enum fusions
+    {
+        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+        //i.e. implement `generate_adjoints`
+        DIFFERENTIABLE_FUSIONS = 0x1,
+        REGULAR_FUSIONS = 0x2,
+        ALL = 0xFFFFFFFF
+    };
+
+    CPUFusion(int fusions = ALL)
         : GraphRewrite()
     {
-        construct_matmul();
-        construct_matmulbias();
-        construct_fprop_bn();
-        construct_zero_padded_reshaped_conv();
-        construct_zero_padded_conv();
-        construct_zero_padded_conv_backprop_filters();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_conv_bias();
-        construct_batch_norm_relu();
-        construct_batch_norm_relu_global_stats();
-        construct_conv_relu();
+        if (fusions & REGULAR_FUSIONS)
+        {
+            construct_matmul();
+            construct_matmulbias();
+            construct_fprop_bn();
+            construct_zero_padded_reshaped_conv();
+            construct_zero_padded_conv();
+            construct_zero_padded_conv_backprop_filters();
+            construct_sigmoid();
+            construct_sigmoid_bprop();
+
+            construct_batch_norm_relu();
+            construct_batch_norm_relu_global_stats();
+            construct_conv_relu();
+        }
+
+        if (fusions & DIFFERENTIABLE_FUSIONS)
+        {
+            construct_conv_bias();
+        }
     }
 
 private:

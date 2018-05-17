@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -31,18 +32,39 @@ std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::st
     nvrtcProgram prog;
     NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
                                        kernel.c_str(),
-                                       "op.cu",
+                                       "ngraph.cu",
                                        0,      // numHeaders
                                        NULL,   // headers
                                        NULL)); // includeNames
 
     nvrtcResult compile_result = nvrtcCompileProgram(prog, number_of_options, options);
 
+    // output compiler log helper
+    auto emit_log = [&prog]() {
+        size_t logSize;
+        NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize));
+        char* log = static_cast<char*>(malloc(sizeof(char) * logSize + 1));
+        NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log));
+        log[logSize] = '\x0';
+        if (std::strlen(log) >= 2)
+        {
+            std::cerr << log;
+        }
+        free(log);
+    };
+
+    // throw if compilation was not successful
     if (compile_result != NVRTC_SUCCESS)
     {
-        throw std::runtime_error("compile error: \n" + kernel + "\n options");
+        std::cerr << "Compile error: \n" + kernel;
+        // output compiler errors
+        emit_log();
+        throw std::runtime_error("NVRTC compilation failure.");
     }
+    // output any compiler warnings
+    emit_log();
 
+    // retrieve the intermediate PTX
     size_t ptx_size;
     NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptx_size));
     char* ptx = new char[ptx_size];
@@ -51,6 +73,7 @@ std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::st
                     ptx)); // Load the generated PTX and get a handle to the parent kernel.
     NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Destroy the program.
 
+    // extract the compiled function
     CUmodule module;
     CUfunction function;
     CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
