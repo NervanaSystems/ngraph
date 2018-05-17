@@ -258,7 +258,8 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto add = dot + broadcast;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -279,7 +280,8 @@ TEST(cpu_fusion, commutative_matmul_bias)
     auto add = broadcast + dot;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, op::ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -301,7 +303,8 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
 
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, op::ParameterVector{W, x, b});
     pass_manager.run_passes(func);
     auto gmm = graph->get_argument(0);
@@ -322,7 +325,8 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
     auto graph = make_shared<op::Abs>(re_dot);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, op::ParameterVector{W, x});
     pass_manager.run_passes(func);
     size_t mmb = count_ops_of_type<op::MatmulBias>(func);
@@ -336,7 +340,8 @@ TEST(cpu_fusion, gemm_mlp)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     auto mmbs = count_ops_of_type<op::MatmulBias>(func);
     ASSERT_EQ(mmbs, 3);
@@ -347,7 +352,8 @@ TEST(cpu_fusion, fuse_fprop_bn)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -477,7 +483,8 @@ TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::DIFFERENTIABLE_FUSIONS);
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -658,7 +665,8 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
 TEST(cpu_fusion, sigmoid_fprop_fusion)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -832,7 +840,8 @@ TEST(cpu_fusion, fuse_conv_relu)
     auto func = make_shared<Function>(abs_node, op::ParameterVector{A, weights});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
     ASSERT_GT(cb, 0);
@@ -1004,7 +1013,8 @@ std::vector<shared_ptr<runtime::TensorView>>
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+            runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
         pass_manager.run_passes(func);
         // check all of our dot/add are converted to a single MatmulBias op.
         size_t count = count_ops_of_type<op::MatmulBias>(func);
@@ -1062,7 +1072,8 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
+        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/rnn-10-step-fusion-test.json");
     const string json_string = file_util::read_file_to_string(json_path);
