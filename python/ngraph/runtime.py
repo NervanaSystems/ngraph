@@ -109,8 +109,8 @@ class Computation:
         # type: (np.ndarray, TensorViewType) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError('Shapes {} and {} do not match'.format(list(tensor_view.shape),
-                                                                        list(value.shape)))
+            raise UserInputError('Shapes expected: %s and provided: %s do not match',
+                                 list(tensor_view.shape), list(value.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
                 'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
