@@ -125,9 +125,13 @@ process.
 There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
-``"INTERPRETER"`` backend can be slow, and is primarily intended for testing.  
+``"INTERPRETER"`` backend can be slow, and is primarily intended for testing; 
+or it can be used in conjunction with `Intel® Xeon® Scalable processor with integrated FPGA`_. 
+See the documentation on  
+:doc:`runtime options for various backends <../programmable/index>` for additional 
+details.
 
-To select the ``"CPU"`` backend,
+To continue with our original example and select the ``"CPU"`` backend: 
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
@@ -231,3 +235,4 @@ Put it all together
 
 .. _Intel MKL-DNN: https://01.org/mkl-dnn
 .. _Intel Nervana NNP: https://ai.intel.com/intel-nervana-neural-network-processors-nnp-redefine-ai-silicon/
+.. _Intel® Xeon® Scalable processor with integrated FPGA: https://techreport.com/news/33654/intel-xeon-scalable-6138p-is-its-first-shipping-cpu-with-an-fpga-on-board
