@@ -104,7 +104,7 @@ namespace ngraph
                 std::cout << "{" << ngraph::join(local) << "}" << std::endl;
             }
             void check_cuda_errors(CUresult err);
-            void* create_gpu_buffer(size_t buffer_size);
+            void* create_gpu_buffer(size_t buffer_size, const void* data = NULL);
             void free_gpu_buffer(void* buffer);
             void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
             void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);

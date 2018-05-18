@@ -43,10 +43,14 @@ void runtime::gpu::check_cuda_errors(CUresult err)
     assert(err == CUDA_SUCCESS);
 }
 
-void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
+void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
 {
     void* allocated_buffer_pool;
     cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size);
+    if (data)
+    {
+        runtime::gpu::cuda_memcpyHtD(allocated_buffer_pool, data, buffer_size);
+    }
     return allocated_buffer_pool;
 }
 
