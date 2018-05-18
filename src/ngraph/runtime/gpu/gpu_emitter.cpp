@@ -1346,8 +1346,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             // 1. reduction function should only have one op
                             // 2. the op should be in the op_map
                             // otherwise, throw an error message
-                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             cudnnReduceTensorOp_t reduce_tensor_op;
+                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             int op_count = 0;
                             for (auto op : reduction_function_ops)
                             {
@@ -1433,7 +1433,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             // otherwise, throw an error message
                             auto reduction_function_ops =
                                 reduce_window_op->get_functions()[0]->get_ops();
-                            cudnnReduceTensorOp_t reduce_tensor_op;
+                            std::unordered_map<std::type_index,
+                                               cudnnReduceTensorOp_t>::const_iterator it =
+                                reduce_map.end();
                             int op_count = 0;
                             for (auto op : reduction_function_ops)
                             {
@@ -1446,21 +1448,27 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 // with shared pointers, which is fine here but clang doesn't like it.)
                                 auto& fn = *op;
                                 auto f_ptr = reduce_map.find(type_index(typeid(fn)));
-                                if (f_ptr == reduce_map.end())
+                                if (op_count != 1)
+                                {
+                                    throw std::runtime_error(
+                                        "reduce with more than one op is not implement yet.");
+                                }
+                                else if (f_ptr == reduce_map.end())
                                 {
                                     throw std::runtime_error("reduce with function " +
                                                              fn.get_name() +
                                                              " is not implement yet.");
                                 }
-                                else if (op_count != 1)
-                                {
-                                    throw std::runtime_error(
-                                        "reduce with more than one op is not implement yet.");
-                                }
                                 else
                                 {
-                                    reduce_tensor_op = f_ptr->second;
+                                    it = f_ptr;
                                 }
+                            }
+
+                            if (it == reduce_map.end())
+                            {
+                                throw std::runtime_error(
+                                    "no valid op found in reduction function.");
                             }
 
                             auto& cuda_emitter =
@@ -1472,7 +1480,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 dtypes.push_back(arg.get_type());
                             }
                             dtypes.push_back(out[0].get_type());
-                            switch (reduce_tensor_op)
+
+                            switch (it->second)
                             {
                             case CUDNN_REDUCE_TENSOR_ADD:
                                 reduce_index = cuda_emitter->build_reduce_window<ngraph::op::Add>(
@@ -1513,9 +1522,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                         reduce_window_op->get_window_shape(),
                                         reduce_window_op->get_window_movement_strides());
                                 break;
-                            default: break;
+                            case CUDNN_REDUCE_TENSOR_AMAX:
+                            case CUDNN_REDUCE_TENSOR_AVG:
+                            case CUDNN_REDUCE_TENSOR_NORM1:
+                            case CUDNN_REDUCE_TENSOR_NORM2:
+                            case CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS:
+                                throw std::runtime_error("reducation op not supported.");
                             }
-
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                             writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
