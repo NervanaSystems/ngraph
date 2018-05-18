@@ -100,9 +100,9 @@ namespace ngraph
 
     /// Row-major strides for a shape
     template <typename T>
-    T row_major_strides(const T& shape)
+    std::vector<typename T::value_type> row_major_strides(const T& shape)
     {
-        T strides;
+        std::vector<typename T::value_type> strides;
         typename T::value_type s = 1;
         for (auto d = shape.rbegin(); d != shape.rend(); d++)
         {

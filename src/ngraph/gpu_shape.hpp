@@ -24,6 +24,7 @@
 
 namespace ngraph
 {
+    class Shape;
     /// \brief Shape for a tensor resident on GPU.
     class GPUShape : public std::vector<uint32_t>
     {
@@ -64,6 +65,20 @@ namespace ngraph
         {
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
+        }
+        GPUShape(const Strides& strides)
+        {
+            for (size_t const& size : strides)
+            {
+                uint32_t low = static_cast<uint32_t>(size);
+                if (low != size)
+                {
+                    throw std::runtime_error(
+                        "Request for Shape which exceeds the bitwidth available for GPUShapes "
+                        "(32)");
+                }
+                this->push_back(low);
+            }
         }
     };
 }
