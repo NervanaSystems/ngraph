@@ -133,7 +133,6 @@ set (SRC
     runtime/interpreter/int_backend.cpp
     runtime/tensor_view.cpp
     serializer.cpp
-    shape.cpp
     type/element_type.cpp
     type/type.cpp
     util.cpp
