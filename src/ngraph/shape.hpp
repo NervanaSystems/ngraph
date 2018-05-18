@@ -16,10 +16,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdio>
+#include <stdexcept>
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -65,14 +68,59 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+        operator GPUShape() const
+        {
+            GPUShape shape;
+            for (size_t const& size : *this)
+            {
+                uint32_t low = static_cast<uint32_t>(size);
+                if (low != size)
+                {
+                    throw std::runtime_error(
+                        "Request for Shape which exceeds the bitwidth available for GPUShapes "
+                        "(32)");
+                }
+                shape.push_back(low);
+            }
+            return shape;
+        }
     };
 
     /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    template <typename T>
+    auto shape_size(const T& shape) -> typename T::value_type
+    {
+        size_t size = 1;
+        for (auto d : shape)
+        {
+            size *= d;
+        }
+        return size;
+    }
 
     /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    template <typename T>
+    T row_major_strides(const T& shape)
+    {
+        T strides;
+        typename T::value_type s = 1;
+        for (auto d = shape.rbegin(); d != shape.rend(); d++)
+        {
+            strides.push_back(s);
+            s *= *d;
+        }
+        std::reverse(strides.begin(), strides.end());
+        return strides;
+    }
 
-    inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
-    inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
+    template <typename T>
+    inline bool is_scalar(const T& shape)
+    {
+        return 0 == shape.size();
+    }
+    template <typename T>
+    inline bool is_vector(const T& shape)
+    {
+        return 1 == shape.size();
+    }
 }
