@@ -3967,16 +3967,13 @@ namespace ngraph
 
                 const ngraph::runtime::cpu::op::LoopKernel* clk =
                     static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
-                //this is needed since we do lk->get_arguments() which isn't declared as const
-                ngraph::runtime::cpu::op::LoopKernel* lk =
-                    const_cast<ngraph::runtime::cpu::op::LoopKernel*>(clk);
 
-                NodeVector output_nodes = lk->get_kernel_outputs();
-                NodeVector node_list = lk->get_node_list();
+                NodeVector output_nodes = clk->get_kernel_outputs();
+                NodeVector node_list = clk->get_node_list();
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(lk->get_argument(i), sname);
+                    auto entry = std::make_pair(clk->get_argument(i), sname);
                     loop_symbol_table.insert(entry);
                 }
 

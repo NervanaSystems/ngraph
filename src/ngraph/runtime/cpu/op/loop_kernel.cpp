@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
@@ -24,9 +25,39 @@ using namespace ngraph;
 shared_ptr<Node>
     ngraph::runtime::cpu::op::LoopKernel::copy_with_new_args(const NodeVector& new_args) const
 {
-    //TODO: this needs to call clone_nodes
-    //repopulate outputs correctly
-    throw ngraph_error("NYI");
+    auto args = get_arguments();
+    if (new_args.size() != args.size())
+    {
+        throw ngraph_error("number of arguments don't match");
+    }
+
+    //map inputs
+    NodeMap nm;
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        nm.add(args.at(i), new_args.at(i));
+    }
+
+    NodeVector new_node_list;
+    for (auto n : m_node_list)
+    {
+        NodeVector cur_args;
+        for (auto a : n->get_arguments())
+        {
+            cur_args.push_back(nm.get(a));
+        }
+        auto new_n = n->copy_with_new_args(cur_args);
+        nm.add(n, new_n);
+        new_node_list.push_back(new_n);
+    }
+
+    NodeVector new_outputs;
+    for (auto o : m_outputs)
+    {
+        new_outputs.push_back(nm.get(o));
+    }
+
+    return std::make_shared<LoopKernel>(new_node_list, new_outputs, new_args);
 }
 
 ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
