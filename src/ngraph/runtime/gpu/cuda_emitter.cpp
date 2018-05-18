@@ -315,8 +315,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     return primitive_index;
 }
 
-pooling_op_shape avgpool_shape(
-    GPUShape in, GPUShape out, GPUShape window, GPUShape strides, GPUShape pad)
+pooling_op_shape
+    avgpool_shape(GPUShape in, GPUShape out, GPUShape window, GPUShape strides, GPUShape pad)
 {
     pooling_op_shape shape;
     shape.N = in[0];
@@ -690,7 +690,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                                       GPUShape slice_strides)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslices_" + join(dtypes,"_");
+    std::string kernel_name = "repslices_" + join(dtypes, "_");
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -786,7 +786,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     auto dim_strides = row_major_strides(tensor_shape);
-    auto dim_strides_d = allocator.reserve_argspace(dim_strides.data(), (dim_strides.size() - 1)*sizeof(int));
+    auto dim_strides_d =
+        allocator.reserve_argspace(dim_strides.data(), (dim_strides.size() - 1) * sizeof(int));
 
     std::vector<int> dmagics;
     std::vector<int> dshifts;
@@ -798,30 +799,29 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         dmagics.push_back(magic);
         dshifts.push_back(shift);
     }
-    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size()*sizeof(int));
-    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size()*sizeof(int));
+    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
+    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
 
     std::vector<int> lbounds;
     for (auto const& lbound : lower_bounds)
     {
         lbounds.push_back(lbound);
     }
-    auto lbounds_d = allocator.reserve_argspace(lbounds.data(), lbounds.size()*sizeof(int));
-
+    auto lbounds_d = allocator.reserve_argspace(lbounds.data(), lbounds.size() * sizeof(int));
 
     std::vector<int> ubounds;
     for (auto const& ubound : upper_bounds)
     {
         ubounds.push_back(ubound);
     }
-    auto ubounds_d = allocator.reserve_argspace(ubounds.data(), ubounds.size()*sizeof(int));
+    auto ubounds_d = allocator.reserve_argspace(ubounds.data(), ubounds.size() * sizeof(int));
 
     std::vector<int> slstrides;
     for (auto const& slstr : slice_strides)
     {
         slstrides.push_back(slstr);
     }
-    auto slstrides_d = allocator.reserve_argspace(slstrides.data(), slstrides.size()*sizeof(int));
+    auto slstrides_d = allocator.reserve_argspace(slstrides.data(), slstrides.size() * sizeof(int));
 
     std::vector<int> smagics;
     std::vector<int> sshifts;
@@ -833,15 +833,16 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         smagics.push_back(magic);
         sshifts.push_back(shift);
     }
-    auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size()*sizeof(int));
-    auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size()*sizeof(int));
+    auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size() * sizeof(int));
+    auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size() * sizeof(int));
 
     std::vector<int> dim_source;
     for (auto const& dim : source_shape)
     {
         dim_source.push_back(dim);
     }
-    auto dim_source_d = allocator.reserve_argspace(dim_source.data(), dim_source.size()*sizeof(int));
+    auto dim_source_d =
+        allocator.reserve_argspace(dim_source.data(), dim_source.size() * sizeof(int));
 
     auto source_strides = row_major_strides(source_shape);
     std::vector<int> src_strides;
@@ -849,7 +850,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     {
         src_strides.push_back(str);
     }
-    auto src_strides_d = allocator.reserve_argspace(src_strides.data(), src_strides.size()*sizeof(int));
+    auto src_strides_d =
+        allocator.reserve_argspace(src_strides.data(), src_strides.size() * sizeof(int));
 
     int rank = tensor_shape.size();
     size_t nthreads = shape_size(tensor_shape);
@@ -858,51 +860,51 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    std::unique_ptr<gpu::primitive> replace_slice(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        void* param_dstr = dim_strides_d();
-        void* param_dmagic = dmagics_d();
-        void* param_dshift = dshifts_d();
-        void* param_lbound = lbounds_d();
-        void* param_ubound = ubounds_d();
-        void* param_slice_str = slstrides_d();
-        void* param_slice_magic = smagics_d();
-        void* param_slice_shift = sshifts_d();
-        void* param_dsource = dim_source_d();
-        void* param_sourcestr = src_strides_d();
+    std::unique_ptr<gpu::primitive> replace_slice(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_dstr = dim_strides_d();
+            void* param_dmagic = dmagics_d();
+            void* param_dshift = dshifts_d();
+            void* param_lbound = lbounds_d();
+            void* param_ubound = ubounds_d();
+            void* param_slice_str = slstrides_d();
+            void* param_slice_magic = smagics_d();
+            void* param_slice_shift = sshifts_d();
+            void* param_dsource = dim_source_d();
+            void* param_sourcestr = src_strides_d();
 
-        void* args_list[] = {&inputs[0],
-                             &inputs[1],
-                             &outputs[0],
-                             &alpha,
-                             &beta,
-                             &param_dstr,
-                             &param_dmagic,
-                             &param_dshift,
-                             &param_lbound,
-                             &param_ubound,
-                             &param_slice_str,
-                             &param_slice_magic,
-                             &param_slice_shift,
-                             &param_dsource,
-                             &param_sourcestr,
-                             &rank,
-                             &nthreads};
+            void* args_list[] = {&inputs[0],
+                                 &inputs[1],
+                                 &outputs[0],
+                                 &alpha,
+                                 &beta,
+                                 &param_dstr,
+                                 &param_dmagic,
+                                 &param_dshift,
+                                 &param_lbound,
+                                 &param_ubound,
+                                 &param_slice_str,
+                                 &param_slice_magic,
+                                 &param_slice_shift,
+                                 &param_dsource,
+                                 &param_sourcestr,
+                                 &rank,
+                                 &nthreads};
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      // ceil_div(nthreads)
-                                      1 + ((nthreads - 1) / nthreads_per_block),
-                                      1,
-                                      1,
-                                      nthreads_per_block,
-                                      1,
-                                      1,
-                                      rank * nthreads_per_block * sizeof(int),
-                                      NULL,
-                                      args_list,
-                                      0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          // ceil_div(nthreads)
+                                          1 + ((nthreads - 1) / nthreads_per_block),
+                                          1,
+                                          1,
+                                          nthreads_per_block,
+                                          1,
+                                          1,
+                                          rank * nthreads_per_block * sizeof(int),
+                                          NULL,
+                                          args_list,
+                                          0));
+            CUDA_SAFE_CALL(cuCtxSynchronize());
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
     m_primitive_emitter->cache(hash, primitive_index);

@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 #pragma once
-#include <vector>
-#include <stack>
 #include <memory>
+#include <stack>
+#include <vector>
 
 #include "ngraph/pass/memory_layout.hpp"
 
@@ -34,11 +34,15 @@ namespace ngraph
             {
             public:
                 GPUAllocator() = delete;
-                GPUAllocator(GPUMemoryManager* mgr) : m_manager(mgr) {}
+                GPUAllocator(GPUMemoryManager* mgr)
+                    : m_manager(mgr)
+                {
+                }
 
                 ~GPUAllocator();
                 memory_primitive reserve_argspace(void* data, size_t size);
                 memory_primitive reserve_workspace(size_t size);
+
             private:
                 GPUMemoryManager* m_manager;
                 std::stack<size_t> m_active;
@@ -47,13 +51,13 @@ namespace ngraph
             class GPUMemoryManager
             {
                 friend class GPUAllocator;
+
             public:
                 GPUMemoryManager();
                 ~GPUMemoryManager();
 
                 void allocate();
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
-
             private:
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
