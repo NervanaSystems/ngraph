@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -736,24 +737,33 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
     runtime::gpu::cuda_memcpyHtD(
         reduce_window_stride_d, reduce_window_strides.data(), sizeof(size_t) * rank);
 
-    CUdeviceptr input_strides_d_ptr = CUdeviceptr(input_strides_d);
-    CUdeviceptr output_shape_d_ptr = CUdeviceptr(output_shape_d);
-    CUdeviceptr reduce_window_shape_d_ptr = CUdeviceptr(reduce_window_shape_d);
-    CUdeviceptr reduce_window_stride_d_ptr = CUdeviceptr(reduce_window_stride_d);
+    std::shared_ptr<CUdeviceptr> input_strides_s_ptr =
+        std::make_shared<CUdeviceptr>(CUdeviceptr(input_strides_d));
+    std::shared_ptr<CUdeviceptr> output_shape_s_ptr =
+        std::make_shared<CUdeviceptr>(CUdeviceptr(output_shape_d));
+    std::shared_ptr<CUdeviceptr> reduce_window_shape_s_ptr =
+        std::make_shared<CUdeviceptr>(CUdeviceptr(reduce_window_shape_d));
+    std::shared_ptr<CUdeviceptr> reduce_window_stride_s_ptr =
+        std::make_shared<CUdeviceptr>(CUdeviceptr(reduce_window_stride_d));
     // create the launch primitive
     std::unique_ptr<gpu::primitive> f(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             std::vector<void*> args_list;
-            for (auto i = 0u; i < dtypes.size() - 1; i++)
-            {
-                args_list.push_back(&inputs[i]);
-            }
+            args_list.push_back(&inputs[0]);
             args_list.push_back(&outputs[0]);
-            args_list.push_back(&input_strides_d_ptr);
-            args_list.push_back(&output_shape_d_ptr);
-            args_list.push_back(&reduce_window_shape_d_ptr);
-            args_list.push_back(&reduce_window_stride_d_ptr);
+            args_list.push_back(input_strides_s_ptr.get());
+            args_list.push_back(output_shape_s_ptr.get());
+            args_list.push_back(reduce_window_shape_s_ptr.get());
+            args_list.push_back(reduce_window_stride_s_ptr.get());
             args_list.push_back(&nthreads);
+            NGRAPH_INFO << nthreads;
+
+            runtime::gpu::print_gpu_tensor<size_t>(input_strides_d, rank);
+            runtime::gpu::print_gpu_tensor<size_t>(output_shape_d, rank);
+            runtime::gpu::print_gpu_tensor<size_t>(reduce_window_shape_d, rank);
+            runtime::gpu::print_gpu_tensor<size_t>(reduce_window_stride_d, rank);
+            runtime::gpu::print_gpu_tensor<float>(inputs[0], 14);
+            runtime::gpu::print_gpu_tensor<float>(outputs[0], 12);
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           static_cast<unsigned int>(nthreads),
@@ -765,8 +775,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
                                           0,
                                           NULL, // shared mem and stream
                                           args_list.data(),
-                                          0));  // arguments
+                                          0));  // arguments 
             CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+            runtime::gpu::print_gpu_tensor<float>(outputs[0], 12);
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(f));

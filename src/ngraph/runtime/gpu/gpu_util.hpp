@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -29,6 +30,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <nvrtc.h>
+#include "ngraph/util.hpp"
 
 //why use "do...while.."
 //https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
@@ -92,6 +94,15 @@ namespace ngraph
         namespace gpu
         {
             void print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
+
+            template <typename T>
+            void print_gpu_tensor(const void* p, size_t element_count)
+            {
+                std::vector<T> local(element_count);
+                size_t size_in_bytes = sizeof(T) * element_count;
+                cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost);
+                std::cout << "{" << ngraph::join(local) << "}" << std::endl;
+            }
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size);
             void free_gpu_buffer(void* buffer);
