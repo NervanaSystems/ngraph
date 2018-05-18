@@ -1517,7 +1517,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1556,7 +1556,7 @@ TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
     ASSERT_EQ(read_vector<int>(da), expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

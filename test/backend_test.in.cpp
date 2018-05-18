@@ -8114,7 +8114,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 {
     Shape shape{2, 3, 4, 2};
     Shape seq_len_shape{4};
@@ -8154,7 +8154,7 @@ TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
 {
     Shape shape{4, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -8193,7 +8193,7 @@ TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
-TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
 {
     Shape shape{4, 2, 3, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
