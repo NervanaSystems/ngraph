@@ -219,6 +219,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/op/matmul_bias.cpp
         runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
+        runtime/cpu/op/loop_kernel.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_workspace_insertion.cpp
