@@ -31,7 +31,7 @@ union FloatUnion {
     int32_t i;
 };
 
-string to_bit_string(float f)
+string float_to_bit_string(float f)
 {
     FloatUnion fu{f}; // FloatInt fi = FloatInt(f);
     stringstream ss;
@@ -48,8 +48,8 @@ TEST(all_close_f, example_compare)
 {
     // float lhs = 1.5;
     float rhs = 1.75;
-    NGRAPH_INFO << to_bit_string(8);
-    NGRAPH_INFO << to_bit_string(rhs);
+    NGRAPH_INFO << float_to_bit_string(8);
+    NGRAPH_INFO << float_to_bit_string(rhs);
 
     float param = 8.;
     float mantissa;

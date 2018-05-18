@@ -21,9 +21,9 @@
 using namespace std;
 using namespace ngraph;
 
+// Returns |a - b| < 2 ^ (a.mantissa - mantissa_bits + 1 + tolerance_bits)
 bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 {
-    // Returns |a - b| < 2 ^ (a.mantissa - mantissa_bits + 1 + tolerance_bits)
     int a_e;
     frexp(a, &a_e);
     return abs(a - b) < pow(2.f, static_cast<float>(a_e - mantissa_bits + 1 + tolerance_bits));
