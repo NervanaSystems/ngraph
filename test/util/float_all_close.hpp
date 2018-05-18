@@ -29,7 +29,7 @@ namespace ngraph
         /// @param a First number to compare
         /// @param b Second number to compare
         /// @param mantissa The mantissa for the underlying number before casting to float
-        /// @param bit
+        /// @param bit_tolerance Bit tolerance error
         /// @returns true if the two floating point number are near
         ///
         /// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
@@ -39,6 +39,6 @@ namespace ngraph
         /// bfloat (s1, e8, m7) has 7 + 1 = 8 bits of mantissa or bit_precision
         /// float (s1, e8, m23) has 23 + 1 = 24 bits of mantissa or bit_precision
         /// Picking 8 as the default mantissa for float_near works for bfloat and float
-        bool float_near(float a, float b, uint32_t bit_precision = 8, uint32_t bit_tolerance = 2);
+        bool float_close(float a, float b, int mantissa = 8, int bit_tolerance = 3);
     }
 }

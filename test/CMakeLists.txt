@@ -22,7 +22,6 @@ include_directories(
 
 set (SRC
     backend_api.cpp
-    all_near.cpp
     algebraic_simplification.cpp
     backend_debug_api.cpp
     builder.cpp
@@ -34,6 +33,7 @@ set (SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
+    float_all_close.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp

@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/float_all_close.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -43,7 +44,7 @@ uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
     return 1;
 }
 
-TEST(all_near, example_compare)
+TEST(float_all_close, example_compare)
 {
     // float lhs = 1.5;
     float rhs = 1.75;
@@ -57,4 +58,15 @@ TEST(all_near, example_compare)
     mantissa = frexp(param, &exponent);
     NGRAPH_INFO << "mantissa " << mantissa;
     NGRAPH_INFO << "exponent " << exponent;
+}
+
+TEST(float_all_close, float_close_basic)
+{
+    NGRAPH_INFO << test::float_close(1.5f, 1.5f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.52f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.53f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.54f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.55f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.56f);
+    NGRAPH_INFO << test::float_close(1.5f, 1.57f);
 }

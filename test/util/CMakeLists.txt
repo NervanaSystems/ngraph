@@ -16,7 +16,7 @@
 
 set (SRC
     autodiff/backprop_function.cpp
-    all_near.cpp
+    float_all_close.cpp
     test_tools.cpp
     benchmark.cpp
     test_control.cpp
