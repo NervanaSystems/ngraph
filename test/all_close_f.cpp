@@ -39,6 +39,11 @@ string float_to_bit_string(float f)
     return ss.str();
 }
 
+float bit_string_to_float(const string& s)
+{
+    return 0.1f;
+}
+
 uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
 {
     return 1;
