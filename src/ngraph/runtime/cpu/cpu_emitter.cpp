@@ -3965,9 +3965,9 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Node>, std::string> loop_symbol_table;
                 //pre-fill symbol table with inputs
 
-                //const ngraph::op::LoopKernel* lk = static_cast<const ngraph::op::LoopKernel*>(node);
                 const ngraph::runtime::cpu::op::LoopKernel* clk =
                     static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+                //this is needed since we do lk->get_arguments() which isn't declared as const
                 ngraph::runtime::cpu::op::LoopKernel* lk =
                     const_cast<ngraph::runtime::cpu::op::LoopKernel*>(clk);
 
