@@ -81,6 +81,7 @@ option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
+option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 
@@ -157,7 +158,10 @@ endif()
 
 include(unit_test_control)
 set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
-unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+endif()
 
 # Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)

@@ -262,14 +262,19 @@ bool codegen::StaticCompiler::is_version_number(const string& path)
 
 void codegen::StaticCompiler::add_header_search_path(const string& path)
 {
-    if (!contains(m_extra_search_path_list, path))
+    vector<string> paths = split(path, ';');
+    NGRAPH_INFO << path;
+    for (const string& p : paths)
     {
-        m_extra_search_path_list.push_back(path);
-        HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
-        hso.AddPath(path, clang::frontend::System, false, false);
+        NGRAPH_INFO << p;
+        if (!contains(m_extra_search_path_list, p))
+        {
+            m_extra_search_path_list.push_back(p);
+            HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
+            hso.AddPath(p, clang::frontend::System, false, false);
+        }
     }
 }
-
 std::unique_ptr<codegen::Module>
     codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
                                      const string& source)

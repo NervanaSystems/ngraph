@@ -111,6 +111,10 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test cpu_backend)
 endif()
 
+if (NGRAPH_INTERPRETER_ENABLE)
+    target_link_libraries(unit-test int_backend)
+endif()
+
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
 endif()
