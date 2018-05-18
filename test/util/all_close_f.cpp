@@ -42,6 +42,12 @@ bool test::all_close_f(const vector<float>& a,
     }
     for (size_t i = 0; i < a.size(); ++i)
     {
+        bool is_close_f = close_f(a[i], b[i], mantissa, bit_tolerance);
+        if (!is_close_f)
+        {
+            NGRAPH_INFO << a[i] << " !≈ " << b[i];
+            rc = false;
+        }
     }
     return rc;
 }
