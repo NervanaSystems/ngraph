@@ -28,25 +28,27 @@ using namespace ngraph;
 
 union FloatUnion {
     float f;
-    int32_t i;
+    uint32_t i;
 };
 
 string float_to_bit_string(float f)
 {
-    FloatUnion fu{f}; // FloatInt fi = FloatInt(f);
+    FloatUnion fu{f};
     stringstream ss;
-    ss << std::bitset<32>(fu.i);
+    ss << bitset<32>(fu.i);
     return ss.str();
 }
 
 float bit_string_to_float(const string& s)
 {
-    return 0.1f;
-}
-
-uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
-{
-    return 1;
+    if (s.size() != 32)
+    {
+        throw ngraph_error("Input s length must be 32");
+    }
+    bitset<32> bs(s);
+    FloatUnion fu;
+    fu.i = static_cast<uint32_t>(bs.to_ulong());
+    return fu.f;
 }
 
 TEST(all_close_f, example_compare)
