@@ -14,43 +14,4 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <sstream>
-#include <bitset>
-
-#include "gtest/gtest.h"
-
-#include "ngraph/ngraph.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-union FloatUnion
-{
-    float f;
-    int32_t i;
-};
-
-string to_bit_string(float f)
-{
-    FloatUnion fu{f}; // FloatInt fi = FloatInt(f);
-    stringstream ss;
-    ss << std::bitset<32>(fu.i);
-    return ss.str();
-}
-
-uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
-{
-
-}
-
-TEST(all_close, example_compare)
-{
-    float lhs = 1.5;
-    float rhs = 1.75;
-    NGRAPH_INFO << to_bit_string(lhs);
-    NGRAPH_INFO << to_bit_string(rhs);
-
-    FloatUnion lhs_u{lhs};
-    FloatUnion rhs_u{rhs};
-    // FloatUnion lhs_u_plus
-}
+#include "util/all_near.hpp"
