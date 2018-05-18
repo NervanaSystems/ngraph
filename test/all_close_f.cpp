@@ -16,6 +16,7 @@
 
 #include <bitset>
 #include <cmath>
+#include <limits>
 #include <sstream>
 
 #include "gtest/gtest.h"
@@ -49,6 +50,14 @@ float bit_string_to_float(const string& s)
     FloatUnion fu;
     fu.i = static_cast<uint32_t>(bs.to_ulong());
     return fu.f;
+}
+
+TEST(all_close_f, bit_string_conversion)
+{
+    EXPECT_EQ(float_to_bit_string(8), "01000001000000000000000000000000");
+    EXPECT_EQ(bit_string_to_float("01000001000000000000000000000000"), 8);
+    EXPECT_EQ(float_to_bit_string(-8), "11000001000000000000000000000000");
+    EXPECT_EQ(bit_string_to_float("11000001000000000000000000000000"), -8);
 }
 
 TEST(all_close_f, example_compare)
