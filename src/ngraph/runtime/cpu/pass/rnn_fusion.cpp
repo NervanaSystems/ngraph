@@ -88,34 +88,29 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
-    NGRAPH_DEBUG << "Sigmoid: " << m;
     this->add_matcher(m);
 }
 
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 {
-    // param1_1 -> ht_1 (src_iter)
-    auto param1_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    // param1_2 -> h2h weights (weights_iter)
-    auto param1_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    auto param1_2_reshape =
-        std::make_shared<op::Reshape>(param1_2, AxisVector{1, 0}, Shape{100, 400});
-    auto dot_1 = std::make_shared<op::Dot>(param1_1, param1_2_reshape);
+    auto input_xt = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto weights_i2h_reshape =
+        std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, Shape{100, 400});
+    auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h_reshape);
 
-    auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto broadcast_bias1 = std::make_shared<op::Broadcast>(bias1, Shape{10, 400}, AxisSet{0});
-    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias1);
+    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{10, 400}, AxisSet{0});
+    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
 
-    // param2_1 -> xt (src_layer)
-    auto param2_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
-    // param2_2 -> i2h weights (weights_layer)
-    auto param2_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
+    auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
+    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
     auto param2_2_reshape =
-        std::make_shared<op::Reshape>(param2_2, AxisVector{1, 0}, Shape{50, 400});
-    auto dot_2 = std::make_shared<op::Dot>(param2_1, param2_2_reshape);
-    auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto broadcast_bias2 = std::make_shared<op::Broadcast>(bias2, Shape{10, 400}, AxisSet{0});
-    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias2);
+        std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, Shape{50, 400});
+    auto dot_2 = std::make_shared<op::Dot>(hidden_ht, param2_2_reshape);
+    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{10, 400}, AxisSet{0});
+    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
 
     auto X = std::make_shared<op::Add>(add_2, add_1);
     // construct forget gate
@@ -146,87 +141,128 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     //Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback =
-        [ct_label, param1_1, param1_2, param2_1, param2_2, bias1, bias2, ct_1](
-            pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                         << m.get_match_root()->get_name();
+    pattern::graph_rewrite_callback callback = [ct_label,
+                                                input_xt,
+                                                weights_i2h,
+                                                hidden_ht,
+                                                weights_h2h,
+                                                bias_i2h,
+                                                bias_h2h,
+                                                ct_1](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
+                     << m.get_match_root()->get_name();
 
-            auto pattern_map = m.get_pattern_map();
-            NGRAPH_DEBUG << "In Lstm fprop call back";
+        auto pattern_map = m.get_pattern_map();
+        NGRAPH_DEBUG << "In Lstm fprop call back";
 
-            if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        auto input_xt_rank = input_xt->get_shape().size();
+        auto hidden_ht_rank = hidden_ht->get_shape().size();
+        auto weights_i2h_rank = weights_i2h->get_shape().size();
+        auto weights_h2h_rank = weights_h2h->get_shape().size();
+        if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
+            weights_h2h_rank != 2)
+        {
+            return false;
+        }
+
+        if (bias_i2h->get_shape().size() != 1 || bias_h2h->get_shape().size() != 1)
+        {
+            throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
+        }
+
+        // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
+        // reliablily in the RNN fusion.
+        std::shared_ptr<op::Lstm> lstm = nullptr;
+        bool intermediate_lstm = false;
+
+        if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
+        {
+            intermediate_lstm = true;
+        }
+
+        // this checks if its a first LSTM cell and uses constant initlization of hiddent states to
+        // differntiate between hiddent state ht and input symbols xt.
+        if (!intermediate_lstm &&
+            (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
+             std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
+        {
+            lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[hidden_ht],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[ct_1]);
+        }
+        else if (!intermediate_lstm &&
+                 (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
+                  std::dynamic_pointer_cast<op::Constant>(pattern_map[input_xt]->get_argument(0))))
+        {
+            lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[input_xt],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[ct_1]);
+        }
+        else if (pattern_map[ct_1]->get_shape() == pattern_map[hidden_ht]->get_shape())
+        {
+            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
+                         << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
+            lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[hidden_ht],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[ct_1]);
+        }
+        else
+        {
+            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
+                         << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
+            lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[input_xt],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[ct_1]);
+        }
+
+        auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
+        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
+
+        // Now identify the nodes which consumes the output of LSTM nodes
+        // and replace them accordingly
+        std::vector<std::shared_ptr<Node>> new_args;
+
+        // find the user's for {ht|ct} and replace them with lstm_goe_1
+        for (auto node : pattern_map[ct_label]->get_users())
+        {
+            NGRAPH_DEBUG << "node_name: " << node->get_name();
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                             << " type is not float!";
-                return false;
-            }
-
-            // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
-            // reliablily in the RNN fusion.
-            std::shared_ptr<op::Lstm> lstm = nullptr;
-            if (m.get_match_root()->get_shape() == pattern_map[param2_1]->get_shape())
-            {
-                NGRAPH_DEBUG << "matched_node_shape: " << join(m.get_match_root()->get_shape())
-                             << " hidden state shape: " << join(pattern_map[param2_1]->get_shape());
-                lstm = std::make_shared<op::Lstm>(pattern_map[param1_1],
-                                                  pattern_map[param1_2],
-                                                  pattern_map[param2_1],
-                                                  pattern_map[param2_2],
-                                                  pattern_map[bias1],
-                                                  pattern_map[bias2],
-                                                  pattern_map[ct_1]);
-            }
-            else
-            {
-                NGRAPH_DEBUG << "matched_node_shape: " << join(m.get_match_root()->get_shape())
-                             << " hidden state shape: " << join(pattern_map[param1_1]->get_shape());
-                lstm = std::make_shared<op::Lstm>(pattern_map[param2_1],
-                                                  pattern_map[param2_2],
-                                                  pattern_map[param1_1],
-                                                  pattern_map[param1_2],
-                                                  pattern_map[bias2],
-                                                  pattern_map[bias1],
-                                                  pattern_map[ct_1]);
-            }
-
-            auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
-            auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
-
-            // Now identify the nodes which consumes the output of LSTM nodes
-            // and replace them accordingly
-            std::vector<std::shared_ptr<Node>> new_args;
-
-            // find the user's for {ht|ct} and replace them with lstm_goe_1
-            for (auto node : pattern_map[ct_label]->get_users())
-            {
-                NGRAPH_DEBUG << "node_name: " << node->get_name();
-                for (size_t i = 0; i < node->get_input_size(); i++)
+                if (node->get_argument(i) == pattern_map[ct_label])
                 {
-                    if (node->get_argument(i) == pattern_map[ct_label])
-                    {
-                        new_args.push_back(ct_output);
-                    }
-                    else
-                    {
-                        new_args.push_back(node->get_argument(i));
-                    }
-                    NGRAPH_DEBUG << "Multiply_input's shape: " << join(new_args[i]->get_shape())
-                                 << " " << new_args[i]->get_name();
+                    node->get_inputs().at(i).replace_output(ct_output->get_outputs().at(0));
                 }
-                auto new_ct_node = node->copy_with_new_args(new_args);
-                NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
-                             << new_ct_node->get_name();
-                ngraph::replace_node(node, new_ct_node);
-                new_args.clear();
             }
+        }
 
-            // find the user's for {ht} and replace them with lstm_goe_0
-            ngraph::replace_node(m.get_match_root(), ht_output);
-            return true;
-        };
+        // find the user's for {ht} and replace them with lstm_goe_0
+        ngraph::replace_node(m.get_match_root(), ht_output);
+        return true;
+    };
     auto m = std::make_shared<pattern::Matcher>(ht, callback);
-    NGRAPH_DEBUG << "lstm: " << m;
     this->add_matcher(m);
 }
 
@@ -304,38 +340,39 @@ static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
 
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
-    auto rpattern_ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    auto bias1 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto bias2 = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm =
-        std::make_shared<op::Lstm>(xt, weights_i2h, rpattern_ht_1, weights_h2h, bias1, bias2, ct_1);
+    auto lstm = std::make_shared<op::Lstm>(
+        xt, weights_i2h, ht_1, weights_h2h, bias_i2h, bias_h2h, rpattern_ct_1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0);
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
     pattern::recurrent_graph_rewrite_callback callback = [lstm_node_label,
                                                           xt,
                                                           weights_h2h,
-                                                          rpattern_ht_1,
+                                                          ht_1,
                                                           weights_i2h,
-                                                          bias1,
-                                                          bias2,
-                                                          ct_1](pattern::RecurrentMatcher& m) {
+                                                          bias_i2h,
+                                                          bias_h2h,
+                                                          rpattern_ct_1](
+        pattern::RecurrentMatcher& m) {
 
         NGRAPH_DEBUG << " In recurrent RNN fusion callback";
 
-        auto ht_1_label = m.get_bound_nodes_for_pattern(rpattern_ht_1);
+        auto ht_1_label = m.get_bound_nodes_for_pattern(ht_1);
 
         // determine the ht and xt
         std::shared_ptr<ngraph::Node> src_layer = nullptr;
         std::shared_ptr<ngraph::Node> src_iter = nullptr;
 
         auto xt_node_array = m.get_bound_nodes_for_pattern(xt);
-        auto hidden_ht_array = m.get_bound_nodes_for_pattern(rpattern_ht_1);
+        auto hidden_ht_array = m.get_bound_nodes_for_pattern(ht_1);
 
         // since we dont have metadata to differentiate between xt and ht_1
         // we will be using the broadcasted constant initilization of the first LSTM cell
@@ -344,10 +381,10 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::dynamic_pointer_cast<op::Constant>(
                 xt_node_array[xt_node_array.size() - 1]->get_argument(0)))
         {
-            std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{rpattern_ht_1};
+            std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{ht_1};
             src_layer = compute_rnn_args(src_layer_labels, m, true);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{xt, ct_1};
+            std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{xt, rpattern_ct_1};
             src_iter = compute_rnn_args(src_iter_labels, m);
         }
         else if (std::dynamic_pointer_cast<op::Broadcast>(
@@ -358,12 +395,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{xt};
             src_layer = compute_rnn_args(src_layer_labels, m, true);
 
-            std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{rpattern_ht_1, ct_1};
+            std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{ht_1, rpattern_ct_1};
             src_iter = compute_rnn_args(src_iter_labels, m);
         }
         else
         {
             // dont fuse, if the PM dint discover all the cell's belonging to RNN layer.
+            // we dont want to throw an assertion, if pattern matcher cannot discover all
+            // nodes belonging to RNN, instead we will return and can compute LSTM cell wise
             return false;
         }
 
@@ -372,9 +411,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<pattern::op::Label>> weights_iter_labels{weights_h2h};
         auto weights_iter = compute_rnn_args(weights_iter_labels, m);
-
-        auto bias_i2h_label = m.get_bound_nodes_for_pattern(bias2);
-        auto bias_h2h_label = m.get_bound_nodes_for_pattern(bias1);
+        auto bias_i2h_label = m.get_bound_nodes_for_pattern(bias_i2h);
+        auto bias_h2h_label = m.get_bound_nodes_for_pattern(bias_h2h);
         auto bias = std::make_shared<op::Add>(bias_i2h_label[0], bias_h2h_label[0]);
 
         auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
@@ -526,41 +564,26 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         //now go through the lstm consumers and replace them with the slice
-        std::vector<std::shared_ptr<Node>> new_args;
         for (auto& node : lstm_goe0_user)
         {
-            for (auto& node_args : node->get_arguments())
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (map_goe_to_lstm_slices.find(node_args) != map_goe_to_lstm_slices.end())
+                if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
+                    map_goe_to_lstm_slices.end())
                 {
-                    NGRAPH_DEBUG << " args_shape " << join(node_args->get_shape())
-                                 << "   name: " << node_args->get_name();
-                    new_args.push_back(map_goe_to_lstm_slices[node_args]);
-                }
-                else
-                {
-                    new_args.push_back(node_args);
+                    node->get_inputs().at(i).replace_output(
+                        map_goe_to_lstm_slices[node->get_argument(i)]->get_outputs().at(0));
                 }
             }
-            NGRAPH_DEBUG << "node bring replaced " << node->get_name();
-            auto new_node = node->copy_with_new_args(new_args);
-            if (!std::dynamic_pointer_cast<op::Result>(node))
-            {
-                ngraph::replace_node(node, new_node);
-                NGRAPH_DEBUG << "node: " << node->get_name() << " replaced with  "
-                             << new_node->get_name();
-            }
-            new_args.clear();
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
-        ngraph::replace_node(m.get_match_root(), ht_slice_per_timestep[0]);
         return true;
 
     };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        lstm_node_label, ct_1, empty_correlated_matches, callback);
+        lstm_node_label, rpattern_ct_1, empty_correlated_matches, callback);
     this->add_matcher(m);
 }

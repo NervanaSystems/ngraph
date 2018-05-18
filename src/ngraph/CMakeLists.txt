@@ -224,6 +224,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/rnn_fusion.cpp
+        runtime/cpu/pass/concat_lstm_inputs.cpp
         runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp

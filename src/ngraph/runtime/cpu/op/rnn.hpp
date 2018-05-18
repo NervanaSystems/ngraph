@@ -34,7 +34,7 @@ namespace ngraph
         // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias + hbh_bias)
         // number_of_timesteps - number of unrolled cells up to timestep t.
         // num_gates_per_cell - number of gates per RNN cell, LSTM = 4, GRU = 3, vanilla RNN = 1
-        // src_seq_length - this will be same as number_of_timesteps
+        // src_sequence_length - this will be same as number_of_timesteps
         // src_layer_feature_size - feature size w.r.to input tensor
         // src_iter_feature_size - feature size w.r.to hidden state
         // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1

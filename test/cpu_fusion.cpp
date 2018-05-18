@@ -44,9 +44,11 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/pass/concat_lstm_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
@@ -1302,6 +1304,21 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
 
+TEST(cpu_fusion, fuse_lstm_cells)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFuseInput>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    auto lstm_ops = get_ops_of_type<op::Lstm>(func);
+    EXPECT_EQ(lstm_ops.size(), 6);
+}
+
 TEST(cpu_fusion, fuse_2_layer_rnn)
 {
     pass::Manager pass_manager;
@@ -1364,7 +1381,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(param->get_shape().size());
+        vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1386,7 +1403,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(param->get_shape().size());
+        vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1408,7 +1425,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(param->get_shape().size());
+        vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
