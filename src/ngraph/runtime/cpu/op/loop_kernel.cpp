@@ -54,16 +54,3 @@ ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
         add_output(o->get_element_type(), o->get_shape());
     }
 }
-
-/*
-shared_ptr<Node> size_t op::LoopKernel::get_output_index(std::shared_ptr<Node> output)
-{
-    auto it = std::find(m_outputs.begin(), m_outputs.end(), output);
-    if (it == std::end())
-    {
-        throw ngraph_error("node isn't in outputs");
-    }
-    
-    return std::distance(m_outputs.begin(), it);
-}
-*/

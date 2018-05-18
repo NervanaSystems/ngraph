@@ -38,7 +38,6 @@ namespace ngraph
 
                     const NodeVector& get_node_list() const { return m_node_list; }
                     const NodeVector& get_kernel_outputs() const { return m_outputs; }
-                    //size_t get_output_index(std::shared_ptr<Node> output);
                 private:
                     NodeVector m_node_list;
                     NodeVector m_outputs;
