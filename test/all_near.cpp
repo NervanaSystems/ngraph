@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <bitset>
+#include <cmath>
 #include <sstream>
 
 #include "gtest/gtest.h"
@@ -44,8 +45,16 @@ uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
 
 TEST(all_near, example_compare)
 {
-    float lhs = 1.5;
+    // float lhs = 1.5;
     float rhs = 1.75;
-    NGRAPH_INFO << to_bit_string(lhs);
+    NGRAPH_INFO << to_bit_string(8);
     NGRAPH_INFO << to_bit_string(rhs);
+
+    float param = 8.;
+    float mantissa;
+    int exponent;
+
+    mantissa = frexp(param, &exponent);
+    NGRAPH_INFO << "mantissa " << mantissa;
+    NGRAPH_INFO << "exponent " << exponent;
 }

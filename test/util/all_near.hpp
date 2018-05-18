@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -40,12 +39,6 @@ namespace ngraph
         /// bfloat (s1, e8, m7) has 7 + 1 = 8 bits of mantissa or bit_precision
         /// float (s1, e8, m23) has 23 + 1 = 24 bits of mantissa or bit_precision
         /// Picking 8 as the default mantissa for float_near works for bfloat and float
-        bool float_near(float a, float b, uint32_t bit_precision = 8, uint32_t bit_tolerance = 2)
-        {
-            // In neon
-            // float 32: exp - 24 + 1 + 2 -> exp - 21
-            // bfloat: exp - 8 + 1 + 2 -> exp
-            return true;
-        }
+        bool float_near(float a, float b, uint32_t bit_precision = 8, uint32_t bit_tolerance = 2);
     }
 }
