@@ -21,19 +21,18 @@
 using namespace std;
 using namespace ngraph;
 
-bool test::close_f(float a, float b, int mantissa, int bit_tolerance)
+bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 {
+    // Returns |a - b| < 2 ^ (a.mantissa - mantissa_bits + 1 + tolerance_bits)
     int a_e;
     frexp(a, &a_e);
-    float bound = pow(2.f, static_cast<float>(a_e - mantissa + 1 + bit_tolerance));
-    float err = abs(a - b);
-    return err < bound;
+    return abs(a - b) < pow(2.f, static_cast<float>(a_e - mantissa_bits + 1 + tolerance_bits));
 }
 
 bool test::all_close_f(const vector<float>& a,
                        const vector<float>& b,
-                       int mantissa,
-                       int bit_tolerance)
+                       int mantissa_bits,
+                       int tolerance_bits)
 {
     bool rc = true;
     if (a.size() != b.size())
@@ -42,7 +41,7 @@ bool test::all_close_f(const vector<float>& a,
     }
     for (size_t i = 0; i < a.size(); ++i)
     {
-        bool is_close_f = close_f(a[i], b[i], mantissa, bit_tolerance);
+        bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
         if (!is_close_f)
         {
             NGRAPH_INFO << a[i] << " !≈ " << b[i];
