@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "util/float_all_close.hpp"
+#include "util/all_close_f.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,7 +44,7 @@ uint32_t uint32_with_accuracy_bit(uint32_t accuracy_bit)
     return 1;
 }
 
-TEST(float_all_close, example_compare)
+TEST(all_close_f, example_compare)
 {
     // float lhs = 1.5;
     float rhs = 1.75;
@@ -60,7 +60,7 @@ TEST(float_all_close, example_compare)
     NGRAPH_INFO << "exponent " << exponent;
 }
 
-TEST(float_all_close, float_close_basic)
+TEST(all_close_f, float_close_basic)
 {
     NGRAPH_INFO << test::float_close(1.5f, 1.5f);
     NGRAPH_INFO << test::float_close(1.5f, 1.52f);

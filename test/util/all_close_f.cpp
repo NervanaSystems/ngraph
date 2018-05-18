@@ -16,7 +16,7 @@
 
 #include <cmath>
 
-#include "util/float_all_close.hpp"
+#include "util/all_close_f.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -30,10 +30,10 @@ bool test::float_close(float a, float b, int mantissa, int bit_tolerance)
     return err < bound;
 }
 
-bool test::float_all_close(const vector<float>& a,
-                           const vector<float>& b,
-                           int mantissa,
-                           int bit_tolerance)
+bool test::all_close_f(const vector<float>& a,
+                       const vector<float>& b,
+                       int mantissa,
+                       int bit_tolerance)
 {
     bool rc = true;
     if (a.size() != b.size())

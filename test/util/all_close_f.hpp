@@ -47,9 +47,9 @@ namespace ngraph
         /// @param mantissa The mantissa for the underlying number before casting to float
         /// @param bit_tolerance Bit tolerance error
         /// @returns true iff the two floating point vectors are close
-        bool float_all_close(const std::vector<float>& a,
-                             const std::vector<float>& b,
-                             int mantissa = 8,
-                             int bit_tolerance = 2);
+        bool all_close_f(const std::vector<float>& a,
+                         const std::vector<float>& b,
+                         int mantissa = 8,
+                         int bit_tolerance = 2);
     }
 }
