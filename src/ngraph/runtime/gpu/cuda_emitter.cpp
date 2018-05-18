@@ -69,11 +69,11 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 
 size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContext* ctx,
                                             const std::array<std::string, 2>& dtypes,
-                                            const Shape& input_shape,
-                                            const Shape& output_shape,
-                                            const Shape& padding_below,
-                                            const Shape& padding_above,
-                                            const Shape& padding_interior,
+                                            GPUShape input_shape,
+                                            GPUShape output_shape,
+                                            GPUShape padding_below,
+                                            GPUShape padding_above,
+                                            GPUShape padding_interior,
                                             const std::string& pad_value)
 {
     // Need to check: are there models in which some tensors will have different types? if so, this
@@ -104,9 +104,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
     if (compiled_kernel == nullptr)
     {
         // normalize pad dimensions to shape dimensions
-        Shape pad_below(input_shape.size(), 0);
-        Shape pad_above(input_shape.size(), 0);
-        Shape pad_interior(input_shape.size(), 0);
+        GPUShape pad_below(input_shape.size(), 0);
+        GPUShape pad_above(input_shape.size(), 0);
+        GPUShape pad_interior(input_shape.size(), 0);
 
         // if padding_interior is not zero length, it
         // is from op::Pad for which padding_below will
@@ -193,7 +193,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -211,7 +211,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -232,8 +232,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
 size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx,
                                                     const std::array<std::string, 2>& dtypes,
-                                                    const Shape& input_shape,
-                                                    const Shape& output_shape,
+                                                    GPUShape input_shape,
+                                                    GPUShape output_shape,
                                                     size_t window_width,
                                                     size_t window_stride)
 {
@@ -297,7 +297,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) {
         void* args_list[] = {&inputs[0], &outputs[0]};
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<unsigned int>(nthreads),
+                                      nthreads,
                                       1,
                                       1, // grid dim
                                       1,
@@ -316,66 +316,66 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
 }
 
 pooling_op_shape avgpool_shape(
-    const Shape& in, const Shape& out, const Shape& window, const Shape& strides, const Shape& pad)
+    GPUShape in, GPUShape out, GPUShape window, GPUShape strides, GPUShape pad)
 {
     pooling_op_shape shape;
-    shape.N = static_cast<int>(in[0]);
-    shape.C = static_cast<int>(in[1]);
+    shape.N = in[0];
+    shape.C = in[1];
     shape.K = shape.C; // pooling feature maps is
     shape.J = shape.C; // not currently supported
     if (in.size() == 3)
     {
         shape.D = 1;
         shape.H = 1;
-        shape.W = static_cast<int>(in[2]);
+        shape.W = in[2];
         shape.M = 1;
         shape.P = 1;
-        shape.Q = static_cast<int>(out[2]);
+        shape.Q = out[2];
         shape.T = 1;
         shape.R = 1;
-        shape.S = static_cast<int>(window[0]);
+        shape.S = window[0];
         shape.STRIDE_D = 0;
         shape.STRIDE_H = 0;
-        shape.STRIDE_W = static_cast<int>(strides[0]);
+        shape.STRIDE_W = strides[0];
         shape.PAD_D = 0;
         shape.PAD_H = 0;
-        shape.PAD_W = static_cast<int>(pad[0]);
+        shape.PAD_W = pad[0];
     }
     else if (in.size() == 4)
     {
         shape.D = 1;
-        shape.H = static_cast<int>(in[2]);
-        shape.W = static_cast<int>(in[3]);
+        shape.H = in[2];
+        shape.W = in[3];
         shape.M = 1;
-        shape.P = static_cast<int>(out[2]);
-        shape.Q = static_cast<int>(out[3]);
+        shape.P = out[2];
+        shape.Q = out[3];
         shape.T = 1;
-        shape.R = static_cast<int>(window[0]);
-        shape.S = static_cast<int>(window[1]);
+        shape.R = window[0];
+        shape.S = window[1];
         shape.STRIDE_D = 0;
-        shape.STRIDE_H = static_cast<int>(strides[0]);
-        shape.STRIDE_W = static_cast<int>(strides[1]);
+        shape.STRIDE_H = strides[0];
+        shape.STRIDE_W = strides[1];
         shape.PAD_D = 0;
-        shape.PAD_H = static_cast<int>(pad[0]);
-        shape.PAD_W = static_cast<int>(pad[1]);
+        shape.PAD_H = pad[0];
+        shape.PAD_W = pad[1];
     }
     else if (in.size() == 5)
     {
-        shape.D = static_cast<int>(in[2]);
-        shape.H = static_cast<int>(in[3]);
-        shape.W = static_cast<int>(in[4]);
-        shape.M = static_cast<int>(out[2]);
-        shape.P = static_cast<int>(out[3]);
-        shape.Q = static_cast<int>(out[4]);
-        shape.T = static_cast<int>(window[0]);
-        shape.R = static_cast<int>(window[1]);
-        shape.S = static_cast<int>(window[2]);
-        shape.STRIDE_D = static_cast<int>(strides[0]);
-        shape.STRIDE_H = static_cast<int>(strides[1]);
-        shape.STRIDE_W = static_cast<int>(strides[2]);
-        shape.PAD_D = static_cast<int>(pad[0]);
-        shape.PAD_H = static_cast<int>(pad[1]);
-        shape.PAD_W = static_cast<int>(pad[2]);
+        shape.D = in[2];
+        shape.H = in[3];
+        shape.W = in[4];
+        shape.M = out[2];
+        shape.P = out[3];
+        shape.Q = out[4];
+        shape.T = window[0];
+        shape.R = window[1];
+        shape.S = window[2];
+        shape.STRIDE_D = strides[0];
+        shape.STRIDE_H = strides[1];
+        shape.STRIDE_W = strides[2];
+        shape.PAD_D = pad[0];
+        shape.PAD_H = pad[1];
+        shape.PAD_W = pad[2];
     }
     else
     {
@@ -386,11 +386,11 @@ pooling_op_shape avgpool_shape(
 
 size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                                                  const std::array<std::string, 2>& dtypes,
-                                                 const Shape& input_shape,
-                                                 const Shape& output_shape,
-                                                 const Shape& window_shape,
-                                                 const Shape& window_stride,
-                                                 const Shape& padding_below,
+                                                 GPUShape input_shape,
+                                                 GPUShape output_shape,
+                                                 GPUShape window_shape,
+                                                 GPUShape window_stride,
+                                                 GPUShape padding_below,
                                                  bool include_pad)
 {
     // assumes NCDHW format
@@ -611,7 +611,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
 
 size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeContext* ctx,
                                                            const std::vector<std::string>& dtypes,
-                                                           const Shape& tensor_shape,
+                                                           GPUShape tensor_shape,
                                                            const char* op,
                                                            const char* kernel)
 {
@@ -650,7 +650,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    size_t nthreads = shape_size(tensor_shape);
+    auto nthreads = shape_size(tensor_shape);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
@@ -663,7 +663,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
             args_list.push_back(&outputs[0]);
             args_list.push_back(&nthreads);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -683,11 +683,11 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
 size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* ctx,
                                                       const std::array<std::string, 3>& dtypes,
-                                                      const Shape& tensor_shape,
-                                                      const Shape& source_shape,
+                                                      GPUShape tensor_shape,
+                                                      GPUShape source_shape,
                                                       const Coordinate& lower_bounds,
                                                       const Coordinate& upper_bounds,
-                                                      const Strides& slice_strides)
+                                                      GPUShape slice_strides)
 {
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "repslices_" + join(dtypes,"_");
@@ -785,14 +785,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
-    std::vector<int> dstr;
     auto dim_strides = row_major_strides(tensor_shape);
-    for (int i = 0; i < dim_strides.size() - 1; i++)
-    {
-        dstr.push_back(static_cast<int>(dim_strides[i]));
-    }
-
-    auto dim_strides_d = allocator.reserve_argspace(dstr.data(), dstr.size()*sizeof(int));
+    auto dim_strides_d = allocator.reserve_argspace(dim_strides.data(), (dim_strides.size() - 1)*sizeof(int));
 
     std::vector<int> dmagics;
     std::vector<int> dshifts;
@@ -800,7 +794,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     {
         int magic;
         int shift;
-        std::tie(magic, shift) = idiv_magic_u64(static_cast<int>(dim_strides[i]));
+        std::tie(magic, shift) = idiv_magic_u64(dim_strides[i]);
         dmagics.push_back(magic);
         dshifts.push_back(shift);
     }
@@ -810,7 +804,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     std::vector<int> lbounds;
     for (auto const& lbound : lower_bounds)
     {
-        lbounds.push_back(static_cast<int>(lbound));
+        lbounds.push_back(lbound);
     }
     auto lbounds_d = allocator.reserve_argspace(lbounds.data(), lbounds.size()*sizeof(int));
 
@@ -818,14 +812,14 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     std::vector<int> ubounds;
     for (auto const& ubound : upper_bounds)
     {
-        ubounds.push_back(static_cast<int>(ubound));
+        ubounds.push_back(ubound);
     }
     auto ubounds_d = allocator.reserve_argspace(ubounds.data(), ubounds.size()*sizeof(int));
 
     std::vector<int> slstrides;
     for (auto const& slstr : slice_strides)
     {
-        slstrides.push_back(static_cast<int>(slstr));
+        slstrides.push_back(slstr);
     }
     auto slstrides_d = allocator.reserve_argspace(slstrides.data(), slstrides.size()*sizeof(int));
 
@@ -835,7 +829,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     {
         int magic;
         int shift;
-        std::tie(magic, shift) = idiv_magic_u64(static_cast<int>(slice_strides[i]));
+        std::tie(magic, shift) = idiv_magic_u64(slice_strides[i]);
         smagics.push_back(magic);
         sshifts.push_back(shift);
     }
@@ -845,7 +839,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     std::vector<int> dim_source;
     for (auto const& dim : source_shape)
     {
-        dim_source.push_back(static_cast<int>(dim));
+        dim_source.push_back(dim);
     }
     auto dim_source_d = allocator.reserve_argspace(dim_source.data(), dim_source.size()*sizeof(int));
 
@@ -853,7 +847,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     std::vector<int> src_strides;
     for (auto const& str : source_strides)
     {
-        src_strides.push_back(static_cast<int>(str));
+        src_strides.push_back(str);
     }
     auto src_strides_d = allocator.reserve_argspace(src_strides.data(), src_strides.size()*sizeof(int));
 
@@ -897,7 +891,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       // ceil_div(nthreads)
-                                      1 + ((static_cast<int>(nthreads) - 1) / nthreads_per_block),
+                                      1 + ((nthreads - 1) / nthreads_per_block),
                                       1,
                                       1,
                                       nthreads_per_block,
@@ -917,7 +911,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
                                                       const std::string& tensor_name,
-                                                      const Shape& shape)
+                                                      GPUShape shape)
 {
     auto strides = row_major_strides(shape);
     writer << "__syncthreads();\n";
