@@ -690,7 +690,9 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                                       const Strides& slice_strides)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslice";
+    std::string kernel_name = "repslices_" + join(dtypes,"_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
     std::stringstream ss;
     ss << kernel_name << "_s" << join(tensor_shape, "_") << "_ssrc" << join(source_shape, "_")
        << "_sll" << join(lower_bounds, "_") << "_slu" << join(upper_bounds, "_") << "_slst"
@@ -781,17 +783,17 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
-    std::vector<int> params;
-    params.reserve(tensor_shape.size() * 3 - 1 + lower_bounds.size() + upper_bounds.size() +
-                   slice_strides.size() * 3 + source_shape.size() * 2);
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
-    int dstr_offset = params.size();
+    std::vector<int> dstr;
     auto dim_strides = row_major_strides(tensor_shape);
     for (int i = 0; i < dim_strides.size() - 1; i++)
     {
-        params.push_back(static_cast<int>(dim_strides[i]));
+        dstr.push_back(static_cast<int>(dim_strides[i]));
     }
-    int dmagic_offset = params.size();
+
+    auto dim_strides_d = allocator.reserve_argspace(dstr.data(), dstr.size()*sizeof(int));
+
     std::vector<int> dmagics;
     std::vector<int> dshifts;
     for (int i = 0; i < tensor_shape.size(); i++)
@@ -802,25 +804,31 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         dmagics.push_back(magic);
         dshifts.push_back(shift);
     }
-    std::copy(dmagics.begin(), dmagics.end(), std::back_inserter(params));
-    int dshift_offset = params.size();
-    std::copy(dshifts.begin(), dshifts.end(), std::back_inserter(params));
-    int lbound_offset = params.size();
+    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size()*sizeof(int));
+    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size()*sizeof(int));
+
+    std::vector<int> lbounds;
     for (auto const& lbound : lower_bounds)
     {
-        params.push_back(static_cast<int>(lbound));
+        lbounds.push_back(static_cast<int>(lbound));
     }
-    int ubound_offset = params.size();
+    auto lbounds_d = allocator.reserve_argspace(lbounds.data(), lbounds.size()*sizeof(int));
+
+
+    std::vector<int> ubounds;
     for (auto const& ubound : upper_bounds)
     {
-        params.push_back(static_cast<int>(ubound));
+        ubounds.push_back(static_cast<int>(ubound));
     }
-    int slice_str_offset = params.size();
+    auto ubounds_d = allocator.reserve_argspace(ubounds.data(), ubounds.size()*sizeof(int));
+
+    std::vector<int> slstrides;
     for (auto const& slstr : slice_strides)
     {
-        params.push_back(static_cast<int>(slstr));
+        slstrides.push_back(static_cast<int>(slstr));
     }
-    int slice_magic_offset = params.size();
+    auto slstrides_d = allocator.reserve_argspace(slstrides.data(), slstrides.size()*sizeof(int));
+
     std::vector<int> smagics;
     std::vector<int> sshifts;
     for (int i = 0; i < slice_strides.size(); i++)
@@ -831,23 +839,26 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         smagics.push_back(magic);
         sshifts.push_back(shift);
     }
-    std::copy(smagics.begin(), smagics.end(), std::back_inserter(params));
-    int slice_shift_offset = params.size();
-    std::copy(sshifts.begin(), sshifts.end(), std::back_inserter(params));
-    int source_shape_offset = params.size();
+    auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size()*sizeof(int));
+    auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size()*sizeof(int));
+
+    std::vector<int> dim_source;
     for (auto const& dim : source_shape)
     {
-        params.push_back(static_cast<int>(dim));
+        dim_source.push_back(static_cast<int>(dim));
     }
-    int source_strides_offset = params.size();
+    auto dim_source_d = allocator.reserve_argspace(dim_source.data(), dim_source.size()*sizeof(int));
+
     auto source_strides = row_major_strides(source_shape);
+    std::vector<int> src_strides;
     for (auto const& str : source_strides)
     {
-        params.push_back(static_cast<int>(str));
+        src_strides.push_back(static_cast<int>(str));
     }
+    auto src_strides_d = allocator.reserve_argspace(src_strides.data(), src_strides.size()*sizeof(int));
 
-    size_t nthreads = shape_size(tensor_shape);
     int rank = tensor_shape.size();
+    size_t nthreads = shape_size(tensor_shape);
 
     // TODO: blending factors are not currently implemented
     float alpha = 1.0f;
@@ -855,22 +866,16 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
     std::unique_ptr<gpu::primitive> replace_slice(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
-
-        // move all below declarations to emitter once temporary memory manager is added
-        int* params_d =
-            static_cast<int*>(runtime::gpu::create_gpu_buffer(params.size() * sizeof(int)));
-        runtime::gpu::cuda_memcpyHtD(params_d, params.data(), params.size() * sizeof(int));
-
-        int* param_dstr = params_d + dstr_offset;
-        int* param_dmagic = params_d + dmagic_offset;
-        int* param_dshift = params_d + dshift_offset;
-        int* param_lbound = params_d + lbound_offset;
-        int* param_ubound = params_d + ubound_offset;
-        int* param_slice_str = params_d + slice_str_offset;
-        int* param_slice_magic = params_d + slice_magic_offset;
-        int* param_slice_shift = params_d + slice_shift_offset;
-        int* param_dsource = params_d + source_shape_offset;
-        int* param_sourcestr = params_d + source_strides_offset;
+        void* param_dstr = dim_strides_d();
+        void* param_dmagic = dmagics_d();
+        void* param_dshift = dshifts_d();
+        void* param_lbound = lbounds_d();
+        void* param_ubound = ubounds_d();
+        void* param_slice_str = slstrides_d();
+        void* param_slice_magic = smagics_d();
+        void* param_slice_shift = sshifts_d();
+        void* param_dsource = dim_source_d();
+        void* param_sourcestr = src_strides_d();
 
         void* args_list[] = {&inputs[0],
                              &inputs[1],
@@ -903,7 +908,6 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                       args_list,
                                       0));
         CUDA_SAFE_CALL(cuCtxSynchronize());
-
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));

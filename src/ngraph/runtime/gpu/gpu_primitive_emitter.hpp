@@ -21,6 +21,8 @@
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
+
 
 namespace ngraph
 {
@@ -41,6 +43,8 @@ namespace ngraph
                 size_t insert(std::unique_ptr<gpu::primitive>&& f);
                 size_t lookup(std::string hash);
                 void cache(const std::string& hash, const size_t& index);
+                GPUAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
+                void allocate_primitive_memory() { m_memory_manager.allocate(); }
 
             private:
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
@@ -48,6 +52,8 @@ namespace ngraph
                 std::vector<gpu::primitive*> m_gpu_primitives;
                 std::unordered_map<std::string, size_t> m_primitive_map;
                 std::vector<std::unique_ptr<gpu::primitive>> m_managed_primitives;
+                GPUMemoryManager m_memory_manager;
+
             };
         }
     }
