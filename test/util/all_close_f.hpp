@@ -39,7 +39,7 @@ namespace ngraph
         /// bfloat (s1, e8, m7) has 7 + 1 = 8 bits of mantissa or bit_precision
         /// float (s1, e8, m23) has 23 + 1 = 24 bits of mantissa or bit_precision
         /// Picking 8 as the default mantissa for float_near works for bfloat and float
-        bool float_close(float a, float b, int mantissa = 8, int bit_tolerance = 2);
+        bool close_f(float a, float b, int mantissa = 8, int bit_tolerance = 2);
 
         /// @brief Check if the two floating point vectors are all close
         /// @param a First number to compare

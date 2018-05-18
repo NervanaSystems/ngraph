@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-bool test::float_close(float a, float b, int mantissa, int bit_tolerance)
+bool test::close_f(float a, float b, int mantissa, int bit_tolerance)
 {
     int a_e;
     frexp(a, &a_e);

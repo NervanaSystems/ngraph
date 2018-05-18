@@ -62,11 +62,11 @@ TEST(all_close_f, example_compare)
 
 TEST(all_close_f, float_close_basic)
 {
-    NGRAPH_INFO << test::float_close(1.5f, 1.5f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.52f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.53f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.54f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.55f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.56f);
-    NGRAPH_INFO << test::float_close(1.5f, 1.57f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.5f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.52f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.53f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.54f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.55f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.56f);
+    NGRAPH_INFO << test::close_f(1.5f, 1.57f);
 }
