@@ -62,9 +62,11 @@ runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_argspace(void
     std::memcpy(m_manager->m_buffered_mem.data() + offset, data, size);
     m_manager->m_buffer_offset += size;
 
+    // required to capture m_manager pointer
+    // directly rather than `this` pointer
+    auto manager = m_manager;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    auto manager = m_manager;
     return [=]() {
         auto gpu_mem = static_cast<uint8_t*>(manager->m_argspace);
         return static_cast<void*>(gpu_mem + offset);
@@ -74,10 +76,13 @@ runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_workspace(siz
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
+    // required to capture m_manager pointer
+    // directly rather than `this` pointer
+    auto manager = m_manager;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    return [&, offset]() {
-        auto gpu_mem = static_cast<uint8_t*>(m_manager->m_workspace);
+    return [=]() {
+        auto gpu_mem = static_cast<uint8_t*>(manager->m_workspace);
         return static_cast<void*>(gpu_mem + offset);
     };
 }
