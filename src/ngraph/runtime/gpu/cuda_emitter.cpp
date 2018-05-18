@@ -724,23 +724,15 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
     }
     size_t nthreads = shape_size(output_shape);
     auto input_strides = row_major_strides(input_shape);
-    void* input_strides_d =
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, input_strides.data());
-    void* output_shape_d =
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, output_shape.data());
-    void* reduce_window_shape_d =
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_shape.data());
-    void* reduce_window_stride_d =
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_strides.data());
 
-    std::shared_ptr<CUdeviceptr> input_strides_s_ptr =
-        std::make_shared<CUdeviceptr>(CUdeviceptr(input_strides_d));
-    std::shared_ptr<CUdeviceptr> output_shape_s_ptr =
-        std::make_shared<CUdeviceptr>(CUdeviceptr(output_shape_d));
-    std::shared_ptr<CUdeviceptr> reduce_window_shape_s_ptr =
-        std::make_shared<CUdeviceptr>(CUdeviceptr(reduce_window_shape_d));
-    std::shared_ptr<CUdeviceptr> reduce_window_stride_s_ptr =
-        std::make_shared<CUdeviceptr>(CUdeviceptr(reduce_window_stride_d));
+    std::shared_ptr<void*> input_strides_ptr = std::make_shared<void*>(
+        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, input_strides.data()));
+    std::shared_ptr<void*> output_shape_ptr = std::make_shared<void*>(
+        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, output_shape.data()));
+    std::shared_ptr<void*> reduce_window_shape_ptr = std::make_shared<void*>(
+        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_shape.data()));
+    std::shared_ptr<void*> reduce_window_stride_ptr = std::make_shared<void*>(
+        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_strides.data()));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> f(
@@ -748,10 +740,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
             std::vector<void*> args_list;
             args_list.push_back(&inputs[0]);
             args_list.push_back(&outputs[0]);
-            args_list.push_back(input_strides_s_ptr.get());
-            args_list.push_back(output_shape_s_ptr.get());
-            args_list.push_back(reduce_window_shape_s_ptr.get());
-            args_list.push_back(reduce_window_stride_s_ptr.get());
+            args_list.push_back(input_strides_ptr.get());
+            args_list.push_back(output_shape_ptr.get());
+            args_list.push_back(reduce_window_shape_ptr.get());
+            args_list.push_back(reduce_window_stride_ptr.get());
             args_list.push_back(&nthreads);
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
