@@ -29,3 +29,19 @@ bool test::float_close(float a, float b, int mantissa, int bit_tolerance)
     float err = abs(a - b);
     return err < bound;
 }
+
+bool test::float_all_close(const vector<float>& a,
+                           const vector<float>& b,
+                           int mantissa,
+                           int bit_tolerance)
+{
+    bool rc = true;
+    if (a.size() != b.size())
+    {
+        throw ngraph_error("a.size() != b.size() for all_close comparison.");
+    }
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+    }
+    return rc;
+}

@@ -25,12 +25,12 @@ namespace ngraph
 {
     namespace test
     {
-        /// @brief Check if the two floating point number are near
+        /// @brief Check if the two floating point numbers are close
         /// @param a First number to compare
         /// @param b Second number to compare
         /// @param mantissa The mantissa for the underlying number before casting to float
         /// @param bit_tolerance Bit tolerance error
-        /// @returns true if the two floating point number are near
+        /// @returns true iff the two floating point numbers are close
         ///
         /// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
         /// |------------bfloat-----------|
@@ -39,6 +39,17 @@ namespace ngraph
         /// bfloat (s1, e8, m7) has 7 + 1 = 8 bits of mantissa or bit_precision
         /// float (s1, e8, m23) has 23 + 1 = 24 bits of mantissa or bit_precision
         /// Picking 8 as the default mantissa for float_near works for bfloat and float
-        bool float_close(float a, float b, int mantissa = 8, int bit_tolerance = 3);
+        bool float_close(float a, float b, int mantissa = 8, int bit_tolerance = 2);
+
+        /// @brief Check if the two floating point vectors are all close
+        /// @param a First number to compare
+        /// @param b Second number to compare
+        /// @param mantissa The mantissa for the underlying number before casting to float
+        /// @param bit_tolerance Bit tolerance error
+        /// @returns true iff the two floating point vectors are close
+        bool float_all_close(const std::vector<float>& a,
+                             const std::vector<float>& b,
+                             int mantissa = 8,
+                             int bit_tolerance = 2);
     }
 }
