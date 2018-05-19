@@ -30,6 +30,7 @@ ExternalProject_Add(
     SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/clang/src"
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/clang/build"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/clang"
+    EXCLUDE_FROM_ALL TRUE
 )
 
 ExternalProject_Get_Property(ext_clang SOURCE_DIR)
@@ -49,6 +50,7 @@ ExternalProject_Add(
     SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/openmp/src"
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/openmp/build"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/openmp"
+    EXCLUDE_FROM_ALL TRUE
 )
 
 ExternalProject_Get_Property(ext_openmp SOURCE_DIR)
@@ -85,6 +87,7 @@ ExternalProject_Add(
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/build"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm"
     BUILD_BYPRODUCTS ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libLLVMCore.a
+    EXCLUDE_FROM_ALL TRUE
 )
 
 ExternalProject_Get_Property(ext_llvm INSTALL_DIR)

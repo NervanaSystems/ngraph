@@ -41,6 +41,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
@@ -59,6 +60,7 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
         BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/eigen/src/Eigen/Core"
+        EXCLUDE_FROM_ALL TRUE
         )
 endif()
 

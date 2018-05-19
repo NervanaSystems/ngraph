@@ -14,6 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-add_subdirectory(cpu)
-add_subdirectory(gpu)
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_subdirectory(interpreter)
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    add_subdirectory(cpu)
+endif()
+
+if (NGRAPH_GPU_ENABLE)
+    add_subdirectory(gpu)
+endif()

@@ -67,7 +67,7 @@ endif()
 
 set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-add_library(cpu_backend SHARED ${SRC})
+add_library(cpu_backend SHARED EXCLUDE_FROM_ALL ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)

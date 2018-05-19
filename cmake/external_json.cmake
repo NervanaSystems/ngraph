@@ -38,6 +38,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         # cmake does not allow calling cmake functions so we call a cmake script in the Module
         # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
@@ -52,6 +53,7 @@ else()
         # cmake does not allow calling cmake functions so we call a cmake script in the Module
         # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
+        EXCLUDE_FROM_ALL TRUE
     )
 endif()
 

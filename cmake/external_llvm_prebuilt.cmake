@@ -39,6 +39,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
@@ -50,6 +51,7 @@ else()
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix/src/ext_llvm/lib/libLLVMCore.a"
+        EXCLUDE_FROM_ALL TRUE
         )
 endif()
 

@@ -60,7 +60,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 
-add_library(codegen SHARED ${SRC})
+add_library(codegen SHARED EXCLUDE_FROM_ALL ${SRC})
 add_dependencies(codegen header_resource)
 target_include_directories(codegen PUBLIC ${CMAKE_BINARY_DIR})
 target_link_libraries(codegen PUBLIC libllvm libmkldnn libeigen pthread dl)

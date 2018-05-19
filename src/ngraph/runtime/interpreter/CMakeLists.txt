@@ -22,5 +22,5 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     link_libraries(${MPI_CXX_LIBRARIES})
 endif()
 
-add_library(int_backend SHARED int_backend.cpp)
+add_library(int_backend SHARED EXCLUDE_FROM_ALL int_backend.cpp)
 target_link_libraries(int_backend PUBLIC ngraph)

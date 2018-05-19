@@ -43,6 +43,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
@@ -63,6 +64,7 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
         BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest/libgtest.a"
+        EXCLUDE_FROM_ALL TRUE
         )
 endif()
 

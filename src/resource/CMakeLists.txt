@@ -39,7 +39,7 @@ if(NGRAPH_TBB_ENABLE)
     list(APPEND HEADER_SEARCH_DEFINES "NGRAPH_TBB_ENABLE")
 endif()
 
-add_executable(resource_generator ${SRC})
+add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
 add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
 
 set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
