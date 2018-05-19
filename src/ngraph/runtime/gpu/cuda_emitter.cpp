@@ -22,6 +22,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -742,22 +743,24 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
+    // TODO factor into range based for loop of arguments
+
     // (lazy) allocation for kernel arguments
-    auto input_strides_d =
+    size_t idx_input_strides =
         allocator.reserve_argspace(input_strides.data(), (input_strides.size() - 1) * sizeof(int));
-    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
-    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
-    auto lower_bounds_d =
+    size_t idx_dmagics = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
+    size_t idx_dshifts = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
+    size_t idx_lower_bounds =
         allocator.reserve_argspace(lower_bounds.data(), lower_bounds.size() * sizeof(int));
-    auto upper_bounds_d =
+    size_t idx_upper_bounds =
         allocator.reserve_argspace(upper_bounds.data(), upper_bounds.size() * sizeof(int));
-    auto slice_strides_d =
+    size_t idx_slice_strides =
         allocator.reserve_argspace(slice_strides.data(), slice_strides.size() * sizeof(int));
-    auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size() * sizeof(int));
-    auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size() * sizeof(int));
-    auto source_shape_d =
+    size_t idx_smagics = allocator.reserve_argspace(smagics.data(), smagics.size() * sizeof(int));
+    size_t idx_sshifts = allocator.reserve_argspace(sshifts.data(), sshifts.size() * sizeof(int));
+    size_t idx_source_shape =
         allocator.reserve_argspace(source_shape.data(), source_shape.size() * sizeof(int));
-    auto source_strides_d =
+    size_t idx_source_strides =
         allocator.reserve_argspace(source_strides.data(), source_strides.size() * sizeof(int));
 
     int rank = tensor_shape.size();
@@ -769,16 +772,16 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
     std::unique_ptr<gpu::primitive> replace_slice(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_dstr = input_strides_d();
-            void* param_dmagic = dmagics_d();
-            void* param_dshift = dshifts_d();
-            void* param_lbound = lower_bounds_d();
-            void* param_ubound = upper_bounds_d();
-            void* param_slice_str = slice_strides_d();
-            void* param_slice_magic = smagics_d();
-            void* param_slice_shift = sshifts_d();
-            void* param_dsource = source_shape_d();
-            void* param_sourcestr = source_strides_d();
+            void* param_dstr = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+            void* param_dmagic = runtime::gpu::invoke_memory_primitive(ctx, idx_dmagics);
+            void* param_dshift = runtime::gpu::invoke_memory_primitive(ctx, idx_dshifts);
+            void* param_lbound = runtime::gpu::invoke_memory_primitive(ctx, idx_lower_bounds);
+            void* param_ubound = runtime::gpu::invoke_memory_primitive(ctx, idx_upper_bounds);
+            void* param_slice_str = runtime::gpu::invoke_memory_primitive(ctx, idx_slice_strides);
+            void* param_slice_magic = runtime::gpu::invoke_memory_primitive(ctx, idx_smagics);
+            void* param_slice_shift = runtime::gpu::invoke_memory_primitive(ctx, idx_sshifts);
+            void* param_dsource = runtime::gpu::invoke_memory_primitive(ctx, idx_source_shape);
+            void* param_sourcestr = runtime::gpu::invoke_memory_primitive(ctx, idx_source_strides);
 
             void* args_list[] = {&inputs[0],
                                  &inputs[1],

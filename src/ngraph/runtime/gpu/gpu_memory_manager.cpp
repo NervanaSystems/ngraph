@@ -16,18 +16,20 @@
 #include <cstring>
 
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
 
 constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
-runtime::gpu::GPUMemoryManager::GPUMemoryManager()
+runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size)
     , m_workspace_manager(alignment)
     , m_argspace(nullptr)
     , m_workspace(nullptr)
+    , m_primitive_emitter(emitter)
 {
 }
 runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
@@ -48,7 +50,7 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_workspace = runtime::gpu::create_gpu_buffer(workspace_size);
     }
 }
-runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_argspace(void* data, size_t size)
+size_t runtime::gpu::GPUAllocator::reserve_argspace(void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
     if (m_manager->m_buffer_offset + size > m_manager->m_buffered_mem.size())
@@ -67,12 +69,13 @@ runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_argspace(void
     auto manager = m_manager;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    return [=]() {
+    gpu::memory_primitive mem_primitive = [=]() {
         auto gpu_mem = static_cast<uint8_t*>(manager->m_argspace);
         return static_cast<void*>(gpu_mem + offset);
     };
+    return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
-runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
+size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
@@ -81,10 +84,11 @@ runtime::gpu::memory_primitive runtime::gpu::GPUAllocator::reserve_workspace(siz
     auto manager = m_manager;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    return [=]() {
+    gpu::memory_primitive mem_primitive = [=]() {
         auto gpu_mem = static_cast<uint8_t*>(manager->m_workspace);
         return static_cast<void*>(gpu_mem + offset);
     };
+    return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 runtime::gpu::GPUAllocator::~GPUAllocator()
 {

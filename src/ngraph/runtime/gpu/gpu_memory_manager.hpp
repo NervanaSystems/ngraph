@@ -26,8 +26,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            using memory_primitive = std::function<void*(void)>;
-
+            class GPUPrimitiveEmitter;
             class GPUMemoryManager;
 
             class GPUAllocator
@@ -40,8 +39,8 @@ namespace ngraph
                 }
 
                 ~GPUAllocator();
-                memory_primitive reserve_argspace(void* data, size_t size);
-                memory_primitive reserve_workspace(size_t size);
+                size_t reserve_argspace(void* data, size_t size);
+                size_t reserve_workspace(size_t size);
 
             private:
                 GPUMemoryManager* m_manager;
@@ -50,21 +49,24 @@ namespace ngraph
 
             class GPUMemoryManager
             {
+                friend class GPUPrimitiveEmitter;
                 friend class GPUAllocator;
 
             public:
-                GPUMemoryManager();
                 ~GPUMemoryManager();
 
                 void allocate();
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
             private:
+                GPUMemoryManager(GPUPrimitiveEmitter* emitter);
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
                 pass::MemoryManager m_workspace_manager;
                 static constexpr const uint16_t alignment = 4;
                 void* m_argspace;
                 void* m_workspace;
+
+                GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }
     }
