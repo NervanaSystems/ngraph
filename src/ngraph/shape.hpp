@@ -102,14 +102,13 @@ namespace ngraph
     template <typename T>
     std::vector<typename T::value_type> row_major_strides(const T& shape)
     {
-        std::vector<typename T::value_type> strides;
+        std::vector<typename T::value_type> strides(shape.size());
         typename T::value_type s = 1;
-        for (auto d = shape.rbegin(); d != shape.rend(); d++)
+        for (auto d = shape.rbegin(), st = strides.rbegin(); d != shape.rend(); d++, st++)
         {
-            strides.push_back(s);
+            *st = s;
             s *= *d;
         }
-        std::reverse(strides.begin(), strides.end());
         return strides;
     }
 
