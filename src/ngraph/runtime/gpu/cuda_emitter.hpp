@@ -18,8 +18,8 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/gpu/gpu_shape.hpp"
 
 namespace ngraph
 {

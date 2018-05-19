@@ -714,7 +714,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_replace_slice_op(writer, kernel_name, dtypes, nthreads_per_block);
+        runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
+            writer, kernel_name, dtypes, nthreads_per_block);
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -736,23 +737,28 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
         std::tie(magic, shift) = idiv_magic_u64(slice_strides[i]);
         smagics.push_back(magic);
         sshifts.push_back(shift);
-
     }
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     // (lazy) allocation for kernel arguments
-    auto input_strides_d = allocator.reserve_argspace(input_strides.data(), (input_strides.size() - 1) * sizeof(int));
+    auto input_strides_d =
+        allocator.reserve_argspace(input_strides.data(), (input_strides.size() - 1) * sizeof(int));
     auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
     auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
-    auto lower_bounds_d = allocator.reserve_argspace(lower_bounds.data(), lower_bounds.size() * sizeof(int));
-    auto upper_bounds_d = allocator.reserve_argspace(upper_bounds.data(), upper_bounds.size() * sizeof(int));
-    auto slice_strides_d = allocator.reserve_argspace(slice_strides.data(), slice_strides.size() * sizeof(int));
+    auto lower_bounds_d =
+        allocator.reserve_argspace(lower_bounds.data(), lower_bounds.size() * sizeof(int));
+    auto upper_bounds_d =
+        allocator.reserve_argspace(upper_bounds.data(), upper_bounds.size() * sizeof(int));
+    auto slice_strides_d =
+        allocator.reserve_argspace(slice_strides.data(), slice_strides.size() * sizeof(int));
     auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size() * sizeof(int));
     auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size() * sizeof(int));
-    auto source_shape_d = allocator.reserve_argspace(source_shape.data(), source_shape.size() * sizeof(int));
-    auto source_strides_d = allocator.reserve_argspace(source_strides.data(), source_strides.size() * sizeof(int));
+    auto source_shape_d =
+        allocator.reserve_argspace(source_shape.data(), source_shape.size() * sizeof(int));
+    auto source_strides_d =
+        allocator.reserve_argspace(source_strides.data(), source_strides.size() * sizeof(int));
 
     int rank = tensor_shape.size();
     size_t nthreads = shape_size(tensor_shape);
