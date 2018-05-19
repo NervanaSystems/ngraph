@@ -18,6 +18,7 @@
 
 #include <cstdio>
 #include <vector>
+#include <stdexcept>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate.hpp"
