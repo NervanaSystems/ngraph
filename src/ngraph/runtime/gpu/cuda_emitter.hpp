@@ -18,7 +18,7 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/coordinate.hpp"
+#include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 
 namespace ngraph
@@ -75,8 +75,8 @@ namespace ngraph
                                            const std::array<std::string, 3>& dtypes,
                                            GPUShape tensor_shape,
                                            GPUShape source_shape,
-                                           const Coordinate& lower_bounds,
-                                           const Coordinate& upper_bounds,
+                                           GPUShape lower_bounds,
+                                           GPUShape upper_bounds,
                                            GPUShape slice_stride);
 
             private:

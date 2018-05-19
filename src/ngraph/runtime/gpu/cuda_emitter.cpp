@@ -685,8 +685,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                                       const std::array<std::string, 3>& dtypes,
                                                       GPUShape tensor_shape,
                                                       GPUShape source_shape,
-                                                      const Coordinate& lower_bounds,
-                                                      const Coordinate& upper_bounds,
+                                                      GPUShape lower_bounds,
+                                                      GPUShape upper_bounds,
                                                       GPUShape slice_strides)
 {
     // assumes NC{d1,...,dn} format
