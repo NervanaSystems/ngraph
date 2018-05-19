@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cstdio>
-#include <stdexcept>
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
@@ -70,8 +68,8 @@ namespace ngraph
     };
 
     /// Number of elements in spanned by a shape
-    template <typename T>
-    auto shape_size(const T& shape) -> typename T::value_type
+    template <typename ShapeType>
+    typename ShapeType::value_type shape_size(const ShapeType& shape)
     {
         size_t size = 1;
         for (auto d : shape)
@@ -82,11 +80,11 @@ namespace ngraph
     }
 
     /// Row-major strides for a shape
-    template <typename T>
-    std::vector<typename T::value_type> row_major_strides(const T& shape)
+    template <typename ShapeType>
+    std::vector<typename ShapeType::value_type> row_major_strides(const ShapeType& shape)
     {
-        std::vector<typename T::value_type> strides(shape.size());
-        typename T::value_type s = 1;
+        std::vector<typename ShapeType::value_type> strides(shape.size());
+        typename ShapeType::value_type s = 1;
         auto st = strides.rbegin();
         for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
         {
@@ -96,13 +94,13 @@ namespace ngraph
         return strides;
     }
 
-    template <typename T>
-    inline bool is_scalar(const T& shape)
+    template <typename ShapeType>
+    inline bool is_scalar(const ShapeType& shape)
     {
         return 0 == shape.size();
     }
-    template <typename T>
-    inline bool is_vector(const T& shape)
+    template <typename ShapeType>
+    inline bool is_vector(const ShapeType& shape)
     {
         return 1 == shape.size();
     }
