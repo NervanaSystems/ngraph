@@ -14,9 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_INTERPRETER_ENABLE)
-    add_subdirectory(interpreter)
-endif()
+add_subdirectory(interpreter)
 
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)

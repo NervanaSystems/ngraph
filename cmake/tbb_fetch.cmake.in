@@ -29,5 +29,4 @@ ExternalProject_Add(
     BUILD_COMMAND ""
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
-    EXCLUDE_FROM_ALL TRUE
 )
