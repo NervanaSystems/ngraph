@@ -104,7 +104,8 @@ namespace ngraph
     {
         std::vector<typename T::value_type> strides(shape.size());
         typename T::value_type s = 1;
-        for (auto d = shape.rbegin(), st = strides.rbegin(); d != shape.rend(); d++, st++)
+        auto st = strides.rbegin();
+        for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
         {
             *st = s;
             s *= *d;
