@@ -714,144 +714,45 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-
-        writer << "extern \"C\" __global__ void cuda_" << kernel_name << "(" << dtypes[0]
-               << "* in, " << dtypes[1] << "* source, " << dtypes[2] << "* out, "
-               << "float alpha, float beta, "
-               << "int* dim_strides, "
-               << "int* dim_magic, "
-               << "int* dim_shift, "
-               << "int* lower_bounds, "
-               << "int* upper_bounds, "
-               << "int* slice_str, "
-               << "int* slice_magic, "
-               << "int* slice_shift, "
-               << "int* dim_source, "
-               << "int* src_strides, "
-               << "int rank,"
-               << "int nthreads"
-               << ")\n";
-        writer.block_begin();
-        {
-            writer << "extern __shared__ int dimensions[];\n";
-            writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
-            writer << "if (tid < nthreads)\n";
-            writer.block_begin();
-            {
-                writer << "int dim_product = tid;\n";
-                writer << "int data_idx = 0;\n";
-                writer << "for (int i = threadIdx.x; i < (rank - 1) * " << nthreads_per_block
-                       << "; i += " << nthreads_per_block << ")\n";
-                writer.block_begin();
-                {
-                    writer << "dimensions[i] = division_by_invariant_multiplication(dim_product, "
-                              "dim_magic[data_idx], "
-                              "dim_shift[data_idx]);\n";
-                    writer << "dim_product -= (dimensions[i] * dim_strides[data_idx]);\n";
-                    writer << "data_idx++;\n";
-                }
-                writer.block_end();
-                writer << "dimensions[threadIdx.x + (rank-1) * " << nthreads_per_block
-                       << "] = dim_product;\n";
-                writer << "data_idx = 0;\n";
-                writer << "bool in_bounds = true;\n";
-                writer << "int source_idx = 0;\n";
-                writer << "for (int i = threadIdx.x; i < rank * " << nthreads_per_block
-                       << "; i += " << nthreads_per_block << ")\n";
-                writer.block_begin();
-                {
-                    writer << "int source_di = division_by_invariant_multiplication(dimensions[i], "
-                              "slice_magic[data_idx], "
-                              "slice_shift[data_idx]);\n";
-                    writer << "bool on_stride = (mod16(dimensions[i], source_di, "
-                              "slice_str[data_idx]) == 0);\n";
-                    // within slice of input tensor and a multiple of the slice stride
-                    writer << "bool in_slice_di = (dimensions[i] >= lower_bounds[data_idx]) && "
-                              "(dimensions[i] < upper_bounds[data_idx]) && on_stride;\n";
-                    writer << "in_bounds = in_bounds && in_slice_di;\n";
-                    // subtract off lower bound to convert to source index
-                    writer << "source_di -= lower_bounds[data_idx];\n";
-                    writer << "source_idx += source_di * src_strides[data_idx];\n";
-                    writer << "data_idx++;\n";
-                }
-                writer.block_end();
-                writer << "out[tid] = in_bounds ? source[source_idx] : in[tid];\n";
-            }
-            writer.block_end();
-        }
-        writer.block_end();
+        runtime::gpu::CudaKernelBuilder::get_replace_slice_op(writer, kernel_name, dtypes, nthreads_per_block);
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
-    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-
-    auto dim_strides = row_major_strides(tensor_shape);
-    auto dim_strides_d =
-        allocator.reserve_argspace(dim_strides.data(), (dim_strides.size() - 1) * sizeof(int));
-
+    // calculate strides
+    auto input_strides = row_major_strides(tensor_shape);
+    auto source_strides = row_major_strides(source_shape);
+    // precacluate invariants for integer division via multiplication
     std::vector<int> dmagics;
     std::vector<int> dshifts;
+    std::vector<int> smagics;
+    std::vector<int> sshifts;
     for (int i = 0; i < tensor_shape.size(); i++)
     {
         int magic;
         int shift;
-        std::tie(magic, shift) = idiv_magic_u64(dim_strides[i]);
+        std::tie(magic, shift) = idiv_magic_u64(input_strides[i]);
         dmagics.push_back(magic);
         dshifts.push_back(shift);
-    }
-    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
-    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
-
-    std::vector<int> lbounds;
-    for (auto const& lbound : lower_bounds)
-    {
-        lbounds.push_back(lbound);
-    }
-    auto lbounds_d = allocator.reserve_argspace(lbounds.data(), lbounds.size() * sizeof(int));
-
-    std::vector<int> ubounds;
-    for (auto const& ubound : upper_bounds)
-    {
-        ubounds.push_back(ubound);
-    }
-    auto ubounds_d = allocator.reserve_argspace(ubounds.data(), ubounds.size() * sizeof(int));
-
-    std::vector<int> slstrides;
-    for (auto const& slstr : slice_strides)
-    {
-        slstrides.push_back(slstr);
-    }
-    auto slstrides_d = allocator.reserve_argspace(slstrides.data(), slstrides.size() * sizeof(int));
-
-    std::vector<int> smagics;
-    std::vector<int> sshifts;
-    for (int i = 0; i < slice_strides.size(); i++)
-    {
-        int magic;
-        int shift;
         std::tie(magic, shift) = idiv_magic_u64(slice_strides[i]);
         smagics.push_back(magic);
         sshifts.push_back(shift);
+
     }
+
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
+    // (lazy) allocation for kernel arguments
+    auto input_strides_d = allocator.reserve_argspace(input_strides.data(), (input_strides.size() - 1) * sizeof(int));
+    auto dmagics_d = allocator.reserve_argspace(dmagics.data(), dmagics.size() * sizeof(int));
+    auto dshifts_d = allocator.reserve_argspace(dshifts.data(), dshifts.size() * sizeof(int));
+    auto lower_bounds_d = allocator.reserve_argspace(lower_bounds.data(), lower_bounds.size() * sizeof(int));
+    auto upper_bounds_d = allocator.reserve_argspace(upper_bounds.data(), upper_bounds.size() * sizeof(int));
+    auto slice_strides_d = allocator.reserve_argspace(slice_strides.data(), slice_strides.size() * sizeof(int));
     auto smagics_d = allocator.reserve_argspace(smagics.data(), smagics.size() * sizeof(int));
     auto sshifts_d = allocator.reserve_argspace(sshifts.data(), sshifts.size() * sizeof(int));
-
-    std::vector<int> dim_source;
-    for (auto const& dim : source_shape)
-    {
-        dim_source.push_back(dim);
-    }
-    auto dim_source_d =
-        allocator.reserve_argspace(dim_source.data(), dim_source.size() * sizeof(int));
-
-    auto source_strides = row_major_strides(source_shape);
-    std::vector<int> src_strides;
-    for (auto const& str : source_strides)
-    {
-        src_strides.push_back(str);
-    }
-    auto src_strides_d =
-        allocator.reserve_argspace(src_strides.data(), src_strides.size() * sizeof(int));
+    auto source_shape_d = allocator.reserve_argspace(source_shape.data(), source_shape.size() * sizeof(int));
+    auto source_strides_d = allocator.reserve_argspace(source_strides.data(), source_strides.size() * sizeof(int));
 
     int rank = tensor_shape.size();
     size_t nthreads = shape_size(tensor_shape);
@@ -862,16 +763,16 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
     std::unique_ptr<gpu::primitive> replace_slice(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_dstr = dim_strides_d();
+            void* param_dstr = input_strides_d();
             void* param_dmagic = dmagics_d();
             void* param_dshift = dshifts_d();
-            void* param_lbound = lbounds_d();
-            void* param_ubound = ubounds_d();
-            void* param_slice_str = slstrides_d();
+            void* param_lbound = lower_bounds_d();
+            void* param_ubound = upper_bounds_d();
+            void* param_slice_str = slice_strides_d();
             void* param_slice_magic = smagics_d();
             void* param_slice_shift = sshifts_d();
-            void* param_dsource = dim_source_d();
-            void* param_sourcestr = src_strides_d();
+            void* param_dsource = source_shape_d();
+            void* param_sourcestr = source_strides_d();
 
             void* args_list[] = {&inputs[0],
                                  &inputs[1],
