@@ -16,13 +16,10 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cstdio>
-#include <stdexcept>
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -68,27 +65,11 @@ namespace ngraph
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
-        operator GPUShape() const
-        {
-            GPUShape shape;
-            for (size_t const& size : *this)
-            {
-                uint32_t low = static_cast<uint32_t>(size);
-                if (low != size)
-                {
-                    throw std::runtime_error(
-                        "Request for Shape which exceeds the bitwidth available for GPUShapes "
-                        "(32)");
-                }
-                shape.push_back(low);
-            }
-            return shape;
-        }
     };
 
     /// Number of elements in spanned by a shape
-    template <typename T>
-    auto shape_size(const T& shape) -> typename T::value_type
+    template <typename ShapeType>
+    typename ShapeType::value_type shape_size(const ShapeType& shape)
     {
         size_t size = 1;
         for (auto d : shape)
@@ -99,12 +80,13 @@ namespace ngraph
     }
 
     /// Row-major strides for a shape
-    template <typename T>
-    std::vector<typename T::value_type> row_major_strides(const T& shape)
+    template <typename ShapeType>
+    std::vector<typename ShapeType::value_type> row_major_strides(const ShapeType& shape)
     {
-        std::vector<typename T::value_type> strides(shape.size());
-        typename T::value_type s = 1;
-        for (auto d = shape.rbegin(), st = strides.rbegin(); d != shape.rend(); d++, st++)
+        std::vector<typename ShapeType::value_type> strides(shape.size());
+        typename ShapeType::value_type s = 1;
+        auto st = strides.rbegin();
+        for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
         {
             *st = s;
             s *= *d;
@@ -112,13 +94,13 @@ namespace ngraph
         return strides;
     }
 
-    template <typename T>
-    inline bool is_scalar(const T& shape)
+    template <typename ShapeType>
+    inline bool is_scalar(const ShapeType& shape)
     {
         return 0 == shape.size();
     }
-    template <typename T>
-    inline bool is_vector(const T& shape)
+    template <typename ShapeType>
+    inline bool is_vector(const ShapeType& shape)
     {
         return 1 == shape.size();
     }
