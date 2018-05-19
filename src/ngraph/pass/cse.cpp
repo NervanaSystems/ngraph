@@ -77,6 +77,17 @@ static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
            (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
 }
 
+static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
+
+    auto ar_a = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(b);
+
+    return ar_a->get_argument(0) == ar_b->get_argument(0) &&
+           ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
+}
+
 static std::unordered_map<std::type_index,
                           std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
@@ -110,6 +121,8 @@ static std::unordered_map<std::type_index,
         {TI(op::Power), cse_binarywise},
         //{TI(op::Remainder), cse_binarywise},
         {TI(op::Subtract), cse_binarywise},
+        {TI(op::Sum), cse_reduction},
+        {TI(op::Product), cse_reduction},
     });
 }
 
