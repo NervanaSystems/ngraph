@@ -63,19 +63,32 @@ if (NGRAPH_TBB_ENABLE)
 
     set_source_files_properties(cpu_external_function.cpp
         PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
+    )
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
+    )
 endif()
 
-set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
+if (NGRAPH_CPU_ENABLE)
+    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-add_library(cpu_backend SHARED EXCLUDE_FROM_ALL ${SRC})
+    add_library(cpu_backend SHARED ${SRC})
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+    if(NGRAPH_DISTRIBUTED_ENABLE)
+        find_package(MPI REQUIRED)
+        add_definitions(-DNGRAPH_DISTRIBUTED)
+        include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+        target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+    endif()
+
+    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson ${TBB_IMPORTED_TARGETS})
+    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+
+    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
-
-target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson ${TBB_IMPORTED_TARGETS})
-target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)

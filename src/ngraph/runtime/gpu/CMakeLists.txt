@@ -41,7 +41,7 @@ set(SRC
     )
 
 if (NGRAPH_GPU_ENABLE)
-    add_library(gpu_backend SHARED EXCLUDE_FROM_ALL ${SRC})
+    add_library(gpu_backend SHARED ${SRC})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
@@ -54,5 +54,6 @@ if (NGRAPH_GPU_ENABLE)
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})
-endif()
 
+    install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+endif()

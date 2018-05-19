@@ -22,5 +22,9 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     link_libraries(${MPI_CXX_LIBRARIES})
 endif()
 
-add_library(int_backend SHARED EXCLUDE_FROM_ALL int_backend.cpp)
-target_link_libraries(int_backend PUBLIC ngraph)
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_library(interpreter_backend SHARED int_backend.cpp)
+    target_link_libraries(interpreter_backend PUBLIC ngraph)
+
+    install(TARGETS interpreter_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+endif()

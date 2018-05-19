@@ -86,3 +86,5 @@ target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.so
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.so
     )
+
+install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB})
