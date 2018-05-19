@@ -20,6 +20,27 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
+if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+    ExternalProject_Add(
+        ext_mkldnn
+        DOWNLOAD_COMMAND ""
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        )
+    add_library(libmkldnn INTERFACE)
+    target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
+    target_link_libraries(libmkldnn INTERFACE
+        ${MKLDNN_LIB_DIR}/libmkldnn.so
+        ${MKLDNN_LIB_DIR}/libmklml_intel.so
+        ${MKLDNN_LIB_DIR}/libiomp5.so
+        )
+
+    install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
+    return()
+endif()
+
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "0e7ca73")
 
