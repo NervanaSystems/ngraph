@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -67,22 +66,6 @@ namespace ngraph
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
-        }
-        operator GPUShape() const
-        {
-            GPUShape shape;
-            for (size_t const& size : *this)
-            {
-                uint32_t low = static_cast<uint32_t>(size);
-                if (low != size)
-                {
-                    throw std::runtime_error(
-                        "Request for Shape which exceeds the bitwidth available for GPUShapes "
-                        "(32)");
-                }
-                shape.push_back(low);
-            }
-            return shape;
         }
     };
 
