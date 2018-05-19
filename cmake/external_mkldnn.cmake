@@ -21,6 +21,18 @@ include(ExternalProject)
 #----------------------------------------------------------------------------------------------------------
 
 if(NGRAPH_CPU_ENABLE)
+    # User provided mkl-dnn
+    if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+        ExternalProject_Add(
+            ext_mkldnn
+            DOWNLOAD_COMMAND ""
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            )
+        return()
+    endif()
 
     set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
     set(MKLDNN_GIT_TAG "0e7ca73")
