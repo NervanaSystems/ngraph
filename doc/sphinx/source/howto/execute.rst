@@ -73,7 +73,7 @@ be passed to them.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
-   :lines: 26-29
+   :lines: 25-29
 
 The above code makes three parameter nodes where each is a 32-bit float of 
 shape ``(2, 3)`` and a row-major element layout.
@@ -125,9 +125,11 @@ process.
 There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
-``"INTERPRETER"`` backend can be slow, and is primarily intended for testing.  
+``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
+See the documentation on :doc:`runtime options for various backends <../programmable/index>` 
+for additional details.
 
-To select the ``"CPU"`` backend,
+To continue with our original example and select the ``"CPU"`` backend: 
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
@@ -145,10 +147,6 @@ in a single thread at a time. A ``CallFrame`` may be reused, but any particular
 ``CallFrame`` must only be running in one thread at any time. If more than one 
 thread needs to execute the function at the same time, create multiple 
 ``CallFrame`` objects from the ``ExternalFunction``.
-
-.. literalinclude:: ../../../examples/abc.cpp
-   :language: cpp
-   :lines: 43-44
 
 
 .. _allocate_bkd_storage:
@@ -176,7 +174,9 @@ the three parameters and the return value as follows:
 
 Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
 backends implement for tensor use. When there are no more references to the 
-tensor view, it will be freed when convenient for the backend.
+tensor view, it will be freed when convenient for the backend. See the 
+:doc:`../programmable/index` documentation for details on ``TensorView ``.
+
 
 .. _initialize_inputs:
 
