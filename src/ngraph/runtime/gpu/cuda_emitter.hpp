@@ -73,11 +73,11 @@ namespace ngraph
 
                 size_t build_replace_slice(const GPURuntimeContext* ctx,
                                            const std::array<std::string, 3>& dtypes,
-                                           const Shape& tensor_shape,
-                                           const Shape& source_shape,
-                                           const Coordinate& lower_bounds,
-                                           const Coordinate& upper_bounds,
-                                           const Strides& slice_stride);
+                                           GPUShape tensor_shape,
+                                           GPUShape source_shape,
+                                           GPUShape lower_bounds,
+                                           GPUShape upper_bounds,
+                                           GPUShape slice_stride);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
