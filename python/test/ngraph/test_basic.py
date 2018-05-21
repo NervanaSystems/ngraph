@@ -20,6 +20,7 @@ import json
 import ngraph as ng
 from test.ngraph.util import get_runtime, run_op_node
 from ngraph.impl import Function, NodeVector
+from ngraph.exceptions import UserInputError
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
@@ -157,3 +158,16 @@ def test_convert_to_uint(val_type):
     expected = np.array(input_data, dtype=val_type)
     result = run_op_node([input_data], ng.convert, val_type)
     assert np.allclose(result, expected)
+
+
+def test_bad_data_shape():
+    A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
+    B = ng.parameter(shape=[2, 2], name='B')
+    model = (A + B)
+    runtime = ng.runtime(backend_name='CPU')
+    computation = runtime.computation(model, A, B)
+
+    value_a = np.array([[1, 2]], dtype=np.float32)
+    value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
+    with pytest.raises(UserInputError):
+        computation(value_a, value_b)
