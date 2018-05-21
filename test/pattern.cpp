@@ -396,22 +396,22 @@ TEST(pattern, matcher)
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
     TestMatcher n(nullptr);
-    //ASSERT_TRUE(n.match(a, a));
+    ASSERT_TRUE(n.match(a, a));
 
     auto abs = make_shared<op::Abs>(a);
     auto any = std::make_shared<pattern::op::Skip>(a);
-    //ASSERT_TRUE(n.match(any, abs));
+    ASSERT_TRUE(n.match(any, abs));
 
     auto false_pred = [](std::shared_ptr<Node> no) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
-    //ASSERT_TRUE(n.match(any_false, a));
+    ASSERT_TRUE(n.match(any_false, a));
 
     auto pattern = std::make_shared<pattern::op::Label>(a);
-    //ASSERT_TRUE(n.match(pattern, a));
-    //ASSERT_EQ(n.get_pattern_map()[pattern], a);
+    ASSERT_TRUE(n.match(pattern, a));
+    ASSERT_EQ(n.get_pattern_map()[pattern], a);
 
     auto pattern_false = std::make_shared<pattern::op::Label>(a, false_pred);
-    //ASSERT_FALSE(n.match(pattern_false, a));
+    ASSERT_FALSE(n.match(pattern_false, a));
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
