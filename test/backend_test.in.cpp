@@ -2490,15 +2490,18 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
     // Create some tensors for input/output
     float pi = acosf(-1);
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
+    vector<float> input{M_PI / 2, 0.0f, -0.0f, M_PI / 6, -M_PI, M_PI};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
-
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    NGRAPH_INFO << read_vector<float>(result)[1];
+    EXPECT_FLOAT_EQ(1.f, read_vector<float>(result)[0]);
+    EXPECT_FLOAT_EQ(0.f, read_vector<float>(result)[1]);
+    EXPECT_FLOAT_EQ(0.f, read_vector<float>(result)[2]);
+    EXPECT_FLOAT_EQ(0.5f, read_vector<float>(result)[3]);
+    EXPECT_FLOAT_EQ(0.f, read_vector<float>(result)[4]);
+    EXPECT_FLOAT_EQ(0.f, read_vector<float>(result)[5]);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cos)
