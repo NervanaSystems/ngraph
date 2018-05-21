@@ -71,14 +71,6 @@ namespace ngraph
                         ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
-                size_t build_replace_slice(const GPURuntimeContext* ctx,
-                                           const std::array<std::string, 3>& dtypes,
-                                           GPUShape tensor_shape,
-                                           GPUShape source_shape,
-                                           GPUShape lower_bounds,
-                                           GPUShape upper_bounds,
-                                           GPUShape slice_stride);
-
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
