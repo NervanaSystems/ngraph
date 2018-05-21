@@ -64,11 +64,13 @@ namespace ngraph
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
+
         GPUShape& operator=(GPUShape&& v)
         {
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
+
         GPUShape(const Shape& shape)
         {
             for (size_t const& size : shape)
@@ -83,6 +85,7 @@ namespace ngraph
                 this->push_back(low);
             }
         }
+
         GPUShape(const Strides& strides)
         {
             for (size_t const& size : strides)
@@ -97,6 +100,7 @@ namespace ngraph
                 this->push_back(low);
             }
         }
+
         GPUShape(const Coordinate& coord)
         {
             for (size_t const& size : coord)

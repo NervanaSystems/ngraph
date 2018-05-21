@@ -99,6 +99,7 @@ namespace ngraph
     {
         return 0 == shape.size();
     }
+
     template <typename ShapeType>
     inline bool is_vector(const ShapeType& shape)
     {
