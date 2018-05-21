@@ -110,6 +110,14 @@ void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset
     memcpy(&target[tensor_offset], source, n);
 }
 
+const bool is_mkldnn_format(runtime::cpu::LayoutDescriptor* cpu_tvl)
+{
+    return (cpu_tvl && cpu_tvl->get_mkldnn_format() != mkldnn::memory::format::format_undef &&
+            !runtime::cpu::mkldnn_utils::compare_mkldnn_formats(
+                cpu_tvl->get_mkldnn_format(),
+                runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)));
+}
+
 void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > buffer_size)
@@ -117,12 +125,9 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         throw out_of_range("read access past end of tensor");
     }
 
-    auto tvl = this->get_tensor_view_layout();
-    auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-    if (cpu_tvl && cpu_tvl->get_mkldnn_format() != memory::format::format_undef &&
-        !runtime::cpu::mkldnn_utils::compare_mkldnn_formats(
-            cpu_tvl->get_mkldnn_format(),
-            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)))
+    auto cpu_tvl =
+        dynamic_cast<runtime::cpu::LayoutDescriptor*>(this->get_tensor_view_layout().get());
+    if (is_mkldnn_format(cpu_tvl))
     {
         auto tensor_shape = this->get_shape();
         auto input_format = cpu_tvl->get_mkldnn_format();
@@ -144,6 +149,16 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     {
         const char* source = get_data_ptr();
         memcpy(target, &source[tensor_offset], n);
+    }
+}
+
+void runtime::cpu::CPUTensorView::read()
+{
+    auto cpu_tvl =
+        dynamic_cast<runtime::cpu::LayoutDescriptor*>(this->get_tensor_view_layout().get());
+    if (is_mkldnn_format(cpu_tvl))
+    {
+        read((void*)get_data_ptr(), 0, buffer_size);
     }
 }
 

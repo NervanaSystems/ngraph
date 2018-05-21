@@ -73,6 +73,8 @@ namespace ngraph
             /// @param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
 
+            /// @brief Finalize and commit any pending updates or layout conversion for this tensor.
+            virtual void read() {}
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
             bool m_stale;
