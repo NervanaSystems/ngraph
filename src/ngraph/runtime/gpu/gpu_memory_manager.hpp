@@ -39,7 +39,7 @@ namespace ngraph
                 }
 
                 ~GPUAllocator();
-                size_t reserve_argspace(void* data, size_t size);
+                size_t reserve_argspace(const void* data, size_t size);
                 size_t reserve_workspace(size_t size);
 
             private:
