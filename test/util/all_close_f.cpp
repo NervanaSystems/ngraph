@@ -51,6 +51,10 @@ bool test::all_close_f(const vector<float>& a,
             NGRAPH_INFO << a[i] << " !≈ " << b[i];
             rc = false;
         }
+        else
+        {
+            NGRAPH_INFO << a[i] << " ≈ " << b[i];
+        }
     }
     return rc;
 }
