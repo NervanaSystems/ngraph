@@ -928,8 +928,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ", "
                            << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
                            << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(trans_strides_d);\n";
                 }
                 writer.block_end();
             }
@@ -968,6 +966,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         lower_bounds.data(), lower_bounds.size() * sizeof(size_t));
                     size_t idx_slice_strides = allocator.reserve_argspace(
                         slice_strides.data(), slice_strides.size() * sizeof(size_t));
+
                     writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_strides_d = "
                            << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
@@ -992,10 +991,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
                               "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
                            << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(lower_bounds_d);\n";
                 }
                 writer.block_end();
             }
@@ -1049,8 +1044,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "ctx, "
                            << "CUdeviceptr(input_shapes_d), CUdeviceptr(reverse_axes_d), "
                            << arg_rank << ", " << out[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_shapes_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(reverse_axes_d);\n";
                 }
                 writer.block_end();
             }
