@@ -144,17 +144,13 @@ The process documented here will work on CentOS 7.4.
       $ make && sudo make install  
 
 #. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
-   install the nGraph libraries to ``$HOME/ngraph_dist``. Another option, if your 
-   deployment system has Intel® Advanced Vector Extensions (Intel® AVX), is to 
-   target the accelerations available directly by compiling the build as follows 
-   during the cmake step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.
-
+   install the nGraph libraries to ``$HOME/ngraph_dist``. 
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ cmake ../ [-DNGRAPH_TARGET_ARCH=skylake-avx512]
+      $ cmake ../
       $ make && sudo make install 
 
 
