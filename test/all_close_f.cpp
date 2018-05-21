@@ -86,3 +86,14 @@ TEST(all_close_f, float_close_basic)
     NGRAPH_INFO << test::close_f(1.5f, 1.56f);
     NGRAPH_INFO << test::close_f(1.5f, 1.57f);
 }
+
+TEST(all_close_f, float_close_zero)
+{
+    NGRAPH_INFO << test::close_f(0.0f, 0.1f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.01f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.001f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.0001f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.00001f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.000001f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.0000001f);
+}
