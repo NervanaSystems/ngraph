@@ -806,12 +806,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "int num_inputs = " << args.size() << ";\n";
-                writer << "std::vector<size_t> block_strides_h = {" << join(block_strides)
-                       << "};\n";
-                writer << "void* block_strides_d = "
-                          "runtime::gpu::create_gpu_buffer(sizeof(size_t) * num_inputs);\n";
-                writer << "runtime::gpu::cuda_memcpyHtD(block_strides_d, block_strides_h.data(), "
-                          "sizeof(size_t) * num_inputs);\n";
+
+                GPUAllocator allocator =
+                    external_function->get_primitive_emitter()->get_memory_allocator();
+                size_t idx_block_strides = allocator.reserve_argspace(
+                    block_strides.data(), block_strides.size() * sizeof(size_t));
+                writer << "void* block_strides_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                       << idx_block_strides << ");\n";
 
                 writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
                        << ", std::vector<std::string>{";
@@ -905,31 +906,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         trans_strides[input_order[i]] = output_strides[i];
                     }
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << input_strides[i] << "UL";
-                    }
-                    writer << "};\n";
 
-                    writer << "std::vector<size_t> trans_strides_h = {" << trans_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << trans_strides[i] << "UL";
-                    }
-                    writer << "};\n";
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_input_strides = allocator.reserve_argspace(
+                        input_strides.data(), input_strides.size() * sizeof(size_t));
+                    size_t idx_trans_strides = allocator.reserve_argspace(
+                        trans_strides.data(), trans_strides.size() * sizeof(size_t));
 
                     writer << "void* input_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                              "runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_input_strides << ");\n";
                     writer << "void* trans_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
+                              "runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_trans_strides << ");\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
                            << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                            << ", ctx"
@@ -968,35 +958,29 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_input_strides = allocator.reserve_argspace(
+                        input_strides.data(), input_strides.size() * sizeof(size_t));
+                    size_t idx_output_strides = allocator.reserve_argspace(
+                        output_strides.data(), output_strides.size() * sizeof(size_t));
+                    size_t idx_lower_bounds = allocator.reserve_argspace(
+                        lower_bounds.data(), lower_bounds.size() * sizeof(size_t));
+                    size_t idx_slice_strides = allocator.reserve_argspace(
+                        slice_strides.data(), slice_strides.size() * sizeof(size_t));
                     writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {"
-                           << join(input_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> output_strides_h = {"
-                           << join(output_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,")
-                           << "UL};\n";
-                    writer << "std::vector<size_t> slice_strides_h = {"
-                           << join(slice_strides, "UL,") << "UL};\n";
-
                     writer << "void* input_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
+                           << ");\n";
                     writer << "void* output_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_output_strides
+                           << ");\n";
                     writer << "void* slice_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_slice_strides
+                           << ");\n";
                     writer << "void* lower_bounds_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(output_strides_d, "
-                              "output_strides_h.data(), "
-                              "sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(slice_strides_d, slice_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(lower_bounds_d, lower_bounds_h.data(), "
-                              "sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_lower_bounds
+                           << ");\n";
 
                     writer << "runtime::gpu::emit_slice(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
@@ -1041,21 +1025,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_shapes_h = {" << join(arg_shape, "UL,")
-                           << "UL};\n";
-                    writer << "std::vector<size_t> reverse_axes_h = {"
-                           << join(reverse_axes_flag, "UL,") << "UL};\n";
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_arg_shape = allocator.reserve_argspace(
+                        arg_shape.data(), arg_shape.size() * sizeof(size_t));
+                    size_t idx_reverse_axes_flag = allocator.reserve_argspace(
+                        reverse_axes_flag.data(), reverse_axes_flag.size() * sizeof(size_t));
 
+                    writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_shapes_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_arg_shape
+                           << ");\n";
                     writer << "void* reverse_axes_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(input_shapes_d, input_shapes_h.data(), "
-                              "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(reverse_axes_d, "
-                              "reverse_axes_h.data(), "
-                              "sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_reverse_axes_flag << ");\n";
 
                     writer << "runtime::gpu::emit_reverse(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
@@ -1204,10 +1187,16 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            writer << "std::vector<float> temp(" << out[0].get_size()
-                                   << ", -std::numeric_limits<float>::infinity());\n";
-                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                            GPUAllocator allocator =
+                                external_function->get_primitive_emitter()->get_memory_allocator();
+                            std::vector<float> negative_inf(
+                                out[0].get_size(), -std::numeric_limits<float>::infinity());
+                            size_t idx_float_inf = allocator.reserve_argspace(
+                                negative_inf.data(), negative_inf.size() * sizeof(float));
+                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                                   << idx_float_inf << ");\n";
+                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
+                                   << ", temp_d, " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
                         else if (args[0].get_shape().size() == out[0].get_shape().size())
@@ -1246,10 +1235,16 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            writer << "std::vector<float> temp(" << out[0].get_size()
-                                   << ", std::numeric_limits<float>::infinity());\n";
-                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                            GPUAllocator allocator =
+                                external_function->get_primitive_emitter()->get_memory_allocator();
+                            std::vector<float> positive_inf(out[0].get_size(),
+                                                            std::numeric_limits<float>::infinity());
+                            size_t idx_float_inf = allocator.reserve_argspace(
+                                positive_inf.data(), positive_inf.size() * sizeof(float));
+                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                                   << idx_float_inf << ");\n";
+                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
+                                   << ", temp_d, " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
                         else if (args[0].get_shape().size() == out[0].get_shape().size())

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -137,6 +138,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     }
     auto& output_desc = tensor_descriptor_from_shape(output_shape);
 
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t workspace_size = 0;
+    CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
+        *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
+    size_t workspace_idx = allocator.reserve_workspace(workspace_size);
+
     // emit reduce operation
     std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
@@ -146,10 +154,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                                            CUDNN_NOT_PROPAGATE_NAN,
                                                            CUDNN_REDUCE_TENSOR_NO_INDICES,
                                                            CUDNN_32BIT_INDICES));
-            size_t workspace_size = 0;
-            CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
-                *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
-            auto workspace_ptr = create_gpu_buffer(workspace_size);
+
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
+
             float alpha = 1.0, beta = 0.0;
             CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
                                               desc,
@@ -163,7 +170,6 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                               &beta,
                                               output_desc,
                                               outputs[0]));
-            free_gpu_buffer(workspace_ptr);
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
