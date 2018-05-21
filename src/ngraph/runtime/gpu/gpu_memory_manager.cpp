@@ -50,7 +50,7 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_workspace = runtime::gpu::create_gpu_buffer(workspace_size);
     }
 }
-size_t runtime::gpu::GPUAllocator::reserve_argspace(void* data, size_t size)
+size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
     if (m_manager->m_buffer_offset + size > m_manager->m_buffered_mem.size())
