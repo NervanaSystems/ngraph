@@ -14,6 +14,8 @@ backwards_log
 backwards_power
 backwards_relu
 backwards_reverse_3d_02
+backwards_reverse_sequence_n4d2c3h2w2
+backwards_reverse_sequence_n3_c2_h3
 backwards_select
 backwards_select_nested
 backwards_sign
