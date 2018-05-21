@@ -22,6 +22,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -69,11 +70,11 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 
 size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContext* ctx,
                                             const std::array<std::string, 2>& dtypes,
-                                            const Shape& input_shape,
-                                            const Shape& output_shape,
-                                            const Shape& padding_below,
-                                            const Shape& padding_above,
-                                            const Shape& padding_interior,
+                                            GPUShape input_shape,
+                                            GPUShape output_shape,
+                                            GPUShape padding_below,
+                                            GPUShape padding_above,
+                                            GPUShape padding_interior,
                                             const std::string& pad_value)
 {
     // Need to check: are there models in which some tensors will have different types? if so, this
@@ -104,9 +105,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
     if (compiled_kernel == nullptr)
     {
         // normalize pad dimensions to shape dimensions
-        Shape pad_below(input_shape.size(), 0);
-        Shape pad_above(input_shape.size(), 0);
-        Shape pad_interior(input_shape.size(), 0);
+        GPUShape pad_below(input_shape.size(), 0);
+        GPUShape pad_above(input_shape.size(), 0);
+        GPUShape pad_interior(input_shape.size(), 0);
 
         // if padding_interior is not zero length, it
         // is from op::Pad for which padding_below will
@@ -193,7 +194,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -211,7 +212,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -232,8 +233,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
 size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx,
                                                     const std::array<std::string, 2>& dtypes,
-                                                    const Shape& input_shape,
-                                                    const Shape& output_shape,
+                                                    GPUShape input_shape,
+                                                    GPUShape output_shape,
                                                     size_t window_width,
                                                     size_t window_stride)
 {
@@ -297,7 +298,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) {
         void* args_list[] = {&inputs[0], &outputs[0]};
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<unsigned int>(nthreads),
+                                      nthreads,
                                       1,
                                       1, // grid dim
                                       1,
@@ -315,67 +316,67 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     return primitive_index;
 }
 
-pooling_op_shape avgpool_shape(
-    const Shape& in, const Shape& out, const Shape& window, const Shape& strides, const Shape& pad)
+pooling_op_shape
+    avgpool_shape(GPUShape in, GPUShape out, GPUShape window, GPUShape strides, GPUShape pad)
 {
     pooling_op_shape shape;
-    shape.N = static_cast<int>(in[0]);
-    shape.C = static_cast<int>(in[1]);
+    shape.N = in[0];
+    shape.C = in[1];
     shape.K = shape.C; // pooling feature maps is
     shape.J = shape.C; // not currently supported
     if (in.size() == 3)
     {
         shape.D = 1;
         shape.H = 1;
-        shape.W = static_cast<int>(in[2]);
+        shape.W = in[2];
         shape.M = 1;
         shape.P = 1;
-        shape.Q = static_cast<int>(out[2]);
+        shape.Q = out[2];
         shape.T = 1;
         shape.R = 1;
-        shape.S = static_cast<int>(window[0]);
+        shape.S = window[0];
         shape.STRIDE_D = 0;
         shape.STRIDE_H = 0;
-        shape.STRIDE_W = static_cast<int>(strides[0]);
+        shape.STRIDE_W = strides[0];
         shape.PAD_D = 0;
         shape.PAD_H = 0;
-        shape.PAD_W = static_cast<int>(pad[0]);
+        shape.PAD_W = pad[0];
     }
     else if (in.size() == 4)
     {
         shape.D = 1;
-        shape.H = static_cast<int>(in[2]);
-        shape.W = static_cast<int>(in[3]);
+        shape.H = in[2];
+        shape.W = in[3];
         shape.M = 1;
-        shape.P = static_cast<int>(out[2]);
-        shape.Q = static_cast<int>(out[3]);
+        shape.P = out[2];
+        shape.Q = out[3];
         shape.T = 1;
-        shape.R = static_cast<int>(window[0]);
-        shape.S = static_cast<int>(window[1]);
+        shape.R = window[0];
+        shape.S = window[1];
         shape.STRIDE_D = 0;
-        shape.STRIDE_H = static_cast<int>(strides[0]);
-        shape.STRIDE_W = static_cast<int>(strides[1]);
+        shape.STRIDE_H = strides[0];
+        shape.STRIDE_W = strides[1];
         shape.PAD_D = 0;
-        shape.PAD_H = static_cast<int>(pad[0]);
-        shape.PAD_W = static_cast<int>(pad[1]);
+        shape.PAD_H = pad[0];
+        shape.PAD_W = pad[1];
     }
     else if (in.size() == 5)
     {
-        shape.D = static_cast<int>(in[2]);
-        shape.H = static_cast<int>(in[3]);
-        shape.W = static_cast<int>(in[4]);
-        shape.M = static_cast<int>(out[2]);
-        shape.P = static_cast<int>(out[3]);
-        shape.Q = static_cast<int>(out[4]);
-        shape.T = static_cast<int>(window[0]);
-        shape.R = static_cast<int>(window[1]);
-        shape.S = static_cast<int>(window[2]);
-        shape.STRIDE_D = static_cast<int>(strides[0]);
-        shape.STRIDE_H = static_cast<int>(strides[1]);
-        shape.STRIDE_W = static_cast<int>(strides[2]);
-        shape.PAD_D = static_cast<int>(pad[0]);
-        shape.PAD_H = static_cast<int>(pad[1]);
-        shape.PAD_W = static_cast<int>(pad[2]);
+        shape.D = in[2];
+        shape.H = in[3];
+        shape.W = in[4];
+        shape.M = out[2];
+        shape.P = out[3];
+        shape.Q = out[4];
+        shape.T = window[0];
+        shape.R = window[1];
+        shape.S = window[2];
+        shape.STRIDE_D = strides[0];
+        shape.STRIDE_H = strides[1];
+        shape.STRIDE_W = strides[2];
+        shape.PAD_D = pad[0];
+        shape.PAD_H = pad[1];
+        shape.PAD_W = pad[2];
     }
     else
     {
@@ -386,11 +387,11 @@ pooling_op_shape avgpool_shape(
 
 size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                                                  const std::array<std::string, 2>& dtypes,
-                                                 const Shape& input_shape,
-                                                 const Shape& output_shape,
-                                                 const Shape& window_shape,
-                                                 const Shape& window_stride,
-                                                 const Shape& padding_below,
+                                                 GPUShape input_shape,
+                                                 GPUShape output_shape,
+                                                 GPUShape window_shape,
+                                                 GPUShape window_stride,
+                                                 GPUShape padding_below,
                                                  bool include_pad)
 {
     // assumes NCDHW format
@@ -441,11 +442,9 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer << "const int q = blockIdx.x;\n";
                 writer << "const int mp = blockIdx.y;\n";
                 writer << "const int nk = blockIdx.z;\n";
-                writer << "const int k = division_by_invariant_multiplication(nk, magic_N, "
-                          "shift_N);\n";
+                writer << "const int k = div64(nk, magic_N, shift_N);\n";
                 writer << "const int n = nk - k * N;\n";
-                writer << "const int m = division_by_invariant_multiplication(mp, magic_P, "
-                          "shift_P);\n";
+                writer << "const int m = div64(mp, magic_P, shift_P);\n";
                 writer << "const int p = mp - m * P;\n";
                 writer << "out += n*KMPQ + k*MPQ + m*PQ + mad16(p, Q, q);\n";
 
@@ -465,11 +464,9 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer << "for (int trs = tid; trs < TRS; trs += 32)\n";
                 writer.block_begin();
                 {
-                    writer << "int t = division_by_invariant_multiplication(trs, magic_RS, "
-                              "shift_RS);\n";
+                    writer << "int t = div64(trs, magic_RS, shift_RS);\n";
                     writer << "int rs = mod16(trs, t, RS);\n";
-                    writer
-                        << "int r  = division_by_invariant_multiplication(rs, magic_S, shift_S);\n";
+                    writer << "int r  = div64(rs, magic_S, shift_S);\n";
                     writer << "int s  = mod16(rs, r, S);\n";
 
                     // coordinate transformation from TRS to DHW
@@ -611,7 +608,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
 
 size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeContext* ctx,
                                                            const std::vector<std::string>& dtypes,
-                                                           const Shape& tensor_shape,
+                                                           GPUShape tensor_shape,
                                                            const char* op,
                                                            const char* kernel)
 {
@@ -650,7 +647,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    size_t nthreads = shape_size(tensor_shape);
+    auto nthreads = shape_size(tensor_shape);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
@@ -663,7 +660,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
             args_list.push_back(&outputs[0]);
             args_list.push_back(&nthreads);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
+                                          nthreads,
                                           1,
                                           1, // grid dim
                                           1,
@@ -822,7 +819,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
                                                       const std::string& tensor_name,
-                                                      const Shape& shape)
+                                                      GPUShape shape)
 {
     auto strides = row_major_strides(shape);
     writer << "__syncthreads();\n";
@@ -866,13 +863,12 @@ std::string runtime::gpu::CUDAEmitter::include_helpers()
 )";
 #endif
 
-    // division_by_invariant_multiplication:
-    // fast integer division via invariant multiplication and shifting
+    // div64: fast integer division via magic multiplication and shifting
     // if value is a power of 2, magic will be 1 and only shifting
-    // is required (predicate p below)
+    // is required (predicate p in div64)
     // load: helper to load from constant memory for fast access
     ss << R"(
-__device__ __forceinline__ int division_by_invariant_multiplication(int value, int magic, int shift)
+__device__ __forceinline__ int div64(int value, int magic, int shift)
 {
     int result;
     asm("{\n\t"

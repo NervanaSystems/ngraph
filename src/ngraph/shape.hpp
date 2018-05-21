@@ -68,11 +68,40 @@ namespace ngraph
     };
 
     /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    template <typename ShapeType>
+    typename ShapeType::value_type shape_size(const ShapeType& shape)
+    {
+        size_t size = 1;
+        for (auto d : shape)
+        {
+            size *= d;
+        }
+        return size;
+    }
 
     /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    template <typename ShapeType>
+    std::vector<typename ShapeType::value_type> row_major_strides(const ShapeType& shape)
+    {
+        std::vector<typename ShapeType::value_type> strides(shape.size());
+        typename ShapeType::value_type s = 1;
+        auto st = strides.rbegin();
+        for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
+        {
+            *st = s;
+            s *= *d;
+        }
+        return strides;
+    }
 
-    inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
-    inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
+    template <typename ShapeType>
+    inline bool is_scalar(const ShapeType& shape)
+    {
+        return 0 == shape.size();
+    }
+    template <typename ShapeType>
+    inline bool is_vector(const ShapeType& shape)
+    {
+        return 1 == shape.size();
+    }
 }

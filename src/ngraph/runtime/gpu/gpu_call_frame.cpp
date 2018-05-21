@@ -84,6 +84,8 @@ void runtime::gpu::GPU_CallFrame::setup_runtime_context()
 
     const auto& primitive_emitter = m_external_function->get_primitive_emitter();
     m_external_function->m_ctx->gpu_primitives = primitive_emitter->get_primitives().data();
+    m_external_function->m_ctx->gpu_memory_primitives =
+        primitive_emitter->get_memory_primitives().data();
 
     // register with c-api runtime context
     m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
