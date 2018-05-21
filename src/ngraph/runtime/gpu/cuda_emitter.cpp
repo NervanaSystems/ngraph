@@ -442,9 +442,11 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer << "const int q = blockIdx.x;\n";
                 writer << "const int mp = blockIdx.y;\n";
                 writer << "const int nk = blockIdx.z;\n";
-                writer << "const int k = div64(nk, magic_N, shift_N);\n";
+                writer << "const int k = division_by_invariant_multiplication(nk, magic_N, "
+                          "shift_N);\n";
                 writer << "const int n = nk - k * N;\n";
-                writer << "const int m = div64(mp, magic_P, shift_P);\n";
+                writer << "const int m = division_by_invariant_multiplication(mp, magic_P, "
+                          "shift_P);\n";
                 writer << "const int p = mp - m * P;\n";
                 writer << "out += n*KMPQ + k*MPQ + m*PQ + mad16(p, Q, q);\n";
 
@@ -464,9 +466,11 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                 writer << "for (int trs = tid; trs < TRS; trs += 32)\n";
                 writer.block_begin();
                 {
-                    writer << "int t = div64(trs, magic_RS, shift_RS);\n";
+                    writer << "int t = division_by_invariant_multiplication(trs, magic_RS, "
+                              "shift_RS);\n";
                     writer << "int rs = mod16(trs, t, RS);\n";
-                    writer << "int r  = div64(rs, magic_S, shift_S);\n";
+                    writer
+                        << "int r  = division_by_invariant_multiplication(rs, magic_S, shift_S);\n";
                     writer << "int s  = mod16(rs, r, S);\n";
 
                     // coordinate transformation from TRS to DHW
@@ -863,12 +867,13 @@ std::string runtime::gpu::CUDAEmitter::include_helpers()
 )";
 #endif
 
-    // div64: fast integer division via magic multiplication and shifting
+    // division_by_invariant_multiplication:
+    // fast integer division via invariant multiplication and shifting
     // if value is a power of 2, magic will be 1 and only shifting
-    // is required (predicate p in div64)
+    // is required (predicate p below)
     // load: helper to load from constant memory for fast access
     ss << R"(
-__device__ __forceinline__ int div64(int value, int magic, int shift)
+__device__ __forceinline__ int division_by_invariant_multiplication(int value, int magic, int shift)
 {
     int result;
     asm("{\n\t"
