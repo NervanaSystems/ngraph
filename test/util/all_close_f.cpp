@@ -24,12 +24,17 @@ using namespace ngraph;
 // Returns |a - b| < 2 ^ (a.mantissa - mantissa_bits + 1 + tolerance_bits)
 bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 {
+    static const float min_value = pow(2.f, -100.f);
     if (!isfinite(a) || !isfinite(b))
     {
         return false;
     }
+    a = abs(a) > min_value ? a : min_value;
+    b = abs(b) > min_value ? b : min_value;
+
     int a_e;
     frexp(a, &a_e);
+
     return abs(a - b) < pow(2.f, static_cast<float>(a_e - mantissa_bits + 1 + tolerance_bits));
 }
 

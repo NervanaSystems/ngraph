@@ -89,11 +89,28 @@ TEST(all_close_f, float_close_basic)
 
 TEST(all_close_f, float_close_zero)
 {
-    NGRAPH_INFO << test::close_f(0.0f, 0.1f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.01f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.001f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.0001f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.00001f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.000001f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.0000001f);
+    NGRAPH_INFO << test::close_f(0.0f, 1e-8f);
+    NGRAPH_INFO << test::close_f(1e-8f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-7f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-6f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-5f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-4f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-3f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-2f, 0.0f);
+    NGRAPH_INFO << test::close_f(1e-1f, 0.0f);
 }
+
+TEST(all_close_f, float_close_zero_b)
+{
+    NGRAPH_INFO << float_to_bit_string(0.0f);
+    NGRAPH_INFO << float_to_bit_string(0.015625f);
+    NGRAPH_INFO << test::close_f(0.0f, 0.015625f);
+    NGRAPH_INFO << test::close_f(0.015625f, 0.0f);
+    NGRAPH_INFO << test::close_f(0.00006103515f, 0.0f);
+}
+
+// TEST(all_close_f, float_close_zero_c)
+// {
+//     EXPECT_TRUE(test::close_f(0.0f, pow(2.f, -19.f));
+//     EXPECT_TRUE(test::close_f(pow(2.f, -19.f), 0.0f));
+// }
