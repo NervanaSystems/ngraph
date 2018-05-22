@@ -272,7 +272,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
             }
 
             writer << data_types[1] << " result = in[idx_init];\n";
-            //writer << data_types[1] << " result = in[0];\n";
 
             for (int i = 0; i < rank; i++)
             {
@@ -286,16 +285,13 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
             {
                 writer << "idx_in += i_" << i << " * input_strides[" << i << "];\n";
             }
-            //writer << "printf(\"idx in is %d.\\n\", idx_in);\n";
             writer << "result = (idx_in == idx_init) ? result : " << op
                    << "(result, in[idx_in]);\n";
-            //writer << "result = (idx_in == idx_init) ? result : " << op << "(result, in[0]);\n";
             for (int i = 0; i < rank; i++)
             {
                 writer.block_end();
             }
             writer << "out[tid] = result;\n";
-            //writer << "out[0] = idx_init;\n";
         }
         writer.block_end();
     }
