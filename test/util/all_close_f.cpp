@@ -92,3 +92,29 @@ bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
 
     return distance <= tolerance;
 }
+
+bool test::all_close_g(const vector<float>& a,
+                       const vector<float>& b,
+                       int mantissa_bits,
+                       int tolerance_bits)
+{
+    bool rc = true;
+    if (a.size() != b.size())
+    {
+        throw ngraph_error("a.size() != b.size() for all_close comparison.");
+    }
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        bool is_close_f = close_g(a[i], b[i], mantissa_bits, tolerance_bits);
+        if (!is_close_f)
+        {
+            NGRAPH_INFO << a[i] << " !≈ " << b[i];
+            rc = false;
+        }
+        else
+        {
+            NGRAPH_INFO << a[i] << " ≈ " << b[i];
+        }
+    }
+    return rc;
+}
