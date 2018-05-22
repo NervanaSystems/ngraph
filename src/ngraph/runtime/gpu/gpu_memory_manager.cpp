@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+
 #include <cstring>
 
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
@@ -32,11 +33,13 @@ runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     , m_primitive_emitter(emitter)
 {
 }
+
 runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
 {
     runtime::gpu::free_gpu_buffer(m_argspace);
     runtime::gpu::free_gpu_buffer(m_workspace);
 }
+
 void runtime::gpu::GPUMemoryManager::allocate()
 {
     if (m_buffer_offset)
@@ -50,6 +53,7 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_workspace = runtime::gpu::create_gpu_buffer(workspace_size);
     }
 }
+
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
@@ -75,6 +79,7 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
+
 size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
@@ -90,6 +95,7 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
+
 runtime::gpu::GPUAllocator::~GPUAllocator()
 {
     while (!m_active.empty())
