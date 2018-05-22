@@ -738,14 +738,14 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
     // create the launch primitive
     std::unique_ptr<gpu::primitive> f(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            std::vector<void*> args_list;
-            args_list.push_back(&inputs[0]);
-            args_list.push_back(&outputs[0]);
-            args_list.push_back(input_strides_ptr.get());
-            args_list.push_back(output_shape_ptr.get());
-            args_list.push_back(reduce_window_shape_ptr.get());
-            args_list.push_back(reduce_window_stride_ptr.get());
-            args_list.push_back(&nthreads);
+            std::vector<void*> args_list(7, NULL);
+            args_list[0] = &inputs[0];
+            args_list[1] = &outputs[0];
+            args_list[2] = input_strides_ptr.get();
+            args_list[3] = output_shape_ptr.get();
+            args_list[4] = reduce_window_shape_ptr.get();
+            args_list[5] = reduce_window_stride_ptr.get();
+            args_list[6] = &nthreads;
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           static_cast<unsigned int>(nthreads),
