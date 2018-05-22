@@ -157,7 +157,45 @@ TEST(all_close_f, gtest_float_equal)
 
 TEST(close_g, example)
 {
-    float a = bit_string_to_float("00111111100000000000000000000000");
-    float b = bit_string_to_float("00000000000000000000000000000000");
-    NGRAPH_INFO << test::close_g(a, b);
+    float val0 = bit_string_to_float("00000000000000000000000000000000");
+    float val1 = bit_string_to_float("00000000000000000000000000000001");
+    float val2 = bit_string_to_float("00000000000000000000000000000010");
+    float val3 = bit_string_to_float("00000000000000000000000000000011");
+    float val4 = bit_string_to_float("00000000000000000000000000000100");
+    float val5 = bit_string_to_float("00000000000000000000000000000101");
+
+    float val_0 = bit_string_to_float("10000000000000000000000000000000");
+    float val_1 = bit_string_to_float("10000000000000000000000000000001");
+    float val_2 = bit_string_to_float("10000000000000000000000000000010");
+    float val_3 = bit_string_to_float("10000000000000000000000000000011");
+    float val_4 = bit_string_to_float("10000000000000000000000000000100");
+    float val_5 = bit_string_to_float("10000000000000000000000000000101");
+
+    NGRAPH_INFO << val0;
+    NGRAPH_INFO << val1;
+    NGRAPH_INFO << val2;
+    NGRAPH_INFO << val3;
+    NGRAPH_INFO << val4;
+    NGRAPH_INFO << val5;
+
+    NGRAPH_INFO << val_0;
+    NGRAPH_INFO << val_1;
+    NGRAPH_INFO << val_2;
+    NGRAPH_INFO << val_3;
+    NGRAPH_INFO << val_4;
+    NGRAPH_INFO << val_5;
+
+    EXPECT_FLOAT_EQ(0.f, val0);
+    EXPECT_FLOAT_EQ(0.f, val1);
+    EXPECT_FLOAT_EQ(0.f, val2);
+    EXPECT_FLOAT_EQ(0.f, val3);
+    EXPECT_FLOAT_EQ(0.f, val4);
+    EXPECT_FLOAT_EQ(0.f, val5);
+
+    EXPECT_FLOAT_EQ(0.f, val_0);
+    EXPECT_FLOAT_EQ(0.f, val_1);
+    EXPECT_FLOAT_EQ(0.f, val_2);
+    EXPECT_FLOAT_EQ(0.f, val_3);
+    EXPECT_FLOAT_EQ(0.f, val_4);
+    EXPECT_FLOAT_EQ(0.f, val_5);
 }

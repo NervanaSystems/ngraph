@@ -71,8 +71,24 @@ union FloatUnion {
 
 bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
 {
-    NGRAPH_INFO << a;
-    NGRAPH_INFO << b;
-    return true;
-}
+    FloatUnion a_fu{a};
+    FloatUnion b_fu{b};
+    uint32_t a_uint = a_fu.i;
+    uint32_t b_uint = b_fu.i;
 
+    // If negative: convert to two's compliment
+    // If positive: mask with sign bit
+    uint32_t sign_mask = static_cast<uint32_t>(1U) << 31;
+    a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
+    b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
+
+    uint32_t distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+
+    // e.g. for float with 24 bit mantissa and 2 bit accuracy
+    // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2)
+    //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
+    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+    uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
+
+    return distance <= tolerance;
+}
