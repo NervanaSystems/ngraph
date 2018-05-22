@@ -76,7 +76,7 @@ bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
     uint32_t a_uint = a_fu.i;
     uint32_t b_uint = b_fu.i;
 
-    // If negative: convert to two's compliment
+    // If negative: convert to two's complement
     // If positive: mask with sign bit
     uint32_t sign_mask = static_cast<uint32_t>(1U) << 31;
     a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
