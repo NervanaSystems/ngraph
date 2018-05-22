@@ -718,11 +718,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeCon
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
-
         CudaKernelBuilder::get_reduce_window_op(writer, kernel_name.str(), op, dtypes, rank);
-
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
+
     size_t nthreads = shape_size(output_shape);
     auto input_strides = row_major_strides(input_shape);
 
