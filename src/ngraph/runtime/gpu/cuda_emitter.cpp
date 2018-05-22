@@ -30,7 +30,6 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-#define TI(x) type_index(typeid(x))
 
 struct pooling_op_shape
 {
@@ -706,8 +705,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
     case OpName::maximum:
         op = CudaOpMap<ngraph::op::Maximum>::op;
         kernel = CudaOpMap<ngraph::op::Maximum>::math_kernel;
-        break;
-    default: throw std::runtime_error("reducation not supported for this op.");
     }
     // kernel_name is used to check if the cuda kernel has been previously compiled
     size_t rank = input_shape.size();
