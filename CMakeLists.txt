@@ -122,7 +122,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
-if (NOT ${NGRAPH_WARNINGS_AS_ERRORS})
+if (${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     message(STATUS "Warnings as errors")
 endif()
