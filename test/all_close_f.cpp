@@ -154,8 +154,7 @@ TEST(all_close_f, gtest_float_equal)
     EXPECT_FLOAT_EQ(0.f, val_5);
 }
 
-
-TEST(close_g, example)
+TEST(close_g, mantissa_24)
 {
     float val0 = bit_string_to_float("00000000000000000000000000000000");
     float val1 = bit_string_to_float("00000000000000000000000000000001");
@@ -198,4 +197,18 @@ TEST(close_g, example)
     NGRAPH_INFO << test::close_g(0.f, val_3, 24);
     NGRAPH_INFO << test::close_g(0.f, val_4, 24);
     NGRAPH_INFO << test::close_g(0.f, val_5, 24);
+}
+
+
+TEST(close_g, mantissa_8)
+{
+    float val0 = bit_string_to_float("00000000000000000000000000000000");
+    float val1 = bit_string_to_float("00000000000001000000000000000000");
+    float val2 = bit_string_to_float("00000000000001000000000000000001");
+    float val3 = bit_string_to_float("00000000000010000000000000000000");
+
+    NGRAPH_INFO << test::close_g(0.f, val0);
+    NGRAPH_INFO << test::close_g(0.f, val1);
+    NGRAPH_INFO << test::close_g(0.f, val2);
+    NGRAPH_INFO << test::close_g(0.f, val3);
 }
