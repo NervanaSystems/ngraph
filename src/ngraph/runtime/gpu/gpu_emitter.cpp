@@ -1420,9 +1420,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         }
                         else if (args[0].get_size() == out[0].get_size())
                         {
-                            NGRAPH_INFO << "equal size";
-                            NGRAPH_INFO << args[0].get_shape().size();
-                            NGRAPH_INFO << out[0].get_shape().size();
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
                         else
@@ -1474,12 +1471,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             size_t reduce_index;
-                            std::vector<std::string> dtypes;
-                            for (auto& arg : args)
-                            {
-                                dtypes.push_back(arg.get_type());
-                            }
-                            dtypes.push_back(out[0].get_type());
+                            std::vector<std::string> dtypes{arg[0].get_type(), out[0].get_type()};
 
                             switch (it->second)
                             {
