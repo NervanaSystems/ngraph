@@ -69,7 +69,7 @@ namespace ngraph
 
     /// Number of elements in spanned by a shape
     template <typename SHAPE_TYPE>
-    typename SHAPE_TYPE::value_type shape_size(const SHAPE_TYPE& shape)
+    size_t shape_size(const SHAPE_TYPE& shape)
     {
         size_t size = 1;
         for (auto d : shape)
