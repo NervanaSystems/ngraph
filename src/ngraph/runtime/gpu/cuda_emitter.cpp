@@ -30,6 +30,7 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
+#define TI(x) type_index(typeid(x))
 
 struct pooling_op_shape
 {
@@ -678,15 +679,36 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_reduce_window_helper(const GPURuntimeContext* ctx,
-                                                             const std::vector<std::string>& dtypes,
-                                                             const Shape& input_shape,
-                                                             const Shape& output_shape,
-                                                             const Shape& reduce_window_shape,
-                                                             const Strides& reduce_window_strides,
-                                                             const char* op,
-                                                             const char* kernel)
+size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* ctx,
+                                                      const OpName op_name,
+                                                      const std::vector<std::string>& dtypes,
+                                                      const Shape& input_shape,
+                                                      const Shape& output_shape,
+                                                      const Shape& reduce_window_shape,
+                                                      const Strides& reduce_window_strides)
 {
+    const char* op = NULL;
+    const char* kernel = NULL;
+    switch (op_name)
+    {
+    case OpName::add:
+        op = CudaOpMap<ngraph::op::Add>::op;
+        kernel = CudaOpMap<ngraph::op::Add>::math_kernel;
+        break;
+    case OpName::multiply:
+        op = CudaOpMap<ngraph::op::Multiply>::op;
+        kernel = CudaOpMap<ngraph::op::Multiply>::math_kernel;
+        break;
+    case OpName::minimum:
+        op = CudaOpMap<ngraph::op::Minimum>::op;
+        kernel = CudaOpMap<ngraph::op::Minimum>::math_kernel;
+        break;
+    case OpName::maximum:
+        op = CudaOpMap<ngraph::op::Maximum>::op;
+        kernel = CudaOpMap<ngraph::op::Maximum>::math_kernel;
+        break;
+    default: throw std::runtime_error("reducation not supported for this op.");
+    }
     // kernel_name is used to check if the cuda kernel has been previously compiled
     size_t rank = input_shape.size();
     std::stringstream kernel_name;

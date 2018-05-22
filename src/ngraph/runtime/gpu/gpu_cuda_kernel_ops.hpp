@@ -65,6 +65,14 @@ namespace ngraph
     {
         namespace gpu
         {
+            enum class OpName
+            {
+                add,
+                multiply,
+                minimum,
+                maximum
+            };
+
             template <typename T>
             struct CudaOpMap;
 
