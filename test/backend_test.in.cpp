@@ -2488,9 +2488,13 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    float pi = acosf(-1);
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{M_PI / 2, 0.0f, -0.0f, M_PI / 6, -M_PI, M_PI};
+    vector<float> input{static_cast<float>(M_PI) / 2.f,
+                        0.0f,
+                        -0.0f,
+                        static_cast<float>(M_PI) / 6.f,
+                        -static_cast<float>(M_PI),
+                        static_cast<float>(M_PI)};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
 

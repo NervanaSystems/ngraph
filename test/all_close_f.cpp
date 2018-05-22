@@ -153,8 +153,3 @@ TEST(all_close_f, gtest_float_equal)
     EXPECT_FLOAT_EQ(0.f, val_4);
     EXPECT_FLOAT_EQ(0.f, val_5);
 }
-
-TEST(all_close_f, gtest_float_equal)
-{
-    EXPECT_FLOAT_EQ(0.f, val0);
-}
