@@ -2481,7 +2481,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
 
 NGRAPH_TEST(${BACKEND_NAME}, sin)
 {
-    Shape shape{6};
+    Shape shape{9};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
 
@@ -2489,13 +2489,20 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{0.f, 0.5f, -0.5f, 1.f, -1.f, 3.f};
+    vector<float> input{0.f, 0.5f, -0.5f, 1.f, -1.f, 3.f, -3.f, 5.f, -5.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        vector<float>{0.f, 0.47942554f, -0.47942554f, 0.84147098f, -0.84147098f, 0.14112001f},
-        read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_g(vector<float>{0.f,
+                                                0.47942554f,
+                                                -0.47942554f,
+                                                0.84147098f,
+                                                -0.84147098f,
+                                                0.14112001f,
+                                                -0.14112001f,
+                                                -0.95892427f,
+                                                0.95892427f},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cos)
