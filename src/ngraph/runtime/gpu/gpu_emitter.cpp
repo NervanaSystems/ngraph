@@ -1471,7 +1471,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             size_t reduce_index;
-                            std::vector<std::string> dtypes{arg[0].get_type(), out[0].get_type()};
+
+                            // this dtypes is two build the binary op, expect both input has same type with args[0]
+                            std::vector<std::string> dtypes{
+                                args[0].get_type(), args[0].get_type(), out[0].get_type()};
 
                             switch (it->second)
                             {
