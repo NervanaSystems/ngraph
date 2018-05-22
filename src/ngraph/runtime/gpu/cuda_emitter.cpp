@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
