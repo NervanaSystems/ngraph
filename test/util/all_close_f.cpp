@@ -63,3 +63,16 @@ bool test::all_close_f(const vector<float>& a,
     }
     return rc;
 }
+
+union FloatUnion {
+    float f;
+    uint32_t i;
+};
+
+bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
+{
+    NGRAPH_INFO << a;
+    NGRAPH_INFO << b;
+    return true;
+}
+

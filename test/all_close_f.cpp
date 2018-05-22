@@ -153,3 +153,11 @@ TEST(all_close_f, gtest_float_equal)
     EXPECT_FLOAT_EQ(0.f, val_4);
     EXPECT_FLOAT_EQ(0.f, val_5);
 }
+
+
+TEST(close_g, example)
+{
+    float a = bit_string_to_float("00111111100000000000000000000000");
+    float b = bit_string_to_float("00000000000000000000000000000000");
+    NGRAPH_INFO << test::close_g(a, b);
+}

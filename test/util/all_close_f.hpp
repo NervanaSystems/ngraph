@@ -51,5 +51,7 @@ namespace ngraph
                          const std::vector<float>& b,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
+
+        bool close_g(float a, float b, int mantissa_bits = 8, int tolerance_bits = 2);
     }
 }
