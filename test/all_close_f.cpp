@@ -199,7 +199,6 @@ TEST(close_g, mantissa_24)
     NGRAPH_INFO << test::close_g(0.f, val_5, 24);
 }
 
-
 TEST(close_g, mantissa_8)
 {
     float val0 = bit_string_to_float("00000000000000000000000000000000");
